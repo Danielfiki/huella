@@ -1,0 +1,50 @@
+.page { display: flex; flex-direction: column; gap: 14px; }
+.header { display: flex; align-items: center; justify-content: space-between; }
+.titulo { font-size: 22px; font-weight: 700; }
+.backBtn { font-size: 14px; color: var(--color-primary); background: none; border: none; cursor: pointer; padding: 0; }
+.label { font-size: 14px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 10px; }
+
+.habilidadesGrid { display: flex; flex-direction: column; gap: 8px; }
+
+.habilidadBtn {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  border: 2px solid transparent;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  transition: all 0.15s;
+}
+
+.habilidadBtn:hover { border-color: var(--color-primary-light); }
+.habilidadSelected { border-color: var(--color-primary) !important; background: #fff4ee; }
+
+.textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-size: 14px;
+  resize: none;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  outline: none;
+}
+.textarea:focus { border-color: var(--color-primary); }
+
+.emptyCard {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 12px; padding: 36px 24px;
+}
+.emptyCard h3 { font-size: 16px; font-weight: 600; }
+.emptyCard p { font-size: 14px; color: var(--color-text-muted); }
+
+.estrategiaHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.estrategiaNombre { font-size: 15px; font-weight: 600; }
+.semanaTag {
+  font-size: 12px; font-weight: 600; padding: 3px 10px;
+  background: var(--color-accent-green); border-radius: 999px; color: #2d5a3d;
+}
+.estrategiaFecha { font-size: 13px; color: var(--color-text-muted); }

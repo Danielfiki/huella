@@ -1,0 +1,27 @@
+.page { display: flex; flex-direction: column; gap: 16px; }
+
+.greeting h1 { font-size: 26px; font-weight: 700; color: var(--color-text); }
+.greeting p { font-size: 15px; color: var(--color-text-muted); margin-top: 2px; }
+
+.registroBtn { margin-top: 4px; }
+
+.cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+
+.graficoCard {}
+
+.patronesCard {}
+.patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.patronesHeader h3 { font-size: 15px; font-weight: 600; }
+.patronesDesc { font-size: 14px; color: var(--color-text-muted); margin-bottom: 12px; }
+.patronesBtn { margin-top: 8px; }
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 32px;
+}
+.emptyCard h3 { font-size: 16px; font-weight: 600; }
+.emptyCard p { font-size: 14px; color: var(--color-text-muted); }
