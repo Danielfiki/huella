@@ -26,7 +26,7 @@ const GATILLANTES = [
 ]
 
 export default function RegistroPage() {
-  const { state, dispatch } = useHuella()
+  const { state, addEpisodio } = useHuella()
   const navigate = useNavigate()
 
   const [tipo, setTipo] = useState('')
@@ -57,7 +57,7 @@ export default function RegistroPage() {
       fecha: new Date().toISOString(),
     }
 
-    dispatch({ type: 'ADD_EPISODIO', payload: episodio })
+    addEpisodio(episodio)
     setGuardado(true)
 
     if (import.meta.env.VITE_ANTHROPIC_API_KEY) {

@@ -17,7 +17,7 @@ const HABILIDADES = [
 ]
 
 export default function EstrategiasPage() {
-  const { state, dispatch } = useHuella()
+  const { state, addEstrategia } = useHuella()
   const [vista, setVista] = useState('lista')
   const [habilidad, setHabilidad] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -33,16 +33,13 @@ export default function EstrategiasPage() {
         : 'Configura tu VITE_ANTHROPIC_API_KEY para generar planes personalizados.'
       setPlan(texto)
 
-      dispatch({
-        type: 'ADD_ESTRATEGIA',
-        payload: {
-          id: Date.now().toString(),
-          habilidad,
-          descripcion,
-          plan: texto,
-          fechaInicio: new Date().toISOString(),
-          semanaActual: 1,
-        },
+      addEstrategia({
+        id: Date.now().toString(),
+        habilidad,
+        descripcion,
+        plan: texto,
+        fechaInicio: new Date().toISOString(),
+        semanaActual: 1,
       })
     } catch (e) {
       setPlan('Error al generar el plan: ' + e.message)

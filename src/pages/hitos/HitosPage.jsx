@@ -15,21 +15,18 @@ const CATEGORIAS = [
 ]
 
 export default function HitosPage() {
-  const { state, dispatch } = useHuella()
+  const { state, addHito } = useHuella()
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')
 
   function handleGuardar() {
     if (!categoria || !descripcion) return
-    dispatch({
-      type: 'ADD_HITO',
-      payload: {
-        id: Date.now().toString(),
-        categoria,
-        descripcion,
-        fecha: new Date().toISOString(),
-      },
+    addHito({
+      id: Date.now().toString(),
+      categoria,
+      descripcion,
+      fecha: new Date().toISOString(),
     })
     setCategoria('')
     setDescripcion('')

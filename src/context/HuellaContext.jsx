@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from './AuthContext'
 
 const HuellaContext = createContext(null)
 
@@ -7,13 +9,18 @@ const initialState = {
   episodios: [],
   estrategias: [],
   hitos: [],
-  user: null,
 }
 
 function reducer(state, action) {
   switch (action.type) {
     case 'SET_HIJO':
       return { ...state, hijo: action.payload }
+    case 'SET_EPISODIOS':
+      return { ...state, episodios: action.payload }
+    case 'SET_HITOS':
+      return { ...state, hitos: action.payload }
+    case 'SET_ESTRATEGIAS':
+      return { ...state, estrategias: action.payload }
     case 'ADD_EPISODIO':
       return { ...state, episodios: [action.payload, ...state.episodios] }
     case 'ADD_HITO':
@@ -28,28 +35,153 @@ function reducer(state, action) {
         ),
       }
     case 'LOAD_STATE':
-      return { ...state, ...action.payload }
+      return { ...initialState, ...action.payload }
     default:
       return state
   }
 }
 
+function dbEpisodioToApp(row) {
+  return {
+    id: row.id,
+    tipo: row.tipo,
+    intensidad: row.intensidad,
+    contexto: row.contexto,
+    gatillantes: row.gatillantes ?? [],
+    estadoPadre: row.estado_padre,
+    fecha: row.fecha,
+  }
+}
+
+function dbEstrategiaToApp(row) {
+  return {
+    id: row.id,
+    habilidad: row.habilidad,
+    descripcion: row.descripcion,
+    plan: row.plan,
+    fechaInicio: row.fecha_inicio,
+    semanaActual: row.semana_actual,
+  }
+}
+
 export function HuellaProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState, (init) => {
-    try {
-      const saved = localStorage.getItem('huella_state')
-      return saved ? { ...init, ...JSON.parse(saved) } : init
-    } catch {
-      return init
-    }
-  })
+  const { user } = useAuth()
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const [dataLoading, setDataLoading] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem('huella_state', JSON.stringify(state))
-  }, [state])
+    if (!user) {
+      dispatch({ type: 'LOAD_STATE', payload: initialState })
+      return
+    }
+    loadUserData(user.id)
+  }, [user?.id])
+
+  async function loadUserData(userId) {
+    setDataLoading(true)
+    const [hijosRes, episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+      supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('episodios').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
+      supabase.from('hitos').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
+      supabase.from('estrategias').select('*').eq('user_id', userId).order('fecha_inicio', { ascending: false }),
+    ])
+    dispatch({
+      type: 'LOAD_STATE',
+      payload: {
+        hijo: hijosRes.data ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad } : null,
+        episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
+        hitos: hitosRes.data ?? [],
+        estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
+      },
+    })
+    setDataLoading(false)
+  }
+
+  async function setHijo(hijo) {
+    if (!user) return
+    dispatch({ type: 'SET_HIJO', payload: hijo })
+    await supabase.from('hijos').upsert(
+      { user_id: user.id, nombre: hijo.nombre, edad: hijo.edad },
+      { onConflict: 'user_id' }
+    )
+  }
+
+  async function addEpisodio(episodio) {
+    if (!user) return
+    // Optimistic: muestra inmediatamente con id temporal
+    dispatch({ type: 'ADD_EPISODIO', payload: episodio })
+    const { error } = await supabase.from('episodios').insert({
+      user_id: user.id,
+      tipo: episodio.tipo,
+      intensidad: episodio.intensidad,
+      contexto: episodio.contexto,
+      gatillantes: episodio.gatillantes,
+      estado_padre: episodio.estadoPadre,
+      fecha: episodio.fecha,
+    })
+    if (!error) {
+      // Reemplazar con datos reales (id uuid) desde Supabase
+      const { data } = await supabase
+        .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+      if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
+    }
+  }
+
+  async function addHito(hito) {
+    if (!user) return
+    dispatch({ type: 'ADD_HITO', payload: hito })
+    const { error } = await supabase.from('hitos').insert({
+      user_id: user.id,
+      categoria: hito.categoria,
+      descripcion: hito.descripcion,
+      fecha: hito.fecha,
+    })
+    if (!error) {
+      const { data } = await supabase
+        .from('hitos').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+      if (data) dispatch({ type: 'SET_HITOS', payload: data })
+    }
+  }
+
+  async function addEstrategia(estrategia) {
+    if (!user) return
+    dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
+    const { error } = await supabase.from('estrategias').insert({
+      user_id: user.id,
+      habilidad: estrategia.habilidad,
+      descripcion: estrategia.descripcion,
+      plan: estrategia.plan,
+      fecha_inicio: estrategia.fechaInicio,
+      semana_actual: estrategia.semanaActual,
+    })
+    if (!error) {
+      const { data } = await supabase
+        .from('estrategias').select('*').eq('user_id', user.id).order('fecha_inicio', { ascending: false })
+      if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
+    }
+  }
+
+  async function updateEstrategia(partial) {
+    if (!user) return
+    dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
+    const dbFields = {}
+    if (partial.semanaActual !== undefined) dbFields.semana_actual = partial.semanaActual
+    if (partial.plan !== undefined) dbFields.plan = partial.plan
+    if (partial.habilidad !== undefined) dbFields.habilidad = partial.habilidad
+    await supabase.from('estrategias').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+  }
 
   return (
-    <HuellaContext.Provider value={{ state, dispatch }}>
+    <HuellaContext.Provider value={{
+      state,
+      dispatch,
+      dataLoading,
+      setHijo,
+      addEpisodio,
+      addHito,
+      addEstrategia,
+      updateEstrategia,
+    }}>
       {children}
     </HuellaContext.Provider>
   )
