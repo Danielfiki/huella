@@ -3,6 +3,7 @@ import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import RespuestaIA from '../../components/ui/RespuestaIA'
+import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
 import styles from './HistorialPage.module.css'
 
 const TIPOS = {
@@ -95,7 +96,7 @@ function EpisodioCard({ ep }) {
 
 export default function HistorialPage() {
   const { state } = useHuella()
-  const { episodios } = state
+  const { episodios, estrategias, hitos, hijo } = state
 
   if (episodios.length === 0) {
     return (
@@ -120,6 +121,13 @@ export default function HistorialPage() {
           {episodios.length} episodio{episodios.length !== 1 ? 's' : ''}
         </span>
       </div>
+
+      <GenerarInformeBtn
+        hijo={hijo}
+        episodios={episodios}
+        estrategias={estrategias}
+        hitos={hitos}
+      />
 
       {grupos.map((grupo) => (
         <div key={grupo.label} className={styles.grupo}>
