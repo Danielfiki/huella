@@ -44,7 +44,7 @@ Responde con este formato exacto:
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
 
-  return llamarAPI(prompt, 600)
+  return llamarAPI(prompt, 900)
 }
 
 export async function interpretarPatrones({ hijo, episodios }) {
@@ -77,7 +77,7 @@ Analiza estos patrones y responde con:
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
 
-  return llamarAPI(prompt, 700)
+  return llamarAPI(prompt, 1000)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
@@ -109,5 +109,5 @@ Genera un plan de 4 semanas con este formato:
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
 
-  return llamarAPI(prompt, 800)
+  return llamarAPI(prompt, 1200)
 }
