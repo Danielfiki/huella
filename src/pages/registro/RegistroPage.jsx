@@ -184,7 +184,11 @@ export default function RegistroPage() {
             </p>
           </Card>
 
-          <RespuestaIA texto={respuestaIA} loading={loadingIA} />
+          <RespuestaIA
+            texto={respuestaIA}
+            loading={loadingIA}
+            mensajeCarga="Analizando lo que pasó con tu hijo..."
+          />
 
           <Button
             variant="secondary"

@@ -147,7 +147,13 @@ export default function EstrategiasPage() {
           Generar plan de 4 semanas
         </Button>
 
-        {(plan || loadingPlan) && <RespuestaIA texto={plan} loading={loadingPlan} />}
+        {(plan || loadingPlan) && (
+          <RespuestaIA
+            texto={plan}
+            loading={loadingPlan}
+            mensajeCarga="Diseñando tu plan de 4 semanas..."
+          />
+        )}
       </div>
     )
   }

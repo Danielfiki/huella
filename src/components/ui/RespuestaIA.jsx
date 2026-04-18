@@ -2,18 +2,20 @@ import React from 'react'
 import styles from './RespuestaIA.module.css'
 import { Sparkles } from 'lucide-react'
 
-export default function RespuestaIA({ texto, loading = false }) {
+export default function RespuestaIA({ texto, loading = false, mensajeCarga }) {
   if (loading) {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <Sparkles size={16} />
-          <span>Analizando...</span>
+          <Sparkles size={16} className={styles.sparklesSpin} />
+          <span>{mensajeCarga || 'Analizando lo que pasó con tu hijo...'}</span>
         </div>
         <div className={styles.skeleton}>
           <div className={styles.skeletonLine} />
-          <div className={styles.skeletonLine} style={{ width: '80%' }} />
+          <div className={styles.skeletonLine} style={{ width: '85%' }} />
+          <div className={styles.skeletonLine} style={{ width: '70%' }} />
           <div className={styles.skeletonLine} style={{ width: '90%' }} />
+          <div className={styles.skeletonLine} style={{ width: '60%' }} />
         </div>
       </div>
     )

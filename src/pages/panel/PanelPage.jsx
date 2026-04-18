@@ -80,7 +80,11 @@ export default function PanelPage() {
           </Button>
         )}
         {(analisis || loadingAnalisis) && (
-          <RespuestaIA texto={analisis} loading={loadingAnalisis} />
+          <RespuestaIA
+            texto={analisis}
+            loading={loadingAnalisis}
+            mensajeCarga="Identificando patrones en el historial..."
+          />
         )}
       </Card>
 
