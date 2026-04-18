@@ -33,6 +33,13 @@ function reducer(state, action) {
       return { ...state, hitos: state.hitos.filter((h) => h.id !== action.payload) }
     case 'REMOVE_ESTRATEGIA':
       return { ...state, estrategias: state.estrategias.filter((e) => e.id !== action.payload) }
+    case 'UPDATE_EPISODIO':
+      return {
+        ...state,
+        episodios: state.episodios.map((e) =>
+          e.id === action.payload.id ? { ...e, ...action.payload } : e
+        ),
+      }
     case 'UPDATE_ESTRATEGIA':
       return {
         ...state,
@@ -56,6 +63,7 @@ function dbEpisodioToApp(row) {
     gatillantes: row.gatillantes ?? [],
     estadoPadre: row.estado_padre,
     fecha: row.fecha,
+    orientacionIA: row.orientacion_ia ?? null,
   }
 }
 
@@ -118,24 +126,38 @@ export function HuellaProvider({ children }) {
   }
 
   async function addEpisodio(episodio) {
-    if (!user || !supabase) return
+    if (!user || !supabase) return null
     dispatch({ type: 'ADD_EPISODIO', payload: episodio })
-    const { error } = await supabase.from('episodios').insert({
-      user_id: user.id,
-      tipo: episodio.tipo,
-      intensidad: episodio.intensidad,
-      contexto: episodio.contexto,
-      gatillantes: episodio.gatillantes,
-      estado_padre: episodio.estadoPadre,
-      fecha: episodio.fecha,
-    })
+    const { data: inserted, error } = await supabase
+      .from('episodios')
+      .insert({
+        user_id: user.id,
+        tipo: episodio.tipo,
+        intensidad: episodio.intensidad,
+        contexto: episodio.contexto,
+        gatillantes: episodio.gatillantes,
+        estado_padre: episodio.estadoPadre,
+        fecha: episodio.fecha,
+      })
+      .select()
+      .single()
     if (error) {
       dispatch({ type: 'REMOVE_EPISODIO', payload: episodio.id })
       throw new Error(error.message)
     }
+    const real = dbEpisodioToApp(inserted)
     const { data } = await supabase
       .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
+    return real
+  }
+
+  async function updateEpisodio(partial) {
+    if (!user || !supabase) return
+    dispatch({ type: 'UPDATE_EPISODIO', payload: partial })
+    const dbFields = {}
+    if (partial.orientacionIA !== undefined) dbFields.orientacion_ia = partial.orientacionIA
+    await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 
   async function addHito(hito) {
@@ -193,6 +215,7 @@ export function HuellaProvider({ children }) {
       dataLoading,
       setHijo,
       addEpisodio,
+      updateEpisodio,
       addHito,
       addEstrategia,
       updateEstrategia,

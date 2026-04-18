@@ -1,0 +1,59 @@
+.page { display: flex; flex-direction: column; gap: 16px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; }
+.titulo { font-size: 22px; font-weight: 700; }
+.count { font-size: 13px; color: var(--color-text-muted); }
+
+.emptyCard {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 12px; padding: 36px 24px;
+}
+.emptyCard h3 { font-size: 16px; font-weight: 600; }
+.emptyCard p { font-size: 14px; color: var(--color-text-muted); line-height: 1.5; }
+
+.grupo { display: flex; flex-direction: column; gap: 10px; }
+
+.grupoLabel {
+  font-size: 11px; font-weight: 700; color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.6px; padding-left: 2px;
+}
+
+.card { display: flex; flex-direction: column; gap: 10px; }
+
+.cardTop {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+
+.tipoWrap { display: flex; align-items: center; gap: 10px; }
+.emoji { font-size: 26px; line-height: 1; }
+.tipoLabel { font-size: 14px; font-weight: 600; }
+.hora { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+
+.intensidadBadge {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 999px; color: var(--color-text);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+.contexto {
+  font-size: 13px; color: var(--color-text-muted); line-height: 1.55;
+  border-left: 3px solid var(--color-border); padding-left: 10px;
+  margin: 0;
+}
+
+.gatillantes { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.gatillante {
+  font-size: 11px; padding: 3px 9px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 999px; color: var(--color-text-muted);
+}
+
+.toggleBtn {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: 600; color: var(--color-primary);
+  background: none; border: none; padding: 0; cursor: pointer;
+  align-self: flex-start;
+}
+.toggleBtn:hover { color: var(--color-primary-dark); }

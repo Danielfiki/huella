@@ -144,8 +144,12 @@ Tablas creadas con Row Level Security activo:
 ### Panel visual con gráficos
 La página existe y muestra números pero NO tiene gráficos reales. Falta implementar visualizaciones con frecuencia por semana, intensidad en el tiempo, gatillantes más frecuentes. Nota: recharts fue eliminado como dependencia el 2026-04-18 — reinstalar o usar implementación custom.
 
-### Historial
-La página existe pero está vacía. Falta conectarla a los episodios reales guardados en Supabase y mostrarlos cronológicamente con la orientación que dio la IA para cada uno.
+### ~~Historial~~ ✅ Completado 2026-04-18
+- Episodios agrupados por día (Hoy / Ayer / fecha)
+- Cada card: tipo con emoji, hora, badge de intensidad, contexto, gatillantes
+- Botón expandible "Ver orientación de Huella" (si existe)
+- La orientación de IA ahora se guarda en Supabase (columna `orientacion_ia`)
+- **Requiere migración SQL**: `alter table public.episodios add column if not exists orientacion_ia text;`
 
 ### Estrategias con seguimiento
 El formulario existe y la vista detalle semana a semana está implementada. Falta: seguimiento semanal con indicadores observables, evaluación de avance a fecha definida.
@@ -184,8 +188,7 @@ Reescribir src/services/anthropic.js con los 35+ referentes completos. El produc
 
 **~~Prioridad 1 — Verificar guardado en Supabase~~** ✅ Listo 2026-04-18
 
-**Prioridad 2 — Historial funcional**
-Mostrar todos los episodios registrados con fecha, tipo, intensidad y la orientación que dio la IA para cada uno.
+**~~Prioridad 2 — Historial funcional~~** ✅ Listo 2026-04-18
 
 **Prioridad 3 — Perfil del hijo**
 Formulario para ingresar nombre y edad del hijo, guardado en tabla `hijos`.

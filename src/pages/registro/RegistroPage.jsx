@@ -26,7 +26,7 @@ const GATILLANTES = [
 ]
 
 export default function RegistroPage() {
-  const { state, addEpisodio } = useHuella()
+  const { state, addEpisodio, updateEpisodio } = useHuella()
   const navigate = useNavigate()
 
   const [tipo, setTipo] = useState('')
@@ -62,7 +62,7 @@ export default function RegistroPage() {
     setLoadingGuardar(true)
     setErrorGuardar('')
     try {
-      await addEpisodio(episodio)
+      const episodioGuardado = await addEpisodio(episodio)
       setGuardado(true)
 
       setLoadingIA(true)
@@ -73,6 +73,9 @@ export default function RegistroPage() {
           historialReciente: state.episodios,
         })
         setRespuestaIA(texto)
+        if (episodioGuardado?.id) {
+          updateEpisodio({ id: episodioGuardado.id, orientacionIA: texto })
+        }
       } catch (e) {
         setRespuestaIA('No se pudo obtener orientación: ' + e.message)
       } finally {

@@ -2,7 +2,7 @@ import React from 'react'
 import styles from './RespuestaIA.module.css'
 import { Sparkles } from 'lucide-react'
 
-export default function RespuestaIA({ texto, loading = false, mensajeCarga }) {
+export default function RespuestaIA({ texto, loading = false, mensajeCarga, compact = false }) {
   if (loading) {
     return (
       <div className={styles.container}>
@@ -44,7 +44,7 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga }) {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
       <div className={styles.header}>
         <Sparkles size={16} />
         <span>Orientación de Huella</span>

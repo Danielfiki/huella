@@ -1,4 +1,7 @@
 -- Ejecutar en el SQL Editor de Supabase
+-- MIGRACIÓN requerida (ejecutar una vez si la tabla episodios ya existe):
+-- alter table public.episodios add column if not exists orientacion_ia text;
+
 
 -- Tabla: perfil del hijo (uno por usuario)
 create table public.hijos (
