@@ -19,18 +19,28 @@ export default function HitosPage() {
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')
+  const [loadingGuardar, setLoadingGuardar] = useState(false)
+  const [errorGuardar, setErrorGuardar] = useState('')
 
-  function handleGuardar() {
+  async function handleGuardar() {
     if (!categoria || !descripcion) return
-    addHito({
-      id: Date.now().toString(),
-      categoria,
-      descripcion,
-      fecha: new Date().toISOString(),
-    })
-    setCategoria('')
-    setDescripcion('')
-    setMostrando(false)
+    setLoadingGuardar(true)
+    setErrorGuardar('')
+    try {
+      await addHito({
+        id: Date.now().toString(),
+        categoria,
+        descripcion,
+        fecha: new Date().toISOString(),
+      })
+      setCategoria('')
+      setDescripcion('')
+      setMostrando(false)
+    } catch (e) {
+      setErrorGuardar('No se pudo guardar el hito: ' + e.message)
+    } finally {
+      setLoadingGuardar(false)
+    }
   }
 
   return (
@@ -69,9 +79,11 @@ export default function HitosPage() {
             fullWidth
             onClick={handleGuardar}
             disabled={!categoria || !descripcion}
+            loading={loadingGuardar}
           >
             Guardar hito
           </Button>
+          {errorGuardar && <p className={styles.error}>{errorGuardar}</p>}
         </Card>
       )}
 

@@ -17,7 +17,6 @@
   color: var(--color-text);
   transition: all 0.15s;
 }
-
 .habilidadBtn:hover { border-color: var(--color-primary-light); }
 .habilidadSelected { border-color: var(--color-primary) !important; background: #fff4ee; }
 
@@ -34,6 +33,8 @@
 }
 .textarea:focus { border-color: var(--color-primary); }
 
+/* ── Lista ────────────────────────────────────────── */
+
 .emptyCard {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 12px; padding: 36px 24px;
@@ -43,8 +44,75 @@
 
 .estrategiaHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .estrategiaNombre { font-size: 15px; font-weight: 600; }
+.estrategiaHeaderRight { display: flex; align-items: center; gap: 8px; }
+.estrategiaFecha { font-size: 13px; color: var(--color-text-muted); }
+
 .semanaTag {
   font-size: 12px; font-weight: 600; padding: 3px 10px;
   background: var(--color-accent-green); border-radius: 999px; color: #2d5a3d;
+  white-space: nowrap;
 }
-.estrategiaFecha { font-size: 13px; color: var(--color-text-muted); }
+.semanaTagCompletada { background: var(--color-accent-blue); color: #1d3d5a; }
+
+.progressBar {
+  margin-top: 10px; height: 4px;
+  background: var(--color-border); border-radius: 999px; overflow: hidden;
+}
+.progressFill {
+  height: 100%; background: var(--color-primary);
+  border-radius: 999px; transition: width 0.3s ease;
+}
+
+/* ── Detalle ──────────────────────────────────────── */
+
+.detalleHeader { display: flex; align-items: center; justify-content: space-between; }
+
+.introLabel {
+  font-size: 11px; font-weight: 700; color: var(--color-primary);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.introTexto { font-size: 14px; color: var(--color-text-muted); line-height: 1.6; }
+
+.semanasLista { display: flex; flex-direction: column; gap: 10px; }
+
+.semanaCard {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+.semanaActual { border-color: var(--color-primary); background: #fff4ee; }
+.semanaCompletada { border-color: var(--color-accent-green); background: #f5fbf7; }
+.semanaProxima { opacity: 0.5; }
+
+.semanaCardHeader {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.semanaNumeroWrap { display: flex; flex-direction: column; gap: 2px; }
+.semanaNumero {
+  font-size: 11px; font-weight: 700; color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.semanaTitulo { font-size: 14px; font-weight: 600; color: var(--color-text); }
+
+.activaBadge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  background: var(--color-primary); border-radius: 999px; color: white;
+}
+
+.semanaContenido { display: flex; flex-direction: column; gap: 10px; }
+.semanaItem { display: flex; flex-direction: column; gap: 3px; }
+.semanaItemLabel {
+  font-size: 11px; font-weight: 700; color: var(--color-primary-dark);
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.semanaItem p { font-size: 14px; color: var(--color-text); line-height: 1.5; }
+
+.proximaTexto { font-size: 13px; color: var(--color-text-light); font-style: italic; }
+
+.completadoBanner {
+  display: flex; flex-direction: row; align-items: center;
+  gap: 12px; padding: 16px;
+}
+.completadoBanner p { font-size: 14px; color: var(--color-text-muted); line-height: 1.4; }

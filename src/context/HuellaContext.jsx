@@ -27,6 +27,12 @@ function reducer(state, action) {
       return { ...state, hitos: [action.payload, ...state.hitos] }
     case 'ADD_ESTRATEGIA':
       return { ...state, estrategias: [action.payload, ...state.estrategias] }
+    case 'REMOVE_EPISODIO':
+      return { ...state, episodios: state.episodios.filter((e) => e.id !== action.payload) }
+    case 'REMOVE_HITO':
+      return { ...state, hitos: state.hitos.filter((h) => h.id !== action.payload) }
+    case 'REMOVE_ESTRATEGIA':
+      return { ...state, estrategias: state.estrategias.filter((e) => e.id !== action.payload) }
     case 'UPDATE_ESTRATEGIA':
       return {
         ...state,
@@ -79,22 +85,27 @@ export function HuellaProvider({ children }) {
 
   async function loadUserData(userId) {
     setDataLoading(true)
-    const [hijosRes, episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
-      supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle(),
-      supabase.from('episodios').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
-      supabase.from('hitos').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
-      supabase.from('estrategias').select('*').eq('user_id', userId).order('fecha_inicio', { ascending: false }),
-    ])
-    dispatch({
-      type: 'LOAD_STATE',
-      payload: {
-        hijo: hijosRes.data ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad } : null,
-        episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
-        hitos: hitosRes.data ?? [],
-        estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
-      },
-    })
-    setDataLoading(false)
+    try {
+      const [hijosRes, episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+        supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('episodios').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
+        supabase.from('hitos').select('*').eq('user_id', userId).order('fecha', { ascending: false }),
+        supabase.from('estrategias').select('*').eq('user_id', userId).order('fecha_inicio', { ascending: false }),
+      ])
+      dispatch({
+        type: 'LOAD_STATE',
+        payload: {
+          hijo: hijosRes.data ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad } : null,
+          episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
+          hitos: hitosRes.data ?? [],
+          estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
+        },
+      })
+    } catch (e) {
+      console.error('Error cargando datos del usuario:', e)
+    } finally {
+      setDataLoading(false)
+    }
   }
 
   async function setHijo(hijo) {
@@ -107,8 +118,7 @@ export function HuellaProvider({ children }) {
   }
 
   async function addEpisodio(episodio) {
-    if (!user) return
-    // Optimistic: muestra inmediatamente con id temporal
+    if (!user || !supabase) return
     dispatch({ type: 'ADD_EPISODIO', payload: episodio })
     const { error } = await supabase.from('episodios').insert({
       user_id: user.id,
@@ -119,16 +129,17 @@ export function HuellaProvider({ children }) {
       estado_padre: episodio.estadoPadre,
       fecha: episodio.fecha,
     })
-    if (!error) {
-      // Reemplazar con datos reales (id uuid) desde Supabase
-      const { data } = await supabase
-        .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
-      if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
+    if (error) {
+      dispatch({ type: 'REMOVE_EPISODIO', payload: episodio.id })
+      throw new Error(error.message)
     }
+    const { data } = await supabase
+      .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+    if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
   }
 
   async function addHito(hito) {
-    if (!user) return
+    if (!user || !supabase) return
     dispatch({ type: 'ADD_HITO', payload: hito })
     const { error } = await supabase.from('hitos').insert({
       user_id: user.id,
@@ -136,15 +147,17 @@ export function HuellaProvider({ children }) {
       descripcion: hito.descripcion,
       fecha: hito.fecha,
     })
-    if (!error) {
-      const { data } = await supabase
-        .from('hitos').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
-      if (data) dispatch({ type: 'SET_HITOS', payload: data })
+    if (error) {
+      dispatch({ type: 'REMOVE_HITO', payload: hito.id })
+      throw new Error(error.message)
     }
+    const { data } = await supabase
+      .from('hitos').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+    if (data) dispatch({ type: 'SET_HITOS', payload: data })
   }
 
   async function addEstrategia(estrategia) {
-    if (!user) return
+    if (!user || !supabase) return
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
     const { error } = await supabase.from('estrategias').insert({
       user_id: user.id,
@@ -154,11 +167,13 @@ export function HuellaProvider({ children }) {
       fecha_inicio: estrategia.fechaInicio,
       semana_actual: estrategia.semanaActual,
     })
-    if (!error) {
-      const { data } = await supabase
-        .from('estrategias').select('*').eq('user_id', user.id).order('fecha_inicio', { ascending: false })
-      if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
+    if (error) {
+      dispatch({ type: 'REMOVE_ESTRATEGIA', payload: estrategia.id })
+      throw new Error(error.message)
     }
+    const { data } = await supabase
+      .from('estrategias').select('*').eq('user_id', user.id).order('fecha_inicio', { ascending: false })
+    if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
   }
 
   async function updateEstrategia(partial) {

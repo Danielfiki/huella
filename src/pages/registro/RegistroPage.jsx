@@ -36,7 +36,9 @@ export default function RegistroPage() {
   const [estadoPadre, setEstadoPadre] = useState('')
   const [respuestaIA, setRespuestaIA] = useState('')
   const [loadingIA, setLoadingIA] = useState(false)
+  const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [guardado, setGuardado] = useState(false)
+  const [errorGuardar, setErrorGuardar] = useState('')
 
   function toggleGatillante(g) {
     setGatillantesSeleccionados((prev) =>
@@ -57,10 +59,12 @@ export default function RegistroPage() {
       fecha: new Date().toISOString(),
     }
 
-    addEpisodio(episodio)
-    setGuardado(true)
+    setLoadingGuardar(true)
+    setErrorGuardar('')
+    try {
+      await addEpisodio(episodio)
+      setGuardado(true)
 
-    if (import.meta.env.VITE_ANTHROPIC_API_KEY) {
       setLoadingIA(true)
       try {
         const texto = await analizarEpisodio({
@@ -70,10 +74,14 @@ export default function RegistroPage() {
         })
         setRespuestaIA(texto)
       } catch (e) {
-        setRespuestaIA('No se pudo conectar con la IA: ' + e.message)
+        setRespuestaIA('No se pudo obtener orientación: ' + e.message)
       } finally {
         setLoadingIA(false)
       }
+    } catch (e) {
+      setErrorGuardar('No se pudo guardar el episodio: ' + e.message)
+    } finally {
+      setLoadingGuardar(false)
     }
   }
 
@@ -159,9 +167,11 @@ export default function RegistroPage() {
             fullWidth
             onClick={handleGuardar}
             disabled={!tipo}
+            loading={loadingGuardar}
           >
             Guardar y obtener orientación
           </Button>
+          {errorGuardar && <p className={styles.error}>{errorGuardar}</p>}
         </>
       ) : (
         <div className={styles.guardadoContainer}>

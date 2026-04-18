@@ -20,10 +20,6 @@ export default function PanelPage() {
   const nombre = hijo?.nombre || 'tu hijo'
 
   async function handleAnalizarPatrones() {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      setAnalisis('Configura tu VITE_ANTHROPIC_API_KEY en el archivo .env para activar el análisis de IA.')
-      return
-    }
     setLoadingAnalisis(true)
     try {
       const texto = await interpretarPatrones({ hijo, episodios })

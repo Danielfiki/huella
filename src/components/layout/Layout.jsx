@@ -1,6 +1,6 @@
 import React from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
-import { Home, Plus, Target, Star, BookOpen, Users, User } from 'lucide-react'
+import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import styles from './Layout.module.css'
 
 const navItems = [
