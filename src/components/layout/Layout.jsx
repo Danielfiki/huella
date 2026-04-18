@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
+import Onboarding, { shouldShowOnboarding } from '../onboarding/Onboarding'
 import styles from './Layout.module.css'
 
 const navItems = [
@@ -12,8 +13,11 @@ const navItems = [
 ]
 
 export default function Layout() {
+  const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding())
+
   return (
     <div className={styles.container}>
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>
