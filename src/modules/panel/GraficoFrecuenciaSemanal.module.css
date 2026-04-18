@@ -1,0 +1,50 @@
+.wrap { display: flex; flex-direction: column; }
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 88px;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+}
+
+.count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  line-height: 1;
+  min-height: 12px;
+}
+
+.track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar {
+  width: 100%;
+  background: var(--color-primary-light);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease;
+}
+
+.barActual { background: var(--color-primary); }
+
+.label {
+  font-size: 9px;
+  color: var(--color-text-light);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.labelActual { color: var(--color-primary); font-weight: 700; }

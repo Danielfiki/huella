@@ -7,7 +7,9 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import ResumenSemanal from '../../modules/panel/ResumenSemanal'
-import GraficoEpisodios from '../../modules/panel/GraficoEpisodios'
+import GraficoFrecuenciaSemanal from '../../modules/panel/GraficoFrecuenciaSemanal'
+import GraficoIntensidad from '../../modules/panel/GraficoIntensidad'
+import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
 import styles from './PanelPage.module.css'
 
 export default function PanelPage() {
@@ -51,11 +53,23 @@ export default function PanelPage() {
 
       <ResumenSemanal episodios={episodios} />
 
-      {episodios.length >= 5 && (
-        <Card className={styles.graficoCard}>
-          <h3 className={styles.cardTitle}>Frecuencia de episodios</h3>
-          <GraficoEpisodios episodios={episodios} />
-        </Card>
+      {episodios.length >= 3 && (
+        <>
+          <Card className={styles.graficoCard}>
+            <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
+            <GraficoFrecuenciaSemanal episodios={episodios} />
+          </Card>
+
+          <Card className={styles.graficoCard}>
+            <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
+            <GraficoIntensidad episodios={episodios} />
+          </Card>
+
+          <Card className={styles.graficoCard}>
+            <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
+            <GraficoGatillantes episodios={episodios} />
+          </Card>
+        </>
       )}
 
       <Card className={styles.patronesCard}>

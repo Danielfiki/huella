@@ -1,0 +1,46 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--color-text);
+  width: 110px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track {
+  flex: 1;
+  height: 10px;
+  background: var(--color-surface-alt);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: var(--color-primary-light);
+  border-radius: 5px;
+  transition: width 0.4s ease;
+  min-width: 6px;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
