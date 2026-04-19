@@ -7,6 +7,36 @@ import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import styles from './EstrategiasPage.module.css'
 
+const CONTEXTOS = {
+  'Calmarse cuando explota':            { texto: 'La autorregulación emocional es la base de todas las demás habilidades sociales y relacionales.', emoji: '🌊' },
+  'Aceptar el "no" sin crisis':         { texto: 'Tolerar la frustración construye resiliencia duradera. Es una de las habilidades más valiosas en la vida adulta.', emoji: '💪' },
+  'Manejar los cambios de rutina':      { texto: 'La flexibilidad ante los cambios reduce el estrés y mejora la adaptación en todo contexto.', emoji: '🔄' },
+  'Relacionarse mejor con otros niños': { texto: 'Las conexiones positivas tempranas son el mayor predictor de bienestar emocional adulto.', emoji: '🤝' },
+  'Manejar el miedo y la angustia':     { texto: 'Aprender a regular el miedo desde pequeño protege la salud mental a largo plazo.', emoji: '🛡️' },
+  'Concentrarse y calmarse':            { texto: 'La calma y el foco son habilidades entrenables con práctica constante, no rasgos fijos.', emoji: '🧘' },
+}
+
+function EstrategiaActivaCard({ estrategia, onAbrir }) {
+  const ctx = CONTEXTOS[estrategia.habilidad] || { texto: 'Cada semana de práctica sostenida genera cambios reales.', emoji: '🎯' }
+  const semana = Math.min(estrategia.semanaActual, 4)
+  return (
+    <button className={styles.activaCard} onClick={onAbrir}>
+      <p className={styles.activaLabel}>Esta semana trabajas</p>
+      <div className={styles.activaTop}>
+        <span className={styles.activaEmoji}>{ctx.emoji}</span>
+        <h3 className={styles.activaTitulo}>{estrategia.habilidad}</h3>
+      </div>
+      <p className={styles.activaContexto}>{ctx.texto}</p>
+      <div className={styles.activaFooter}>
+        <div className={styles.progressBar} style={{ marginTop: 0 }}>
+          <div className={styles.progressFill} style={{ width: `${(semana / 4) * 100}%` }} />
+        </div>
+        <span className={styles.activaSemanaTag}>Semana {semana}/4</span>
+      </div>
+    </button>
+  )
+}
+
 const HABILIDADES = [
   { label: 'Calmarse cuando explota',               tecnico: 'Autorregulación emocional',       emoji: '🌊' },
   { label: 'Aceptar el "no" sin crisis',            tecnico: 'Resiliencia ante la frustración', emoji: '💪' },
@@ -333,6 +363,8 @@ export default function EstrategiasPage() {
   }
 
   // ── VISTA: LISTA ──────────────────────────────────────────────────────────
+  const estrategiaActiva = state.estrategias.find((e) => e.semanaActual < 4) ?? null
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -341,6 +373,13 @@ export default function EstrategiasPage() {
           <Plus size={16} /> Nueva
         </Button>
       </div>
+
+      {estrategiaActiva && (
+        <EstrategiaActivaCard
+          estrategia={estrategiaActiva}
+          onAbrir={() => abrirDetalle(estrategiaActiva)}
+        />
+      )}
 
       {state.estrategias.length === 0 ? (
         <Card className={styles.emptyCard}>
