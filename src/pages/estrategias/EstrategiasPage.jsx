@@ -63,6 +63,7 @@ export default function EstrategiasPage() {
   const [loadingAvanzar, setLoadingAvanzar] = useState(false)
   const [checkinVisible, setCheckinVisible] = useState(false)
   const [checkinTexto, setCheckinTexto] = useState('')
+  const [loadingRegen, setLoadingRegen] = useState(false)
 
   // Derive from context so it auto-updates after updateEstrategia
   const estrategiaSeleccionada = selectedId
@@ -94,6 +95,25 @@ export default function EstrategiasPage() {
       setPlan('Error al generar el plan: ' + e.message)
     } finally {
       setLoadingPlan(false)
+    }
+  }
+
+  async function handleRegenerarPlan() {
+    if (!estrategiaSeleccionada) return
+    setLoadingRegen(true)
+    try {
+      const habilidadObj = HABILIDADES.find((h) => h.label === estrategiaSeleccionada.habilidad)
+      const habilidadIA = habilidadObj?.tecnico ?? estrategiaSeleccionada.habilidad
+      const texto = await generarEstrategia({
+        hijo: state.hijo,
+        habilidad: habilidadIA,
+        descripcion: estrategiaSeleccionada.descripcion,
+      })
+      await updateEstrategia({ id: estrategiaSeleccionada.id, plan: texto })
+    } catch (e) {
+      // silencioso — el usuario puede reintentar
+    } finally {
+      setLoadingRegen(false)
     }
   }
 
@@ -167,7 +187,10 @@ export default function EstrategiasPage() {
 
   // ── VISTA: DETALLE ────────────────────────────────────────────────────────
   if (vista === 'detalle' && estrategiaSeleccionada) {
-    const { intro, semanas } = parsePlan(estrategiaSeleccionada.plan)
+    const planValido = estrategiaSeleccionada.plan &&
+      !estrategiaSeleccionada.plan.includes('VITE_ANTHROPIC') &&
+      estrategiaSeleccionada.plan.trim().length > 50
+    const { intro, semanas } = planValido ? parsePlan(estrategiaSeleccionada.plan) : { intro: '', semanas: [] }
     const semanaActual = estrategiaSeleccionada.semanaActual
 
     return (
@@ -189,7 +212,22 @@ export default function EstrategiasPage() {
         ) : null}
 
         <div className={styles.semanasLista}>
-          {semanas.length > 0
+          {!planValido ? (
+            <Card className={styles.regenCard}>
+              <p className={styles.regenTexto}>
+                Este plan fue generado con una versión anterior de Huella y ya no es compatible.
+                Puedes regenerarlo ahora — tarda unos segundos.
+              </p>
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleRegenerarPlan}
+                loading={loadingRegen}
+              >
+                Regenerar plan
+              </Button>
+            </Card>
+          ) : semanas.length > 0
             ? semanas.map((semana) => {
                 const esActual = semana.numero === semanaActual
                 const esCompletada = semana.numero < semanaActual

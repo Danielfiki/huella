@@ -122,6 +122,10 @@
 }
 .completadoBanner p { font-size: 14px; color: var(--color-text-muted); line-height: 1.4; margin: 0; }
 
+/* ── Plan corrupto / regenerar ── */
+.regenCard { display: flex; flex-direction: column; gap: 14px; }
+.regenTexto { font-size: 14px; color: var(--color-text-muted); line-height: 1.55; margin: 0; }
+
 /* ── Check-in ── */
 .checkinCard { display: flex; flex-direction: column; gap: 12px; }
 .checkinPregunta { font-size: 14px; font-weight: 600; color: var(--color-text); margin: 0; }
