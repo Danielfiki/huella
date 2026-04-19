@@ -29,6 +29,50 @@
   line-height: 1.5;
 }
 
+/* ── Avatar hijo ── */
+.avatarWrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  margin: 12px auto 4px;
+  cursor: pointer;
+}
+.avatarImg {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-primary-light);
+  display: block;
+}
+.avatarPlaceholder {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--color-primary-bg);
+  border: 2px dashed var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatarCamara {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatarLoading {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* ── Formulario hijo ── */
 .form {
   display: flex;

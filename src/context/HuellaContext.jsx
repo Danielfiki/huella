@@ -103,7 +103,7 @@ export function HuellaProvider({ children }) {
       dispatch({
         type: 'LOAD_STATE',
         payload: {
-          hijo: hijosRes.data ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad } : null,
+          hijo: hijosRes.data ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad, avatarUrl: hijosRes.data.avatar_url ?? null } : null,
           episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
           hitos: hitosRes.data ?? [],
           estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
@@ -121,7 +121,7 @@ export function HuellaProvider({ children }) {
     const anterior = state.hijo
     dispatch({ type: 'SET_HIJO', payload: hijo })
     const { error } = await supabase.from('hijos').upsert(
-      { user_id: user.id, nombre: hijo.nombre, edad: hijo.edad },
+      { user_id: user.id, nombre: hijo.nombre, edad: hijo.edad, avatar_url: hijo.avatarUrl ?? null },
       { onConflict: 'user_id' }
     )
     if (error) {

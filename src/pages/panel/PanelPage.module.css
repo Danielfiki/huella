@@ -1,7 +1,16 @@
 .page { display: flex; flex-direction: column; gap: 16px; }
 
-.greeting h1 { font-size: 26px; font-weight: 700; color: var(--color-text); }
-.greeting p { font-size: 15px; color: var(--color-text-muted); margin-top: 2px; }
+.greeting { display: flex; align-items: center; gap: 14px; }
+.greetingText h1 { font-size: 26px; font-weight: 700; color: var(--color-text); }
+.greetingText p { font-size: 15px; color: var(--color-text-muted); margin-top: 2px; }
+.greetingAvatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-primary-light);
+  flex-shrink: 0;
+}
 
 .registroBtn { margin-top: 4px; }
 

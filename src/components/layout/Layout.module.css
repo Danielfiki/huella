@@ -48,6 +48,13 @@
   color: var(--color-primary-dark);
 }
 
+.profileAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .main {
   flex: 1;
   overflow-y: auto;

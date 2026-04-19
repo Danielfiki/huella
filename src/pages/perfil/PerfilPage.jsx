@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
@@ -10,10 +10,32 @@ import styles from './PerfilPage.module.css'
 
 const getPadreKey = (uid) => `huella_padre_v1_${uid || 'anon'}`
 
+async function compressImage(file, maxSize = 400) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+        const w = Math.round(img.width * scale)
+        const h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.82)
+      }
+      img.src = ev.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
   const { state, setHijo } = useHuella()
   const navigate = useNavigate()
+  const avatarInputRef = useRef(null)
 
   const [nombre, setNombre] = useState('')
   const [edad, setEdad] = useState('')
@@ -21,6 +43,7 @@ export default function PerfilPage() {
   const [errorHijo, setErrorHijo] = useState('')
   const [guardadoOk, setGuardadoOk] = useState(false)
   const [loadingSignOut, setLoadingSignOut] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   const [padreNombre, setPadreNombre] = useState('')
   const [guardadoPadreOk, setGuardadoPadreOk] = useState(false)
@@ -57,13 +80,40 @@ export default function PerfilPage() {
     setErrorHijo('')
     setGuardadoOk(false)
     try {
-      await setHijo({ nombre: nombre.trim(), edad: edad ? Number(edad) : null })
+      await setHijo({ nombre: nombre.trim(), edad: edad ? Number(edad) : null, avatarUrl: state.hijo?.avatarUrl ?? null })
       setGuardadoOk(true)
       setTimeout(() => setGuardadoOk(false), 3000)
     } catch {
       setErrorHijo('No se pudo guardar. Intenta de nuevo.')
     } finally {
       setLoadingHijo(false)
+    }
+  }
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+    try {
+      const blob = await compressImage(file)
+      const path = `${user.id}/hijo.jpg`
+      const { error } = await supabase.storage.from('avatares').upload(path, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      })
+      if (error) throw new Error(error.message)
+      const { data } = supabase.storage.from('avatares').getPublicUrl(path)
+      const url = `${data.publicUrl}?t=${Date.now()}`
+      await setHijo({
+        nombre: nombre.trim() || state.hijo?.nombre || '',
+        edad: edad ? Number(edad) : state.hijo?.edad ?? null,
+        avatarUrl: url,
+      })
+    } catch (err) {
+      console.error('Error subiendo avatar:', err)
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
     }
   }
 
@@ -145,6 +195,29 @@ export default function PerfilPage() {
             Con el nombre y la edad, Huella personaliza cada orientación.
           </p>
         )}
+
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleAvatarChange}
+        />
+        <div
+          className={`${styles.avatarWrap} ${uploadingAvatar ? styles.avatarLoading : ''}`}
+          onClick={() => !uploadingAvatar && avatarInputRef.current?.click()}
+        >
+          {state.hijo?.avatarUrl ? (
+            <img src={state.hijo.avatarUrl} alt="Avatar" className={styles.avatarImg} />
+          ) : (
+            <div className={styles.avatarPlaceholder}>
+              <Baby size={34} color="var(--color-primary-light)" />
+            </div>
+          )}
+          <div className={styles.avatarCamara}>
+            <Camera size={13} color="white" />
+          </div>
+        </div>
 
         <form onSubmit={handleGuardarHijo} className={styles.form}>
           <div className={styles.field}>

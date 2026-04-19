@@ -81,8 +81,13 @@ export default function PanelPage() {
   return (
     <div className={styles.page}>
       <div className={styles.greeting}>
-        <h1>{titulo}</h1>
-        <p>{subtitulo}</p>
+        {hijo?.avatarUrl && (
+          <img src={hijo.avatarUrl} alt="Avatar" className={styles.greetingAvatar} />
+        )}
+        <div className={styles.greetingText}>
+          <h1>{titulo}</h1>
+          <p>{subtitulo}</p>
+        </div>
       </div>
 
       <Button
