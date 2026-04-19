@@ -72,8 +72,9 @@
 
 .error {
   font-size: 13px;
-  color: var(--color-danger);
-  background: #fef2f2;
+  color: var(--color-danger-text, var(--color-danger));
+  background: var(--color-danger-bg, #fef2f2);
+  border: 1px solid var(--color-danger-border, #fecaca);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
 }
@@ -132,4 +133,57 @@
 
 .link:hover {
   color: var(--color-primary-dark);
+}
+
+/* ── Google OAuth ── */
+
+.btnGoogle {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 4px;
+}
+.btnGoogle:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: var(--color-primary);
+}
+.btnGoogle:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.spinnerDark {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--color-border);
+  border-top-color: var(--color-text-muted);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
 }
