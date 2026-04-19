@@ -27,7 +27,7 @@ function SkeletonLoader() {
 
 export default function Layout() {
   const { user } = useAuth()
-  const { dataLoading } = useHuella()
+  const { state, dataLoading } = useHuella()
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding(user?.id))
 
   return (
