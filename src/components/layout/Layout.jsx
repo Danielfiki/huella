@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
-import Onboarding, { shouldShowOnboarding } from '../onboarding/Onboarding'
-import { useAuth } from '../../context/AuthContext'
+import Onboarding from '../onboarding/Onboarding'
 import { useHuella } from '../../context/HuellaContext'
 import styles from './Layout.module.css'
 
@@ -26,14 +25,13 @@ function SkeletonLoader() {
 }
 
 export default function Layout() {
-  const { user } = useAuth()
   const { state, dataLoading } = useHuella()
-  const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding(user?.id))
+  const [showOnboarding, setShowOnboarding] = useState(true)
 
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} userId={user?.id} />}
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>
