@@ -1,9 +1,25 @@
+import { supabase } from '../lib/supabase.js'
+
 async function llamarAPI(prompt, max_tokens) {
+  const headers = { 'content-type': 'application/json' }
+
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+  }
+
   const response = await fetch('/api/anthropic', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers,
     body: JSON.stringify({ prompt, max_tokens }),
   })
+
+  if (response.status === 429) {
+    const err = await response.json()
+    throw new Error(err.error || 'Límite diario de consultas alcanzado. Vuelve mañana.')
+  }
 
   if (!response.ok) {
     const err = await response.json()
@@ -78,6 +94,18 @@ Analiza estos patrones y responde con:
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
 
   return llamarAPI(prompt, 1000)
+}
+
+export async function celebrarHito({ hijo, hito }) {
+  const prompt = `Niño/a: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años.
+
+El padre/madre acaba de registrar este avance positivo:
+- Tipo: ${hito.categoria}
+- Descripción: ${hito.descripcion || '(sin descripción)'}
+
+Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado de este momento para el desarrollo del niño y explica brevemente por qué este tipo de avance importa. Habla en segunda persona al padre/madre. No uses listas ni títulos. No incluyas disclaimer ni marco aplicado.`
+
+  return llamarAPI(prompt, 180)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {

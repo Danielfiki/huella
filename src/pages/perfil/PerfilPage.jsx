@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
+import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import styles from './PerfilPage.module.css'
+
+const getPadreKey = (uid) => `huella_padre_v1_${uid || 'anon'}`
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
@@ -19,13 +22,33 @@ export default function PerfilPage() {
   const [guardadoOk, setGuardadoOk] = useState(false)
   const [loadingSignOut, setLoadingSignOut] = useState(false)
 
-  // Pre-fill cuando ya hay datos del hijo
+  const [padreNombre, setPadreNombre] = useState('')
+  const [guardadoPadreOk, setGuardadoPadreOk] = useState(false)
+
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
+  const [eliminandoCuenta, setEliminandoCuenta] = useState(false)
+  const [errorEliminar, setErrorEliminar] = useState('')
+
   useEffect(() => {
     if (state.hijo) {
       setNombre(state.hijo.nombre || '')
       setEdad(state.hijo.edad != null ? String(state.hijo.edad) : '')
     }
   }, [state.hijo])
+
+  useEffect(() => {
+    if (user?.id) {
+      setPadreNombre(localStorage.getItem(getPadreKey(user.id)) || '')
+    }
+  }, [user?.id])
+
+  function handleGuardarPadre(e) {
+    e.preventDefault()
+    if (!user?.id) return
+    localStorage.setItem(getPadreKey(user.id), padreNombre.trim())
+    setGuardadoPadreOk(true)
+    setTimeout(() => setGuardadoPadreOk(false), 2500)
+  }
 
   async function handleGuardarHijo(e) {
     e.preventDefault()
@@ -44,6 +67,21 @@ export default function PerfilPage() {
     }
   }
 
+  async function handleEliminarCuenta() {
+    setEliminandoCuenta(true)
+    setErrorEliminar('')
+    try {
+      const { error } = await supabase.rpc('delete_user')
+      if (error) throw new Error(error.message)
+      await signOut()
+      navigate('/login')
+    } catch (e) {
+      setErrorEliminar('No se pudo eliminar la cuenta. Intenta de nuevo o escribe a danielundurraga.r@gmail.com')
+      setEliminandoCuenta(false)
+      setConfirmandoEliminar(false)
+    }
+  }
+
   async function handleSignOut() {
     setLoadingSignOut(true)
     try {
@@ -57,6 +95,42 @@ export default function PerfilPage() {
   return (
     <div className={styles.page}>
       <h2 className={styles.titulo}>Perfil</h2>
+
+      {/* ── Padre/madre ──────────────────────────────── */}
+      <Card>
+        <div className={styles.sectionHeader}>
+          <Heart size={18} color="var(--color-primary)" />
+          <h3 className={styles.sectionTitle}>Tú</h3>
+        </div>
+        <p className={styles.sectionDesc}>
+          Así te llamará Huella en el saludo del panel.
+        </p>
+        <form onSubmit={handleGuardarPadre} className={styles.form}>
+          <div className={styles.field}>
+            <label className={styles.label}>¿Cómo te llamamos?</label>
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Tu nombre"
+              value={padreNombre}
+              onChange={(e) => setPadreNombre(e.target.value)}
+              maxLength={40}
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="secondary"
+            fullWidth
+            disabled={!padreNombre.trim()}
+          >
+            {guardadoPadreOk ? (
+              <><CheckCircle size={15} /> Guardado</>
+            ) : (
+              'Guardar'
+            )}
+          </Button>
+        </form>
+      </Card>
 
       {/* ── Hijo ─────────────────────────────────────── */}
       <Card>
@@ -147,15 +221,44 @@ export default function PerfilPage() {
         </div>
       </Card>
 
-      <Button
-        variant="secondary"
-        fullWidth
-        loading={loadingSignOut}
-        onClick={handleSignOut}
-      >
-        <LogOut size={16} />
-        Cerrar sesión
-      </Button>
+      <button className={styles.signOutLink} onClick={handleSignOut} disabled={loadingSignOut}>
+        {loadingSignOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+      </button>
+
+      {!confirmandoEliminar ? (
+        <button className={styles.eliminarLink} onClick={() => setConfirmandoEliminar(true)}>
+          Eliminar cuenta
+        </button>
+      ) : (
+        <Card className={styles.eliminarCard}>
+          <p className={styles.eliminarAviso}>
+            ⚠️ Esto eliminará tu cuenta y todos tus datos permanentemente. Esta acción no se puede deshacer.
+          </p>
+          {errorEliminar && <p className={styles.error}>{errorEliminar}</p>}
+          <div className={styles.eliminarBtns}>
+            <button
+              className={styles.eliminarCancelarBtn}
+              onClick={() => { setConfirmandoEliminar(false); setErrorEliminar('') }}
+              disabled={eliminandoCuenta}
+            >
+              Cancelar
+            </button>
+            <button
+              className={styles.eliminarConfirmarBtn}
+              onClick={handleEliminarCuenta}
+              disabled={eliminandoCuenta}
+            >
+              {eliminandoCuenta ? 'Eliminando...' : 'Sí, eliminar mi cuenta'}
+            </button>
+          </div>
+        </Card>
+      )}
+
+      <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+        <Link to="/terminos" style={{ color: 'var(--color-text-muted)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+          Términos y privacidad
+        </Link>
+      </p>
     </div>
   )
 }

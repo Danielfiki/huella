@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Star, Plus } from 'lucide-react'
+import { Star, Plus, Sparkles } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import { celebrarHito } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import styles from './HitosPage.module.css'
@@ -21,21 +22,33 @@ export default function HitosPage() {
   const [descripcion, setDescripcion] = useState('')
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+  const [celebracion, setCelebracion] = useState('')
+  const [loadingCelebracion, setLoadingCelebracion] = useState(false)
 
   async function handleGuardar() {
-    if (!categoria || !descripcion) return
+    if (!categoria) return
     setLoadingGuardar(true)
     setErrorGuardar('')
+    const hito = {
+      id: Date.now().toString(),
+      categoria,
+      descripcion,
+      fecha: new Date().toISOString(),
+    }
     try {
-      await addHito({
-        id: Date.now().toString(),
-        categoria,
-        descripcion,
-        fecha: new Date().toISOString(),
-      })
+      await addHito(hito)
       setCategoria('')
       setDescripcion('')
       setMostrando(false)
+      setLoadingCelebracion(true)
+      try {
+        const texto = await celebrarHito({ hijo: state.hijo, hito })
+        setCelebracion(texto)
+      } catch {
+        // silencioso — la celebración es bonus, no crítica
+      } finally {
+        setLoadingCelebracion(false)
+      }
     } catch (e) {
       setErrorGuardar('No se pudo guardar el hito: ' + e.message)
     } finally {
@@ -78,12 +91,29 @@ export default function HitosPage() {
             variant="primary"
             fullWidth
             onClick={handleGuardar}
-            disabled={!categoria || !descripcion}
+            disabled={!categoria}
             loading={loadingGuardar}
           >
             Guardar hito
           </Button>
           {errorGuardar && <p className={styles.error}>{errorGuardar}</p>}
+        </Card>
+      )}
+
+      {(loadingCelebracion || celebracion) && (
+        <Card className={styles.celebracionCard}>
+          <div className={styles.celebracionHeader}>
+            <Sparkles size={15} color="var(--color-primary-dark)" />
+            <span>Huella</span>
+          </div>
+          {loadingCelebracion ? (
+            <div className={styles.celebracionSkeleton}>
+              <div className={styles.skeletonLine} />
+              <div className={styles.skeletonLine} style={{ width: '75%' }} />
+            </div>
+          ) : (
+            <p className={styles.celebracionTexto}>{celebracion}</p>
+          )}
         </Card>
       )}
 

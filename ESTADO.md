@@ -23,185 +23,196 @@ $env:PATH += ";C:\Users\dundu\.local\bin"; cd C:\Users\dundu\OneDrive\Desktop\fl
 
 ---
 
-## BASE TEÓRICA COMPLETA (debe estar íntegra en el system prompt)
-
-El system prompt actual solo tiene 6 autores. Esto es INSUFICIENTE. La base real del producto es:
-
-### Neurociencia del desarrollo
-- **Daniel Siegel** — ventana de tolerancia, cerebro arriba/abajo, mano como modelo del cerebro, integración neural, neurobiología interpersonal
-- **Bruce Perry** — secuencia neurosequencial del desarrollo, regulación antes de relación antes de razón, impacto del trauma en el cerebro en desarrollo
-- **Bessel van der Kolk** — el cuerpo lleva el marcador, trauma complejo, regulación somática
-- **Allan Schore** — regulación afectiva, hemisferio derecho, apego y neurobiología
-- **Stephen Porges** — teoría polivagal, estado del sistema nervioso autónomo, seguridad como base de aprendizaje y conexión
-
-### Teoría del apego
-- **John Bowlby** — teoría del apego, base segura, modelos operativos internos
-- **Mary Ainsworth** — patrones de apego (seguro, ansioso, evitativo, desorganizado), situación extraña
-- **Dan Hughes** — PACE (Playfulness, Acceptance, Curiosity, Empathy), apego y trauma
-- **Gordon Neufeld** — madurez, apego como base del desarrollo, por qué los niños necesitan a los adultos
-- **Sue Johnson** — terapia focalizada en emociones, ciclos de apego
-
-### Regulación emocional y conductual
-- **Ross Greene** — modelo de habilidades no adquiridas, Plan B colaborativo, las explosiones ocurren cuando las demandas superan las habilidades
-- **Stuart Shanker** — autorregulación, 5 dominios de estrés (biológico, emocional, cognitivo, social, prosocial), reencuadre conductual
-- **Mona Delahooke** — perfil neurológico individual, conducta como comunicación, más allá de los puntos de recompensa
-- **Stanley Greenspan** — DIR/Floortime, desarrollo emocional funcional, niveles de procesamiento
-
-### Crianza respetuosa y disciplina positiva
-- **Janet Lansbury** — crianza respetuosa desde el nacimiento, límites con empatía, el niño como persona completa
-- **Alfie Kohn** — sin castigos ni recompensas, educación incondicional, motivación intrínseca
-- **Laura Markham** — crianza pacífica, conexión antes de corrección, coaching emocional
-- **Adele Faber** — comunicación con los hijos, cómo hablar para que los niños escuchen
-- **Lawrence Cohen** — juego terapéutico, parenthood, reconexión a través del juego
-
-### Desarrollo cognitivo y del aprendizaje
-- **Lev Vygotsky** — zona de desarrollo próximo, aprendizaje social, andamiaje
-- **Jean Piaget** — etapas del desarrollo cognitivo, pensamiento preoperacional, egocentrismo
-- **Urie Bronfenbrenner** — modelo ecológico del desarrollo, sistemas que rodean al niño
-- **Howard Gardner** — inteligencias múltiples, diversidad del aprendizaje
-- **Alison Gopnik** — el niño como científico, aprendizaje por exploración, teoría de la mente
-
-### Trauma, resiliencia y regulación somática
-- **Peter Levine** — trauma como energía atrapada, Somatic Experiencing, ciclo de activación-descarga
-- **Gabor Maté** — trauma no es lo que te pasa sino lo que pasa dentro, conexión mente-cuerpo, raíces del TDAH y otras condiciones
-- **Tina Payne Bryson** — cerebro del niño en 12 estrategias (coescrita con Siegel), el cerebro del sí, conexión antes de dirección
-
----
-
 ## Módulos implementados ✅
 
 ### 1. Registro de episodios
-Formulario completo con:
-- Tipo de episodio: rabieta, llanto, agresividad, miedo, dificultad para dormir, rechazo social, desconexión, otro
-- Intensidad del 1 al 5 con slider
-- Campo de contexto libre
-- Selección de gatillantes: hambre, cansancio, cambio de rutina, conflicto con pares, pantallas, transiciones, enfermedad, estrés familiar
-- Campo de estado emocional del padre
-- Botón "Guardar y obtener orientación"
+- Tipo, intensidad (1-5), contexto libre, gatillantes, estado emocional del padre
+- Llama a la IA al guardar y muestra orientación de inmediato
+- Guarda orientación de IA en Supabase (`orientacion_ia`)
 
 ### 2. Orientación de IA
-- Responde inmediatamente tras guardar el episodio *(bug crítico corregido 2026-04-18)*
-- Estructura: Qué está pasando / Qué hacer ahora / Qué evitar / (cuando corresponde) Si esto sigue
-- System prompt con 6 autores base (INSUFICIENTE — ampliar es tarea prioritaria #0)
-- Al final muestra en itálica: "Marco aplicado: [Autor] — [concepto]"
-- Disclaimer: "Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico."
+- System prompt completo con 35+ referentes (Siegel, Perry, van der Kolk, Schore, Porges, Bowlby, Ainsworth, Hughes, Neufeld, Johnson, Greene, Shanker, Delahooke, Greenspan, Lansbury, Kohn, Markham, Faber, Cohen, Vygotsky, Piaget, Bronfenbrenner, Gardner, Gopnik, Levine, Maté, Bryson)
+- Formato: Qué está pasando / Qué hacer ahora / Qué evitar
+- Termina con disclaimer clínico + Marco aplicado
+- Archivo: `api/anthropic.js` (Vercel serverless) + `src/services/anthropic.js` (cliente)
 - Modelo: claude-sonnet-4-5
-- Archivo: src/services/anthropic.js
-- En dev local, `vite.config.js` sirve `/api/anthropic` vía middleware (requiere `ANTHROPIC_API_KEY` en `.env`)
 
-### 3. Panel de inicio
-- Saludo "Hola / Esto es lo que está pasando con tu hijo"
-- Botón destacado "Registrar episodio"
-- Card "Últimos 7 días": episodios, intensidad promedio, tipo más frecuente
-- Card "Análisis de patrones": aparece cuando hay 3+ episodios
-- Card "Empieza registrando"
+### 3. Panel de inicio con gráficos reales
+- Saludo + botón de registro destacado
+- ResumenSemanal: episodios últimos 7 días, intensidad promedio, tipo más frecuente
+- 3 gráficos (visibles desde 3+ episodios): frecuencia semanal, intensidad en el tiempo, gatillantes más frecuentes — todos con datos reales de Supabase
+- Análisis de patrones con IA (botón on-demand)
 
-### 4. Estrategias proactivas
-- El padre elige habilidad: autorregulación emocional, resiliencia ante la frustración, tolerancia a los cambios, habilidades sociales, manejo del miedo, concentración y calma
-- Campo de contexto adicional opcional
-- La IA genera un plan (funcionalidad parcial — ver módulos parciales)
+### 4. Historial
+- Episodios agrupados por día (Hoy / Ayer / fecha)
+- Card: tipo con emoji, hora, badge de intensidad, contexto, gatillantes
+- Botón expandible "Ver orientación de Huella" (si existe)
+- **Requiere migración SQL**: `alter table public.episodios add column if not exists orientacion_ia text;`
 
-### 5. Hitos positivos
-- Categorías: se calmó solo, mostró empatía, pidió disculpas, toleró un "no", avance social, otro avance
-- Campo de descripción libre
-- Botón "Guardar hito"
+### 5. Estrategias
+- El padre elige habilidad + contexto opcional
+- Plan de 4 semanas generado por IA
+- Vista detalle semana a semana con estrategia e indicador
+- Semana activa resaltada, completadas con checkmark, próximas bloqueadas
+- "Avanzar a semana N" persiste en Supabase
+- Banner de plan completado al terminar semana 4
 
-### 6. Navegación
-- Barra inferior fija: Inicio, Registrar, Estrategias, Hitos, Historial
-- Diseño tipo app móvil, centrado, ancho limitado, colores pastel cálidos
+### 6. Hitos positivos
+- Categorías predefinidas + descripción libre
+- Guardado en Supabase
 
-### 7. Sistema de autenticación
-- Login con email y contraseña
-- Registro con email y contraseña
-- Confirmación de email via Supabase (el usuario debe confirmar antes de ingresar)
-- Rutas protegidas — redirige a /login si no hay sesión
+### 7. Perfil del hijo
+- Formulario nombre + edad, guardado en tabla `hijos` de Supabase con upsert
+- Estadísticas de actividad (episodios, hitos, estrategias)
+- Email de cuenta y botón de cerrar sesión
+
+### 8. Onboarding de bienvenida *(corregido 2026-04-19)*
+- 4 pantallas con gradientes, partículas flotantes y animaciones
+- Swipe táctil + botones + puntos de progreso
+- Botón "Saltar" en pantallas 1-3
+- CTA "Empezar ahora →" en la última pantalla
+- **Bug corregido hoy**: la clave de localStorage era global (`huella_onboarding_v1`), ahora es por usuario (`huella_onboarding_v1_{userId}`), lo que asegura que cada usuario nuevo vea el onboarding independientemente del dispositivo
+
+### 9. Autenticación
+- Login y signup con email + contraseña
+- Rutas protegidas (ProtectedRoute)
 - Cerrar sesión desde PerfilPage
 
-### 8. Base de datos Supabase
-Tablas creadas con Row Level Security activo:
+### 10. Base de datos Supabase
+Tablas con Row Level Security activo:
 - `hijos`: id, user_id, nombre, edad, created_at
-- `episodios`: id, user_id, tipo, intensidad, contexto, gatillantes[], estado_padre, fecha
+- `episodios`: id, user_id, tipo, intensidad, contexto, gatillantes[], estado_padre, fecha, orientacion_ia
 - `hitos`: id, user_id, categoria, descripcion, fecha
 - `estrategias`: id, user_id, habilidad, descripcion, plan, fecha_inicio, semana_actual
 
-### 9. Vista detalle de estrategias *(completado 2026-04-18)*
-- Plan parseado semana a semana con estrategia e indicador por semana
-- Semana activa resaltada, semanas completadas con checkmark, próximas bloqueadas
-- Botón "Avanzar a semana N" persiste en Supabase
-- Banner de plan completado al terminar semana 4
-- Lista con barra de progreso y badge de estado
-
----
-
-## Módulos parciales ⚠️
-
-### ~~Guardado en Supabase~~ ✅ Verificado y corregido 2026-04-18
-- Sin uso de localStorage para datos de la app (verificado)
-- Los datos SÍ van a Supabase via HuellaContext
-- Corregido: fallo silencioso en inserts — ahora hacen rollback en el reducer y lanzan error que las páginas capturan y muestran al usuario
-- Corregido: loadUserData tenía try-catch faltante — ya no deja el spinner colgado si Supabase falla
-
-### Panel visual con gráficos
-La página existe y muestra números pero NO tiene gráficos reales. Falta implementar visualizaciones con frecuencia por semana, intensidad en el tiempo, gatillantes más frecuentes. Nota: recharts fue eliminado como dependencia el 2026-04-18 — reinstalar o usar implementación custom.
-
-### ~~Historial~~ ✅ Completado 2026-04-18
-- Episodios agrupados por día (Hoy / Ayer / fecha)
-- Cada card: tipo con emoji, hora, badge de intensidad, contexto, gatillantes
-- Botón expandible "Ver orientación de Huella" (si existe)
-- La orientación de IA ahora se guarda en Supabase (columna `orientacion_ia`)
-- **Requiere migración SQL**: `alter table public.episodios add column if not exists orientacion_ia text;`
-
-### Estrategias con seguimiento
-El formulario existe y la vista detalle semana a semana está implementada. Falta: seguimiento semanal con indicadores observables, evaluación de avance a fecha definida.
-
-### Perfil del hijo
-PerfilPage muestra email y botón de cerrar sesión. Falta: nombre del hijo, edad, fecha de nacimiento, configuración guardada en tabla `hijos` de Supabase.
+### 11. PDF exportable
+- Botón "Exportar informe PDF" en el historial (lazy-loaded)
+- Incluye historial clínico completo: episodios, estrategias, hitos
 
 ---
 
 ## Módulos sin empezar ❌
 
 ### Modo pareja
-Dos cuentas vinculadas al mismo hijo. Ambos padres registran, ambos ven el historial, la IA sintetiza perspectivas. Requiere tabla de vínculos entre usuarios.
-
-### Historial clínico exportable (PDF)
-PDF con historial completo: episodios, patrones, gatillantes, estrategias aplicadas, evolución. Para llevar al pediatra, psicólogo o colegio. Costo: $5 USD por generación (modelo de negocio).
+Placeholder "Próximamente". Requiere tabla de vínculos entre usuarios, lógica de invitación y vista compartida.
 
 ### Notificaciones inteligentes
-Detectar patrones nuevos, recordar registrar si llevan tiempo sin hacerlo, avisar fechas de evaluación de estrategias.
+Recordar registrar, alertar patrones nuevos, avisar fechas de evaluación de estrategias.
 
 ### Voz a texto
-Botón de micrófono que transcribe y estructura el registro automáticamente. Reduce la fricción a cero en el momento del episodio.
-
-### Análisis de patrones real
-Actualmente es un placeholder. Debe leer datos reales de Supabase, detectar patrones (horarios de concentración de episodios, gatillantes recurrentes, evolución de intensidad) y la IA debe interpretarlos periódicamente.
+Botón de micrófono en el formulario de registro. Reduce fricción a cero en el momento del episodio.
 
 ### Directorio de especialistas
-Suscripción mensual para profesionales (psicólogos, pediatras). Fase 2 del modelo de negocio.
+Fase 2 del modelo de negocio. Suscripción mensual para profesionales.
 
 ---
 
-## Orden de trabajo recomendado para próxima sesión
+## Lo que falta para que Huella sea 100% operativa para usuarios reales
 
-**Prioridad 0 — System prompt completo**
-Reescribir src/services/anthropic.js con los 35+ referentes completos. El producto actual tiene solo 6 autores, lo cual es insuficiente para la propuesta de valor.
+### 🔴 Crítico — bloquea el lanzamiento
 
-**~~Prioridad 1 — Verificar guardado en Supabase~~** ✅ Listo 2026-04-18
+**~~1. Rate limiting en la API de Anthropic~~** ✅ Listo 2026-04-19
+- Límite: 20 llamadas/día por usuario
+- `api/anthropic.js` verifica el JWT del usuario contra tabla `api_llamadas` en Supabase
+- `src/services/anthropic.js` envía el token de sesión en el header `Authorization`
+- Falla abierta si la tabla no existe (no rompe la app si no se ha corrido el SQL)
+- ⚠️ **Requiere migración SQL** (ver sección al final)
 
-**~~Prioridad 2 — Historial funcional~~** ✅ Listo 2026-04-18
+**~~2. UX de confirmación de email post-registro~~** ✅ Listo 2026-04-19
+- `SignupPage.jsx` muestra pantalla "📬 Revisa tu correo" con el email del usuario
+- Botón "Ir a iniciar sesión" + opción "intenta de nuevo"
+- Ya no redirige a `/panel` (lo que causaba pantalla en blanco si el email no estaba confirmado)
 
-**Prioridad 3 — Perfil del hijo**
-Formulario para ingresar nombre y edad del hijo, guardado en tabla `hijos`.
+**~~3. Error boundary global~~** ✅ Listo 2026-04-19
+- `main.jsx`: ErrorBoundary global con botón "Recargar app", link "Volver al inicio", y stack trace visible solo en desarrollo
+- `App.jsx`: PageErrorBoundary por ruta — si una página crashea, solo esa sección falla; el resto de la app sigue funcionando
+- Botón "Reintentar" en PageErrorBoundary para intentar rerenderizar sin recargar
 
-**Prioridad 4 — Panel visual con gráficos reales**
-Implementar visualizaciones: frecuencia semanal, intensidad en el tiempo, gatillantes más frecuentes.
+### 🟡 Importante — degradan la experiencia de usuarios reales
 
-**Prioridad 5 — PDF exportable**
-Historial clínico completo en PDF descargable.
+**~~4. `setHijo` no hace rollback ni lanza error~~** ✅ Listo 2026-04-19
+- Guarda el estado anterior antes del dispatch optimista
+- Si el upsert a Supabase falla: revierte el estado y lanza el error
+- `PerfilPage` ya capturaba el error y mostraba "No se pudo guardar" — ahora ese mensaje funciona de verdad
 
-**Prioridad 6 — Modo pareja**
+**~~5. Pantalla de carga mientras `dataLoading` es true~~** ✅ Listo 2026-04-19
+- Barra de progreso animada en la parte superior del Layout mientras los datos cargan desde Supabase
+- Gradiente primario con animación de deslizamiento (no bloquea la UI)
 
-**Prioridad 7 — Voz a texto**
+**~~6. Página 404 y manejo de rutas inválidas~~** ✅ Listo 2026-04-19
+- `NotFoundPage` dentro del Layout: emoji 🔍, mensaje amigable, botón "Volver al inicio"
+- Rutas inválidas dentro de la app muestran la página 404 con la barra de navegación activa
+
+### 🟢 Deseable antes o poco después del lanzamiento
+
+**7. Términos de servicio y política de privacidad**
+Legalmente obligatorio en Chile (Ley 19.628) y en cualquier mercado hispanohablante antes de aceptar datos personales de menores. Puede ser una página simple enlazada desde el signup.
+
+**8. Analytics básico**
+Sin ningún tracking (Posthog, Plausible o similar) es imposible saber cuántos usuarios reales hay, qué módulos usan, dónde abandonan. No afecta la funcionalidad pero ciega el roadmap.
+
+**9. Modelo de negocio / paywall**
+Actualmente todo es gratuito e ilimitado. Definir si hay un free tier (ej. 10 registros/mes) y un plan premium antes de escalar.
+
+---
+
+## Migraciones SQL pendientes
+
+Correr en Supabase → SQL Editor antes del próximo deploy:
+
+```sql
+-- Eliminar cuenta: función que borra el usuario autenticado (Ley 19.628)
+-- Requiere permisos de postgres (ejecutar como superuser en el SQL Editor)
+CREATE OR REPLACE FUNCTION delete_user()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = auth
+AS $$
+BEGIN
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+GRANT EXECUTE ON FUNCTION delete_user TO authenticated;
+```
+
+```sql
+-- Rate limiting: tabla de llamadas diarias a la API
+create table if not exists public.api_llamadas (
+  user_id uuid references auth.users not null,
+  fecha    date not null default current_date,
+  cuenta   integer not null default 0,
+  primary key (user_id, fecha)
+);
+alter table public.api_llamadas enable row level security;
+create policy "Solo el propio usuario"
+  on public.api_llamadas for all
+  using (auth.uid() = user_id);
+
+-- Historial: columna de orientación de IA (si no se corrió antes)
+alter table public.episodios
+  add column if not exists orientacion_ia text;
+```
+
+## Orden de trabajo recomendado
+
+1. ~~UX de confirmación de email~~ ✅
+2. ~~Rate limiting en API~~ ✅
+3. ~~Error boundary global~~ ✅
+4. ~~Rollback + error en `setHijo`~~ ✅
+5. ~~Pantalla de carga con `dataLoading`~~ ✅
+6. ~~Página 404~~ ✅
+7. ~~Términos y política de privacidad~~ ✅ Listo 2026-04-19
+8. ~~Analytics básico — Plausible~~ ✅ Listo 2026-04-19
+   - Script inyectado dinámicamente desde `main.jsx` solo si `VITE_PLAUSIBLE_DOMAIN` está configurado (no corre en dev por defecto)
+   - `PageTracker` en `App.jsx` dispara `plausible('pageview')` en cada cambio de ruta de React Router (skip del primer render para no duplicar el pageview inicial)
+   - Sin cookies, sin datos personales — compatible con GDPR y Ley 19.628
+   - **Para activar**: crear cuenta en plausible.io → añadir sitio `huella-theta.vercel.app` → agregar `VITE_PLAUSIBLE_DOMAIN=huella-theta.vercel.app` en Vercel → redeploy
+
+---
+
+## BASE TEÓRICA (referencia)
+Ver `api/anthropic.js` — el system prompt completo está implementado con todos los 35+ referentes.
 
 ---
 
@@ -214,4 +225,4 @@ Historial clínico completo en PDF descargable.
 
 ---
 
-*Este archivo se actualiza al final de cada sesión de trabajo.*
+*Última actualización: 2026-04-19*

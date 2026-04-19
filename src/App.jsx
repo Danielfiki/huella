@@ -1,5 +1,5 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect, useRef } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { HuellaProvider } from './context/HuellaContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -14,6 +14,94 @@ import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
 import ParejasPage from './pages/pareja/ParejasPage'
 import PerfilPage from './pages/perfil/PerfilPage'
+import TerminosPage from './pages/legal/TerminosPage'
+
+class PageErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', minHeight: '60dvh', padding: '32px',
+          textAlign: 'center', gap: '12px',
+        }}>
+          <div style={{ fontSize: '36px' }}>⚠️</div>
+          <h3 style={{ margin: 0, color: '#3a2e28' }}>Esta página tuvo un error</h3>
+          <p style={{ color: '#8a7a70', margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
+            No pudimos cargar esta sección. Tus datos están a salvo.
+          </p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{
+              padding: '10px 22px', background: '#c96f45', color: '#fff',
+              border: 'none', borderRadius: '10px', fontSize: '14px',
+              fontWeight: 600, cursor: 'pointer', marginTop: '4px',
+            }}
+          >
+            Reintentar
+          </button>
+          <a href="/panel" style={{ fontSize: '13px', color: '#8a7a70', textDecoration: 'underline' }}>
+            Volver al inicio
+          </a>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function PageTracker() {
+  const location = useLocation()
+  const isFirst = useRef(true)
+
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false
+      return
+    }
+    if (typeof window.plausible === 'function') {
+      window.plausible('pageview')
+    }
+  }, [location.pathname])
+
+  return null
+}
+
+function NotFoundPage() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', minHeight: '65dvh', padding: '32px',
+      textAlign: 'center', gap: '14px',
+    }}>
+      <div style={{ fontSize: '52px' }}>🔍</div>
+      <h2 style={{ margin: 0, color: 'var(--color-text)', fontSize: '20px' }}>
+        Página no encontrada
+      </h2>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', lineHeight: 1.65, maxWidth: '260px', margin: 0 }}>
+        Esta dirección no existe en Huella. Puede que el enlace esté roto o que hayas escrito la URL a mano.
+      </p>
+      <Link
+        to="/panel"
+        style={{
+          marginTop: '4px', padding: '12px 24px',
+          background: 'var(--color-primary)', color: '#fff',
+          borderRadius: 'var(--radius-md)', fontWeight: 700,
+          fontSize: '14px', textDecoration: 'none',
+        }}
+      >
+        Volver al inicio
+      </Link>
+    </div>
+  )
+}
 
 function MissingConfig() {
   return (
@@ -41,9 +129,11 @@ export default function App() {
     <AuthProvider>
       <HuellaProvider>
         <BrowserRouter>
+          <PageTracker />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/terminos" element={<TerminosPage />} />
             <Route
               path="/"
               element={
@@ -53,13 +143,14 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="/panel" replace />} />
-              <Route path="panel" element={<PanelPage />} />
-              <Route path="registro" element={<RegistroPage />} />
-              <Route path="estrategias" element={<EstrategiasPage />} />
-              <Route path="hitos" element={<HitosPage />} />
-              <Route path="historial" element={<HistorialPage />} />
-              <Route path="pareja" element={<ParejasPage />} />
-              <Route path="perfil" element={<PerfilPage />} />
+              <Route path="panel" element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
+              <Route path="registro" element={<PageErrorBoundary><RegistroPage /></PageErrorBoundary>} />
+              <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
+              <Route path="hitos" element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
+              <Route path="historial" element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
+              <Route path="pareja" element={<PageErrorBoundary><ParejasPage /></PageErrorBoundary>} />
+              <Route path="perfil" element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
+              <Route path="*" element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
             </Route>
           </Routes>
         </BrowserRouter>

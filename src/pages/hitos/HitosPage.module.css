@@ -114,3 +114,49 @@
   margin: 0;
   color: var(--color-text, #374151);
 }
+
+/* ── Celebración IA ── */
+.celebracionCard {
+  background: linear-gradient(135deg, var(--color-celebration-start) 0%, var(--color-celebration-end) 100%);
+  border: 1px solid var(--color-primary-light);
+}
+
+.celebracionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.celebracionTexto {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin: 0;
+  font-style: italic;
+}
+
+.celebracionSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

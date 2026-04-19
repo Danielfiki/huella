@@ -7,7 +7,10 @@
 .habilidadesGrid { display: flex; flex-direction: column; gap: 8px; }
 
 .habilidadBtn {
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
   border: 2px solid transparent;
@@ -16,9 +19,11 @@
   font-weight: 500;
   color: var(--color-text);
   transition: all 0.15s;
+  cursor: pointer;
 }
 .habilidadBtn:hover { border-color: var(--color-primary-light); }
-.habilidadSelected { border-color: var(--color-primary) !important; background: #fff4ee; }
+.habilidadSelected { border-color: var(--color-primary) !important; background: var(--color-primary-bg); }
+.habilidadEmoji { font-size: 22px; flex-shrink: 0; }
 
 .textarea {
   width: 100%;
@@ -49,10 +54,10 @@
 
 .semanaTag {
   font-size: 12px; font-weight: 600; padding: 3px 10px;
-  background: var(--color-accent-green); border-radius: 999px; color: #2d5a3d;
+  background: var(--color-accent-green); border-radius: 999px; color: var(--color-tag-green);
   white-space: nowrap;
 }
-.semanaTagCompletada { background: var(--color-accent-blue); color: #1d3d5a; }
+.semanaTagCompletada { background: var(--color-accent-blue); color: var(--color-tag-blue); }
 
 .progressBar {
   margin-top: 10px; height: 4px;
@@ -81,8 +86,8 @@
   border-radius: var(--radius-md);
   padding: 14px 16px;
 }
-.semanaActual { border-color: var(--color-primary); background: #fff4ee; }
-.semanaCompletada { border-color: var(--color-accent-green); background: #f5fbf7; }
+.semanaActual { border-color: var(--color-primary); background: var(--color-primary-bg); }
+.semanaCompletada { border-color: var(--color-accent-green); background: var(--color-success-bg); }
 .semanaProxima { opacity: 0.5; }
 
 .semanaCardHeader {
@@ -112,7 +117,13 @@
 .proximaTexto { font-size: 13px; color: var(--color-text-light); font-style: italic; }
 
 .completadoBanner {
-  display: flex; flex-direction: row; align-items: center;
+  display: flex; flex-direction: column; align-items: flex-start;
   gap: 12px; padding: 16px;
 }
-.completadoBanner p { font-size: 14px; color: var(--color-text-muted); line-height: 1.4; }
+.completadoBanner p { font-size: 14px; color: var(--color-text-muted); line-height: 1.4; margin: 0; }
+
+/* ── Check-in ── */
+.checkinCard { display: flex; flex-direction: column; gap: 12px; }
+.checkinPregunta { font-size: 14px; font-weight: 600; color: var(--color-text); margin: 0; }
+.checkinBtns { display: flex; gap: 10px; }
+.checkinBtns > * { flex: 1; }

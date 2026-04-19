@@ -5,28 +5,45 @@
 }
 
 :root {
+  /* ── Fondos ── */
   --color-bg: #fdf6f0;
   --color-surface: #ffffff;
   --color-surface-alt: #fef9f5;
   --color-border: #f0e6db;
 
+  /* ── Primario ── */
   --color-primary: #e8936a;
   --color-primary-light: #f5c4a8;
   --color-primary-dark: #c96f45;
 
+  /* ── Tints semánticos (hardcoded → variables) ── */
+  --color-primary-bg: #fff4ee;       /* selected/highlighted areas */
+  --color-success-bg: #f5fbf7;       /* completed/positive tints */
+  --color-celebration-start: #fff8f3;
+  --color-celebration-end: #fff4ee;
+  --color-danger-bg: #fff5f5;
+  --color-danger-border: #fca5a5;
+  --color-danger-text: #b91c1c;
+  --color-tag-green: #2d5a3d;
+  --color-tag-blue: #1d3d5a;
+
+  /* ── Acentos ── */
   --color-accent-blue: #a8c4e0;
   --color-accent-green: #a8d5b5;
   --color-accent-lavender: #c4b8e8;
   --color-accent-yellow: #f0dfa0;
 
+  /* ── Texto ── */
   --color-text: #3a2e28;
   --color-text-muted: #8a7a70;
   --color-text-light: #bfb0a8;
 
+  /* ── Estados ── */
   --color-success: #6dbf88;
   --color-warning: #f0c060;
   --color-danger: #e87878;
 
+  /* ── Radios y sombras ── */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
@@ -37,6 +54,47 @@
   --shadow-lg: 0 8px 32px rgba(58, 46, 40, 0.14);
 
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Modo oscuro nocturno ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1410;
+    --color-surface: #241e18;
+    --color-surface-alt: #2e2620;
+    --color-border: #403228;
+
+    --color-primary: #e8936a;
+    --color-primary-light: #4a2e1a;
+    --color-primary-dark: #f0a478;
+
+    --color-primary-bg: #3a2010;
+    --color-success-bg: #18261e;
+    --color-celebration-start: #2e2010;
+    --color-celebration-end: #3a2010;
+    --color-danger-bg: #2e1515;
+    --color-danger-border: #5a2828;
+    --color-danger-text: #f87171;
+    --color-tag-green: #6dbf88;
+    --color-tag-blue: #7fb3d3;
+
+    --color-accent-blue: #3a5a7a;
+    --color-accent-green: #2a5a38;
+    --color-accent-lavender: #4a3a6a;
+    --color-accent-yellow: #5a4e20;
+
+    --color-text: #f0e6dc;
+    --color-text-muted: #9e8878;
+    --color-text-light: #6a5a50;
+
+    --color-success: #6dbf88;
+    --color-warning: #f0c060;
+    --color-danger: #f08080;
+
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.60);
+  }
 }
 
 html, body, #root {

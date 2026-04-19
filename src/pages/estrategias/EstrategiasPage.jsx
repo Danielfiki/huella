@@ -8,12 +8,12 @@ import RespuestaIA from '../../components/ui/RespuestaIA'
 import styles from './EstrategiasPage.module.css'
 
 const HABILIDADES = [
-  'Autorregulación emocional',
-  'Resiliencia ante la frustración',
-  'Tolerancia a los cambios',
-  'Habilidades sociales',
-  'Manejo del miedo',
-  'Concentración y calma',
+  { label: 'Calmarse cuando explota',               tecnico: 'Autorregulación emocional',       emoji: '🌊' },
+  { label: 'Aceptar el "no" sin crisis',            tecnico: 'Resiliencia ante la frustración', emoji: '💪' },
+  { label: 'Manejar los cambios de rutina',         tecnico: 'Tolerancia a los cambios',        emoji: '🔄' },
+  { label: 'Relacionarse mejor con otros niños',    tecnico: 'Habilidades sociales',             emoji: '🤝' },
+  { label: 'Manejar el miedo y la angustia',        tecnico: 'Manejo del miedo',                emoji: '🛡️' },
+  { label: 'Concentrarse y calmarse',               tecnico: 'Concentración y calma',           emoji: '🧘' },
 ]
 
 function parsePlan(texto) {
@@ -61,6 +61,8 @@ export default function EstrategiasPage() {
   const [plan, setPlan] = useState('')
   const [loadingPlan, setLoadingPlan] = useState(false)
   const [loadingAvanzar, setLoadingAvanzar] = useState(false)
+  const [checkinVisible, setCheckinVisible] = useState(false)
+  const [checkinTexto, setCheckinTexto] = useState('')
 
   // Derive from context so it auto-updates after updateEstrategia
   const estrategiaSeleccionada = selectedId
@@ -76,7 +78,9 @@ export default function EstrategiasPage() {
     if (!habilidad) return
     setLoadingPlan(true)
     try {
-      const texto = await generarEstrategia({ hijo: state.hijo, habilidad, descripcion })
+      const habilidadObj = HABILIDADES.find((h) => h.label === habilidad)
+      const habilidadIA = habilidadObj?.tecnico ?? habilidad
+      const texto = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
       setPlan(texto)
       await addEstrategia({
         id: Date.now().toString(),
@@ -95,6 +99,8 @@ export default function EstrategiasPage() {
 
   async function handleAvanzarSemana() {
     if (!estrategiaSeleccionada || estrategiaSeleccionada.semanaActual >= 4) return
+    setCheckinVisible(false)
+    setCheckinTexto('')
     setLoadingAvanzar(true)
     await updateEstrategia({
       id: estrategiaSeleccionada.id,
@@ -111,15 +117,16 @@ export default function EstrategiasPage() {
         <h2 className={styles.titulo}>Nueva estrategia</h2>
 
         <Card>
-          <p className={styles.label}>¿Qué habilidad quieres fortalecer?</p>
+          <p className={styles.label}>¿En qué quieres trabajar?</p>
           <div className={styles.habilidadesGrid}>
             {HABILIDADES.map((h) => (
               <button
-                key={h}
-                className={`${styles.habilidadBtn} ${habilidad === h ? styles.habilidadSelected : ''}`}
-                onClick={() => setHabilidad(h)}
+                key={h.label}
+                className={`${styles.habilidadBtn} ${habilidad === h.label ? styles.habilidadSelected : ''}`}
+                onClick={() => setHabilidad(h.label)}
               >
-                {h}
+                <span className={styles.habilidadEmoji}>{h.emoji}</span>
+                <span>{h.label}</span>
               </button>
             ))}
           </div>
@@ -235,19 +242,52 @@ export default function EstrategiasPage() {
         </div>
 
         {semanaActual < 4 ? (
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={handleAvanzarSemana}
-            loading={loadingAvanzar}
-          >
-            Avanzar a semana {semanaActual + 1}
-          </Button>
+          checkinVisible ? (
+            <Card className={styles.checkinCard}>
+              <p className={styles.checkinPregunta}>¿Cómo fue la semana? ¿Notaste algún cambio?</p>
+              <textarea
+                className={styles.textarea}
+                placeholder="Opcional — lo que observaste esta semana..."
+                value={checkinTexto}
+                onChange={(e) => setCheckinTexto(e.target.value)}
+                rows={3}
+              />
+              <div className={styles.checkinBtns}>
+                <Button
+                  variant="secondary"
+                  onClick={() => { setCheckinVisible(false); setCheckinTexto('') }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleAvanzarSemana}
+                  loading={loadingAvanzar}
+                >
+                  Confirmar avance
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={() => setCheckinVisible(true)}
+            >
+              Avanzar a semana {semanaActual + 1}
+            </Button>
+          )
         ) : (
           <Card className={styles.completadoBanner}>
             <CheckCircle size={28} color="var(--color-success)" />
-            <p>¡Plan completado! Considera crear una nueva estrategia para seguir creciendo.</p>
+            <div>
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>¡Completaste las 4 semanas!</p>
+              <p>Eso ya es un logro. ¿Quieres trabajar otra habilidad?</p>
+            </div>
+            <Button variant="primary" fullWidth onClick={() => setVista('nueva')}>
+              Crear nueva estrategia
+            </Button>
           </Card>
         )}
       </div>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mic } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { analizarEpisodio } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -9,36 +8,100 @@ import RespuestaIA from '../../components/ui/RespuestaIA'
 import styles from './RegistroPage.module.css'
 
 const TIPOS = [
-  { id: 'rabieta', label: 'Rabieta', emoji: '😤' },
-  { id: 'llanto', label: 'Llanto', emoji: '😢' },
-  { id: 'agresividad', label: 'Agresividad', emoji: '😠' },
-  { id: 'miedo', label: 'Miedo', emoji: '😨' },
-  { id: 'sueño', label: 'Dificultad para dormir', emoji: '😴' },
-  { id: 'social', label: 'Rechazo social', emoji: '🙈' },
-  { id: 'desconexion', label: 'Desconexión', emoji: '😶' },
-  { id: 'otro', label: 'Otro', emoji: '📝' },
+  { id: 'rabieta',      label: 'Rabieta / explosión',             emoji: '😤' },
+  { id: 'llanto',       label: 'Llanto intenso',                  emoji: '😢' },
+  { id: 'agresividad',  label: 'Golpes / agresividad',            emoji: '😠' },
+  { id: 'miedo',        label: 'Miedo / angustia',                emoji: '😨' },
+  { id: 'sueño',        label: 'No quiere dormir',                emoji: '😴' },
+  { id: 'social',       label: 'Se aisló / no quiso relacionarse', emoji: '🙈' },
+  { id: 'desconexion',  label: 'Se cerró / no respondía',         emoji: '😶' },
+  { id: 'oposicion',    label: 'Oposición / no coopera',          emoji: '🙅' },
+  { id: 'otro',         label: 'Otro',                            emoji: '📝' },
+]
+
+const INTENSIDADES = [
+  { valor: 1, emoji: '😌', label: 'Muy leve' },
+  { valor: 2, emoji: '🙁', label: 'Leve' },
+  { valor: 3, emoji: '😟', label: 'Moderado' },
+  { valor: 4, emoji: '😣', label: 'Intenso' },
+  { valor: 5, emoji: '😱', label: 'Muy intenso' },
+]
+
+const ESTADOS_PADRE = [
+  'Calmado', 'Frustrado', 'Cansado', 'Ansioso', 'Triste', 'Abrumado',
 ]
 
 const GATILLANTES = [
   'Hambre', 'Cansancio', 'Cambio de rutina',
-  'Conflicto con pares', 'Pantallas', 'Transiciones',
-  'Enfermedad', 'Estrés familiar',
+  'Pelea con amigos', 'Pantallas', 'Transiciones',
+  'Enfermedad', 'Tensión en casa', 'Sobreestimulación',
+  'Dolor o malestar físico',
 ]
+
+const CUANDO_OPCIONES = [
+  { id: 'ahora',      label: 'Ahora' },
+  { id: 'hora_antes', label: 'Hace ~1 hora' },
+  { id: 'manana',     label: 'Esta mañana' },
+  { id: 'tarde',      label: 'Esta tarde' },
+  { id: 'ayer',       label: 'Ayer' },
+  { id: 'custom',     label: 'Otro momento…' },
+]
+
+function computarFecha(cuandoPaso, fechaCustom) {
+  const d = new Date()
+  switch (cuandoPaso) {
+    case 'hora_antes':
+      d.setHours(d.getHours() - 1)
+      return d.toISOString()
+    case 'manana':
+      d.setHours(9, 0, 0, 0)
+      return d.toISOString()
+    case 'tarde':
+      d.setHours(15, 0, 0, 0)
+      return d.toISOString()
+    case 'ayer':
+      d.setDate(d.getDate() - 1)
+      d.setHours(18, 0, 0, 0)
+      return d.toISOString()
+    case 'custom':
+      return fechaCustom ? new Date(fechaCustom).toISOString() : d.toISOString()
+    default:
+      return d.toISOString()
+  }
+}
+
+function nowLocal() {
+  const d = new Date()
+  d.setSeconds(0, 0)
+  // toISOString gives UTC; we need local for datetime-local input
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 export default function RegistroPage() {
   const { state, addEpisodio, updateEpisodio } = useHuella()
   const navigate = useNavigate()
 
   const [tipo, setTipo] = useState('')
-  const [intensidad, setIntensidad] = useState(3)
+  const [intensidad, setIntensidad] = useState(null)
+  const [cuandoPaso, setCuandoPaso] = useState('ahora')
+  const [fechaCustom, setFechaCustom] = useState('')
   const [contexto, setContexto] = useState('')
   const [gatillantesSeleccionados, setGatillantesSeleccionados] = useState([])
-  const [estadoPadre, setEstadoPadre] = useState('')
+  const [estadoPadrePicker, setEstadoPadrePicker] = useState('')
+  const [estadoPadreExtra, setEstadoPadreExtra] = useState('')
   const [respuestaIA, setRespuestaIA] = useState('')
   const [loadingIA, setLoadingIA] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [guardado, setGuardado] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+
+  function handleCuando(id) {
+    setCuandoPaso(id)
+    if (id === 'custom' && !fechaCustom) {
+      setFechaCustom(nowLocal())
+    }
+  }
 
   function toggleGatillante(g) {
     setGatillantesSeleccionados((prev) =>
@@ -47,7 +110,11 @@ export default function RegistroPage() {
   }
 
   async function handleGuardar() {
-    if (!tipo) return
+    if (!tipo || !intensidad) return
+
+    const estadoPadre = estadoPadrePicker
+      ? estadoPadreExtra ? `${estadoPadrePicker}. ${estadoPadreExtra}` : estadoPadrePicker
+      : estadoPadreExtra
 
     const episodio = {
       id: Date.now().toString(),
@@ -56,7 +123,7 @@ export default function RegistroPage() {
       contexto,
       gatillantes: gatillantesSeleccionados,
       estadoPadre,
-      fecha: new Date().toISOString(),
+      fecha: computarFecha(cuandoPaso, fechaCustom),
     }
 
     setLoadingGuardar(true)
@@ -111,20 +178,43 @@ export default function RegistroPage() {
           </Card>
 
           <Card>
-            <p className={styles.label}>Intensidad: <strong>{intensidad}/5</strong></p>
-            <input
-              type="range"
-              min={1}
-              max={5}
-              value={intensidad}
-              onChange={(e) => setIntensidad(Number(e.target.value))}
-              className={styles.slider}
-            />
-            <div className={styles.sliderLabels}>
-              <span>Leve</span>
-              <span>Moderado</span>
-              <span>Intenso</span>
+            <p className={styles.label}>¿Qué tan intenso fue?</p>
+            <div className={styles.intensidadGrid}>
+              {INTENSIDADES.map((op) => (
+                <button
+                  key={op.valor}
+                  className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
+                  onClick={() => setIntensidad(op.valor)}
+                >
+                  <span className={styles.intensidadEmoji}>{op.emoji}</span>
+                  <span className={styles.intensidadLabel}>{op.label}</span>
+                </button>
+              ))}
             </div>
+          </Card>
+
+          <Card>
+            <p className={styles.label}>¿Cuándo pasó?</p>
+            <div className={styles.tagsGrid}>
+              {CUANDO_OPCIONES.map((op) => (
+                <button
+                  key={op.id}
+                  className={`${styles.tag} ${cuandoPaso === op.id ? styles.tagSelected : ''}`}
+                  onClick={() => handleCuando(op.id)}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            {cuandoPaso === 'custom' && (
+              <input
+                type="datetime-local"
+                className={styles.fechaInput}
+                value={fechaCustom}
+                max={nowLocal()}
+                onChange={(e) => setFechaCustom(e.target.value)}
+              />
+            )}
           </Card>
 
           <Card>
@@ -155,13 +245,26 @@ export default function RegistroPage() {
 
           <Card>
             <p className={styles.label}>¿Cómo estabas tú en ese momento?</p>
-            <textarea
-              className={styles.textarea}
-              placeholder="Tu estado emocional puede haber influido..."
-              value={estadoPadre}
-              onChange={(e) => setEstadoPadre(e.target.value)}
-              rows={2}
-            />
+            <div className={styles.tagsGrid} style={{ marginBottom: estadoPadrePicker ? 10 : 0 }}>
+              {ESTADOS_PADRE.map((op) => (
+                <button
+                  key={op}
+                  className={`${styles.tag} ${estadoPadrePicker === op ? styles.tagSelected : ''}`}
+                  onClick={() => setEstadoPadrePicker(prev => prev === op ? '' : op)}
+                >
+                  {op}
+                </button>
+              ))}
+            </div>
+            {estadoPadrePicker && (
+              <textarea
+                className={styles.textarea}
+                placeholder="Algo más que quieras agregar (opcional)..."
+                value={estadoPadreExtra}
+                onChange={(e) => setEstadoPadreExtra(e.target.value)}
+                rows={2}
+              />
+            )}
           </Card>
 
           <Button
@@ -169,7 +272,7 @@ export default function RegistroPage() {
             size="lg"
             fullWidth
             onClick={handleGuardar}
-            disabled={!tipo}
+            disabled={!tipo || !intensidad}
             loading={loadingGuardar}
           >
             Guardar y obtener orientación

@@ -52,9 +52,9 @@ const SLIDES = [
   },
 ]
 
-const STORAGE_KEY = 'huella_onboarding_v1'
+const getKey = (userId) => `huella_onboarding_v1_${userId || 'anon'}`
 
-export default function Onboarding({ onDone }) {
+export default function Onboarding({ onDone, userId }) {
   const [current, setCurrent] = useState(0)
   const [dir, setDir] = useState(1)
   const [animating, setAnimating] = useState(false)
@@ -82,7 +82,7 @@ export default function Onboarding({ onDone }) {
   }
 
   function finish() {
-    localStorage.setItem(STORAGE_KEY, '1')
+    localStorage.setItem(getKey(userId), '1')
     onDone()
   }
 
@@ -216,6 +216,6 @@ export default function Onboarding({ onDone }) {
   )
 }
 
-export function shouldShowOnboarding() {
-  return !localStorage.getItem(STORAGE_KEY)
+export function shouldShowOnboarding(userId) {
+  return !localStorage.getItem(getKey(userId))
 }

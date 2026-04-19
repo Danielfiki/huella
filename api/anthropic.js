@@ -1,3 +1,48 @@
+import { createClient } from '@supabase/supabase-js'
+
+const DAILY_LIMIT = 20
+
+async function verificarRateLimit(token) {
+  const url = process.env.VITE_SUPABASE_URL
+  const key = process.env.VITE_SUPABASE_ANON_KEY
+  if (!url || !key || !token) return { permitido: true }
+
+  try {
+    const client = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
+    })
+
+    const { data: userResponse } = await client.auth.getUser()
+    const userId = userResponse?.user?.id
+    if (!userId) return { permitido: true }
+
+    const today = new Date().toISOString().split('T')[0]
+
+    const { data: existing } = await client
+      .from('api_llamadas')
+      .select('cuenta')
+      .eq('user_id', userId)
+      .eq('fecha', today)
+      .maybeSingle()
+
+    const cuenta = existing?.cuenta ?? 0
+
+    if (cuenta >= DAILY_LIMIT) {
+      return { permitido: false }
+    }
+
+    await client.from('api_llamadas').upsert(
+      { user_id: userId, fecha: today, cuenta: cuenta + 1 },
+      { onConflict: 'user_id,fecha' }
+    )
+
+    return { permitido: true }
+  } catch {
+    return { permitido: true }
+  }
+}
+
 const SYSTEM_PROMPT = `Eres el asistente de crianza de Huella. Acompañas a padres hispanohablantes con orientación profunda, práctica y cálida, basada en la mejor evidencia del desarrollo infantil y la neurociencia del apego.
 
 Tu voz es la de un amigo muy bien informado: cercano, honesto, concreto. Nunca un manual. Nunca jerga clínica. Nunca un diagnóstico.
@@ -162,6 +207,14 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return res.status(500).json({ error: 'API key no configurada en el servidor' })
+  }
+
+  const token = req.headers.authorization?.replace('Bearer ', '')
+  const { permitido } = await verificarRateLimit(token)
+  if (!permitido) {
+    return res.status(429).json({
+      error: `Alcanzaste el límite de ${DAILY_LIMIT} consultas diarias. Vuelve mañana.`,
+    })
   }
 
   const { prompt, max_tokens = 700 } = req.body

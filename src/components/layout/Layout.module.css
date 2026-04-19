@@ -55,12 +55,15 @@
   padding-bottom: 8px;
 }
 
+/* ── Bottom nav ── */
 .bottomNav {
   display: flex;
+  align-items: flex-end;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  padding: 8px 4px 12px;
+  padding: 6px 4px 12px;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .navItem {
@@ -84,8 +87,96 @@
 
 .navItemActive {
   color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .navItemActive svg {
   stroke: var(--color-primary);
+}
+
+/* ── Botón Registrar destacado ── */
+.navRegistrar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px 2px;
+  color: var(--color-primary);
+}
+
+.navRegistrarBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.navRegistrar:hover .navRegistrarBtn {
+  transform: scale(1.06);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.25);
+}
+
+.navRegistrarActive .navRegistrarBtn {
+  background: var(--color-primary-dark);
+}
+
+.navRegistrarLabel {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ── Loading bar ── */
+.loadingBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
+  animation: loadingSlide 1.4s ease-in-out infinite;
+  z-index: 200;
+  border-radius: 0 2px 2px 0;
+}
+
+@keyframes loadingSlide {
+  0%   { width: 0; opacity: 1; }
+  60%  { width: 85%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+/* ── Skeleton ── */
+.skeletonPage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.skeletonTitle {
+  height: 28px;
+  width: 45%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-alt) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonCard {
+  height: 100px;
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-alt) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

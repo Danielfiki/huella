@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, TrendingUp, AlertCircle } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
 import { interpretarPatrones } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -12,14 +13,58 @@ import GraficoIntensidad from '../../modules/panel/GraficoIntensidad'
 import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
 import styles from './PanelPage.module.css'
 
+function getPadreNombre(userId) {
+  try { return localStorage.getItem(`huella_padre_v1_${userId || 'anon'}`) || '' } catch { return '' }
+}
+
+function buildGreeting(hora, padreNombre, nombreHijo, episodiosSemana, diasSinRegistrar, tieneHijo) {
+  const saludoBase = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'
+  const titulo = padreNombre ? `${saludoBase}, ${padreNombre}.` : `${saludoBase}.`
+
+  if (!tieneHijo) {
+    return { titulo, subtitulo: 'Empieza configurando el perfil de tu hijo/a en la pestaña Perfil.' }
+  }
+
+  if (diasSinRegistrar !== null && diasSinRegistrar >= 5) {
+    return { titulo, subtitulo: `Hace ${diasSinRegistrar} días sin registrar. Retomar el hábito ayuda a ver el patrón con ${nombreHijo}.` }
+  }
+
+  if (episodiosSemana > 5) {
+    return { titulo, subtitulo: `Llevas una semana intensa con ${nombreHijo}. Que lo estés registrando ya es un gran paso.` }
+  }
+
+  if (hora < 12) return { titulo, subtitulo: `¿Cómo empezó ${nombreHijo} hoy?` }
+  if (hora < 20) return { titulo, subtitulo: `¿Cómo va ${nombreHijo} esta tarde?` }
+  return { titulo, subtitulo: `Registrar antes de dormir ayuda a ver el patrón con ${nombreHijo}.` }
+}
+
 export default function PanelPage() {
+  const { user } = useAuth()
   const { state } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
 
-  const { hijo, episodios } = state
-  const nombre = hijo?.nombre || 'tu hijo'
+  const { hijo, episodios, hitos } = state
+  const nombre = hijo?.nombre || 'tu hijo/a'
+
+  const padreNombre = getPadreNombre(user?.id)
+
+  const episodiosSemana = useMemo(() => {
+    const hace7 = new Date()
+    hace7.setDate(hace7.getDate() - 7)
+    return episodios.filter((e) => new Date(e.fecha) >= hace7).length
+  }, [episodios])
+
+  const diasSinRegistrar = useMemo(() => {
+    if (episodios.length === 0) return null
+    const ultimo = new Date(episodios[0].fecha)
+    const hoy = new Date()
+    return Math.floor((hoy - ultimo) / (1000 * 60 * 60 * 24))
+  }, [episodios])
+
+  const hora = new Date().getHours()
+  const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombre, episodiosSemana, diasSinRegistrar, !!hijo)
 
   async function handleAnalizarPatrones() {
     setLoadingAnalisis(true)
@@ -36,8 +81,8 @@ export default function PanelPage() {
   return (
     <div className={styles.page}>
       <div className={styles.greeting}>
-        <h1>Hola</h1>
-        <p>Esto es lo que está pasando con {nombre}.</p>
+        <h1>{titulo}</h1>
+        <p>{subtitulo}</p>
       </div>
 
       <Button
@@ -51,7 +96,7 @@ export default function PanelPage() {
         Registrar episodio
       </Button>
 
-      <ResumenSemanal episodios={episodios} />
+      <ResumenSemanal episodios={episodios} hitos={hitos} />
 
       {episodios.length >= 3 && (
         <>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -7,14 +7,15 @@ import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
 import styles from './HistorialPage.module.css'
 
 const TIPOS = {
-  rabieta:     { label: 'Rabieta', emoji: '😤' },
-  llanto:      { label: 'Llanto', emoji: '😢' },
-  agresividad: { label: 'Agresividad', emoji: '😠' },
-  miedo:       { label: 'Miedo', emoji: '😨' },
-  sueño:       { label: 'Dificultad para dormir', emoji: '😴' },
-  social:      { label: 'Rechazo social', emoji: '🙈' },
-  desconexion: { label: 'Desconexión', emoji: '😶' },
-  otro:        { label: 'Otro', emoji: '📝' },
+  rabieta:     { label: 'Rabieta / explosión',              emoji: '😤' },
+  llanto:      { label: 'Llanto intenso',                   emoji: '😢' },
+  agresividad: { label: 'Golpes / agresividad',             emoji: '😠' },
+  miedo:       { label: 'Miedo / angustia',                 emoji: '😨' },
+  sueño:       { label: 'No quiere dormir',                 emoji: '😴' },
+  social:      { label: 'Se aisló / no quiso relacionarse', emoji: '🙈' },
+  desconexion: { label: 'Se cerró / no respondía',          emoji: '😶' },
+  oposicion:   { label: 'Oposición / no coopera',           emoji: '🙅' },
+  otro:        { label: 'Otro',                             emoji: '📝' },
 }
 
 const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy intenso']
@@ -44,9 +45,21 @@ function agruparPorDia(episodios) {
   return Array.from(grupos.values())
 }
 
-function EpisodioCard({ ep }) {
+function EpisodioCard({ ep, onDelete }) {
   const [expandido, setExpandido] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
   const tipo = TIPOS[ep.tipo] || { label: ep.tipo, emoji: '📝' }
+
+  async function handleEliminar() {
+    setEliminando(true)
+    try {
+      await onDelete(ep.id)
+    } catch {
+      setEliminando(false)
+      setConfirmando(false)
+    }
+  }
 
   return (
     <Card className={styles.card}>
@@ -58,12 +71,40 @@ function EpisodioCard({ ep }) {
             <p className={styles.hora}>{formatHora(ep.fecha)}</p>
           </div>
         </div>
-        <span
-          className={styles.intensidadBadge}
-          style={{ background: INTENSIDAD_COLOR[ep.intensidad] }}
-        >
-          {INTENSIDAD_LABEL[ep.intensidad]}
-        </span>
+        <div className={styles.cardTopRight}>
+          <span
+            className={styles.intensidadBadge}
+            style={{ background: INTENSIDAD_COLOR[ep.intensidad] }}
+          >
+            {INTENSIDAD_LABEL[ep.intensidad]}
+          </span>
+          {!confirmando ? (
+            <button
+              className={styles.deleteBtn}
+              onClick={() => setConfirmando(true)}
+              title="Eliminar episodio"
+            >
+              <Trash2 size={14} />
+            </button>
+          ) : (
+            <div className={styles.confirmWrap}>
+              <button
+                className={styles.confirmSiBtn}
+                onClick={handleEliminar}
+                disabled={eliminando}
+              >
+                {eliminando ? '...' : 'Eliminar'}
+              </button>
+              <button
+                className={styles.confirmNoBtn}
+                onClick={() => setConfirmando(false)}
+                disabled={eliminando}
+              >
+                No
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {ep.contexto ? (
@@ -76,6 +117,10 @@ function EpisodioCard({ ep }) {
             <span key={g} className={styles.gatillante}>{g}</span>
           ))}
         </div>
+      ) : null}
+
+      {ep.estadoPadre ? (
+        <p className={styles.estadoPadre}>Estado del padre: {ep.estadoPadre}</p>
       ) : null}
 
       {ep.orientacionIA ? (
@@ -95,7 +140,7 @@ function EpisodioCard({ ep }) {
 }
 
 export default function HistorialPage() {
-  const { state } = useHuella()
+  const { state, deleteEpisodio } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
 
   if (episodios.length === 0) {
@@ -122,21 +167,21 @@ export default function HistorialPage() {
         </span>
       </div>
 
+      {grupos.map((grupo) => (
+        <div key={grupo.label} className={styles.grupo}>
+          <p className={styles.grupoLabel}>{grupo.label}</p>
+          {grupo.episodios.map((ep) => (
+            <EpisodioCard key={ep.id} ep={ep} onDelete={deleteEpisodio} />
+          ))}
+        </div>
+      ))}
+
       <GenerarInformeBtn
         hijo={hijo}
         episodios={episodios}
         estrategias={estrategias}
         hitos={hitos}
       />
-
-      {grupos.map((grupo) => (
-        <div key={grupo.label} className={styles.grupo}>
-          <p className={styles.grupoLabel}>{grupo.label}</p>
-          {grupo.episodios.map((ep) => (
-            <EpisodioCard key={ep.id} ep={ep} />
-          ))}
-        </div>
-      ))}
     </div>
   )
 }

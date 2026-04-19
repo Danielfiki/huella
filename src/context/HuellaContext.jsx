@@ -118,11 +118,16 @@ export function HuellaProvider({ children }) {
 
   async function setHijo(hijo) {
     if (!user) return
+    const anterior = state.hijo
     dispatch({ type: 'SET_HIJO', payload: hijo })
-    await supabase.from('hijos').upsert(
+    const { error } = await supabase.from('hijos').upsert(
       { user_id: user.id, nombre: hijo.nombre, edad: hijo.edad },
       { onConflict: 'user_id' }
     )
+    if (error) {
+      dispatch({ type: 'SET_HIJO', payload: anterior })
+      throw new Error(error.message)
+    }
   }
 
   async function addEpisodio(episodio) {
@@ -150,6 +155,18 @@ export function HuellaProvider({ children }) {
       .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
     return real
+  }
+
+  async function deleteEpisodio(id) {
+    if (!user || !supabase) return
+    dispatch({ type: 'REMOVE_EPISODIO', payload: id })
+    const { error } = await supabase.from('episodios').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      const { data } = await supabase
+        .from('episodios').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+      if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
+      throw new Error(error.message)
+    }
   }
 
   async function updateEpisodio(partial) {
@@ -216,6 +233,7 @@ export function HuellaProvider({ children }) {
       setHijo,
       addEpisodio,
       updateEpisodio,
+      deleteEpisodio,
       addHito,
       addEstrategia,
       updateEstrategia,
