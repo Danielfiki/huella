@@ -217,12 +217,23 @@ Ver `api/anthropic.js` — el system prompt completo está implementado con todo
 ---
 
 ## Diseño y UX
-- Colores pastel cálidos, fondo salmón/crema
-- Tipografía limpia, lenguaje humano sin jerga clínica
-- Diseño tipo app móvil centrado en pantalla
-- Nunca diagnostica, siempre orienta
-- Cada respuesta termina con disclaimer clínico
+
+### Sistema de tokens (index.css)
+- **Fondo**: `--color-bg: #FBF7F2` (crema cálido) · `--color-surface: #FFFFFF` · `--color-surface-alt: #F5EEE6`
+- **Primario**: `--color-primary: #C4714A` (terracota) · dark `#A05838` · light `#E8C4B0`
+- **Texto**: `--color-text: #2D1F1A` (marrón oscuro) · muted `#7A6258` · light `#B8A8A0`
+- **Acento**: verde salvia `#C5D9C6` · azul `#B0C8DC` · lavanda `#CAC0E0` · amarillo `#F0DFA0`
+- **Estados**: success `#7A9E7E` · warning `#D4944A` · danger `#C85050`
+- **Radios**: sm `10px` · md `16px` · lg `20px` · xl `28px`
+- **Sombras**: difusas sobre `rgba(45,31,26,…)` — sm `0 2px 12px / .06` · md `0 6px 24px / .09` · lg `0 12px 48px / .12`
+- **Tipografía**: `Fraunces` (serif orgánico, headings) + `Plus Jakarta Sans` (body 400/500/600/700)
+- **Dark mode**: mismos tokens adaptados a tonos cálidos oscuros vía `@media (prefers-color-scheme: dark)`
+
+### Principios de UI
+- Lenguaje humano sin jerga clínica · diseño tipo app móvil centrado en pantalla
+- Nunca diagnostica, siempre orienta · cada respuesta termina con disclaimer clínico
+- Todos los colores y radios usan variables CSS — sin hardcodeo en módulos
 
 ---
 
-*Última actualización: 2026-04-19*
+*Última actualización: 2026-04-20*

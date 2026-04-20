@@ -1,7 +1,7 @@
 .compact { margin-top: 0; }
 
 .container {
-  background: linear-gradient(135deg, #fff8f4 0%, #f5f0ff 100%);
+  background: linear-gradient(135deg, var(--color-celebration-start) 0%, var(--color-surface-alt) 100%);
   border: 1px solid var(--color-primary-light);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -53,10 +53,10 @@
 .marco {
   font-size: 11px;
   font-style: italic;
-  color: var(--color-muted, #9ca3af);
+  color: var(--color-text-muted);
   margin-top: 10px;
   margin-bottom: 0;
-  border-top: 1px solid var(--color-border, #e5e7eb);
+  border-top: 1px solid var(--color-border);
   padding-top: 8px;
 }
 
@@ -65,9 +65,9 @@
 
 .skeletonLine {
   height: 14px;
-  background: linear-gradient(90deg, var(--color-border) 25%, #f5ede6 50%, var(--color-border) 75%);
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%);
   background-size: 200% 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
