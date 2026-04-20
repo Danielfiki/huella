@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Target, Plus, ChevronRight, CheckCircle, Lock, ArrowRight } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
+import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { generarEstrategia } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -84,9 +85,12 @@ function parsePlan(texto) {
 
 export default function EstrategiasPage() {
   const { state, addEstrategia, updateEstrategia } = useHuella()
-  const [vista, setVista] = useState('lista')
+  const location = useLocation()
+  const initNueva = location.state?.nueva === true
+  const initHabilidad = location.state?.habilidad || ''
+  const [vista, setVista] = useState(initNueva ? 'nueva' : 'lista')
   const [selectedId, setSelectedId] = useState(null)
-  const [habilidad, setHabilidad] = useState('')
+  const [habilidad, setHabilidad] = useState(initHabilidad)
   const [descripcion, setDescripcion] = useState('')
   const [plan, setPlan] = useState('')
   const [loadingPlan, setLoadingPlan] = useState(false)
@@ -364,6 +368,7 @@ export default function EstrategiasPage() {
 
   // ── VISTA: LISTA ──────────────────────────────────────────────────────────
   const estrategiaActiva = state.estrategias.find((e) => e.semanaActual < 4) ?? null
+  const nombreHijo = state.hijo?.nombre || 'tu hijo/a'
 
   return (
     <div className={styles.page}>
@@ -373,6 +378,20 @@ export default function EstrategiasPage() {
           <Plus size={16} /> Nueva
         </Button>
       </div>
+
+      <Card className={styles.explicativaCard}>
+        <div className={styles.explicativaHeader}>
+          <Sprout size={18} className={styles.explicativaIcon} />
+          <h3 className={styles.explicativaTitulo}>Tu plan de crianza</h3>
+        </div>
+        <p className={styles.explicativaTexto}>
+          Aquí construyes estrategias concretas para trabajar habilidades específicas con {nombreHijo}.
+          Cada plan dura 4 semanas — una acción por semana, sin presión.
+        </p>
+        <p className={styles.explicativaTexto}>
+          No es terapia ni teoría: son pasos reales que puedes hacer hoy, en casa, con lo que tienes.
+        </p>
+      </Card>
 
       {estrategiaActiva && (
         <EstrategiaActivaCard

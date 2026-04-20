@@ -40,6 +40,17 @@ const GATILLANTES = [
   'Dolor o malestar físico',
 ]
 
+const TIPO_A_HABILIDAD = {
+  rabieta:     'Calmarse cuando explota',
+  agresividad: 'Calmarse cuando explota',
+  desconexion: 'Calmarse cuando explota',
+  oposicion:   'Aceptar el "no" sin crisis',
+  miedo:       'Manejar el miedo y la angustia',
+  llanto:      'Manejar el miedo y la angustia',
+  sueño:       'Concentrarse y calmarse',
+  social:      'Relacionarse mejor con otros niños',
+}
+
 const CUANDO_OPCIONES = [
   { id: 'ahora',      label: 'Ahora' },
   { id: 'hora_antes', label: 'Hace ~1 hora' },
@@ -181,6 +192,7 @@ export default function RegistroPage() {
   // ── VISTA: GUARDADO ───────────────────────────────────────────────────────
   if (vista === 'guardado') {
     const tipoObj = TIPOS.find((t) => t.id === tipo)
+    const habilidadSugerida = TIPO_A_HABILIDAD[tipo] || ''
     return (
       <div className={styles.page}>
         <div className={styles.guardadoContainer}>
@@ -196,6 +208,19 @@ export default function RegistroPage() {
             loading={loadingIA}
             mensajeCarga="Analizando lo que pasó con tu hijo..."
           />
+          {habilidadSugerida && (
+            <button
+              className={styles.estrategiaBtn}
+              onClick={() => navigate('/estrategias', { state: { nueva: true, habilidad: habilidadSugerida } })}
+            >
+              <span className={styles.estrategiaBtnEmoji}>🌱</span>
+              <span className={styles.estrategiaBtnTexto}>
+                <strong>Crear estrategia desde esto</strong>
+                <span>{habilidadSugerida}</span>
+              </span>
+              <span className={styles.estrategiaBtnArrow}>→</span>
+            </button>
+          )}
           <Button variant="secondary" fullWidth onClick={() => navigate('/panel')}>
             Volver al inicio
           </Button>

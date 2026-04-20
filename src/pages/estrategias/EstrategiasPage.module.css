@@ -59,6 +59,27 @@
   flex-shrink: 0;
 }
 
+/* ── Card explicativa ── */
+.explicativaCard {
+  background: linear-gradient(135deg, var(--color-success-bg) 0%, var(--color-surface) 100%);
+  border-color: var(--color-accent-green);
+}
+.explicativaHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.explicativaIcon { color: var(--color-success); flex-shrink: 0; }
+.explicativaTitulo { font-size: 15px; font-weight: 700; color: var(--color-text); margin: 0; }
+.explicativaTexto {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0 0 6px;
+}
+.explicativaTexto:last-child { margin-bottom: 0; }
+
 .habilidadesGrid { display: flex; flex-direction: column; gap: 8px; }
 
 .habilidadBtn {
