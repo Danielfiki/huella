@@ -31,7 +31,75 @@
 .tipoWrap { display: flex; align-items: center; gap: 10px; }
 .emoji { font-size: 26px; line-height: 1; }
 .tipoLabel { font-size: 14px; font-weight: 600; }
-.hora { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.horaRow { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.hora { font-size: 12px; color: var(--color-text-muted); }
+.estrategiaBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-tag-green);
+  background: var(--color-accent-green);
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Card impacto estrategia ── */
+.impactoCard { display: flex; flex-direction: column; gap: 4px; }
+
+.impactoHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.impactoIcon { flex-shrink: 0; }
+.impactoLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.impactoNombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.impactoMensaje {
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+.impactoDetalle {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.impacto_bajaron {
+  background: linear-gradient(135deg, var(--color-success-bg) 0%, var(--color-surface) 100%);
+  border-color: var(--color-accent-green);
+}
+.impacto_bajaron .impactoIcon { color: var(--color-success); }
+
+.impacto_subieron {
+  background: linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-surface) 100%);
+  border-color: var(--color-primary-light);
+}
+.impacto_subieron .impactoIcon { color: var(--color-warning); }
+
+.impacto_igual,
+.impacto_inicio,
+.impacto_sin_datos {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.impacto_igual .impactoIcon,
+.impacto_inicio .impactoIcon,
+.impacto_sin_datos .impactoIcon { color: var(--color-text-muted); }
 
 .intensidadBadge {
   font-size: 11px; font-weight: 600; padding: 3px 10px;

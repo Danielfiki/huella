@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { BookOpen, ChevronDown, ChevronUp, Trash2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -16,6 +16,65 @@ const TIPOS = {
   desconexion: { label: 'Se cerró / no respondía',          emoji: '😶' },
   oposicion:   { label: 'Oposición / no coopera',           emoji: '🙅' },
   otro:        { label: 'Otro',                             emoji: '📝' },
+}
+
+const HABILIDAD_A_TIPOS = {
+  'Calmarse cuando explota':            ['rabieta', 'agresividad', 'desconexion'],
+  'Aceptar el "no" sin crisis':         ['oposicion'],
+  'Manejar el miedo y la angustia':     ['miedo', 'llanto'],
+  'Concentrarse y calmarse':            ['sueño'],
+  'Relacionarse mejor con otros niños': ['social'],
+  'Manejar los cambios de rutina':      ['rabieta', 'oposicion'],
+}
+
+function calcularImpacto(estrategia, episodios) {
+  const inicio = new Date(estrategia.fechaInicio)
+  const ahora = new Date()
+  const diasDesde = Math.max(1, Math.floor((ahora - inicio) / 864e5))
+  const ventanaAntes = new Date(inicio)
+  ventanaAntes.setDate(ventanaAntes.getDate() - diasDesde)
+
+  const tipos = HABILIDAD_A_TIPOS[estrategia.habilidad] || []
+  const tipoLabel = tipos[0] ? (TIPOS[tipos[0]]?.label || estrategia.habilidad) : estrategia.habilidad
+
+  const antes = episodios.filter((e) => {
+    const f = new Date(e.fecha)
+    return f >= ventanaAntes && f < inicio && tipos.includes(e.tipo)
+  }).length
+  const despues = episodios.filter((e) => {
+    const f = new Date(e.fecha)
+    return f >= inicio && tipos.includes(e.tipo)
+  }).length
+
+  // normalizar a tasa semanal para comparar períodos desiguales
+  const ratAntes  = (antes  / diasDesde) * 7
+  const ratDespues = (despues / diasDesde) * 7
+  const diff = ratDespues - ratAntes
+
+  let tendencia, mensaje, detalle
+  if (diasDesde < 5) {
+    tendencia = 'inicio'
+    mensaje = `Llevas ${diasDesde} ${diasDesde === 1 ? 'día' : 'días'} con esta estrategia.`
+    detalle = 'Sigue registrando para ver si hay cambios.'
+  } else if (antes === 0 && despues === 0) {
+    tendencia = 'sin_datos'
+    mensaje = `Sin episodios de "${tipoLabel}" para comparar.`
+    detalle = 'No hay datos suficientes todavía.'
+  } else if (diff < -0.4) {
+    tendencia = 'bajaron'
+    mensaje = `Los episodios de "${tipoLabel}" bajaron.`
+    detalle = `Antes: ${antes} · Después: ${despues}. Algo está funcionando. 💪`
+  } else if (diff > 0.4) {
+    tendencia = 'subieron'
+    mensaje = `Los episodios de "${tipoLabel}" aumentaron.`
+    detalle = `Antes: ${antes} · Después: ${despues}. Puede pasar al inicio — el cambio lleva tiempo.`
+  } else {
+    tendencia = 'igual'
+    mensaje = `Los episodios de "${tipoLabel}" se mantuvieron similares.`
+    detalle = `Antes: ${antes} · Después: ${despues}. Sigue registrando para ver el patrón.`
+  }
+
+  return { diasDesde, tendencia, mensaje, detalle }
 }
 
 const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy intenso']
@@ -45,7 +104,7 @@ function agruparPorDia(episodios) {
   return Array.from(grupos.values())
 }
 
-function EpisodioCard({ ep, onDelete }) {
+function EpisodioCard({ ep, onDelete, conEstrategia }) {
   const [expandido, setExpandido] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -68,7 +127,12 @@ function EpisodioCard({ ep, onDelete }) {
           <span className={styles.emoji}>{tipo.emoji}</span>
           <div>
             <p className={styles.tipoLabel}>{tipo.label}</p>
-            <p className={styles.hora}>{formatHora(ep.fecha)}</p>
+            <div className={styles.horaRow}>
+              <p className={styles.hora}>{formatHora(ep.fecha)}</p>
+              {conEstrategia && (
+                <span className={styles.estrategiaBadge}>con estrategia activa</span>
+              )}
+            </div>
           </div>
         </div>
         <div className={styles.cardTopRight}>
@@ -143,6 +207,31 @@ export default function HistorialPage() {
   const { state, deleteEpisodio } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
 
+  const estrategiaActiva = useMemo(
+    () => (estrategias || []).find((e) => e.semanaActual < 4) ?? null,
+    [estrategias]
+  )
+
+  const impacto = useMemo(
+    () => estrategiaActiva ? calcularImpacto(estrategiaActiva, episodios) : null,
+    [estrategiaActiva, episodios]
+  )
+
+  // Set de IDs de episodios registrados mientras había una estrategia activa
+  const episodiosConEstrategia = useMemo(() => {
+    const set = new Set()
+    for (const ep of episodios) {
+      const fEp = new Date(ep.fecha)
+      for (const est of (estrategias || [])) {
+        const fIni = new Date(est.fechaInicio)
+        const fFin = new Date(est.fechaInicio)
+        fFin.setDate(fFin.getDate() + 28)
+        if (fEp >= fIni && fEp <= fFin) { set.add(ep.id); break }
+      }
+    }
+    return set
+  }, [episodios, estrategias])
+
   if (episodios.length === 0) {
     return (
       <div className={styles.page}>
@@ -158,6 +247,12 @@ export default function HistorialPage() {
 
   const grupos = agruparPorDia(episodios)
 
+  const ImpactoIcon = impacto?.tendencia === 'bajaron'
+    ? TrendingDown
+    : impacto?.tendencia === 'subieron'
+    ? TrendingUp
+    : Minus
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -167,11 +262,30 @@ export default function HistorialPage() {
         </span>
       </div>
 
+      {impacto && estrategiaActiva && (
+        <Card className={`${styles.impactoCard} ${styles[`impacto_${impacto.tendencia}`]}`}>
+          <div className={styles.impactoHeader}>
+            <ImpactoIcon size={16} className={styles.impactoIcon} />
+            <p className={styles.impactoLabel}>
+              Estrategia activa · hace {impacto.diasDesde} {impacto.diasDesde === 1 ? 'día' : 'días'}
+            </p>
+          </div>
+          <p className={styles.impactoNombre}>"{estrategiaActiva.habilidad}"</p>
+          <p className={styles.impactoMensaje}>{impacto.mensaje}</p>
+          <p className={styles.impactoDetalle}>{impacto.detalle}</p>
+        </Card>
+      )}
+
       {grupos.map((grupo) => (
         <div key={grupo.label} className={styles.grupo}>
           <p className={styles.grupoLabel}>{grupo.label}</p>
           {grupo.episodios.map((ep) => (
-            <EpisodioCard key={ep.id} ep={ep} onDelete={deleteEpisodio} />
+            <EpisodioCard
+              key={ep.id}
+              ep={ep}
+              onDelete={deleteEpisodio}
+              conEstrategia={episodiosConEstrategia.has(ep.id)}
+            />
           ))}
         </div>
       ))}
