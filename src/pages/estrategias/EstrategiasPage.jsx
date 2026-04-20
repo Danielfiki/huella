@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { generarEstrategia } from '../../services/anthropic'
@@ -86,6 +86,7 @@ function parsePlan(texto) {
 export default function EstrategiasPage() {
   const { state, addEstrategia, updateEstrategia } = useHuella()
   const location = useLocation()
+  const navigate = useNavigate()
   const initNueva = location.state?.nueva === true
   const initHabilidad = location.state?.habilidad || ''
   const [vista, setVista] = useState(initNueva ? 'nueva' : 'lista')
@@ -357,6 +358,17 @@ export default function EstrategiasPage() {
               <p style={{ fontWeight: 600, marginBottom: 4 }}>¡Completaste las 4 semanas!</p>
               <p>Eso ya es un logro. ¿Quieres trabajar otra habilidad?</p>
             </div>
+            <div className={styles.badgeDesbloqueado}>
+              <span className={styles.badgeDesbloqueadoEmoji}>🏆</span>
+              <div>
+                <p className={styles.badgeDesbloqueadoLabel}>Medalla desbloqueada</p>
+                <p className={styles.badgeDesbloqueadoTitulo}>4 semanas</p>
+                <p className={styles.badgeDesbloqueadoFrase}>"Cuatro semanas sostenidas. Eso es transformación real."</p>
+              </div>
+            </div>
+            <Button variant="ghost" fullWidth onClick={() => navigate('/hitos')}>
+              Ver en Logros →
+            </Button>
             <Button variant="primary" fullWidth onClick={() => setVista('nueva')}>
               Crear nueva estrategia
             </Button>

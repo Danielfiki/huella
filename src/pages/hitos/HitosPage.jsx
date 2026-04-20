@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Sparkles, Lock } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
 import { celebrarHito } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -425,16 +426,17 @@ const NIVELES = [
 
 // ── Componentes ───────────────────────────────────────────────────────────
 
-function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado }) {
+function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado, esNuevo }) {
   const locked = nivelBloqueado || !desbloqueado
   return (
-    <div className={`${styles.badgeCard} ${locked ? styles.badgeLocked : styles.badgeUnlocked}`}>
+    <div className={`${styles.badgeCard} ${locked ? styles.badgeLocked : styles.badgeUnlocked} ${esNuevo ? styles.badgeNuevo : ''}`}>
       <div
         className={styles.badgeEmojiWrap}
         style={!locked ? { background: badge.color + '22', borderColor: badge.color + '66' } : {}}
       >
         <span className={styles.badgeEmoji}>{badge.emoji}</span>
       </div>
+      {esNuevo && <span className={styles.nuevoPill}>¡Nuevo!</span>}
       <p className={styles.badgeTitulo}>{badge.titulo}</p>
       <p className={styles.badgeDesc}>{badge.desc}</p>
       {!locked ? (
@@ -455,7 +457,7 @@ function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado }) {
   )
 }
 
-function NivelSection({ nivel, data, bloqueado, desbloqueadosPrevios, umbralPrevio }) {
+function NivelSection({ nivel, data, bloqueado, umbralPrevio, badgesNuevos }) {
   const desbloqueados = nivel.badges.filter((b) => b.check(data)).length
   const total = nivel.badges.length
   const pct = Math.round((desbloqueados / total) * 100)
@@ -496,6 +498,7 @@ function NivelSection({ nivel, data, bloqueado, desbloqueadosPrevios, umbralPrev
               desbloqueado={desbloqueado}
               fechaLogro={fechaLogro}
               nivelBloqueado={bloqueado}
+              esNuevo={badgesNuevos?.has(badge.id) ?? false}
             />
           )
         })}
@@ -508,6 +511,7 @@ function NivelSection({ nivel, data, bloqueado, desbloqueadosPrevios, umbralPrev
 
 export default function HitosPage() {
   const { state, addHito } = useHuella()
+  const { user } = useAuth()
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -518,6 +522,36 @@ export default function HitosPage() {
 
   const { episodios, hitos, estrategias } = state
   const dataBadge = { episodios, hitos, estrategias }
+
+  // ── Tracking de badges nuevos ─────────────────────────────────────────────
+  const storageKey = `huella_badges_vistos_${user?.id || 'anon'}`
+  const badgesVistosRef = useRef(null)
+
+  if (badgesVistosRef.current === null) {
+    try {
+      badgesVistosRef.current = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'))
+    } catch { badgesVistosRef.current = new Set() }
+  }
+
+  const todosLosBadges = NIVELES.flatMap((n) => n.badges)
+  const desbloqueadosActuales = new Set(todosLosBadges.filter((b) => b.check(dataBadge)).map((b) => b.id))
+  const badgesNuevos = new Set([...desbloqueadosActuales].filter((id) => !badgesVistosRef.current.has(id)))
+
+  // Marcar como vistos al salir (o tras 4s)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify([...desbloqueadosActuales]))
+      } catch {}
+    }, 4000)
+    return () => {
+      clearTimeout(timer)
+      try {
+        localStorage.setItem(storageKey, JSON.stringify([...desbloqueadosActuales]))
+      } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey])
 
   // Determine which levels are unlocked
   const nivelesConEstado = NIVELES.map((nivel, i) => {
@@ -531,7 +565,7 @@ export default function HitosPage() {
   const lastUnlockedIdx = nivelesConEstado.reduce((acc, n, i) => (!n.bloqueado ? i : acc), 0)
   const nivelesVisibles = nivelesConEstado.slice(0, Math.min(lastUnlockedIdx + 2, NIVELES.length))
 
-  const totalDesbloqueados = NIVELES.flatMap((n) => n.badges).filter((b) => b.check(dataBadge)).length
+  const totalDesbloqueados = desbloqueadosActuales.size
   const totalBadges = NIVELES.reduce((s, n) => s + n.badges.length, 0)
 
   async function handleGuardar() {
@@ -631,6 +665,7 @@ export default function HitosPage() {
           data={dataBadge}
           bloqueado={nivel.bloqueado}
           umbralPrevio={nivel.umbralPrevio}
+          badgesNuevos={badgesNuevos}
         />
       ))}
 

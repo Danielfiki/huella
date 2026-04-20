@@ -141,6 +141,28 @@
 .badgeUnlocked { border-color: var(--color-border); }
 .badgeLocked { opacity: 0.5; }
 
+.badgeNuevo {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+  animation: pulseNuevo 2s ease-in-out 3;
+}
+@keyframes pulseNuevo {
+  0%, 100% { box-shadow: 0 0 0 3px var(--color-primary-bg); }
+  50% { box-shadow: 0 0 0 5px var(--color-primary-light); }
+}
+
+.nuevoPill {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: white;
+  background: var(--color-primary);
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-bottom: 2px;
+}
+
 .badgeEmojiWrap {
   width: 44px;
   height: 44px;
