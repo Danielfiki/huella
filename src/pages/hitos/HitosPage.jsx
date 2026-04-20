@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Star, Plus, Sparkles } from 'lucide-react'
+import { Plus, Sparkles, Lock } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { celebrarHito } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -15,162 +15,496 @@ const CATEGORIAS = [
   { id: 'otro',            label: 'Otro avance',     emoji: '⭐' },
 ]
 
-// ── Definición de badges ──────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 
-const BADGES = [
+function diasActivo({ episodios, hitos }) {
+  const fechas = [...episodios.map((e) => e.fecha), ...hitos.map((h) => h.fecha)]
+  if (!fechas.length) return 0
+  const oldest = Math.min(...fechas.map((f) => new Date(f).getTime()))
+  return Math.floor((Date.now() - oldest) / (24 * 60 * 60 * 1000))
+}
+
+function fechaAlDia(data, dias) {
+  const fechas = [...data.episodios.map((e) => e.fecha), ...data.hitos.map((h) => h.fecha)]
+  if (!fechas.length) return null
+  const oldest = Math.min(...fechas.map((f) => new Date(f).getTime()))
+  if (Date.now() - oldest < dias * 24 * 60 * 60 * 1000) return null
+  return new Date(oldest + dias * 24 * 60 * 60 * 1000).toISOString()
+}
+
+function fechaNEpisodio(episodios, n) {
+  if (episodios.length < n) return null
+  // episodios sorted newest-first; n-th registered = index length-n
+  return episodios[episodios.length - n].fecha
+}
+
+function tieneVentana(episodios, count, dias) {
+  if (episodios.length < count) return null // returns date or null
+  const sorted = [...episodios].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+  const ventanaMs = dias * 24 * 60 * 60 * 1000
+  for (let i = count - 1; i < sorted.length; i++) {
+    const base = new Date(sorted[i].fecha).getTime()
+    const inWindow = sorted.filter(
+      (e) => new Date(e.fecha).getTime() >= base - ventanaMs && new Date(e.fecha).getTime() <= base
+    )
+    if (inWindow.length >= count) return sorted[i].fecha
+  }
+  return null
+}
+
+// ── Definición de niveles ─────────────────────────────────────────────────
+
+const NIVELES = [
   {
-    id: 'primer_registro',
-    emoji: '🌟',
-    titulo: 'Primer paso',
-    desc: '1 episodio registrado',
-    color: '#f59e0b',
-    check: ({ episodios }) => episodios.length >= 1,
-    fechaLogro: ({ episodios }) =>
-      episodios.length >= 1 ? episodios[episodios.length - 1].fecha : null,
+    nivel: 1,
+    subtitulo: 'Primeros pasos',
+    umbral: 7,
+    badges: [
+      {
+        id: 'primer_registro',
+        emoji: '🌟',
+        titulo: 'Primer paso',
+        desc: '1 episodio registrado',
+        frase: 'Registrar ya es un acto de amor hacia tu hijo.',
+        color: '#f59e0b',
+        check: ({ episodios }) => episodios.length >= 1,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 1),
+      },
+      {
+        id: 'cinco_registros',
+        emoji: '📊',
+        titulo: 'Observador',
+        desc: '5 episodios registrados',
+        frase: 'Observar sin juzgar es la primera herramienta de todo buen padre.',
+        color: '#3b82f6',
+        check: ({ episodios }) => episodios.length >= 5,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 5),
+      },
+      {
+        id: 'diez_registros',
+        emoji: '🔍',
+        titulo: 'Analista',
+        desc: '10 episodios registrados',
+        frase: 'Ya estás viendo patrones que antes eran invisibles.',
+        color: '#8b5cf6',
+        check: ({ episodios }) => episodios.length >= 10,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 10),
+      },
+      {
+        id: 'primer_hito',
+        emoji: '💛',
+        titulo: 'Primer avance',
+        desc: '1 avance positivo registrado',
+        frase: 'Notar los logros pequeños es lo que los hace crecer.',
+        color: '#eab308',
+        check: ({ hitos }) => hitos.length >= 1,
+        fechaLogro: ({ hitos }) => hitos.length >= 1 ? hitos[hitos.length - 1].fecha : null,
+      },
+      {
+        id: 'cinco_hitos',
+        emoji: '🏅',
+        titulo: 'Coleccionista',
+        desc: '5 avances positivos registrados',
+        frase: 'Cada avance registrado le dice: te veo, te valoro.',
+        color: '#f97316',
+        check: ({ hitos }) => hitos.length >= 5,
+        fechaLogro: ({ hitos }) => hitos.length >= 5 ? hitos[hitos.length - 5].fecha : null,
+      },
+      {
+        id: 'primera_estrategia',
+        emoji: '🎯',
+        titulo: 'Estratega',
+        desc: '1 estrategia creada',
+        frase: 'Tener un plan cambia todo. Lo más difícil ya pasó.',
+        color: '#10b981',
+        check: ({ estrategias }) => estrategias.length >= 1,
+        fechaLogro: ({ estrategias }) =>
+          estrategias.length >= 1 ? estrategias[estrategias.length - 1].fechaInicio : null,
+      },
+      {
+        id: 'plan_completo',
+        emoji: '🏆',
+        titulo: '4 semanas',
+        desc: 'Completaste un plan de 4 semanas',
+        frase: 'Cuatro semanas sostenidas. Eso es transformación real.',
+        color: '#f59e0b',
+        check: ({ estrategias }) => estrategias.some((e) => e.semanaActual >= 4),
+        fechaLogro: ({ estrategias }) => {
+          const e = estrategias.find((e) => e.semanaActual >= 4)
+          return e ? e.fechaInicio : null
+        },
+      },
+      {
+        id: 'mes_activo',
+        emoji: '📅',
+        titulo: 'Un mes',
+        desc: '30 días usando Huella',
+        frase: 'Un mes de presencia consciente. Extraordinario.',
+        color: '#6366f1',
+        check: (data) => diasActivo(data) >= 30,
+        fechaLogro: (data) => fechaAlDia(data, 30),
+      },
+      {
+        id: 'semana_activa',
+        emoji: '🔥',
+        titulo: 'Semana activa',
+        desc: '7 episodios en 7 días',
+        frase: 'Registrar en momentos difíciles es valentía pura.',
+        color: '#ef4444',
+        check: ({ episodios }) => tieneVentana(episodios, 7, 7) !== null,
+        fechaLogro: ({ episodios }) => tieneVentana(episodios, 7, 7),
+      },
+      {
+        id: 'tres_estrategias',
+        emoji: '🌈',
+        titulo: 'Multihabilidad',
+        desc: '3 estrategias creadas',
+        frase: 'Tres dimensiones distintas. Eso es comprensión profunda.',
+        color: '#06b6d4',
+        check: ({ estrategias }) => estrategias.length >= 3,
+        fechaLogro: ({ estrategias }) =>
+          estrategias.length >= 3 ? estrategias[estrategias.length - 3].fechaInicio : null,
+      },
+    ],
   },
   {
-    id: 'cinco_registros',
-    emoji: '📊',
-    titulo: 'Observador',
-    desc: '5 episodios registrados',
-    color: '#3b82f6',
-    check: ({ episodios }) => episodios.length >= 5,
-    fechaLogro: ({ episodios }) =>
-      episodios.length >= 5 ? episodios[episodios.length - 5].fecha : null,
+    nivel: 2,
+    subtitulo: 'En profundidad',
+    umbral: 7,
+    badges: [
+      {
+        id: 'veinticinco_registros',
+        emoji: '💎',
+        titulo: 'Experto',
+        desc: '25 episodios registrados',
+        frase: 'Te has convertido en el mayor experto en tu propio hijo.',
+        color: '#06b6d4',
+        check: ({ episodios }) => episodios.length >= 25,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 25),
+      },
+      {
+        id: 'cincuenta_registros',
+        emoji: '🎓',
+        titulo: 'Profundo',
+        desc: '50 episodios registrados',
+        frase: 'Pocos padres llegan tan lejos. Eres excepcional.',
+        color: '#7c3aed',
+        check: ({ episodios }) => episodios.length >= 50,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 50),
+      },
+      {
+        id: 'dos_meses',
+        emoji: '🌿',
+        titulo: 'Constancia',
+        desc: '60 días usando Huella',
+        frase: 'La constancia no se improvisa, se construye día a día.',
+        color: '#059669',
+        check: (data) => diasActivo(data) >= 60,
+        fechaLogro: (data) => fechaAlDia(data, 60),
+      },
+      {
+        id: 'diez_hitos',
+        emoji: '🤝',
+        titulo: 'Mentor',
+        desc: '10 avances positivos registrados',
+        frase: 'Llevas un registro de amor que tu hijo un día entenderá.',
+        color: '#d97706',
+        check: ({ hitos }) => hitos.length >= 10,
+        fechaLogro: ({ hitos }) =>
+          hitos.length >= 10 ? hitos[hitos.length - 10].fecha : null,
+      },
+      {
+        id: 'cinco_estrategias',
+        emoji: '⚡',
+        titulo: 'Arquitecto',
+        desc: '5 estrategias creadas',
+        frase: 'Estás construyendo una arquitectura emocional sólida.',
+        color: '#0ea5e9',
+        check: ({ estrategias }) => estrategias.length >= 5,
+        fechaLogro: ({ estrategias }) =>
+          estrategias.length >= 5 ? estrategias[estrategias.length - 5].fechaInicio : null,
+      },
+      {
+        id: 'dos_planes',
+        emoji: '🎯',
+        titulo: 'Doble logro',
+        desc: '2 planes de 4 semanas completados',
+        frase: 'Sabes que el cambio requiere tiempo y lo estás dando.',
+        color: '#10b981',
+        check: ({ estrategias }) => estrategias.filter((e) => e.semanaActual >= 4).length >= 2,
+        fechaLogro: ({ estrategias }) => {
+          const c = [...estrategias]
+            .filter((e) => e.semanaActual >= 4)
+            .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio))
+          return c.length >= 2 ? c[1].fechaInicio : null
+        },
+      },
+      {
+        id: 'quince_en_semana',
+        emoji: '📈',
+        titulo: 'Resistente',
+        desc: '15 episodios en 7 días',
+        frase: 'Lo viviste, lo registraste, seguiste adelante. Eso es resiliencia.',
+        color: '#ef4444',
+        check: ({ episodios }) => tieneVentana(episodios, 15, 7) !== null,
+        fechaLogro: ({ episodios }) => tieneVentana(episodios, 15, 7),
+      },
+      {
+        id: 'cinco_tipos',
+        emoji: '🧩',
+        titulo: 'Diversidad',
+        desc: 'Episodios de 5 tipos distintos',
+        frase: 'Ves a tu hijo desde 5 ángulos distintos. Eso es comprensión.',
+        color: '#8b5cf6',
+        check: ({ episodios }) => new Set(episodios.map((e) => e.tipo)).size >= 5,
+        fechaLogro: ({ episodios }) => {
+          const sorted = [...episodios].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+          const tipos = new Set()
+          for (const ep of sorted) {
+            tipos.add(ep.tipo)
+            if (tipos.size >= 5) return ep.fecha
+          }
+          return null
+        },
+      },
+      {
+        id: 'catorce_dias',
+        emoji: '🗓️',
+        titulo: 'Comprometido',
+        desc: 'Registros en 14 días distintos',
+        frase: 'Tu compromiso es consistente y real.',
+        color: '#f97316',
+        check: ({ episodios }) => new Set(episodios.map((e) => e.fecha.slice(0, 10))).size >= 14,
+        fechaLogro: ({ episodios }) => {
+          const sorted = [...episodios].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+          const dias = new Set()
+          for (const ep of sorted) {
+            dias.add(ep.fecha.slice(0, 10))
+            if (dias.size >= 14) return ep.fecha
+          }
+          return null
+        },
+      },
+      {
+        id: 'tres_meses',
+        emoji: '🏔️',
+        titulo: 'Tres meses',
+        desc: '90 días usando Huella',
+        frase: '90 días. El cambio que buscabas ya es permanente.',
+        color: '#6366f1',
+        check: (data) => diasActivo(data) >= 90,
+        fechaLogro: (data) => fechaAlDia(data, 90),
+      },
+    ],
   },
   {
-    id: 'diez_registros',
-    emoji: '🔍',
-    titulo: 'Analista',
-    desc: '10 episodios registrados',
-    color: '#8b5cf6',
-    check: ({ episodios }) => episodios.length >= 10,
-    fechaLogro: ({ episodios }) =>
-      episodios.length >= 10 ? episodios[episodios.length - 10].fecha : null,
-  },
-  {
-    id: 'primer_hito',
-    emoji: '💛',
-    titulo: 'Primer avance',
-    desc: 'Registraste un avance positivo',
-    color: '#eab308',
-    check: ({ hitos }) => hitos.length >= 1,
-    fechaLogro: ({ hitos }) =>
-      hitos.length >= 1 ? hitos[hitos.length - 1].fecha : null,
-  },
-  {
-    id: 'cinco_hitos',
-    emoji: '🏅',
-    titulo: 'Coleccionista',
-    desc: '5 avances positivos registrados',
-    color: '#f97316',
-    check: ({ hitos }) => hitos.length >= 5,
-    fechaLogro: ({ hitos }) =>
-      hitos.length >= 5 ? hitos[hitos.length - 5].fecha : null,
-  },
-  {
-    id: 'primera_estrategia',
-    emoji: '🎯',
-    titulo: 'Estratega',
-    desc: 'Creaste tu primera estrategia',
-    color: '#10b981',
-    check: ({ estrategias }) => estrategias.length >= 1,
-    fechaLogro: ({ estrategias }) =>
-      estrategias.length >= 1 ? estrategias[estrategias.length - 1].fechaInicio : null,
-  },
-  {
-    id: 'plan_completo',
-    emoji: '🏆',
-    titulo: '4 semanas',
-    desc: 'Completaste un plan de 4 semanas',
-    color: '#f59e0b',
-    check: ({ estrategias }) => estrategias.some((e) => e.semanaActual >= 4),
-    fechaLogro: ({ estrategias }) => {
-      const e = estrategias.find((e) => e.semanaActual >= 4)
-      return e ? e.fechaInicio : null
-    },
-  },
-  {
-    id: 'mes_activo',
-    emoji: '📅',
-    titulo: 'Un mes',
-    desc: '30 días usando Huella',
-    color: '#6366f1',
-    check: ({ episodios, hitos }) => {
-      const fechas = [...episodios.map((e) => e.fecha), ...hitos.map((h) => h.fecha)]
-      if (!fechas.length) return false
-      const oldest = Math.min(...fechas.map((f) => new Date(f).getTime()))
-      return Date.now() - oldest >= 30 * 24 * 60 * 60 * 1000
-    },
-    fechaLogro: ({ episodios, hitos }) => {
-      const fechas = [...episodios.map((e) => e.fecha), ...hitos.map((h) => h.fecha)]
-      if (!fechas.length) return null
-      const oldest = Math.min(...fechas.map((f) => new Date(f).getTime()))
-      return new Date(oldest + 30 * 24 * 60 * 60 * 1000).toISOString()
-    },
-  },
-  {
-    id: 'semana_intensa',
-    emoji: '🔥',
-    titulo: 'Semana activa',
-    desc: '7 episodios en 7 días',
-    color: '#ef4444',
-    check: ({ episodios }) => {
-      if (episodios.length < 7) return false
-      for (let i = 0; i < episodios.length; i++) {
-        const base = new Date(episodios[i].fecha).getTime()
-        const ventana = episodios.filter(
-          (e) => Math.abs(new Date(e.fecha).getTime() - base) <= 7 * 24 * 60 * 60 * 1000
-        )
-        if (ventana.length >= 7) return true
-      }
-      return false
-    },
-    fechaLogro: ({ episodios }) => {
-      if (episodios.length < 7) return null
-      for (let i = 0; i < episodios.length; i++) {
-        const base = new Date(episodios[i].fecha).getTime()
-        const ventana = episodios.filter(
-          (e) => Math.abs(new Date(e.fecha).getTime() - base) <= 7 * 24 * 60 * 60 * 1000
-        )
-        if (ventana.length >= 7) return episodios[i].fecha
-      }
-      return null
-    },
-  },
-  {
-    id: 'tres_estrategias',
-    emoji: '🌈',
-    titulo: 'Multihabilidad',
-    desc: '3 estrategias creadas',
-    color: '#06b6d4',
-    check: ({ estrategias }) => estrategias.length >= 3,
-    fechaLogro: ({ estrategias }) =>
-      estrategias.length >= 3 ? estrategias[estrategias.length - 3].fechaInicio : null,
+    nivel: 3,
+    subtitulo: 'Maestría',
+    umbral: 7,
+    badges: [
+      {
+        id: 'cien_registros',
+        emoji: '👑',
+        titulo: 'Maestro',
+        desc: '100 episodios registrados',
+        frase: 'Nadie conoce mejor a tu hijo que tú.',
+        color: '#f59e0b',
+        check: ({ episodios }) => episodios.length >= 100,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 100),
+      },
+      {
+        id: 'veinte_hitos',
+        emoji: '🔮',
+        titulo: 'Visionario',
+        desc: '20 avances positivos registrados',
+        frase: 'Una biblioteca de momentos que valen oro.',
+        color: '#7c3aed',
+        check: ({ hitos }) => hitos.length >= 20,
+        fechaLogro: ({ hitos }) =>
+          hitos.length >= 20 ? hitos[hitos.length - 20].fecha : null,
+      },
+      {
+        id: 'cinco_planes',
+        emoji: '🌊',
+        titulo: 'Fluidez',
+        desc: '5 planes de 4 semanas completados',
+        frase: 'Tu disciplina es inspiradora. Cinco planes sostenidos.',
+        color: '#0ea5e9',
+        check: ({ estrategias }) => estrategias.filter((e) => e.semanaActual >= 4).length >= 5,
+        fechaLogro: ({ estrategias }) => {
+          const c = [...estrategias]
+            .filter((e) => e.semanaActual >= 4)
+            .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio))
+          return c.length >= 5 ? c[4].fechaInicio : null
+        },
+      },
+      {
+        id: 'cuatro_meses',
+        emoji: '🦋',
+        titulo: 'Transformación',
+        desc: '120 días usando Huella',
+        frase: 'Lo que cambió no solo es tu hijo, también eres tú.',
+        color: '#ec4899',
+        check: (data) => diasActivo(data) >= 120,
+        fechaLogro: (data) => fechaAlDia(data, 120),
+      },
+      {
+        id: 'ciento_cincuenta',
+        emoji: '🧬',
+        titulo: 'Científico',
+        desc: '150 episodios registrados',
+        frase: 'Eres el científico de tu propia familia.',
+        color: '#10b981',
+        check: ({ episodios }) => episodios.length >= 150,
+        fechaLogro: ({ episodios }) => fechaNEpisodio(episodios, 150),
+      },
+      {
+        id: 'seis_meses',
+        emoji: '⭐',
+        titulo: 'Dedicado',
+        desc: '180 días usando Huella',
+        frase: 'Estás redefiniendo lo que significa ser padre o madre.',
+        color: '#6366f1',
+        check: (data) => diasActivo(data) >= 180,
+        fechaLogro: (data) => fechaAlDia(data, 180),
+      },
+      {
+        id: 'siete_tipos',
+        emoji: '🎪',
+        titulo: 'Explorador',
+        desc: 'Episodios de 7 tipos distintos',
+        frase: 'Tu hijo no tiene secretos para ti.',
+        color: '#f97316',
+        check: ({ episodios }) => new Set(episodios.map((e) => e.tipo)).size >= 7,
+        fechaLogro: ({ episodios }) => {
+          const sorted = [...episodios].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+          const tipos = new Set()
+          for (const ep of sorted) {
+            tipos.add(ep.tipo)
+            if (tipos.size >= 7) return ep.fecha
+          }
+          return null
+        },
+      },
+      {
+        id: 'diez_estrategias',
+        emoji: '💫',
+        titulo: 'Decano',
+        desc: '10 estrategias creadas',
+        frase: 'Eres un guía para toda tu familia.',
+        color: '#06b6d4',
+        check: ({ estrategias }) => estrategias.length >= 10,
+        fechaLogro: ({ estrategias }) =>
+          estrategias.length >= 10 ? estrategias[estrategias.length - 10].fechaInicio : null,
+      },
+      {
+        id: 'veinticinco_hitos',
+        emoji: '🌺',
+        titulo: 'Florecimiento',
+        desc: '25 avances positivos registrados',
+        frase: 'Una historia de amor que ningún otro padre documenta así.',
+        color: '#f43f5e',
+        check: ({ hitos }) => hitos.length >= 25,
+        fechaLogro: ({ hitos }) =>
+          hitos.length >= 25 ? hitos[hitos.length - 25].fecha : null,
+      },
+      {
+        id: 'leyenda',
+        emoji: '🏅',
+        titulo: 'Leyenda',
+        desc: '30 avances positivos registrados',
+        frase: 'Has llegado al nivel más alto. Eres extraordinario/a.',
+        color: '#f59e0b',
+        check: ({ hitos }) => hitos.length >= 30,
+        fechaLogro: ({ hitos }) =>
+          hitos.length >= 30 ? hitos[hitos.length - 30].fecha : null,
+      },
+    ],
   },
 ]
 
-function BadgeCard({ badge, desbloqueado, fechaLogro }) {
+// ── Componentes ───────────────────────────────────────────────────────────
+
+function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado }) {
+  const locked = nivelBloqueado || !desbloqueado
   return (
-    <div className={`${styles.badgeCard} ${desbloqueado ? styles.badgeDesbloqueado : styles.badgeBloqueado}`}>
+    <div className={`${styles.badgeCard} ${locked ? styles.badgeLocked : styles.badgeUnlocked}`}>
       <div
         className={styles.badgeEmojiWrap}
-        style={desbloqueado ? { background: badge.color + '22', borderColor: badge.color + '55' } : {}}
+        style={!locked ? { background: badge.color + '22', borderColor: badge.color + '66' } : {}}
       >
         <span className={styles.badgeEmoji}>{badge.emoji}</span>
       </div>
       <p className={styles.badgeTitulo}>{badge.titulo}</p>
       <p className={styles.badgeDesc}>{badge.desc}</p>
-      {desbloqueado && fechaLogro ? (
-        <p className={styles.badgeFecha} style={{ color: badge.color }}>
-          {new Date(fechaLogro).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
-        </p>
+      {!locked ? (
+        <>
+          <p className={styles.badgeFrase}>"{badge.frase}"</p>
+          {fechaLogro && (
+            <p className={styles.badgeFecha} style={{ color: badge.color }}>
+              {new Date(fechaLogro).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
+          )}
+        </>
       ) : (
-        <p className={styles.badgeBloqueadoLabel}>Bloqueado</p>
+        <p className={styles.badgeBloqueadoLabel}>
+          {nivelBloqueado ? 'Nivel bloqueado' : 'Pendiente'}
+        </p>
       )}
     </div>
   )
 }
+
+function NivelSection({ nivel, data, bloqueado, desbloqueadosPrevios, umbralPrevio }) {
+  const desbloqueados = nivel.badges.filter((b) => b.check(data)).length
+  const total = nivel.badges.length
+  const pct = Math.round((desbloqueados / total) * 100)
+
+  return (
+    <div className={`${styles.nivelSection} ${bloqueado ? styles.nivelBloqueado : ''}`}>
+      <div className={styles.nivelHeader}>
+        <div className={styles.nivelTituloWrap}>
+          {bloqueado && <Lock size={13} className={styles.nivelLockIcon} />}
+          <span className={styles.nivelTitulo}>Nivel {nivel.nivel}</span>
+          <span className={styles.nivelSubtitulo}>· {nivel.subtitulo}</span>
+        </div>
+        {bloqueado ? (
+          <span className={styles.nivelLockMsg}>
+            Completa {umbralPrevio}/{10} del nivel anterior
+          </span>
+        ) : (
+          <span className={styles.nivelCounter}>
+            {desbloqueados}/{total}
+          </span>
+        )}
+      </div>
+
+      {!bloqueado && (
+        <div className={styles.nivelProgressBar}>
+          <div className={styles.nivelProgressFill} style={{ width: `${pct}%` }} />
+        </div>
+      )}
+
+      <div className={styles.badgesGrid}>
+        {nivel.badges.map((badge) => {
+          const desbloqueado = !bloqueado && badge.check(data)
+          const fechaLogro = desbloqueado ? badge.fechaLogro(data) : null
+          return (
+            <BadgeCard
+              key={badge.id}
+              badge={badge}
+              desbloqueado={desbloqueado}
+              fechaLogro={fechaLogro}
+              nivelBloqueado={bloqueado}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Página ────────────────────────────────────────────────────────────────
 
 export default function HitosPage() {
   const { state, addHito } = useHuella()
@@ -185,7 +519,20 @@ export default function HitosPage() {
   const { episodios, hitos, estrategias } = state
   const dataBadge = { episodios, hitos, estrategias }
 
-  const desbloqueados = BADGES.filter((b) => b.check(dataBadge)).length
+  // Determine which levels are unlocked
+  const nivelesConEstado = NIVELES.map((nivel, i) => {
+    if (i === 0) return { ...nivel, bloqueado: false }
+    const previo = NIVELES[i - 1]
+    const desbloqueadosPrevios = previo.badges.filter((b) => b.check(dataBadge)).length
+    return { ...nivel, bloqueado: desbloqueadosPrevios < previo.umbral, umbralPrevio: previo.umbral }
+  })
+
+  // Always show up to (last unlocked + 1) level, minimum 2
+  const lastUnlockedIdx = nivelesConEstado.reduce((acc, n, i) => (!n.bloqueado ? i : acc), 0)
+  const nivelesVisibles = nivelesConEstado.slice(0, Math.min(lastUnlockedIdx + 2, NIVELES.length))
+
+  const totalDesbloqueados = NIVELES.flatMap((n) => n.badges).filter((b) => b.check(dataBadge)).length
+  const totalBadges = NIVELES.reduce((s, n) => s + n.badges.length, 0)
 
   async function handleGuardar() {
     if (!categoria) return
@@ -206,9 +553,7 @@ export default function HitosPage() {
       try {
         const texto = await celebrarHito({ hijo: state.hijo, hito })
         setCelebracion(texto)
-      } catch {
-        // celebración es bonus
-      } finally {
+      } catch { /* celebración es bonus */ } finally {
         setLoadingCelebracion(false)
       }
     } catch (e) {
@@ -221,7 +566,10 @@ export default function HitosPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h2 className={styles.titulo}>Logros</h2>
+        <div>
+          <h2 className={styles.titulo}>Logros</h2>
+          <p className={styles.totalBadges}>{totalDesbloqueados} de {totalBadges} medallas</p>
+        </div>
         <Button variant="primary" size="sm" onClick={() => setMostrando(!mostrando)}>
           <Plus size={16} /> Registrar
         </Button>
@@ -275,31 +623,21 @@ export default function HitosPage() {
         </Card>
       )}
 
-      {/* ── Medallas ── */}
-      <div className={styles.badgesHeader}>
-        <h3 className={styles.seccionTitulo}>Medallas</h3>
-        <span className={styles.badgesContador}>{desbloqueados}/{BADGES.length}</span>
-      </div>
-
-      <div className={styles.badgesGrid}>
-        {BADGES.map((badge) => {
-          const desbloqueado = badge.check(dataBadge)
-          const fechaLogro = desbloqueado ? badge.fechaLogro(dataBadge) : null
-          return (
-            <BadgeCard
-              key={badge.id}
-              badge={badge}
-              desbloqueado={desbloqueado}
-              fechaLogro={fechaLogro}
-            />
-          )
-        })}
-      </div>
+      {/* ── Niveles de badges ── */}
+      {nivelesVisibles.map((nivel) => (
+        <NivelSection
+          key={nivel.nivel}
+          nivel={nivel}
+          data={dataBadge}
+          bloqueado={nivel.bloqueado}
+          umbralPrevio={nivel.umbralPrevio}
+        />
+      ))}
 
       {/* ── Avances registrados ── */}
       {hitos.length > 0 && (
         <>
-          <h3 className={styles.seccionTitulo} style={{ marginTop: 4 }}>Avances registrados</h3>
+          <h3 className={styles.seccionTitulo}>Avances registrados</h3>
           <div className={styles.hitosList}>
             {hitos.map((h) => {
               const cat = CATEGORIAS.find((c) => c.id === h.categoria)
