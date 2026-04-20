@@ -218,6 +218,94 @@
 .badgeDesbloqueadoTitulo { font-size: 15px; font-weight: 700; color: var(--color-text); margin: 0 0 3px; }
 .badgeDesbloqueadoFrase { font-size: 12px; color: var(--color-text-muted); font-style: italic; margin: 0; line-height: 1.4; }
 
+/* ── Tareas semanales ── */
+.tareasSeccion {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tareasHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tareasLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary-dark);
+}
+
+.tareasProgress {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.tareasLista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tareaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+.tareaItem:active { opacity: 0.7; }
+
+.tareaCompletada {
+  border-color: var(--color-accent-green);
+  background: var(--color-success-bg);
+}
+
+.tareaCheck { flex-shrink: 0; margin-top: 1px; }
+
+.tareaTexto {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
+.tareaCompletada .tareaTexto {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.tareasGenerando {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.tareasHint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
 /* ── Plan corrupto / regenerar ── */
 .regenCard { display: flex; flex-direction: column; gap: 14px; }
 .regenTexto { font-size: 14px; color: var(--color-text-muted); line-height: 1.55; margin: 0; }

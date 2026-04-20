@@ -75,6 +75,7 @@ function dbEstrategiaToApp(row) {
     plan: row.plan,
     fechaInicio: row.fecha_inicio,
     semanaActual: row.semana_actual,
+    tareas: row.tareas ?? {},
   }
 }
 
@@ -196,23 +197,26 @@ export function HuellaProvider({ children }) {
   }
 
   async function addEstrategia(estrategia) {
-    if (!user || !supabase) return
+    if (!user || !supabase) return null
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
-    const { error } = await supabase.from('estrategias').insert({
+    const { data: inserted, error } = await supabase.from('estrategias').insert({
       user_id: user.id,
       habilidad: estrategia.habilidad,
       descripcion: estrategia.descripcion,
       plan: estrategia.plan,
       fecha_inicio: estrategia.fechaInicio,
       semana_actual: estrategia.semanaActual,
-    })
+      tareas: estrategia.tareas ?? {},
+    }).select().single()
     if (error) {
       dispatch({ type: 'REMOVE_ESTRATEGIA', payload: estrategia.id })
       throw new Error(error.message)
     }
+    const realId = inserted?.id ?? estrategia.id
     const { data } = await supabase
       .from('estrategias').select('*').eq('user_id', user.id).order('fecha_inicio', { ascending: false })
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
+    return realId
   }
 
   async function updateEstrategia(partial) {
@@ -222,6 +226,7 @@ export function HuellaProvider({ children }) {
     if (partial.semanaActual !== undefined) dbFields.semana_actual = partial.semanaActual
     if (partial.plan !== undefined) dbFields.plan = partial.plan
     if (partial.habilidad !== undefined) dbFields.habilidad = partial.habilidad
+    if (partial.tareas !== undefined) dbFields.tareas = partial.tareas
     await supabase.from('estrategias').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 

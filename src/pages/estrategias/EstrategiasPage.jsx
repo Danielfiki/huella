@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout } from 'lucide-react'
+import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
-import { generarEstrategia } from '../../services/anthropic'
+import { generarEstrategia, generarTareas } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -95,6 +95,7 @@ export default function EstrategiasPage() {
   const [descripcion, setDescripcion] = useState('')
   const [plan, setPlan] = useState('')
   const [loadingPlan, setLoadingPlan] = useState(false)
+  const [loadingTareas, setLoadingTareas] = useState(false)
   const [loadingAvanzar, setLoadingAvanzar] = useState(false)
   const [checkinVisible, setCheckinVisible] = useState(false)
   const [checkinTexto, setCheckinTexto] = useState('')
@@ -118,19 +119,52 @@ export default function EstrategiasPage() {
       const habilidadIA = habilidadObj?.tecnico ?? habilidad
       const texto = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
       setPlan(texto)
-      await addEstrategia({
+      const realId = await addEstrategia({
         id: Date.now().toString(),
         habilidad,
         descripcion,
         plan: texto,
+        tareas: {},
         fechaInicio: new Date().toISOString(),
         semanaActual: 1,
       })
+      // Generar tareas en segundo plano sin bloquear la UI
+      if (realId) {
+        setLoadingTareas(true)
+        generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
+          .then((tareasJson) => {
+            if (tareasJson) updateEstrategia({ id: realId, tareas: tareasJson })
+          })
+          .catch(() => {})
+          .finally(() => setLoadingTareas(false))
+      }
     } catch (e) {
       setPlan('Error al generar el plan: ' + e.message)
     } finally {
       setLoadingPlan(false)
     }
+  }
+
+  async function handleToggleTarea(semanaNum, tareaId) {
+    if (!estrategiaSeleccionada) return
+    const tareas = JSON.parse(JSON.stringify(estrategiaSeleccionada.tareas || {}))
+    const key = String(semanaNum)
+    tareas[key] = (tareas[key] || []).map((t) =>
+      t.id === tareaId ? { ...t, completada: !t.completada } : t
+    )
+    await updateEstrategia({ id: estrategiaSeleccionada.id, tareas })
+  }
+
+  async function handleGenerarTareas() {
+    if (!estrategiaSeleccionada) return
+    setLoadingTareas(true)
+    try {
+      const habilidadObj = HABILIDADES.find((h) => h.label === estrategiaSeleccionada.habilidad)
+      const habilidadIA = habilidadObj?.tecnico ?? estrategiaSeleccionada.habilidad
+      const tareasJson = await generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion: estrategiaSeleccionada.descripcion })
+      if (tareasJson) await updateEstrategia({ id: estrategiaSeleccionada.id, tareas: tareasJson })
+    } catch { /* silencioso */ }
+    finally { setLoadingTareas(false) }
   }
 
   async function handleRegenerarPlan() {
@@ -227,6 +261,11 @@ export default function EstrategiasPage() {
       estrategiaSeleccionada.plan.trim().length > 50
     const { intro, semanas } = planValido ? parsePlan(estrategiaSeleccionada.plan) : { intro: '', semanas: [] }
     const semanaActual = estrategiaSeleccionada.semanaActual
+    const tareas = estrategiaSeleccionada.tareas || {}
+    const tareasActuales = tareas[String(semanaActual)] || []
+    const tieneTareas = tareasActuales.length > 0
+    const completadas = tareasActuales.filter((t) => t.completada).length
+    const todasCompletadas = !tieneTareas || completadas === tareasActuales.length
 
     return (
       <div className={styles.page}>
@@ -301,6 +340,39 @@ export default function EstrategiasPage() {
                             <p>{semana.indicador}</p>
                           </div>
                         )}
+                        {esActual && (
+                          <div className={styles.tareasSeccion}>
+                            {loadingTareas ? (
+                              <p className={styles.tareasGenerando}>Generando tareas personalizadas…</p>
+                            ) : !tieneTareas ? (
+                              <Button variant="secondary" size="sm" fullWidth onClick={handleGenerarTareas}>
+                                Generar tareas de esta semana
+                              </Button>
+                            ) : (
+                              <>
+                                <div className={styles.tareasHeader}>
+                                  <span className={styles.tareasLabel}>Tareas de esta semana</span>
+                                  <span className={styles.tareasProgress}>{completadas}/{tareasActuales.length}</span>
+                                </div>
+                                <div className={styles.tareasLista}>
+                                  {tareasActuales.map((tarea) => (
+                                    <button
+                                      key={tarea.id}
+                                      className={`${styles.tareaItem} ${tarea.completada ? styles.tareaCompletada : ''}`}
+                                      onClick={() => handleToggleTarea(semanaActual, tarea.id)}
+                                    >
+                                      {tarea.completada
+                                        ? <CheckCircle2 size={20} color="var(--color-success)" className={styles.tareaCheck} />
+                                        : <Circle size={20} color="var(--color-text-muted)" className={styles.tareaCheck} />
+                                      }
+                                      <span className={styles.tareaTexto}>{tarea.texto}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -342,14 +414,22 @@ export default function EstrategiasPage() {
               </div>
             </Card>
           ) : (
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={() => setCheckinVisible(true)}
-            >
-              Avanzar a semana {semanaActual + 1}
-            </Button>
+            <>
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => setCheckinVisible(true)}
+                disabled={!todasCompletadas}
+              >
+                Avanzar a semana {semanaActual + 1}
+              </Button>
+              {!todasCompletadas && (
+                <p className={styles.tareasHint}>
+                  Completa {tareasActuales.length - completadas} tarea{tareasActuales.length - completadas !== 1 ? 's' : ''} para avanzar
+                </p>
+              )}
+            </>
           )
         ) : (
           <Card className={styles.completadoBanner}>

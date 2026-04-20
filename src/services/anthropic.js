@@ -108,6 +108,31 @@ Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado
   return llamarAPI(prompt, 180)
 }
 
+export async function generarTareas({ hijo, habilidad, descripcion }) {
+  const prompt = `Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
+Habilidad a trabajar: ${habilidad}
+Contexto: ${descripcion || 'ninguno'}
+
+Genera exactamente 4 semanas de tareas concretas para el padre/madre. Devuelve ÚNICAMENTE JSON válido sin texto adicional, sin markdown, sin explicaciones:
+
+{"1":[{"id":"s1t1","texto":"..."},{"id":"s1t2","texto":"..."},{"id":"s1t3","texto":"..."}],"2":[{"id":"s2t1","texto":"..."},{"id":"s2t2","texto":"..."},{"id":"s2t3","texto":"..."}],"3":[{"id":"s3t1","texto":"..."},{"id":"s3t2","texto":"..."},{"id":"s3t3","texto":"..."}],"4":[{"id":"s4t1","texto":"..."},{"id":"s4t2","texto":"..."},{"id":"s4t3","texto":"..."}]}
+
+Reglas por tarea: máximo 90 caracteres, verbo de acción concreto, realizable en casa sin preparación, en segunda persona al padre/madre. Semana 1: observar y preparar. Semana 4: consolidar y generalizar. 3 tareas por semana.`
+
+  const raw = await llamarAPI(prompt, 700)
+  try {
+    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const parsed = JSON.parse(clean)
+    const result = {}
+    for (const sem of ['1', '2', '3', '4']) {
+      result[sem] = (parsed[sem] || []).map((t) => ({ ...t, completada: false }))
+    }
+    return result
+  } catch {
+    return null
+  }
+}
+
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const prompt = `Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
 
