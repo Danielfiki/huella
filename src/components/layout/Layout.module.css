@@ -122,13 +122,13 @@
   align-items: center;
   justify-content: center;
   margin-top: -20px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .navRegistrar:hover .navRegistrarBtn {
   transform: scale(1.06);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-md);
 }
 
 .navRegistrarActive .navRegistrarBtn {
@@ -169,7 +169,7 @@
 .skeletonTitle {
   height: 28px;
   width: 45%;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-alt) 50%, var(--color-border) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;

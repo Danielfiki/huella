@@ -247,7 +247,7 @@
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   padding: 14px 18px;
   text-align: left;
   animation: fadeUp 0.5s ease both;
@@ -295,7 +295,7 @@
   width: 100%;
   max-width: 340px;
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255,255,255,0.18);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -321,9 +321,9 @@
   width: 100%;
   max-width: 340px;
   padding: 18px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: #fff;
-  color: #c96f45;
+  color: var(--color-primary);
   font-size: 17px;
   font-weight: 800;
   font-family: var(--font-family);
