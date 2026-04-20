@@ -8,10 +8,10 @@ import styles from './Layout.module.css'
 
 const navItems = [
   { to: '/panel',       icon: Home,     label: 'Inicio' },
+  { to: '/historial',   icon: BookOpen, label: 'Historial' },
   { to: '/registro',    icon: Plus,     label: 'Registrar', destacado: true },
   { to: '/estrategias', icon: Target,   label: 'Estrategias' },
   { to: '/hitos',       icon: Star,     label: 'Logros' },
-  { to: '/historial',   icon: BookOpen, label: 'Historial' },
 ]
 
 function SkeletonLoader() {
