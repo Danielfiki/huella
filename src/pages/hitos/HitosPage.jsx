@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { celebrarHito } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import CitaLoader from '../../components/ui/CitaLoader'
 import styles from './HitosPage.module.css'
 
 const CATEGORIAS = [
@@ -647,10 +648,7 @@ export default function HitosPage() {
             <span>Huella</span>
           </div>
           {loadingCelebracion ? (
-            <div className={styles.celebracionSkeleton}>
-              <div className={styles.skeletonLine} />
-              <div className={styles.skeletonLine} style={{ width: '75%' }} />
-            </div>
+            <CitaLoader categoria="regulacion" compact />
           ) : (
             <p className={styles.celebracionTexto}>{celebracion}</p>
           )}

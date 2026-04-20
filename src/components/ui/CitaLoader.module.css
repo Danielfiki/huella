@@ -1,0 +1,65 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 20px 16px 16px;
+  text-align: center;
+}
+
+.compact {
+  padding: 10px 4px 8px;
+}
+
+.texto {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--color-text);
+  line-height: 1.65;
+  margin: 0 0 10px;
+  max-width: 340px;
+}
+
+.compact .texto {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.autor {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-primary);
+  font-weight: 600;
+  margin: 0 0 16px;
+  letter-spacing: 0.2px;
+}
+
+.compact .autor {
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  opacity: 0.45;
+}
+
+.skLine {
+  height: 11px;
+  border-radius: 6px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-primary-light) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.skLine:nth-child(2) { animation-delay: 0.15s; }
+.skLine:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

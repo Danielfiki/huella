@@ -1,8 +1,9 @@
 import React from 'react'
 import styles from './RespuestaIA.module.css'
 import { Sparkles } from 'lucide-react'
+import CitaLoader from './CitaLoader'
 
-export default function RespuestaIA({ texto, loading = false, mensajeCarga, compact = false }) {
+export default function RespuestaIA({ texto, loading = false, mensajeCarga, compact = false, categoria = 'regulacion' }) {
   if (loading) {
     return (
       <div className={styles.container}>
@@ -10,13 +11,7 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
           <Sparkles size={16} className={styles.sparklesSpin} />
           <span>{mensajeCarga || 'Analizando lo que pasó con tu hijo...'}</span>
         </div>
-        <div className={styles.skeleton}>
-          <div className={styles.skeletonLine} />
-          <div className={styles.skeletonLine} style={{ width: '85%' }} />
-          <div className={styles.skeletonLine} style={{ width: '70%' }} />
-          <div className={styles.skeletonLine} style={{ width: '90%' }} />
-          <div className={styles.skeletonLine} style={{ width: '60%' }} />
-        </div>
+        <CitaLoader categoria={categoria} />
       </div>
     )
   }

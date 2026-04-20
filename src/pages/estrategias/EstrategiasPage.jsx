@@ -6,6 +6,7 @@ import { generarEstrategia, generarTareas } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
+import CitaLoader from '../../components/ui/CitaLoader'
 import styles from './EstrategiasPage.module.css'
 
 const CONTEXTOS = {
@@ -248,6 +249,7 @@ export default function EstrategiasPage() {
             texto={plan}
             loading={loadingPlan}
             mensajeCarga="Diseñando tu plan de 4 semanas..."
+            categoria="estrategia"
           />
         )}
       </div>
@@ -343,7 +345,7 @@ export default function EstrategiasPage() {
                         {esActual && (
                           <div className={styles.tareasSeccion}>
                             {loadingTareas ? (
-                              <p className={styles.tareasGenerando}>Generando tareas personalizadas…</p>
+                              <CitaLoader categoria="estrategia" compact />
                             ) : !tieneTareas ? (
                               <Button variant="secondary" size="sm" fullWidth onClick={handleGenerarTareas}>
                                 Generar tareas de esta semana

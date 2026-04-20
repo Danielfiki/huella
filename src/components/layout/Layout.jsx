@@ -3,6 +3,7 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import Onboarding from '../onboarding/Onboarding'
 import { useHuella } from '../../context/HuellaContext'
+import CitaLoader from '../ui/CitaLoader'
 import styles from './Layout.module.css'
 
 const navItems = [
@@ -16,7 +17,7 @@ const navItems = [
 function SkeletonLoader() {
   return (
     <div className={styles.skeletonPage}>
-      <div className={styles.skeletonTitle} />
+      <CitaLoader categoria="general" />
       <div className={styles.skeletonCard} style={{ height: 80 }} />
       <div className={styles.skeletonCard} style={{ height: 120 }} />
       <div className={styles.skeletonCard} style={{ height: 60 }} />

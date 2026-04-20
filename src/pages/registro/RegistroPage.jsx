@@ -207,6 +207,7 @@ export default function RegistroPage() {
             texto={respuestaIA}
             loading={loadingIA}
             mensajeCarga="Analizando lo que pasó con tu hijo..."
+            categoria="regulacion"
           />
           {habilidadSugerida && (
             <button
