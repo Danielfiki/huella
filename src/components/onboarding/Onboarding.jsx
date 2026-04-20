@@ -83,28 +83,14 @@ export default function Onboarding({ onDone }) {
     onDone()
   }
 
-  function onPointerDown(e) {
-    startX.current = e.clientX ?? e.touches?.[0]?.clientX
-  }
-
-  function onPointerUp(e) {
-    if (startX.current == null) return
-    const endX = e.clientX ?? e.changedTouches?.[0]?.clientX
-    const delta = endX - startX.current
-    startX.current = null
-    if (delta < -50) next()
-    else if (delta > 50) prev()
-  }
-
   const slide = SLIDES[current]
 
   return (
     <div
       className={styles.overlay}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
       onTouchStart={(e) => { startX.current = e.touches[0].clientX }}
       onTouchEnd={(e) => {
+        if (startX.current == null) return
         const delta = e.changedTouches[0].clientX - startX.current
         startX.current = null
         if (delta < -50) next()
