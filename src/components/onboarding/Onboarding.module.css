@@ -11,6 +11,7 @@
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+  background: #12082a;
 }
 
 /* ── Background ────────────────────────────────────────────────────────── */
@@ -21,7 +22,7 @@
 }
 
 @keyframes bgFadeIn {
-  from { opacity: 0.4; }
+  from { opacity: 0; }
   to   { opacity: 1; }
 }
 
