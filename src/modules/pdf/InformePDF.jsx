@@ -20,19 +20,22 @@ const C = {
   green:        '#6dbf88',
   yellow:       '#f0dfa0',
   red:          '#e87878',
+  emocionBg:    '#eef0fb',
+  emocionColor: '#5b6bbf',
 }
 
 const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy intenso']
 const INTENSIDAD_COLOR = ['', '#a8d5b5', '#c4e0a8', C.yellow, C.primaryLight, C.red]
 
 const TIPOS = {
-  rabieta:     'Rabieta',
-  llanto:      'Llanto',
-  agresividad: 'Agresividad',
-  miedo:       'Miedo',
-  sueño:       'Dificultad para dormir',
-  social:      'Rechazo social',
-  desconexion: 'Desconexión',
+  rabieta:     'Rabieta / explosion',
+  llanto:      'Llanto intenso',
+  agresividad: 'Golpes / agresividad',
+  miedo:       'Miedo / angustia',
+  sueno:       'No quiere dormir',
+  social:      'Se aislo / no quiso relacionarse',
+  desconexion: 'Se cerro / no respondia',
+  oposicion:   'Oposicion / no coopera',
   otro:        'Otro',
 }
 
@@ -79,6 +82,12 @@ const s = StyleSheet.create({
     color: C.text,
     marginTop: 8,
   },
+  disclaimer: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
 
   // ── Sections ──
   section: {
@@ -96,28 +105,57 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // ── Stats grid ──
-  statsRow: {
+  // ── Resumen 30 dias ──
+  resumenGrid: {
     flexDirection: 'row',
     gap: 10,
+    marginBottom: 10,
   },
-  statBox: {
+  resumenBox: {
     flex: 1,
     backgroundColor: C.surface,
     borderRadius: 6,
     padding: 10,
     alignItems: 'center',
   },
-  statNum: {
+  resumenNum: {
     fontSize: 22,
     fontFamily: 'Helvetica-Bold',
     color: C.primary,
   },
-  statLabel: {
+  resumenLabel: {
     fontSize: 8,
     color: C.muted,
     textAlign: 'center',
     marginTop: 2,
+  },
+  resumenPeriodo: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  resumenFila: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  resumenItem: {
+    flex: 1,
+    backgroundColor: C.surface,
+    borderRadius: 6,
+    padding: 8,
+  },
+  resumenItemLabel: {
+    fontSize: 7,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 3,
+  },
+  resumenItemVal: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: C.text,
   },
 
   // ── Triggers ──
@@ -163,8 +201,12 @@ const s = StyleSheet.create({
   epHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 4,
+  },
+  epHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
   },
   epFecha: {
     fontSize: 9,
@@ -181,6 +223,16 @@ const s = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
     color: C.text,
+  },
+  epEmocion: {
+    fontSize: 8,
+    color: C.emocionColor,
+    backgroundColor: C.emocionBg,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginTop: 4,
+    alignSelf: 'flex-start',
   },
   epContexto: {
     fontSize: 9,
@@ -313,16 +365,35 @@ function fmtHora(str) {
   return new Date(str).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
 }
 
-function calcStats(episodios) {
-  if (!episodios.length) return { total: 0, avgInt: '-', tipoTop: '-', dateRange: '-' }
-  const total = episodios.length
-  const avgInt = (episodios.reduce((s, e) => s + e.intensidad, 0) / total).toFixed(1)
+function ultimos30Dias(episodios) {
+  const corte = new Date()
+  corte.setDate(corte.getDate() - 30)
+  return episodios.filter((e) => new Date(e.fecha) >= corte)
+}
+
+function calcResumen30(episodios) {
+  const recientes = ultimos30Dias(episodios)
+  if (!recientes.length) return null
+
+  const total = recientes.length
+  const avgInt = (recientes.reduce((s, e) => s + e.intensidad, 0) / total).toFixed(1)
+
   const tipoCount = {}
-  for (const ep of episodios) tipoCount[ep.tipo] = (tipoCount[ep.tipo] || 0) + 1
-  const tipoTop = TIPOS[Object.entries(tipoCount).sort((a, b) => b[1] - a[1])[0]?.[0]] || '-'
-  const fechas = episodios.map((e) => new Date(e.fecha)).sort((a, b) => a - b)
-  const dateRange = `${fmtFechaCorta(fechas[0])} – ${fmtFechaCorta(fechas[fechas.length - 1])}`
-  return { total, avgInt, tipoTop, dateRange }
+  for (const ep of recientes) tipoCount[ep.tipo] = (tipoCount[ep.tipo] || 0) + 1
+  const tipoTopKey = Object.entries(tipoCount).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const tipoTop = TIPOS[tipoTopKey] || tipoTopKey || '-'
+
+  const emocionCount = {}
+  for (const ep of recientes) {
+    if (ep.emocion) emocionCount[ep.emocion] = (emocionCount[ep.emocion] || 0) + 1
+  }
+  const emocionTop = Object.entries(emocionCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+
+  const corte = new Date()
+  corte.setDate(corte.getDate() - 30)
+  const periodoStr = `${fmtFechaCorta(corte)} – ${fmtFechaCorta(new Date())}`
+
+  return { total, avgInt, tipoTop, emocionTop, periodoStr }
 }
 
 function calcTopGatillantes(episodios, n = 5) {
@@ -336,41 +407,53 @@ function calcTopGatillantes(episodios, n = 5) {
 // ── Sections ───────────────────────────────────────────────────────────────
 function HeaderSection({ hijo, generadoEl }) {
   const nombreHijo = hijo?.nombre || 'Sin nombre'
-  const edadStr = hijo?.edad != null ? `, ${hijo.edad} años` : ''
+  const edadStr = hijo?.edad != null ? `, ${hijo.edad} anos` : ''
   return (
     <View style={s.header}>
       <View style={s.headerTop}>
         <Text style={s.brandName}>Huella</Text>
         <Text style={s.reportDate}>Generado el {generadoEl}</Text>
       </View>
-      <Text style={s.headerSub}>Historial clínico familiar · Registro de desarrollo emocional</Text>
+      <Text style={s.headerSub}>Historial clinico familiar · Registro de desarrollo emocional</Text>
       <Text style={s.hijoName}>{nombreHijo}{edadStr}</Text>
+      <Text style={s.disclaimer}>
+        Este documento es un registro de apoyo y no constituye un diagnostico clinico.
+        Elaborado para facilitar la comunicacion con profesionales de la salud.
+      </Text>
     </View>
   )
 }
 
-function StatsSection({ episodios }) {
-  const { total, avgInt, tipoTop, dateRange } = calcStats(episodios)
+function ResumenSection({ episodios }) {
+  const r = calcResumen30(episodios)
+  if (!r) return null
+
   return (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Resumen</Text>
-      <View style={s.statsRow}>
-        <View style={s.statBox}>
-          <Text style={s.statNum}>{total}</Text>
-          <Text style={s.statLabel}>Episodios registrados</Text>
+      <Text style={s.sectionTitle}>Resumen de los ultimos 30 dias</Text>
+      <Text style={s.resumenPeriodo}>Periodo: {r.periodoStr}</Text>
+      <View style={s.resumenGrid}>
+        <View style={s.resumenBox}>
+          <Text style={s.resumenNum}>{r.total}</Text>
+          <Text style={s.resumenLabel}>Episodios registrados</Text>
         </View>
-        <View style={s.statBox}>
-          <Text style={s.statNum}>{avgInt}</Text>
-          <Text style={s.statLabel}>Intensidad promedio</Text>
-        </View>
-        <View style={s.statBox}>
-          <Text style={[s.statNum, { fontSize: 13 }]}>{tipoTop}</Text>
-          <Text style={s.statLabel}>Tipo más frecuente</Text>
+        <View style={s.resumenBox}>
+          <Text style={s.resumenNum}>{r.avgInt}</Text>
+          <Text style={s.resumenLabel}>Intensidad promedio</Text>
         </View>
       </View>
-      {total > 0 && (
-        <Text style={[s.epFecha, { marginTop: 8 }]}>Período: {dateRange}</Text>
-      )}
+      <View style={s.resumenFila}>
+        <View style={s.resumenItem}>
+          <Text style={s.resumenItemLabel}>Tipo mas frecuente</Text>
+          <Text style={s.resumenItemVal}>{r.tipoTop}</Text>
+        </View>
+        {r.emocionTop && (
+          <View style={s.resumenItem}>
+            <Text style={s.resumenItemLabel}>Emocion mas frecuente</Text>
+            <Text style={s.resumenItemVal}>{r.emocionTop}</Text>
+          </View>
+        )}
+      </View>
     </View>
   )
 }
@@ -381,7 +464,7 @@ function GatillantesSection({ episodios }) {
   const max = top[0][1]
   return (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Gatillantes más frecuentes</Text>
+      <Text style={s.sectionTitle}>Gatillantes mas frecuentes</Text>
       {top.map(([label, count]) => (
         <View key={label} style={s.triggerRow}>
           <Text style={s.triggerLabel}>{label}</Text>
@@ -396,14 +479,14 @@ function GatillantesSection({ episodios }) {
 }
 
 function EpisodiosSection({ episodios }) {
-  const ordenados = [...episodios].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+  const ordenados = [...episodios].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
   return (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Historial de episodios</Text>
+      <Text style={s.sectionTitle}>Historial completo de episodios</Text>
       {ordenados.map((ep) => (
         <View key={ep.id} style={s.epCard} wrap={false}>
           <View style={s.epHeader}>
-            <View>
+            <View style={s.epHeaderLeft}>
               <Text style={s.epTipo}>{TIPOS[ep.tipo] || ep.tipo}</Text>
               <Text style={s.epFecha}>{fmtFecha(ep.fecha)} · {fmtHora(ep.fecha)}</Text>
             </View>
@@ -416,6 +499,10 @@ function EpisodiosSection({ episodios }) {
               {INTENSIDAD_LABEL[ep.intensidad] || ep.intensidad}
             </Text>
           </View>
+
+          {ep.emocion ? (
+            <Text style={s.epEmocion}>Emocion: {ep.emocion}</Text>
+          ) : null}
 
           {ep.contexto ? (
             <Text style={s.epContexto}>"{ep.contexto}"</Text>
@@ -431,7 +518,7 @@ function EpisodiosSection({ episodios }) {
 
           {ep.orientacionIA ? (
             <>
-              <Text style={s.epOrientacionLabel}>Orientación Huella</Text>
+              <Text style={s.epOrientacionLabel}>Orientacion Huella</Text>
               <Text style={s.epOrientacion}>{ep.orientacionIA}</Text>
             </>
           ) : null}
@@ -473,7 +560,7 @@ function EstrategiasSection({ estrategias }) {
 
 function HitosSection({ hitos }) {
   if (!hitos.length) return null
-  const ordenados = [...hitos].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+  const ordenados = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
   return (
     <View style={s.section}>
       <Text style={s.sectionTitle}>Hitos registrados</Text>
@@ -495,7 +582,7 @@ function Footer() {
     <View style={s.footer} fixed>
       <Text style={s.footerText}>Huella · Registro de desarrollo emocional</Text>
       <Text style={s.footerText} render={({ pageNumber, totalPages }) =>
-        `Página ${pageNumber} de ${totalPages}`
+        `Pagina ${pageNumber} de ${totalPages}`
       } />
     </View>
   )
@@ -511,11 +598,11 @@ export default function InformePDF({ hijo, episodios, estrategias, hitos }) {
     <Document
       title={`Huella - Informe ${hijo?.nombre || 'familiar'}`}
       author="Huella"
-      subject="Historial clínico de desarrollo emocional"
+      subject="Historial clinico de desarrollo emocional"
     >
       <Page size="A4" style={s.page}>
         <HeaderSection hijo={hijo} generadoEl={generadoEl} />
-        <StatsSection episodios={episodios} />
+        <ResumenSection episodios={episodios} />
         <GatillantesSection episodios={episodios} />
         <EstrategiasSection estrategias={estrategias} />
         <HitosSection hitos={hitos} />

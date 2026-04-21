@@ -7,14 +7,14 @@ import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
 import styles from './HistorialPage.module.css'
 
 const TIPOS = {
-  rabieta:     { label: 'Rabieta / explosión',              emoji: '😤' },
-  llanto:      { label: 'Llanto intenso',                   emoji: '😢' },
-  agresividad: { label: 'Golpes / agresividad',             emoji: '😠' },
-  miedo:       { label: 'Miedo / angustia',                 emoji: '😨' },
-  sueño:       { label: 'No quiere dormir',                 emoji: '😴' },
-  social:      { label: 'Se aisló / no quiso relacionarse', emoji: '🙈' },
-  desconexion: { label: 'Se cerró / no respondía',          emoji: '😶' },
-  oposicion:   { label: 'Oposición / no coopera',           emoji: '🙅' },
+  rabieta:     { label: 'Rabieta / explosión',              emoji: '💥' },
+  llanto:      { label: 'Llanto intenso',                   emoji: '😭' },
+  agresividad: { label: 'Golpes / agresividad',             emoji: '👊' },
+  miedo:       { label: 'Miedo / angustia',                 emoji: '🫣' },
+  sueño:       { label: 'No quiere dormir',                 emoji: '🛏️' },
+  social:      { label: 'Se aisló / no quiso relacionarse', emoji: '🫥' },
+  desconexion: { label: 'Se cerró / no respondía',          emoji: '🔇' },
+  oposicion:   { label: 'Oposición / no coopera',           emoji: '🚫' },
   otro:        { label: 'Otro',                             emoji: '📝' },
 }
 
