@@ -175,14 +175,14 @@ function EmocionSelector({ emocion, setEmocion }) {
 }
 
 const TIPOS = [
-  { id: 'rabieta',     label: 'Rabieta / explosión',              emoji: '😤' },
-  { id: 'llanto',      label: 'Llanto intenso',                   emoji: '😢' },
-  { id: 'agresividad', label: 'Golpes / agresividad',             emoji: '😠' },
-  { id: 'miedo',       label: 'Miedo / angustia',                 emoji: '😨' },
-  { id: 'sueño',       label: 'No quiere dormir',                 emoji: '😴' },
-  { id: 'oposicion',   label: 'Oposición / no coopera',           emoji: '🙅' },
-  { id: 'social',      label: 'Se aisló / no quiso relacionarse', emoji: '🙈' },
-  { id: 'desconexion', label: 'Se cerró / no respondía',          emoji: '😶' },
+  { id: 'rabieta',     label: 'Rabieta / explosión',              emoji: '💥' },
+  { id: 'llanto',      label: 'Llanto intenso',                   emoji: '😭' },
+  { id: 'agresividad', label: 'Golpes / agresividad',             emoji: '👊' },
+  { id: 'miedo',       label: 'Miedo / angustia',                 emoji: '🫣' },
+  { id: 'sueño',       label: 'No quiere dormir',                 emoji: '🛏️' },
+  { id: 'oposicion',   label: 'Oposición / no coopera',           emoji: '🚫' },
+  { id: 'social',      label: 'Se aisló / no quiso relacionarse', emoji: '🫥' },
+  { id: 'desconexion', label: 'Se cerró / no respondía',          emoji: '🔇' },
   { id: 'otro',        label: 'Otro',                             emoji: '📝' },
 ]
 
@@ -513,7 +513,7 @@ export default function RegistroPage() {
       </Card>
 
       <Card>
-        <p className={styles.label}>¿Qué emoción sentía tu hijo/a? <span className={styles.labelOpcional}>(opcional)</span></p>
+        <p className={styles.label}>¿Qué emoción crees que estaba detrás de lo que pasó? <span className={styles.labelOpcional}>(opcional)</span></p>
         <EmocionSelector emocion={emocionSeleccionada} setEmocion={setEmocionSeleccionada} />
       </Card>
 
