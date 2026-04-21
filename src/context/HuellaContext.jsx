@@ -86,32 +86,68 @@ export function HuellaProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [dataLoading, setDataLoading] = useState(false)
 
+  // Incluimos family?.partner?.id en las deps para recargar cuando se conecta la pareja
   useEffect(() => {
     if (!user) {
       dispatch({ type: 'LOAD_STATE', payload: initialState })
       return
     }
-    // Esperar a que FamilyContext termine de cargar para usar el family_id correcto
+    // Esperar a que FamilyContext termine; family puede ser null (sin pareja) o un objeto
     if (familyLoading) return
-    loadUserData(user.id)
-  }, [user?.id, familyLoading, family?.familyId])
+    // Pasar family explícitamente para evitar el bug de closure cuando React
+    // ejecuta este efecto antes de que FamilyProvider haya terminado su propio efecto
+    loadUserData(user.id, family)
+  }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
-  async function loadUserData(userId) {
+  // currentFamily se pasa explícitamente — no usar la variable `family` del closure
+  async function loadUserData(userId, currentFamily) {
     setDataLoading(true)
     try {
-      // Para hijos: usar family_id cuando hay familia (hijo canónico),
-      // user_id cuando es usuario solo
-      const hijosQuery = family?.familyId
-        ? supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
-        : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
+      // IDs a consultar: propio + pareja (si existe)
+      const partnerIds = currentFamily?.partner?.id
+        ? [userId, currentFamily.partner.id]
+        : [userId]
 
-      // Para el resto: sin filtro de user_id — la RLS devuelve los datos de toda la familia
-      const [hijosRes, episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
-        hijosQuery,
-        supabase.from('episodios').select('*').order('fecha', { ascending: false }),
-        supabase.from('hitos').select('*').order('fecha', { ascending: false }),
-        supabase.from('estrategias').select('*').order('fecha_inicio', { ascending: false }),
+      // Para hijos: primero intenta por family_id (hijo canónico compartido);
+      // si no hay resultado (p.ej. family_id aún no propagado), cae a user_id
+      let hijosRes
+      if (currentFamily?.familyId) {
+        hijosRes = await supabase
+          .from('hijos').select('*')
+          .eq('family_id', currentFamily.familyId)
+          .maybeSingle()
+        if (!hijosRes.data) {
+          // Fallback: puede que la columna family_id aún no esté seteada en la fila existente
+          hijosRes = await supabase
+            .from('hijos').select('*')
+            .eq('user_id', userId)
+            .maybeSingle()
+        }
+      } else {
+        hijosRes = await supabase
+          .from('hijos').select('*')
+          .eq('user_id', userId)
+          .maybeSingle()
+      }
+
+      // Para episodios/hitos/estrategias: filtro explícito por ambos user_ids.
+      // La RLS sigue aplicando como capa de seguridad, pero no dependemos de ella
+      // como único mecanismo de filtrado.
+      const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+        supabase.from('episodios')
+          .select('*')
+          .in('user_id', partnerIds)
+          .order('fecha', { ascending: false }),
+        supabase.from('hitos')
+          .select('*')
+          .in('user_id', partnerIds)
+          .order('fecha', { ascending: false }),
+        supabase.from('estrategias')
+          .select('*')
+          .in('user_id', partnerIds)
+          .order('fecha_inicio', { ascending: false }),
       ])
+
       dispatch({
         type: 'LOAD_STATE',
         payload: {
@@ -130,11 +166,15 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // Helper: IDs para refetch tras mutaciones (propio + pareja si existe)
+  function getPartnerIds() {
+    return family?.partner?.id ? [user.id, family.partner.id] : [user.id]
+  }
+
   async function setHijo(hijo) {
     if (!user) return
     const anterior = state.hijo
     dispatch({ type: 'SET_HIJO', payload: hijo })
-    // upsert_family_child maneja internamente si hay familia o no
     const { error } = await supabase.rpc('upsert_family_child', {
       p_nombre:     hijo.nombre,
       p_edad:       hijo.edad ?? null,
@@ -167,9 +207,10 @@ export function HuellaProvider({ children }) {
       throw new Error(error.message)
     }
     const real = dbEpisodioToApp(inserted)
-    // Recargar todos los episodios de la familia (sin filtro, RLS los controla)
     const { data } = await supabase
-      .from('episodios').select('*').order('fecha', { ascending: false })
+      .from('episodios').select('*')
+      .in('user_id', getPartnerIds())
+      .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
     return real
   }
@@ -177,12 +218,13 @@ export function HuellaProvider({ children }) {
   async function deleteEpisodio(id) {
     if (!user || !supabase) return
     dispatch({ type: 'REMOVE_EPISODIO', payload: id })
-    // La condición user_id asegura que solo borras tus propios episodios
     const { error } = await supabase
       .from('episodios').delete().eq('id', id).eq('user_id', user.id)
     if (error) {
       const { data } = await supabase
-        .from('episodios').select('*').order('fecha', { ascending: false })
+        .from('episodios').select('*')
+        .in('user_id', getPartnerIds())
+        .order('fecha', { ascending: false })
       if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
       throw new Error(error.message)
     }
@@ -210,7 +252,10 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'REMOVE_HITO', payload: hito.id })
       throw new Error(error.message)
     }
-    const { data } = await supabase.from('hitos').select('*').order('fecha', { ascending: false })
+    const { data } = await supabase
+      .from('hitos').select('*')
+      .in('user_id', getPartnerIds())
+      .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
     return inserted
   }
@@ -218,7 +263,10 @@ export function HuellaProvider({ children }) {
   async function updateHitoFoto(hitoId, fotoUrl) {
     if (!user) return
     await supabase.from('hitos').update({ foto_url: fotoUrl }).eq('id', hitoId).eq('user_id', user.id)
-    const { data } = await supabase.from('hitos').select('*').order('fecha', { ascending: false })
+    const { data } = await supabase
+      .from('hitos').select('*')
+      .in('user_id', getPartnerIds())
+      .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
   }
 
@@ -226,13 +274,13 @@ export function HuellaProvider({ children }) {
     if (!user || !supabase) return null
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
     const { data: inserted, error } = await supabase.from('estrategias').insert({
-      user_id:      user.id,
-      habilidad:    estrategia.habilidad,
-      descripcion:  estrategia.descripcion,
-      plan:         estrategia.plan,
-      fecha_inicio: estrategia.fechaInicio,
+      user_id:       user.id,
+      habilidad:     estrategia.habilidad,
+      descripcion:   estrategia.descripcion,
+      plan:          estrategia.plan,
+      fecha_inicio:  estrategia.fechaInicio,
       semana_actual: estrategia.semanaActual,
-      tareas:       estrategia.tareas ?? {},
+      tareas:        estrategia.tareas ?? {},
     }).select().single()
     if (error) {
       dispatch({ type: 'REMOVE_ESTRATEGIA', payload: estrategia.id })
@@ -240,7 +288,9 @@ export function HuellaProvider({ children }) {
     }
     const realId = inserted?.id ?? estrategia.id
     const { data } = await supabase
-      .from('estrategias').select('*').order('fecha_inicio', { ascending: false })
+      .from('estrategias').select('*')
+      .in('user_id', getPartnerIds())
+      .order('fecha_inicio', { ascending: false })
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
     return realId
   }
