@@ -49,6 +49,7 @@ create table if not exists public.estrategias (
 alter table public.hijos      add column if not exists avatar_url     text;
 alter table public.episodios  add column if not exists orientacion_ia text;
 alter table public.estrategias add column if not exists tareas         jsonb default '{}'::jsonb;
+alter table public.hitos      add column if not exists foto_url       text;
 
 -- ── Row Level Security ────────────────────────────────────────
 alter table public.hijos       enable row level security;
@@ -113,3 +114,39 @@ create policy "avatares_delete" on storage.objects
 create policy "avatares_select" on storage.objects
   for select to public
   using (bucket_id = 'avatares');
+
+-- ── Storage: bucket momentos ──────────────────────────────────
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('momentos', 'momentos', true, 10485760, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set public = true, file_size_limit = 10485760;
+
+drop policy if exists "momentos_insert" on storage.objects;
+drop policy if exists "momentos_update" on storage.objects;
+drop policy if exists "momentos_delete" on storage.objects;
+drop policy if exists "momentos_select" on storage.objects;
+
+create policy "momentos_insert" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'momentos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "momentos_update" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'momentos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "momentos_delete" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'momentos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "momentos_select" on storage.objects
+  for select to public
+  using (bucket_id = 'momentos');

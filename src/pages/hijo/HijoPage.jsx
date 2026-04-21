@@ -226,6 +226,34 @@ export default function HijoPage() {
         </Card>
       )}
 
+      {/* ── Álbum de momentos ── */}
+      {(() => {
+        const momentos = [...hitos]
+          .filter((h) => h.foto_url)
+          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+        if (momentos.length === 0) return null
+        return (
+          <div>
+            <p className={styles.seccionTitulo}>Álbum de crecimiento</p>
+            <div className={styles.albumGrid}>
+              {momentos.map((h) => (
+                <div key={h.id} className={styles.albumItem}>
+                  <img src={h.foto_url} alt={h.descripcion} className={styles.albumImg} />
+                  <div className={styles.albumMeta}>
+                    <span className={styles.albumFecha}>
+                      {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                    </span>
+                    {h.descripcion && (
+                      <span className={styles.albumDesc}>{h.descripcion}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
     </div>
   )
 }

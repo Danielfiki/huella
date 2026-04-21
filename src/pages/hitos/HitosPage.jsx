@@ -1,12 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, Sparkles, Lock } from 'lucide-react'
+import { Plus, Sparkles, Lock, Camera, X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
 import { celebrarHito } from '../../services/anthropic'
+import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import CitaLoader from '../../components/ui/CitaLoader'
 import styles from './HitosPage.module.css'
+
+async function compressImage(file, maxSize = 1200) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+        const w = Math.round(img.width * scale)
+        const h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85)
+      }
+      img.src = ev.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 const CATEGORIAS = [
   { id: 'autorregulacion', label: 'Se calmó solo',   emoji: '🌱' },
@@ -511,7 +533,7 @@ function NivelSection({ nivel, data, bloqueado, umbralPrevio, badgesNuevos }) {
 // ── Página ────────────────────────────────────────────────────────────────
 
 export default function HitosPage() {
-  const { state, addHito } = useHuella()
+  const { state, addHito, updateHitoFoto } = useHuella()
   const { user } = useAuth()
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
@@ -520,6 +542,12 @@ export default function HitosPage() {
   const [errorGuardar, setErrorGuardar] = useState('')
   const [celebracion, setCelebracion] = useState('')
   const [loadingCelebracion, setLoadingCelebracion] = useState(false)
+
+  const [hitoReciente, setHitoReciente] = useState(null) // { id, descripcion, categoria }
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [errorFoto, setErrorFoto] = useState('')
+  const [fotoUrl, setFotoUrl] = useState(null)
+  const fotoInputRef = useRef(null)
 
   const { episodios, hitos, estrategias } = state
   const dataBadge = { episodios, hitos, estrategias }
@@ -580,10 +608,13 @@ export default function HitosPage() {
       fecha: new Date().toISOString(),
     }
     try {
-      await addHito(hito)
+      const inserted = await addHito(hito)
       setCategoria('')
       setDescripcion('')
       setMostrando(false)
+      setHitoReciente({ id: inserted?.id, descripcion: hito.descripcion, categoria: hito.categoria })
+      setFotoUrl(null)
+      setErrorFoto('')
       setLoadingCelebracion(true)
       try {
         const texto = await celebrarHito({ hijo: state.hijo, hito })
@@ -595,6 +626,32 @@ export default function HitosPage() {
       setErrorGuardar('No se pudo guardar: ' + e.message)
     } finally {
       setLoadingGuardar(false)
+    }
+  }
+
+  async function handleSubirFoto(e) {
+    const file = e.target.files?.[0]
+    if (!file || !hitoReciente?.id || !user) return
+    setSubiendoFoto(true)
+    setErrorFoto('')
+    try {
+      const blob = await compressImage(file)
+      const path = `${user.id}/${hitoReciente.id}.jpg`
+      const { error: uploadError } = await supabase.storage.from('momentos').upload(path, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      })
+      if (uploadError) throw new Error(uploadError.message)
+      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
+      const url = `${data.publicUrl}?t=${Date.now()}`
+      await updateHitoFoto(hitoReciente.id, url)
+      setFotoUrl(url)
+    } catch (err) {
+      console.error('Error subiendo foto:', err)
+      setErrorFoto('No se pudo subir la foto. Intenta de nuevo.')
+    } finally {
+      setSubiendoFoto(false)
+      if (fotoInputRef.current) fotoInputRef.current.value = ''
     }
   }
 
@@ -653,6 +710,54 @@ export default function HitosPage() {
             <p className={styles.celebracionTexto}>{celebracion}</p>
           )}
         </Card>
+      )}
+
+      {/* ── Enmarca este momento ── */}
+      {hitoReciente && (
+        <div className={styles.enmarcarCard}>
+          <input
+            ref={fotoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={handleSubirFoto}
+          />
+          <button
+            className={styles.enmarcarCerrar}
+            onClick={() => setHitoReciente(null)}
+            aria-label="Cerrar"
+          >
+            <X size={16} />
+          </button>
+
+          {fotoUrl ? (
+            <div className={styles.enmarcarFotoWrap}>
+              <img src={fotoUrl} alt="Momento" className={styles.enmarcarFoto} />
+              <p className={styles.enmarcarExito}>📸 ¡Momento guardado en el álbum de {state.hijo?.nombre || 'tu hijo/a'}!</p>
+              <button className={styles.enmarcarLinkBtn} onClick={() => setHitoReciente(null)}>
+                Listo
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className={styles.enmarcarEmoji}>📸</span>
+              <p className={styles.enmarcarTitulo}>Enmarca este momento</p>
+              <p className={styles.enmarcarSub}>
+                Agrega una foto de este avance. Quedará en el álbum de crecimiento de {state.hijo?.nombre || 'tu hijo/a'}.
+              </p>
+              {errorFoto && <p className={styles.enmarcarError}>{errorFoto}</p>}
+              <button
+                className={styles.enmarcarBtn}
+                onClick={() => fotoInputRef.current?.click()}
+                disabled={subiendoFoto}
+              >
+                <Camera size={16} />
+                {subiendoFoto ? 'Subiendo...' : 'Agregar foto'}
+              </button>
+            </>
+          )}
+        </div>
       )}
 
       {/* ── Niveles de badges ── */}

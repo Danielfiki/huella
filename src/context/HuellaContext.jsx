@@ -179,18 +179,28 @@ export function HuellaProvider({ children }) {
   }
 
   async function addHito(hito) {
-    if (!user || !supabase) return
+    if (!user || !supabase) return null
     dispatch({ type: 'ADD_HITO', payload: hito })
-    const { error } = await supabase.from('hitos').insert({
+    const { data: inserted, error } = await supabase.from('hitos').insert({
       user_id: user.id,
       categoria: hito.categoria,
       descripcion: hito.descripcion,
       fecha: hito.fecha,
-    })
+      foto_url: null,
+    }).select().single()
     if (error) {
       dispatch({ type: 'REMOVE_HITO', payload: hito.id })
       throw new Error(error.message)
     }
+    const { data } = await supabase
+      .from('hitos').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
+    if (data) dispatch({ type: 'SET_HITOS', payload: data })
+    return inserted
+  }
+
+  async function updateHitoFoto(hitoId, fotoUrl) {
+    if (!user) return
+    await supabase.from('hitos').update({ foto_url: fotoUrl }).eq('id', hitoId).eq('user_id', user.id)
     const { data } = await supabase
       .from('hitos').select('*').eq('user_id', user.id).order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
@@ -240,6 +250,7 @@ export function HuellaProvider({ children }) {
       updateEpisodio,
       deleteEpisodio,
       addHito,
+      updateHitoFoto,
       addEstrategia,
       updateEstrategia,
     }}>
