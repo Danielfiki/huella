@@ -118,27 +118,21 @@ export default function EstrategiasPage() {
     try {
       const habilidadObj = HABILIDADES.find((h) => h.label === habilidad)
       const habilidadIA = habilidadObj?.tecnico ?? habilidad
-      const texto = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
+      // Generar plan y tareas en paralelo — ambos se guardan juntos en el insert inicial
+      const [texto, tareasJson] = await Promise.all([
+        generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion }),
+        generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion }),
+      ])
       setPlan(texto)
-      const realId = await addEstrategia({
+      await addEstrategia({
         id: Date.now().toString(),
         habilidad,
         descripcion,
         plan: texto,
-        tareas: {},
+        tareas: tareasJson ?? {},
         fechaInicio: new Date().toISOString(),
         semanaActual: 1,
       })
-      // Generar tareas en segundo plano sin bloquear la UI
-      if (realId) {
-        setLoadingTareas(true)
-        generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
-          .then((tareasJson) => {
-            if (tareasJson) updateEstrategia({ id: realId, tareas: tareasJson })
-          })
-          .catch(() => {})
-          .finally(() => setLoadingTareas(false))
-      }
     } catch (e) {
       setPlan('Error al generar el plan: ' + e.message)
     } finally {
@@ -192,11 +186,31 @@ export default function EstrategiasPage() {
     setCheckinVisible(false)
     setCheckinTexto('')
     setLoadingAvanzar(true)
-    await updateEstrategia({
-      id: estrategiaSeleccionada.id,
-      semanaActual: estrategiaSeleccionada.semanaActual + 1,
-    })
+    const nextSemana = estrategiaSeleccionada.semanaActual + 1
+    await updateEstrategia({ id: estrategiaSeleccionada.id, semanaActual: nextSemana })
     setLoadingAvanzar(false)
+
+    // Si la siguiente semana no tiene tareas guardadas, generarlas ahora
+    const tareasExistentes = estrategiaSeleccionada.tareas || {}
+    const nextTareas = tareasExistentes[String(nextSemana)]
+    if (!nextTareas || nextTareas.length === 0) {
+      setLoadingTareas(true)
+      const habilidadObj = HABILIDADES.find((h) => h.label === estrategiaSeleccionada.habilidad)
+      const habilidadIA = habilidadObj?.tecnico ?? estrategiaSeleccionada.habilidad
+      generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion: estrategiaSeleccionada.descripcion })
+        .then((tareasJson) => {
+          if (tareasJson) {
+            // Mezclar: preservar semanas ya existentes (con su progreso) y rellenar las que faltan
+            const merged = { ...tareasJson }
+            for (const [week, tasks] of Object.entries(tareasExistentes)) {
+              if (tasks && tasks.length > 0) merged[week] = tasks
+            }
+            updateEstrategia({ id: estrategiaSeleccionada.id, tareas: merged })
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingTareas(false))
+    }
   }
 
   // ── VISTA: NUEVA ──────────────────────────────────────────────────────────
