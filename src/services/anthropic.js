@@ -93,7 +93,7 @@ Analiza estos patrones y responde con:
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
 
-  return llamarAPI(prompt, 1000)
+  return llamarAPI(prompt, 1800)
 }
 
 export async function celebrarHito({ hijo, hito }) {
