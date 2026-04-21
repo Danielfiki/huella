@@ -262,14 +262,40 @@ const s = StyleSheet.create({
     marginBottom: 3,
   },
   epOrientacion: {
-    fontSize: 8.5,
-    color: C.text,
-    lineHeight: 1.5,
     backgroundColor: C.white,
     padding: 7,
     borderRadius: 4,
     borderLeftWidth: 2,
     borderLeftColor: C.primaryLight,
+  },
+  mdText: {
+    fontSize: 8.5,
+    color: C.text,
+    lineHeight: 1.5,
+    marginBottom: 2,
+  },
+  mdHeading: {
+    fontSize: 8.5,
+    fontFamily: 'Helvetica-Bold',
+    color: C.primaryDark,
+    marginTop: 5,
+    marginBottom: 2,
+  },
+  mdListRow: {
+    flexDirection: 'row',
+    marginBottom: 2,
+  },
+  mdBullet: {
+    fontSize: 8.5,
+    color: C.text,
+    lineHeight: 1.5,
+    width: 12,
+  },
+  mdListText: {
+    fontSize: 8.5,
+    color: C.text,
+    lineHeight: 1.5,
+    flex: 1,
   },
 
   // ── Strategies ──
@@ -404,6 +430,73 @@ function calcTopGatillantes(episodios, n = 5) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, n)
 }
 
+// ── Markdown renderer ──────────────────────────────────────────────────────
+// Convierte el markdown de la IA (negritas, listas) en elementos react-pdf.
+function renderInlineBold(line) {
+  const parts = line.split(/\*\*([^*]+)\*\*/g)
+  if (parts.length === 1) return line
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <Text key={i} style={{ fontFamily: 'Helvetica-Bold' }}>{part}</Text>
+      : part
+  )
+}
+
+function renderOrientacion(text) {
+  if (!text) return null
+  const lines = text.split('\n')
+  const elements = []
+
+  lines.forEach((raw, i) => {
+    const line = raw.trimEnd()
+
+    // Línea vacía → separador mínimo
+    if (!line.trim()) {
+      elements.push(<Text key={i} style={{ fontSize: 3 }}> </Text>)
+      return
+    }
+
+    // Encabezado: **texto** solo (toda la línea entre **)
+    if (/^\*\*[^*]+\*\*$/.test(line.trim())) {
+      const content = line.trim().replace(/^\*\*|\*\*$/g, '')
+      elements.push(<Text key={i} style={s.mdHeading}>{content}</Text>)
+      return
+    }
+
+    // Bullet: - texto
+    if (/^- /.test(line.trim())) {
+      const content = line.trim().slice(2).replace(/\*\*/g, '')
+      elements.push(
+        <View key={i} style={s.mdListRow}>
+          <Text style={s.mdBullet}>{'• '}</Text>
+          <Text style={s.mdListText}>{content}</Text>
+        </View>
+      )
+      return
+    }
+
+    // Lista numerada: 1. texto
+    const numMatch = line.trim().match(/^(\d+)\.\s+(.+)$/)
+    if (numMatch) {
+      const content = numMatch[2].replace(/\*\*/g, '')
+      elements.push(
+        <View key={i} style={s.mdListRow}>
+          <Text style={s.mdBullet}>{numMatch[1] + '. '}</Text>
+          <Text style={s.mdListText}>{content}</Text>
+        </View>
+      )
+      return
+    }
+
+    // Texto normal con posibles negritas inline
+    elements.push(
+      <Text key={i} style={s.mdText}>{renderInlineBold(line.trim())}</Text>
+    )
+  })
+
+  return elements
+}
+
 // ── Sections ───────────────────────────────────────────────────────────────
 function HeaderSection({ hijo, generadoEl }) {
   const nombreHijo = hijo?.nombre || 'Sin nombre'
@@ -519,7 +612,9 @@ function EpisodiosSection({ episodios }) {
           {ep.orientacionIA ? (
             <>
               <Text style={s.epOrientacionLabel}>Orientacion Huella</Text>
-              <Text style={s.epOrientacion}>{ep.orientacionIA}</Text>
+              <View style={s.epOrientacion}>
+                {renderOrientacion(ep.orientacionIA)}
+              </View>
             </>
           ) : null}
         </View>
