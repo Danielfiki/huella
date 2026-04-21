@@ -1,0 +1,65 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #EEF0FB 0%, #E8F1F8 100%);
+  border: 1.5px solid #B0C8DC;
+  border-radius: var(--radius-md);
+  margin-bottom: 4px;
+  animation: bannerIn 0.25s ease both;
+}
+
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.icon {
+  color: #5B8DB8;
+  flex-shrink: 0;
+}
+
+.texto {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btnActivar {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #5B8DB8;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  font-family: var(--font-family);
+}
+.btnActivar:hover { background: #4a7aa8; }
+.btnActivar:disabled { opacity: 0.6; cursor: default; }
+
+.btnDismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+.btnDismiss:hover { color: var(--color-text-muted); }

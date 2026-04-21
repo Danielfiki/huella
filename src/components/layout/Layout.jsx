@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import Onboarding from '../onboarding/Onboarding'
+import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
 import CitaLoader from '../ui/CitaLoader'
 import styles from './Layout.module.css'
@@ -45,6 +46,7 @@ export default function Layout() {
       </header>
 
       <main className={styles.main}>
+        <NotifBanner />
         {dataLoading ? <SkeletonLoader /> : <Outlet />}
       </main>
 
