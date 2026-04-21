@@ -93,8 +93,16 @@ Tablas con Row Level Security activo:
 
 ## Módulos sin empezar ❌
 
-### Modo pareja
-Placeholder "Próximamente". Requiere tabla de vínculos entre usuarios, lógica de invitación y vista compartida.
+### ~~Modo pareja~~ ✅ Listo 2026-04-21
+- Invitación por email (Resend) + link copiable desde PerfilPage
+- Token único con expiración de 7 días (`partner_invitations`)
+- Aceptación en `/invitar?token=xxx` (ruta pública)
+- Datos compartidos vía RLS con función `get_family_user_ids` — sin cambios en queries del frontend
+- Solo el invitante (role='owner') puede desconectar la pareja
+- `FamilyContext.jsx`: estado de familia, invitePartner, cancelInvitation, disconnectPartner
+- SQL: 3 tablas nuevas + 6 funciones RPC + RLS actualizado en todas las tablas de datos
+- **Requiere**: correr el bloque SQL de Modo Pareja en Supabase → SQL Editor
+- **Requiere**: variable `RESEND_API_KEY` en Vercel (y opcionalmente `RESEND_FROM_EMAIL`)
 
 ### Notificaciones inteligentes
 Recordar registrar, alertar patrones nuevos, avisar fechas de evaluación de estrategias.
@@ -236,4 +244,4 @@ Ver `api/anthropic.js` — el system prompt completo está implementado con todo
 
 ---
 
-*Última actualización: 2026-04-20*
+*Última actualización: 2026-04-21*

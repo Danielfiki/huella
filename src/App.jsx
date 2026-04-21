@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { FamilyProvider } from './context/FamilyContext'
 import { HuellaProvider } from './context/HuellaContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import { supabaseConfigured } from './lib/supabase'
@@ -12,10 +13,10 @@ import RegistroPage from './pages/registro/RegistroPage'
 import EstrategiasPage from './pages/estrategias/EstrategiasPage'
 import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
-import ParejasPage from './pages/pareja/ParejasPage'
 import PerfilPage from './pages/perfil/PerfilPage'
 import HijoPage from './pages/hijo/HijoPage'
 import TerminosPage from './pages/legal/TerminosPage'
+import InvitarPage from './pages/invitar/InvitarPage'
 
 class PageErrorBoundary extends React.Component {
   constructor(props) {
@@ -128,35 +129,37 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <HuellaProvider>
-        <BrowserRouter>
-          <PageTracker />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/terminos" element={<TerminosPage />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/panel" replace />} />
-              <Route path="panel" element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
-              <Route path="registro" element={<PageErrorBoundary><RegistroPage /></PageErrorBoundary>} />
-              <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
-              <Route path="hitos" element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
-              <Route path="historial" element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
-              <Route path="pareja" element={<PageErrorBoundary><ParejasPage /></PageErrorBoundary>} />
-              <Route path="perfil" element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
-              <Route path="hijo" element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
-              <Route path="*" element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </HuellaProvider>
+      <FamilyProvider>
+        <HuellaProvider>
+          <BrowserRouter>
+            <PageTracker />
+            <Routes>
+              <Route path="/login"    element={<LoginPage />} />
+              <Route path="/signup"   element={<SignupPage />} />
+              <Route path="/terminos" element={<TerminosPage />} />
+              <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/panel" replace />} />
+                <Route path="panel"       element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
+                <Route path="registro"    element={<PageErrorBoundary><RegistroPage /></PageErrorBoundary>} />
+                <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
+                <Route path="hitos"       element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
+                <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
+                <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
+                <Route path="hijo"        element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
+                <Route path="*"           element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </HuellaProvider>
+      </FamilyProvider>
     </AuthProvider>
   )
 }

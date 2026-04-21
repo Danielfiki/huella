@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
+import { useFamily } from '../../context/FamilyContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -34,6 +35,7 @@ async function compressImage(file, maxSize = 400) {
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
   const { state, setHijo } = useHuella()
+  const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
 
@@ -52,6 +54,16 @@ export default function PerfilPage() {
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminandoCuenta, setEliminandoCuenta] = useState(false)
   const [errorEliminar, setErrorEliminar] = useState('')
+
+  // Familia
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+  const [inviteLink, setInviteLink] = useState('')
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [disconnectLoading, setDisconnectLoading] = useState(false)
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+  const [familyError, setFamilyError] = useState('')
 
   useEffect(() => {
     if (state.hijo) {
@@ -132,6 +144,45 @@ export default function PerfilPage() {
       setErrorEliminar('No se pudo eliminar la cuenta. Intenta de nuevo o escribe a danielundurraga.r@gmail.com')
       setEliminandoCuenta(false)
       setConfirmandoEliminar(false)
+    }
+  }
+
+  async function handleInvite(e) {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setInviteLoading(true)
+    setInviteError('')
+    setInviteLink('')
+    try {
+      const url = await invitePartner(inviteEmail.trim().toLowerCase())
+      setInviteLink(url)
+      setInviteEmail('')
+    } catch (err) {
+      setInviteError(err.message || 'No se pudo enviar la invitación')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  function handleCopyLink(link) {
+    const url = link || (pendingInvitation ? `${window.location.origin}/invitar?token=${pendingInvitation.token}` : '')
+    if (!url) return
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+    })
+  }
+
+  async function handleDisconnect() {
+    setDisconnectLoading(true)
+    setFamilyError('')
+    try {
+      await disconnectPartner()
+      setConfirmDisconnect(false)
+    } catch (err) {
+      setFamilyError(err.message || 'No se pudo desconectar')
+    } finally {
+      setDisconnectLoading(false)
     }
   }
 
@@ -265,6 +316,105 @@ export default function PerfilPage() {
             )}
           </Button>
         </form>
+      </Card>
+
+      {/* ── Mi Familia ───────────────────────────────── */}
+      <Card>
+        <div className={styles.sectionHeader}>
+          <Users size={18} color="var(--color-primary)" />
+          <h3 className={styles.sectionTitle}>Mi familia</h3>
+        </div>
+
+        {familyLoading ? (
+          <p className={styles.sectionDesc}>Cargando…</p>
+        ) : family?.partner ? (
+          /* Estado C: pareja conectada */
+          <div className={styles.familyConnected}>
+            <div className={styles.familyPartnerRow}>
+              <div className={styles.familyDot} />
+              <div>
+                <p className={styles.familyPartnerLabel}>Pareja conectada</p>
+                <p className={styles.familyPartnerEmail}>{family.partner.email}</p>
+              </div>
+            </div>
+            {familyError && <p className={styles.error}>{familyError}</p>}
+            {family.role === 'owner' && (
+              confirmDisconnect ? (
+                <div className={styles.familyConfirmRow}>
+                  <p className={styles.familyConfirmText}>¿Desconectar a {family.partner.email}? Dejarán de compartir datos.</p>
+                  <div className={styles.familyConfirmBtns}>
+                    <button className={styles.familyCancelBtn} onClick={() => setConfirmDisconnect(false)} disabled={disconnectLoading}>
+                      Cancelar
+                    </button>
+                    <button className={styles.familyDisconnectBtn} onClick={handleDisconnect} disabled={disconnectLoading}>
+                      {disconnectLoading ? 'Desconectando…' : 'Sí, desconectar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className={styles.familyTextBtn} onClick={() => setConfirmDisconnect(true)}>
+                  Desconectar pareja
+                </button>
+              )
+            )}
+          </div>
+        ) : pendingInvitation || inviteLink ? (
+          /* Estado B: invitación pendiente */
+          <div className={styles.familyPending}>
+            <p className={styles.sectionDesc} style={{ marginBottom: 0 }}>
+              Invitación enviada a <strong>{pendingInvitation?.inviteeEmail ?? inviteEmail}</strong>.
+              Comparte el link para que pueda aceptarla.
+            </p>
+            <div className={styles.familyLinkBox}>
+              <span className={styles.familyLinkText}>
+                {inviteLink || `${window.location.origin}/invitar?token=${pendingInvitation?.token}`}
+              </span>
+              <button
+                className={styles.familyCopyBtn}
+                onClick={() => handleCopyLink(inviteLink)}
+                title="Copiar link"
+              >
+                {copiedLink ? <Check size={15} color="var(--color-success)" /> : <Copy size={15} />}
+              </button>
+            </div>
+            <button
+              className={styles.familyTextBtn}
+              onClick={cancelInvitation}
+            >
+              Cancelar invitación
+            </button>
+          </div>
+        ) : (
+          /* Estado A: sin pareja */
+          <>
+            <p className={styles.sectionDesc}>
+              Invita a tu pareja para registrar episodios y ver el progreso juntos.
+            </p>
+            <form onSubmit={handleInvite} className={styles.form}>
+              <div className={styles.field}>
+                <label className={styles.label}>Email de tu pareja</label>
+                <input
+                  className={styles.input}
+                  type="email"
+                  placeholder="pareja@email.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {inviteError && <p className={styles.error}>{inviteError}</p>}
+              <Button
+                type="submit"
+                variant="secondary"
+                fullWidth
+                disabled={!inviteEmail.trim()}
+                loading={inviteLoading}
+              >
+                Enviar invitación
+              </Button>
+            </form>
+          </>
+        )}
       </Card>
 
       {/* ── Estadísticas ─────────────────────────────── */}

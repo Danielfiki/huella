@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './AuthPage.module.css'
 
@@ -17,6 +17,8 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/panel'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -41,7 +43,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/panel')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.message === 'Invalid login credentials'
         ? 'Email o contraseña incorrectos'
