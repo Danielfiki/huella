@@ -44,6 +44,7 @@ export default function PerfilPage() {
   const [guardadoOk, setGuardadoOk] = useState(false)
   const [loadingSignOut, setLoadingSignOut] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [errorAvatar, setErrorAvatar] = useState('')
 
   const [padreNombre, setPadreNombre] = useState('')
   const [guardadoPadreOk, setGuardadoPadreOk] = useState(false)
@@ -94,14 +95,15 @@ export default function PerfilPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     setUploadingAvatar(true)
+    setErrorAvatar('')
     try {
       const blob = await compressImage(file)
       const path = `${user.id}/hijo.jpg`
-      const { error } = await supabase.storage.from('avatares').upload(path, blob, {
+      const { error: uploadError } = await supabase.storage.from('avatares').upload(path, blob, {
         contentType: 'image/jpeg',
         upsert: true,
       })
-      if (error) throw new Error(error.message)
+      if (uploadError) throw new Error(uploadError.message)
       const { data } = supabase.storage.from('avatares').getPublicUrl(path)
       const url = `${data.publicUrl}?t=${Date.now()}`
       await setHijo({
@@ -111,6 +113,7 @@ export default function PerfilPage() {
       })
     } catch (err) {
       console.error('Error subiendo avatar:', err)
+      setErrorAvatar('No se pudo subir la foto. Asegúrate de tener conexión e intenta de nuevo.')
     } finally {
       setUploadingAvatar(false)
       if (avatarInputRef.current) avatarInputRef.current.value = ''
@@ -218,6 +221,7 @@ export default function PerfilPage() {
             <Camera size={13} color="white" />
           </div>
         </div>
+        {errorAvatar && <p className={styles.error}>{errorAvatar}</p>}
 
         <form onSubmit={handleGuardarHijo} className={styles.form}>
           <div className={styles.field}>
