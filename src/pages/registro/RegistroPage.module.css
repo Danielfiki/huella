@@ -294,3 +294,65 @@
 .estrategiaBtnTexto strong { font-size: 14px; font-weight: 700; color: var(--color-text); }
 .estrategiaBtnTexto span { font-size: 12px; color: var(--color-text-muted); }
 .estrategiaBtnArrow { font-size: 16px; color: var(--color-success); flex-shrink: 0; }
+
+/* ── Acción inmediata ─────────────────────────────────── */
+
+.accionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg, 16px);
+  background: linear-gradient(135deg, #fff4e6 0%, #fff8f0 100%);
+  border: 2px solid #f59e0b;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
+  animation: accionFadeIn 0.35s ease both;
+}
+
+@keyframes accionFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.accionHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.accionEmoji { font-size: 16px; line-height: 1; }
+
+.accionLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #b45309;
+}
+
+.accionTexto {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #3a2e28;
+  margin: 0;
+  font-weight: 500;
+}
+
+.accionSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.accionSkLine {
+  height: 13px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #fde68a 25%, #fbbf24 50%, #fde68a 75%);
+  background-size: 200% 100%;
+  animation: accionShimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes accionShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

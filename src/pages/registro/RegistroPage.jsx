@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
-import { analizarEpisodio } from '../../services/anthropic'
+import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -128,6 +128,8 @@ export default function RegistroPage() {
   // post-save
   const [respuestaIA, setRespuestaIA] = useState('')
   const [loadingIA, setLoadingIA] = useState(false)
+  const [accionIA, setAccionIA] = useState('')
+  const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
 
@@ -167,20 +169,19 @@ export default function RegistroPage() {
       const episodioGuardado = await addEpisodio(episodio)
       setVista('guardado')
       setLoadingIA(true)
-      try {
-        const texto = await analizarEpisodio({
-          hijo: state.hijo,
-          episodio,
-          historialReciente: state.episodios,
-        })
-        setRespuestaIA(texto)
-        if (episodioGuardado?.id) {
-          updateEpisodio({ id: episodioGuardado.id, orientacionIA: texto })
-        }
-      } catch (e) {
-        setRespuestaIA('No se pudo obtener orientación: ' + e.message)
-      } finally {
-        setLoadingIA(false)
+      setLoadingAccion(true)
+      setAccionIA('')
+      const [texto] = await Promise.all([
+        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios })
+          .catch((e) => 'No se pudo obtener orientación: ' + e.message),
+        generarAccionInmediata({ hijo: state.hijo, episodio })
+          .then((a) => { setAccionIA(a); setLoadingAccion(false) })
+          .catch(() => { setLoadingAccion(false) }),
+      ])
+      setRespuestaIA(texto)
+      setLoadingIA(false)
+      if (episodioGuardado?.id) {
+        updateEpisodio({ id: episodioGuardado.id, orientacionIA: texto })
       }
     } catch (e) {
       setErrorGuardar('No se pudo guardar: ' + e.message)
@@ -203,6 +204,22 @@ export default function RegistroPage() {
               {tipoObj?.emoji} {tipoObj?.label} — Intensidad {intensidad}/5
             </p>
           </Card>
+          {(loadingAccion || accionIA) && (
+            <div className={styles.accionCard}>
+              <div className={styles.accionHeader}>
+                <span className={styles.accionEmoji}>⚡</span>
+                <span className={styles.accionLabel}>Acción inmediata</span>
+              </div>
+              {loadingAccion ? (
+                <div className={styles.accionSkeleton}>
+                  <div className={styles.accionSkLine} style={{ width: '90%' }} />
+                  <div className={styles.accionSkLine} style={{ width: '75%' }} />
+                </div>
+              ) : (
+                <p className={styles.accionTexto}>{accionIA}</p>
+              )}
+            </div>
+          )}
           <RespuestaIA
             texto={respuestaIA}
             loading={loadingIA}

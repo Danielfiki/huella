@@ -30,6 +30,15 @@ async function llamarAPI(prompt, max_tokens) {
   return data.text
 }
 
+export async function generarAccionInmediata({ hijo, episodio }) {
+  const prompt = `Niño/a: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años.
+Acaba de tener: ${episodio.tipo} (intensidad ${episodio.intensidad}/5).${episodio.contexto ? `\nContexto: ${episodio.contexto}` : ''}${episodio.gatillantes?.length ? `\nGatillantes: ${episodio.gatillantes.join(', ')}` : ''}
+
+Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en los próximos 2 minutos. Máximo 3 líneas. Sin listas, sin títulos, sin markdown. Lenguaje simple y cálido. Empieza con "Ahora mismo:" y describe el gesto o acción física específica, incluyendo palabras exactas si aplica. Que sea algo que cualquier padre/madre pueda hacer en casa ahora, sin preparación.`
+
+  return llamarAPI(prompt, 120)
+}
+
 export async function analizarEpisodio({ hijo, episodio, historialReciente = [] }) {
   const contexto = historialReciente.length > 0
     ? `\n\nÚltimos episodios registrados:\n${historialReciente
