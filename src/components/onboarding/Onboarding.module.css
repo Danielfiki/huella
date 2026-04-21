@@ -232,6 +232,11 @@
   animation: fadeUp 0.5s 0.22s ease both;
 }
 
+/* Slide con steps: padding-bottom para que el último card no tape el botón */
+.slideWrapSteps {
+  padding-bottom: 110px;
+}
+
 /* ── Steps ─────────────────────────────────────────────────────────────── */
 .steps {
   display: flex;

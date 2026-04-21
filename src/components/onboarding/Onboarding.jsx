@@ -9,7 +9,7 @@ const SLIDES = [
     emoji: '🌙',
     title: 'Son las 11pm\ny no sabes qué hacer',
     body: 'Tu hijo llora, explota, o simplemente se desconecta. Estás agotado/a, te sientes solo/a, y nadie te enseñó cómo manejar esto.',
-    sub: 'No es tu culpa.\nPero sí puedes cambiar esto.',
+    sub: 'Estás haciendo lo mejor que puedes.\nHuella te ayuda a hacer más.',
     textColor: '#fff',
     badgeColor: 'rgba(255,255,255,0.15)',
   },
@@ -19,8 +19,8 @@ const SLIDES = [
     badge: 'Ciencia real · Lenguaje humano',
     emoji: '🧠',
     title: 'No estás adivinando.\nEstás aprendiendo.',
-    body: 'Huella integra el trabajo de Daniel Siegel, Bessel van der Kolk, Gordon Neufeld y 24 referentes más para darte orientación concreta, sin tecnicismos ni juicios.',
-    sub: 'Cada respuesta está hecha para\ntu hijo y tu familia, no para nadie más.',
+    body: 'Huella integra el trabajo de Daniel Siegel, Bessel van der Kolk y decenas de los referentes más reconocidos en desarrollo infantil para darte orientación concreta, sin tecnicismos ni juicios.',
+    sub: 'Orientación real para lo que está pasando\nhoy con tu hijo/a. Sin teoría, sin juicios.',
     textColor: '#fff',
     badgeColor: 'rgba(255,255,255,0.20)',
   },
@@ -133,7 +133,7 @@ export default function Onboarding({ onDone }) {
       {/* Slide content */}
       <div
         ref={sliderRef}
-        className={`${styles.slideWrap} ${animating ? (dir > 0 ? styles.exitLeft : styles.exitRight) : ''}`}
+        className={`${styles.slideWrap} ${slide.steps ? styles.slideWrapSteps : ''} ${animating ? (dir > 0 ? styles.exitLeft : styles.exitRight) : ''}`}
         key={current}
       >
         {/* Badge */}
