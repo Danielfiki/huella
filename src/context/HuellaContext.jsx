@@ -65,6 +65,7 @@ function dbEpisodioToApp(row) {
     estadoPadre: row.estado_padre,
     fecha: row.fecha,
     orientacionIA: row.orientacion_ia ?? null,
+    emocion: row.emocion ?? null,
   }
 }
 
@@ -199,6 +200,7 @@ export function HuellaProvider({ children }) {
         gatillantes:  episodio.gatillantes,
         estado_padre: episodio.estadoPadre,
         fecha:        episodio.fecha,
+        emocion:      episodio.emocion ?? null,
       })
       .select()
       .single()

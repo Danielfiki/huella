@@ -1,12 +1,178 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import styles from './RegistroPage.module.css'
+
+const TAXONOMIA_EMOCIONES = [
+  {
+    id: 'miedo',
+    label: 'Miedo / Angustia',
+    emoji: '😨',
+    color: '#7C8FD4',
+    colorBg: '#EEF0FB',
+    especificas: [
+      'Miedo al abandono',
+      'Miedo a lo desconocido',
+      'Miedo a fracasar',
+      'Miedo a hacerse daño',
+      'Miedo a la oscuridad',
+    ],
+  },
+  {
+    id: 'rabia',
+    label: 'Rabia / Frustración',
+    emoji: '😠',
+    color: '#C4714A',
+    colorBg: '#FAEDE6',
+    especificas: [
+      'Rabia por injusticia',
+      'Rabia por no conseguir algo',
+      'Rabia por ser interrumpido',
+      'Rabia por perder el control',
+      'Frustración acumulada',
+    ],
+  },
+  {
+    id: 'tristeza',
+    label: 'Tristeza / Pena',
+    emoji: '😢',
+    color: '#5B8DB8',
+    colorBg: '#E8F1F8',
+    especificas: [
+      'Tristeza por un cambio o pérdida',
+      'Tristeza por sentirse solo',
+      'Tristeza por decepción',
+      'Añoranza de alguien',
+      'Tristeza sin causa clara',
+    ],
+  },
+  {
+    id: 'alegria',
+    label: 'Alegría / Desborde',
+    emoji: '🤩',
+    color: '#C49A28',
+    colorBg: '#FDF5DC',
+    especificas: [
+      'Euforia que se desbordó',
+      'Alegría que terminó en llanto',
+      'Excitación extrema',
+      'Emoción por anticipación',
+    ],
+  },
+  {
+    id: 'asco',
+    label: 'Asco / Rechazo',
+    emoji: '🤢',
+    color: '#7A9E6A',
+    colorBg: '#EBF3E8',
+    especificas: [
+      'Rechazo a comida o textura',
+      'Rechazo a una actividad',
+      'Disgusto sensorial',
+      'Vergüenza',
+    ],
+  },
+  {
+    id: 'confusion',
+    label: 'Confusión / Sorpresa',
+    emoji: '😵',
+    color: '#C4874A',
+    colorBg: '#FAF0E6',
+    especificas: [
+      'Confusión por cambio de reglas',
+      'Sorpresa que asustó',
+      'No entendió lo que pasó',
+      'Se sintió ignorado',
+    ],
+  },
+]
+
+function EmocionSelector({ emocion, setEmocion }) {
+  const [categoriaAbierta, setCategoriaAbierta] = useState(null)
+
+  const categoriaSeleccionada = emocion
+    ? TAXONOMIA_EMOCIONES.find((c) => c.especificas.includes(emocion))
+    : null
+
+  function handleCategoria(cat) {
+    setCategoriaAbierta((prev) => prev === cat.id ? null : cat.id)
+  }
+
+  function handleEspecifica(cat, esp) {
+    setEmocion(esp)
+    setCategoriaAbierta(null)
+  }
+
+  function limpiar() {
+    setEmocion('')
+    setCategoriaAbierta(null)
+  }
+
+  if (emocion && categoriaSeleccionada) {
+    return (
+      <div
+        className={styles.emocionSeleccionada}
+        style={{ borderColor: categoriaSeleccionada.color, background: categoriaSeleccionada.colorBg }}
+      >
+        <span className={styles.emocionSeleccionadaEmoji}>{categoriaSeleccionada.emoji}</span>
+        <span className={styles.emocionSeleccionadaTexto}>
+          <span style={{ color: categoriaSeleccionada.color, fontWeight: 700 }}>{categoriaSeleccionada.label}</span>
+          <span className={styles.emocionSeleccionadaArrow}>›</span>
+          <span>{emocion}</span>
+        </span>
+        <button className={styles.emocionLimpiarBtn} onClick={limpiar} aria-label="Limpiar emoción">
+          <X size={13} />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.emocionSelector}>
+      <div className={styles.emocionCategorias}>
+        {TAXONOMIA_EMOCIONES.map((cat) => (
+          <button
+            key={cat.id}
+            className={[
+              styles.emocionCatBtn,
+              categoriaAbierta === cat.id ? styles.emocionCatBtnAbierta : '',
+            ].join(' ')}
+            style={categoriaAbierta === cat.id
+              ? { borderColor: cat.color, background: cat.colorBg, color: cat.color }
+              : {}}
+            onClick={() => handleCategoria(cat)}
+          >
+            <span>{cat.emoji}</span>
+            <span>{cat.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {categoriaAbierta && (() => {
+        const cat = TAXONOMIA_EMOCIONES.find((c) => c.id === categoriaAbierta)
+        return (
+          <div className={styles.emocionEspecificas}>
+            {cat.especificas.map((esp) => (
+              <button
+                key={esp}
+                className={styles.emocionEspBtn}
+                style={{ borderColor: cat.color, color: cat.color }}
+                onClick={() => handleEspecifica(cat, esp)}
+              >
+                {esp}
+              </button>
+            ))}
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
 
 const TIPOS = [
   { id: 'rabieta',     label: 'Rabieta / explosión',              emoji: '😤' },
@@ -118,6 +284,7 @@ export default function RegistroPage() {
   const [intensidad, setIntensidad] = useState(null)
 
   // detailed-only fields
+  const [emocionSeleccionada, setEmocionSeleccionada] = useState('')
   const [cuandoPaso, setCuandoPaso] = useState('ahora')
   const [fechaCustom, setFechaCustom] = useState('')
   const [contexto, setContexto] = useState('')
@@ -161,6 +328,7 @@ export default function RegistroPage() {
       gatillantes: modo === 'detallado' ? gatillantesSeleccionados : [],
       estadoPadre,
       fecha: modo === 'detallado' ? computarFecha(cuandoPaso, fechaCustom) : new Date().toISOString(),
+      emocion:     modo === 'detallado' ? (emocionSeleccionada || null) : null,
     }
 
     setLoadingGuardar(true)
@@ -342,6 +510,11 @@ export default function RegistroPage() {
       <Card>
         <p className={styles.label}>Tipo de episodio</p>
         <TipoSelector tipo={tipo} setTipo={setTipo} />
+      </Card>
+
+      <Card>
+        <p className={styles.label}>¿Qué emoción sentía tu hijo/a? <span className={styles.labelOpcional}>(opcional)</span></p>
+        <EmocionSelector emocion={emocionSeleccionada} setEmocion={setEmocionSeleccionada} />
       </Card>
 
       <Card>

@@ -356,3 +356,117 @@
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ── Selector de emociones ─────────────────────────────── */
+
+.labelOpcional {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-light);
+}
+
+.emocionSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emocionCategorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.emocionCatBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.emocionCatBtn:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-text);
+}
+.emocionCatBtnAbierta {
+  font-weight: 600;
+}
+
+.emocionEspecificas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  animation: emocionSlideDown 0.18s ease both;
+}
+
+@keyframes emocionSlideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.emocionEspBtn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  background: white;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: all 0.13s;
+  opacity: 0.85;
+}
+.emocionEspBtn:hover {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+.emocionSeleccionada {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid;
+  animation: emocionSlideDown 0.18s ease both;
+}
+
+.emocionSeleccionadaEmoji { font-size: 20px; flex-shrink: 0; }
+
+.emocionSeleccionadaTexto {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.emocionSeleccionadaArrow {
+  color: var(--color-text-light);
+  font-size: 12px;
+}
+
+.emocionLimpiarBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+.emocionLimpiarBtn:hover { color: var(--color-danger); }
