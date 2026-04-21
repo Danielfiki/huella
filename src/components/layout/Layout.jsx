@@ -36,7 +36,7 @@ export default function Layout() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>
-          <NavLink to="/perfil" className={styles.profileBtn}>
+          <NavLink to={state.hijo ? '/hijo' : '/perfil'} className={styles.profileBtn}>
             {state.hijo?.avatarUrl
               ? <img src={state.hijo.avatarUrl} alt="Avatar" className={styles.profileAvatar} />
               : <User size={20} />}

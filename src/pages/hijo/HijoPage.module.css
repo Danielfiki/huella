@@ -1,0 +1,313 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 32px;
+}
+
+/* ── Empty state ── */
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 60dvh;
+  text-align: center;
+  padding: 32px;
+  color: var(--color-text-muted);
+}
+
+.editarBtn {
+  padding: 12px 28px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  transition: transform 0.15s;
+}
+
+.editarBtn:hover { transform: translateY(-1px); }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 32px;
+  background: linear-gradient(155deg, #f5e6d8 0%, #fdf6f0 60%, #f9ede3 100%);
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+  margin-bottom: 4px;
+}
+
+.editarIconBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background 0.15s;
+}
+
+.editarIconBtn:hover { background: rgba(0,0,0,0.13); }
+
+.avatarWrap {
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.avatarPlaceholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: 800;
+  color: #fff;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.nombre {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.edad {
+  font-size: 15px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Racha card ── */
+.rachaCard {
+  margin: 0 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #c96f45 0%, #e8936a 100%);
+  border-radius: var(--radius-lg, 16px);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(201, 111, 69, 0.3);
+}
+
+.rachaTop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rachaNumero {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.rachaDias {
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.rachaFlama {
+  font-size: 28px;
+  margin-left: auto;
+}
+
+.rachaFrase {
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.88;
+  margin: 0;
+}
+
+/* ── Section labels ── */
+.seccionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+}
+
+.seccionTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 16px 8px;
+}
+
+/* ── Evolución ── */
+.evolucionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.evolucionNum {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.evolucionCifra {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.evolucionSub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.evolucionSep {
+  width: 1px;
+  height: 44px;
+  background: var(--color-border);
+}
+
+.evolucionTendencia {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.evolucionPct {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.evolucionMsg {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+/* ── Logros ── */
+.logrosRow {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.logrosRow::-webkit-scrollbar { display: none; }
+
+.logroChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.logroEmoji {
+  font-size: 28px;
+}
+
+.logroTitulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.logroFecha {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ── Timeline ── */
+.timelineCard {
+  margin: 0;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+.timelineLast {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.timelineEmoji {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.timelineTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.timelineDesc {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.timelineFecha {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Hito vacío ── */
+.hitoVacioCard {
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}

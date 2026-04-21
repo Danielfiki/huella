@@ -14,6 +14,7 @@ import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
 import ParejasPage from './pages/pareja/ParejasPage'
 import PerfilPage from './pages/perfil/PerfilPage'
+import HijoPage from './pages/hijo/HijoPage'
 import TerminosPage from './pages/legal/TerminosPage'
 
 class PageErrorBoundary extends React.Component {
@@ -150,6 +151,7 @@ export default function App() {
               <Route path="historial" element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
               <Route path="pareja" element={<PageErrorBoundary><ParejasPage /></PageErrorBoundary>} />
               <Route path="perfil" element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
+              <Route path="hijo" element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
               <Route path="*" element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
             </Route>
           </Routes>
