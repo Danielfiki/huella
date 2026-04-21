@@ -175,6 +175,18 @@
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 .graficoCard {}
 
+.narrativa {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-alt);
+  border-left: 3px solid var(--color-primary-light);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
 /* ── Análisis de patrones ── */
 .patronesCard {}
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

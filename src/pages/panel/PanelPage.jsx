@@ -146,6 +146,109 @@ export default function PanelPage() {
     [estrategias]
   )
 
+  // ── Narrativas de gráficos ────────────────────────────────────────────────
+
+  const narrativaFrecuencia = useMemo(() => {
+    if (episodios.length < 3) return null
+    const now = new Date()
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+    monday.setHours(0, 0, 0, 0)
+    const weeks = Array.from({ length: 6 }, (_, i) => {
+      const start = new Date(monday)
+      start.setDate(monday.getDate() - (5 - i) * 7)
+      const end = new Date(start)
+      end.setDate(start.getDate() + 7)
+      return { start, end }
+    })
+    const counts = weeks.map((w) =>
+      episodios.filter((e) => { const f = new Date(e.fecha); return f >= w.start && f < w.end }).length
+    )
+    const current = counts[5]
+    const prev5 = counts.slice(0, 5)
+    const prevWeek = counts[4]
+    const avg5 = prev5.reduce((s, c) => s + c, 0) / 5
+    const min5 = Math.min(...prev5.filter((_, i) => prev5.some((c) => c > 0)) )
+    const hasHistory = prev5.some((c) => c > 0)
+
+    // Impacto de estrategia (si empezó ≥14 días antes)
+    const estActiva = estrategias.find((e) => e.fechaInicio)
+    if (estActiva) {
+      const inicio = new Date(estActiva.fechaInicio)
+      const diasDesde = (Date.now() - inicio) / 864e5
+      if (diasDesde >= 14) {
+        const antes = episodios.filter((e) => new Date(e.fecha) < inicio)
+        const despues = episodios.filter((e) => new Date(e.fecha) >= inicio)
+        if (antes.length >= 3 && despues.length >= 3) {
+          const tasaAntes = antes.length / Math.max((inicio - new Date(antes.at(-1).fecha)) / 864e5, 1)
+          const tasaDespues = despues.length / diasDesde
+          if (tasaDespues < tasaAntes * 0.65) {
+            const pct = Math.round((1 - tasaDespues / tasaAntes) * 100)
+            return `Los episodios bajaron un ${pct}% desde que empezaste tu estrategia 💪`
+          }
+        }
+      }
+    }
+
+    if (current === 0) return 'Sin episodios esta semana 🌱'
+    if (hasHistory && prev5.every((c) => c === 0 || current < c))
+      return 'Mejor semana en los últimos 30 días 📈'
+    if (prevWeek > 0 && current <= prevWeek * 0.6) {
+      const pct = Math.round((1 - current / prevWeek) * 100)
+      return `${pct}% menos episodios que la semana pasada 💪`
+    }
+    if (avg5 > 0 && current < avg5 * 0.85) return 'Esta semana, por debajo de tu promedio 🌿'
+    if (avg5 > 0 && current > avg5 * 1.2) return 'Esta semana fue más intensa que tu promedio'
+    if (prevWeek > 0 && current > prevWeek) {
+      const diff = current - prevWeek
+      return `${diff} más que la semana pasada — registrar ayuda a entender el patrón`
+    }
+    return `${current} episodio${current !== 1 ? 's' : ''} esta semana — dentro de tu promedio`
+  }, [episodios, estrategias])
+
+  const narrativaIntensidad = useMemo(() => {
+    const data = [...episodios].reverse().slice(-20)
+    if (data.length < 4) return null
+    const half = Math.floor(data.length / 2)
+    const avg = (arr) => arr.reduce((s, e) => s + e.intensidad, 0) / arr.length
+    const firstAvg = avg(data.slice(0, half))
+    const secondAvg = avg(data.slice(-half))
+    const delta = secondAvg - firstAvg
+    const overallAvg = avg(data).toFixed(1)
+    if (delta <= -0.4)
+      return `La intensidad está bajando 🌿 — de ${firstAvg.toFixed(1)} a ${secondAvg.toFixed(1)} en los últimos registros`
+    if (delta >= 0.5)
+      return `Los episodios recientes son más intensos (${secondAvg.toFixed(1)}/5) — considera reforzar la estrategia`
+    return `Intensidad estable en los últimos registros — promedio ${overallAvg}/5`
+  }, [episodios])
+
+  const narrativaGatillantes = useMemo(() => {
+    const counts = {}
+    for (const ep of episodios) {
+      for (const g of ep.gatillantes || []) counts[g] = (counts[g] || 0) + 1
+    }
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
+    if (entries.length === 0) return null
+    const [topName, topCount] = entries[0]
+    const totalConGatillante = episodios.filter((e) => e.gatillantes?.length > 0).length
+    if (totalConGatillante === 0) return null
+
+    // ¿Está aumentando en las últimas 4 semanas?
+    const hace28 = new Date(); hace28.setDate(hace28.getDate() - 28)
+    const recientes = episodios.filter((e) => new Date(e.fecha) >= hace28)
+    const countReciente = recientes.filter((e) => e.gatillantes?.includes(topName)).length
+    const pctReciente = recientes.length > 0 ? countReciente / recientes.length : 0
+    const pctTotal = topCount / totalConGatillante
+
+    if (pctReciente > pctTotal * 1.4 && countReciente >= 3)
+      return `«${topName}» aparece cada vez más — algo cambió recientemente`
+    if (entries.length >= 3 && entries[0][1] <= entries[2][1] * 1.4)
+      return 'Los gatillantes varían — no hay uno dominante, el contexto importa más'
+    if (pctTotal >= 0.5)
+      return `«${topName}» aparece en más de la mitad de los episodios — el patrón más claro`
+    return `«${topName}» es el gatillante más frecuente con ${topCount} ${topCount === 1 ? 'aparición' : 'apariciones'}`
+  }, [episodios])
+
   async function handleAnalizarPatrones() {
     setLoadingAnalisis(true)
     try {
@@ -197,14 +300,23 @@ export default function PanelPage() {
           <Card className={styles.graficoCard}>
             <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
             <GraficoFrecuenciaSemanal episodios={episodios} />
+            {narrativaFrecuencia && (
+              <p className={styles.narrativa}>{narrativaFrecuencia}</p>
+            )}
           </Card>
           <Card className={styles.graficoCard}>
             <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
             <GraficoIntensidad episodios={episodios} />
+            {narrativaIntensidad && (
+              <p className={styles.narrativa}>{narrativaIntensidad}</p>
+            )}
           </Card>
           <Card className={styles.graficoCard}>
             <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
             <GraficoGatillantes episodios={episodios} />
+            {narrativaGatillantes && (
+              <p className={styles.narrativa}>{narrativaGatillantes}</p>
+            )}
           </Card>
         </>
       )}
