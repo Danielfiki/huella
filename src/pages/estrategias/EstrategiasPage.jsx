@@ -332,13 +332,13 @@ export default function EstrategiasPage() {
                       <div className={styles.semanaContenido}>
                         {semana.estrategia && (
                           <div className={styles.semanaItem}>
-                            <span className={styles.semanaItemLabel}>Estrategia</span>
+                            <span className={styles.semanaItemLabel}>Qué hacer esta semana</span>
                             <p>{semana.estrategia}</p>
                           </div>
                         )}
                         {semana.indicador && (
                           <div className={styles.semanaItem}>
-                            <span className={styles.semanaItemLabel}>Indicador</span>
+                            <span className={styles.semanaItemLabel}>Cómo saber si está funcionando</span>
                             <p>{semana.indicador}</p>
                           </div>
                         )}
