@@ -22,6 +22,7 @@ create table if not exists public.episodios (
   contexto      text,
   gatillantes   text[],
   estado_padre  text,
+  emocion       text,
   orientacion_ia text,
   fecha         timestamptz default now()
 );
@@ -46,18 +47,27 @@ create table if not exists public.estrategias (
   checkins     jsonb default '{}'::jsonb
 );
 
+create table if not exists public.api_llamadas (
+  user_id uuid references auth.users(id) on delete cascade not null,
+  fecha   date not null default current_date,
+  cuenta  integer not null default 0,
+  primary key (user_id, fecha)
+);
+
 -- ── Migraciones para instalaciones existentes ─────────────────
 alter table public.hijos      add column if not exists avatar_url     text;
 alter table public.episodios  add column if not exists orientacion_ia text;
+alter table public.episodios  add column if not exists emocion        text;
 alter table public.estrategias add column if not exists tareas         jsonb default '{}'::jsonb;
 alter table public.estrategias add column if not exists checkins       jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url       text;
 
 -- ── Row Level Security ────────────────────────────────────────
-alter table public.hijos       enable row level security;
-alter table public.episodios   enable row level security;
-alter table public.hitos        enable row level security;
-alter table public.estrategias  enable row level security;
+alter table public.hijos         enable row level security;
+alter table public.episodios     enable row level security;
+alter table public.hitos         enable row level security;
+alter table public.estrategias   enable row level security;
+alter table public.api_llamadas  enable row level security;
 
 -- Eliminar políticas previas para evitar conflictos al re-ejecutar
 drop policy if exists "own_data" on public.hijos;
@@ -75,6 +85,9 @@ create policy "own_data" on public.hitos
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own_data" on public.estrategias
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_data" on public.api_llamadas
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ── Storage: bucket avatares ──────────────────────────────────
@@ -479,4 +492,16 @@ begin
   end if;
 end;
 $$;
+grant execute on function public.upsert_family_child(text, integer, text) to authenticated;
+
+-- Eliminar la cuenta del usuario autenticado y todos sus datos (cascade)
+create or replace function public.delete_user()
+returns void
+language plpgsql security definer
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+grant execute on function public.delete_user() to authenticated;
 grant execute on function public.upsert_family_child(text, integer, text) to authenticated;
