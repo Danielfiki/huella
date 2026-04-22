@@ -42,13 +42,15 @@ create table if not exists public.estrategias (
   plan         text,
   fecha_inicio timestamptz default now(),
   semana_actual integer default 1,
-  tareas       jsonb default '{}'::jsonb
+  tareas       jsonb default '{}'::jsonb,
+  checkins     jsonb default '{}'::jsonb
 );
 
 -- ── Migraciones para instalaciones existentes ─────────────────
 alter table public.hijos      add column if not exists avatar_url     text;
 alter table public.episodios  add column if not exists orientacion_ia text;
 alter table public.estrategias add column if not exists tareas         jsonb default '{}'::jsonb;
+alter table public.estrategias add column if not exists checkins       jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url       text;
 
 -- ── Row Level Security ────────────────────────────────────────

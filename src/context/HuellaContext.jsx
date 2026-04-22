@@ -78,6 +78,7 @@ function dbEstrategiaToApp(row) {
     fechaInicio: row.fecha_inicio,
     semanaActual: row.semana_actual,
     tareas: row.tareas ?? {},
+    checkins: row.checkins ?? {},
   }
 }
 
@@ -305,6 +306,7 @@ export function HuellaProvider({ children }) {
     if (partial.plan         !== undefined) dbFields.plan          = partial.plan
     if (partial.habilidad    !== undefined) dbFields.habilidad     = partial.habilidad
     if (partial.tareas       !== undefined) dbFields.tareas        = partial.tareas
+    if (partial.checkins     !== undefined) dbFields.checkins      = partial.checkins
     await supabase.from('estrategias').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 

@@ -183,11 +183,17 @@ export default function EstrategiasPage() {
 
   async function handleAvanzarSemana() {
     if (!estrategiaSeleccionada || estrategiaSeleccionada.semanaActual >= 4) return
-    setCheckinVisible(false)
-    setCheckinTexto('')
     setLoadingAvanzar(true)
     const nextSemana = estrategiaSeleccionada.semanaActual + 1
-    await updateEstrategia({ id: estrategiaSeleccionada.id, semanaActual: nextSemana })
+    const updates = { id: estrategiaSeleccionada.id, semanaActual: nextSemana }
+    if (checkinTexto.trim()) {
+      const checkins = { ...(estrategiaSeleccionada.checkins ?? {}) }
+      checkins[String(estrategiaSeleccionada.semanaActual)] = checkinTexto.trim()
+      updates.checkins = checkins
+    }
+    await updateEstrategia(updates)
+    setCheckinVisible(false)
+    setCheckinTexto('')
     setLoadingAvanzar(false)
 
     // Si la siguiente semana no tiene tareas guardadas, generarlas ahora
@@ -354,6 +360,14 @@ export default function EstrategiasPage() {
                           <div className={styles.semanaItem}>
                             <span className={styles.semanaItemLabel}>Cómo saber si está funcionando</span>
                             <p>{semana.indicador}</p>
+                          </div>
+                        )}
+                        {esCompletada && estrategiaSeleccionada.checkins?.[String(semana.numero)] && (
+                          <div className={styles.checkinGuardado}>
+                            <span className={styles.checkinGuardadoLabel}>Tu reflexión</span>
+                            <p className={styles.checkinGuardadoTexto}>
+                              {estrategiaSeleccionada.checkins[String(semana.numero)]}
+                            </p>
                           </div>
                         )}
                         {esActual && (
