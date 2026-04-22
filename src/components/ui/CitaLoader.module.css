@@ -7,6 +7,17 @@
   text-align: center;
 }
 
+.quoteWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 380ms ease;
+  will-change: opacity;
+}
+
+.quoteVisible { opacity: 1; }
+.quoteHidden  { opacity: 0; }
+
 .compact {
   padding: 10px 4px 8px;
 }
