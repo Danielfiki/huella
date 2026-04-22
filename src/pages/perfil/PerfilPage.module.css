@@ -160,6 +160,26 @@
   gap: 10px;
 }
 
+.inviteStatusOk {
+  font-size: 13px;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.inviteStatusWarn {
+  font-size: 13px;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .familyLinkBox {
   display: flex;
   align-items: center;

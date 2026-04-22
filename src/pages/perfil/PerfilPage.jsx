@@ -60,6 +60,7 @@ export default function PerfilPage() {
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError, setInviteError] = useState('')
   const [inviteLink, setInviteLink] = useState('')
+  const [inviteEmailSent, setInviteEmailSent] = useState(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [disconnectLoading, setDisconnectLoading] = useState(false)
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
@@ -154,8 +155,9 @@ export default function PerfilPage() {
     setInviteError('')
     setInviteLink('')
     try {
-      const url = await invitePartner(inviteEmail.trim().toLowerCase())
+      const { url, emailSent } = await invitePartner(inviteEmail.trim().toLowerCase())
       setInviteLink(url)
+      setInviteEmailSent(emailSent)
       setInviteEmail('')
     } catch (err) {
       setInviteError(err.message || 'No se pudo enviar la invitación')
@@ -361,10 +363,19 @@ export default function PerfilPage() {
         ) : pendingInvitation || inviteLink ? (
           /* Estado B: invitación pendiente */
           <div className={styles.familyPending}>
-            <p className={styles.sectionDesc} style={{ marginBottom: 0 }}>
-              Invitación enviada a <strong>{pendingInvitation?.inviteeEmail ?? inviteEmail}</strong>.
-              Comparte el link para que pueda aceptarla.
-            </p>
+            {inviteEmailSent === true ? (
+              <p className={styles.inviteStatusOk}>
+                Email enviado a <strong>{pendingInvitation?.inviteeEmail}</strong>. También puedes copiar el link.
+              </p>
+            ) : inviteEmailSent === false ? (
+              <p className={styles.inviteStatusWarn}>
+                No pudimos enviar el email automáticamente. Comparte el link con <strong>{pendingInvitation?.inviteeEmail}</strong>.
+              </p>
+            ) : (
+              <p className={styles.sectionDesc} style={{ marginBottom: 0 }}>
+                Invitación pendiente para <strong>{pendingInvitation?.inviteeEmail}</strong>. Comparte el link para que pueda aceptarla.
+              </p>
+            )}
             <div className={styles.familyLinkBox}>
               <span className={styles.familyLinkText}>
                 {inviteLink || `${window.location.origin}/invitar?token=${pendingInvitation?.token}`}

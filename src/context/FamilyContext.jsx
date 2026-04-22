@@ -71,18 +71,20 @@ export function FamilyProvider({ children }) {
     const inviteUrl = `${window.location.origin}/invitar?token=${data.token}`
 
     // Enviar email (best-effort: no falla si Resend no está configurado)
+    let emailSent = false
     try {
-      await fetch('/api/invite', {
+      const res = await fetch('/api/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: email, inviterEmail: user.email, inviteUrl }),
       })
-    } catch (emailErr) {
-      console.warn('No se pudo enviar el email de invitación:', emailErr)
+      emailSent = res.ok
+    } catch {
+      emailSent = false
     }
 
     await loadFamilyData()
-    return inviteUrl
+    return { url: inviteUrl, emailSent }
   }
 
   async function cancelInvitation() {
