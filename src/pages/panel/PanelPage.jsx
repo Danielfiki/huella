@@ -21,13 +21,16 @@ const CONTEXTOS_ESTRATEGIA = {
   'Concentrarse y calmarse':            { emoji: '🧘' },
 }
 
-function buildGreeting(hora, padreNombre, nombreHijo) {
+function buildGreeting(hora, padreNombre, nombreHijo, edadHijo) {
   const saludoHora = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'
+  const hijoLabel = edadHijo != null
+    ? `${nombreHijo} (${edadHijo} ${edadHijo === 1 ? 'año' : 'años'})`
+    : nombreHijo
   const preguntaHora = hora < 12
-    ? `¿Cómo empezó el día con ${nombreHijo}?`
+    ? `¿Cómo empezó el día con ${hijoLabel}?`
     : hora < 20
-    ? `¿Cómo va la tarde con ${nombreHijo}?`
-    : `¿Cómo estuvo hoy con ${nombreHijo}?`
+    ? `¿Cómo va la tarde con ${hijoLabel}?`
+    : `¿Cómo estuvo hoy con ${hijoLabel}?`
 
   if (padreNombre) {
     return { titulo: `Hola, ${padreNombre} 👋`, subtitulo: preguntaHora }
@@ -153,7 +156,7 @@ export default function PanelPage() {
   const { hijo, episodios, hitos, estrategias, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
   const hora = new Date().getHours()
-  const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombreHijo)
+  const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombreHijo, hijo?.edad)
 
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find((e) => e.semanaActual < 4),

@@ -55,12 +55,14 @@ create table if not exists public.api_llamadas (
 );
 
 -- ── Migraciones para instalaciones existentes ─────────────────
-alter table public.hijos      add column if not exists avatar_url     text;
-alter table public.episodios  add column if not exists orientacion_ia text;
-alter table public.episodios  add column if not exists emocion        text;
-alter table public.estrategias add column if not exists tareas         jsonb default '{}'::jsonb;
-alter table public.estrategias add column if not exists checkins       jsonb default '{}'::jsonb;
-alter table public.hitos      add column if not exists foto_url       text;
+alter table public.hijos      add column if not exists avatar_url       text;
+alter table public.hijos      add column if not exists fecha_nacimiento date;
+alter table public.hijos      add column if not exists genero            text;
+alter table public.episodios  add column if not exists orientacion_ia   text;
+alter table public.episodios  add column if not exists emocion           text;
+alter table public.estrategias add column if not exists tareas           jsonb default '{}'::jsonb;
+alter table public.estrategias add column if not exists checkins         jsonb default '{}'::jsonb;
+alter table public.hitos      add column if not exists foto_url          text;
 
 -- ── Row Level Security ────────────────────────────────────────
 alter table public.hijos         enable row level security;
@@ -460,10 +462,14 @@ $$;
 grant execute on function public.disconnect_partner() to authenticated;
 
 -- Upsert del hijo canónico (INSERT o UPDATE preservando user_id original)
+drop function if exists public.upsert_family_child(text, integer, text);
+
 create or replace function public.upsert_family_child(
-  p_nombre     text,
-  p_edad       integer,
-  p_avatar_url text
+  p_nombre           text,
+  p_edad             integer,
+  p_avatar_url       text,
+  p_fecha_nacimiento date    default null,
+  p_genero           text    default null
 ) returns void
 language plpgsql security definer
 as $$
@@ -477,22 +483,30 @@ begin
 
   if v_family_id is not null then
     update public.hijos
-    set nombre = p_nombre, edad = p_edad, avatar_url = p_avatar_url
+    set nombre           = p_nombre,
+        edad             = p_edad,
+        avatar_url       = p_avatar_url,
+        fecha_nacimiento = p_fecha_nacimiento,
+        genero           = p_genero
     where family_id = v_family_id;
 
     if not found then
-      insert into public.hijos (user_id, family_id, nombre, edad, avatar_url)
-      values (auth.uid(), v_family_id, p_nombre, p_edad, p_avatar_url);
+      insert into public.hijos (user_id, family_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
+      values (auth.uid(), v_family_id, p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero);
     end if;
   else
-    insert into public.hijos (user_id, nombre, edad, avatar_url)
-    values (auth.uid(), p_nombre, p_edad, p_avatar_url)
+    insert into public.hijos (user_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
+    values (auth.uid(), p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero)
     on conflict (user_id) do update
-    set nombre = excluded.nombre, edad = excluded.edad, avatar_url = excluded.avatar_url;
+    set nombre           = excluded.nombre,
+        edad             = excluded.edad,
+        avatar_url       = excluded.avatar_url,
+        fecha_nacimiento = excluded.fecha_nacimiento,
+        genero           = excluded.genero;
   end if;
 end;
 $$;
-grant execute on function public.upsert_family_child(text, integer, text) to authenticated;
+grant execute on function public.upsert_family_child(text, integer, text, date, text) to authenticated;
 
 -- ── Perfil del padre/madre ────────────────────────────────────────────────
 -- Migración: ejecutar en Supabase Dashboard → SQL Editor si ya tienes la DB
@@ -519,4 +533,4 @@ begin
 end;
 $$;
 grant execute on function public.delete_user() to authenticated;
-grant execute on function public.upsert_family_child(text, integer, text) to authenticated;
+grant execute on function public.upsert_family_child(text, integer, text, date, text) to authenticated;

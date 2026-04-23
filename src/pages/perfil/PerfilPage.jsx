@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useHuella } from '../../context/HuellaContext'
+import { useHuella, calcularEdad } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
@@ -38,7 +38,8 @@ export default function PerfilPage() {
   const avatarInputRef = useRef(null)
 
   const [nombre, setNombre] = useState('')
-  const [edad, setEdad] = useState('')
+  const [fechaNacimiento, setFechaNacimiento] = useState('')
+  const [genero, setGenero] = useState('')
   const [loadingHijo, setLoadingHijo] = useState(false)
   const [errorHijo, setErrorHijo] = useState('')
   const [guardadoOk, setGuardadoOk] = useState(false)
@@ -67,7 +68,8 @@ export default function PerfilPage() {
   useEffect(() => {
     if (state.hijo) {
       setNombre(state.hijo.nombre || '')
-      setEdad(state.hijo.edad != null ? String(state.hijo.edad) : '')
+      setFechaNacimiento(state.hijo.fechaNacimiento || '')
+      setGenero(state.hijo.genero || '')
     }
   }, [state.hijo])
 
@@ -94,7 +96,12 @@ export default function PerfilPage() {
     setErrorHijo('')
     setGuardadoOk(false)
     try {
-      await setHijo({ nombre: nombre.trim(), edad: edad ? Number(edad) : null, avatarUrl: state.hijo?.avatarUrl ?? null })
+      await setHijo({
+        nombre:          nombre.trim(),
+        avatarUrl:       state.hijo?.avatarUrl ?? null,
+        fechaNacimiento: fechaNacimiento || null,
+        genero:          genero || null,
+      })
       setGuardadoOk(true)
       setTimeout(() => setGuardadoOk(false), 3000)
     } catch {
@@ -120,9 +127,10 @@ export default function PerfilPage() {
       const { data } = supabase.storage.from('avatares').getPublicUrl(path)
       const url = `${data.publicUrl}?t=${Date.now()}`
       await setHijo({
-        nombre: nombre.trim() || state.hijo?.nombre || '',
-        edad: edad ? Number(edad) : state.hijo?.edad ?? null,
-        avatarUrl: url,
+        nombre:          nombre.trim() || state.hijo?.nombre || '',
+        avatarUrl:       url,
+        fechaNacimiento: fechaNacimiento || state.hijo?.fechaNacimiento || null,
+        genero:          genero || state.hijo?.genero || null,
       })
     } catch (err) {
       console.error('Error subiendo avatar:', err)
@@ -290,16 +298,40 @@ export default function PerfilPage() {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Edad (años)</label>
+            <label className={styles.label}>Fecha de nacimiento</label>
             <input
               className={styles.input}
-              type="number"
-              placeholder="Ej: 4"
-              value={edad}
-              onChange={(e) => setEdad(e.target.value)}
-              min={0}
-              max={18}
+              type="date"
+              value={fechaNacimiento}
+              onChange={(e) => setFechaNacimiento(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
             />
+            {fechaNacimiento && (() => {
+              const e = calcularEdad(fechaNacimiento)
+              return e != null
+                ? <p className={styles.edadPreview}>{e} {e === 1 ? 'año' : 'años'}</p>
+                : null
+            })()}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Género</label>
+            <div className={styles.generoGroup}>
+              {[
+                { val: 'm',  label: 'Niño' },
+                { val: 'f',  label: 'Niña' },
+                { val: 'nb', label: 'Prefiero no decir' },
+              ].map(({ val, label }) => (
+                <button
+                  key={val}
+                  type="button"
+                  className={`${styles.generoBtn} ${genero === val ? styles.generoBtnActivo : ''}`}
+                  onClick={() => setGenero(genero === val ? '' : val)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {errorHijo && <p className={styles.error}>{errorHijo}</p>}

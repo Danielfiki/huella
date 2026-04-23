@@ -5,6 +5,16 @@ import { useFamily } from './FamilyContext'
 
 const HuellaContext = createContext(null)
 
+export function calcularEdad(fechaNacimiento) {
+  if (!fechaNacimiento) return null
+  const hoy = new Date()
+  const nac = new Date(fechaNacimiento)
+  let edad = hoy.getFullYear() - nac.getFullYear()
+  const m = hoy.getMonth() - nac.getMonth()
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
+  return edad >= 0 ? edad : null
+}
+
 const initialState = {
   hijo: null,
   episodios: [],
@@ -160,9 +170,16 @@ export function HuellaProvider({ children }) {
       dispatch({
         type: 'LOAD_STATE',
         payload: {
-          hijo: hijosRes.data
-            ? { nombre: hijosRes.data.nombre, edad: hijosRes.data.edad, avatarUrl: hijosRes.data.avatar_url ?? null }
-            : null,
+          hijo: hijosRes.data ? (() => {
+            const row = hijosRes.data
+            return {
+              nombre:          row.nombre,
+              edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
+              avatarUrl:       row.avatar_url ?? null,
+              fechaNacimiento: row.fecha_nacimiento ?? null,
+              genero:          row.genero ?? null,
+            }
+          })() : null,
           episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
           hitos: hitosRes.data ?? [],
           estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
@@ -186,9 +203,11 @@ export function HuellaProvider({ children }) {
     const anterior = state.hijo
     dispatch({ type: 'SET_HIJO', payload: hijo })
     const { error } = await supabase.rpc('upsert_family_child', {
-      p_nombre:     hijo.nombre,
-      p_edad:       hijo.edad ?? null,
-      p_avatar_url: hijo.avatarUrl ?? null,
+      p_nombre:            hijo.nombre,
+      p_edad:              null,
+      p_avatar_url:        hijo.avatarUrl ?? null,
+      p_fecha_nacimiento:  hijo.fechaNacimiento ?? null,
+      p_genero:            hijo.genero ?? null,
     })
     if (error) {
       dispatch({ type: 'SET_HIJO', payload: anterior })
