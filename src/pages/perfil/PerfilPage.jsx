@@ -96,12 +96,15 @@ export default function PerfilPage() {
     setErrorHijo('')
     setGuardadoOk(false)
     try {
-      await setHijo({
-        nombre:          nombre.trim(),
-        avatarUrl:       state.hijo?.avatarUrl ?? null,
-        fechaNacimiento: fechaNacimiento || null,
-        genero:          genero || null,
-      })
+      await Promise.all([
+        setHijo({
+          nombre:          nombre.trim(),
+          avatarUrl:       state.hijo?.avatarUrl ?? null,
+          fechaNacimiento: fechaNacimiento || null,
+          genero:          genero || null,
+        }),
+        padreNombre.trim() ? savePadreNombre(padreNombre.trim()) : Promise.resolve(),
+      ])
       setGuardadoOk(true)
       setTimeout(() => setGuardadoOk(false), 3000)
     } catch {
