@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Mic } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
-import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
+import { analizarEpisodio, generarAccionInmediata, extraerCamposDeVoz } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -273,6 +273,84 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
   )
 }
 
+function VozCard({ onExtracted, hijo }) {
+  const [estado, setEstado] = useState('idle') // idle | escuchando | procesando | ok | error
+  const [transcripcion, setTranscripcion] = useState('')
+
+  const disponible = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  if (!disponible) return null
+
+  function iniciar() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const rec = new SR()
+    rec.lang = 'es-CL'
+    rec.continuous = false
+    rec.interimResults = false
+
+    setEstado('escuchando')
+    setTranscripcion('')
+
+    let gotResult = false
+
+    rec.onresult = async (e) => {
+      gotResult = true
+      const texto = e.results[0][0].transcript
+      setTranscripcion(texto)
+      setEstado('procesando')
+      try {
+        const campos = await extraerCamposDeVoz({ transcripcion: texto, hijo })
+        if (campos) { onExtracted(campos); setEstado('ok') }
+        else setEstado('error')
+      } catch { setEstado('error') }
+    }
+
+    rec.onerror = () => setEstado('error')
+    rec.onend = () => { if (!gotResult) setEstado('idle') }
+
+    rec.start()
+  }
+
+  return (
+    <div className={styles.vozCard}>
+      {estado === 'idle' && (
+        <button className={styles.vozBtn} onClick={iniciar}>
+          <Mic size={16} />
+          <span>Dicta lo que pasó</span>
+        </button>
+      )}
+
+      {estado === 'escuchando' && (
+        <div className={styles.vozEscuchando}>
+          <span className={styles.vozPulse} />
+          <span>Escuchando…</span>
+        </div>
+      )}
+
+      {estado === 'procesando' && (
+        <div className={styles.vozProcesando}>
+          <span className={styles.vozSpinner} />
+          <span>Analizando con IA…</span>
+        </div>
+      )}
+
+      {estado === 'ok' && (
+        <div className={styles.vozOk}>
+          <span className={styles.vozOkLabel}>✓ Campos rellenados automáticamente</span>
+          {transcripcion && <p className={styles.vozTranscripcion}>"{transcripcion}"</p>}
+          <button className={styles.vozReintentarBtn} onClick={() => setEstado('idle')}>Dictar de nuevo</button>
+        </div>
+      )}
+
+      {estado === 'error' && (
+        <div className={styles.vozError}>
+          <span>No se pudo procesar el audio.</span>
+          <button className={styles.vozReintentarBtn} onClick={() => setEstado('idle')}>Reintentar</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function RegistroPage() {
   const { state, addEpisodio, updateEpisodio } = useHuella()
   const navigate = useNavigate()
@@ -299,6 +377,14 @@ export default function RegistroPage() {
   const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+
+  function handleVozExtracted(campos) {
+    if (campos.tipo && TIPOS.find((t) => t.id === campos.tipo)) setTipo(campos.tipo)
+    if (campos.intensidad) setIntensidad(campos.intensidad)
+    if (campos.contexto) setContexto(campos.contexto)
+    if (campos.gatillantes?.length) setGatillantesSeleccionados(campos.gatillantes.filter((g) => GATILLANTES.includes(g)))
+    if (campos.estadoPadre && ESTADOS_PADRE.includes(campos.estadoPadre)) setEstadoPadrePicker(campos.estadoPadre)
+  }
 
   function handleCuando(id) {
     setCuandoPaso(id)
@@ -458,6 +544,8 @@ export default function RegistroPage() {
         </div>
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
+        <VozCard onExtracted={handleVozExtracted} hijo={state.hijo} />
+
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
           <TipoSelector tipo={tipo} setTipo={setTipo} bigEmoji />
@@ -506,6 +594,8 @@ export default function RegistroPage() {
         <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
       </div>
       <h2 className={styles.titulo}>¿Qué pasó?</h2>
+
+      <VozCard onExtracted={handleVozExtracted} hijo={state.hijo} />
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>
