@@ -590,6 +590,7 @@
   align-items: center;
   gap: 10px;
   flex: 1;
+  width: 100%;
   min-width: 0;
   padding: 6px 0;
 }
@@ -611,31 +612,23 @@
 .vozBars {
   display: flex;
   align-items: center;
-  gap: 3px;
-  height: 34px;
+  justify-content: space-between;
+  flex: 1;
+  height: 40px;
 }
 
 .vozBar {
-  width: 3px;
-  border-radius: 3px;
+  width: 4px;
+  border-radius: 4px;
   background: var(--color-primary);
   height: 3px;
   transition: height 0.07s ease-out;
+  /* animationDelay se aplica vía inline style en el JSX */
+  animation: vozBarPulse 1.4s ease-in-out infinite;
 }
 
-/* CSS fallback: los bars pulsan suavemente antes de que el AudioContext tenga datos */
-.vozBar:nth-child(1) { animation: vozBarPulse 1.4s 0.00s ease-in-out infinite; }
-.vozBar:nth-child(2) { animation: vozBarPulse 1.4s 0.12s ease-in-out infinite; }
-.vozBar:nth-child(3) { animation: vozBarPulse 1.4s 0.24s ease-in-out infinite; }
-.vozBar:nth-child(4) { animation: vozBarPulse 1.4s 0.36s ease-in-out infinite; }
-.vozBar:nth-child(5) { animation: vozBarPulse 1.4s 0.48s ease-in-out infinite; }
-.vozBar:nth-child(6) { animation: vozBarPulse 1.4s 0.60s ease-in-out infinite; }
-.vozBar:nth-child(7) { animation: vozBarPulse 1.4s 0.72s ease-in-out infinite; }
-.vozBar:nth-child(8) { animation: vozBarPulse 1.4s 0.84s ease-in-out infinite; }
-.vozBar:nth-child(9) { animation: vozBarPulse 1.4s 0.96s ease-in-out infinite; }
-
 @keyframes vozBarPulse {
-  0%, 100% { opacity: 0.25; }
+  0%, 100% { opacity: 0.2; }
   50%       { opacity: 1; }
 }
 

@@ -273,7 +273,7 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
   )
 }
 
-const NUM_BARS = 9
+const NUM_BARS = 20
 
 function NarrativaBar({ onExtracted, hijo }) {
   const [texto, setTexto] = useState('')
@@ -282,17 +282,23 @@ function NarrativaBar({ onExtracted, hijo }) {
   const [procesandoTexto, setProcesandoTexto] = useState(false)
   const [ok, setOk] = useState(false)
 
-  const recRef       = useRef(null)
-  const transcriptRef = useRef('')
-  const audioCtxRef  = useRef(null)
-  const analyserRef  = useRef(null)
-  const streamRef    = useRef(null)
-  const animFrameRef = useRef(null)
-  const barsRef      = useRef([])
+  const recRef            = useRef(null)
+  const transcriptRef     = useRef('')
+  const audioCtxRef       = useRef(null)
+  const analyserRef       = useRef(null)
+  const streamRef         = useRef(null)
+  const animFrameRef      = useRef(null)
+  const barsRef           = useRef([])
+  const releaseHandlerRef = useRef(null)
+  const isRecordingRef    = useRef(false)
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
   useEffect(() => () => {
+    if (releaseHandlerRef.current) {
+      document.removeEventListener('mouseup', releaseHandlerRef.current)
+      document.removeEventListener('touchend', releaseHandlerRef.current)
+    }
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
@@ -318,13 +324,31 @@ function NarrativaBar({ onExtracted, hijo }) {
   }
 
   async function startMic() {
-    if (voiceEstado !== 'idle') return
+    if (isRecordingRef.current || voiceEstado !== 'idle') return
+    isRecordingRef.current = true
     transcriptRef.current = ''
     setVoiceEstado('grabando')
+
+    // Listener a nivel de document para capturar mouseup/touchend en cualquier lugar
+    const onRelease = () => {
+      document.removeEventListener('mouseup', onRelease)
+      document.removeEventListener('touchend', onRelease)
+      if (!isRecordingRef.current) return
+      isRecordingRef.current = false
+      recRef.current?.stop()
+      cancelAnimationFrame(animFrameRef.current)
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      audioCtxRef.current?.close().catch(() => {})
+      setVoiceEstado('revisando')
+    }
+    releaseHandlerRef.current = onRelease
+    document.addEventListener('mouseup', onRelease)
+    document.addEventListener('touchend', onRelease)
 
     // Web Audio API — visualización de amplitud
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      if (!isRecordingRef.current) { stream.getTracks().forEach((t) => t.stop()); return }
       streamRef.current = stream
       const AudioCtx = window.AudioContext || window.webkitAudioContext
       if (AudioCtx) {
@@ -337,6 +361,8 @@ function NarrativaBar({ onExtracted, hijo }) {
         startWaveform()
       }
     } catch { /* sin visualización, transcripción sigue funcionando */ }
+
+    if (!isRecordingRef.current) return
 
     // Speech Recognition
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -358,15 +384,6 @@ function NarrativaBar({ onExtracted, hijo }) {
     }
   }
 
-  function stopMic() {
-    if (voiceEstado !== 'grabando') return
-    recRef.current?.stop()
-    cancelAnimationFrame(animFrameRef.current)
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-    audioCtxRef.current?.close().catch(() => {})
-    setVoiceEstado('revisando')
-  }
-
   function cancelarVoz() {
     transcriptRef.current = ''
     setVoiceEstado('idle')
@@ -382,6 +399,24 @@ function NarrativaBar({ onExtracted, hijo }) {
         onExtracted(campos)
         setOk(true)
         setTimeout(() => setOk(false), 3000)
+        // Scroll hacia el primer campo rellenado y resaltarlo en verde
+        setTimeout(() => {
+          const targetId = campos.tipo ? 'campo-tipo'
+            : campos.intensidad ? 'campo-intensidad'
+            : campos.contexto   ? 'campo-contexto'
+            : null
+          if (!targetId) return
+          const el = document.getElementById(targetId)
+          if (!el) return
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.style.transition = 'box-shadow 0.2s ease'
+          el.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.65)'
+          setTimeout(() => {
+            el.style.transition = 'box-shadow 0.8s ease'
+            el.style.boxShadow = ''
+            setTimeout(() => { el.style.transition = '' }, 850)
+          }, 1500)
+        }, 80)
       }
     } catch {}
     setVoiceEstado('idle')
@@ -443,28 +478,21 @@ function NarrativaBar({ onExtracted, hijo }) {
           </>
         )}
 
-        {/* ── GRABANDO: onda de audio + mic rojo (usuario mantiene presionado) ── */}
+        {/* ── GRABANDO: onda de audio ancho completo (soltar en cualquier lugar detiene) ── */}
         {voiceEstado === 'grabando' && (
-          <>
-            <div className={styles.vozWaveformArea}>
-              <span className={styles.vozRecDot} />
-              <div className={styles.vozBars}>
-                {Array.from({ length: NUM_BARS }, (_, i) => (
-                  <span key={i} ref={(el) => { barsRef.current[i] = el }} className={styles.vozBar} />
-                ))}
-              </div>
+          <div className={styles.vozWaveformArea}>
+            <span className={styles.vozRecDot} />
+            <div className={styles.vozBars}>
+              {Array.from({ length: NUM_BARS }, (_, i) => (
+                <span
+                  key={i}
+                  ref={(el) => { barsRef.current[i] = el }}
+                  className={styles.vozBar}
+                  style={{ animationDelay: `${i * 0.07}s` }}
+                />
+              ))}
             </div>
-            <button
-              className={`${styles.narrativaMicBtn} ${styles.narrativaMicBtnActivo}`}
-              onMouseUp={stopMic}
-              onMouseLeave={stopMic}
-              onTouchEnd={(e) => { e.preventDefault(); stopMic() }}
-              type="button"
-              aria-label="Soltar para detener"
-            >
-              <Mic size={17} />
-            </button>
-          </>
+          </div>
         )}
 
         {/* ── REVISANDO: X cancelar / ✓ confirmar ── */}
@@ -690,26 +718,30 @@ export default function RegistroPage() {
 
         <NarrativaBar onExtracted={handleVozExtracted} hijo={state.hijo} />
 
-        <Card>
-          <p className={styles.label}>Tipo de episodio</p>
-          <TipoSelector tipo={tipo} setTipo={setTipo} bigEmoji />
-        </Card>
+        <div id="campo-tipo">
+          <Card>
+            <p className={styles.label}>Tipo de episodio</p>
+            <TipoSelector tipo={tipo} setTipo={setTipo} bigEmoji />
+          </Card>
+        </div>
 
-        <Card>
-          <p className={styles.label}>¿Qué tan intenso fue?</p>
-          <div className={styles.intensidadGridBig}>
-            {INTENSIDADES.map((op) => (
-              <button
-                key={op.valor}
-                className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
-                onClick={() => setIntensidad(op.valor)}
-              >
-                <span className={styles.intensidadEmojiBig}>{op.emoji}</span>
-                <span className={styles.intensidadLabel}>{op.label}</span>
-              </button>
-            ))}
-          </div>
-        </Card>
+        <div id="campo-intensidad">
+          <Card>
+            <p className={styles.label}>¿Qué tan intenso fue?</p>
+            <div className={styles.intensidadGridBig}>
+              {INTENSIDADES.map((op) => (
+                <button
+                  key={op.valor}
+                  className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
+                  onClick={() => setIntensidad(op.valor)}
+                >
+                  <span className={styles.intensidadEmojiBig}>{op.emoji}</span>
+                  <span className={styles.intensidadLabel}>{op.label}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+        </div>
 
         <Button
           variant="primary"
@@ -741,31 +773,35 @@ export default function RegistroPage() {
 
       <NarrativaBar onExtracted={handleVozExtracted} hijo={state.hijo} />
 
-      <Card>
-        <p className={styles.label}>Tipo de episodio</p>
-        <TipoSelector tipo={tipo} setTipo={setTipo} />
-      </Card>
+      <div id="campo-tipo">
+        <Card>
+          <p className={styles.label}>Tipo de episodio</p>
+          <TipoSelector tipo={tipo} setTipo={setTipo} />
+        </Card>
+      </div>
 
       <Card>
         <p className={styles.label}>¿Qué emoción crees que estaba detrás de lo que pasó? <span className={styles.labelOpcional}>(opcional)</span></p>
         <EmocionSelector emocion={emocionSeleccionada} setEmocion={setEmocionSeleccionada} />
       </Card>
 
-      <Card>
-        <p className={styles.label}>¿Qué tan intenso fue?</p>
-        <div className={styles.intensidadGrid}>
-          {INTENSIDADES.map((op) => (
-            <button
-              key={op.valor}
-              className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
-              onClick={() => setIntensidad(op.valor)}
-            >
-              <span className={styles.intensidadEmoji}>{op.emoji}</span>
-              <span className={styles.intensidadLabel}>{op.label}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
+      <div id="campo-intensidad">
+        <Card>
+          <p className={styles.label}>¿Qué tan intenso fue?</p>
+          <div className={styles.intensidadGrid}>
+            {INTENSIDADES.map((op) => (
+              <button
+                key={op.valor}
+                className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
+                onClick={() => setIntensidad(op.valor)}
+              >
+                <span className={styles.intensidadEmoji}>{op.emoji}</span>
+                <span className={styles.intensidadLabel}>{op.label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
 
       <Card>
         <p className={styles.label}>¿Cuándo pasó?</p>
@@ -791,7 +827,8 @@ export default function RegistroPage() {
         )}
       </Card>
 
-      <Card>
+      <div id="campo-contexto">
+        <Card>
         <p className={styles.label}>¿Qué estaba pasando antes?</p>
         <textarea
           className={styles.textarea}
@@ -801,6 +838,7 @@ export default function RegistroPage() {
           rows={3}
         />
       </Card>
+      </div>
 
       <Card>
         <p className={styles.label}>Posibles gatillantes</p>
