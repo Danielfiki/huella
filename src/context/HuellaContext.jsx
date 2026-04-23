@@ -77,8 +77,9 @@ function dbEpisodioToApp(row) {
     gatillantes: row.gatillantes ?? [],
     estadoPadre: row.estado_padre,
     fecha: row.fecha,
-    orientacionIA: row.orientacion_ia ?? null,
-    emocion: row.emocion ?? null,
+    orientacionIA:    row.orientacion_ia    ?? null,
+    emocion:          row.emocion           ?? null,
+    descripcionLibre: row.descripcion_libre ?? null,
   }
 }
 
@@ -250,8 +251,9 @@ export function HuellaProvider({ children }) {
         contexto:     episodio.contexto,
         gatillantes:  episodio.gatillantes,
         estado_padre: episodio.estadoPadre,
-        fecha:        episodio.fecha,
-        emocion:      episodio.emocion ?? null,
+        fecha:            episodio.fecha,
+        emocion:          episodio.emocion          ?? null,
+        descripcion_libre: episodio.descripcionLibre ?? null,
       })
       .select()
       .single()

@@ -22,9 +22,10 @@ create table if not exists public.episodios (
   contexto      text,
   gatillantes   text[],
   estado_padre  text,
-  emocion       text,
-  orientacion_ia text,
-  fecha         timestamptz default now()
+  emocion           text,
+  orientacion_ia    text,
+  descripcion_libre text,
+  fecha             timestamptz default now()
 );
 
 create table if not exists public.hitos (
@@ -60,6 +61,7 @@ alter table public.hijos      add column if not exists fecha_nacimiento date;
 alter table public.hijos      add column if not exists genero            text;
 alter table public.episodios  add column if not exists orientacion_ia   text;
 alter table public.episodios  add column if not exists emocion           text;
+alter table public.episodios  add column if not exists descripcion_libre text;
 alter table public.estrategias add column if not exists tareas           jsonb default '{}'::jsonb;
 alter table public.estrategias add column if not exists checkins         jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url          text;
