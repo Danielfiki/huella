@@ -10,6 +10,7 @@ const initialState = {
   episodios: [],
   estrategias: [],
   hitos: [],
+  padreNombre: '',
 }
 
 function reducer(state, action) {
@@ -48,6 +49,8 @@ function reducer(state, action) {
           e.id === action.payload.id ? { ...e, ...action.payload } : e
         ),
       }
+    case 'SET_PADRE_NOMBRE':
+      return { ...state, padreNombre: action.payload }
     case 'LOAD_STATE':
       return { ...initialState, ...action.payload }
     default:
@@ -135,7 +138,7 @@ export function HuellaProvider({ children }) {
       // Para episodios/hitos/estrategias: filtro explícito por ambos user_ids.
       // La RLS sigue aplicando como capa de seguridad, pero no dependemos de ella
       // como único mecanismo de filtrado.
-      const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+      const [episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
         supabase.from('episodios')
           .select('*')
           .in('user_id', partnerIds)
@@ -148,6 +151,10 @@ export function HuellaProvider({ children }) {
           .select('*')
           .in('user_id', partnerIds)
           .order('fecha_inicio', { ascending: false }),
+        supabase.from('perfiles')
+          .select('nombre')
+          .eq('user_id', userId)
+          .maybeSingle(),
       ])
 
       dispatch({
@@ -159,6 +166,7 @@ export function HuellaProvider({ children }) {
           episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
           hitos: hitosRes.data ?? [],
           estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
+          padreNombre: perfilRes.data?.nombre ?? '',
         },
       })
     } catch (e) {
@@ -298,6 +306,15 @@ export function HuellaProvider({ children }) {
     return realId
   }
 
+  async function savePadreNombre(nombre) {
+    if (!user) return
+    dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
+    const { error } = await supabase
+      .from('perfiles')
+      .upsert({ user_id: user.id, nombre }, { onConflict: 'user_id' })
+    if (error) throw new Error(error.message)
+  }
+
   async function updateEstrategia(partial) {
     if (!user) return
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
@@ -323,6 +340,7 @@ export function HuellaProvider({ children }) {
       updateHitoFoto,
       addEstrategia,
       updateEstrategia,
+      savePadreNombre,
     }}>
       {children}
     </HuellaContext.Provider>

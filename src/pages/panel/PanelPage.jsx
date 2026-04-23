@@ -21,10 +21,6 @@ const CONTEXTOS_ESTRATEGIA = {
   'Concentrarse y calmarse':            { emoji: '🧘' },
 }
 
-function getPadreNombre(userId) {
-  try { return localStorage.getItem(`huella_padre_v1_${userId || 'anon'}`) || '' } catch { return '' }
-}
-
 function buildGreeting(hora, padreNombre, nombreHijo) {
   const saludoHora = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'
   const preguntaHora = hora < 12
@@ -135,9 +131,8 @@ export default function PanelPage() {
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
 
-  const { hijo, episodios, hitos, estrategias } = state
+  const { hijo, episodios, hitos, estrategias, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
-  const padreNombre = getPadreNombre(user?.id)
   const hora = new Date().getHours()
   const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombreHijo)
 

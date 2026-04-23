@@ -9,8 +9,6 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import styles from './PerfilPage.module.css'
 
-const getPadreKey = (uid) => `huella_padre_v1_${uid || 'anon'}`
-
 async function compressImage(file, maxSize = 400) {
   return new Promise((resolve) => {
     const reader = new FileReader()
@@ -34,7 +32,7 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo } = useHuella()
+  const { state, setHijo, savePadreNombre } = useHuella()
   const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
@@ -74,17 +72,19 @@ export default function PerfilPage() {
   }, [state.hijo])
 
   useEffect(() => {
-    if (user?.id) {
-      setPadreNombre(localStorage.getItem(getPadreKey(user.id)) || '')
-    }
-  }, [user?.id])
+    if (state.padreNombre) setPadreNombre(state.padreNombre)
+  }, [state.padreNombre])
 
-  function handleGuardarPadre(e) {
+  async function handleGuardarPadre(e) {
     e.preventDefault()
     if (!user?.id) return
-    localStorage.setItem(getPadreKey(user.id), padreNombre.trim())
-    setGuardadoPadreOk(true)
-    setTimeout(() => setGuardadoPadreOk(false), 2500)
+    try {
+      await savePadreNombre(padreNombre.trim())
+      setGuardadoPadreOk(true)
+      setTimeout(() => setGuardadoPadreOk(false), 2500)
+    } catch {
+      // el estado optimista ya se aplicó en el contexto; el error es silencioso
+    }
   }
 
   async function handleGuardarHijo(e) {

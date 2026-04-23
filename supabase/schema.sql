@@ -494,6 +494,21 @@ end;
 $$;
 grant execute on function public.upsert_family_child(text, integer, text) to authenticated;
 
+-- ── Perfil del padre/madre ────────────────────────────────────────────────
+-- Migración: ejecutar en Supabase Dashboard → SQL Editor si ya tienes la DB
+
+create table if not exists public.perfiles (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  nombre     text,
+  created_at timestamptz default now()
+);
+
+alter table public.perfiles enable row level security;
+
+drop policy if exists "own_data" on public.perfiles;
+create policy "own_data" on public.perfiles
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- Eliminar la cuenta del usuario autenticado y todos sus datos (cascade)
 create or replace function public.delete_user()
 returns void
