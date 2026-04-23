@@ -213,6 +213,26 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
+    // Refetch desde DB para sincronizar edad calculada y evitar campos perdidos
+    let refetch
+    if (family?.familyId) {
+      refetch = await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
+      if (!refetch.data) {
+        refetch = await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
+      }
+    } else {
+      refetch = await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
+    }
+    if (refetch.data) {
+      const row = refetch.data
+      dispatch({ type: 'SET_HIJO', payload: {
+        nombre:          row.nombre,
+        edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
+        avatarUrl:       row.avatar_url ?? null,
+        fechaNacimiento: row.fecha_nacimiento ?? null,
+        genero:          row.genero ?? null,
+      }})
+    }
   }
 
   async function addEpisodio(episodio) {

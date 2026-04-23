@@ -114,10 +114,17 @@ export default function PerfilPage() {
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    const nombreActual = nombre.trim() || state.hijo?.nombre || ''
+    if (!nombreActual) {
+      setErrorAvatar('Primero ingresa el nombre de tu hijo/a.')
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+      return
+    }
     setUploadingAvatar(true)
     setErrorAvatar('')
     try {
       const blob = await compressImage(file)
+      if (!blob) throw new Error('No se pudo procesar la imagen.')
       const path = `${user.id}/hijo.jpg`
       const { error: uploadError } = await supabase.storage.from('avatares').upload(path, blob, {
         contentType: 'image/jpeg',
@@ -127,7 +134,7 @@ export default function PerfilPage() {
       const { data } = supabase.storage.from('avatares').getPublicUrl(path)
       const url = `${data.publicUrl}?t=${Date.now()}`
       await setHijo({
-        nombre:          nombre.trim() || state.hijo?.nombre || '',
+        nombre:          nombreActual,
         avatarUrl:       url,
         fechaNacimiento: fechaNacimiento || state.hijo?.fechaNacimiento || null,
         genero:          genero || state.hijo?.genero || null,
@@ -315,12 +322,12 @@ export default function PerfilPage() {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Género</label>
+            <label className={styles.label}>Es...</label>
             <div className={styles.generoGroup}>
               {[
-                { val: 'm',  label: 'Niño' },
-                { val: 'f',  label: 'Niña' },
-                { val: 'nb', label: 'Prefiero no decir' },
+                { val: 'm',  label: '👦 Niño' },
+                { val: 'f',  label: '👧 Niña' },
+                { val: 'nb', label: '🙂 Prefiero no decir' },
               ].map(({ val, label }) => (
                 <button
                   key={val}
