@@ -279,6 +279,7 @@ function NarrativaBar({ onExtracted, hijo }) {
   const [texto, setTexto] = useState('')
   // idle → grabando → revisando → procesando → idle
   const [voiceEstado, setVoiceEstado] = useState('idle')
+  const [transcriptText, setTranscriptText] = useState('')
   const [procesandoTexto, setProcesandoTexto] = useState(false)
   const [ok, setOk] = useState(false)
 
@@ -291,6 +292,7 @@ function NarrativaBar({ onExtracted, hijo }) {
   const barsRef           = useRef([])
   const releaseHandlerRef = useRef(null)
   const isRecordingRef    = useRef(false)
+  const holdStartRef      = useRef(0)
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
@@ -326,10 +328,11 @@ function NarrativaBar({ onExtracted, hijo }) {
   async function startMic() {
     if (isRecordingRef.current || voiceEstado !== 'idle') return
     isRecordingRef.current = true
+    holdStartRef.current = Date.now()
     transcriptRef.current = ''
     setVoiceEstado('grabando')
 
-    // Listener a nivel de document para capturar mouseup/touchend en cualquier lugar
+    // Diferimos 80ms para que el mouseup/touchend del mismo click no se capture
     const onRelease = () => {
       document.removeEventListener('mouseup', onRelease)
       document.removeEventListener('touchend', onRelease)
@@ -339,11 +342,22 @@ function NarrativaBar({ onExtracted, hijo }) {
       cancelAnimationFrame(animFrameRef.current)
       streamRef.current?.getTracks().forEach((t) => t.stop())
       audioCtxRef.current?.close().catch(() => {})
+      const held = Date.now() - holdStartRef.current
+      const captured = transcriptRef.current.trim()
+      // Si fue un tap accidental (< 300ms y nada capturado), volver a idle
+      if (held < 300 && !captured) {
+        setVoiceEstado('idle')
+        return
+      }
+      setTranscriptText(captured)
       setVoiceEstado('revisando')
     }
     releaseHandlerRef.current = onRelease
-    document.addEventListener('mouseup', onRelease)
-    document.addEventListener('touchend', onRelease)
+    // 80ms de margen: el mouseup del mismo clic ya habrá sido despachado
+    setTimeout(() => {
+      document.addEventListener('mouseup', onRelease)
+      document.addEventListener('touchend', onRelease)
+    }, 80)
 
     // Web Audio API — visualización de amplitud
     try {
@@ -386,6 +400,7 @@ function NarrativaBar({ onExtracted, hijo }) {
 
   function cancelarVoz() {
     transcriptRef.current = ''
+    setTranscriptText('')
     setVoiceEstado('idle')
   }
 
@@ -495,17 +510,21 @@ function NarrativaBar({ onExtracted, hijo }) {
           </div>
         )}
 
-        {/* ── REVISANDO: X cancelar / ✓ confirmar ── */}
+        {/* ── REVISANDO: texto transcrito + X / ✓ ── */}
         {voiceEstado === 'revisando' && (
           <div className={styles.vozRevisando}>
-            <button className={styles.vozCancelarBtn} onClick={cancelarVoz} type="button">
-              <X size={17} />
-              <span>Cancelar</span>
-            </button>
-            <button className={styles.vozConfirmarBtn} onClick={confirmarVoz} type="button">
-              <Check size={17} />
-              <span>Confirmar</span>
-            </button>
+            <p className={styles.vozTranscriptText}>
+              {transcriptText || <em className={styles.vozTranscriptVacio}>No se captó audio</em>}
+            </p>
+            <div className={styles.vozRevisandoBtns}>
+              <button className={styles.vozCancelarBtn} onClick={cancelarVoz} type="button" aria-label="Cancelar">
+                <X size={16} />
+              </button>
+              <button className={styles.vozConfirmarBtn} onClick={confirmarVoz} type="button">
+                <Check size={16} />
+                <span>Confirmar</span>
+              </button>
+            </div>
           </div>
         )}
 

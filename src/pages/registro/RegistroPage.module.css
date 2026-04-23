@@ -634,37 +634,56 @@
 
 .vozRevisando {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   flex: 1;
+  padding: 4px 0;
+}
+
+.vozTranscriptText {
+  font-size: 13px;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.45;
+  /* clamp a 3 líneas máximo */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vozTranscriptVacio {
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+.vozRevisandoBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .vozCancelarBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: 1.5px solid var(--color-border);
   background: transparent;
   color: var(--color-text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--font-family);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
   transition: border-color 0.15s, color 0.15s;
 }
 .vozCancelarBtn:hover { border-color: var(--color-danger); color: var(--color-danger); }
 
 .vozConfirmarBtn {
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 7px 14px;
   border-radius: 999px;
   border: none;
   background: var(--color-primary);
