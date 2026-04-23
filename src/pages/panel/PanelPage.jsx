@@ -107,6 +107,25 @@ function ResumenEmocionalCard({ episodios, hitos }) {
   )
 }
 
+function EstadoVacio({ nombreHijo, onRegistrar }) {
+  return (
+    <Card className={styles.emptyCard}>
+      <div className={styles.emptyIlustracion}>🌱</div>
+      <h2 className={styles.emptyTitulo}>Todo empieza aquí</h2>
+      <p className={styles.emptyTexto}>
+        Cada vez que anotas lo que pasó con <strong>{nombreHijo}</strong>,
+        Huella construye un mapa de sus emociones. Con el tiempo verás
+        patrones que hoy son invisibles.
+      </p>
+      <p className={styles.emptyTip}>No tiene que ser perfecto — una nota rápida ya cuenta.</p>
+      <Button variant="primary" fullWidth onClick={onRegistrar}>
+        <Plus size={18} />
+        Registrar primer episodio
+      </Button>
+    </Card>
+  )
+}
+
 function EstrategiaActivaPanel({ estrategia, onAbrir }) {
   const ctx = CONTEXTOS_ESTRATEGIA[estrategia.habilidad] || { emoji: '🎯' }
   const semana = Math.min(estrategia.semanaActual, 4)
@@ -272,70 +291,79 @@ export default function PanelPage() {
         </div>
       </div>
 
-      {/* ── Resumen emocional ── */}
-      <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
+      {episodios.length === 0 ? (
 
-      {/* ── CTA registrar ── */}
-      <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/registro')}>
-        <Plus size={20} />
-        Registrar episodio
-      </Button>
+        /* ── Estado vacío ── */
+        <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/registro')} />
 
-      {/* ── Estrategia activa ── */}
-      {estrategiaActiva && (
-        <EstrategiaActivaPanel
-          estrategia={estrategiaActiva}
-          onAbrir={() => navigate('/estrategias')}
-        />
-      )}
-
-      {/* ── Gráficos ── */}
-      {episodios.length >= 3 && (
+      ) : (
         <>
-          <Card className={styles.graficoCard}>
-            <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
-            <GraficoFrecuenciaSemanal episodios={episodios} />
-            {narrativaFrecuencia && (
-              <p className={styles.narrativa}>{narrativaFrecuencia}</p>
+          {/* ── Resumen emocional ── */}
+          <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
+
+          {/* ── CTA registrar ── */}
+          <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/registro')}>
+            <Plus size={20} />
+            Registrar episodio
+          </Button>
+
+          {/* ── Estrategia activa ── */}
+          {estrategiaActiva && (
+            <EstrategiaActivaPanel
+              estrategia={estrategiaActiva}
+              onAbrir={() => navigate('/estrategias')}
+            />
+          )}
+
+          {/* ── Gráficos ── */}
+          {episodios.length >= 3 && (
+            <>
+              <Card className={styles.graficoCard}>
+                <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
+                <GraficoFrecuenciaSemanal episodios={episodios} />
+                {narrativaFrecuencia && (
+                  <p className={styles.narrativa}>{narrativaFrecuencia}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard}>
+                <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
+                <GraficoIntensidad episodios={episodios} />
+                {narrativaIntensidad && (
+                  <p className={styles.narrativa}>{narrativaIntensidad}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard}>
+                <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
+                <GraficoGatillantes episodios={episodios} />
+                {narrativaGatillantes && (
+                  <p className={styles.narrativa}>{narrativaGatillantes}</p>
+                )}
+              </Card>
+            </>
+          )}
+
+          {/* ── Análisis de patrones ── */}
+          <Card className={styles.patronesCard}>
+            <div className={styles.patronesHeader}>
+              <TrendingUp size={18} />
+              <h3>Análisis de patrones</h3>
+            </div>
+            <p className={styles.patronesDesc}>
+              {episodios.length < 3
+                ? 'Registra al menos 3 episodios para activar el análisis de patrones.'
+                : `Tienes ${episodios.length} episodios registrados. La IA puede identificar patrones.`}
+            </p>
+            {episodios.length >= 3 && (
+              <Button variant="secondary" fullWidth onClick={handleAnalizarPatrones} loading={loadingAnalisis} className={styles.patronesBtn}>
+                Ver análisis de patrones
+              </Button>
             )}
-          </Card>
-          <Card className={styles.graficoCard}>
-            <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
-            <GraficoIntensidad episodios={episodios} />
-            {narrativaIntensidad && (
-              <p className={styles.narrativa}>{narrativaIntensidad}</p>
-            )}
-          </Card>
-          <Card className={styles.graficoCard}>
-            <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
-            <GraficoGatillantes episodios={episodios} />
-            {narrativaGatillantes && (
-              <p className={styles.narrativa}>{narrativaGatillantes}</p>
+            {(analisis || loadingAnalisis) && (
+              <RespuestaIA texto={analisis} loading={loadingAnalisis} mensajeCarga="Identificando patrones en el historial..." categoria="patrones" />
             )}
           </Card>
         </>
       )}
-
-      {/* ── Análisis de patrones ── */}
-      <Card className={styles.patronesCard}>
-        <div className={styles.patronesHeader}>
-          <TrendingUp size={18} />
-          <h3>Análisis de patrones</h3>
-        </div>
-        <p className={styles.patronesDesc}>
-          {episodios.length < 3
-            ? 'Registra al menos 3 episodios para activar el análisis de patrones.'
-            : `Tienes ${episodios.length} episodios registrados. La IA puede identificar patrones.`}
-        </p>
-        {episodios.length >= 3 && (
-          <Button variant="secondary" fullWidth onClick={handleAnalizarPatrones} loading={loadingAnalisis} className={styles.patronesBtn}>
-            Ver análisis de patrones
-          </Button>
-        )}
-        {(analisis || loadingAnalisis) && (
-          <RespuestaIA texto={analisis} loading={loadingAnalisis} mensajeCarga="Identificando patrones en el historial..." categoria="patrones" />
-        )}
-      </Card>
 
     </div>
   )

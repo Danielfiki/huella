@@ -187,6 +187,44 @@
   line-height: 1.5;
 }
 
+/* ── Estado vacío ── */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px 24px;
+  gap: 12px;
+}
+
+.emptyIlustracion {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.emptyTitulo {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.emptyTexto {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 300px;
+}
+
+.emptyTip {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0 0 4px;
+}
+
 /* ── Análisis de patrones ── */
 .patronesCard {}
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
