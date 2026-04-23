@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X, Mic, Send } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Mic, Send, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { analizarEpisodio, generarAccionInmediata, extraerCamposDeVoz } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -273,44 +273,123 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
   )
 }
 
+const NUM_BARS = 9
+
 function NarrativaBar({ onExtracted, hijo }) {
   const [texto, setTexto] = useState('')
-  const [escuchando, setEscuchando] = useState(false)
-  const [procesando, setProcesando] = useState(false)
+  // idle → grabando → revisando → procesando → idle
+  const [voiceEstado, setVoiceEstado] = useState('idle')
+  const [procesandoTexto, setProcesandoTexto] = useState(false)
   const [ok, setOk] = useState(false)
-  const recRef = useRef(null)
+
+  const recRef       = useRef(null)
+  const transcriptRef = useRef('')
+  const audioCtxRef  = useRef(null)
+  const analyserRef  = useRef(null)
+  const streamRef    = useRef(null)
+  const animFrameRef = useRef(null)
+  const barsRef      = useRef([])
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
-  function startMic() {
-    if (escuchando) return
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return
-    const rec = new SR()
-    rec.lang = 'es-CL'
-    rec.continuous = false
-    rec.interimResults = false
-    recRef.current = rec
+  useEffect(() => () => {
+    cancelAnimationFrame(animFrameRef.current)
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    audioCtxRef.current?.close().catch(() => {})
+    recRef.current?.abort()
+  }, [])
 
-    rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript
-      setTexto((prev) => (prev ? prev + ' ' + transcript : transcript))
+  function startWaveform() {
+    const analyser = analyserRef.current
+    if (!analyser) return
+    const data = new Uint8Array(analyser.frequencyBinCount)
+    const tick = () => {
+      animFrameRef.current = requestAnimationFrame(tick)
+      analyser.getByteFrequencyData(data)
+      barsRef.current.forEach((bar, i) => {
+        if (!bar) return
+        // Sample the lower half of bins (voice frequencies)
+        const bin = Math.floor((i / NUM_BARS) * data.length * 0.6)
+        const v = data[bin] || 0
+        bar.style.height = Math.max(3, (v / 255) * 34) + 'px'
+      })
     }
-    rec.onerror = () => setEscuchando(false)
-    rec.onend = () => setEscuchando(false)
+    tick()
+  }
 
-    rec.start()
-    setEscuchando(true)
+  async function startMic() {
+    if (voiceEstado !== 'idle') return
+    transcriptRef.current = ''
+    setVoiceEstado('grabando')
+
+    // Web Audio API — visualización de amplitud
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      streamRef.current = stream
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (AudioCtx) {
+        const ctx = new AudioCtx()
+        audioCtxRef.current = ctx
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 64
+        analyserRef.current = analyser
+        ctx.createMediaStreamSource(stream).connect(analyser)
+        startWaveform()
+      }
+    } catch { /* sin visualización, transcripción sigue funcionando */ }
+
+    // Speech Recognition
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SR) {
+      const rec = new SR()
+      rec.lang = 'es-CL'
+      rec.continuous = true
+      rec.interimResults = false
+      recRef.current = rec
+      rec.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
+          }
+        }
+      }
+      rec.onerror = () => {}
+      try { rec.start() } catch {}
+    }
   }
 
   function stopMic() {
-    if (!escuchando) return
+    if (voiceEstado !== 'grabando') return
     recRef.current?.stop()
+    cancelAnimationFrame(animFrameRef.current)
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    audioCtxRef.current?.close().catch(() => {})
+    setVoiceEstado('revisando')
   }
 
-  async function confirmar() {
-    if (!texto.trim() || procesando) return
-    setProcesando(true)
+  function cancelarVoz() {
+    transcriptRef.current = ''
+    setVoiceEstado('idle')
+  }
+
+  async function confirmarVoz() {
+    const transcript = transcriptRef.current.trim()
+    if (!transcript) { cancelarVoz(); return }
+    setVoiceEstado('procesando')
+    try {
+      const campos = await extraerCamposDeVoz({ transcripcion: transcript, hijo })
+      if (campos) {
+        onExtracted(campos)
+        setOk(true)
+        setTimeout(() => setOk(false), 3000)
+      }
+    } catch {}
+    setVoiceEstado('idle')
+  }
+
+  async function confirmarTexto() {
+    if (!texto.trim() || procesandoTexto) return
+    setProcesandoTexto(true)
     setOk(false)
     try {
       const campos = await extraerCamposDeVoz({ transcripcion: texto.trim(), hijo })
@@ -320,46 +399,96 @@ function NarrativaBar({ onExtracted, hijo }) {
         setTimeout(() => setOk(false), 3000)
       }
     } catch {}
-    finally { setProcesando(false) }
+    setProcesandoTexto(false)
   }
 
   return (
     <div className={styles.narrativaWrap}>
       <div className={styles.narrativaBar}>
-        <textarea
-          className={styles.narrativaTextarea}
-          placeholder="Describe lo que pasó o usa el micrófono…"
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          rows={2}
-        />
-        <div className={styles.narrativaBtns}>
-          {disponibleVoz && (
+
+        {/* ── IDLE: textarea + botones ── */}
+        {voiceEstado === 'idle' && (
+          <>
+            <textarea
+              className={styles.narrativaTextarea}
+              placeholder="Describe lo que pasó o usa el micrófono…"
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              rows={2}
+            />
+            <div className={styles.narrativaBtns}>
+              {disponibleVoz && (
+                <button
+                  className={styles.narrativaMicBtn}
+                  onMouseDown={startMic}
+                  onTouchStart={(e) => { e.preventDefault(); startMic() }}
+                  type="button"
+                  aria-label="Mantén presionado para grabar"
+                >
+                  <Mic size={17} />
+                </button>
+              )}
+              <button
+                className={styles.narrativaEnviarBtn}
+                onClick={confirmarTexto}
+                disabled={!texto.trim() || procesandoTexto}
+                type="button"
+                aria-label="Analizar y rellenar campos"
+              >
+                {procesandoTexto
+                  ? <span className={styles.narrativaSpinner} />
+                  : <Send size={15} />}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── GRABANDO: onda de audio + mic rojo (usuario mantiene presionado) ── */}
+        {voiceEstado === 'grabando' && (
+          <>
+            <div className={styles.vozWaveformArea}>
+              <span className={styles.vozRecDot} />
+              <div className={styles.vozBars}>
+                {Array.from({ length: NUM_BARS }, (_, i) => (
+                  <span key={i} ref={(el) => { barsRef.current[i] = el }} className={styles.vozBar} />
+                ))}
+              </div>
+            </div>
             <button
-              className={`${styles.narrativaMicBtn} ${escuchando ? styles.narrativaMicBtnActivo : ''}`}
-              onMouseDown={startMic}
+              className={`${styles.narrativaMicBtn} ${styles.narrativaMicBtnActivo}`}
               onMouseUp={stopMic}
               onMouseLeave={stopMic}
-              onTouchStart={(e) => { e.preventDefault(); startMic() }}
               onTouchEnd={(e) => { e.preventDefault(); stopMic() }}
               type="button"
-              aria-label="Mantén presionado para grabar"
+              aria-label="Soltar para detener"
             >
               <Mic size={17} />
             </button>
-          )}
-          <button
-            className={styles.narrativaEnviarBtn}
-            onClick={confirmar}
-            disabled={!texto.trim() || procesando}
-            type="button"
-            aria-label="Analizar y rellenar campos"
-          >
-            {procesando
-              ? <span className={styles.narrativaSpinner} />
-              : <Send size={15} />}
-          </button>
-        </div>
+          </>
+        )}
+
+        {/* ── REVISANDO: X cancelar / ✓ confirmar ── */}
+        {voiceEstado === 'revisando' && (
+          <div className={styles.vozRevisando}>
+            <button className={styles.vozCancelarBtn} onClick={cancelarVoz} type="button">
+              <X size={17} />
+              <span>Cancelar</span>
+            </button>
+            <button className={styles.vozConfirmarBtn} onClick={confirmarVoz} type="button">
+              <Check size={17} />
+              <span>Confirmar</span>
+            </button>
+          </div>
+        )}
+
+        {/* ── PROCESANDO VOZ: spinner ── */}
+        {voiceEstado === 'procesando' && (
+          <div className={styles.vozProcesandoRow}>
+            <span className={styles.vozSpinner} />
+            <span className={styles.vozProcesandoLabel}>Analizando con IA…</span>
+          </div>
+        )}
+
       </div>
       {ok && <p className={styles.narrativaOk}>✓ Campos rellenados automáticamente</p>}
     </div>

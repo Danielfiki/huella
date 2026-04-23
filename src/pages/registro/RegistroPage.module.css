@@ -582,3 +582,126 @@
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Estados de grabación de voz ─────────────────────── */
+
+.vozWaveformArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+}
+
+.vozRecDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  animation: vozDotBlink 1s ease-in-out infinite;
+}
+
+@keyframes vozDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.vozBars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 34px;
+}
+
+.vozBar {
+  width: 3px;
+  border-radius: 3px;
+  background: var(--color-primary);
+  height: 3px;
+  transition: height 0.07s ease-out;
+}
+
+/* CSS fallback: los bars pulsan suavemente antes de que el AudioContext tenga datos */
+.vozBar:nth-child(1) { animation: vozBarPulse 1.4s 0.00s ease-in-out infinite; }
+.vozBar:nth-child(2) { animation: vozBarPulse 1.4s 0.12s ease-in-out infinite; }
+.vozBar:nth-child(3) { animation: vozBarPulse 1.4s 0.24s ease-in-out infinite; }
+.vozBar:nth-child(4) { animation: vozBarPulse 1.4s 0.36s ease-in-out infinite; }
+.vozBar:nth-child(5) { animation: vozBarPulse 1.4s 0.48s ease-in-out infinite; }
+.vozBar:nth-child(6) { animation: vozBarPulse 1.4s 0.60s ease-in-out infinite; }
+.vozBar:nth-child(7) { animation: vozBarPulse 1.4s 0.72s ease-in-out infinite; }
+.vozBar:nth-child(8) { animation: vozBarPulse 1.4s 0.84s ease-in-out infinite; }
+.vozBar:nth-child(9) { animation: vozBarPulse 1.4s 0.96s ease-in-out infinite; }
+
+@keyframes vozBarPulse {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; }
+}
+
+.vozRevisando {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.vozCancelarBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.vozCancelarBtn:hover { border-color: var(--color-danger); color: var(--color-danger); }
+
+.vozConfirmarBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.vozConfirmarBtn:hover { opacity: 0.88; }
+
+.vozProcesandoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.vozSpinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: narrativaSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.vozProcesandoLabel {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
