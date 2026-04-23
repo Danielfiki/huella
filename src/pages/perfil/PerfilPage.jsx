@@ -9,6 +9,21 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import styles from './PerfilPage.module.css'
 
+function isoToDisplay(iso) {
+  if (!iso || iso.length < 10) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function displayToIso(display) {
+  const digits = display.replace(/\D/g, '')
+  if (digits.length !== 8) return ''
+  const d = digits.slice(0, 2), m = digits.slice(2, 4), y = digits.slice(4, 8)
+  const date = new Date(`${y}-${m}-${d}`)
+  if (isNaN(date.getTime()) || date.getMonth() + 1 !== Number(m)) return ''
+  return `${y}-${m}-${d}`
+}
+
 async function compressImage(file, maxSize = 400) {
   return new Promise((resolve) => {
     const reader = new FileReader()
@@ -39,6 +54,7 @@ export default function PerfilPage() {
 
   const [nombre, setNombre] = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
+  const [fechaDisplay, setFechaDisplay] = useState('')
   const [genero, setGenero] = useState('')
   const [loadingHijo, setLoadingHijo] = useState(false)
   const [errorHijo, setErrorHijo] = useState('')
@@ -69,6 +85,7 @@ export default function PerfilPage() {
     if (state.hijo) {
       setNombre(state.hijo.nombre || '')
       setFechaNacimiento(state.hijo.fechaNacimiento || '')
+      setFechaDisplay(isoToDisplay(state.hijo.fechaNacimiento || ''))
       setGenero(state.hijo.genero || '')
     }
   }, [state.hijo])
@@ -87,6 +104,16 @@ export default function PerfilPage() {
     } catch {
       // el estado optimista ya se aplicó en el contexto; el error es silencioso
     }
+  }
+
+  function handleFechaChange(e) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let display = digits
+    if (digits.length > 4) display = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`
+    else if (digits.length > 2) display = `${digits.slice(0,2)}/${digits.slice(2)}`
+    setFechaDisplay(display)
+    const iso = displayToIso(display)
+    setFechaNacimiento(iso || (digits.length === 0 ? '' : fechaNacimiento))
   }
 
   async function handleGuardarHijo(e) {
@@ -305,10 +332,12 @@ export default function PerfilPage() {
             <label className={styles.label}>Fecha de nacimiento</label>
             <input
               className={styles.input}
-              type="date"
-              value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}
+              type="text"
+              inputMode="numeric"
+              placeholder="DD/MM/AAAA"
+              value={fechaDisplay}
+              onChange={handleFechaChange}
+              maxLength={10}
             />
             {fechaNacimiento && (() => {
               const e = calcularEdad(fechaNacimiento)
