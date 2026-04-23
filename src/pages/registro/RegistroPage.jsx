@@ -282,11 +282,8 @@ function NarrativaBar({ onExtracted, hijo }) {
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
-  function toggleMic() {
-    if (escuchando) {
-      recRef.current?.stop()
-      return
-    }
+  function startMic() {
+    if (escuchando) return
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) return
     const rec = new SR()
@@ -304,6 +301,11 @@ function NarrativaBar({ onExtracted, hijo }) {
 
     rec.start()
     setEscuchando(true)
+  }
+
+  function stopMic() {
+    if (!escuchando) return
+    recRef.current?.stop()
   }
 
   async function confirmar() {
@@ -335,9 +337,13 @@ function NarrativaBar({ onExtracted, hijo }) {
           {disponibleVoz && (
             <button
               className={`${styles.narrativaMicBtn} ${escuchando ? styles.narrativaMicBtnActivo : ''}`}
-              onClick={toggleMic}
+              onMouseDown={startMic}
+              onMouseUp={stopMic}
+              onMouseLeave={stopMic}
+              onTouchStart={(e) => { e.preventDefault(); startMic() }}
+              onTouchEnd={(e) => { e.preventDefault(); stopMic() }}
               type="button"
-              aria-label={escuchando ? 'Detener grabación' : 'Dictar por voz'}
+              aria-label="Mantén presionado para grabar"
             >
               <Mic size={17} />
             </button>
