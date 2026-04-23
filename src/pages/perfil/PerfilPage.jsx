@@ -117,12 +117,6 @@ export default function PerfilPage() {
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    const nombreActual = nombre.trim() || state.hijo?.nombre || ''
-    if (!nombreActual) {
-      setErrorAvatar('Primero ingresa el nombre de tu hijo/a.')
-      if (avatarInputRef.current) avatarInputRef.current.value = ''
-      return
-    }
     setUploadingAvatar(true)
     setErrorAvatar('')
     try {
@@ -137,7 +131,7 @@ export default function PerfilPage() {
       const { data } = supabase.storage.from('avatares').getPublicUrl(path)
       const url = `${data.publicUrl}?t=${Date.now()}`
       await setHijo({
-        nombre:          nombreActual,
+        nombre:          nombre.trim() || state.hijo?.nombre || '',
         avatarUrl:       url,
         fechaNacimiento: fechaNacimiento || state.hijo?.fechaNacimiento || null,
         genero:          genero || state.hijo?.genero || null,

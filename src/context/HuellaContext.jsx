@@ -213,6 +213,7 @@ export function HuellaProvider({ children }) {
     const { error } = await supabase.rpc('upsert_family_child', rpcParams)
     if (error) {
       console.error('[setHijo] error en upsert_family_child:', error)
+      alert(JSON.stringify(error))
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
