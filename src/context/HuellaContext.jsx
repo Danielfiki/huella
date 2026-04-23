@@ -202,14 +202,17 @@ export function HuellaProvider({ children }) {
     if (!user) return
     const anterior = state.hijo
     dispatch({ type: 'SET_HIJO', payload: hijo })
-    const { error } = await supabase.rpc('upsert_family_child', {
+    const rpcParams = {
       p_nombre:            hijo.nombre,
       p_edad:              null,
       p_avatar_url:        hijo.avatarUrl ?? null,
       p_fecha_nacimiento:  hijo.fechaNacimiento ?? null,
       p_genero:            hijo.genero ?? null,
-    })
+    }
+    console.log('[setHijo] llamando upsert_family_child con:', rpcParams)
+    const { error } = await supabase.rpc('upsert_family_child', rpcParams)
     if (error) {
+      console.error('[setHijo] error en upsert_family_child:', error)
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
