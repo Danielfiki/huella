@@ -25,6 +25,13 @@ export function usePushNotifications() {
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {})
   }, [isSupported])
 
+  // Si el permiso ya estaba concedido (sesión anterior), re-suscribir silenciosamente
+  // para asegurar que la suscripción está guardada en la DB.
+  useEffect(() => {
+    if (!isSupported || Notification.permission !== 'granted' || !VAPID_PUBLIC_KEY) return
+    saveSubscription()
+  }, [isSupported])
+
   async function saveSubscription() {
     if (!VAPID_PUBLIC_KEY) return
     try {
