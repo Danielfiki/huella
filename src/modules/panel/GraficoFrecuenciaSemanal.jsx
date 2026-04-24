@@ -21,7 +21,7 @@ function getLast6Weeks() {
   })
 }
 
-export default function GraficoFrecuenciaSemanal({ episodios }) {
+export default function GraficoFrecuenciaSemanal({ episodios, estrategiaInicio }) {
   const weeks = getLast6Weeks()
   const counts = weeks.map((w) =>
     episodios.filter((e) => {
@@ -30,6 +30,15 @@ export default function GraficoFrecuenciaSemanal({ episodios }) {
     }).length
   )
   const max = Math.max(...counts, 1)
+
+  // Semana donde empieza la estrategia (0-4, no mostramos línea si es la semana actual)
+  const estrategiaSemana = estrategiaInicio
+    ? weeks.findIndex((w) => {
+        const d = new Date(estrategiaInicio)
+        return d >= w.start && d < w.end
+      })
+    : -1
+  const mostrarLinea = estrategiaSemana > 0 && estrategiaSemana < 5
 
   return (
     <div className={styles.wrap}>
@@ -50,7 +59,22 @@ export default function GraficoFrecuenciaSemanal({ episodios }) {
             </span>
           </div>
         ))}
+
+        {/* Línea vertical marcando el inicio de la estrategia */}
+        {mostrarLinea && (
+          <div
+            className={styles.estrategiaLinea}
+            style={{ left: `calc(${(estrategiaSemana / 6) * 100}% - 1px)` }}
+          />
+        )}
       </div>
+
+      {mostrarLinea && (
+        <div className={styles.estrategiaLeyenda}>
+          <span className={styles.estrategiaTrazo} />
+          <span>inicio de estrategia</span>
+        </div>
+      )}
     </div>
   )
 }

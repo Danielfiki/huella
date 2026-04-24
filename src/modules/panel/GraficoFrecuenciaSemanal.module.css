@@ -48,3 +48,37 @@
 }
 
 .labelActual { color: var(--color-primary); font-weight: 700; }
+
+/* ── Marcador de inicio de estrategia ─────────────────── */
+
+.bars { position: relative; }
+
+.estrategiaLinea {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #22c55e;
+  opacity: 0.55;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.estrategiaLeyenda {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 10px;
+  color: #22c55e;
+}
+
+.estrategiaTrazo {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: #22c55e;
+  opacity: 0.6;
+  border-radius: 1px;
+  flex-shrink: 0;
+}

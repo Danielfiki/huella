@@ -10,6 +10,8 @@ import RespuestaIA from '../../components/ui/RespuestaIA'
 import GraficoFrecuenciaSemanal from '../../modules/panel/GraficoFrecuenciaSemanal'
 import GraficoIntensidad from '../../modules/panel/GraficoIntensidad'
 import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
+import GraficoDiaSemana from '../../modules/panel/GraficoDiaSemana'
+import GraficoTipos from '../../modules/panel/GraficoTipos'
 import styles from './PanelPage.module.css'
 
 const CONTEXTOS_ESTRATEGIA = {
@@ -239,6 +241,47 @@ export default function PanelPage() {
     return `Intensidad estable en los últimos registros — promedio ${overallAvg}/5`
   }, [episodios])
 
+  const narrativaDiaSemana = useMemo(() => {
+    if (episodios.length < 5) return null
+    const counts = [0, 0, 0, 0, 0, 0, 0]
+    for (const ep of episodios) {
+      const d = new Date(ep.fecha).getDay()
+      counts[d === 0 ? 6 : d - 1]++
+    }
+    const DIAS_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+    const peak = counts.indexOf(Math.max(...counts))
+    const total = counts.reduce((s, c) => s + c, 0)
+    const pct = Math.round((counts[peak] / total) * 100)
+    const weekend = counts[5] + counts[6]
+    const weekday = total - weekend
+    if (pct >= 30) return `El ${DIAS_FULL[peak]} concentra el ${pct}% de los episodios — algo pasa ese día`
+    if (weekend > 0 && weekday > 0 && weekend / 2 > (weekday / 5) * 1.5)
+      return 'Los fines de semana son más intensos — los cambios de rutina pueden estar influyendo'
+    return 'Los episodios se distribuyen en varios días — no hay un día claramente más difícil'
+  }, [episodios])
+
+  const narrativaTipos = useMemo(() => {
+    const counts = {}
+    for (const ep of episodios) {
+      if (ep.tipo) counts[ep.tipo] = (counts[ep.tipo] || 0) + 1
+    }
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
+    if (entries.length === 0) return null
+    const total = entries.reduce((s, [, c]) => s + c, 0)
+    const [topTipo, topCount] = entries[0]
+    const TIPO_LABELS = {
+      rabieta: 'rabietas', llanto: 'llanto', agresividad: 'agresividad',
+      miedo: 'miedo', sueño: 'problemas de sueño', oposicion: 'oposición',
+      social: 'dificultades sociales', desconexion: 'desconexión', otro: 'otro tipo',
+    }
+    const label = TIPO_LABELS[topTipo] || topTipo
+    const pct = Math.round((topCount / total) * 100)
+    if (entries.length === 1) return `Todos los episodios son de ${label}`
+    if (pct >= 50) return `El ${pct}% de los episodios son ${label} — el patrón más claro`
+    if (entries.length >= 3) return `Los episodios varían entre ${entries.length} tipos — el contexto importa más que el tipo`
+    return `${label} es el tipo más frecuente (${pct}%)`
+  }, [episodios])
+
   const narrativaGatillantes = useMemo(() => {
     const counts = {}
     for (const ep of episodios) {
@@ -323,9 +366,16 @@ export default function PanelPage() {
             <>
               <Card className={styles.graficoCard}>
                 <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
-                <GraficoFrecuenciaSemanal episodios={episodios} />
+                <GraficoFrecuenciaSemanal episodios={episodios} estrategiaInicio={estrategiaActiva?.fechaInicio} />
                 {narrativaFrecuencia && (
                   <p className={styles.narrativa}>{narrativaFrecuencia}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard}>
+                <h3 className={styles.cardTitle}>Distribución por día</h3>
+                <GraficoDiaSemana episodios={episodios} />
+                {narrativaDiaSemana && (
+                  <p className={styles.narrativa}>{narrativaDiaSemana}</p>
                 )}
               </Card>
               <Card className={styles.graficoCard}>
@@ -333,6 +383,13 @@ export default function PanelPage() {
                 <GraficoIntensidad episodios={episodios} />
                 {narrativaIntensidad && (
                   <p className={styles.narrativa}>{narrativaIntensidad}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard}>
+                <h3 className={styles.cardTitle}>Tipos de episodio</h3>
+                <GraficoTipos episodios={episodios} />
+                {narrativaTipos && (
+                  <p className={styles.narrativa}>{narrativaTipos}</p>
                 )}
               </Card>
               <Card className={styles.graficoCard}>

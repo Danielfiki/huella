@@ -1,0 +1,62 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emoji {
+  font-size: 14px;
+  width: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+  text-align: center;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--color-text);
+  width: 84px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-surface-alt);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.45s ease;
+  opacity: 0.82;
+  min-width: 4px;
+}
+
+.pct {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
