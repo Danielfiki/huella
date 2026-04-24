@@ -276,8 +276,10 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
 const NUM_BARS = 20
 
 function NarrativaBar({ value, onChange }) {
+  // idle | grabando | finalizando | revisando | error
   const [voiceEstado, setVoiceEstado] = useState('idle')
   const [transcriptText, setTranscriptText] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   const recRef            = useRef(null)
   const transcriptRef     = useRef('')
@@ -289,10 +291,12 @@ function NarrativaBar({ value, onChange }) {
   const releaseHandlerRef = useRef(null)
   const isRecordingRef    = useRef(false)
   const holdStartRef      = useRef(0)
+  const endTimeoutRef     = useRef(null)
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
   useEffect(() => () => {
+    clearTimeout(endTimeoutRef.current)
     if (releaseHandlerRef.current) {
       document.removeEventListener('mouseup', releaseHandlerRef.current)
       document.removeEventListener('touchend', releaseHandlerRef.current)
@@ -320,6 +324,35 @@ function NarrativaBar({ value, onChange }) {
     tick()
   }
 
+  // Called by rec.onend (after stop() + all pending onresult events have fired)
+  function finalizarRevision() {
+    clearTimeout(endTimeoutRef.current)
+    const held = Date.now() - holdStartRef.current
+    const captured = transcriptRef.current.trim()
+    if (held < 300 && !captured) {
+      setVoiceEstado('idle')
+    } else {
+      setTranscriptText(captured)
+      setVoiceEstado('revisando')
+    }
+  }
+
+  function mostrarError(msg) {
+    clearTimeout(endTimeoutRef.current)
+    isRecordingRef.current = false
+    cancelAnimationFrame(animFrameRef.current)
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    audioCtxRef.current?.close().catch(() => {})
+    recRef.current = null
+    if (releaseHandlerRef.current) {
+      document.removeEventListener('mouseup', releaseHandlerRef.current)
+      document.removeEventListener('touchend', releaseHandlerRef.current)
+    }
+    setErrorMsg(msg)
+    setVoiceEstado('error')
+    setTimeout(() => { setVoiceEstado('idle'); setErrorMsg('') }, 3500)
+  }
+
   async function startMic() {
     if (isRecordingRef.current || voiceEstado !== 'idle') return
     isRecordingRef.current = true
@@ -332,56 +365,84 @@ function NarrativaBar({ value, onChange }) {
       document.removeEventListener('touchend', onRelease)
       if (!isRecordingRef.current) return
       isRecordingRef.current = false
-      recRef.current?.stop()
       cancelAnimationFrame(animFrameRef.current)
       streamRef.current?.getTracks().forEach((t) => t.stop())
       audioCtxRef.current?.close().catch(() => {})
-      const held = Date.now() - holdStartRef.current
-      const captured = transcriptRef.current.trim()
-      if (held < 300 && !captured) { setVoiceEstado('idle'); return }
-      setTranscriptText(captured)
-      setVoiceEstado('revisando')
+      if (recRef.current) {
+        // Transition to 'finalizando' while SR processes pending audio.
+        // rec.onend fires after all onresult events, then calls finalizarRevision().
+        setVoiceEstado('finalizando')
+        // Safety net: if onend never fires (browser bug), fall through after 2s
+        endTimeoutRef.current = setTimeout(finalizarRevision, 2000)
+        recRef.current.stop()
+      } else {
+        finalizarRevision()
+      }
     }
     releaseHandlerRef.current = onRelease
+    // 80ms delay: prevents the mouseup from the same click triggering onRelease immediately
     setTimeout(() => {
       document.addEventListener('mouseup', onRelease)
       document.addEventListener('touchend', onRelease)
     }, 80)
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      if (!isRecordingRef.current) { stream.getTracks().forEach((t) => t.stop()); return }
-      streamRef.current = stream
-      const AudioCtx = window.AudioContext || window.webkitAudioContext
-      if (AudioCtx) {
-        const ctx = new AudioCtx()
-        audioCtxRef.current = ctx
-        const analyser = ctx.createAnalyser()
-        analyser.fftSize = 64
-        analyserRef.current = analyser
-        ctx.createMediaStreamSource(stream).connect(analyser)
-        startWaveform()
+    // Web Audio API — best-effort waveform visualization
+    if (navigator.mediaDevices?.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        if (!isRecordingRef.current) { stream.getTracks().forEach((t) => t.stop()); return }
+        streamRef.current = stream
+        const AudioCtx = window.AudioContext || window.webkitAudioContext
+        if (AudioCtx) {
+          const ctx = new AudioCtx()
+          audioCtxRef.current = ctx
+          const analyser = ctx.createAnalyser()
+          analyser.fftSize = 64
+          analyserRef.current = analyser
+          ctx.createMediaStreamSource(stream).connect(analyser)
+          startWaveform()
+        }
+      } catch {
+        // getUserMedia denied or unavailable — SR may still work independently
       }
-    } catch { /* sin visualización */ }
+    }
 
     if (!isRecordingRef.current) return
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (SR) {
-      const rec = new SR()
-      rec.lang = 'es-CL'
-      rec.continuous = true
-      rec.interimResults = false
-      recRef.current = rec
-      rec.onresult = (e) => {
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) {
-            transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
-          }
+    if (!SR) return
+
+    const rec = new SR()
+    rec.lang = 'es-CL'
+    rec.continuous = true
+    rec.interimResults = false
+    recRef.current = rec
+
+    rec.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
         }
       }
-      rec.onerror = () => {}
-      try { rec.start() } catch {}
+    }
+
+    // onend fires after stop() + all pending onresult events — safe to read transcript here
+    rec.onend = () => {
+      if (isRecordingRef.current) return // SR ended unexpectedly while still recording
+      finalizarRevision()
+    }
+
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        mostrarError('Permiso de micrófono denegado. Habilítalo en la configuración del navegador.')
+      }
+      // 'no-speech', 'network', 'audio-capture': onend still fires → finalizarRevision handles it
+    }
+
+    try {
+      rec.start()
+    } catch {
+      mostrarError('No se pudo acceder al micrófono en este navegador.')
     }
   }
 
@@ -392,9 +453,8 @@ function NarrativaBar({ value, onChange }) {
   }
 
   function confirmarVoz() {
-    const transcript = transcriptRef.current.trim()
-    if (transcript) {
-      const newText = value ? value.trim() + ' ' + transcript : transcript
+    if (transcriptText) {
+      const newText = value ? value.trim() + ' ' + transcriptText : transcriptText
       onChange(newText)
     }
     transcriptRef.current = ''
@@ -449,6 +509,14 @@ function NarrativaBar({ value, onChange }) {
           </div>
         )}
 
+        {/* ── FINALIZANDO: SR procesando audio restante ── */}
+        {voiceEstado === 'finalizando' && (
+          <div className={styles.vozProcesandoRow}>
+            <span className={styles.vozSpinner} />
+            <span className={styles.vozProcesandoLabel}>Procesando…</span>
+          </div>
+        )}
+
         {/* ── REVISANDO: texto transcrito + X / Agregar ── */}
         {voiceEstado === 'revisando' && (
           <div className={styles.vozRevisando}>
@@ -464,6 +532,13 @@ function NarrativaBar({ value, onChange }) {
                 <span>Agregar</span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ── ERROR: permiso denegado u otro fallo ── */}
+        {voiceEstado === 'error' && (
+          <div className={styles.vozErrorRow}>
+            <span className={styles.vozErrorMsg}>{errorMsg}</span>
           </div>
         )}
 

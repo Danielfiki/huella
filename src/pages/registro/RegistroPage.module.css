@@ -717,3 +717,16 @@
   font-size: 13px;
   color: var(--color-text-muted);
 }
+
+.vozErrorRow {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.vozErrorMsg {
+  font-size: 12px;
+  color: var(--color-danger, #dc2626);
+  line-height: 1.4;
+}
