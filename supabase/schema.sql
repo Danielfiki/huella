@@ -55,6 +55,16 @@ create table if not exists public.api_llamadas (
   primary key (user_id, fecha)
 );
 
+create table if not exists public.push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users(id) on delete cascade not null,
+  endpoint   text not null,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz default now(),
+  unique (user_id, endpoint)
+);
+
 -- ── Migraciones para instalaciones existentes ─────────────────
 alter table public.hijos      add column if not exists avatar_url       text;
 alter table public.hijos      add column if not exists fecha_nacimiento date;
@@ -71,7 +81,8 @@ alter table public.hijos         enable row level security;
 alter table public.episodios     enable row level security;
 alter table public.hitos         enable row level security;
 alter table public.estrategias   enable row level security;
-alter table public.api_llamadas  enable row level security;
+alter table public.api_llamadas        enable row level security;
+alter table public.push_subscriptions  enable row level security;
 
 -- Eliminar políticas previas para evitar conflictos al re-ejecutar
 drop policy if exists "own_data" on public.hijos;
@@ -92,6 +103,10 @@ create policy "own_data" on public.estrategias
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own_data" on public.api_llamadas
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own_data" on public.push_subscriptions;
+create policy "own_data" on public.push_subscriptions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ── Storage: bucket avatares ──────────────────────────────────
