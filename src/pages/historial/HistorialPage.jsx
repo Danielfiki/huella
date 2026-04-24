@@ -94,6 +94,15 @@ function labelDia(fechaStr) {
   return fecha.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
+const CATEGORIAS_HITO = {
+  autorregulacion: { label: 'Se calmó solo',   emoji: '🌱' },
+  empatia:         { label: 'Mostró empatía',  emoji: '💛' },
+  disculpa:        { label: 'Pidió disculpas', emoji: '🤝' },
+  frustration:     { label: 'Toleró un "no"',  emoji: '💪' },
+  social:          { label: 'Avance social',   emoji: '👫' },
+  otro:            { label: 'Otro avance',     emoji: '⭐' },
+}
+
 function agruparPorDia(episodios) {
   const grupos = new Map()
   for (const ep of episodios) {
@@ -102,6 +111,45 @@ function agruparPorDia(episodios) {
     grupos.get(key).episodios.push(ep)
   }
   return Array.from(grupos.values())
+}
+
+function agruparItemsPorDia(items) {
+  const grupos = new Map()
+  for (const item of items) {
+    const key = new Date(item.fecha).toDateString()
+    if (!grupos.has(key)) grupos.set(key, { label: labelDia(item.fecha), items: [] })
+    grupos.get(key).items.push(item)
+  }
+  return Array.from(grupos.values())
+}
+
+function HitoHistorialCard({ hito }) {
+  const cat = CATEGORIAS_HITO[hito.categoria] || { label: hito.categoria || 'Avance', emoji: '⭐' }
+  return (
+    <Card className={styles.card}>
+      <div className={styles.hitoCardTop}>
+        <span className={styles.hitoEmoji}>{cat.emoji}</span>
+        <div>
+          <p className={styles.tipoLabel}>{cat.label}</p>
+          <p className={styles.hora}>
+            {new Date(hito.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+        <span className={styles.hitoBadge}>avance</span>
+      </div>
+      {hito.descripcion ? (
+        <p className={styles.contexto}>{hito.descripcion}</p>
+      ) : null}
+      {hito.foto_url ? (
+        <img
+          src={hito.foto_url}
+          alt="Foto del avance"
+          className={styles.hitoFoto}
+          onClick={() => window.open(hito.foto_url, '_blank')}
+        />
+      ) : null}
+    </Card>
+  )
 }
 
 function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
@@ -254,9 +302,16 @@ function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
   )
 }
 
+const PESTANAS = [
+  { id: 'todos',     label: 'Todos' },
+  { id: 'episodios', label: 'Episodios' },
+  { id: 'avances',   label: 'Avances' },
+]
+
 export default function HistorialPage() {
   const { state, deleteEpisodio, updateEpisodio } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
+  const [pestaña, setPestaña] = useState('todos')
 
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find((e) => e.semanaActual < 4) ?? null,
@@ -268,7 +323,6 @@ export default function HistorialPage() {
     [estrategiaActiva, episodios]
   )
 
-  // Set de IDs de episodios registrados mientras había una estrategia activa
   const episodiosConEstrategia = useMemo(() => {
     const set = new Set()
     for (const ep of episodios) {
@@ -283,20 +337,20 @@ export default function HistorialPage() {
     return set
   }, [episodios, estrategias])
 
-  if (episodios.length === 0) {
-    return (
-      <div className={styles.page}>
-        <h2 className={styles.titulo}>Historial</h2>
-        <Card className={styles.emptyCard}>
-          <BookOpen size={36} color="var(--color-primary-light)" />
-          <h3>Sin episodios aún</h3>
-          <p>Cuando registres episodios aparecerán aquí con la orientación que dio Huella en cada momento.</p>
-        </Card>
-      </div>
-    )
-  }
+  const gruposTodos = useMemo(() => {
+    const items = [
+      ...episodios.map((ep) => ({ kind: 'episodio', fecha: ep.fecha, data: ep })),
+      ...hitos.map((h)  => ({ kind: 'hito',     fecha: h.fecha,  data: h  })),
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+    return agruparItemsPorDia(items)
+  }, [episodios, hitos])
 
-  const grupos = agruparPorDia(episodios)
+  const gruposEpisodios = useMemo(() => agruparPorDia(episodios), [episodios])
+
+  const hitosOrdenados = useMemo(
+    () => [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
+    [hitos]
+  )
 
   const ImpactoIcon = impacto?.tendencia === 'bajaron'
     ? TrendingDown
@@ -304,16 +358,49 @@ export default function HistorialPage() {
     ? TrendingUp
     : Minus
 
+  const totalRegistros = episodios.length + hitos.length
+  const countLabel =
+    pestaña === 'todos'
+      ? `${totalRegistros} registro${totalRegistros !== 1 ? 's' : ''}`
+      : pestaña === 'episodios'
+      ? `${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
+      : `${hitos.length} avance${hitos.length !== 1 ? 's' : ''}`
+
+  if (totalRegistros === 0) {
+    return (
+      <div className={styles.page}>
+        <h2 className={styles.titulo}>Historial</h2>
+        <Card className={styles.emptyCard}>
+          <BookOpen size={36} color="var(--color-primary-light)" />
+          <h3>Sin registros aún</h3>
+          <p>Aquí aparecerán tus episodios y avances cuando empieces a registrar.</p>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h2 className={styles.titulo}>Historial</h2>
-        <span className={styles.count}>
-          {episodios.length} episodio{episodios.length !== 1 ? 's' : ''}
-        </span>
+        <span className={styles.count}>{countLabel}</span>
       </div>
 
-      {impacto && estrategiaActiva && (
+      {/* ── Pestañas ── */}
+      <div className={styles.tabs}>
+        {PESTANAS.map((p) => (
+          <button
+            key={p.id}
+            className={`${styles.tab} ${pestaña === p.id ? styles.tabActive : ''}`}
+            onClick={() => setPestaña(p.id)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Impacto estrategia (solo en episodios) ── */}
+      {pestaña === 'episodios' && impacto && estrategiaActiva && (
         <Card className={`${styles.impactoCard} ${styles[`impacto_${impacto.tendencia}`]}`}>
           <div className={styles.impactoHeader}>
             <ImpactoIcon size={16} className={styles.impactoIcon} />
@@ -327,27 +414,80 @@ export default function HistorialPage() {
         </Card>
       )}
 
-      {grupos.map((grupo) => (
-        <div key={grupo.label} className={styles.grupo}>
-          <p className={styles.grupoLabel}>{grupo.label}</p>
-          {grupo.episodios.map((ep) => (
-            <EpisodioCard
-              key={ep.id}
-              ep={ep}
-              onDelete={deleteEpisodio}
-              onUpdate={updateEpisodio}
-              conEstrategia={episodiosConEstrategia.has(ep.id)}
-            />
-          ))}
-        </div>
-      ))}
+      {/* ── TODOS ── */}
+      {pestaña === 'todos' && (
+        totalRegistros === 0 ? (
+          <Card className={styles.emptyCard}>
+            <p>Sin registros aún.</p>
+          </Card>
+        ) : (
+          gruposTodos.map((grupo) => (
+            <div key={grupo.label} className={styles.grupo}>
+              <p className={styles.grupoLabel}>{grupo.label}</p>
+              {grupo.items.map((item) =>
+                item.kind === 'episodio' ? (
+                  <EpisodioCard
+                    key={item.data.id}
+                    ep={item.data}
+                    onDelete={deleteEpisodio}
+                    onUpdate={updateEpisodio}
+                    conEstrategia={episodiosConEstrategia.has(item.data.id)}
+                  />
+                ) : (
+                  <HitoHistorialCard key={item.data.id} hito={item.data} />
+                )
+              )}
+            </div>
+          ))
+        )
+      )}
 
-      <GenerarInformeBtn
-        hijo={hijo}
-        episodios={episodios}
-        estrategias={estrategias}
-        hitos={hitos}
-      />
+      {/* ── EPISODIOS ── */}
+      {pestaña === 'episodios' && (
+        episodios.length === 0 ? (
+          <Card className={styles.emptyCard}>
+            <p>Sin episodios registrados.</p>
+          </Card>
+        ) : (
+          <>
+            {gruposEpisodios.map((grupo) => (
+              <div key={grupo.label} className={styles.grupo}>
+                <p className={styles.grupoLabel}>{grupo.label}</p>
+                {grupo.episodios.map((ep) => (
+                  <EpisodioCard
+                    key={ep.id}
+                    ep={ep}
+                    onDelete={deleteEpisodio}
+                    onUpdate={updateEpisodio}
+                    conEstrategia={episodiosConEstrategia.has(ep.id)}
+                  />
+                ))}
+              </div>
+            ))}
+            <GenerarInformeBtn
+              hijo={hijo}
+              episodios={episodios}
+              estrategias={estrategias}
+              hitos={hitos}
+            />
+          </>
+        )
+      )}
+
+      {/* ── AVANCES ── */}
+      {pestaña === 'avances' && (
+        hitos.length === 0 ? (
+          <Card className={styles.emptyCard}>
+            <p>Sin avances registrados aún.</p>
+          </Card>
+        ) : (
+          <div className={styles.grupo}>
+            {hitosOrdenados.map((h) => (
+              <HitoHistorialCard key={h.id} hito={h} />
+            ))}
+          </div>
+        )
+      )}
     </div>
   )
 }

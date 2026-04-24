@@ -11,6 +11,67 @@
 .emptyCard h3 { font-size: 16px; font-weight: 600; }
 .emptyCard p { font-size: 14px; color: var(--color-text-muted); line-height: 1.5; }
 
+/* ── Pestañas ── */
+.tabs {
+  display: flex;
+  gap: 3px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.tab {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.tabActive {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Hito card en historial ── */
+.hitoCardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hitoEmoji { font-size: 26px; line-height: 1; flex-shrink: 0; }
+
+.hitoBadge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hitoFoto {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.hitoFoto:hover { opacity: 0.9; }
+
 .grupo { display: flex; flex-direction: column; gap: 10px; }
 
 .grupoLabel {
