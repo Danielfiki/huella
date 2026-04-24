@@ -81,6 +81,7 @@ function dbEpisodioToApp(row) {
     emocion:          row.emocion           ?? null,
     descripcionLibre: row.descripcion_libre ?? null,
     reflexion:        row.reflexion         ?? null,
+    fotoUrl:          row.foto_url          ?? null,
   }
 }
 
@@ -292,6 +293,7 @@ export function HuellaProvider({ children }) {
     const dbFields = {}
     if (partial.orientacionIA !== undefined) dbFields.orientacion_ia = partial.orientacionIA
     if (partial.reflexion     !== undefined) dbFields.reflexion      = partial.reflexion
+    if (partial.fotoUrl       !== undefined) dbFields.foto_url       = partial.fotoUrl
     await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 
@@ -361,6 +363,19 @@ export function HuellaProvider({ children }) {
     if (error) throw new Error(error.message)
   }
 
+  async function uploadEpisodioFoto(episodioId, file) {
+    if (!user || !supabase) return null
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+    const path = `${user.id}/${episodioId}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('momentos')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (uploadError) throw new Error(uploadError.message)
+    const { data } = supabase.storage.from('momentos').getPublicUrl(path)
+    await updateEpisodio({ id: episodioId, fotoUrl: data.publicUrl })
+    return data.publicUrl
+  }
+
   async function updateEstrategia(partial) {
     if (!user) return
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
@@ -381,6 +396,7 @@ export function HuellaProvider({ children }) {
       setHijo,
       addEpisodio,
       updateEpisodio,
+      uploadEpisodioFoto,
       deleteEpisodio,
       addHito,
       updateHitoFoto,

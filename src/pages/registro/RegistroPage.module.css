@@ -730,3 +730,65 @@
   color: var(--color-danger, #dc2626);
   line-height: 1.4;
 }
+
+/* ── Foto opcional ──────────────────────────────────────── */
+
+.fotoPickerWrap {
+  display: flex;
+  align-items: flex-start;
+}
+
+.fotoPickerBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.fotoPickerBtn:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.fotoPickerPreview {
+  position: relative;
+  display: inline-block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.fotoPickerImg {
+  display: block;
+  max-height: 150px;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1.5px solid var(--color-border);
+}
+
+.fotoPickerRemove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fotoPickerRemove:hover { background: rgba(0, 0, 0, 0.78); }

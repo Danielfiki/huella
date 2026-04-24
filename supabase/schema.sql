@@ -73,6 +73,7 @@ alter table public.episodios  add column if not exists orientacion_ia   text;
 alter table public.episodios  add column if not exists emocion           text;
 alter table public.episodios  add column if not exists descripcion_libre text;
 alter table public.episodios  add column if not exists reflexion          text;
+alter table public.episodios  add column if not exists foto_url           text;
 alter table public.estrategias add column if not exists tareas           jsonb default '{}'::jsonb;
 alter table public.estrategias add column if not exists checkins         jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url          text;

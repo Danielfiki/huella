@@ -212,6 +212,15 @@ function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
         </div>
       ) : null}
 
+      {ep.fotoUrl ? (
+        <img
+          src={ep.fotoUrl}
+          alt="Foto del episodio"
+          className={styles.fotoEpisodio}
+          onClick={() => window.open(ep.fotoUrl, '_blank')}
+        />
+      ) : null}
+
       {ep.orientacionIA ? (
         <>
           <button
