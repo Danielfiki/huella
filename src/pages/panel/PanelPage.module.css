@@ -225,6 +225,91 @@
   margin: 0 0 4px;
 }
 
+/* ── Consejo diario ── */
+.consejoCard {
+  background: linear-gradient(135deg, #fdf6ec 0%, var(--color-surface) 100%);
+  border-color: var(--color-primary-light);
+}
+
+.consejoHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.consejoIcon { color: var(--color-primary); flex-shrink: 0; }
+
+.consejoLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+}
+
+.consejoTexto {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Presencia semanal ── */
+.presenciaWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 2px;
+}
+
+.presenciaCirculos {
+  display: flex;
+  gap: 6px;
+}
+
+.presenciaCirculo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.presenciaVisitado {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.presenciaHoy {
+  border-color: var(--color-primary);
+  border-style: dashed;
+}
+
+.presenciaLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.presenciaVisitado .presenciaLabel {
+  color: #fff;
+}
+
+.presenciaMensaje {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
 /* ── Análisis de patrones ── */
 .patronesCard {}
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

@@ -169,6 +169,27 @@ Extrae los campos y devuelve ÚNICAMENTE JSON válido sin texto adicional ni mar
   }
 }
 
+export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias }) {
+  const hace7 = new Date()
+  hace7.setDate(hace7.getDate() - 7)
+  const semanaEp = episodios.filter((e) => new Date(e.fecha) >= hace7).slice(0, 8)
+  const hitosCount = hitos.filter((h) => new Date(h.fecha) >= hace7).length
+  const estrategiaActiva = (estrategias || []).find((e) => e.semanaActual < 4)
+
+  const resumenEp = semanaEp.length > 0
+    ? semanaEp.map((e) => `- ${e.tipo} (intensidad ${e.intensidad}/5)${e.contexto ? ': ' + e.contexto.slice(0, 80) : ''}`).join('\n')
+    : 'Sin episodios esta semana.'
+
+  const prompt = `Soy padre/madre y registro el desarrollo emocional de ${hijo?.nombre || 'mi hijo/a'}, ${hijo?.edad || '?'} años.
+
+Esta semana anoté:
+${resumenEp}${hitosCount > 0 ? `\n\nAvances positivos registrados esta semana: ${hitosCount}` : ''}${estrategiaActiva ? `\n\nEstoy trabajando la estrategia: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4)` : ''}
+
+Escribe exactamente 2-3 frases cálidas y concretas como consejo para hoy. Habla en segunda persona al padre/madre. Basa el consejo en los datos reales que te di. Reconoce el esfuerzo de registrar. Sin listas, sin títulos, sin markdown, sin disclaimer clínico.`
+
+  return llamarAPI(prompt, 200)
+}
+
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const prompt = `Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
 
