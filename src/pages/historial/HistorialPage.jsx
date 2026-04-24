@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { BookOpen, ChevronDown, ChevronUp, Trash2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
@@ -104,11 +104,17 @@ function agruparPorDia(episodios) {
   return Array.from(grupos.values())
 }
 
-function EpisodioCard({ ep, onDelete, conEstrategia }) {
+function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
   const [expandido, setExpandido] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
+  const [reflexion, setReflexion] = useState(ep.reflexion ?? '')
+  const [guardando, setGuardando] = useState(false)
+  const [guardado, setGuardado] = useState(false)
+  const guardadoTimerRef = useRef(null)
   const tipo = TIPOS[ep.tipo] || { label: ep.tipo, emoji: '📝' }
+
+  const reflexionDirty = reflexion !== (ep.reflexion ?? '')
 
   async function handleEliminar() {
     setEliminando(true)
@@ -117,6 +123,18 @@ function EpisodioCard({ ep, onDelete, conEstrategia }) {
     } catch {
       setEliminando(false)
       setConfirmando(false)
+    }
+  }
+
+  async function handleGuardarReflexion() {
+    setGuardando(true)
+    try {
+      await onUpdate({ id: ep.id, reflexion: reflexion || null })
+      clearTimeout(guardadoTimerRef.current)
+      setGuardado(true)
+      guardadoTimerRef.current = setTimeout(() => setGuardado(false), 2500)
+    } finally {
+      setGuardando(false)
     }
   }
 
@@ -187,6 +205,13 @@ function EpisodioCard({ ep, onDelete, conEstrategia }) {
         <p className={styles.estadoPadre}>Estado del padre: {ep.estadoPadre}</p>
       ) : null}
 
+      {ep.descripcionLibre ? (
+        <div className={styles.descripcionLibreWrap}>
+          <span className={styles.descripcionLibreLabel}>Relato del momento</span>
+          <p className={styles.descripcionLibre}>{ep.descripcionLibre}</p>
+        </div>
+      ) : null}
+
       {ep.orientacionIA ? (
         <>
           <button
@@ -199,12 +224,38 @@ function EpisodioCard({ ep, onDelete, conEstrategia }) {
           {expandido && <RespuestaIA texto={ep.orientacionIA} compact />}
         </>
       ) : null}
+
+      <div className={styles.reflexionWrap}>
+        <span className={styles.reflexionLabel}>Mi reflexión</span>
+        <textarea
+          className={styles.reflexionTextarea}
+          placeholder="¿Qué aprendiste de este momento? ¿Qué harías diferente?"
+          value={reflexion}
+          onChange={(e) => { setReflexion(e.target.value); setGuardado(false) }}
+          rows={reflexion ? undefined : 2}
+        />
+        {(reflexionDirty || guardado) && (
+          <div className={styles.reflexionActions}>
+            {guardado ? (
+              <span className={styles.reflexionGuardado}>✓ Guardado</span>
+            ) : (
+              <button
+                className={styles.reflexionBtn}
+                onClick={handleGuardarReflexion}
+                disabled={guardando}
+              >
+                {guardando ? 'Guardando…' : 'Guardar reflexión'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </Card>
   )
 }
 
 export default function HistorialPage() {
-  const { state, deleteEpisodio } = useHuella()
+  const { state, deleteEpisodio, updateEpisodio } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
 
   const estrategiaActiva = useMemo(
@@ -284,6 +335,7 @@ export default function HistorialPage() {
               key={ep.id}
               ep={ep}
               onDelete={deleteEpisodio}
+              onUpdate={updateEpisodio}
               conEstrategia={episodiosConEstrategia.has(ep.id)}
             />
           ))}

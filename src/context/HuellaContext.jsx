@@ -80,6 +80,7 @@ function dbEpisodioToApp(row) {
     orientacionIA:    row.orientacion_ia    ?? null,
     emocion:          row.emocion           ?? null,
     descripcionLibre: row.descripcion_libre ?? null,
+    reflexion:        row.reflexion         ?? null,
   }
 }
 
@@ -290,6 +291,7 @@ export function HuellaProvider({ children }) {
     dispatch({ type: 'UPDATE_EPISODIO', payload: partial })
     const dbFields = {}
     if (partial.orientacionIA !== undefined) dbFields.orientacion_ia = partial.orientacionIA
+    if (partial.reflexion     !== undefined) dbFields.reflexion      = partial.reflexion
     await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 

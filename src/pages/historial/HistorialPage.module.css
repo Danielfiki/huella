@@ -127,6 +127,98 @@
   font-style: italic; margin: 0;
 }
 
+/* ── Descripción libre (relato de voz) ── */
+.descripcionLibreWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 3px solid var(--color-primary-light);
+  padding-left: 10px;
+}
+
+.descripcionLibreLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+  opacity: 0.7;
+}
+
+.descripcionLibre {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ── Reflexión editable ── */
+.reflexionWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.reflexionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.reflexionTextarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  min-height: 56px;
+}
+.reflexionTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary-light);
+}
+.reflexionTextarea::placeholder {
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+.reflexionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.reflexionBtn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.reflexionBtn:disabled { opacity: 0.5; cursor: default; }
+.reflexionBtn:not(:disabled):hover { opacity: 0.88; }
+
+.reflexionGuardado {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success, #22c55e);
+}
+
 .toggleBtn {
   display: flex; align-items: center; gap: 5px;
   font-size: 13px; font-weight: 600; color: var(--color-primary);
