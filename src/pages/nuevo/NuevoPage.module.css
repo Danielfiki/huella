@@ -1,0 +1,107 @@
+.page { display: flex; flex-direction: column; gap: 16px; }
+.titulo { font-size: 22px; font-weight: 700; margin: 0; }
+.label { font-size: 14px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 10px; }
+.labelOpcional { font-size: 11px; font-weight: 400; color: var(--color-text-light); }
+.error { font-size: 13px; color: var(--color-danger); text-align: center; }
+
+/* ── Elegir ── */
+.header { padding-bottom: 2px; }
+
+.opcionCard {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 20px;
+  border-radius: var(--radius-lg, 16px);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+.opcionCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.opcionCard:active { transform: scale(0.985); }
+
+.opcionEpisodio:hover { border-color: #7C8FD4; }
+.opcionAvance { border-color: var(--color-primary-light); background: var(--color-primary-bg); }
+.opcionAvance:hover { border-color: var(--color-primary); }
+
+.opcionEmoji { font-size: 46px; flex-shrink: 0; line-height: 1; }
+.opcionTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.opcionTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
+.opcionDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+
+/* ── Hito form ── */
+.vistaHeader { display: flex; align-items: center; }
+.backBtn {
+  background: none; border: none; font-size: 14px;
+  color: var(--color-primary); cursor: pointer; padding: 0;
+}
+
+.textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+  font-size: 14px; font-family: var(--font-family);
+  background: var(--color-surface-alt); color: var(--color-text);
+  resize: none; outline: none; box-sizing: border-box; line-height: 1.55;
+}
+.textarea:focus { border-color: var(--color-primary); }
+.textarea::placeholder { color: var(--color-text-light); }
+
+.categoriasGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.catBtn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md); background: var(--color-surface-alt);
+  cursor: pointer; font-size: 13px; color: var(--color-text-muted);
+  font-family: var(--font-family); text-align: left;
+  transition: border-color 0.15s;
+}
+.catBtn:hover { border-color: var(--color-primary-light); }
+.catSelected { border-color: var(--color-primary) !important; background: var(--color-primary-bg); color: var(--color-text); }
+
+/* ── Foto ── */
+.fotoSection { display: flex; flex-direction: column; gap: 8px; }
+
+.fotoCameraBtn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 999px;
+  border: 1.5px dashed var(--color-border); background: transparent;
+  color: var(--color-text-muted); font-size: 13px; font-weight: 500;
+  font-family: var(--font-family); cursor: pointer; align-self: flex-start;
+  transition: border-color 0.15s, color 0.15s;
+}
+.fotoCameraBtn:hover { border-color: var(--color-primary-light); color: var(--color-primary); }
+
+.fotoPreview { position: relative; display: inline-block; border-radius: var(--radius-md); overflow: hidden; }
+.fotoPreviewImg {
+  display: block; max-height: 180px; max-width: 100%;
+  border-radius: var(--radius-md); object-fit: cover;
+  border: 1.5px solid var(--color-border);
+}
+.fotoRemoveBtn {
+  position: absolute; top: 6px; right: 6px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55); border: none; color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.fotoRemoveBtn:hover { background: rgba(0, 0, 0, 0.78); }
+
+/* ── Guardado ── */
+.guardadoWrap {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 14px; padding: 32px 8px;
+}
+.guardadoEmoji { font-size: 52px; margin: 0; line-height: 1; }
+.guardadoTitulo { font-size: 20px; font-weight: 800; color: var(--color-text); margin: 0; }
+.guardadoSub {
+  font-size: 14px; color: var(--color-text-muted);
+  line-height: 1.6; margin: 0; max-width: 280px;
+}
+.verHitosBtn {
+  font-size: 13px; color: var(--color-primary); font-weight: 600;
+  font-family: var(--font-family); background: none; border: none; cursor: pointer;
+}
+.verHitosBtn:hover { text-decoration: underline; }

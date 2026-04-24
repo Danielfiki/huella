@@ -340,7 +340,7 @@ export default function PanelPage() {
       {episodios.length === 0 ? (
 
         /* ── Estado vacío ── */
-        <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/registro')} />
+        <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
 
       ) : (
         <>
@@ -348,7 +348,7 @@ export default function PanelPage() {
           <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
 
           {/* ── CTA registrar ── */}
-          <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/registro')}>
+          <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/nuevo')}>
             <Plus size={20} />
             Registrar episodio
           </Button>

@@ -10,6 +10,7 @@ import LoginPage from './pages/auth/LoginPage'
 import SignupPage from './pages/auth/SignupPage'
 import PanelPage from './pages/panel/PanelPage'
 import RegistroPage from './pages/registro/RegistroPage'
+import NuevoPage from './pages/nuevo/NuevoPage'
 import EstrategiasPage from './pages/estrategias/EstrategiasPage'
 import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
@@ -148,6 +149,7 @@ export default function App() {
               >
                 <Route index element={<Navigate to="/panel" replace />} />
                 <Route path="panel"       element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
+                <Route path="nuevo"       element={<PageErrorBoundary><NuevoPage /></PageErrorBoundary>} />
                 <Route path="registro"    element={<PageErrorBoundary><RegistroPage /></PageErrorBoundary>} />
                 <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
                 <Route path="hitos"       element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
