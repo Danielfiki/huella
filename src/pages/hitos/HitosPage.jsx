@@ -530,6 +530,78 @@ function NivelSection({ nivel, data, bloqueado, umbralPrevio, badgesNuevos }) {
   )
 }
 
+// ── HitoCard con upload de foto ───────────────────────────────────────────
+
+function HitoCard({ hito, user, updateHitoFoto }) {
+  const cat = CATEGORIAS.find((c) => c.id === hito.categoria)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [errorFoto, setErrorFoto] = useState('')
+  const fotoInputRef = useRef(null)
+
+  async function handleUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setSubiendoFoto(true)
+    setErrorFoto('')
+    try {
+      const blob = await compressImage(file)
+      const path = `${user.id}/${hito.id}.jpg`
+      const { error } = await supabase.storage
+        .from('momentos')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+      if (error) throw new Error(error.message)
+      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
+      await updateHitoFoto(hito.id, `${data.publicUrl}?t=${Date.now()}`)
+    } catch {
+      setErrorFoto('No se pudo subir la foto. Intenta de nuevo.')
+    } finally {
+      setSubiendoFoto(false)
+      if (fotoInputRef.current) fotoInputRef.current.value = ''
+    }
+  }
+
+  return (
+    <Card className={styles.hitoCard}>
+      <div className={styles.hitoHeader}>
+        <span className={styles.hitoEmoji}>{cat?.emoji || '⭐'}</span>
+        <div>
+          <p className={styles.hitoCategoria}>{cat?.label || hito.categoria}</p>
+          <p className={styles.hitoFecha}>
+            {new Date(hito.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
+          </p>
+        </div>
+      </div>
+      {hito.descripcion ? <p className={styles.hitoDesc}>{hito.descripcion}</p> : null}
+      {hito.foto_url ? (
+        <img
+          src={hito.foto_url}
+          alt="Momento"
+          className={styles.hitoFotoImg}
+          onClick={() => window.open(hito.foto_url, '_blank')}
+        />
+      ) : (
+        <button
+          className={styles.hitoCameraBtn}
+          onClick={() => fotoInputRef.current?.click()}
+          disabled={subiendoFoto}
+        >
+          <Camera size={13} />
+          {subiendoFoto ? 'Subiendo…' : 'Agregar foto'}
+        </button>
+      )}
+      {errorFoto && <p className={styles.hitoFotoError}>{errorFoto}</p>}
+      <input
+        ref={fotoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleUpload}
+      />
+    </Card>
+  )
+}
+
 // ── Página ────────────────────────────────────────────────────────────────
 
 export default function HitosPage() {
@@ -772,28 +844,35 @@ export default function HitosPage() {
         />
       ))}
 
+      {/* ── Álbum de crecimiento ── */}
+      {hitos.some((h) => h.foto_url) && (
+        <>
+          <h3 className={styles.seccionTitulo}>Álbum de crecimiento</h3>
+          <div className={styles.albumGrid}>
+            {hitos.filter((h) => h.foto_url).map((h) => (
+              <div
+                key={h.id}
+                className={styles.albumItem}
+                onClick={() => window.open(h.foto_url, '_blank')}
+              >
+                <img src={h.foto_url} alt="" className={styles.albumImg} />
+                <p className={styles.albumLabel}>
+                  {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       {/* ── Avances registrados ── */}
       {hitos.length > 0 && (
         <>
           <h3 className={styles.seccionTitulo}>Avances registrados</h3>
           <div className={styles.hitosList}>
-            {hitos.map((h) => {
-              const cat = CATEGORIAS.find((c) => c.id === h.categoria)
-              return (
-                <Card key={h.id} className={styles.hitoCard}>
-                  <div className={styles.hitoHeader}>
-                    <span className={styles.hitoEmoji}>{cat?.emoji || '⭐'}</span>
-                    <div>
-                      <p className={styles.hitoCategoria}>{cat?.label || h.categoria}</p>
-                      <p className={styles.hitoFecha}>
-                        {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
-                      </p>
-                    </div>
-                  </div>
-                  {h.descripcion ? <p className={styles.hitoDesc}>{h.descripcion}</p> : null}
-                </Card>
-              )
-            })}
+            {hitos.map((h) => (
+              <HitoCard key={h.id} hito={h} user={user} updateHitoFoto={updateHitoFoto} />
+            ))}
           </div>
         </>
       )}

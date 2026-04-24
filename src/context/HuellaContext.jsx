@@ -363,19 +363,6 @@ export function HuellaProvider({ children }) {
     if (error) throw new Error(error.message)
   }
 
-  async function uploadEpisodioFoto(episodioId, file) {
-    if (!user || !supabase) return null
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
-    const path = `${user.id}/${episodioId}.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from('momentos')
-      .upload(path, file, { upsert: true, contentType: file.type })
-    if (uploadError) throw new Error(uploadError.message)
-    const { data } = supabase.storage.from('momentos').getPublicUrl(path)
-    await updateEpisodio({ id: episodioId, fotoUrl: data.publicUrl })
-    return data.publicUrl
-  }
-
   async function updateEstrategia(partial) {
     if (!user) return
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
@@ -396,7 +383,6 @@ export function HuellaProvider({ children }) {
       setHijo,
       addEpisodio,
       updateEpisodio,
-      uploadEpisodioFoto,
       deleteEpisodio,
       addHito,
       updateHitoFoto,

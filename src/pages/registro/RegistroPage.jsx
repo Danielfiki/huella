@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X, Mic, Check, Camera } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Mic, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -548,7 +548,7 @@ function NarrativaBar({ value, onChange }) {
 }
 
 export default function RegistroPage() {
-  const { state, addEpisodio, updateEpisodio, uploadEpisodioFoto } = useHuella()
+  const { state, addEpisodio, updateEpisodio } = useHuella()
   const navigate = useNavigate()
 
   const [vista, setVista] = useState('elegir')
@@ -557,11 +557,6 @@ export default function RegistroPage() {
   const [tipo, setTipo] = useState('')
   const [intensidad, setIntensidad] = useState(null)
   const [descripcionLibre, setDescripcionLibre] = useState('')
-
-  // foto
-  const [fotoFile, setFotoFile] = useState(null)
-  const [fotoPreviewUrl, setFotoPreviewUrl] = useState('')
-  const fotoInputRef = useRef(null)
 
   // detailed-only fields
   const [emocionSeleccionada, setEmocionSeleccionada] = useState('')
@@ -579,21 +574,6 @@ export default function RegistroPage() {
   const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
-
-  function handleFotoChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (fotoPreviewUrl) URL.revokeObjectURL(fotoPreviewUrl)
-    setFotoFile(file)
-    setFotoPreviewUrl(URL.createObjectURL(file))
-    e.target.value = ''
-  }
-
-  function removeFoto() {
-    if (fotoPreviewUrl) URL.revokeObjectURL(fotoPreviewUrl)
-    setFotoFile(null)
-    setFotoPreviewUrl('')
-  }
 
   function handleCuando(id) {
     setCuandoPaso(id)
@@ -632,9 +612,6 @@ export default function RegistroPage() {
     try {
       const episodioGuardado = await addEpisodio(episodio)
       setVista('guardado')
-      if (fotoFile && episodioGuardado?.id) {
-        uploadEpisodioFoto(episodioGuardado.id, fotoFile).catch(() => {})
-      }
       setLoadingIA(true)
       setLoadingAccion(true)
       setAccionIA('')
@@ -747,25 +724,6 @@ export default function RegistroPage() {
     )
   }
 
-  const fotoPicker = (
-    <div className={styles.fotoPickerWrap}>
-      {fotoPreviewUrl ? (
-        <div className={styles.fotoPickerPreview}>
-          <img src={fotoPreviewUrl} alt="" className={styles.fotoPickerImg} />
-          <button className={styles.fotoPickerRemove} onClick={removeFoto} type="button" aria-label="Quitar foto">
-            <X size={13} />
-          </button>
-        </div>
-      ) : (
-        <button className={styles.fotoPickerBtn} type="button" onClick={() => fotoInputRef.current?.click()}>
-          <Camera size={15} />
-          <span>Agregar foto</span>
-        </button>
-      )}
-      <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFotoChange} />
-    </div>
-  )
-
   // ── VISTA: MODO RÁPIDO ────────────────────────────────────────────────────
   if (vista === 'rapido') {
     return (
@@ -777,7 +735,6 @@ export default function RegistroPage() {
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
         <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} />
-        {fotoPicker}
 
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
@@ -829,7 +786,6 @@ export default function RegistroPage() {
       <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
       <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} />
-      {fotoPicker}
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>

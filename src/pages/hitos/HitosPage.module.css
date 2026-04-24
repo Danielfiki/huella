@@ -302,6 +302,37 @@
   font-family: var(--font-family);
 }
 
+/* ── Álbum de crecimiento ── */
+.albumGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.albumItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.albumImg {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s;
+}
+.albumItem:hover .albumImg { opacity: 0.88; }
+
+.albumLabel {
+  font-size: 9px;
+  color: var(--color-text-light);
+  text-align: center;
+  margin: 0;
+  line-height: 1.2;
+}
+
 /* ── Avances registrados ── */
 .hitosList { display: flex; flex-direction: column; gap: 10px; }
 .hitoCard { display: flex; flex-direction: column; gap: 6px; }
@@ -310,3 +341,42 @@
 .hitoCategoria { font-size: 14px; font-weight: 600; margin: 0; }
 .hitoFecha { font-size: 12px; color: var(--color-text-muted); margin: 0; }
 .hitoDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+
+.hitoFotoImg {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.hitoFotoImg:hover { opacity: 0.9; }
+
+.hitoCameraBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.hitoCameraBtn:hover:not(:disabled) {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+.hitoCameraBtn:disabled { opacity: 0.5; cursor: default; }
+
+.hitoFotoError {
+  font-size: 11px;
+  color: var(--color-danger);
+  margin: 0;
+}
