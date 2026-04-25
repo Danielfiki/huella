@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2, Trash2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { generarEstrategia, generarTareas } from '../../services/anthropic'
+import { renderMarkdown } from '../../utils/renderMarkdown'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -344,7 +345,7 @@ export default function EstrategiasPage() {
         {intro ? (
           <Card>
             <p className={styles.introLabel}>Por qué importa ahora</p>
-            <p className={styles.introTexto}>{intro}</p>
+            <div className={styles.introTexto}>{renderMarkdown(intro)}</div>
           </Card>
         ) : null}
 
@@ -394,13 +395,13 @@ export default function EstrategiasPage() {
                         {semana.accion && (
                           <div className={styles.semanaItem}>
                             <span className={styles.semanaItemLabel}>Qué hacer esta semana</span>
-                            <p>{semana.accion}</p>
+                            <div>{renderMarkdown(semana.accion)}</div>
                           </div>
                         )}
                         {semana.indicador && (
                           <div className={styles.semanaItem}>
                             <span className={styles.semanaItemLabel}>Cómo saber si está funcionando</span>
-                            <p>{semana.indicador}</p>
+                            <div>{renderMarkdown(semana.indicador)}</div>
                           </div>
                         )}
                         {esCompletada && estrategiaSeleccionada.checkins?.[String(semana.numero)] && (

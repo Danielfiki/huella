@@ -6,6 +6,7 @@ import { analizarEpisodio, generarAccionInmediata } from '../../services/anthrop
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
+import { renderMarkdown } from '../../utils/renderMarkdown'
 import styles from './RegistroPage.module.css'
 
 const TAXONOMIA_EMOCIONES = [
@@ -660,7 +661,7 @@ export default function RegistroPage() {
                   <div className={styles.accionSkLine} style={{ width: '75%' }} />
                 </div>
               ) : (
-                <p className={styles.accionTexto}>{accionIA}</p>
+                <div className={styles.accionTexto}>{renderMarkdown(accionIA)}</div>
               )}
             </div>
           )}

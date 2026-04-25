@@ -7,6 +7,7 @@ import { interpretarPatrones, generarConsejoDiario } from '../../services/anthro
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
+import { renderMarkdown } from '../../utils/renderMarkdown'
 import GraficoFrecuenciaSemanal from '../../modules/panel/GraficoFrecuenciaSemanal'
 import GraficoIntensidad from '../../modules/panel/GraficoIntensidad'
 import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
@@ -212,9 +213,10 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     <Card className={styles.acompCard}>
       {showFrase && (
         <>
-          <p className={loadingFrase ? styles.acompFraseCargando : styles.acompFrase}>
-            {loadingFrase ? 'Preparando tu mensaje de hoy...' : frase}
-          </p>
+          {loadingFrase
+            ? <p className={styles.acompFraseCargando}>Preparando tu mensaje de hoy...</p>
+            : <div className={styles.acompFrase}>{renderMarkdown(frase)}</div>
+          }
           <div className={styles.acompDivider} />
         </>
       )}

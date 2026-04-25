@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import CitaLoader from '../../components/ui/CitaLoader'
+import { renderMarkdown } from '../../utils/renderMarkdown'
 import styles from './HitosPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -779,7 +780,7 @@ export default function HitosPage() {
           {loadingCelebracion ? (
             <CitaLoader categoria="regulacion" compact />
           ) : (
-            <p className={styles.celebracionTexto}>{celebracion}</p>
+            <div className={styles.celebracionTexto}>{renderMarkdown(celebracion)}</div>
           )}
         </Card>
       )}

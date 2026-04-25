@@ -2,6 +2,7 @@ import React from 'react'
 import styles from './RespuestaIA.module.css'
 import { Sparkles } from 'lucide-react'
 import CitaLoader from './CitaLoader'
+import { renderInline } from '../../utils/renderMarkdown'
 
 export default function RespuestaIA({ texto, loading = false, mensajeCarga, compact = false, categoria = 'regulacion' }) {
   if (loading) {
@@ -23,18 +24,15 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
       if (line.startsWith('Marco aplicado:')) {
         return <p key={i} className={styles.marco}>{line}</p>
       }
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <h4 key={i} className={styles.titulo}>{line.replace(/\*\*/g, '')}</h4>
-      }
-      if (line.match(/^\*\*(.+)\*\*/)) {
-        const formatted = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        return <p key={i} dangerouslySetInnerHTML={{ __html: formatted }} />
+      if (line.match(/^\*\*(.+)\*\*$/) || line.match(/^#{1,3} /)) {
+        const content = line.replace(/^#{1,3} /, '').replace(/^\*\*|\*\*$/g, '')
+        return <h4 key={i} className={styles.titulo}>{content}</h4>
       }
       if (line.startsWith('- ') || line.match(/^\d+\. /)) {
-        return <li key={i} className={styles.item}>{line.replace(/^[-\d.] /, '')}</li>
+        return <li key={i} className={styles.item}>{renderInline(line.replace(/^([-\d*.]+ ?)/, ''))}</li>
       }
       if (line.trim() === '') return <br key={i} />
-      return <p key={i} className={styles.parrafo}>{line}</p>
+      return <p key={i} className={styles.parrafo}>{renderInline(line)}</p>
     })
   }
 
