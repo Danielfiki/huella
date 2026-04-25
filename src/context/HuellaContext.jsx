@@ -375,6 +375,21 @@ export function HuellaProvider({ children }) {
     await supabase.from('estrategias').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 
+  async function deleteEstrategia(id) {
+    if (!user || !supabase) return
+    dispatch({ type: 'REMOVE_ESTRATEGIA', payload: id })
+    const { error } = await supabase
+      .from('estrategias').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      const { data } = await supabase
+        .from('estrategias').select('*')
+        .in('user_id', getPartnerIds())
+        .order('fecha_inicio', { ascending: false })
+      if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
+      throw new Error(error.message)
+    }
+  }
+
   return (
     <HuellaContext.Provider value={{
       state,
@@ -388,6 +403,7 @@ export function HuellaProvider({ children }) {
       updateHitoFoto,
       addEstrategia,
       updateEstrategia,
+      deleteEstrategia,
       savePadreNombre,
     }}>
       {children}

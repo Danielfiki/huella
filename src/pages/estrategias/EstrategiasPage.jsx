@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2 } from 'lucide-react'
+import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2, Trash2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { generarEstrategia, generarTareas } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -116,7 +116,7 @@ function parsePlan(texto) {
 }
 
 export default function EstrategiasPage() {
-  const { state, addEstrategia, updateEstrategia } = useHuella()
+  const { state, addEstrategia, updateEstrategia, deleteEstrategia } = useHuella()
   const location = useLocation()
   const navigate = useNavigate()
   const initNueva = location.state?.nueva === true
@@ -132,6 +132,7 @@ export default function EstrategiasPage() {
   const [checkinVisible, setCheckinVisible] = useState(false)
   const [checkinTexto, setCheckinTexto] = useState('')
   const [loadingRegen, setLoadingRegen] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   // Derive from context so it auto-updates after updateEstrategia
   const estrategiaSeleccionada = selectedId
@@ -211,6 +212,12 @@ export default function EstrategiasPage() {
     } finally {
       setLoadingRegen(false)
     }
+  }
+
+  async function handleDeleteEstrategia(id) {
+    await deleteEstrategia(id)
+    setConfirmDeleteId(null)
+    if (selectedId === id) { setSelectedId(null); setVista('lista') }
   }
 
   async function handleAvanzarSemana() {
@@ -584,7 +591,13 @@ export default function EstrategiasPage() {
                 <span className={`${styles.semanaTag} ${e.semanaActual >= 4 ? styles.semanaTagCompletada : ''}`}>
                   {e.semanaActual >= 4 ? 'Completado' : `Semana ${e.semanaActual}/4`}
                 </span>
-                <ChevronRight size={16} color="var(--color-text-muted)" />
+                <button
+                  className={styles.deleteBtn}
+                  onClick={(ev) => { ev.stopPropagation(); setConfirmDeleteId(e.id) }}
+                  aria-label="Eliminar estrategia"
+                >
+                  <Trash2 size={15} />
+                </button>
               </div>
             </div>
             <p className={styles.estrategiaFecha}>
@@ -598,6 +611,19 @@ export default function EstrategiasPage() {
             </div>
           </Card>
         ))
+      )}
+
+      {confirmDeleteId && (
+        <div className={styles.modalOverlay} onClick={() => setConfirmDeleteId(null)}>
+          <div className={styles.modalCard} onClick={(ev) => ev.stopPropagation()}>
+            <p className={styles.modalTitulo}>¿Estás seguro?</p>
+            <p className={styles.modalTexto}>Esta estrategia y su progreso se eliminarán permanentemente.</p>
+            <div className={styles.modalBtns}>
+              <Button variant="secondary" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
+              <Button variant="danger" onClick={() => handleDeleteEstrategia(confirmDeleteId)}>Eliminar</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
