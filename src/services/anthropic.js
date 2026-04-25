@@ -192,32 +192,17 @@ Escribe exactamente 2-3 frases cálidas y concretas como consejo para hoy. Habla
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const prompt = `Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
-
-El padre/madre quiere fortalecer: **${habilidad}**
+Habilidad a fortalecer: ${habilidad}
 Contexto adicional: ${descripcion || 'ninguno'}
 
-Genera un plan de 4 semanas con este formato:
+Devuelve ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin bloque de código. Estructura exacta:
+{"porQueImporta":"2-3 frases sobre por qué esta habilidad importa en esta etapa del desarrollo, sin markdown","semanas":[{"numero":1,"titulo":"Observar y preparar","accion":"Acción concreta para esta semana, máximo 2 frases, en segunda persona al padre/madre","indicador":"Cómo saber si está funcionando, 1 frase","tareas":["tarea 1 en segunda persona, max 90 caracteres","tarea 2","tarea 3"]},{"numero":2,"titulo":"Introducir","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":3,"titulo":"Practicar","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":4,"titulo":"Consolidar","accion":"...","indicador":"...","tareas":["...","...","..."]}]}`
 
-**Por qué esta habilidad importa ahora**
-[1-2 oraciones sobre el desarrollo en esta etapa]
-
-**Semana 1 — Observar y preparar**
-- Estrategia: [acción concreta]
-- Indicador: [cómo saber que funcionó]
-
-**Semana 2 — Introducir**
-- Estrategia: [acción concreta]
-- Indicador: [cómo saber que funcionó]
-
-**Semana 3 — Practicar**
-- Estrategia: [acción concreta]
-- Indicador: [cómo saber que funcionó]
-
-**Semana 4 — Consolidar**
-- Estrategia: [acción concreta]
-- Indicador: [cómo saber que funcionó]
-
-Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
-
-  return llamarAPI(prompt, 1200)
+  const raw = await llamarAPI(prompt, 1200)
+  try {
+    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    return JSON.parse(clean)
+  } catch {
+    return raw
+  }
 }

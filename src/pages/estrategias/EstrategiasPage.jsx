@@ -48,8 +48,39 @@ const HABILIDADES = [
   { label: 'Concentrarse y calmarse',               tecnico: 'Concentración y calma',           emoji: '🧘' },
 ]
 
+function extraerTareasDePlan(planObj) {
+  if (!planObj?.semanas) return {}
+  const result = {}
+  for (const s of planObj.semanas) {
+    result[String(s.numero)] = (s.tareas || []).map((texto, i) => ({
+      id: `s${s.numero}t${i + 1}`,
+      texto,
+      completada: false,
+    }))
+  }
+  return result
+}
+
 function parsePlan(texto) {
   if (!texto) return { intro: '', semanas: [] }
+
+  // JSON format (new)
+  try {
+    const raw = typeof texto === 'string' ? JSON.parse(texto) : texto
+    if (raw?.semanas?.length) {
+      return {
+        intro: raw.porQueImporta || '',
+        semanas: raw.semanas.map((s) => ({
+          numero: s.numero,
+          titulo: s.titulo,
+          accion: s.accion,
+          indicador: s.indicador,
+        })),
+      }
+    }
+  } catch {}
+
+  // Fallback: legacy markdown parser
   const lines = texto.split('\n')
   const introLines = []
   const semanas = []
@@ -77,7 +108,7 @@ function parsePlan(texto) {
       return {
         numero: s.numero,
         titulo: s.titulo,
-        estrategia: estrategiaMatch ? estrategiaMatch[1].trim() : contenido,
+        accion: estrategiaMatch ? estrategiaMatch[1].trim() : contenido,
         indicador: indicadorMatch ? indicadorMatch[1].trim() : null,
       }
     }),
@@ -118,18 +149,16 @@ export default function EstrategiasPage() {
     try {
       const habilidadObj = HABILIDADES.find((h) => h.label === habilidad)
       const habilidadIA = habilidadObj?.tecnico ?? habilidad
-      // Generar plan y tareas en paralelo — ambos se guardan juntos en el insert inicial
-      const [texto, tareasJson] = await Promise.all([
-        generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion }),
-        generarTareas({ hijo: state.hijo, habilidad: habilidadIA, descripcion }),
-      ])
-      setPlan(texto)
+      const planObj = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
+      const planStr = typeof planObj === 'string' ? planObj : JSON.stringify(planObj)
+      const tareas = typeof planObj === 'object' ? extraerTareasDePlan(planObj) : {}
+      setPlan(planStr)
       await addEstrategia({
         id: Date.now().toString(),
         habilidad,
         descripcion,
-        plan: texto,
-        tareas: tareasJson ?? {},
+        plan: planStr,
+        tareas,
         fechaInicio: new Date().toISOString(),
         semanaActual: 1,
       })
@@ -168,13 +197,15 @@ export default function EstrategiasPage() {
     try {
       const habilidadObj = HABILIDADES.find((h) => h.label === estrategiaSeleccionada.habilidad)
       const habilidadIA = habilidadObj?.tecnico ?? estrategiaSeleccionada.habilidad
-      const texto = await generarEstrategia({
+      const planObj = await generarEstrategia({
         hijo: state.hijo,
         habilidad: habilidadIA,
         descripcion: estrategiaSeleccionada.descripcion,
       })
-      await updateEstrategia({ id: estrategiaSeleccionada.id, plan: texto })
-    } catch (e) {
+      const planStr = typeof planObj === 'string' ? planObj : JSON.stringify(planObj)
+      const tareas = typeof planObj === 'object' ? extraerTareasDePlan(planObj) : estrategiaSeleccionada.tareas
+      await updateEstrategia({ id: estrategiaSeleccionada.id, plan: planStr, tareas })
+    } catch {
       // silencioso — el usuario puede reintentar
     } finally {
       setLoadingRegen(false)
@@ -350,10 +381,10 @@ export default function EstrategiasPage() {
 
                     {!esProxima && (
                       <div className={styles.semanaContenido}>
-                        {semana.estrategia && (
+                        {semana.accion && (
                           <div className={styles.semanaItem}>
                             <span className={styles.semanaItemLabel}>Qué hacer esta semana</span>
-                            <p>{semana.estrategia}</p>
+                            <p>{semana.accion}</p>
                           </div>
                         )}
                         {semana.indicador && (
