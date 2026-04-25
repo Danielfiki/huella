@@ -48,8 +48,8 @@ export default function InvitarPage() {
       const { data, error } = await supabase.rpc('accept_partner_invitation', { p_token: token })
       if (error) throw new Error(error.message)
       if (!data?.success) throw new Error(data?.error ?? 'No se pudo aceptar')
-      await refreshFamily()
-      reloadData()
+      const newFamily = await refreshFamily()
+      reloadData(newFamily)
       setStatus('done')
       setTimeout(() => navigate('/panel'), 2000)
     } catch (e) {

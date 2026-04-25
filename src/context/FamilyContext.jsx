@@ -23,6 +23,7 @@ export function FamilyProvider({ children }) {
 
   async function loadFamilyData() {
     setFamilyLoading(true)
+    let newFamily = null
     try {
       const [partnerRes, invitationRes] = await Promise.all([
         supabase.rpc('get_partner_info'),
@@ -35,11 +36,12 @@ export function FamilyProvider({ children }) {
       ])
 
       if (partnerRes.data?.hasFamily) {
-        setFamily({
+        newFamily = {
           familyId: partnerRes.data.familyId,
           role: partnerRes.data.role,
           partner: partnerRes.data.partner ?? null,
-        })
+        }
+        setFamily(newFamily)
       } else {
         setFamily(null)
       }
@@ -59,6 +61,7 @@ export function FamilyProvider({ children }) {
     } finally {
       setFamilyLoading(false)
     }
+    return newFamily
   }
 
   async function invitePartner(email) {

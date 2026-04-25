@@ -181,8 +181,8 @@ export function HuellaProvider({ children }) {
     }
   }
 
-  function reloadData() {
-    if (user) loadUserData(user.id, family)
+  function reloadData(overrideFamily) {
+    if (user) loadUserData(user.id, overrideFamily !== undefined ? overrideFamily : family)
   }
 
   // Helper: IDs para refetch tras mutaciones (propio + pareja si existe)
