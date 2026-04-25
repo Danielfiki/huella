@@ -125,12 +125,12 @@ export function HuellaProvider({ children }) {
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // Hijos: por family_id cuando está disponible (hijo canónico compartido);
-      // por user_id solo cuando aún no hay familia. Sin fallback: accept_partner_invitation
-      // garantiza que el hijo del owner tiene family_id seteado antes de que el
-      // partner pueda llegar aquí.
+      // Hijos: cuando hay familia, traer el propio hijo Y cualquier hijo de la familia
+      // (ambos padres pueden tener sus hijos con el mismo family_id). Se prefiere
+      // el hijo propio del usuario; si solo el otro padre registró hijo, se usa ese.
       const hijosQuery = currentFamily?.familyId
-        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId).maybeSingle()
+        ? supabase.from('hijos').select('*')
+            .or(`user_id.eq.${userId},family_id.eq.${currentFamily.familyId}`)
         : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
 
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
@@ -153,19 +153,21 @@ export function HuellaProvider({ children }) {
           .maybeSingle(),
       ])
 
+      // When queried with .or(), data is an array; pick own row first, else partner's
+      const hijoRow = currentFamily?.familyId
+        ? ((hijosRes.data ?? []).find(r => r.user_id === userId) ?? (hijosRes.data ?? [])[0] ?? null)
+        : hijosRes.data
+
       dispatch({
         type: 'LOAD_STATE',
         payload: {
-          hijo: hijosRes.data ? (() => {
-            const row = hijosRes.data
-            return {
-              nombre:          row.nombre,
-              edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
-              avatarUrl:       row.avatar_url ?? null,
-              fechaNacimiento: row.fecha_nacimiento ?? null,
-              genero:          row.genero ?? null,
-            }
-          })() : null,
+          hijo: hijoRow ? {
+            nombre:          hijoRow.nombre,
+            edad:            calcularEdad(hijoRow.fecha_nacimiento) ?? hijoRow.edad ?? null,
+            avatarUrl:       hijoRow.avatar_url ?? null,
+            fechaNacimiento: hijoRow.fecha_nacimiento ?? null,
+            genero:          hijoRow.genero ?? null,
+          } : null,
           episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
           hitos: hitosRes.data ?? [],
           estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
@@ -177,6 +179,10 @@ export function HuellaProvider({ children }) {
     } finally {
       setDataLoading(false)
     }
+  }
+
+  function reloadData() {
+    if (user) loadUserData(user.id, family)
   }
 
   // Helper: IDs para refetch tras mutaciones (propio + pareja si existe)
@@ -204,16 +210,19 @@ export function HuellaProvider({ children }) {
     }
     // Refetch desde DB para sincronizar edad calculada y evitar campos perdidos
     const refetch = family?.familyId
-      ? await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
+      ? await supabase.from('hijos').select('*')
+          .or(`user_id.eq.${user.id},family_id.eq.${family.familyId}`)
       : await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
-    if (refetch.data) {
-      const row = refetch.data
+    const hijoRow = family?.familyId
+      ? ((refetch.data ?? []).find(r => r.user_id === user.id) ?? (refetch.data ?? [])[0] ?? null)
+      : refetch.data
+    if (hijoRow) {
       dispatch({ type: 'SET_HIJO', payload: {
-        nombre:          row.nombre,
-        edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
-        avatarUrl:       row.avatar_url ?? null,
-        fechaNacimiento: row.fecha_nacimiento ?? null,
-        genero:          row.genero ?? null,
+        nombre:          hijoRow.nombre,
+        edad:            calcularEdad(hijoRow.fecha_nacimiento) ?? hijoRow.edad ?? null,
+        avatarUrl:       hijoRow.avatar_url ?? null,
+        fechaNacimiento: hijoRow.fecha_nacimiento ?? null,
+        genero:          hijoRow.genero ?? null,
       }})
     }
   }
@@ -372,6 +381,7 @@ export function HuellaProvider({ children }) {
       state,
       dispatch,
       dataLoading,
+      reloadData,
       setHijo,
       addEpisodio,
       updateEpisodio,

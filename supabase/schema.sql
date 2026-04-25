@@ -87,13 +87,24 @@ alter table public.api_llamadas        enable row level security;
 alter table public.push_subscriptions  enable row level security;
 
 -- Eliminar políticas previas para evitar conflictos al re-ejecutar
-drop policy if exists "own_data" on public.hijos;
+drop policy if exists "own_data"       on public.hijos;
+drop policy if exists "family_read"    on public.hijos;
 drop policy if exists "own_data" on public.episodios;
 drop policy if exists "own_data" on public.hitos;
 drop policy if exists "own_data" on public.estrategias;
 
+-- Propietario puede hacer todo sobre su hijo
 create policy "own_data" on public.hijos
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Partner puede leer el hijo canónico de la familia (user_id pertenece al owner,
+-- pero ambos comparten family_id; sin esta policy el SELECT retorna vacío para el partner)
+create policy "family_read" on public.hijos
+  for select using (
+    family_id in (
+      select family_id from public.family_members where user_id = auth.uid()
+    )
+  );
 
 create policy "own_data" on public.episodios
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -217,12 +228,13 @@ create table if not exists public.partner_invitations (
   expires_at    timestamptz default (now() + interval '7 days')
 );
 
--- Columna family_id en hijos (hijo canónico de la familia)
+-- Columna family_id en hijos
 alter table public.hijos add column if not exists
   family_id uuid references public.families(id) on delete set null;
 
-create unique index if not exists hijos_family_id_unique
-  on public.hijos(family_id) where family_id is not null;
+-- Índice no-único: una familia puede tener hijos registrados por ambos padres
+drop index if exists hijos_family_id_unique;
+create index if not exists hijos_family_id_idx on public.hijos(family_id);
 
 -- ── RLS tablas nuevas ─────────────────────────────────────────
 
@@ -413,9 +425,9 @@ begin
   where user_id = v_inv.inviter_id
     and family_id is null;
 
-  -- Eliminar el hijo propio del partner (si existe sin family_id)
-  -- para que no interfiera con la query canónica por family_id.
-  delete from public.hijos
+  -- Vincular los hijos del partner a la familia
+  update public.hijos
+  set family_id = v_inv.family_id
   where user_id = auth.uid()
     and family_id is null;
 

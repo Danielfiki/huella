@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useFamily } from '../../context/FamilyContext'
+import { useHuella } from '../../context/HuellaContext'
 import styles from './InvitarPage.module.css'
 
 export default function InvitarPage() {
@@ -11,6 +12,7 @@ export default function InvitarPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { refreshFamily } = useFamily()
+  const { reloadData } = useHuella()
 
   const [status, setStatus] = useState('loading')    // loading | invalid | ready | accepting | done | error
   const [invitation, setInvitation] = useState(null) // { inviterEmail, inviteeEmail, expiresAt }
@@ -47,6 +49,7 @@ export default function InvitarPage() {
       if (error) throw new Error(error.message)
       if (!data?.success) throw new Error(data?.error ?? 'No se pudo aceptar')
       await refreshFamily()
+      reloadData()
       setStatus('done')
       setTimeout(() => navigate('/panel'), 2000)
     } catch (e) {
