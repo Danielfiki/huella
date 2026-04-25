@@ -437,7 +437,7 @@ export default function PanelPage() {
       ) : (
         <>
           {/* ── Consejo diario ── */}
-          <ConsejoDiario user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
+          <AcompañamientoCard user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
 
           {/* ── Resumen emocional ── */}
           <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
