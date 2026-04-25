@@ -127,10 +127,9 @@ export function HuellaProvider({ children }) {
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      const hijosQuery = currentFamily?.familyId
-        ? supabase.from('hijos').select('*')
-            .or(`user_id.eq.${userId},family_id.eq.${currentFamily.familyId}`)
-        : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
+      // RLS returns own hijo (own_data) + family hijo (family_read) automatically.
+      // No explicit family_id filter needed — avoids dependency on currentFamily timing.
+      const hijosQuery = supabase.from('hijos').select('*')
 
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
         hijosQuery,
@@ -154,10 +153,10 @@ export function HuellaProvider({ children }) {
 
       console.log('[HuellaContext] hijosRes', { data: hijosRes.data, error: hijosRes.error })
 
-      // When queried with .or(), data is an array; pick own row first, else partner's
-      const hijoRow = currentFamily?.familyId
-        ? ((hijosRes.data ?? []).find(r => r.user_id === userId) ?? (hijosRes.data ?? [])[0] ?? null)
-        : hijosRes.data
+      // Prefer own hijo; fall back to any family hijo returned by RLS
+      const hijoRow = (hijosRes.data ?? []).find(r => r.user_id === userId)
+        ?? (hijosRes.data ?? [])[0]
+        ?? null
 
       console.log('[HuellaContext] hijoRow seleccionado', hijoRow)
 
@@ -212,14 +211,11 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
-    // Refetch desde DB para sincronizar edad calculada y evitar campos perdidos
-    const refetch = family?.familyId
-      ? await supabase.from('hijos').select('*')
-          .or(`user_id.eq.${user.id},family_id.eq.${family.familyId}`)
-      : await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
-    const hijoRow = family?.familyId
-      ? ((refetch.data ?? []).find(r => r.user_id === user.id) ?? (refetch.data ?? [])[0] ?? null)
-      : refetch.data
+    // Refetch desde DB — RLS devuelve hijo propio + hijo de familia automáticamente
+    const refetch = await supabase.from('hijos').select('*')
+    const hijoRow = (refetch.data ?? []).find(r => r.user_id === user.id)
+      ?? (refetch.data ?? [])[0]
+      ?? null
     if (hijoRow) {
       dispatch({ type: 'SET_HIJO', payload: {
         nombre:          hijoRow.nombre,
