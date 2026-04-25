@@ -121,37 +121,20 @@ export function HuellaProvider({ children }) {
   async function loadUserData(userId, currentFamily) {
     setDataLoading(true)
     try {
-      // IDs a consultar: propio + pareja (si existe)
       const partnerIds = currentFamily?.partner?.id
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // Para hijos: primero intenta por family_id (hijo canónico compartido);
-      // si no hay resultado (p.ej. family_id aún no propagado), cae a user_id
-      let hijosRes
-      if (currentFamily?.familyId) {
-        hijosRes = await supabase
-          .from('hijos').select('*')
-          .eq('family_id', currentFamily.familyId)
-          .maybeSingle()
-        if (!hijosRes.data) {
-          // Fallback: puede que la columna family_id aún no esté seteada en la fila existente
-          hijosRes = await supabase
-            .from('hijos').select('*')
-            .eq('user_id', userId)
-            .maybeSingle()
-        }
-      } else {
-        hijosRes = await supabase
-          .from('hijos').select('*')
-          .eq('user_id', userId)
-          .maybeSingle()
-      }
+      // Hijos: por family_id cuando está disponible (hijo canónico compartido);
+      // por user_id solo cuando aún no hay familia. Sin fallback: accept_partner_invitation
+      // garantiza que el hijo del owner tiene family_id seteado antes de que el
+      // partner pueda llegar aquí.
+      const hijosQuery = currentFamily?.familyId
+        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId).maybeSingle()
+        : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
 
-      // Para episodios/hitos/estrategias: filtro explícito por ambos user_ids.
-      // La RLS sigue aplicando como capa de seguridad, pero no dependemos de ella
-      // como único mecanismo de filtrado.
-      const [episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
+      const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
+        hijosQuery,
         supabase.from('episodios')
           .select('*')
           .in('user_id', partnerIds)
@@ -220,15 +203,9 @@ export function HuellaProvider({ children }) {
       throw new Error(error.message)
     }
     // Refetch desde DB para sincronizar edad calculada y evitar campos perdidos
-    let refetch
-    if (family?.familyId) {
-      refetch = await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
-      if (!refetch.data) {
-        refetch = await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
-      }
-    } else {
-      refetch = await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
-    }
+    const refetch = family?.familyId
+      ? await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
+      : await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
     if (refetch.data) {
       const row = refetch.data
       dispatch({ type: 'SET_HIJO', payload: {

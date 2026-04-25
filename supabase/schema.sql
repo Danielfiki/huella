@@ -405,6 +405,20 @@ begin
     return jsonb_build_object('success', false, 'error', 'Ya perteneces a una familia');
   end if;
 
+  -- Vincular el hijo canónico del owner a esta familia si aún no lo está.
+  -- Cubre el caso en que el owner creó su hijo antes o después de crear
+  -- la familia y create_family_and_invite no alcanzó a enlazarlo.
+  update public.hijos
+  set family_id = v_inv.family_id
+  where user_id = v_inv.inviter_id
+    and family_id is null;
+
+  -- Eliminar el hijo propio del partner (si existe sin family_id)
+  -- para que no interfiera con la query canónica por family_id.
+  delete from public.hijos
+  where user_id = auth.uid()
+    and family_id is null;
+
   insert into public.family_members (family_id, user_id, role)
   values (v_inv.family_id, auth.uid(), 'partner')
   on conflict do nothing;
