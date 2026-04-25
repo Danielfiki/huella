@@ -152,8 +152,7 @@ export default function EstrategiasPage() {
       const planObj = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
       const planStr = typeof planObj === 'string' ? planObj : JSON.stringify(planObj)
       const tareas = typeof planObj === 'object' ? extraerTareasDePlan(planObj) : {}
-      setPlan(planStr)
-      await addEstrategia({
+      const realId = await addEstrategia({
         id: Date.now().toString(),
         habilidad,
         descripcion,
@@ -162,6 +161,8 @@ export default function EstrategiasPage() {
         fechaInicio: new Date().toISOString(),
         semanaActual: 1,
       })
+      setSelectedId(realId)
+      setVista('detalle')
     } catch (e) {
       setPlan('Error al generar el plan: ' + e.message)
     } finally {
@@ -295,13 +296,15 @@ export default function EstrategiasPage() {
           Generar plan de 4 semanas
         </Button>
 
-        {(plan || loadingPlan) && (
+        {loadingPlan && (
           <RespuestaIA
-            texto={plan}
-            loading={loadingPlan}
+            loading={true}
             mensajeCarga="Diseñando tu plan de 4 semanas..."
             categoria="estrategia"
           />
+        )}
+        {plan && plan.startsWith('Error') && (
+          <p className={styles.regenTexto}>{plan}</p>
         )}
       </div>
     )
@@ -443,7 +446,17 @@ export default function EstrategiasPage() {
                   </div>
                 )
               })
-            : <RespuestaIA texto={estrategiaSeleccionada.plan} />
+            : (
+              <Card className={styles.regenCard}>
+                <p className={styles.regenTexto}>
+                  Este plan fue generado con una versión anterior de Huella y ya no es compatible.
+                  Puedes regenerarlo ahora — tarda unos segundos.
+                </p>
+                <Button variant="primary" fullWidth onClick={handleRegenerarPlan} loading={loadingRegen}>
+                  Regenerar plan
+                </Button>
+              </Card>
+            )
           }
         </div>
 
