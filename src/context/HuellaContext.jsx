@@ -110,24 +110,23 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'LOAD_STATE', payload: initialState })
       return
     }
-    // Esperar a que FamilyContext termine; family puede ser null (sin pareja) o un objeto
-    if (familyLoading) return
-    // Pasar family explícitamente para evitar el bug de closure cuando React
-    // ejecuta este efecto antes de que FamilyProvider haya terminado su propio efecto
+    if (familyLoading) {
+      console.log('[HuellaContext] useEffect: esperando familyLoading...')
+      return
+    }
+    console.log('[HuellaContext] useEffect: disparando loadUserData', { familyId: family?.familyId, partnerId: family?.partner?.id })
     loadUserData(user.id, family)
   }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
   // currentFamily se pasa explícitamente — no usar la variable `family` del closure
   async function loadUserData(userId, currentFamily) {
+    console.log('[HuellaContext] loadUserData START', { userId, familyId: currentFamily?.familyId })
     setDataLoading(true)
     try {
       const partnerIds = currentFamily?.partner?.id
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // Hijos: cuando hay familia, traer el propio hijo Y cualquier hijo de la familia
-      // (ambos padres pueden tener sus hijos con el mismo family_id). Se prefiere
-      // el hijo propio del usuario; si solo el otro padre registró hijo, se usa ese.
       const hijosQuery = currentFamily?.familyId
         ? supabase.from('hijos').select('*')
             .or(`user_id.eq.${userId},family_id.eq.${currentFamily.familyId}`)
@@ -153,10 +152,14 @@ export function HuellaProvider({ children }) {
           .maybeSingle(),
       ])
 
+      console.log('[HuellaContext] hijosRes', { data: hijosRes.data, error: hijosRes.error })
+
       // When queried with .or(), data is an array; pick own row first, else partner's
       const hijoRow = currentFamily?.familyId
         ? ((hijosRes.data ?? []).find(r => r.user_id === userId) ?? (hijosRes.data ?? [])[0] ?? null)
         : hijosRes.data
+
+      console.log('[HuellaContext] hijoRow seleccionado', hijoRow)
 
       dispatch({
         type: 'LOAD_STATE',
@@ -175,13 +178,14 @@ export function HuellaProvider({ children }) {
         },
       })
     } catch (e) {
-      console.error('Error cargando datos del usuario:', e)
+      console.error('[HuellaContext] Error cargando datos:', e)
     } finally {
       setDataLoading(false)
     }
   }
 
   function reloadData(overrideFamily) {
+    console.log('[HuellaContext] reloadData llamado', { overrideFamily, currentFamily: family })
     if (user) loadUserData(user.id, overrideFamily !== undefined ? overrideFamily : family)
   }
 
