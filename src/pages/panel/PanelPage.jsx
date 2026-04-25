@@ -426,8 +426,8 @@ export default function PanelPage() {
         </div>
       </div>
 
-      {/* ── Presencia semanal ── */}
-      <PresenciaSemanal user={user} />
+      {/* ── Acompañamiento: presencia semanal + frase diaria ── */}
+      <AcompañamientoCard user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
 
       {episodios.length === 0 ? (
 
@@ -436,8 +436,6 @@ export default function PanelPage() {
 
       ) : (
         <>
-          {/* ── Consejo diario ── */}
-          <AcompañamientoCard user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
 
           {/* ── Resumen emocional ── */}
           <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
