@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, TrendingUp, ChevronRight, Lightbulb } from 'lucide-react'
+import { Plus, TrendingUp, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
 import { interpretarPatrones, generarConsejoDiario } from '../../services/anthropic'
@@ -148,106 +148,92 @@ function EstrategiaActivaPanel({ estrategia, onAbrir }) {
   )
 }
 
-function ConsejoDiario({ user, hijo, episodios, hitos, estrategias }) {
-  const [consejo, setConsejo] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!user?.id) return
-    const hasData = episodios.length >= 2 || hitos.length >= 1
-    if (!hasData) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const key = `huella_consejo_${user.id}_${today}`
-    try {
-      const cached = localStorage.getItem(key)
-      if (cached) { setConsejo(cached); return }
-    } catch {}
-
-    setLoading(true)
-    generarConsejoDiario({ hijo, episodios, hitos, estrategias })
-      .then((text) => {
-        setConsejo(text)
-        try { localStorage.setItem(key, text) } catch {}
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!loading && !consejo) return null
-
-  return (
-    <Card className={styles.consejoCard}>
-      <div className={styles.consejoHeader}>
-        <Lightbulb size={15} className={styles.consejoIcon} />
-        <span className={styles.consejoLabel}>Consejo del día</span>
-      </div>
-      {loading
-        ? <p className={styles.consejoTexto} style={{ color: 'var(--color-text-light)', fontStyle: 'italic' }}>Preparando tu consejo...</p>
-        : <p className={styles.consejoTexto}>{consejo}</p>
-      }
-    </Card>
-  )
-}
-
-function PresenciaSemanal({ user }) {
+function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
+  const [frase, setFrase] = useState(null)
+  const [loadingFrase, setLoadingFrase] = useState(false)
   const [diasVisitados, setDiasVisitados] = useState([])
 
   useEffect(() => {
     if (!user?.id) return
-    const key = `huella_presencia_${user.id}`
+
     const today = new Date().toISOString().split('T')[0]
+
+    // Track presence
+    const presenciaKey = `huella_presencia_${user.id}`
     try {
-      const stored = JSON.parse(localStorage.getItem(key) || '[]')
+      const stored = JSON.parse(localStorage.getItem(presenciaKey) || '[]')
       const updated = stored.includes(today) ? stored : [...stored, today]
-      localStorage.setItem(key, JSON.stringify(updated))
+      localStorage.setItem(presenciaKey, JSON.stringify(updated))
       setDiasVisitados(updated)
     } catch {}
-  }, [user?.id])
 
+    // Fetch daily frase if enough data
+    const hasData = episodios.length >= 2 || hitos.length >= 1
+    if (!hasData) return
+
+    const fraseKey = `huella_consejo_${user.id}_${today}`
+    try {
+      const cached = localStorage.getItem(fraseKey)
+      if (cached) { setFrase(cached); return }
+    } catch {}
+
+    setLoadingFrase(true)
+    generarConsejoDiario({ hijo, episodios, hitos, estrategias })
+      .then((text) => {
+        setFrase(text)
+        try { localStorage.setItem(fraseKey, text) } catch {}
+      })
+      .catch(() => {})
+      .finally(() => setLoadingFrase(false))
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Week Mon–Sun
   const now = new Date()
   const monday = new Date(now)
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
   monday.setHours(0, 0, 0, 0)
-
-  const DIAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
   const today = now.toISOString().split('T')[0]
-  const semana = DIAS.map((label, i) => {
+  const semana = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
     const iso = d.toISOString().split('T')[0]
-    return { label, iso, visited: diasVisitados.includes(iso), isToday: iso === today }
+    return { iso, visited: diasVisitados.includes(iso), isToday: iso === today }
   })
 
   const count = semana.filter((d) => d.visited).length
-  const mensaje = count === 7
-    ? '¡Semana completa! 🌟'
-    : count >= 5
-    ? `${count} de 7 días — ¡increíble constancia! 🌿`
-    : count >= 3
-    ? `${count} días esta semana, ¡vas muy bien!`
-    : count === 1
-    ? 'Estás aquí hoy — eso ya cuenta 💛'
-    : `${count} días esta semana`
+  const nombre = hijo?.nombre || 'tu hijo/a'
+  const presenciaTexto = count === 1
+    ? `Esta semana acompañaste a ${nombre} 1 vez`
+    : `Esta semana acompañaste a ${nombre} ${count} veces`
+
+  const showFrase = frase || loadingFrase
 
   return (
-    <div className={styles.presenciaWrap}>
-      <div className={styles.presenciaCirculos}>
-        {semana.map(({ label, visited, isToday }) => (
-          <div
-            key={label}
-            className={[
-              styles.presenciaCirculo,
-              visited ? styles.presenciaVisitado : '',
-              isToday && !visited ? styles.presenciaHoy : '',
-            ].filter(Boolean).join(' ')}
-          >
-            <span className={styles.presenciaLabel}>{label}</span>
-          </div>
-        ))}
+    <Card className={styles.acompCard}>
+      {showFrase && (
+        <>
+          <p className={loadingFrase ? styles.acompFraseCargando : styles.acompFrase}>
+            {loadingFrase ? 'Preparando tu mensaje de hoy...' : frase}
+          </p>
+          <div className={styles.acompDivider} />
+        </>
+      )}
+      <div className={styles.acompPresencia}>
+        <p className={styles.acompPresenciaTexto}>{presenciaTexto}</p>
+        <div className={styles.acompDots}>
+          {semana.map(({ iso, visited, isToday }) => (
+            <div
+              key={iso}
+              className={[
+                styles.acompDot,
+                visited ? styles.acompDotVisitado : '',
+                isToday && !visited ? styles.acompDotHoy : '',
+              ].filter(Boolean).join(' ')}
+            />
+          ))}
+        </div>
       </div>
-      <p className={styles.presenciaMensaje}>{mensaje}</p>
-    </div>
+    </Card>
   )
 }
 
