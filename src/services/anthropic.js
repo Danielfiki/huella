@@ -177,14 +177,32 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
   const estrategiaActiva = (estrategias || []).find((e) => e.semanaActual < 4)
 
   const resumenEp = semanaEp.length > 0
-    ? semanaEp.map((e) => `- ${e.tipo} (intensidad ${e.intensidad}/5)${e.contexto ? ': ' + e.contexto.slice(0, 80) : ''}`).join('\n')
+    ? semanaEp.map((e) => {
+        let line = `- ${e.tipo}, intensidad ${e.intensidad}/5`
+        if (e.gatillantes?.length) line += `, gatillantes: ${e.gatillantes.join(', ')}`
+        if (e.emocion) line += `, emoción del niño: ${e.emocion}`
+        if (e.estadoPadre) line += `, estado del padre/madre: ${e.estadoPadre}`
+        if (e.contexto) line += ` | contexto: ${e.contexto.slice(0, 80)}`
+        return line
+      }).join('\n')
     : 'Sin episodios esta semana.'
 
-  const prompt = `Contexto: ${hijo?.nombre || 'hijo/a'} de ${hijo?.edad || '?'} años. ${resumenEp}${estrategiaActiva ? ` Estrategia activa: ${estrategiaActiva.habilidad}.` : ''}
+  const gatillanteCounts = {}
+  for (const e of semanaEp) for (const g of e.gatillantes || []) gatillanteCounts[g] = (gatillanteCounts[g] || 0) + 1
+  const topGatillante = Object.entries(gatillanteCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const avgIntensidad = semanaEp.length > 0
+    ? (semanaEp.reduce((s, e) => s + (e.intensidad || 0), 0) / semanaEp.length).toFixed(1)
+    : null
 
-INSTRUCCIÓN: Escribe UN consejo para hoy. Máximo 2 oraciones cortas. Máximo 30 palabras en total. Cálido, concreto, accionable. Segunda persona. Cero markdown, cero listas, cero disclaimer.`
+  const prompt = `Niño/a: ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años.
 
-  return llamarAPI(prompt, 80)
+Episodios esta semana (${semanaEp.length}):
+${resumenEp}
+${avgIntensidad ? `Intensidad promedio: ${avgIntensidad}/5.` : ''}${topGatillante ? ` Gatillante más frecuente: "${topGatillante}".` : ''}${hitosCount > 0 ? ` Avances positivos esta semana: ${hitosCount}.` : ''}${estrategiaActiva ? ` Estrategia activa: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4).` : ''}
+
+INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy. Debes mencionar algo específico de los datos anteriores (un gatillante concreto, un patrón de intensidad, una emoción específica). Nada genérico. Si hay un patrón claro, nómbralo y da una acción concreta. Tono cálido, segunda persona, sin markdown, sin listas, sin disclaimer.`
+
+  return llamarAPI(prompt, 150)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
