@@ -154,6 +154,7 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
   const [loadingFrase, setLoadingFrase] = useState(false)
   const [diasVisitados, setDiasVisitados] = useState([])
   const [mostrarFrase, setMostrarFrase] = useState(false)
+  const [expandido, setExpandido] = useState(false)
 
   useEffect(() => {
     if (!user?.id) return
@@ -229,10 +230,28 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     <Card className={styles.acompCard}>
       {showFrase && (
         <>
-          {loadingFrase
-            ? <p className={styles.acompFraseCargando}>Preparando tu mensaje de hoy...</p>
-            : <div className={styles.acompFrase}>{renderMarkdown(frase)}</div>
-          }
+          <button
+            className={styles.consejoToggle}
+            onClick={() => setExpandido((v) => !v)}
+            aria-expanded={expandido}
+          >
+            <span className={styles.consejoToggleLeft}>
+              <span className={styles.consejoToggleIcon}>💡</span>
+              <span className={styles.consejoToggleLabel}>Tu consejo de hoy</span>
+            </span>
+            <ChevronRight
+              size={16}
+              className={[styles.consejoChevron, expandido ? styles.consejoChevronOpen : ''].filter(Boolean).join(' ')}
+            />
+          </button>
+          {expandido && (
+            <div className={styles.consejoBody}>
+              {loadingFrase
+                ? <p className={styles.acompFraseCargando}>Preparando tu mensaje de hoy...</p>
+                : <div className={styles.consejoTexto}>{renderMarkdown(frase)}</div>
+              }
+            </div>
+          )}
           <div className={styles.acompDivider} />
         </>
       )}
