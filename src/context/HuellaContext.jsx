@@ -121,11 +121,9 @@ export function HuellaProvider({ children }) {
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // Both owner and partner query by family_id — they share one row.
-      // No family yet: query by user_id (pre-invite state).
-      const hijosQuery = currentFamily?.familyId
-        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId).maybeSingle()
-        : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
+      // No filter — hijos_select RLS returns exactly the row this user can see:
+      // owner via (user_id = auth.uid()), partner via (family_id in family_members)
+      const hijosQuery = supabase.from('hijos').select('*').maybeSingle()
 
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
         hijosQuery,
@@ -190,10 +188,7 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
-    // Refetch: same query as loadUserData — family_id when in a family, user_id otherwise
-    const { data: hijoRow } = family?.familyId
-      ? await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
-      : await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
+    const { data: hijoRow } = await supabase.from('hijos').select('*').maybeSingle()
     if (hijoRow) {
       dispatch({ type: 'SET_HIJO', payload: {
         nombre:          hijoRow.nombre,

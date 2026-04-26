@@ -25,38 +25,36 @@ export function FamilyProvider({ children }) {
     setFamilyLoading(true)
     let newFamily = null
     try {
-      const [partnerRes, invitationRes, memberRes] = await Promise.all([
-        supabase.rpc('get_partner_info'),
+      // Round 1: own membership + pending invitation (parallel)
+      const [{ data: membership, error: memberError }, invitationRes] = await Promise.all([
+        supabase
+          .from('family_members')
+          .select('family_id, role')
+          .eq('user_id', user.id)
+          .maybeSingle(),
         supabase
           .from('partner_invitations')
           .select('id, invitee_email, token, created_at')
           .eq('inviter_id', user.id)
           .eq('status', 'pending')
           .maybeSingle(),
-        // Direct fallback: family_members_own RLS allows user to always read their own row
-        supabase
-          .from('family_members')
-          .select('family_id, role')
-          .eq('user_id', user.id)
-          .maybeSingle(),
       ])
 
-      if (partnerRes.error) console.error('get_partner_info error:', partnerRes.error)
+      if (memberError) console.error('family_members error:', memberError)
 
-      if (partnerRes.data?.hasFamily) {
-        // RPC returned full data including partner email
+      if (membership?.family_id) {
+        // Round 2: find the other member in this family
+        const { data: partnerMember } = await supabase
+          .from('family_members')
+          .select('user_id')
+          .eq('family_id', membership.family_id)
+          .neq('user_id', user.id)
+          .maybeSingle()
+
         newFamily = {
-          familyId: partnerRes.data.familyId,
-          role: partnerRes.data.role,
-          partner: partnerRes.data.partner ?? null,
-        }
-      } else if (memberRes.data?.family_id) {
-        // RPC failed or returned hasFamily:false despite user being in family_members.
-        // Use direct membership row; partner email unavailable but family_id is correct.
-        newFamily = {
-          familyId: memberRes.data.family_id,
-          role: memberRes.data.role,
-          partner: null,
+          familyId: membership.family_id,
+          role: membership.role,
+          partner: partnerMember?.user_id ? { id: partnerMember.user_id } : null,
         }
       }
 
