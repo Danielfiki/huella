@@ -185,9 +185,9 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
 Esta semana anoté:
 ${resumenEp}${hitosCount > 0 ? `\n\nAvances positivos registrados esta semana: ${hitosCount}` : ''}${estrategiaActiva ? `\n\nEstoy trabajando la estrategia: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4)` : ''}
 
-Escribe exactamente 2-3 frases cálidas y concretas como consejo para hoy. Habla en segunda persona al padre/madre. Basa el consejo en los datos reales que te di. Reconoce el esfuerzo de registrar. Sin listas, sin títulos, sin markdown, sin disclaimer clínico.`
+Escribe exactamente 2 frases como consejo para hoy. Máximo 2 líneas en total. Tono cálido, consejo accionable y concreto basado en los datos reales. Segunda persona al padre/madre. Sin listas, sin títulos, sin markdown, sin disclaimer.`
 
-  return llamarAPI(prompt, 200)
+  return llamarAPI(prompt, 120)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {

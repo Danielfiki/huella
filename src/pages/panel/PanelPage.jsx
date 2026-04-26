@@ -153,6 +153,7 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
   const [frase, setFrase] = useState(null)
   const [loadingFrase, setLoadingFrase] = useState(false)
   const [diasVisitados, setDiasVisitados] = useState([])
+  const [mostrarFrase, setMostrarFrase] = useState(false)
 
   useEffect(() => {
     if (!user?.id) return
@@ -168,6 +169,12 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
       setDiasVisitados(updated)
     } catch {}
 
+    // Only show once per day
+    const vistoKey = `huella_consejo_visto_${user.id}_${today}`
+    try {
+      if (localStorage.getItem(vistoKey)) return
+    } catch {}
+
     // Fetch daily frase if enough data
     const hasData = episodios.length >= 2 || hitos.length >= 1
     if (!hasData) return
@@ -175,14 +182,23 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     const fraseKey = `huella_consejo_${user.id}_${today}`
     try {
       const cached = localStorage.getItem(fraseKey)
-      if (cached) { setFrase(cached); return }
+      if (cached) {
+        setFrase(cached)
+        setMostrarFrase(true)
+        localStorage.setItem(vistoKey, '1')
+        return
+      }
     } catch {}
 
+    setMostrarFrase(true)
     setLoadingFrase(true)
     generarConsejoDiario({ hijo, episodios, hitos, estrategias })
       .then((text) => {
         setFrase(text)
-        try { localStorage.setItem(fraseKey, text) } catch {}
+        try {
+          localStorage.setItem(fraseKey, text)
+          localStorage.setItem(vistoKey, '1')
+        } catch {}
       })
       .catch(() => {})
       .finally(() => setLoadingFrase(false))
@@ -207,7 +223,7 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     ? `Esta semana acompañaste a ${nombre} 1 vez`
     : `Esta semana acompañaste a ${nombre} ${count} veces`
 
-  const showFrase = frase || loadingFrase
+  const showFrase = mostrarFrase && (frase || loadingFrase)
 
   return (
     <Card className={styles.acompCard}>
