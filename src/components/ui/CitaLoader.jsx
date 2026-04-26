@@ -19,7 +19,7 @@ export default function CitaLoader({ categoria = 'general', compact = false }) {
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    const duration = Math.min(Math.max(frase.texto.length * 40, 3000), 6000)
+    const duration = Math.min(Math.max(frase.texto.length * 40, 4500), 7500)
     let swapTimer
 
     const displayTimer = setTimeout(() => {
