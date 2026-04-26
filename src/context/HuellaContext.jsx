@@ -110,59 +110,36 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'LOAD_STATE', payload: initialState })
       return
     }
-    if (familyLoading) {
-      console.log('[HuellaContext] useEffect: esperando familyLoading...')
-      return
-    }
-    console.log('[HuellaContext] useEffect: disparando loadUserData', { familyId: family?.familyId, partnerId: family?.partner?.id })
+    if (familyLoading) return
     loadUserData(user.id, family)
   }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
-  // currentFamily se pasa explícitamente — no usar la variable `family` del closure
   async function loadUserData(userId, currentFamily) {
-    console.log('[HuellaContext] loadUserData START', { userId, familyId: currentFamily?.familyId })
     setDataLoading(true)
     try {
       const partnerIds = currentFamily?.partner?.id
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // partner has no own hijo — must find the owner's hijo via family_id
-      // owner always has user_id on their row — query directly
-      const isPartner = currentFamily?.role === 'partner' && currentFamily?.familyId
-      const hijosQuery = isPartner
-        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId)
+      // Both owner and partner query by family_id — they share one row.
+      // No family yet: query by user_id (pre-invite state).
+      const hijosQuery = currentFamily?.familyId
+        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId).maybeSingle()
         : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
 
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
         hijosQuery,
         supabase.from('episodios')
-          .select('*')
-          .in('user_id', partnerIds)
-          .order('fecha', { ascending: false }),
+          .select('*').in('user_id', partnerIds).order('fecha', { ascending: false }),
         supabase.from('hitos')
-          .select('*')
-          .in('user_id', partnerIds)
-          .order('fecha', { ascending: false }),
+          .select('*').in('user_id', partnerIds).order('fecha', { ascending: false }),
         supabase.from('estrategias')
-          .select('*')
-          .in('user_id', partnerIds)
-          .order('fecha_inicio', { ascending: false }),
+          .select('*').in('user_id', partnerIds).order('fecha_inicio', { ascending: false }),
         supabase.from('perfiles')
-          .select('nombre')
-          .eq('user_id', userId)
-          .maybeSingle(),
+          .select('nombre').eq('user_id', userId).maybeSingle(),
       ])
 
-      console.log('[HuellaContext] hijosRes', { data: hijosRes.data, error: hijosRes.error })
-
-      // partner query returns array; owner query returns single object via maybeSingle
-      const hijoRow = isPartner
-        ? ((hijosRes.data ?? [])[0] ?? null)
-        : hijosRes.data
-
-      console.log('[HuellaContext] hijoRow seleccionado', hijoRow)
-
+      const hijoRow = hijosRes.data
       dispatch({
         type: 'LOAD_STATE',
         payload: {
@@ -180,14 +157,13 @@ export function HuellaProvider({ children }) {
         },
       })
     } catch (e) {
-      console.error('[HuellaContext] Error cargando datos:', e)
+      console.error('Error cargando datos:', e)
     } finally {
       setDataLoading(false)
     }
   }
 
   function reloadData(overrideFamily) {
-    console.log('[HuellaContext] reloadData llamado', { overrideFamily, currentFamily: family })
     if (user) loadUserData(user.id, overrideFamily !== undefined ? overrideFamily : family)
   }
 
@@ -214,14 +190,10 @@ export function HuellaProvider({ children }) {
       dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
-    // Refetch desde DB para sincronizar edad calculada y evitar campos perdidos
-    const refetch = family?.familyId
-      ? await supabase.from('hijos').select('*')
-          .or(`user_id.eq.${user.id},family_id.eq.${family.familyId}`)
+    // Refetch: same query as loadUserData — family_id when in a family, user_id otherwise
+    const { data: hijoRow } = family?.familyId
+      ? await supabase.from('hijos').select('*').eq('family_id', family.familyId).maybeSingle()
       : await supabase.from('hijos').select('*').eq('user_id', user.id).maybeSingle()
-    const hijoRow = family?.familyId
-      ? ((refetch.data ?? []).find(r => r.user_id === user.id) ?? (refetch.data ?? [])[0] ?? null)
-      : refetch.data
     if (hijoRow) {
       dispatch({ type: 'SET_HIJO', payload: {
         nombre:          hijoRow.nombre,

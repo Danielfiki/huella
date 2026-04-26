@@ -89,22 +89,38 @@ alter table public.push_subscriptions  enable row level security;
 -- Eliminar políticas previas para evitar conflictos al re-ejecutar
 drop policy if exists "own_data"       on public.hijos;
 drop policy if exists "family_read"    on public.hijos;
+drop policy if exists "hijos_select"   on public.hijos;
+drop policy if exists "hijos_insert"   on public.hijos;
+drop policy if exists "hijos_update"   on public.hijos;
+drop policy if exists "hijos_delete"   on public.hijos;
 drop policy if exists "own_data" on public.episodios;
 drop policy if exists "own_data" on public.hitos;
 drop policy if exists "own_data" on public.estrategias;
 
--- Propietario puede hacer todo sobre su hijo
-create policy "own_data" on public.hijos
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+-- Un hijo pertenece a su creador (user_id). Ambos miembros de la familia
+-- pueden leerlo y editarlo; solo el creador puede insertar o borrar.
 
--- Partner puede leer el hijo canónico de la familia (user_id pertenece al owner,
--- pero ambos comparten family_id; sin esta policy el SELECT retorna vacío para el partner)
-create policy "family_read" on public.hijos
+create policy "hijos_select" on public.hijos
   for select using (
-    family_id in (
+    user_id = auth.uid()
+    or family_id in (
       select family_id from public.family_members where user_id = auth.uid()
     )
   );
+
+create policy "hijos_insert" on public.hijos
+  for insert with check (user_id = auth.uid());
+
+create policy "hijos_update" on public.hijos
+  for update using (
+    user_id = auth.uid()
+    or family_id in (
+      select family_id from public.family_members where user_id = auth.uid()
+    )
+  );
+
+create policy "hijos_delete" on public.hijos
+  for delete using (user_id = auth.uid());
 
 create policy "own_data" on public.episodios
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
