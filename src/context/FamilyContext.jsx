@@ -25,7 +25,7 @@ export function FamilyProvider({ children }) {
     setFamilyLoading(true)
     let newFamily = null
     try {
-      const [partnerRes, invitationRes] = await Promise.all([
+      const [partnerRes, invitationRes, memberRes] = await Promise.all([
         supabase.rpc('get_partner_info'),
         supabase
           .from('partner_invitations')
@@ -33,18 +33,34 @@ export function FamilyProvider({ children }) {
           .eq('inviter_id', user.id)
           .eq('status', 'pending')
           .maybeSingle(),
+        // Direct fallback: family_members_own RLS allows user to always read their own row
+        supabase
+          .from('family_members')
+          .select('family_id, role')
+          .eq('user_id', user.id)
+          .maybeSingle(),
       ])
 
+      if (partnerRes.error) console.error('get_partner_info error:', partnerRes.error)
+
       if (partnerRes.data?.hasFamily) {
+        // RPC returned full data including partner email
         newFamily = {
           familyId: partnerRes.data.familyId,
           role: partnerRes.data.role,
           partner: partnerRes.data.partner ?? null,
         }
-        setFamily(newFamily)
-      } else {
-        setFamily(null)
+      } else if (memberRes.data?.family_id) {
+        // RPC failed or returned hasFamily:false despite user being in family_members.
+        // Use direct membership row; partner email unavailable but family_id is correct.
+        newFamily = {
+          familyId: memberRes.data.family_id,
+          role: memberRes.data.role,
+          partner: null,
+        }
       }
+
+      setFamily(newFamily)
 
       setPendingInvitation(
         invitationRes.data
