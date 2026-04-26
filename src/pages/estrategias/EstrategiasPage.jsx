@@ -126,6 +126,7 @@ export default function EstrategiasPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [habilidad, setHabilidad] = useState(initHabilidad)
   const [descripcion, setDescripcion] = useState('')
+  const [otraDescripcion, setOtraDescripcion] = useState('')
   const [plan, setPlan] = useState('')
   const [loadingPlan, setLoadingPlan] = useState(false)
   const [loadingTareas, setLoadingTareas] = useState(false)
@@ -146,18 +147,20 @@ export default function EstrategiasPage() {
   }
 
   async function handleCrearPlan() {
-    if (!habilidad) return
+    const efectivaHabilidad = habilidad === '__otra__' ? otraDescripcion.trim() : habilidad
+    if (!efectivaHabilidad) return
     setLoadingPlan(true)
     try {
       const habilidadObj = HABILIDADES.find((h) => h.label === habilidad)
-      const habilidadIA = habilidadObj?.tecnico ?? habilidad
-      const planObj = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion })
+      const habilidadIA = habilidadObj?.tecnico ?? efectivaHabilidad
+      const efectivaDesc = habilidad === '__otra__' ? '' : descripcion
+      const planObj = await generarEstrategia({ hijo: state.hijo, habilidad: habilidadIA, descripcion: efectivaDesc })
       const planStr = typeof planObj === 'string' ? planObj : JSON.stringify(planObj)
       const tareas = typeof planObj === 'object' ? extraerTareasDePlan(planObj) : {}
       const realId = await addEstrategia({
         id: Date.now().toString(),
-        habilidad,
-        descripcion,
+        habilidad: efectivaHabilidad,
+        descripcion: efectivaDesc,
         plan: planStr,
         tareas,
         fechaInicio: new Date().toISOString(),
@@ -279,26 +282,47 @@ export default function EstrategiasPage() {
                 <span>{h.label}</span>
               </button>
             ))}
+            <button
+              className={`${styles.habilidadBtn} ${styles.habilidadOtra} ${habilidad === '__otra__' ? styles.habilidadSelected : ''}`}
+              onClick={() => setHabilidad('__otra__')}
+            >
+              <span className={styles.habilidadEmoji}>✍️</span>
+              <span>Otra situación...</span>
+            </button>
           </div>
+          {habilidad === '__otra__' && (
+            <div className={styles.otraExpand}>
+              <textarea
+                className={styles.otraTextarea}
+                placeholder="Descríbela con tus palabras, eso es suficiente para crear tu estrategia."
+                value={otraDescripcion}
+                onChange={(e) => setOtraDescripcion(e.target.value)}
+                rows={3}
+                autoFocus
+              />
+            </div>
+          )}
         </Card>
 
-        <Card>
-          <p className={styles.label}>Contexto adicional (opcional)</p>
-          <textarea
-            className={styles.textarea}
-            placeholder="Algo específico que quieras trabajar..."
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={3}
-          />
-        </Card>
+        {habilidad !== '__otra__' && (
+          <Card>
+            <p className={styles.label}>Contexto adicional (opcional)</p>
+            <textarea
+              className={styles.textarea}
+              placeholder="Algo específico que quieras trabajar..."
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              rows={3}
+            />
+          </Card>
+        )}
 
         <Button
           variant="primary"
           size="lg"
           fullWidth
           onClick={handleCrearPlan}
-          disabled={!habilidad}
+          disabled={!habilidad || (habilidad === '__otra__' && !otraDescripcion.trim())}
           loading={loadingPlan}
         >
           Generar plan de 4 semanas
