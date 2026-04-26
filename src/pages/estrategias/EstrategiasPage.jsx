@@ -283,8 +283,10 @@ export default function EstrategiasPage() {
 
         <Card>
           <p className={styles.label}>¿En qué quieres trabajar?</p>
+
+          <p className={styles.categoriaHeader}>Regulación emocional</p>
           <div className={styles.habilidadesGrid}>
-            {HABILIDADES.map((h) => (
+            {HABILIDADES.slice(0, 6).map((h) => (
               <button
                 key={h.label}
                 className={`${styles.habilidadBtn} ${habilidad === h.label ? styles.habilidadSelected : ''}`}
@@ -294,6 +296,23 @@ export default function EstrategiasPage() {
                 <span>{h.label}</span>
               </button>
             ))}
+          </div>
+
+          <p className={styles.categoriaHeader}>Desarrollo y aprendizaje</p>
+          <div className={styles.habilidadesGrid}>
+            {HABILIDADES.slice(6).map((h) => (
+              <button
+                key={h.label}
+                className={`${styles.habilidadBtn} ${habilidad === h.label ? styles.habilidadSelected : ''}`}
+                onClick={() => setHabilidad(h.label)}
+              >
+                <span className={styles.habilidadEmoji}>{h.emoji}</span>
+                <span>{h.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.habilidadesGrid}>
             <button
               className={`${styles.habilidadBtn} ${styles.habilidadOtra} ${habilidad === '__otra__' ? styles.habilidadSelected : ''}`}
               onClick={() => setHabilidad('__otra__')}

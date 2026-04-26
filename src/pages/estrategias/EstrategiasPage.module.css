@@ -80,6 +80,16 @@
 }
 .explicativaTexto:last-child { margin-bottom: 0; }
 
+.categoriaHeader {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-text-muted);
+  margin: 14px 0 6px;
+}
+.categoriaHeader:first-of-type { margin-top: 0; }
+
 .habilidadesGrid { display: flex; flex-direction: column; gap: 8px; }
 
 .habilidadBtn {
