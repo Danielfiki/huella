@@ -149,34 +149,21 @@ function EstrategiaActivaPanel({ estrategia, onAbrir }) {
   )
 }
 
-function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
+function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
   const [frase, setFrase] = useState(null)
   const [loadingFrase, setLoadingFrase] = useState(false)
-  const [diasVisitados, setDiasVisitados] = useState([])
-  const [mostrarFrase, setMostrarFrase] = useState(false)
-  const [expandido, setExpandido] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const [abierto, setAbierto] = useState(false)
 
   useEffect(() => {
     if (!user?.id) return
 
     const today = new Date().toISOString().split('T')[0]
-
-    // Track presence
-    const presenciaKey = `huella_presencia_${user.id}`
-    try {
-      const stored = JSON.parse(localStorage.getItem(presenciaKey) || '[]')
-      const updated = stored.includes(today) ? stored : [...stored, today]
-      localStorage.setItem(presenciaKey, JSON.stringify(updated))
-      setDiasVisitados(updated)
-    } catch {}
-
-    // Only show once per day
     const vistoKey = `huella_consejo_v3_visto_${user.id}_${today}`
     try {
       if (localStorage.getItem(vistoKey)) return
     } catch {}
 
-    // Fetch daily frase if enough data
     const hasData = episodios.length >= 2 || hitos.length >= 1
     if (!hasData) return
 
@@ -185,13 +172,13 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
       const cached = localStorage.getItem(fraseKey)
       if (cached) {
         setFrase(cached)
-        setMostrarFrase(true)
+        setVisible(true)
         localStorage.setItem(vistoKey, '1')
         return
       }
     } catch {}
 
-    setMostrarFrase(true)
+    setVisible(true)
     setLoadingFrase(true)
     generarConsejoDiario({ hijo, episodios, hitos, estrategias })
       .then((text) => {
@@ -205,72 +192,41 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
       .finally(() => setLoadingFrase(false))
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Week Mon–Sun
-  const now = new Date()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-  monday.setHours(0, 0, 0, 0)
-  const today = now.toISOString().split('T')[0]
-  const semana = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(monday.getDate() + i)
-    const iso = d.toISOString().split('T')[0]
-    return { iso, visited: diasVisitados.includes(iso), isToday: iso === today }
-  })
-
-  const count = semana.filter((d) => d.visited).length
-  const nombre = hijo?.nombre || 'tu hijo/a'
-  const presenciaTexto = count === 1
-    ? `Esta semana acompañaste a ${nombre} 1 vez`
-    : `Esta semana acompañaste a ${nombre} ${count} veces`
-
-  const showFrase = mostrarFrase && (frase || loadingFrase)
+  if (!visible) return null
 
   return (
-    <Card className={styles.acompCard}>
-      {showFrase && (
-        <>
-          <button
-            className={styles.consejoToggle}
-            onClick={() => setExpandido((v) => !v)}
-            aria-expanded={expandido}
-          >
-            <span className={styles.consejoToggleLeft}>
-              <span className={styles.consejoToggleIcon}>💡</span>
-              <span className={styles.consejoToggleLabel}>Tu consejo de hoy</span>
-            </span>
-            <ChevronRight
-              size={16}
-              className={[styles.consejoChevron, expandido ? styles.consejoChevronOpen : ''].filter(Boolean).join(' ')}
-            />
-          </button>
-          {expandido && (
-            <div className={styles.consejoBody}>
+    <>
+      <button
+        className={styles.consejoBubble}
+        onClick={() => setAbierto(true)}
+        aria-label="Tu consejo de hoy"
+      >
+        💡
+      </button>
+
+      {abierto && (
+        <div className={styles.consejoOverlay} onClick={() => setAbierto(false)}>
+          <div className={styles.consejoModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.consejoModalHeader}>
+              <span className={styles.consejoModalTitle}>💡 Tu consejo de hoy</span>
+              <button
+                className={styles.consejoModalClose}
+                onClick={() => setAbierto(false)}
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.consejoModalBody}>
               {loadingFrase
-                ? <p className={styles.acompFraseCargando}>Preparando tu mensaje de hoy...</p>
-                : <div className={styles.consejoTexto}>{renderMarkdown(frase)}</div>
+                ? <p className={styles.consejoModalCargando}>Preparando tu consejo…</p>
+                : <div className={styles.consejoModalTexto}>{renderMarkdown(frase)}</div>
               }
             </div>
-          )}
-          <div className={styles.acompDivider} />
-        </>
-      )}
-      <div className={styles.acompPresencia}>
-        <p className={styles.acompPresenciaTexto}>{presenciaTexto}</p>
-        <div className={styles.acompDots}>
-          {semana.map(({ iso, visited, isToday }) => (
-            <div
-              key={iso}
-              className={[
-                styles.acompDot,
-                visited ? styles.acompDotVisitado : '',
-                isToday && !visited ? styles.acompDotHoy : '',
-              ].filter(Boolean).join(' ')}
-            />
-          ))}
+          </div>
         </div>
-      </div>
-    </Card>
+      )}
+    </>
   )
 }
 
@@ -463,9 +419,6 @@ export default function PanelPage() {
         </div>
       </div>
 
-      {/* ── Acompañamiento: presencia semanal + frase diaria ── */}
-      <AcompañamientoCard user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
-
       {episodios.length === 0 ? (
 
         /* ── Estado vacío ── */
@@ -474,8 +427,6 @@ export default function PanelPage() {
       ) : (
         <>
 
-          {/* ── Resumen emocional ── */}
-          <ResumenEmocionalCard episodios={episodios} hitos={hitos} />
 
           {/* ── CTA registrar ── */}
           <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/nuevo')}>
@@ -555,6 +506,7 @@ export default function PanelPage() {
         </>
       )}
 
+      <ConsejoBubble user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
     </div>
   )
 }
