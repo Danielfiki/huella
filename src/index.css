@@ -138,3 +138,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+p {
+  text-align: justify;
+}
