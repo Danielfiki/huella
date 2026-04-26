@@ -158,35 +158,23 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
   useEffect(() => {
     if (!user?.id) return
 
-    const today = new Date().toISOString().split('T')[0]
-    const vistoKey = `huella_consejo_v3_visto_${user.id}_${today}`
-    try {
-      if (localStorage.getItem(vistoKey)) return
-    } catch {}
-
     const hasData = episodios.length >= 2 || hitos.length >= 1
     if (!hasData) return
 
+    setVisible(true)
+
+    const today = new Date().toISOString().split('T')[0]
     const fraseKey = `huella_consejo_v3_${user.id}_${today}`
     try {
       const cached = localStorage.getItem(fraseKey)
-      if (cached) {
-        setFrase(cached)
-        setVisible(true)
-        localStorage.setItem(vistoKey, '1')
-        return
-      }
+      if (cached) { setFrase(cached); return }
     } catch {}
 
-    setVisible(true)
     setLoadingFrase(true)
     generarConsejoDiario({ hijo, episodios, hitos, estrategias })
       .then((text) => {
         setFrase(text)
-        try {
-          localStorage.setItem(fraseKey, text)
-          localStorage.setItem(vistoKey, '1')
-        } catch {}
+        try { localStorage.setItem(fraseKey, text) } catch {}
       })
       .catch(() => {})
       .finally(() => setLoadingFrase(false))
