@@ -11,12 +11,18 @@ import CitaLoader from '../../components/ui/CitaLoader'
 import styles from './EstrategiasPage.module.css'
 
 const CONTEXTOS = {
-  'Calmarse cuando explota':            { texto: 'La autorregulación emocional es la base de todas las demás habilidades sociales y relacionales.', emoji: '🌊' },
-  'Aceptar el "no" sin crisis':         { texto: 'Tolerar la frustración construye resiliencia duradera. Es una de las habilidades más valiosas en la vida adulta.', emoji: '💪' },
-  'Manejar los cambios de rutina':      { texto: 'La flexibilidad ante los cambios reduce el estrés y mejora la adaptación en todo contexto.', emoji: '🔄' },
-  'Relacionarse mejor con otros niños': { texto: 'Las conexiones positivas tempranas son el mayor predictor de bienestar emocional adulto.', emoji: '🤝' },
-  'Manejar el miedo y la angustia':     { texto: 'Aprender a regular el miedo desde pequeño protege la salud mental a largo plazo.', emoji: '🛡️' },
-  'Concentrarse y calmarse':            { texto: 'La calma y el foco son habilidades entrenables con práctica constante, no rasgos fijos.', emoji: '🧘' },
+  'Calmarse cuando explota':                      { texto: 'La autorregulación emocional es la base de todas las demás habilidades sociales y relacionales.', emoji: '🌊' },
+  'Aceptar el "no" sin crisis':                   { texto: 'Tolerar la frustración construye resiliencia duradera. Es una de las habilidades más valiosas en la vida adulta.', emoji: '💪' },
+  'Manejar los cambios de rutina':                { texto: 'La flexibilidad ante los cambios reduce el estrés y mejora la adaptación en todo contexto.', emoji: '🔄' },
+  'Relacionarse mejor con otros niños':           { texto: 'Las conexiones positivas tempranas son el mayor predictor de bienestar emocional adulto.', emoji: '🤝' },
+  'Manejar el miedo y la angustia':               { texto: 'Aprender a regular el miedo desde pequeño protege la salud mental a largo plazo.', emoji: '🛡️' },
+  'Concentrarse y calmarse':                      { texto: 'La calma y el foco son habilidades entrenables con práctica constante, no rasgos fijos.', emoji: '🧘' },
+  'Mejorar la atención y concentración':          { texto: 'La atención sostenida se entrena como un músculo — pequeños ejercicios diarios generan cambios duraderos.', emoji: '🎯' },
+  'Desarrollar autonomía e independencia':        { texto: 'Cada pequeño paso que hace solo construye confianza en sí mismo y en el mundo.', emoji: '💪' },
+  'Mejorar vínculos sociales con otros niños':    { texto: 'Las amistades tempranas son el laboratorio donde se aprende empatía, negociación y pertenencia.', emoji: '🤝' },
+  'Establecer rutinas que funcionen':             { texto: 'Las rutinas predecibles reducen la ansiedad y liberan energía mental para aprender y crecer.', emoji: '📅' },
+  'Motivación y autoestima':                      { texto: 'Un niño que se siente capaz intenta cosas nuevas. La autoestima se construye en los pequeños logros de cada día.', emoji: '🌟' },
+  'Dificultades en el colegio':                   { texto: 'El colegio es un entorno exigente. Con las estrategias correctas, los desafíos se vuelven oportunidades de crecer.', emoji: '🏫' },
 }
 
 function EstrategiaActivaCard({ estrategia, onAbrir }) {
@@ -41,12 +47,18 @@ function EstrategiaActivaCard({ estrategia, onAbrir }) {
 }
 
 const HABILIDADES = [
-  { label: 'Calmarse cuando explota',               tecnico: 'Autorregulación emocional',       emoji: '🌊' },
-  { label: 'Aceptar el "no" sin crisis',            tecnico: 'Resiliencia ante la frustración', emoji: '💪' },
-  { label: 'Manejar los cambios de rutina',         tecnico: 'Tolerancia a los cambios',        emoji: '🔄' },
-  { label: 'Relacionarse mejor con otros niños',    tecnico: 'Habilidades sociales',             emoji: '🤝' },
-  { label: 'Manejar el miedo y la angustia',        tecnico: 'Manejo del miedo',                emoji: '🛡️' },
-  { label: 'Concentrarse y calmarse',               tecnico: 'Concentración y calma',           emoji: '🧘' },
+  { label: 'Calmarse cuando explota',               tecnico: 'Autorregulación emocional',                emoji: '🌊' },
+  { label: 'Aceptar el "no" sin crisis',            tecnico: 'Resiliencia ante la frustración',          emoji: '💪' },
+  { label: 'Manejar los cambios de rutina',         tecnico: 'Tolerancia a los cambios',                 emoji: '🔄' },
+  { label: 'Relacionarse mejor con otros niños',    tecnico: 'Habilidades sociales',                     emoji: '🤝' },
+  { label: 'Manejar el miedo y la angustia',        tecnico: 'Manejo del miedo',                         emoji: '🛡️' },
+  { label: 'Concentrarse y calmarse',               tecnico: 'Concentración y calma',                    emoji: '🧘' },
+  { label: 'Mejorar la atención y concentración',   tecnico: 'Atención y concentración',                 emoji: '🎯' },
+  { label: 'Desarrollar autonomía e independencia', tecnico: 'Autonomía e independencia',                emoji: '💪' },
+  { label: 'Mejorar vínculos sociales con otros niños', tecnico: 'Vínculos sociales y amistad',         emoji: '🤝' },
+  { label: 'Establecer rutinas que funcionen',      tecnico: 'Rutinas y estructura diaria',              emoji: '📅' },
+  { label: 'Motivación y autoestima',               tecnico: 'Motivación y autoestima',                  emoji: '🌟' },
+  { label: 'Dificultades en el colegio',            tecnico: 'Adaptación y rendimiento escolar',         emoji: '🏫' },
 ]
 
 function extraerTareasDePlan(planObj) {
