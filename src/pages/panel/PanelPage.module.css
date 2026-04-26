@@ -32,7 +32,7 @@
   flex-shrink: 0;
 }
 
-.greetingText { display: flex; flex-direction: column; gap: 2px; }
+.greetingText { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 
 .greetingTitulo {
   font-size: 24px;
@@ -68,7 +68,7 @@
   margin-top: 1px;
 }
 
-.resumenTextos { display: flex; flex-direction: column; gap: 4px; }
+.resumenTextos { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 
 .resumenFrase {
   font-size: 15px;
@@ -173,7 +173,7 @@
 
 /* ── Gráficos ── */
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.graficoCard {}
+.graficoCard { overflow: visible; }
 
 .narrativa {
   margin: 12px 0 0;

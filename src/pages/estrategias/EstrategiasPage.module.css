@@ -38,6 +38,7 @@
   font-weight: 700;
   color: var(--color-text);
   margin: 0;
+  min-width: 0;
 }
 .activaContexto {
   font-size: 13px;
@@ -161,7 +162,7 @@
 .emptyCard p { font-size: 14px; color: var(--color-text-muted); }
 
 .estrategiaHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.estrategiaNombre { font-size: 15px; font-weight: 600; }
+.estrategiaNombre { font-size: 15px; font-weight: 600; min-width: 0; }
 .estrategiaHeaderRight { display: flex; align-items: center; gap: 8px; }
 .estrategiaFecha { font-size: 13px; color: var(--color-text-muted); }
 

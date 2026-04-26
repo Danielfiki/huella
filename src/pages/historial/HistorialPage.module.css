@@ -24,7 +24,7 @@
 
 .semanaEmoji { font-size: 28px; line-height: 1; flex-shrink: 0; }
 
-.semanaInfo { display: flex; flex-direction: column; gap: 3px; }
+.semanaInfo { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 
 .semanaTexto {
   font-size: 15px;
@@ -118,7 +118,7 @@
   display: flex; align-items: center; gap: 8px; flex-shrink: 0;
 }
 
-.tipoWrap { display: flex; align-items: center; gap: 10px; }
+.tipoWrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .emoji { font-size: 26px; line-height: 1; }
 .tipoLabel { font-size: 14px; font-weight: 600; }
 .horaRow { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
