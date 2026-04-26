@@ -8,26 +8,26 @@
 
 :root {
   /* ── Fondos ── */
-  --color-bg: #FBF7F2;
-  --color-surface: #FFFFFF;
-  --color-surface-alt: #F5EEE6;
-  --color-border: #E8DDD5;
+  --color-bg: #FAFAF8;
+  --color-surface: #F5E6D8;
+  --color-surface-alt: #EDD5C2;
+  --color-border: #E0C9B5;
 
-  /* ── Primario — terracota #C4714A ── */
-  --color-primary: #C4714A;
-  --color-primary-light: #E8C4B0;
-  --color-primary-dark: #A05838;
+  /* ── Primario — fuego #E8622A ── */
+  --color-primary: #E8622A;
+  --color-primary-light: #F5B49A;
+  --color-primary-dark: #C44E1E;
 
   /* ── Tints semánticos ── */
-  --color-primary-bg: #F5E8DF;
+  --color-primary-bg: #FDEEE6;
   --color-success-bg: #EBF3EC;
-  --color-celebration-start: #FDF0E8;
-  --color-celebration-end: #F5E8DF;
+  --color-celebration-start: #FDF5EE;
+  --color-celebration-end: #FDEEE6;
   --color-danger-bg: #FFF2F2;
   --color-danger-border: #F5BEBE;
   --color-danger-text: #A83228;
 
-  /* ── Acento verde salvia #7A9E7E ── */
+  /* ── Acentos ── */
   --color-accent-green: #C5D9C6;
   --color-accent-blue: #B0C8DC;
   --color-accent-lavender: #CAC0E0;
@@ -37,10 +37,10 @@
   --color-tag-green: #3D6B42;
   --color-tag-blue: #274A68;
 
-  /* ── Texto — marrón oscuro #2D1F1A ── */
-  --color-text: #2D1F1A;
-  --color-text-muted: #7A6258;
-  --color-text-light: #B8A8A0;
+  /* ── Texto — índigo #1E2A4A ── */
+  --color-text: #1E2A4A;
+  --color-text-muted: #5A6A8A;
+  --color-text-light: #8A9AB8;
 
   /* ── Estados ── */
   --color-success: #7A9E7E;
@@ -53,32 +53,38 @@
   --radius-lg: 20px;
   --radius-xl: 28px;
 
-  /* ── Sombras — suaves y difusas ── */
-  --shadow-sm: 0 2px 12px rgba(45, 31, 26, 0.06);
-  --shadow-md: 0 6px 24px rgba(45, 31, 26, 0.09);
-  --shadow-lg: 0 12px 48px rgba(45, 31, 26, 0.12);
+  /* ── Sombras ── */
+  --shadow-sm: 0 2px 12px rgba(30, 42, 74, 0.06);
+  --shadow-md: 0 6px 24px rgba(30, 42, 74, 0.09);
+  --shadow-lg: 0 12px 48px rgba(30, 42, 74, 0.12);
 
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Fraunces', Georgia, serif;
+
+  /* ── Navegación oscura ── */
+  --color-nav: #1E2A4A;
+  --color-nav-border: #2E3F6F;
+  --color-nav-text: rgba(239, 243, 255, 0.6);
+  --color-nav-text-active: #EFF3FF;
 }
 
 /* ── Modo oscuro ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1C1510;
-    --color-surface: #261E18;
-    --color-surface-alt: #312620;
-    --color-border: #453228;
+    --color-bg: #0E1625;
+    --color-surface: #1A2240;
+    --color-surface-alt: #243060;
+    --color-border: #2E3F6F;
 
-    --color-primary: #D4876A;
-    --color-primary-light: #4A2E1A;
-    --color-primary-dark: #E8A080;
+    --color-primary: #F07A4A;
+    --color-primary-light: #3A1808;
+    --color-primary-dark: #F5A080;
 
-    --color-primary-bg: #3A2010;
+    --color-primary-bg: #2A1808;
     --color-success-bg: #182618;
-    --color-celebration-start: #2E2010;
-    --color-celebration-end: #3A2010;
+    --color-celebration-start: #251A08;
+    --color-celebration-end: #2A1808;
     --color-danger-bg: #2E1515;
     --color-danger-border: #5A2828;
     --color-danger-text: #F87171;
@@ -91,9 +97,9 @@
     --color-tag-green: #7ABF88;
     --color-tag-blue: #7FB3D3;
 
-    --color-text: #F0E6DC;
-    --color-text-muted: #9E8878;
-    --color-text-light: #6A5A50;
+    --color-text: #EFF3FF;
+    --color-text-muted: #7A90B8;
+    --color-text-light: #4A5A80;
 
     --color-success: #7ABF88;
     --color-warning: #E0A858;
@@ -102,6 +108,11 @@
     --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.40);
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.65);
+
+    --color-nav: #0A1020;
+    --color-nav-border: #1A2540;
+    --color-nav-text: rgba(239, 243, 255, 0.5);
+    --color-nav-text-active: #EFF3FF;
   }
 }
 

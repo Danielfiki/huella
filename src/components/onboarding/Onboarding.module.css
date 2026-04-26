@@ -11,7 +11,7 @@
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
-  background: #12082a;
+  background: var(--color-nav);
 }
 
 /* ── Background ────────────────────────────────────────────────────────── */
