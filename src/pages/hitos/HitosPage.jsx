@@ -608,6 +608,7 @@ function HitoCard({ hito, user, updateHitoFoto }) {
 export default function HitosPage() {
   const { state, addHito, updateHitoFoto } = useHuella()
   const { user } = useAuth()
+  const [pestaña, setPestaña] = useState('medallas')
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -735,12 +736,28 @@ export default function HitosPage() {
           <h2 className={styles.titulo}>Logros</h2>
           <p className={styles.totalBadges}>{totalDesbloqueados} de {totalBadges} medallas</p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => setMostrando(!mostrando)}>
+        <Button variant="primary" size="sm" onClick={() => { setMostrando(!mostrando); setPestaña('medallas') }}>
           <Plus size={16} /> Registrar
         </Button>
       </div>
 
-      {/* ── Formulario ── */}
+      {/* ── Pestañas ── */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${pestaña === 'medallas' ? styles.tabActive : ''}`}
+          onClick={() => setPestaña('medallas')}
+        >
+          Medallas
+        </button>
+        <button
+          className={`${styles.tab} ${pestaña === 'album' ? styles.tabActive : ''}`}
+          onClick={() => setPestaña('album')}
+        >
+          Álbum
+        </button>
+      </div>
+
+      {/* ── Formulario (siempre visible cuando está abierto) ── */}
       {mostrando && (
         <Card className={styles.formCard}>
           <p className={styles.label}>¿Qué logró?</p>
@@ -803,7 +820,6 @@ export default function HitosPage() {
           >
             <X size={16} />
           </button>
-
           {fotoUrl ? (
             <div className={styles.enmarcarFotoWrap}>
               <img src={fotoUrl} alt="Momento" className={styles.enmarcarFoto} />
@@ -833,48 +849,60 @@ export default function HitosPage() {
         </div>
       )}
 
-      {/* ── Niveles de badges ── */}
-      {nivelesVisibles.map((nivel) => (
-        <NivelSection
-          key={nivel.nivel}
-          nivel={nivel}
-          data={dataBadge}
-          bloqueado={nivel.bloqueado}
-          umbralPrevio={nivel.umbralPrevio}
-          badgesNuevos={badgesNuevos}
-        />
-      ))}
-
-      {/* ── Álbum de crecimiento ── */}
-      {hitos.some((h) => h.foto_url) && (
+      {/* ── Tab: Medallas ── */}
+      {pestaña === 'medallas' && (
         <>
-          <h3 className={styles.seccionTitulo}>Álbum de crecimiento</h3>
-          <div className={styles.albumGrid}>
-            {hitos.filter((h) => h.foto_url).map((h) => (
-              <div
-                key={h.id}
-                className={styles.albumItem}
-                onClick={() => window.open(h.foto_url, '_blank')}
-              >
-                <img src={h.foto_url} alt="" className={styles.albumImg} />
-                <p className={styles.albumLabel}>
-                  {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
-                </p>
-              </div>
-            ))}
-          </div>
+          {nivelesVisibles.map((nivel) => (
+            <NivelSection
+              key={nivel.nivel}
+              nivel={nivel}
+              data={dataBadge}
+              bloqueado={nivel.bloqueado}
+              umbralPrevio={nivel.umbralPrevio}
+              badgesNuevos={badgesNuevos}
+            />
+          ))}
         </>
       )}
 
-      {/* ── Avances registrados ── */}
-      {hitos.length > 0 && (
+      {/* ── Tab: Álbum ── */}
+      {pestaña === 'album' && (
         <>
-          <h3 className={styles.seccionTitulo}>Avances registrados</h3>
-          <div className={styles.hitosList}>
-            {hitos.map((h) => (
-              <HitoCard key={h.id} hito={h} user={user} updateHitoFoto={updateHitoFoto} />
-            ))}
-          </div>
+          {hitos.length === 0 ? (
+            <Card className={styles.albumVacio}>
+              <p className={styles.albumVacioEmoji}>📸</p>
+              <p className={styles.albumVacioTitulo}>Aún no hay avances registrados</p>
+              <p className={styles.albumVacioSub}>Registra un logro de {state.hijo?.nombre || 'tu hijo/a'} para empezar el álbum.</p>
+            </Card>
+          ) : (
+            <>
+              {hitos.some((h) => h.foto_url) && (
+                <>
+                  <h3 className={styles.seccionTitulo}>Álbum de crecimiento</h3>
+                  <div className={styles.albumGrid}>
+                    {hitos.filter((h) => h.foto_url).map((h) => (
+                      <div
+                        key={h.id}
+                        className={styles.albumItem}
+                        onClick={() => window.open(h.foto_url, '_blank')}
+                      >
+                        <img src={h.foto_url} alt="" className={styles.albumImg} />
+                        <p className={styles.albumLabel}>
+                          {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              <h3 className={styles.seccionTitulo}>Avances registrados</h3>
+              <div className={styles.hitosList}>
+                {hitos.map((h) => (
+                  <HitoCard key={h.id} hito={h} user={user} updateHitoFoto={updateHitoFoto} />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
