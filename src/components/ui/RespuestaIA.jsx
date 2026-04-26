@@ -24,9 +24,9 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
       if (line.startsWith('Marco aplicado:')) {
         return <p key={i} className={styles.marco}>{line}</p>
       }
-      if (line.match(/^\*\*(.+)\*\*$/) || line.match(/^#{1,3} /)) {
+      if (line.match(/^\*\*[^*]+\*\*$/) || line.match(/^#{1,3} /)) {
         const content = line.replace(/^#{1,3} /, '').replace(/^\*\*|\*\*$/g, '')
-        return <h4 key={i} className={styles.titulo}>{content}</h4>
+        return <h4 key={i} className={styles.titulo}>{renderInline(content)}</h4>
       }
       if (line.startsWith('- ') || line.match(/^\d+\. /)) {
         return <li key={i} className={styles.item}>{renderInline(line.replace(/^([-\d*.]+ ?)/, ''))}</li>
