@@ -97,15 +97,28 @@ drop policy if exists "own_data" on public.episodios;
 drop policy if exists "own_data" on public.hitos;
 drop policy if exists "own_data" on public.estrategias;
 
+-- Helper: returns the current user's family_id without triggering RLS on
+-- family_members. Used in hijos policies to avoid the infinite-recursion
+-- that occurs when a policy subquery hits a table that itself has RLS.
+create or replace function public.my_family_id()
+returns uuid
+language sql
+security definer
+stable
+as $$
+  select family_id
+  from public.family_members
+  where user_id = auth.uid()
+  limit 1
+$$;
+
 -- Un hijo pertenece a su creador (user_id). Ambos miembros de la familia
 -- pueden leerlo y editarlo; solo el creador puede insertar o borrar.
 
 create policy "hijos_select" on public.hijos
   for select using (
     user_id = auth.uid()
-    or family_id in (
-      select family_id from public.family_members where user_id = auth.uid()
-    )
+    or family_id = public.my_family_id()
   );
 
 create policy "hijos_insert" on public.hijos
@@ -114,9 +127,7 @@ create policy "hijos_insert" on public.hijos
 create policy "hijos_update" on public.hijos
   for update using (
     user_id = auth.uid()
-    or family_id in (
-      select family_id from public.family_members where user_id = auth.uid()
-    )
+    or family_id = public.my_family_id()
   );
 
 create policy "hijos_delete" on public.hijos
