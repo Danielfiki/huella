@@ -127,9 +127,11 @@ export function HuellaProvider({ children }) {
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      const hijosQuery = currentFamily?.familyId
-        ? supabase.from('hijos').select('*')
-            .or(`user_id.eq.${userId},family_id.eq.${currentFamily.familyId}`)
+      // partner has no own hijo — must find the owner's hijo via family_id
+      // owner always has user_id on their row — query directly
+      const isPartner = currentFamily?.role === 'partner' && currentFamily?.familyId
+      const hijosQuery = isPartner
+        ? supabase.from('hijos').select('*').eq('family_id', currentFamily.familyId)
         : supabase.from('hijos').select('*').eq('user_id', userId).maybeSingle()
 
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
@@ -154,9 +156,9 @@ export function HuellaProvider({ children }) {
 
       console.log('[HuellaContext] hijosRes', { data: hijosRes.data, error: hijosRes.error })
 
-      // When queried with .or(), data is an array; pick own row first, else partner's
-      const hijoRow = currentFamily?.familyId
-        ? ((hijosRes.data ?? []).find(r => r.user_id === userId) ?? (hijosRes.data ?? [])[0] ?? null)
+      // partner query returns array; owner query returns single object via maybeSingle
+      const hijoRow = isPartner
+        ? ((hijosRes.data ?? [])[0] ?? null)
         : hijosRes.data
 
       console.log('[HuellaContext] hijoRow seleccionado', hijoRow)

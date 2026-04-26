@@ -49,7 +49,7 @@ export default function InvitarPage() {
       if (error) throw new Error(error.message)
       if (!data?.success) throw new Error(data?.error ?? 'No se pudo aceptar')
       const newFamily = await refreshFamily()
-      reloadData(newFamily)
+      if (newFamily) reloadData(newFamily)
       setStatus('done')
       setTimeout(() => navigate('/panel'), 2000)
     } catch (e) {
