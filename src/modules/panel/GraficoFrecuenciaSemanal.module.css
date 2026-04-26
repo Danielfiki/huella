@@ -49,6 +49,47 @@
 
 .labelActual { color: var(--color-primary); font-weight: 700; }
 
+.colTappable { cursor: pointer; }
+
+.barSeleccionado { opacity: 0.75; }
+
+/* ── Tooltip ── */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text, #1a1a2e);
+  color: #fff;
+  border-radius: 7px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 20;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-text, #1a1a2e);
+}
+
+.tooltipLeft  { left: 0; transform: none; }
+.tooltipLeft::after  { left: 12px; transform: none; }
+
+.tooltipRight { left: auto; right: 0; transform: none; }
+.tooltipRight::after { left: auto; right: 12px; transform: none; }
+
+.tooltipDia { font-size: 10px; line-height: 1.4; }
+
 /* ── Marcador de inicio de estrategia ─────────────────── */
 
 .bars { position: relative; }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styles from './GraficoFrecuenciaSemanal.module.css'
 
 function getLast6Weeks() {
@@ -21,7 +21,27 @@ function getLast6Weeks() {
   })
 }
 
+function getTooltipDias(episodios, week) {
+  const byDay = new Map()
+  for (const ep of episodios) {
+    const f = new Date(ep.fecha)
+    if (f < week.start || f >= week.end) continue
+    const key = f.toDateString()
+    if (!byDay.has(key)) {
+      byDay.set(key, {
+        ts: f.getTime(),
+        label: f.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric' }),
+        count: 0,
+      })
+    }
+    byDay.get(key).count++
+  }
+  return [...byDay.values()].sort((a, b) => a.ts - b.ts)
+}
+
 export default function GraficoFrecuenciaSemanal({ episodios, estrategiaInicio }) {
+  const [activoIdx, setActivoIdx] = useState(null)
+
   const weeks = getLast6Weeks()
   const counts = weeks.map((w) =>
     episodios.filter((e) => {
@@ -31,7 +51,6 @@ export default function GraficoFrecuenciaSemanal({ episodios, estrategiaInicio }
   )
   const max = Math.max(...counts, 1)
 
-  // Semana donde empieza la estrategia (0-4, no mostramos línea si es la semana actual)
   const estrategiaSemana = estrategiaInicio
     ? weeks.findIndex((w) => {
         const d = new Date(estrategiaInicio)
@@ -40,17 +59,46 @@ export default function GraficoFrecuenciaSemanal({ episodios, estrategiaInicio }
     : -1
   const mostrarLinea = estrategiaSemana > 0 && estrategiaSemana < 5
 
+  const tooltipDias = activoIdx !== null && counts[activoIdx] > 0
+    ? getTooltipDias(episodios, weeks[activoIdx])
+    : []
+
+  function handleBarClick(e, i) {
+    e.stopPropagation()
+    setActivoIdx(activoIdx === i ? null : i)
+  }
+
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} onClick={() => setActivoIdx(null)}>
       <div className={styles.bars}>
         {weeks.map((w, i) => (
-          <div key={i} className={styles.col}>
+          <div
+            key={i}
+            className={`${styles.col} ${counts[i] > 0 ? styles.colTappable : ''}`}
+            onClick={(e) => counts[i] > 0 && handleBarClick(e, i)}
+          >
+            {activoIdx === i && tooltipDias.length > 0 && (
+              <div className={[
+                styles.tooltip,
+                i <= 1 ? styles.tooltipLeft : i >= 4 ? styles.tooltipRight : '',
+              ].filter(Boolean).join(' ')}>
+                {tooltipDias.map((d) => (
+                  <span key={d.label} className={styles.tooltipDia}>
+                    {d.label}{d.count > 1 ? ` ×${d.count}` : ''}
+                  </span>
+                ))}
+              </div>
+            )}
             {counts[i] > 0 && (
               <span className={styles.count}>{counts[i]}</span>
             )}
             <div className={styles.track}>
               <div
-                className={`${styles.bar} ${w.isCurrent ? styles.barActual : ''}`}
+                className={[
+                  styles.bar,
+                  w.isCurrent ? styles.barActual : '',
+                  activoIdx === i ? styles.barSeleccionado : '',
+                ].filter(Boolean).join(' ')}
                 style={{ height: `${Math.max((counts[i] / max) * 100, counts[i] > 0 ? 10 : 3)}%` }}
               />
             </div>
@@ -60,7 +108,6 @@ export default function GraficoFrecuenciaSemanal({ episodios, estrategiaInicio }
           </div>
         ))}
 
-        {/* Línea vertical marcando el inicio de la estrategia */}
         {mostrarLinea && (
           <div
             className={styles.estrategiaLinea}
