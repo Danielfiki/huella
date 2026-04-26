@@ -358,6 +358,10 @@ export default function HistorialPage() {
     ? TrendingUp
     : Minus
 
+  const hace7 = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 7); return d }, [])
+  const epSemana = useMemo(() => episodios.filter((e) => new Date(e.fecha) >= hace7), [episodios, hace7])
+  const totalSemana = epSemana.length
+
   const totalRegistros = episodios.length + hitos.length
   const countLabel =
     pestaña === 'todos'
@@ -385,6 +389,29 @@ export default function HistorialPage() {
         <h2 className={styles.titulo}>Historial</h2>
         <span className={styles.count}>{countLabel}</span>
       </div>
+
+      {/* ── Resumen semanal ── */}
+      {episodios.length > 0 && (
+        <div className={styles.semanaCard}>
+          <span className={styles.semanaEmoji}>
+            {totalSemana === 0 ? '🌱' : totalSemana >= 5 ? '💪' : '✨'}
+          </span>
+          <div className={styles.semanaInfo}>
+            <p className={styles.semanaTexto}>
+              {totalSemana === 0
+                ? 'Sin episodios esta semana'
+                : `${totalSemana} ${totalSemana === 1 ? 'episodio' : 'episodios'} esta semana`}
+            </p>
+            <p className={styles.semanaDetalle}>
+              {totalSemana === 0
+                ? 'Las semanas tranquilas también cuentan.'
+                : totalSemana >= 5
+                ? 'Que los hayas anotado ya es un gran paso.'
+                : 'Seguís registrando — eso construye el patrón.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Pestañas ── */}
       <div className={styles.tabs}>
