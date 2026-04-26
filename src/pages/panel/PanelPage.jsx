@@ -170,7 +170,7 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     } catch {}
 
     // Only show once per day
-    const vistoKey = `huella_consejo_visto_${user.id}_${today}`
+    const vistoKey = `huella_consejo_v2_visto_${user.id}_${today}`
     try {
       if (localStorage.getItem(vistoKey)) return
     } catch {}
@@ -179,7 +179,7 @@ function AcompañamientoCard({ user, hijo, episodios, hitos, estrategias }) {
     const hasData = episodios.length >= 2 || hitos.length >= 1
     if (!hasData) return
 
-    const fraseKey = `huella_consejo_${user.id}_${today}`
+    const fraseKey = `huella_consejo_v2_${user.id}_${today}`
     try {
       const cached = localStorage.getItem(fraseKey)
       if (cached) {

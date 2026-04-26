@@ -180,14 +180,11 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
     ? semanaEp.map((e) => `- ${e.tipo} (intensidad ${e.intensidad}/5)${e.contexto ? ': ' + e.contexto.slice(0, 80) : ''}`).join('\n')
     : 'Sin episodios esta semana.'
 
-  const prompt = `Soy padre/madre y registro el desarrollo emocional de ${hijo?.nombre || 'mi hijo/a'}, ${hijo?.edad || '?'} años.
+  const prompt = `Contexto: ${hijo?.nombre || 'hijo/a'} de ${hijo?.edad || '?'} años. ${resumenEp}${estrategiaActiva ? ` Estrategia activa: ${estrategiaActiva.habilidad}.` : ''}
 
-Esta semana anoté:
-${resumenEp}${hitosCount > 0 ? `\n\nAvances positivos registrados esta semana: ${hitosCount}` : ''}${estrategiaActiva ? `\n\nEstoy trabajando la estrategia: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4)` : ''}
+INSTRUCCIÓN: Escribe UN consejo para hoy. Máximo 2 oraciones cortas. Máximo 30 palabras en total. Cálido, concreto, accionable. Segunda persona. Cero markdown, cero listas, cero disclaimer.`
 
-Escribe exactamente 2 frases como consejo para hoy. Máximo 2 líneas en total. Tono cálido, consejo accionable y concreto basado en los datos reales. Segunda persona al padre/madre. Sin listas, sin títulos, sin markdown, sin disclaimer.`
-
-  return llamarAPI(prompt, 120)
+  return llamarAPI(prompt, 80)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
