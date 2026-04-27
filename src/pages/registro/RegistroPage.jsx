@@ -574,6 +574,10 @@ export default function RegistroPage() {
   const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+  const [episodioId, setEpisodioId] = useState(null)
+  const [reflexion, setReflexion] = useState('')
+  const [guardandoReflexion, setGuardandoReflexion] = useState(false)
+  const [reflexionGuardada, setReflexionGuardada] = useState(false)
 
   function handleCuando(id) {
     setCuandoPaso(id)
@@ -612,6 +616,7 @@ export default function RegistroPage() {
     try {
       const episodioGuardado = await addEpisodio(episodio)
       setVista('guardado')
+      setEpisodioId(episodioGuardado?.id ?? null)
       setLoadingIA(true)
       setLoadingAccion(true)
       setAccionIA('')
@@ -631,6 +636,19 @@ export default function RegistroPage() {
       setErrorGuardar('No se pudo guardar: ' + e.message)
     } finally {
       setLoadingGuardar(false)
+    }
+  }
+
+  async function handleGuardarReflexion() {
+    if (!episodioId || !reflexion.trim()) return
+    setGuardandoReflexion(true)
+    try {
+      await updateEpisodio({ id: episodioId, reflexion: reflexion.trim() })
+      setReflexionGuardada(true)
+    } catch {
+      // reflexion is non-critical, fail silently
+    } finally {
+      setGuardandoReflexion(false)
     }
   }
 
@@ -670,6 +688,36 @@ export default function RegistroPage() {
             mensajeCarga="Analizando lo que pasó con tu hijo..."
             categoria="regulacion"
           />
+
+          <div className={styles.reflexionSection}>
+            <p className={styles.reflexionLabel}>
+              ¿Cómo te sentiste tú? ¿Qué harías diferente?
+              <span className={styles.reflexionOpcional}> — opcional</span>
+            </p>
+            <textarea
+              className={styles.textarea}
+              placeholder="Este momento también es tuyo. Escribe lo que quieras…"
+              value={reflexion}
+              onChange={(e) => { setReflexion(e.target.value); setReflexionGuardada(false) }}
+              rows={3}
+            />
+            <div className={styles.reflexionFooter}>
+              {reflexionGuardada
+                ? <span className={styles.reflexionGuardadaMsg}>✓ Guardado</span>
+                : (
+                  <button
+                    className={styles.reflexionSaveBtn}
+                    onClick={handleGuardarReflexion}
+                    disabled={!reflexion.trim() || guardandoReflexion}
+                    type="button"
+                  >
+                    {guardandoReflexion ? 'Guardando…' : 'Guardar reflexión'}
+                  </button>
+                )
+              }
+            </div>
+          </div>
+
           {habilidadSugerida && (
             <button
               className={styles.estrategiaBtn}
