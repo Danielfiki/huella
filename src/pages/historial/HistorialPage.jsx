@@ -518,6 +518,7 @@ export default function HistorialPage() {
       {/* ── Filtros (solo pestaña episodios) ── */}
       {pestaña === 'episodios' && episodios.length > 0 && (
         <div className={styles.filtros}>
+          <p className={styles.filtrosHint}>Filtra los episodios para encontrar patrones</p>
           <div className={styles.filtroSection}>
             <span className={styles.filtroLabel}>Tipo</span>
             <div className={styles.filtroChips}>
