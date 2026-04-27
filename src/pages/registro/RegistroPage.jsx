@@ -276,7 +276,7 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
 
 const NUM_BARS = 20
 
-function NarrativaBar({ value, onChange }) {
+function NarrativaBar({ value, onChange, onVoiceResult }) {
   // idle | grabando | finalizando | revisando | error
   const [voiceEstado, setVoiceEstado] = useState('idle')
   const [transcriptText, setTranscriptText] = useState('')
@@ -454,9 +454,8 @@ function NarrativaBar({ value, onChange }) {
   }
 
   function confirmarVoz() {
-    if (transcriptText) {
-      const newText = value ? value.trim() + ' ' + transcriptText : transcriptText
-      onChange(newText)
+    if (transcriptText && onVoiceResult) {
+      onVoiceResult((prev) => prev ? prev.trim() + ' ' + transcriptText : transcriptText)
     }
     transcriptRef.current = ''
     setTranscriptText('')
@@ -600,7 +599,7 @@ export default function RegistroPage() {
       id: Date.now().toString(),
       tipo,
       intensidad,
-      contexto:    modo === 'detallado' ? contexto : '',
+      contexto:    contexto,
       gatillantes: modo === 'detallado' ? gatillantesSeleccionados : [],
       estadoPadre,
       fecha: modo === 'detallado' ? computarFecha(cuandoPaso, fechaCustom) : new Date().toISOString(),
@@ -735,7 +734,7 @@ export default function RegistroPage() {
         </div>
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-        <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} />
+        <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setContexto} />
 
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
@@ -786,7 +785,7 @@ export default function RegistroPage() {
       </div>
       <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-      <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} />
+      <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setContexto} />
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>

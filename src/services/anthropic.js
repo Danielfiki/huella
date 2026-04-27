@@ -142,33 +142,6 @@ Reglas por tarea: máximo 90 caracteres, verbo de acción concreto, realizable e
   }
 }
 
-export async function extraerCamposDeVoz({ transcripcion, hijo }) {
-  const tiposValidos = ['rabieta', 'llanto', 'agresividad', 'miedo', 'sueño', 'oposicion', 'social', 'desconexion', 'otro']
-  const gatillantesValidos = ['Hambre', 'Cansancio', 'Cambio de rutina', 'Pelea con amigos', 'Pantallas', 'Transiciones', 'Enfermedad', 'Tensión en casa', 'Sobreestimulación', 'Dolor o malestar físico']
-  const estadosValidos = ['Calmado', 'Frustrado', 'Cansado', 'Ansioso', 'Triste', 'Abrumado']
-
-  const prompt = `Eres un asistente que ayuda a padres a registrar episodios de conducta de sus hijos. El padre/madre describió oralmente lo que pasó con ${hijo?.nombre || 'su hijo/a'}${hijo?.edad ? ` (${hijo.edad} años)` : ''}.
-
-Transcripción: "${transcripcion}"
-
-Extrae los campos y devuelve ÚNICAMENTE JSON válido sin texto adicional ni markdown:
-{
-  "tipo": "<uno de ${tiposValidos.join('/')} — el más cercano, o null>",
-  "intensidad": <número del 1 al 5 o null — 1=muy leve, 5=muy intenso; si mencionan escala 1-10 mapear: 1-2→1, 3-4→2, 5-6→3, 7-8→4, 9-10→5>,
-  "contexto": "<resumen del contexto en 1-2 frases, o vacío>",
-  "gatillantes": [<solo elementos exactos de esta lista que claramente apliquen: ${gatillantesValidos.join(', ')}>],
-  "estadoPadre": "<uno de ${estadosValidos.join('/')} o vacío>"
-}`
-
-  const raw = await llamarAPI(prompt, 400)
-  try {
-    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    return JSON.parse(clean)
-  } catch {
-    return null
-  }
-}
-
 export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias }) {
   const hace7 = new Date()
   hace7.setDate(hace7.getDate() - 7)
