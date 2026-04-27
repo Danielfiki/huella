@@ -242,6 +242,121 @@ function nowLocal() {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+const CAL_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const CAL_DIAS  = ['Lu','Ma','Mi','Ju','Vi','Sa','Do']
+
+function parseFechaStr(str) {
+  if (!str) {
+    const n = new Date()
+    return { year: n.getFullYear(), month: n.getMonth(), day: n.getDate(), hour: n.getHours(), minute: n.getMinutes() }
+  }
+  const [d, t] = str.split('T')
+  const [year, month, day] = d.split('-').map(Number)
+  const [hour, minute] = t.split(':').map(Number)
+  return { year, month: month - 1, day, hour, minute }
+}
+
+function TimeSpinner({ value, onUp, onDown }) {
+  return (
+    <div className={styles.timeSpinner}>
+      <button type="button" className={styles.timeBtn} onClick={onUp}>▲</button>
+      <span className={styles.timeVal}>{String(value).padStart(2, '0')}</span>
+      <button type="button" className={styles.timeBtn} onClick={onDown}>▼</button>
+    </div>
+  )
+}
+
+function FechaHoraPicker({ value, onChange, max }) {
+  const sel  = parseFechaStr(value)
+  const maxP = max ? parseFechaStr(max) : null
+
+  const [viewYear,  setViewYear]  = useState(sel.year)
+  const [viewMonth, setViewMonth] = useState(sel.month)
+
+  function emit(y, mo, d, h, min) {
+    const p = n => String(n).padStart(2, '0')
+    onChange(`${y}-${p(mo + 1)}-${p(d)}T${p(h)}:${p(min)}`)
+  }
+
+  const today   = new Date()
+  const minNav  = new Date(today.getFullYear(), today.getMonth() - 3, 1)
+  const canPrev = viewYear > minNav.getFullYear() || (viewYear === minNav.getFullYear() && viewMonth > minNav.getMonth())
+  const canNext = !maxP || viewYear < maxP.year   || (viewYear === maxP.year && viewMonth < maxP.month)
+
+  function prevMonth() {
+    if (!canPrev) return
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+  }
+  function nextMonth() {
+    if (!canNext) return
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+  }
+
+  function isDayDisabled(d) {
+    if (!maxP) return false
+    if (viewYear > maxP.year) return true
+    if (viewYear === maxP.year && viewMonth > maxP.month) return true
+    if (viewYear === maxP.year && viewMonth === maxP.month && d > maxP.day) return true
+    return false
+  }
+
+  const offset   = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7
+  const daysInMo = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const cells    = [...Array(offset).fill(null), ...Array.from({ length: daysInMo }, (_, i) => i + 1)]
+
+  return (
+    <div className={styles.fechaHoraPicker}>
+      <div className={styles.calNav}>
+        <button type="button" className={styles.calNavBtn} onClick={prevMonth} disabled={!canPrev}>‹</button>
+        <span className={styles.calMesLabel}>{CAL_MESES[viewMonth]} {viewYear}</span>
+        <button type="button" className={styles.calNavBtn} onClick={nextMonth} disabled={!canNext}>›</button>
+      </div>
+
+      <div className={styles.calGrid}>
+        {CAL_DIAS.map(d => <span key={d} className={styles.calDia}>{d}</span>)}
+        {cells.map((d, i) => {
+          if (d === null) return <span key={`g${i}`} />
+          const disabled = isDayDisabled(d)
+          const selected = sel.year === viewYear && sel.month === viewMonth && sel.day === d
+          const isHoy    = today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === d
+          return (
+            <button
+              key={d}
+              type="button"
+              disabled={disabled}
+              className={[
+                styles.calDiaBtn,
+                selected           ? styles.calDiaBtnSelected : '',
+                isHoy && !selected ? styles.calDiaBtnHoy      : '',
+                disabled           ? styles.calDiaBtnDisabled  : '',
+              ].filter(Boolean).join(' ')}
+              onClick={() => emit(viewYear, viewMonth, d, sel.hour, sel.minute)}
+            >
+              {d}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className={styles.timePicker}>
+        <TimeSpinner
+          value={sel.hour}
+          onUp={()  => emit(sel.year, sel.month, sel.day, (sel.hour + 1)  % 24, sel.minute)}
+          onDown={() => emit(sel.year, sel.month, sel.day, (sel.hour + 23) % 24, sel.minute)}
+        />
+        <span className={styles.timeSep}>:</span>
+        <TimeSpinner
+          value={sel.minute}
+          onUp={()  => emit(sel.year, sel.month, sel.day, sel.hour, (sel.minute + 5)  % 60)}
+          onDown={() => emit(sel.year, sel.month, sel.day, sel.hour, (sel.minute + 55) % 60)}
+        />
+      </div>
+    </div>
+  )
+}
+
 function TipoSelector({ tipo, setTipo, tipoOtroTexto, setTipoOtroTexto, bigEmoji = false }) {
   return (
     <div className={styles.tipoSelectorWrap}>
@@ -880,12 +995,10 @@ export default function RegistroPage() {
           ))}
         </div>
         {cuandoPaso === 'custom' && (
-          <input
-            type="datetime-local"
-            className={styles.fechaInput}
+          <FechaHoraPicker
             value={fechaCustom}
+            onChange={setFechaCustom}
             max={nowLocal()}
-            onChange={(e) => setFechaCustom(e.target.value)}
           />
         )}
       </Card>

@@ -9,14 +9,14 @@ import {
 
 // ── Paleta ──────────────────────────────────────────────────────────────────
 const C = {
-  primary:      '#e8936a',
-  primaryLight: '#f5c4a8',
-  primaryDark:  '#c96f45',
-  text:         '#1a1a1a',
-  muted:        '#6b7280',
-  border:       '#e5e7eb',
-  surface:      '#f9f7f4',
-  white:        '#ffffff',
+  primary:      '#C17F5E',
+  primaryLight: '#DBA890',
+  primaryDark:  '#A66845',
+  text:         '#2C1810',
+  muted:        '#8B6355',
+  border:       '#E8D5C8',
+  surface:      '#F5EDE8',
+  white:        '#FBF7F4',
   green:        '#6dbf88',
   yellow:       '#f0dfa0',
   red:          '#e87878',
@@ -268,6 +268,19 @@ const s = StyleSheet.create({
     borderLeftWidth: 2,
     borderLeftColor: C.primaryLight,
   },
+  epReflexionLabel: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: C.muted,
+    marginTop: 7,
+    marginBottom: 2,
+  },
+  epReflexion: {
+    fontSize: 9,
+    color: C.text,
+    fontStyle: 'italic',
+    lineHeight: 1.5,
+  },
   mdText: {
     fontSize: 8.5,
     color: C.text,
@@ -354,6 +367,15 @@ const s = StyleSheet.create({
   hitoDesc: {
     fontSize: 9,
     color: C.text,
+  },
+
+  // ── Resumen ejecutivo ──
+  resumenEjecutivoBox: {
+    backgroundColor: C.surface,
+    borderRadius: 6,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: C.primary,
   },
 
   // ── Footer ──
@@ -517,6 +539,18 @@ function HeaderSection({ hijo, generadoEl }) {
   )
 }
 
+function ResumenEjecutivoSection({ texto }) {
+  if (!texto) return null
+  return (
+    <View style={s.section}>
+      <Text style={s.sectionTitle}>Resumen ejecutivo</Text>
+      <View style={s.resumenEjecutivoBox}>
+        {renderOrientacion(texto)}
+      </View>
+    </View>
+  )
+}
+
 function ResumenSection({ episodios }) {
   const r = calcResumen30(episodios)
   if (!r) return null
@@ -617,6 +651,13 @@ function EpisodiosSection({ episodios }) {
               </View>
             </>
           ) : null}
+
+          {ep.reflexion ? (
+            <>
+              <Text style={s.epReflexionLabel}>Reflexion del padre/madre</Text>
+              <Text style={s.epReflexion}>{ep.reflexion}</Text>
+            </>
+          ) : null}
         </View>
       ))}
     </View>
@@ -684,7 +725,7 @@ function Footer() {
 }
 
 // ── Document ───────────────────────────────────────────────────────────────
-export default function InformePDF({ hijo, episodios, estrategias, hitos }) {
+export default function InformePDF({ hijo, episodios, estrategias, hitos, resumenEjecutivo }) {
   const generadoEl = new Date().toLocaleDateString('es-CL', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
@@ -697,6 +738,7 @@ export default function InformePDF({ hijo, episodios, estrategias, hitos }) {
     >
       <Page size="A4" style={s.page}>
         <HeaderSection hijo={hijo} generadoEl={generadoEl} />
+        <ResumenEjecutivoSection texto={resumenEjecutivo} />
         <ResumenSection episodios={episodios} />
         <GatillantesSection episodios={episodios} />
         <EstrategiasSection estrategias={estrategias} />

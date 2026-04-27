@@ -505,6 +505,16 @@ export default function HistorialPage() {
         )
       )}
 
+      {/* ── Botón PDF (solo pestaña episodios) ── */}
+      {pestaña === 'episodios' && episodios.length > 0 && (
+        <GenerarInformeBtn
+          hijo={hijo}
+          episodios={episodios}
+          estrategias={estrategias}
+          hitos={hitos}
+        />
+      )}
+
       {/* ── Filtros (solo pestaña episodios) ── */}
       {pestaña === 'episodios' && episodios.length > 0 && (
         <div className={styles.filtros}>
@@ -569,12 +579,6 @@ export default function HistorialPage() {
                 ))}
               </div>
             ))}
-            <GenerarInformeBtn
-              hijo={hijo}
-              episodios={episodios}
-              estrategias={estrategias}
-              hitos={hitos}
-            />
           </>
         )
       )}

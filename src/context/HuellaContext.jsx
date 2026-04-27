@@ -15,68 +15,119 @@ export function calcularEdad(fechaNacimiento) {
   return edad >= 0 ? edad : null
 }
 
+// state.hijo siempre apunta al elemento activo de state.hijos[].
+// Es un campo derivado mantenido por el reducer — la UI existente
+// que lee state.hijo sigue funcionando sin cambios.
 const initialState = {
-  hijo: null,
-  episodios: [],
-  estrategias: [],
-  hitos: [],
-  padreNombre: '',
+  hijos:        [],
+  hijoActivoId: null,
+  hijo:         null,   // derivado: hijos.find(h => h.id === hijoActivoId) ?? null
+  episodios:    [],
+  estrategias:  [],
+  hitos:        [],
+  padreNombre:  '',
+}
+
+function syncHijo(state) {
+  const hijo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
+  return { ...state, hijo }
 }
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'SET_HIJO':
-      return { ...state, hijo: action.payload }
+    case 'SET_HIJOS':
+      return syncHijo({ ...state, hijos: action.payload })
+
+    case 'ADD_HIJO':
+      return syncHijo({ ...state, hijos: [...state.hijos, action.payload] })
+
+    case 'UPDATE_HIJO':
+      return syncHijo({
+        ...state,
+        hijos: state.hijos.map(h =>
+          h.id === action.payload.id ? { ...h, ...action.payload } : h
+        ),
+      })
+
+    case 'SET_HIJO_ACTIVO':
+      return syncHijo({ ...state, hijoActivoId: action.payload })
+
     case 'SET_EPISODIOS':
       return { ...state, episodios: action.payload }
+
     case 'SET_HITOS':
       return { ...state, hitos: action.payload }
+
     case 'SET_ESTRATEGIAS':
       return { ...state, estrategias: action.payload }
+
     case 'ADD_EPISODIO':
       return { ...state, episodios: [action.payload, ...state.episodios] }
+
     case 'ADD_HITO':
       return { ...state, hitos: [action.payload, ...state.hitos] }
+
     case 'ADD_ESTRATEGIA':
       return { ...state, estrategias: [action.payload, ...state.estrategias] }
+
     case 'REMOVE_EPISODIO':
-      return { ...state, episodios: state.episodios.filter((e) => e.id !== action.payload) }
+      return { ...state, episodios: state.episodios.filter(e => e.id !== action.payload) }
+
     case 'REMOVE_HITO':
-      return { ...state, hitos: state.hitos.filter((h) => h.id !== action.payload) }
+      return { ...state, hitos: state.hitos.filter(h => h.id !== action.payload) }
+
     case 'REMOVE_ESTRATEGIA':
-      return { ...state, estrategias: state.estrategias.filter((e) => e.id !== action.payload) }
+      return { ...state, estrategias: state.estrategias.filter(e => e.id !== action.payload) }
+
     case 'UPDATE_EPISODIO':
       return {
         ...state,
-        episodios: state.episodios.map((e) =>
+        episodios: state.episodios.map(e =>
           e.id === action.payload.id ? { ...e, ...action.payload } : e
         ),
       }
+
     case 'UPDATE_ESTRATEGIA':
       return {
         ...state,
-        estrategias: state.estrategias.map((e) =>
+        estrategias: state.estrategias.map(e =>
           e.id === action.payload.id ? { ...e, ...action.payload } : e
         ),
       }
+
     case 'SET_PADRE_NOMBRE':
       return { ...state, padreNombre: action.payload }
+
     case 'LOAD_STATE':
-      return { ...initialState, ...action.payload }
+      return syncHijo({ ...initialState, ...action.payload })
+
     default:
       return state
   }
 }
 
+// ── Mappers DB → app ──────────────────────────────────────────────────────────
+
+function dbHijoToApp(row) {
+  return {
+    id:              row.id,
+    nombre:          row.nombre,
+    edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
+    avatarUrl:       row.avatar_url ?? null,
+    fechaNacimiento: row.fecha_nacimiento ?? null,
+    genero:          row.genero ?? null,
+  }
+}
+
 function dbEpisodioToApp(row) {
   return {
-    id: row.id,
-    tipo: row.tipo,
-    intensidad: row.intensidad,
-    contexto: row.contexto,
-    gatillantes: row.gatillantes ?? [],
-    estadoPadre: row.estado_padre,
-    fecha: row.fecha,
+    id:               row.id,
+    tipo:             row.tipo,
+    intensidad:       row.intensidad,
+    contexto:         row.contexto,
+    gatillantes:      row.gatillantes ?? [],
+    estadoPadre:      row.estado_padre,
+    fecha:            row.fecha,
     orientacionIA:    row.orientacion_ia    ?? null,
     emocion:          row.emocion           ?? null,
     descripcionLibre: row.descripcion_libre ?? null,
@@ -87,16 +138,18 @@ function dbEpisodioToApp(row) {
 
 function dbEstrategiaToApp(row) {
   return {
-    id: row.id,
-    habilidad: row.habilidad,
-    descripcion: row.descripcion,
-    plan: row.plan,
-    fechaInicio: row.fecha_inicio,
+    id:           row.id,
+    habilidad:    row.habilidad,
+    descripcion:  row.descripcion,
+    plan:         row.plan,
+    fechaInicio:  row.fecha_inicio,
     semanaActual: row.semana_actual,
-    tareas: row.tareas ?? {},
-    checkins: row.checkins ?? {},
+    tareas:       row.tareas   ?? {},
+    checkins:     row.checkins ?? {},
   }
 }
+
+// ── Provider ──────────────────────────────────────────────────────────────────
 
 export function HuellaProvider({ children }) {
   const { user } = useAuth()
@@ -104,7 +157,6 @@ export function HuellaProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [dataLoading, setDataLoading] = useState(false)
 
-  // Incluimos family?.partner?.id en las deps para recargar cuando se conecta la pareja
   useEffect(() => {
     if (!user) {
       dispatch({ type: 'LOAD_STATE', payload: initialState })
@@ -121,12 +173,8 @@ export function HuellaProvider({ children }) {
         ? [userId, currentFamily.partner.id]
         : [userId]
 
-      // No filter — hijos_select RLS returns exactly the row this user can see:
-      // owner via (user_id = auth.uid()), partner via (family_id in family_members)
-      const hijosQuery = supabase.from('hijos').select('*').maybeSingle()
-
       const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
-        hijosQuery,
+        supabase.from('hijos').select('*').order('created_at', { ascending: true }),
         supabase.from('episodios')
           .select('*').in('user_id', partnerIds).order('fecha', { ascending: false }),
         supabase.from('hitos')
@@ -137,19 +185,23 @@ export function HuellaProvider({ children }) {
           .select('nombre').eq('user_id', userId).maybeSingle(),
       ])
 
-      const hijoRow = hijosRes.data
+      const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
+
+      // Preservar el hijo activo seleccionado si todavía existe tras el reload.
+      // Útil cuando el contexto se recarga por cambio de pareja sin que el
+      // usuario haya cambiado de hijo. Fallback: primer hijo de la lista.
+      const ids = new Set(hijos.map(h => h.id))
+      const hijoActivoId = ids.has(state.hijoActivoId)
+        ? state.hijoActivoId
+        : (hijos[0]?.id ?? null)
+
       dispatch({
         type: 'LOAD_STATE',
         payload: {
-          hijo: hijoRow ? {
-            nombre:          hijoRow.nombre,
-            edad:            calcularEdad(hijoRow.fecha_nacimiento) ?? hijoRow.edad ?? null,
-            avatarUrl:       hijoRow.avatar_url ?? null,
-            fechaNacimiento: hijoRow.fecha_nacimiento ?? null,
-            genero:          hijoRow.genero ?? null,
-          } : null,
-          episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
-          hitos: hitosRes.data ?? [],
+          hijos,
+          hijoActivoId,
+          episodios:   (episodiosRes.data ?? []).map(dbEpisodioToApp),
+          hitos:       hitosRes.data ?? [],
           estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
           padreNombre: perfilRes.data?.nombre ?? '',
         },
@@ -165,40 +217,66 @@ export function HuellaProvider({ children }) {
     if (user) loadUserData(user.id, overrideFamily !== undefined ? overrideFamily : family)
   }
 
-  // Helper: IDs para refetch tras mutaciones (propio + pareja si existe)
   function getPartnerIds() {
     return family?.partner?.id ? [user.id, family.partner.id] : [user.id]
   }
 
-  async function setHijo(hijo) {
+  // ── Hijos ─────────────────────────────────────────────────────────────────
+
+  function setHijoActivo(id) {
+    dispatch({ type: 'SET_HIJO_ACTIVO', payload: id })
+  }
+
+  // datos: { nombre, avatarUrl?, fechaNacimiento?, genero? }
+  // hijoId = null  → INSERT (nuevo hijo); devuelve el UUID generado
+  // hijoId = uuid  → UPDATE (edita ese hijo); devuelve el mismo UUID
+  async function setHijo(datos, hijoId = null) {
     if (!user) return
-    const anterior = state.hijo
-    dispatch({ type: 'SET_HIJO', payload: hijo })
+
     const rpcParams = {
-      p_nombre:            hijo.nombre,
+      p_nombre:            datos.nombre,
       p_edad:              null,
-      p_avatar_url:        hijo.avatarUrl ?? null,
-      p_fecha_nacimiento:  hijo.fechaNacimiento ?? null,
-      p_genero:            hijo.genero ?? null,
+      p_avatar_url:        datos.avatarUrl       ?? null,
+      p_fecha_nacimiento:  datos.fechaNacimiento ?? null,
+      p_genero:            datos.genero          ?? null,
+      p_hijo_id:           hijoId                ?? null,
     }
 
-    const { error } = await supabase.rpc('upsert_family_child', rpcParams)
+    if (hijoId) {
+      // Optimistic update para edición
+      const anterior = state.hijos.find(h => h.id === hijoId)
+      dispatch({ type: 'UPDATE_HIJO', payload: { id: hijoId, ...datos } })
+
+      const { data: returnedId, error } = await supabase.rpc('upsert_family_child', rpcParams)
+      if (error) {
+        console.error('[setHijo] error en upsert_family_child:', error)
+        if (anterior) dispatch({ type: 'UPDATE_HIJO', payload: anterior })
+        throw new Error(error.message)
+      }
+      // Confirmar con datos canónicos de la DB
+      const { data: hijoRow } = await supabase
+        .from('hijos').select('*').eq('id', returnedId).maybeSingle()
+      if (hijoRow) dispatch({ type: 'UPDATE_HIJO', payload: dbHijoToApp(hijoRow) })
+      return returnedId
+    }
+
+    // Crear nuevo hijo (no hay optimistic — el id lo genera la DB)
+    const { data: returnedId, error } = await supabase.rpc('upsert_family_child', rpcParams)
     if (error) {
       console.error('[setHijo] error en upsert_family_child:', error)
-      dispatch({ type: 'SET_HIJO', payload: anterior })
       throw new Error(error.message)
     }
-    const { data: hijoRow } = await supabase.from('hijos').select('*').maybeSingle()
+    const { data: hijoRow } = await supabase
+      .from('hijos').select('*').eq('id', returnedId).maybeSingle()
     if (hijoRow) {
-      dispatch({ type: 'SET_HIJO', payload: {
-        nombre:          hijoRow.nombre,
-        edad:            calcularEdad(hijoRow.fecha_nacimiento) ?? hijoRow.edad ?? null,
-        avatarUrl:       hijoRow.avatar_url ?? null,
-        fechaNacimiento: hijoRow.fecha_nacimiento ?? null,
-        genero:          hijoRow.genero ?? null,
-      }})
+      const nuevoHijo = dbHijoToApp(hijoRow)
+      dispatch({ type: 'ADD_HIJO',       payload: nuevoHijo })
+      dispatch({ type: 'SET_HIJO_ACTIVO', payload: nuevoHijo.id })
     }
+    return returnedId
   }
+
+  // ── Episodios ─────────────────────────────────────────────────────────────
 
   async function addEpisodio(episodio) {
     if (!user || !supabase) return null
@@ -206,14 +284,14 @@ export function HuellaProvider({ children }) {
     const { data: inserted, error } = await supabase
       .from('episodios')
       .insert({
-        user_id:      user.id,
-        tipo:         episodio.tipo,
-        intensidad:   episodio.intensidad,
-        contexto:     episodio.contexto,
-        gatillantes:  episodio.gatillantes,
-        estado_padre: episodio.estadoPadre,
-        fecha:            episodio.fecha,
-        emocion:          episodio.emocion          ?? null,
+        user_id:           user.id,
+        tipo:              episodio.tipo,
+        intensidad:        episodio.intensidad,
+        contexto:          episodio.contexto,
+        gatillantes:       episodio.gatillantes,
+        estado_padre:      episodio.estadoPadre,
+        fecha:             episodio.fecha,
+        emocion:           episodio.emocion          ?? null,
         descripcion_libre: episodio.descripcionLibre ?? null,
       })
       .select()
@@ -256,6 +334,8 @@ export function HuellaProvider({ children }) {
     await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 
+  // ── Hitos ─────────────────────────────────────────────────────────────────
+
   async function addHito(hito) {
     if (!user || !supabase) return null
     dispatch({ type: 'ADD_HITO', payload: hito })
@@ -288,6 +368,8 @@ export function HuellaProvider({ children }) {
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
   }
 
+  // ── Estrategias ───────────────────────────────────────────────────────────
+
   async function addEstrategia(estrategia) {
     if (!user || !supabase) return null
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
@@ -311,15 +393,6 @@ export function HuellaProvider({ children }) {
       .order('fecha_inicio', { ascending: false })
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
     return realId
-  }
-
-  async function savePadreNombre(nombre) {
-    if (!user) return
-    dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
-    const { error } = await supabase
-      .from('perfiles')
-      .upsert({ user_id: user.id, nombre }, { onConflict: 'user_id' })
-    if (error) throw new Error(error.message)
   }
 
   async function updateEstrategia(partial) {
@@ -349,6 +422,17 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // ── Perfil padre/madre ────────────────────────────────────────────────────
+
+  async function savePadreNombre(nombre) {
+    if (!user) return
+    dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
+    const { error } = await supabase
+      .from('perfiles')
+      .upsert({ user_id: user.id, nombre }, { onConflict: 'user_id' })
+    if (error) throw new Error(error.message)
+  }
+
   return (
     <HuellaContext.Provider value={{
       state,
@@ -356,6 +440,7 @@ export function HuellaProvider({ children }) {
       dataLoading,
       reloadData,
       setHijo,
+      setHijoActivo,
       addEpisodio,
       updateEpisodio,
       deleteEpisodio,

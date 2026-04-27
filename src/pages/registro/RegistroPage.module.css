@@ -294,6 +294,150 @@
 }
 .fechaInput:focus { border-color: var(--color-primary); }
 
+/* ── Date + time picker custom ─────────────────────── */
+.fechaHoraPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  margin-top: 4px;
+}
+
+.calNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calNavBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.calNavBtn:hover:not(:disabled) { background: var(--color-border); color: var(--color-text); }
+.calNavBtn:disabled { opacity: 0.25; cursor: default; }
+
+.calMesLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calDia {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 2px 0 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.calDiaBtn {
+  aspect-ratio: 1;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+}
+.calDiaBtn:hover:not(:disabled) { background: var(--color-border); }
+.calDiaBtnSelected {
+  background: var(--color-primary) !important;
+  color: white !important;
+  font-weight: 700;
+}
+.calDiaBtnHoy {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.calDiaBtnDisabled { opacity: 0.25; cursor: not-allowed; }
+
+.timePicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.timeSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeBtn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.timeBtn:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+}
+.timeBtn:active { background: var(--color-primary); color: white; }
+
+.timeVal {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: center;
+  line-height: 1;
+}
+
+.timeSep {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  line-height: 1;
+  padding-bottom: 2px;
+}
+
 /* ── Confirmación guardado ──────────────────────────────── */
 
 .guardadoContainer { display: flex; flex-direction: column; gap: 14px; }

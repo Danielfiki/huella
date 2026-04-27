@@ -155,6 +155,31 @@
   font-weight: 700;
 }
 
+/* ── Agregar hijo ── */
+.agregarHijoBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  background: none;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.agregarHijoBtn:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
 /* ── Mi Familia ── */
 .familyConnected {
   display: flex;

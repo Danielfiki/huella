@@ -110,7 +110,7 @@
   background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   border-radius: var(--radius-lg, 16px);
   color: #fff;
-  box-shadow: 0 4px 20px rgba(212, 134, 42, 0.3);
+  box-shadow: 0 4px 20px rgba(193, 127, 94, 0.3);
 }
 
 .rachaTop {
@@ -312,6 +312,117 @@
   font-size: 14px;
   color: var(--color-text-muted);
   line-height: 1.6;
+}
+
+/* ── Formulario nuevo hijo ── */
+.formHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 0;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.backBtn:hover { background: var(--color-border); }
+
+.formTitulo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 16px 32px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campoLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.required {
+  color: var(--color-primary);
+  margin-left: 2px;
+}
+
+.input {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 15px;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus { border-color: var(--color-primary); }
+
+.generoRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.generoBtn {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-alt);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.generoBtn:hover { border-color: var(--color-primary-light); color: var(--color-text); }
+
+.generoBtnActivo {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.formError {
+  font-size: 13px;
+  color: #e53e3e;
+  margin: 0;
+}
+
+.guardarBtn {
+  margin-top: 4px;
 }
 
 /* ── Álbum de momentos ── */

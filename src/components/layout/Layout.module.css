@@ -89,12 +89,12 @@
 
 .navItem:hover {
   color: var(--color-primary);
-  background: rgba(212, 134, 42, 0.12);
+  background: rgba(193, 127, 94, 0.12);
 }
 
 .navItemActive {
   color: var(--color-primary);
-  background: rgba(212, 134, 42, 0.18);
+  background: rgba(193, 127, 94, 0.18);
 }
 
 .navItemActive svg {

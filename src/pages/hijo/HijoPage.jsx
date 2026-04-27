@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowUp, ArrowDown, Minus, Settings } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowUp, ArrowDown, Minus, Settings, ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import styles from './HijoPage.module.css'
@@ -19,7 +19,6 @@ function calcularRacha(episodios, hitos) {
   if (set.size === 0) return 0
   const cursor = new Date()
   cursor.setHours(0, 0, 0, 0)
-  // Permitir que la racha empiece desde ayer si hoy no hay actividad
   if (!set.has(toDateStr(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
     if (!set.has(toDateStr(cursor))) return 0
@@ -62,7 +61,6 @@ function calcularEvolucion(episodios) {
   return { este, anterior, diff, pct }
 }
 
-// Evaluación compacta de badges (subset de NIVELES en HitosPage)
 function calcularLogrosRecientes(data) {
   const { episodios, hitos, estrategias } = data
   const diasActivos = (() => {
@@ -94,23 +92,148 @@ function calcularLogrosRecientes(data) {
     .slice(0, 3)
 }
 
+// ── Helpers fecha (modo creación) ─────────────────────────────────────────
+
+function isoToDisplay(iso) {
+  if (!iso || iso.length < 10) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function displayToIso(display) {
+  const digits = display.replace(/\D/g, '')
+  if (digits.length !== 8) return ''
+  const d = digits.slice(0, 2), m = digits.slice(2, 4), y = digits.slice(4, 8)
+  const date = new Date(`${y}-${m}-${d}`)
+  if (isNaN(date.getTime()) || date.getMonth() + 1 !== Number(m)) return ''
+  return `${y}-${m}-${d}`
+}
+
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 const HITO_EMOJIS = { autorregulacion: '🌱', empatia: '💛', disculpa: '🤝', frustration: '💪', social: '👫', otro: '⭐' }
 
 // ── Componente ────────────────────────────────────────────────────────────
 
 export default function HijoPage() {
-  const { state } = useHuella()
+  const { state, setHijo } = useHuella()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { hijo, episodios, hitos, estrategias } = state
 
-  const racha = useMemo(() => calcularRacha(episodios, hitos), [episodios, hitos])
-  const evolucion = useMemo(() => calcularEvolucion(episodios), [episodios])
-  const logros = useMemo(() => calcularLogrosRecientes({ episodios, hitos, estrategias }), [episodios, hitos, estrategias])
-  const ultimosHitos = useMemo(() => [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5), [hitos])
+  const esNuevo = searchParams.get('nuevo') === 'true'
 
-  const nombreMesActual = MESES[new Date().getMonth()]
+  // Estados del formulario de creación (siempre declarados — regla de hooks)
+  const [nombre, setNombre]               = useState('')
+  const [fechaNacimiento, setFechaNacimiento] = useState('')
+  const [fechaDisplay, setFechaDisplay]   = useState('')
+  const [genero, setGenero]               = useState('')
+  const [loadingCrear, setLoadingCrear]   = useState(false)
+  const [errorCrear, setErrorCrear]       = useState('')
 
+  function handleFechaChange(e) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let display = digits
+    if (digits.length > 4) display = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`
+    else if (digits.length > 2) display = `${digits.slice(0,2)}/${digits.slice(2)}`
+    setFechaDisplay(display)
+    const iso = displayToIso(display)
+    setFechaNacimiento(iso || (digits.length === 0 ? '' : fechaNacimiento))
+  }
+
+  async function handleCrear(e) {
+    e.preventDefault()
+    if (!nombre.trim()) return
+    setLoadingCrear(true)
+    setErrorCrear('')
+    try {
+      await setHijo({
+        nombre:          nombre.trim(),
+        avatarUrl:       null,
+        fechaNacimiento: fechaNacimiento || null,
+        genero:          genero || null,
+      }, null)
+      navigate('/hijo')
+    } catch {
+      setErrorCrear('No se pudo crear. Intenta de nuevo.')
+    } finally {
+      setLoadingCrear(false)
+    }
+  }
+
+  // ── Modo creación ─────────────────────────────────────────────────────────
+  if (esNuevo) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.formHeader}>
+          <button
+            type="button"
+            className={styles.backBtn}
+            onClick={() => navigate(-1)}
+            aria-label="Volver"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className={styles.formTitulo}>Nuevo hijo/a</h2>
+        </div>
+
+        <Card>
+          <form onSubmit={handleCrear} className={styles.form}>
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>
+                Nombre <span className={styles.required}>*</span>
+              </label>
+              <input
+                className={styles.input}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Nombre del niño/a"
+                autoFocus
+              />
+            </div>
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>Fecha de nacimiento</label>
+              <input
+                className={styles.input}
+                value={fechaDisplay}
+                onChange={handleFechaChange}
+                placeholder="DD/MM/AAAA"
+                inputMode="numeric"
+              />
+            </div>
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>Género</label>
+              <div className={styles.generoRow}>
+                {[['m', 'Niño'], ['f', 'Niña'], ['nb', 'Otro']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`${styles.generoBtn} ${genero === val ? styles.generoBtnActivo : ''}`}
+                    onClick={() => setGenero((g) => g === val ? '' : val)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {errorCrear && <p className={styles.formError}>{errorCrear}</p>}
+
+            <button
+              type="submit"
+              className={styles.guardarBtn}
+              disabled={!nombre.trim() || loadingCrear}
+            >
+              {loadingCrear ? 'Guardando…' : 'Crear hijo/a'}
+            </button>
+          </form>
+        </Card>
+      </div>
+    )
+  }
+
+  // ── Modo vista vacía ──────────────────────────────────────────────────────
   if (!hijo) {
     return (
       <div className={styles.page}>
@@ -124,6 +247,13 @@ export default function HijoPage() {
       </div>
     )
   }
+
+  // ── Modo stats ────────────────────────────────────────────────────────────
+  const racha        = calcularRacha(episodios, hitos)
+  const evolucion    = calcularEvolucion(episodios)
+  const logros       = calcularLogrosRecientes({ episodios, hitos, estrategias })
+  const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5)
+  const nombreMesActual = MESES[new Date().getMonth()]
 
   return (
     <div className={styles.page}>

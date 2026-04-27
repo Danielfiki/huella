@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdad } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
@@ -129,7 +129,7 @@ export default function PerfilPage() {
           avatarUrl:       state.hijo?.avatarUrl ?? null,
           fechaNacimiento: fechaNacimiento || null,
           genero:          genero || null,
-        }),
+        }, state.hijo?.id ?? null),
         padreNombre.trim() ? savePadreNombre(padreNombre.trim()) : Promise.resolve(),
       ])
       setGuardadoOk(true)
@@ -162,7 +162,7 @@ export default function PerfilPage() {
         avatarUrl:       url,
         fechaNacimiento: fechaNacimiento || state.hijo?.fechaNacimiento || null,
         genero:          genero || state.hijo?.genero || null,
-      })
+      }, state.hijo?.id ?? null)
     } catch (err) {
       console.error('Error subiendo avatar:', err)
       setErrorAvatar('No se pudo subir la foto. Asegúrate de tener conexión e intenta de nuevo.')
@@ -383,6 +383,15 @@ export default function PerfilPage() {
             )}
           </Button>
         </form>
+
+        <button
+          type="button"
+          className={styles.agregarHijoBtn}
+          onClick={() => navigate('/hijo?nuevo=true')}
+        >
+          <Plus size={14} />
+          Agregar otro hijo/a
+        </button>
       </Card>
 
       {/* ── Mi Familia ───────────────────────────────── */}

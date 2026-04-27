@@ -220,12 +220,12 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state } = useHuella()
+  const { state, setHijoActivo } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
 
-  const { hijo, episodios, hitos, estrategias, padreNombre } = state
+  const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
   const hora = new Date().getHours()
   const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombreHijo, hijo?.edad)
@@ -406,6 +406,30 @@ export default function PanelPage() {
           {!hijo && <p className={styles.greetingSubtitulo}>Configura el perfil de tu hijo/a para empezar.</p>}
         </div>
       </div>
+
+      {/* ── Selector de hijo activo (solo si hay más de uno) ── */}
+      {hijos.length > 1 && (
+        <div className={styles.selectorHijos}>
+          {hijos.map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              className={`${styles.selectorChip} ${h.id === state.hijoActivoId ? styles.selectorChipActivo : ''}`}
+              onClick={() => setHijoActivo(h.id)}
+            >
+              {h.nombre}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={styles.selectorAddBtn}
+            onClick={() => navigate('/hijo?nuevo=true')}
+            aria-label="Agregar hijo"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      )}
 
       {episodios.length === 0 ? (
 
