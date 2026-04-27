@@ -65,8 +65,8 @@
   --font-heading: 'Fraunces', Georgia, serif;
 
   /* ── Navegación oscura ── */
-  --color-nav: #2C1810;
-  --color-nav-border: #4A2E20;
+  --color-nav: #e8936a;
+  --color-nav-border: #c96f45;
   --color-nav-text: rgba(255, 245, 235, 0.6);
   --color-nav-text-active: #FFF5EB;
 }
