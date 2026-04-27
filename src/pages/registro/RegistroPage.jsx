@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X, Mic, Check } from 'lucide-react'
+import { X, Mic, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
@@ -187,9 +187,6 @@ const TIPOS = [
   { id: 'otro',        label: 'Otro',                             emoji: '📝' },
 ]
 
-const TIPOS_PRINCIPALES = TIPOS.slice(0, 6)
-const TIPOS_EXTRAS = TIPOS.slice(6)
-
 const INTENSIDADES = [
   { valor: 1, emoji: '😌', label: 'Muy leve' },
   { valor: 2, emoji: '🙁', label: 'Leve' },
@@ -245,13 +242,11 @@ function nowLocal() {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
-  const [verMas, setVerMas] = useState(false)
-  const mostrar = verMas ? TIPOS : TIPOS_PRINCIPALES
+function TipoSelector({ tipo, setTipo, tipoOtroTexto, setTipoOtroTexto, bigEmoji = false }) {
   return (
-    <div>
+    <div className={styles.tipoSelectorWrap}>
       <div className={bigEmoji ? styles.tiposGridBig : styles.tiposGrid}>
-        {mostrar.map((t) => (
+        {TIPOS.map((t) => (
           <button
             key={t.id}
             className={[
@@ -265,11 +260,15 @@ function TipoSelector({ tipo, setTipo, bigEmoji = false }) {
           </button>
         ))}
       </div>
-      <button className={styles.verMasBtn} onClick={() => setVerMas((v) => !v)}>
-        {verMas
-          ? <><ChevronUp size={13} /> Ver menos</>
-          : <><ChevronDown size={13} /> Ver más tipos</>}
-      </button>
+      {tipo === 'otro' && (
+        <textarea
+          className={styles.tipoOtroInput}
+          placeholder="¿Cómo describirías lo que pasó?"
+          value={tipoOtroTexto}
+          onChange={(e) => setTipoOtroTexto(e.target.value)}
+          rows={2}
+        />
+      )}
     </div>
   )
 }
@@ -556,6 +555,7 @@ export default function RegistroPage() {
   // shared fields
   const [tipo, setTipo] = useState('')
   const [intensidad, setIntensidad] = useState(null)
+  const [tipoOtroTexto, setTipoOtroTexto] = useState('')
   const [descripcionLibre, setDescripcionLibre] = useState('')
 
   // detailed-only fields
@@ -608,7 +608,9 @@ export default function RegistroPage() {
       estadoPadre,
       fecha: modo === 'detallado' ? computarFecha(cuandoPaso, fechaCustom) : new Date().toISOString(),
       emocion:          modo === 'detallado' ? (emocionSeleccionada || null) : null,
-      descripcionLibre: descripcionLibre.trim() || null,
+      descripcionLibre: tipo === 'otro' && tipoOtroTexto.trim()
+        ? tipoOtroTexto.trim() + (descripcionLibre.trim() ? '. ' + descripcionLibre.trim() : '')
+        : descripcionLibre.trim() || null,
     }
 
     setLoadingGuardar(true)
@@ -786,7 +788,7 @@ export default function RegistroPage() {
 
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
-          <TipoSelector tipo={tipo} setTipo={setTipo} bigEmoji />
+          <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} bigEmoji />
         </Card>
 
         <Card>
@@ -837,7 +839,7 @@ export default function RegistroPage() {
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>
-        <TipoSelector tipo={tipo} setTipo={setTipo} />
+        <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} />
       </Card>
 
       <Card>
