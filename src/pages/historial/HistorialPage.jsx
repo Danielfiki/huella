@@ -249,8 +249,21 @@ function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
         </div>
       ) : null}
 
-      {ep.estadoPadre ? (
-        <p className={styles.estadoPadre}>Estado del padre: {ep.estadoPadre}</p>
+      {(ep.emocion || ep.estadoPadre) ? (
+        <div className={styles.emocionEstadoRow}>
+          {ep.emocion && (
+            <span className={styles.emocionPill}>
+              <span className={styles.emocionPillLabel}>niño/a</span>
+              {ep.emocion}
+            </span>
+          )}
+          {ep.estadoPadre && (
+            <span className={styles.estadoPill}>
+              <span className={styles.estadoPillLabel}>yo</span>
+              {ep.estadoPadre}
+            </span>
+          )}
+        </div>
       ) : null}
 
       {ep.descripcionLibre ? (
@@ -312,6 +325,21 @@ export default function HistorialPage() {
   const { state, deleteEpisodio, updateEpisodio } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
   const [pestaña, setPestaña] = useState('todos')
+  const [filtroTipos, setFiltroTipos] = useState(() => new Set())
+  const [filtroIntensidad, setFiltroIntensidad] = useState(null)
+
+  function toggleFiltroTipo(tipo) {
+    setFiltroTipos((prev) => {
+      const next = new Set(prev)
+      next.has(tipo) ? next.delete(tipo) : next.add(tipo)
+      return next
+    })
+  }
+  function limpiarFiltros() {
+    setFiltroTipos(new Set())
+    setFiltroIntensidad(null)
+  }
+  const hayFiltros = filtroTipos.size > 0 || filtroIntensidad !== null
 
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find((e) => e.semanaActual < 4) ?? null,
@@ -345,7 +373,13 @@ export default function HistorialPage() {
     return agruparItemsPorDia(items)
   }, [episodios, hitos])
 
-  const gruposEpisodios = useMemo(() => agruparPorDia(episodios), [episodios])
+  const episodiosFiltrados = useMemo(() => episodios.filter((ep) => {
+    if (filtroTipos.size > 0 && !filtroTipos.has(ep.tipo)) return false
+    if (filtroIntensidad !== null && ep.intensidad !== filtroIntensidad) return false
+    return true
+  }), [episodios, filtroTipos, filtroIntensidad])
+
+  const gruposEpisodios = useMemo(() => agruparPorDia(episodiosFiltrados), [episodiosFiltrados])
 
   const hitosOrdenados = useMemo(
     () => [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
@@ -367,7 +401,9 @@ export default function HistorialPage() {
     pestaña === 'todos'
       ? `${totalRegistros} registro${totalRegistros !== 1 ? 's' : ''}`
       : pestaña === 'episodios'
-      ? `${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
+      ? hayFiltros
+        ? `${episodiosFiltrados.length} de ${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
+        : `${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
       : `${hitos.length} avance${hitos.length !== 1 ? 's' : ''}`
 
   if (totalRegistros === 0) {
@@ -467,6 +503,48 @@ export default function HistorialPage() {
             </div>
           ))
         )
+      )}
+
+      {/* ── Filtros (solo pestaña episodios) ── */}
+      {pestaña === 'episodios' && episodios.length > 0 && (
+        <div className={styles.filtros}>
+          <div className={styles.filtroSection}>
+            <span className={styles.filtroLabel}>Tipo</span>
+            <div className={styles.filtroChips}>
+              {Object.entries(TIPOS).map(([id, { emoji, label }]) => (
+                <button
+                  key={id}
+                  className={`${styles.filtroChip} ${filtroTipos.has(id) ? styles.filtroChipActive : ''}`}
+                  onClick={() => toggleFiltroTipo(id)}
+                  title={label}
+                  type="button"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filtroSection}>
+            <span className={styles.filtroLabel}>Intensidad</span>
+            <div className={styles.filtroChips}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  className={`${styles.filtroChip} ${filtroIntensidad === n ? styles.filtroChipActive : ''}`}
+                  onClick={() => setFiltroIntensidad((prev) => prev === n ? null : n)}
+                  type="button"
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          {hayFiltros && (
+            <button className={styles.limpiarFiltros} onClick={limpiarFiltros} type="button">
+              Limpiar filtros
+            </button>
+          )}
+        </div>
       )}
 
       {/* ── EPISODIOS ── */}

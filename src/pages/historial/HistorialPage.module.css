@@ -212,10 +212,111 @@
   border-radius: 999px; color: var(--color-text-muted);
 }
 
-.estadoPadre {
-  font-size: 12px; color: var(--color-text-muted);
-  font-style: italic; margin: 0;
+/* ── Emoción del niño + estado del padre ── */
+.emocionEstadoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 }
+
+.emocionPill, .estadoPill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.emocionPill {
+  background: var(--color-accent-lavender);
+  color: #4a3870;
+}
+
+.estadoPill {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.emocionPillLabel, .estadoPillLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.65;
+}
+
+/* ── Filtros ── */
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.filtroSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filtroLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  width: 62px;
+}
+
+.filtroChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.filtroChip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.filtroChip:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-text);
+}
+.filtroChipActive {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.limpiarFiltros {
+  font-size: 12px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+  font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s;
+}
+.limpiarFiltros:hover { opacity: 0.75; }
 
 /* ── Descripción libre (relato de voz) ── */
 .descripcionLibreWrap {
