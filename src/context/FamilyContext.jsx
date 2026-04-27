@@ -40,7 +40,7 @@ export function FamilyProvider({ children }) {
           .maybeSingle(),
       ])
 
-      console.log('[FamilyContext] family_members row:', { membership, memberError, userId: user.id })
+
 
       if (membership?.family_id) {
         // Round 2: find the other member in this family

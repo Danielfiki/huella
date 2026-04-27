@@ -181,7 +181,7 @@ export function HuellaProvider({ children }) {
       p_fecha_nacimiento:  hijo.fechaNacimiento ?? null,
       p_genero:            hijo.genero ?? null,
     }
-    console.log('[setHijo] llamando upsert_family_child con:', rpcParams)
+
     const { error } = await supabase.rpc('upsert_family_child', rpcParams)
     if (error) {
       console.error('[setHijo] error en upsert_family_child:', error)
