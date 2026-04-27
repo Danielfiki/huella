@@ -8,21 +8,21 @@
 
 :root {
   /* ── Fondos ── */
-  --color-bg: #FAFAF8;
-  --color-surface: #F5E6D8;
-  --color-surface-alt: #EDD5C2;
-  --color-border: #E0C9B5;
+  --color-bg: #FBF7F0;
+  --color-surface: #F5E6CF;
+  --color-surface-alt: #E8D4B5;
+  --color-border: #E5D0B0;
 
-  /* ── Primario — fuego #E8622A ── */
-  --color-primary: #E8622A;
-  --color-primary-light: #F5B49A;
-  --color-primary-dark: #C44E1E;
+  /* ── Primario — cacao y sol #D4862A ── */
+  --color-primary: #D4862A;
+  --color-primary-light: #EFC088;
+  --color-primary-dark: #B56E1A;
 
   /* ── Tints semánticos ── */
-  --color-primary-bg: #FDEEE6;
+  --color-primary-bg: #FEF3E0;
   --color-success-bg: #EBF3EC;
-  --color-celebration-start: #FDF5EE;
-  --color-celebration-end: #FDEEE6;
+  --color-celebration-start: #FEF8F0;
+  --color-celebration-end: #FEF3E0;
   --color-danger-bg: #FFF2F2;
   --color-danger-border: #F5BEBE;
   --color-danger-text: #A83228;
@@ -37,10 +37,10 @@
   --color-tag-green: #3D6B42;
   --color-tag-blue: #274A68;
 
-  /* ── Texto — índigo #1E2A4A ── */
-  --color-text: #1E2A4A;
-  --color-text-muted: #5A6A8A;
-  --color-text-light: #8A9AB8;
+  /* ── Texto — cacao #1C0F0A ── */
+  --color-text: #1C0F0A;
+  --color-text-muted: #6B4A35;
+  --color-text-light: #A07A60;
 
   /* ── Estados ── */
   --color-success: #7A9E7E;
@@ -54,36 +54,36 @@
   --radius-xl: 28px;
 
   /* ── Sombras ── */
-  --shadow-sm: 0 2px 12px rgba(30, 42, 74, 0.06);
-  --shadow-md: 0 6px 24px rgba(30, 42, 74, 0.09);
-  --shadow-lg: 0 12px 48px rgba(30, 42, 74, 0.12);
+  --shadow-sm: 0 2px 12px rgba(28, 15, 10, 0.07);
+  --shadow-md: 0 6px 24px rgba(28, 15, 10, 0.10);
+  --shadow-lg: 0 12px 48px rgba(28, 15, 10, 0.14);
 
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Fraunces', Georgia, serif;
 
   /* ── Navegación oscura ── */
-  --color-nav: #1E2A4A;
-  --color-nav-border: #2E3F6F;
-  --color-nav-text: rgba(239, 243, 255, 0.6);
-  --color-nav-text-active: #EFF3FF;
+  --color-nav: #1C0F0A;
+  --color-nav-border: #3D1F12;
+  --color-nav-text: rgba(255, 245, 230, 0.6);
+  --color-nav-text-active: #FFF5E6;
 }
 
 /* ── Modo oscuro ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #0E1625;
-    --color-surface: #1A2240;
-    --color-surface-alt: #243060;
-    --color-border: #2E3F6F;
+    --color-bg: #0F0805;
+    --color-surface: #1E1008;
+    --color-surface-alt: #2A1A0A;
+    --color-border: #3D2010;
 
-    --color-primary: #F07A4A;
-    --color-primary-light: #3A1808;
-    --color-primary-dark: #F5A080;
+    --color-primary: #E09840;
+    --color-primary-light: #3A2008;
+    --color-primary-dark: #EFB050;
 
     --color-primary-bg: #2A1808;
     --color-success-bg: #182618;
-    --color-celebration-start: #251A08;
+    --color-celebration-start: #261A08;
     --color-celebration-end: #2A1808;
     --color-danger-bg: #2E1515;
     --color-danger-border: #5A2828;
@@ -97,9 +97,9 @@
     --color-tag-green: #7ABF88;
     --color-tag-blue: #7FB3D3;
 
-    --color-text: #EFF3FF;
-    --color-text-muted: #7A90B8;
-    --color-text-light: #4A5A80;
+    --color-text: #FFF5E6;
+    --color-text-muted: #C09070;
+    --color-text-light: #7A5040;
 
     --color-success: #7ABF88;
     --color-warning: #E0A858;
@@ -109,10 +109,10 @@
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.65);
 
-    --color-nav: #0A1020;
-    --color-nav-border: #1A2540;
-    --color-nav-text: rgba(239, 243, 255, 0.5);
-    --color-nav-text-active: #EFF3FF;
+    --color-nav: #0A0503;
+    --color-nav-border: #1C0F0A;
+    --color-nav-text: rgba(255, 245, 230, 0.5);
+    --color-nav-text-active: #FFF5E6;
   }
 }
 
