@@ -250,6 +250,35 @@
   color: var(--color-primary-dark);
 }
 
+/* ── Quién estuvo presente (No lo vi yo) ── */
+.quienEstuvoWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quienEstuvoLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.quienEstuvoInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: var(--font-family);
+  box-sizing: border-box;
+}
+.quienEstuvoInput:focus { border-color: var(--color-primary); }
+.quienEstuvoInput::placeholder { color: var(--color-text-light); }
+
 .fechaInput {
   margin-top: 12px;
   width: 100%;

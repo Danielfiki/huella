@@ -195,7 +195,7 @@ const INTENSIDADES = [
   { valor: 5, emoji: '😱', label: 'Muy intenso' },
 ]
 
-const ESTADOS_PADRE = ['Calmado', 'Frustrado', 'Cansado', 'Ansioso', 'Triste', 'Abrumado']
+const ESTADOS_PADRE = ['Calmado', 'Frustrado', 'Cansado', 'Ansioso', 'Triste', 'Abrumado', 'No lo vi yo']
 
 const GATILLANTES = [
   'Hambre', 'Cansancio', 'Cambio de rutina',
@@ -566,6 +566,7 @@ export default function RegistroPage() {
   const [gatillantesSeleccionados, setGatillantesSeleccionados] = useState([])
   const [estadoPadrePicker, setEstadoPadrePicker] = useState('')
   const [estadoPadreExtra, setEstadoPadreExtra] = useState('')
+  const [quienEstuvo, setQuienEstuvo] = useState('')
 
   // post-save
   const [respuestaIA, setRespuestaIA] = useState('')
@@ -594,9 +595,11 @@ export default function RegistroPage() {
     if (!tipo || !intensidad) return
 
     const estadoPadre = modo === 'detallado'
-      ? estadoPadrePicker
-        ? estadoPadreExtra ? `${estadoPadrePicker}. ${estadoPadreExtra}` : estadoPadrePicker
-        : estadoPadreExtra
+      ? estadoPadrePicker === 'No lo vi yo'
+        ? quienEstuvo.trim() ? `No lo vi yo — ${quienEstuvo.trim()}` : 'No lo vi yo'
+        : estadoPadrePicker
+          ? estadoPadreExtra ? `${estadoPadrePicker}. ${estadoPadreExtra}` : estadoPadrePicker
+          : estadoPadreExtra
       : ''
 
     const episodio = {
@@ -926,7 +929,18 @@ export default function RegistroPage() {
             </button>
           ))}
         </div>
-        {estadoPadrePicker && (
+        {estadoPadrePicker === 'No lo vi yo' && (
+          <div className={styles.quienEstuvoWrap}>
+            <p className={styles.quienEstuvoLabel}>¿Quién estuvo presente?</p>
+            <input
+              className={styles.quienEstuvoInput}
+              placeholder="ej: abuela, profe, otro cuidador"
+              value={quienEstuvo}
+              onChange={(e) => setQuienEstuvo(e.target.value)}
+            />
+          </div>
+        )}
+        {estadoPadrePicker && estadoPadrePicker !== 'No lo vi yo' && (
           <textarea
             className={styles.textarea}
             placeholder="Algo más que quieras agregar (opcional)..."
