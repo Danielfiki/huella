@@ -250,7 +250,7 @@
   gap: 10px;
   padding: 24px 20px 20px;
   border-radius: var(--radius-lg, 16px);
-  background: linear-gradient(135deg, #fff8f3 0%, #fdeee4 100%);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
   border: 1.5px solid var(--color-primary-light);
   text-align: center;
   animation: fadeUp 0.4s ease both;

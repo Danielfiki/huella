@@ -417,7 +417,7 @@
 
 .formError {
   font-size: 13px;
-  color: #e53e3e;
+  color: var(--color-danger);
   margin: 0;
 }
 

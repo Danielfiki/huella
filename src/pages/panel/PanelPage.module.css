@@ -314,7 +314,7 @@
 
 /* ── Consejo diario ── */
 .consejoCard {
-  background: linear-gradient(135deg, #fdf6ec 0%, var(--color-surface) 100%);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
   border-color: var(--color-primary-light);
 }
 
