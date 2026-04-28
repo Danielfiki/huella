@@ -8,10 +8,10 @@
 
 :root {
   /* ── Fondos ── */
-  --color-bg: #FBF7F4;
-  --color-surface: #F5EDE8;
-  --color-surface-alt: #EDE2D8;
-  --color-border: #E8D5C8;
+  --color-bg: #fdf6f0;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fef9f5;
+  --color-border: #f0e6db;
 
   /* ── Primario ── */
   --color-primary: #e8936a;
@@ -19,13 +19,13 @@
   --color-primary-dark: #c96f45;
 
   /* ── Tints semánticos ── */
-  --color-primary-bg: #FAF0E8;
-  --color-success-bg: #EBF3EC;
-  --color-celebration-start: #FBF5F0;
-  --color-celebration-end: #FAF0E8;
-  --color-danger-bg: #FFF2F2;
-  --color-danger-border: #F5BEBE;
-  --color-danger-text: #A83228;
+  --color-primary-bg: #fff4ee;
+  --color-success-bg: #e8f5ec;
+  --color-celebration-start: #fdf6f0;
+  --color-celebration-end: #fff4ee;
+  --color-danger-bg: #fff0f0;
+  --color-danger-border: #f5c4c4;
+  --color-danger-text: #a83228;
 
   /* ── Acentos ── */
   --color-accent: #7A9E7E;
@@ -40,14 +40,14 @@
   --color-tag-blue: #274A68;
 
   /* ── Texto ── */
-  --color-text: #2C1810;
-  --color-text-muted: #8B6355;
-  --color-text-light: #B09080;
+  --color-text: #3a2e28;
+  --color-text-muted: #8a7a70;
+  --color-text-light: #bfb0a8;
 
   /* ── Estados ── */
-  --color-success: #7A9E7E;
-  --color-warning: #C17F5E;
-  --color-danger: #C85050;
+  --color-success: #6dbf88;
+  --color-warning: #f0c060;
+  --color-danger: #e87878;
 
   /* ── Radios — más generosos ── */
   --radius-sm: 10px;
@@ -56,17 +56,17 @@
   --radius-xl: 28px;
 
   /* ── Sombras ── */
-  --shadow-sm: 0 2px 12px rgba(44, 24, 16, 0.07);
-  --shadow-md: 0 6px 24px rgba(44, 24, 16, 0.10);
-  --shadow-lg: 0 12px 48px rgba(44, 24, 16, 0.14);
+  --shadow-sm: 0 2px 12px rgba(58, 46, 40, 0.07);
+  --shadow-md: 0 6px 24px rgba(58, 46, 40, 0.10);
+  --shadow-lg: 0 12px 48px rgba(58, 46, 40, 0.14);
 
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Fraunces', Georgia, serif;
 
-  /* ── Navegación oscura ── */
-  --color-nav: #e8936a;
-  --color-nav-border: #c96f45;
+  /* ── Navegación ── */
+  --color-nav: #3a2e28;
+  --color-nav-border: #4a3a30;
   --color-nav-text: rgba(255, 245, 235, 0.6);
   --color-nav-text-active: #FFF5EB;
 }
@@ -74,22 +74,22 @@
 /* ── Modo oscuro ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #100806;
-    --color-surface: #1C100C;
-    --color-surface-alt: #251610;
-    --color-border: #3A2218;
+    --color-bg: #1a1210;
+    --color-surface: #231815;
+    --color-surface-alt: #2e201c;
+    --color-border: #3d2e28;
 
-    --color-primary: #D49878;
-    --color-primary-light: #3A2018;
-    --color-primary-dark: #E0AA88;
+    --color-primary: #e8936a;
+    --color-primary-light: #3a2010;
+    --color-primary-dark: #f0a478;
 
-    --color-primary-bg: #2A1810;
+    --color-primary-bg: #2a1810;
     --color-success-bg: #182618;
     --color-celebration-start: #221610;
-    --color-celebration-end: #2A1810;
-    --color-danger-bg: #2E1515;
-    --color-danger-border: #5A2828;
-    --color-danger-text: #F87171;
+    --color-celebration-end: #2a1810;
+    --color-danger-bg: #2e1515;
+    --color-danger-border: #5a2828;
+    --color-danger-text: #f87171;
 
     --color-accent-green: #2A4A2E;
     --color-accent-blue: #2A3E52;
@@ -111,8 +111,8 @@
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.65);
 
-    --color-nav: #0C0604;
-    --color-nav-border: #2C1810;
+    --color-nav: #1a1210;
+    --color-nav-border: #3d2e28;
     --color-nav-text: rgba(255, 245, 235, 0.5);
     --color-nav-text-active: #FFF5EB;
   }
