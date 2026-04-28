@@ -66,8 +66,8 @@
 .bottomNav {
   display: flex;
   align-items: flex-end;
-  background: var(--color-nav);
-  border-top: 1px solid var(--color-nav-border);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   padding: 6px 4px 12px;
   flex-shrink: 0;
   overflow: visible;
