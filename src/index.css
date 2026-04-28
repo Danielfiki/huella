@@ -8,30 +8,30 @@
 
 :root {
   /* ── Fondos ── */
-  --color-bg: #fdf6f0;
-  --color-surface: #ffffff;
-  --color-surface-alt: #fef9f5;
-  --color-border: #f0e6db;
+  --color-bg: #F6F4F2;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F0EDE8;
+  --color-border: #E8E0D8;
 
   /* ── Primario ── */
-  --color-primary: #e8936a;
-  --color-primary-light: #f5c4a8;
-  --color-primary-dark: #c96f45;
+  --color-primary: #E68A5C;
+  --color-primary-light: #F2A97F;
+  --color-primary-dark: #C96A3C;
 
   /* ── Tints semánticos ── */
-  --color-primary-bg: #fff4ee;
-  --color-success-bg: #e8f5ec;
-  --color-celebration-start: #fdf6f0;
-  --color-celebration-end: #fff4ee;
-  --color-danger-bg: #fff0f0;
-  --color-danger-border: #f5c4c4;
-  --color-danger-text: #a83228;
+  --color-primary-bg: #FEF0E8;
+  --color-success-bg: #E8F5F0;
+  --color-celebration-start: #FEF6F0;
+  --color-celebration-end: #FEF0E8;
+  --color-danger-bg: #FFF0F0;
+  --color-danger-border: #F5C4C4;
+  --color-danger-text: #A83228;
 
   /* ── Acentos ── */
-  --color-accent: #7A9E7E;
-  --color-accent-light: #EEF4EE;
+  --color-accent: #7FB8A4;
+  --color-accent-light: #A8D5C2;
   --color-accent-green: #C5D9C6;
-  --color-accent-blue: #B0C8DC;
+  --color-accent-blue: #6C8EF5;
   --color-accent-lavender: #CAC0E0;
   --color-accent-yellow: #F0DFA0;
 
@@ -40,56 +40,56 @@
   --color-tag-blue: #274A68;
 
   /* ── Texto ── */
-  --color-text: #3a2e28;
-  --color-text-muted: #8a7a70;
-  --color-text-light: #bfb0a8;
+  --color-text: #2E2E2E;
+  --color-text-muted: #6B6B6B;
+  --color-text-light: #9E9E9E;
 
   /* ── Estados ── */
   --color-success: #6dbf88;
   --color-warning: #f0c060;
   --color-danger: #e87878;
 
-  /* ── Radios — más generosos ── */
+  /* ── Radios ── */
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 20px;
   --radius-xl: 28px;
 
   /* ── Sombras ── */
-  --shadow-sm: 0 2px 12px rgba(58, 46, 40, 0.07);
-  --shadow-md: 0 6px 24px rgba(58, 46, 40, 0.10);
-  --shadow-lg: 0 12px 48px rgba(58, 46, 40, 0.14);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.14);
 
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Fraunces', Georgia, serif;
 
   /* ── Navegación ── */
-  --color-nav: #3a2e28;
-  --color-nav-border: #4a3a30;
-  --color-nav-text: rgba(255, 245, 235, 0.6);
-  --color-nav-text-active: #FFF5EB;
+  --color-nav: #FFFFFF;
+  --color-nav-border: rgba(0, 0, 0, 0.06);
+  --color-nav-text: #6B6B6B;
+  --color-nav-text-active: #E68A5C;
 }
 
 /* ── Modo oscuro ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1a1210;
-    --color-surface: #231815;
-    --color-surface-alt: #2e201c;
-    --color-border: #3d2e28;
+    --color-bg: #1A1816;
+    --color-surface: #242220;
+    --color-surface-alt: #2E2C28;
+    --color-border: #3A3630;
 
-    --color-primary: #e8936a;
-    --color-primary-light: #3a2010;
-    --color-primary-dark: #f0a478;
+    --color-primary: #E68A5C;
+    --color-primary-light: #3A2010;
+    --color-primary-dark: #F0A478;
 
-    --color-primary-bg: #2a1810;
+    --color-primary-bg: #2A1810;
     --color-success-bg: #182618;
-    --color-celebration-start: #221610;
-    --color-celebration-end: #2a1810;
-    --color-danger-bg: #2e1515;
-    --color-danger-border: #5a2828;
-    --color-danger-text: #f87171;
+    --color-celebration-start: #221810;
+    --color-celebration-end: #2A1810;
+    --color-danger-bg: #2E1515;
+    --color-danger-border: #5A2828;
+    --color-danger-text: #F87171;
 
     --color-accent-green: #2A4A2E;
     --color-accent-blue: #2A3E52;
@@ -99,22 +99,22 @@
     --color-tag-green: #7ABF88;
     --color-tag-blue: #7FB3D3;
 
-    --color-text: #FFF5EB;
-    --color-text-muted: #C09878;
-    --color-text-light: #7A5848;
+    --color-text: #F5F0EB;
+    --color-text-muted: #A09888;
+    --color-text-light: #6A6058;
 
     --color-success: #7ABF88;
-    --color-warning: #D49878;
+    --color-warning: #D4A040;
     --color-danger: #F08080;
 
     --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.40);
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.65);
 
-    --color-nav: #1a1210;
-    --color-nav-border: #3d2e28;
-    --color-nav-text: rgba(255, 245, 235, 0.5);
-    --color-nav-text-active: #FFF5EB;
+    --color-nav: #1A1816;
+    --color-nav-border: rgba(255, 255, 255, 0.08);
+    --color-nav-text: #A09888;
+    --color-nav-text-active: #E68A5C;
   }
 }
 

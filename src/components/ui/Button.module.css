@@ -16,11 +16,14 @@
 
 /* variants */
 .primary {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, #E68A5C, #F2A97F);
   color: white;
+  box-shadow: 0 6px 16px rgba(230, 138, 92, 0.3);
+  border-radius: 16px;
 }
 .primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: linear-gradient(135deg, #C96A3C, #E68A5C);
+  box-shadow: 0 8px 20px rgba(230, 138, 92, 0.4);
 }
 
 .secondary {
