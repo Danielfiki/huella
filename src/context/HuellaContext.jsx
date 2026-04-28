@@ -166,43 +166,82 @@ export function HuellaProvider({ children }) {
     loadUserData(user.id, family)
   }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
+  function getPartnerIds(currentFamily) {
+    const f = currentFamily ?? family
+    return f?.partner?.id ? [user.id, f.partner.id] : [user.id]
+  }
+
+  // ── Carga de datos por hijo ───────────────────────────────────────────────
+
+  async function loadHijoDatos(hijoId, currentFamily) {
+    if (!user || !hijoId) return
+    const partnerIds = getPartnerIds(currentFamily)
+    const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+      supabase.from('episodios')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .order('fecha', { ascending: false }),
+      supabase.from('hitos')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .order('fecha', { ascending: false }),
+      supabase.from('estrategias')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .order('fecha_inicio', { ascending: false }),
+    ])
+    dispatch({ type: 'SET_EPISODIOS',  payload: (episodiosRes.data  ?? []).map(dbEpisodioToApp) })
+    dispatch({ type: 'SET_HITOS',      payload:  hitosRes.data       ?? [] })
+    dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data ?? []).map(dbEstrategiaToApp) })
+  }
+
   async function loadUserData(userId, currentFamily) {
     setDataLoading(true)
     try {
-      const partnerIds = currentFamily?.partner?.id
-        ? [userId, currentFamily.partner.id]
-        : [userId]
+      const partnerIds = getPartnerIds(currentFamily)
 
-      const [hijosRes, episodiosRes, hitosRes, estrategiasRes, perfilRes] = await Promise.all([
+      // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
+      const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('episodios')
-          .select('*').in('user_id', partnerIds).order('fecha', { ascending: false }),
-        supabase.from('hitos')
-          .select('*').in('user_id', partnerIds).order('fecha', { ascending: false }),
-        supabase.from('estrategias')
-          .select('*').in('user_id', partnerIds).order('fecha_inicio', { ascending: false }),
-        supabase.from('perfiles')
-          .select('nombre').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre').eq('user_id', userId).maybeSingle(),
       ])
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
-
-      // Preservar el hijo activo seleccionado si todavía existe tras el reload.
-      // Útil cuando el contexto se recarga por cambio de pareja sin que el
-      // usuario haya cambiado de hijo. Fallback: primer hijo de la lista.
       const ids = new Set(hijos.map(h => h.id))
       const hijoActivoId = ids.has(state.hijoActivoId)
         ? state.hijoActivoId
         : (hijos[0]?.id ?? null)
+
+      // Fase 2: datos filtrados por hijo activo
+      let episodios = [], hitos = [], estrategias = []
+      if (hijoActivoId) {
+        const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+          supabase.from('episodios')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId)
+            .order('fecha', { ascending: false }),
+          supabase.from('hitos')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId)
+            .order('fecha', { ascending: false }),
+          supabase.from('estrategias')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId)
+            .order('fecha_inicio', { ascending: false }),
+        ])
+        episodios   = (episodiosRes.data  ?? []).map(dbEpisodioToApp)
+        hitos       =  hitosRes.data       ?? []
+        estrategias = (estrategiasRes.data ?? []).map(dbEstrategiaToApp)
+      }
 
       dispatch({
         type: 'LOAD_STATE',
         payload: {
           hijos,
           hijoActivoId,
-          episodios:   (episodiosRes.data ?? []).map(dbEpisodioToApp),
-          hitos:       hitosRes.data ?? [],
-          estrategias: (estrategiasRes.data ?? []).map(dbEstrategiaToApp),
+          episodios,
+          hitos,
+          estrategias,
           padreNombre: perfilRes.data?.nombre ?? '',
         },
       })
@@ -217,14 +256,16 @@ export function HuellaProvider({ children }) {
     if (user) loadUserData(user.id, overrideFamily !== undefined ? overrideFamily : family)
   }
 
-  function getPartnerIds() {
-    return family?.partner?.id ? [user.id, family.partner.id] : [user.id]
-  }
-
   // ── Hijos ─────────────────────────────────────────────────────────────────
 
-  function setHijoActivo(id) {
+  async function setHijoActivo(id) {
     dispatch({ type: 'SET_HIJO_ACTIVO', payload: id })
+    setDataLoading(true)
+    try {
+      await loadHijoDatos(id)
+    } finally {
+      setDataLoading(false)
+    }
   }
 
   // datos: { nombre, avatarUrl?, fechaNacimiento?, genero? }
@@ -253,7 +294,6 @@ export function HuellaProvider({ children }) {
         if (anterior) dispatch({ type: 'UPDATE_HIJO', payload: anterior })
         throw new Error(error.message)
       }
-      // Confirmar con datos canónicos de la DB
       const { data: hijoRow } = await supabase
         .from('hijos').select('*').eq('id', returnedId).maybeSingle()
       if (hijoRow) dispatch({ type: 'UPDATE_HIJO', payload: dbHijoToApp(hijoRow) })
@@ -270,7 +310,7 @@ export function HuellaProvider({ children }) {
       .from('hijos').select('*').eq('id', returnedId).maybeSingle()
     if (hijoRow) {
       const nuevoHijo = dbHijoToApp(hijoRow)
-      dispatch({ type: 'ADD_HIJO',       payload: nuevoHijo })
+      dispatch({ type: 'ADD_HIJO',        payload: nuevoHijo })
       dispatch({ type: 'SET_HIJO_ACTIVO', payload: nuevoHijo.id })
     }
     return returnedId
@@ -285,6 +325,7 @@ export function HuellaProvider({ children }) {
       .from('episodios')
       .insert({
         user_id:           user.id,
+        hijo_id:           state.hijoActivoId ?? null,
         tipo:              episodio.tipo,
         intensidad:        episodio.intensidad,
         contexto:          episodio.contexto,
@@ -304,6 +345,7 @@ export function HuellaProvider({ children }) {
     const { data } = await supabase
       .from('episodios').select('*')
       .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
     return real
@@ -318,6 +360,7 @@ export function HuellaProvider({ children }) {
       const { data } = await supabase
         .from('episodios').select('*')
         .in('user_id', getPartnerIds())
+        .eq('hijo_id', state.hijoActivoId)
         .order('fecha', { ascending: false })
       if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
       throw new Error(error.message)
@@ -341,6 +384,7 @@ export function HuellaProvider({ children }) {
     dispatch({ type: 'ADD_HITO', payload: hito })
     const { data: inserted, error } = await supabase.from('hitos').insert({
       user_id:     user.id,
+      hijo_id:     state.hijoActivoId ?? null,
       categoria:   hito.categoria,
       descripcion: hito.descripcion,
       fecha:       hito.fecha,
@@ -353,6 +397,7 @@ export function HuellaProvider({ children }) {
     const { data } = await supabase
       .from('hitos').select('*')
       .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
     return inserted
@@ -364,6 +409,7 @@ export function HuellaProvider({ children }) {
     const { data } = await supabase
       .from('hitos').select('*')
       .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
   }
@@ -375,6 +421,7 @@ export function HuellaProvider({ children }) {
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
     const { data: inserted, error } = await supabase.from('estrategias').insert({
       user_id:       user.id,
+      hijo_id:       state.hijoActivoId ?? null,
       habilidad:     estrategia.habilidad,
       descripcion:   estrategia.descripcion,
       plan:          estrategia.plan,
@@ -390,6 +437,7 @@ export function HuellaProvider({ children }) {
     const { data } = await supabase
       .from('estrategias').select('*')
       .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
       .order('fecha_inicio', { ascending: false })
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
     return realId
@@ -416,6 +464,7 @@ export function HuellaProvider({ children }) {
       const { data } = await supabase
         .from('estrategias').select('*')
         .in('user_id', getPartnerIds())
+        .eq('hijo_id', state.hijoActivoId)
         .order('fecha_inicio', { ascending: false })
       if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
       throw new Error(error.message)
