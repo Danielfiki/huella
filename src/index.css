@@ -141,6 +141,11 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  transition: transform 0.12s ease;
+}
+
+button:active {
+  transform: scale(0.93);
 }
 
 input, textarea, select {

@@ -25,6 +25,7 @@ const initialState = {
   episodios:    [],
   estrategias:  [],
   hitos:        [],
+  rutinas:      [],
   padreNombre:  '',
 }
 
@@ -60,6 +61,26 @@ function reducer(state, action) {
 
     case 'SET_ESTRATEGIAS':
       return { ...state, estrategias: action.payload }
+
+    case 'SET_RUTINAS':
+      return { ...state, rutinas: action.payload }
+
+    case 'ADD_RUTINA':
+      return {
+        ...state,
+        rutinas: [...state.rutinas, action.payload].sort((a, b) => a.hora.localeCompare(b.hora)),
+      }
+
+    case 'UPDATE_RUTINA':
+      return {
+        ...state,
+        rutinas: state.rutinas
+          .map((r) => (r.id === action.payload.id ? { ...r, ...action.payload } : r))
+          .sort((a, b) => a.hora.localeCompare(b.hora)),
+      }
+
+    case 'REMOVE_RUTINA':
+      return { ...state, rutinas: state.rutinas.filter((r) => r.id !== action.payload) }
 
     case 'ADD_EPISODIO':
       return { ...state, episodios: [action.payload, ...state.episodios] }
@@ -107,6 +128,18 @@ function reducer(state, action) {
 }
 
 // ── Mappers DB → app ──────────────────────────────────────────────────────────
+
+function dbRutinaToApp(row) {
+  return {
+    id:              row.id,
+    hijoId:          row.hijo_id,
+    hora:            row.hora,
+    nombre:          row.nombre,
+    nota:            row.nota            ?? null,
+    esMomentoRiesgo: row.es_momento_riesgo ?? false,
+    createdAt:       row.created_at,
+  }
+}
 
 function dbHijoToApp(row) {
   return {
@@ -176,7 +209,7 @@ export function HuellaProvider({ children }) {
   async function loadHijoDatos(hijoId, currentFamily) {
     if (!user || !hijoId) return
     const partnerIds = getPartnerIds(currentFamily)
-    const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes] = await Promise.all([
       supabase.from('episodios')
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
@@ -189,10 +222,15 @@ export function HuellaProvider({ children }) {
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
         .order('fecha_inicio', { ascending: false }),
+      supabase.from('rutinas')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .order('hora', { ascending: true }),
     ])
-    dispatch({ type: 'SET_EPISODIOS',  payload: (episodiosRes.data  ?? []).map(dbEpisodioToApp) })
-    dispatch({ type: 'SET_HITOS',      payload:  hitosRes.data       ?? [] })
-    dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data ?? []).map(dbEstrategiaToApp) })
+    dispatch({ type: 'SET_EPISODIOS',   payload: (episodiosRes.data   ?? []).map(dbEpisodioToApp) })
+    dispatch({ type: 'SET_HITOS',       payload:  hitosRes.data        ?? [] })
+    dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data  ?? []).map(dbEstrategiaToApp) })
+    dispatch({ type: 'SET_RUTINAS',     payload: (rutinasRes.data      ?? []).map(dbRutinaToApp) })
   }
 
   async function loadUserData(userId, currentFamily) {
@@ -213,9 +251,9 @@ export function HuellaProvider({ children }) {
         : (hijos[0]?.id ?? null)
 
       // Fase 2: datos filtrados por hijo activo
-      let episodios = [], hitos = [], estrategias = []
+      let episodios = [], hitos = [], estrategias = [], rutinas = []
       if (hijoActivoId) {
-        const [episodiosRes, hitosRes, estrategiasRes] = await Promise.all([
+        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes] = await Promise.all([
           supabase.from('episodios')
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
@@ -228,10 +266,15 @@ export function HuellaProvider({ children }) {
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
             .order('fecha_inicio', { ascending: false }),
+          supabase.from('rutinas')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId)
+            .order('hora', { ascending: true }),
         ])
-        episodios   = (episodiosRes.data  ?? []).map(dbEpisodioToApp)
-        hitos       =  hitosRes.data       ?? []
-        estrategias = (estrategiasRes.data ?? []).map(dbEstrategiaToApp)
+        episodios   = (episodiosRes.data   ?? []).map(dbEpisodioToApp)
+        hitos       =  hitosRes.data        ?? []
+        estrategias = (estrategiasRes.data  ?? []).map(dbEstrategiaToApp)
+        rutinas     = (rutinasRes.data      ?? []).map(dbRutinaToApp)
       }
 
       dispatch({
@@ -242,6 +285,7 @@ export function HuellaProvider({ children }) {
           episodios,
           hitos,
           estrategias,
+          rutinas,
           padreNombre: perfilRes.data?.nombre ?? '',
         },
       })
@@ -471,6 +515,56 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // ── Rutinas ───────────────────────────────────────────────────────────────
+
+  async function addRutina(rutina) {
+    if (!user || !supabase) return null
+    dispatch({ type: 'ADD_RUTINA', payload: rutina })
+    const { data: inserted, error } = await supabase.from('rutinas').insert({
+      user_id:           user.id,
+      hijo_id:           state.hijoActivoId ?? null,
+      hora:              rutina.hora,
+      nombre:            rutina.nombre,
+      nota:              rutina.nota            ?? null,
+      es_momento_riesgo: rutina.esMomentoRiesgo ?? false,
+    }).select().single()
+    if (error) {
+      dispatch({ type: 'REMOVE_RUTINA', payload: rutina.id })
+      throw new Error(error.message)
+    }
+    const { data } = await supabase.from('rutinas').select('*')
+      .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
+      .order('hora', { ascending: true })
+    if (data) dispatch({ type: 'SET_RUTINAS', payload: data.map(dbRutinaToApp) })
+    return inserted
+  }
+
+  async function updateRutina(partial) {
+    if (!user || !supabase) return
+    dispatch({ type: 'UPDATE_RUTINA', payload: partial })
+    const dbFields = {}
+    if (partial.hora            !== undefined) dbFields.hora              = partial.hora
+    if (partial.nombre          !== undefined) dbFields.nombre            = partial.nombre
+    if (partial.nota            !== undefined) dbFields.nota              = partial.nota
+    if (partial.esMomentoRiesgo !== undefined) dbFields.es_momento_riesgo = partial.esMomentoRiesgo
+    await supabase.from('rutinas').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+  }
+
+  async function deleteRutina(id) {
+    if (!user || !supabase) return
+    dispatch({ type: 'REMOVE_RUTINA', payload: id })
+    const { error } = await supabase.from('rutinas').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      const { data } = await supabase.from('rutinas').select('*')
+        .in('user_id', getPartnerIds())
+        .eq('hijo_id', state.hijoActivoId)
+        .order('hora', { ascending: true })
+      if (data) dispatch({ type: 'SET_RUTINAS', payload: data.map(dbRutinaToApp) })
+      throw new Error(error.message)
+    }
+  }
+
   // ── Perfil padre/madre ────────────────────────────────────────────────────
 
   async function savePadreNombre(nombre) {
@@ -498,6 +592,9 @@ export function HuellaProvider({ children }) {
       addEstrategia,
       updateEstrategia,
       deleteEstrategia,
+      addRutina,
+      updateRutina,
+      deleteRutina,
       savePadreNombre,
     }}>
       {children}

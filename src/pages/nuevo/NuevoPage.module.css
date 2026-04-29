@@ -21,7 +21,7 @@
   transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
 }
 .opcionCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.opcionCard:active { transform: scale(0.985); }
+.opcionCard:active { transform: scale(0.93); }
 
 .opcionEpisodio:hover { border-color: #7C8FD4; }
 .opcionAvance { border-color: var(--color-primary-light); background: var(--color-primary-bg); }

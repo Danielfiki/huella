@@ -39,12 +39,16 @@ Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en 
   return llamarAPI(prompt, 120)
 }
 
-export async function analizarEpisodio({ hijo, episodio, historialReciente = [] }) {
+export async function analizarEpisodio({ hijo, episodio, historialReciente = [], bloqueRutina = null }) {
   const contexto = historialReciente.length > 0
     ? `\n\nÚltimos episodios registrados:\n${historialReciente
         .slice(0, 5)
         .map(e => `- ${e.tipo} (intensidad ${e.intensidad}/5) el ${new Date(e.fecha).toLocaleDateString('es-CL')}`)
         .join('\n')}`
+    : ''
+
+  const bloqueCtx = bloqueRutina
+    ? `\n- Momento de la rutina diaria: "${bloqueRutina.nombre}" (${bloqueRutina.hora})${bloqueRutina.esMomentoRiesgo ? ' — marcado por los padres como momento de riesgo' : ''}${bloqueRutina.nota ? `. Nota: ${bloqueRutina.nota}` : ''}`
     : ''
 
   const prompt = `Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
@@ -53,7 +57,7 @@ Episodio registrado:
 - Tipo: ${episodio.tipo}
 - Intensidad: ${episodio.intensidad}/5${episodio.emocion ? `\n- Emoción del niño: ${episodio.emocion}` : ''}
 - Contexto: ${episodio.contexto || 'no especificado'}
-- Gatillantes posibles: ${episodio.gatillantes?.join(', ') || 'no especificados'}${episodio.descripcionLibre ? `\n- Relato del padre/madre: ${episodio.descripcionLibre}` : ''}${contexto}
+- Gatillantes posibles: ${episodio.gatillantes?.join(', ') || 'no especificados'}${episodio.descripcionLibre ? `\n- Relato del padre/madre: ${episodio.descripcionLibre}` : ''}${bloqueCtx}${contexto}
 
 Responde con este formato exacto:
 

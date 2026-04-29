@@ -143,13 +143,13 @@ export default function PerfilPage() {
 
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file || !user || !state.hijo?.id) return
     setUploadingAvatar(true)
     setErrorAvatar('')
     try {
       const blob = await compressImage(file)
       if (!blob) throw new Error('No se pudo procesar la imagen.')
-      const path = `${user.id}/hijo.jpg`
+      const path = `${user.id}/${state.hijo.id}.jpg`
       const { error: uploadError } = await supabase.storage.from('avatares').upload(path, blob, {
         contentType: 'image/jpeg',
         upsert: true,

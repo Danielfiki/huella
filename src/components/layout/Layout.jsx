@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Outlet, NavLink } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import Onboarding from '../onboarding/Onboarding'
 import NotifBanner from '../NotifBanner'
@@ -15,6 +15,19 @@ const navItems = [
   { to: '/hitos',       icon: Star,     label: 'Logros' },
 ]
 
+function PageFade({ children }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return (
+    <div className={`${styles.pageWrap} ${visible ? styles.pageVisible : ''}`}>
+      {children}
+    </div>
+  )
+}
+
 function SkeletonLoader() {
   return (
     <div className={styles.skeletonPage}>
@@ -29,6 +42,7 @@ function SkeletonLoader() {
 export default function Layout() {
   const { state, dataLoading } = useHuella()
   const [showOnboarding, setShowOnboarding] = useState(true)
+  const location = useLocation()
 
   return (
     <div className={styles.container}>
@@ -47,7 +61,11 @@ export default function Layout() {
 
       <main className={styles.main}>
         <NotifBanner />
-        {dataLoading ? <SkeletonLoader /> : <Outlet />}
+        {dataLoading ? <SkeletonLoader /> : (
+          <PageFade key={location.key}>
+            <Outlet />
+          </PageFade>
+        )}
       </main>
 
       <nav className={styles.bottomNav}>

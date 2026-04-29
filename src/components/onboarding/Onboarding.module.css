@@ -113,7 +113,7 @@
   padding: 0 32px;
   max-width: 400px;
   width: 100%;
-  animation: slideIn 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation: slideIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 @keyframes slideIn {
@@ -319,7 +319,7 @@
 }
 
 .btnNext:active {
-  transform: scale(0.98);
+  transform: scale(0.93);
 }
 
 .btnPrimary {
@@ -343,7 +343,7 @@
 }
 
 .btnPrimary:active {
-  transform: scale(0.97);
+  transform: scale(0.93);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 

@@ -21,7 +21,7 @@
   transition: border-color 0.15s, transform 0.1s;
 }
 .modoCard:hover { border-color: var(--color-primary-light); }
-.modoCard:active { transform: scale(0.98); }
+.modoCard:active { transform: scale(0.93); }
 
 .modoCardDestacado {
   border-color: var(--color-primary);
@@ -541,11 +541,11 @@
   background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
   border: 2px solid #f59e0b;
   box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
-  animation: accionFadeIn 0.35s ease both;
+  animation: accionFadeIn 0.5s ease both;
 }
 
 @keyframes accionFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

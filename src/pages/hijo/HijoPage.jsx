@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown, Minus, Settings, ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import styles from './HijoPage.module.css'
+import RutinaDiaria from './RutinaDiaria'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ export default function HijoPage() {
   const esNuevo = searchParams.get('nuevo') === 'true'
 
   // Estados del formulario de creación (siempre declarados — regla de hooks)
+  const [seccion, setSeccion]             = useState('perfil')
   const [nombre, setNombre]               = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
   const [fechaDisplay, setFechaDisplay]   = useState('')
@@ -275,6 +277,26 @@ export default function HijoPage() {
         )}
       </div>
 
+      {/* ── Tabs ── */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${seccion === 'perfil' ? styles.tabActivo : ''}`}
+          onClick={() => setSeccion('perfil')}
+        >
+          Perfil
+        </button>
+        <button
+          className={`${styles.tab} ${seccion === 'rutina' ? styles.tabActivo : ''}`}
+          onClick={() => setSeccion('rutina')}
+        >
+          Rutina diaria
+        </button>
+      </div>
+
+      {seccion === 'rutina' && <RutinaDiaria />}
+
+      {seccion === 'perfil' && <>
+
       {/* ── Racha ── */}
       <div className={styles.rachaCard}>
         <div className={styles.rachaTop}>
@@ -383,6 +405,8 @@ export default function HijoPage() {
           </div>
         )
       })()}
+
+      </>}
 
     </div>
   )

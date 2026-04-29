@@ -224,6 +224,18 @@ const CUANDO_OPCIONES = [
   { id: 'custom',     label: 'Otro momento…' },
 ]
 
+function detectarBloqueRutina(fechaEpisodio, rutinas) {
+  if (!rutinas || rutinas.length === 0) return null
+  const d = new Date(fechaEpisodio)
+  const minEpisodio = d.getHours() * 60 + d.getMinutes()
+  let bloque = null
+  for (const b of [...rutinas].sort((a, r) => a.hora.localeCompare(r.hora))) {
+    const [h, m] = b.hora.split(':').map(Number)
+    if (h * 60 + m <= minEpisodio) bloque = b
+  }
+  return bloque
+}
+
 function computarFecha(cuandoPaso, fechaCustom) {
   const d = new Date()
   switch (cuandoPaso) {
@@ -731,6 +743,8 @@ export default function RegistroPage() {
         : descripcionLibre.trim() || null,
     }
 
+    const bloqueRutina = detectarBloqueRutina(episodio.fecha, state.rutinas)
+
     setLoadingGuardar(true)
     setErrorGuardar('')
     try {
@@ -741,7 +755,7 @@ export default function RegistroPage() {
       setLoadingAccion(true)
       setAccionIA('')
       const [texto] = await Promise.all([
-        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios })
+        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios, bloqueRutina })
           .catch((e) => 'No se pudo obtener orientación: ' + e.message),
         generarAccionInmediata({ hijo: state.hijo, episodio })
           .then((a) => { setAccionIA(a); setLoadingAccion(false) })

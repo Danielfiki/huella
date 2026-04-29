@@ -7,11 +7,11 @@
   border: 1.5px solid #B0C8DC;
   border-radius: var(--radius-md);
   margin-bottom: 4px;
-  animation: bannerIn 0.25s ease both;
+  animation: bannerIn 0.5s ease both;
 }
 
 @keyframes bannerIn {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

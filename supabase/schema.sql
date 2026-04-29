@@ -7,7 +7,7 @@
 
 create table if not exists public.hijos (
   id         uuid primary key default gen_random_uuid(),
-  user_id    uuid references auth.users(id) on delete cascade not null unique,
+  user_id    uuid references auth.users(id) on delete cascade not null,
   nombre     text not null,
   edad       integer,
   avatar_url text,
@@ -533,52 +533,60 @@ end;
 $$;
 grant execute on function public.disconnect_partner() to authenticated;
 
--- Upsert del hijo canónico (INSERT o UPDATE preservando user_id original)
+-- Upsert de hijo: INSERT si p_hijo_id es null, UPDATE si se pasa un UUID.
+-- Retorna el UUID del hijo creado o actualizado.
 drop function if exists public.upsert_family_child(text, integer, text);
+drop function if exists public.upsert_family_child(text, integer, text, date, text);
 
 create or replace function public.upsert_family_child(
   p_nombre           text,
   p_edad             integer,
   p_avatar_url       text,
-  p_fecha_nacimiento date    default null,
-  p_genero           text    default null
-) returns void
+  p_fecha_nacimiento date  default null,
+  p_genero           text  default null,
+  p_hijo_id          uuid  default null
+)
+returns uuid
 language plpgsql security definer
 as $$
 declare
   v_family_id uuid;
+  v_hijo_id   uuid;
 begin
   select family_id into v_family_id
   from public.family_members
   where user_id = auth.uid()
   limit 1;
 
-  if v_family_id is not null then
+  if p_hijo_id is not null then
+    -- Actualizar hijo existente identificado por su UUID
     update public.hijos
-    set nombre           = p_nombre,
-        edad             = p_edad,
-        avatar_url       = p_avatar_url,
-        fecha_nacimiento = p_fecha_nacimiento,
-        genero           = p_genero
-    where family_id = v_family_id;
+       set nombre           = p_nombre,
+           edad             = p_edad,
+           avatar_url       = p_avatar_url,
+           fecha_nacimiento = p_fecha_nacimiento,
+           genero           = p_genero
+     where id = p_hijo_id
+       and (
+         user_id = auth.uid()
+         or (v_family_id is not null and family_id = v_family_id)
+       )
+    returning id into v_hijo_id;
 
-    if not found then
-      insert into public.hijos (user_id, family_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
-      values (auth.uid(), v_family_id, p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero);
+    if v_hijo_id is null then
+      raise exception 'Hijo no encontrado o sin permisos: %', p_hijo_id;
     end if;
   else
-    insert into public.hijos (user_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
-    values (auth.uid(), p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero)
-    on conflict (user_id) do update
-    set nombre           = excluded.nombre,
-        edad             = excluded.edad,
-        avatar_url       = excluded.avatar_url,
-        fecha_nacimiento = excluded.fecha_nacimiento,
-        genero           = excluded.genero;
+    -- Insertar hijo nuevo
+    insert into public.hijos (user_id, family_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
+    values (auth.uid(), v_family_id, p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero)
+    returning id into v_hijo_id;
   end if;
+
+  return v_hijo_id;
 end;
 $$;
-grant execute on function public.upsert_family_child(text, integer, text, date, text) to authenticated;
+grant execute on function public.upsert_family_child(text, integer, text, date, text, uuid) to authenticated;
 
 -- ── Perfil del padre/madre ────────────────────────────────────────────────
 -- Migración: ejecutar en Supabase Dashboard → SQL Editor si ya tienes la DB
@@ -605,4 +613,25 @@ begin
 end;
 $$;
 grant execute on function public.delete_user() to authenticated;
-grant execute on function public.upsert_family_child(text, integer, text, date, text) to authenticated;
+grant execute on function public.upsert_family_child(text, integer, text, date, text, uuid) to authenticated;
+
+-- ── Tabla: rutinas ────────────────────────────────────────────
+-- Bloques de rutina diaria por hijo (hora, nombre, nota, es_momento_riesgo)
+create table if not exists public.rutinas (
+  id                uuid primary key default gen_random_uuid(),
+  hijo_id           uuid references public.hijos(id) on delete cascade not null,
+  user_id           uuid references auth.users(id) on delete cascade not null,
+  hora              text not null,
+  nombre            text not null,
+  nota              text,
+  es_momento_riesgo boolean not null default false,
+  created_at        timestamptz default now()
+);
+
+alter table public.rutinas enable row level security;
+
+drop policy if exists "rutinas_all" on public.rutinas;
+create policy "rutinas_all" on public.rutinas
+  for all
+  using    (user_id = any(public.get_family_user_ids(auth.uid())))
+  with check (auth.uid() = user_id);
