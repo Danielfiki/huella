@@ -114,6 +114,7 @@
 
 .tipoOtroInput {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
   padding: 10px 12px;
@@ -355,7 +356,6 @@
 
 .calDiaBtn {
   aspect-ratio: 1;
-  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -74,9 +74,9 @@
 }
 .fotoCameraBtn:hover { border-color: var(--color-primary-light); color: var(--color-primary); }
 
-.fotoPreview { position: relative; display: inline-block; border-radius: var(--radius-md); overflow: hidden; }
+.fotoPreview { position: relative; display: block; border-radius: var(--radius-md); overflow: hidden; max-width: 100%; }
 .fotoPreviewImg {
-  display: block; max-height: 180px; max-width: 100%;
+  display: block; max-height: 180px; width: 100%;
   border-radius: var(--radius-md); object-fit: cover;
   border: 1.5px solid var(--color-border);
 }
