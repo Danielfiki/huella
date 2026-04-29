@@ -132,7 +132,6 @@
 
 .generoBtn {
   flex: 1;
-  min-width: 80px;
   padding: 9px 10px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -142,7 +141,6 @@
   color: var(--color-text-muted);
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
-  white-space: nowrap;
 }
 
 .generoBtn:hover {

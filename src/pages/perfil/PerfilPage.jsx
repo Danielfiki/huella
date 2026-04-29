@@ -353,7 +353,7 @@ export default function PerfilPage() {
               {[
                 { val: 'm',  label: '👦 Niño' },
                 { val: 'f',  label: '👧 Niña' },
-                { val: 'nb', label: '🙂 Prefiero no decir' },
+                { val: 'nb', label: '🙂 Otro' },
               ].map(({ val, label }) => (
                 <button
                   key={val}

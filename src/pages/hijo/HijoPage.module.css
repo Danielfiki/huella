@@ -422,7 +422,6 @@
 
 .generoBtn {
   flex: 1;
-  min-width: 90px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--color-border);
