@@ -29,7 +29,8 @@
 .burbuja {
   position: absolute;
   top: 28px;
-  left: 0;
+  left: auto;
+  right: 0;
   background: #2A1A0E;
   color: white;
   border-radius: 12px;

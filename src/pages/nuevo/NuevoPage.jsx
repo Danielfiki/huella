@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './NuevoPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -103,8 +104,7 @@ export default function NuevoPage() {
     return (
       <div className={styles.page}>
         <div className={styles.header}>
-          <h2 className={styles.titulo}>¿Qué quieres registrar?</h2>
-          <p style={{ fontSize: 13, color: '#9B7B6A', marginTop: 4, marginBottom: 16 }}>Mientras más detalles aportes, más precisa será la orientación de Huella.</p>
+          <h2 className={styles.titulo}>¿Qué quieres registrar?<TooltipAyuda texto="Mientras más detalles aportes, más precisa será la orientación de Huella." /></h2>
         </div>
 
         <button
