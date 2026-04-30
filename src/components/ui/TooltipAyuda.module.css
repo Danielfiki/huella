@@ -29,17 +29,17 @@
 .burbuja {
   position: absolute;
   top: 28px;
-  left: auto;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background: #2A1A0E;
   color: white;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 13px;
   line-height: 1.5;
-  min-width: 240px;
-  max-width: 280px;
-  z-index: 200;
+  min-width: 220px;
+  max-width: 260px;
+  z-index: 300;
   font-family: var(--font-family);
   font-weight: 400;
 }
