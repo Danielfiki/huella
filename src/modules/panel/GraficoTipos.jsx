@@ -2,15 +2,15 @@ import React from 'react'
 import styles from './GraficoTipos.module.css'
 
 const TIPO_META = {
-  rabieta:     { label: 'Rabieta',     emoji: '💥', color: '#A07060' },
-  llanto:      { label: 'Llanto',      emoji: '😭', color: '#7C8FD4' },
-  agresividad: { label: 'Agresividad', emoji: '👊', color: '#C4714A' },
-  miedo:       { label: 'Miedo',       emoji: '🫣', color: '#9B8EC4' },
-  sueño:       { label: 'Sueño',       emoji: '🛏️', color: '#5B8DB8' },
-  oposicion:   { label: 'Oposición',   emoji: '🚫', color: '#C4874A' },
-  social:      { label: 'Social',      emoji: '🫥', color: '#7A9E6A' },
-  desconexion: { label: 'Desconexión', emoji: '🔇', color: '#8A8A8A' },
-  otro:        { label: 'Otro',        emoji: '📝', color: '#a0aec0' },
+  rabieta:     { label: 'Rabieta',     emoji: '💥', color: '#F08070' },
+  llanto:      { label: 'Llanto',      emoji: '😭', color: '#EE9452' },
+  agresividad: { label: 'Agresividad', emoji: '👊', color: '#E56E26' },
+  miedo:       { label: 'Miedo',       emoji: '🫣', color: '#9B7B6A' },
+  sueño:       { label: 'Sueño',       emoji: '🛏️', color: '#8FA840' },
+  oposicion:   { label: 'Oposición',   emoji: '🚫', color: '#C45A18' },
+  social:      { label: 'Social',      emoji: '🫥', color: '#B0C870' },
+  desconexion: { label: 'Desconexión', emoji: '🔇', color: '#D4C4BC' },
+  otro:        { label: 'Otro',        emoji: '📝', color: '#EDE4D8' },
 }
 
 export default function GraficoTipos({ episodios }) {
