@@ -82,8 +82,8 @@
   margin-left: auto;
   font-size: 10px;
   font-weight: 700;
-  color: #C45A18;
-  background: #FEE8D6;
+  color: white;
+  background: #9B7B6A;
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
@@ -109,7 +109,7 @@
 }
 
 .card { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid #F08070; }
-.cardHito { border-left: 3px solid #8FA840; background: #F0F8E8; border: 1px solid #C8DCA0; }
+.cardHito { background: white; border: 1px solid #E8DACE; border-left: 4px solid #9B7B6A; }
 
 .cardTop {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
