@@ -11,7 +11,7 @@ const PASOS = [
 export default function GuiaPrimerosPasos({ totalEpisodios }) {
   const navigate = useNavigate()
 
-  if (totalEpisodios >= 10) return null
+  if (totalEpisodios >= 3) return null
 
   return (
     <div className={styles.card}>
