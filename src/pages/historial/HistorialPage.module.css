@@ -231,13 +231,15 @@
 }
 
 .emocionPill {
-  background: #EDE4D8;
-  color: #7A6050;
+  background: #D4C4BC;
+  color: #4A2A18;
+  font-weight: 600;
 }
 
 .estadoPill {
-  background: #FEE8D6;
-  color: #C45A18;
+  background: #F0C8A0;
+  color: #7A3A10;
+  font-weight: 600;
 }
 
 .emocionPillLabel, .estadoPillLabel {
