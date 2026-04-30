@@ -126,7 +126,7 @@ function agruparItemsPorDia(items) {
 function HitoHistorialCard({ hito }) {
   const cat = CATEGORIAS_HITO[hito.categoria] || { label: hito.categoria || 'Avance', emoji: '⭐' }
   return (
-    <Card className={styles.card}>
+    <Card className={`${styles.card} ${styles.cardHito}`}>
       <div className={styles.hitoCardTop}>
         <span className={styles.hitoEmoji}>{cat.emoji}</span>
         <div>

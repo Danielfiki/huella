@@ -108,7 +108,8 @@
   text-transform: uppercase; letter-spacing: 0.6px; padding-left: 2px;
 }
 
-.card { display: flex; flex-direction: column; gap: 10px; }
+.card { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid #F08070; }
+.cardHito { border-left: 3px solid #8FA840; }
 
 .cardTop {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;

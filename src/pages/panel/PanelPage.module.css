@@ -52,6 +52,7 @@
 .resumenCard {
   background: linear-gradient(135deg, var(--color-celebration-start) 0%, var(--color-celebration-end) 100%);
   border-color: var(--color-primary-light);
+  border-left: 3px solid #9B7B6A;
 }
 
 .resumenTop {
@@ -170,7 +171,7 @@
 
 /* ── Gráficos ── */
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.graficoCard { overflow: visible; }
+.graficoCard { overflow: visible; border-left: 3px solid #8FA840; }
 
 .narrativa {
   margin: 12px 0 0;
@@ -316,6 +317,7 @@
 .consejoCard {
   background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
   border-color: var(--color-primary-light);
+  border-left: 3px solid #8FA840;
 }
 
 .consejoHeader {
@@ -454,7 +456,7 @@
 }
 
 /* ── Análisis de patrones ── */
-.patronesCard {}
+.patronesCard { border-left: 3px solid #F08070; }
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .patronesHeader h3 { font-size: 15px; font-weight: 600; }
 .patronesDesc { font-size: 14px; color: var(--color-text-muted); margin-bottom: 12px; }
