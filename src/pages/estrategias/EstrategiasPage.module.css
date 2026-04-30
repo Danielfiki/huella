@@ -111,7 +111,7 @@
 }
 .habilidadBtn:hover { border-color: var(--color-primary-light); }
 .habilidadSelected { border-color: var(--color-primary) !important; background: var(--color-primary-bg); }
-.habilidadOtra { color: var(--color-text-muted); border-style: dashed; border-color: var(--color-border); }
+.habilidadOtra { color: var(--color-text-muted); border-style: dashed; border-color: var(--color-border); margin-top: 8px; }
 .habilidadEmoji { font-size: 22px; flex-shrink: 0; }
 
 .otraExpand {
