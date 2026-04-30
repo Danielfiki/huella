@@ -262,6 +262,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
+  border-left: 4px solid #9B7B6A;
   background: var(--color-surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);

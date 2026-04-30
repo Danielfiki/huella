@@ -1,4 +1,4 @@
-.wrap { display: flex; flex-direction: column; }
+.wrap { display: flex; flex-direction: column; background: #F8FAEE; border-left: 4px solid #8FA840; }
 
 .bars {
   display: flex;
