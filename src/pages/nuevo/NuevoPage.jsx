@@ -104,6 +104,7 @@ export default function NuevoPage() {
       <div className={styles.page}>
         <div className={styles.header}>
           <h2 className={styles.titulo}>¿Qué quieres registrar?</h2>
+          <p style={{ fontSize: 13, color: '#9B7B6A', marginTop: 4, marginBottom: 16 }}>Mientras más detalles aportes, más precisa será la orientación de Huella.</p>
         </div>
 
         <button
