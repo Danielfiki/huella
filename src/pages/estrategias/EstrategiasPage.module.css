@@ -62,8 +62,9 @@
 
 /* ── Card explicativa ── */
 .explicativaCard {
-  background: linear-gradient(135deg, var(--color-success-bg) 0%, var(--color-surface) 100%);
-  border-color: var(--color-accent-green);
+  background: #EFF4DC;
+  border: 1.5px solid #C8DCA0;
+  border-left: 4px solid #8FA840;
 }
 .explicativaHeader {
   display: flex;
@@ -158,6 +159,7 @@
 .emptyCard {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 12px; padding: 36px 24px;
+  border: 1.5px solid #E8DACE;
 }
 .emptyCard h3 { font-size: 16px; font-weight: 600; }
 .emptyCard p { font-size: 14px; color: var(--color-text-muted); }

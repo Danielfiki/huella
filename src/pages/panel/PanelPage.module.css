@@ -50,7 +50,7 @@
 
 /* ── Resumen emocional ── */
 .resumenCard {
-  background: linear-gradient(135deg, var(--color-celebration-start) 0%, var(--color-celebration-end) 100%);
+  background: #FEF0E4;
   border-color: var(--color-primary-light);
   border-left: 3px solid #9B7B6A;
 }
@@ -171,7 +171,7 @@
 
 /* ── Gráficos ── */
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.graficoCard { overflow: visible; border-left: 3px solid #8FA840; }
+.graficoCard { overflow: visible; border-left: 3px solid #8FA840; background: #F8FAEE; }
 
 .narrativa {
   margin: 12px 0 0;

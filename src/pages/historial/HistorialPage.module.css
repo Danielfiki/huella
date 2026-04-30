@@ -109,7 +109,7 @@
 }
 
 .card { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid #F08070; }
-.cardHito { border-left: 3px solid #8FA840; }
+.cardHito { border-left: 3px solid #8FA840; background: #F0F8E8; border: 1px solid #C8DCA0; }
 
 .cardTop {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
