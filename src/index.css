@@ -9,7 +9,7 @@
 :root {
   /* ── Fondos ── */
   --color-bg: #FAF3EC;
-  --color-surface: #F5EDE3;
+  --color-surface: #FAF3EC;
   --color-surface-alt: #EDE4D8;
   --color-border: #E8DACE;
 
@@ -67,10 +67,10 @@
   --font-heading: 'Fraunces', Georgia, serif;
 
   /* ── Navegación ── */
-  --color-nav: #F5EDE3;
+  --color-nav: #FAF3EC;
   --color-nav-border: rgba(42, 26, 14, 0.08);
   --color-nav-text: #7A6050;
-  --color-nav-text-active: #E56E26;
+  --color-nav-text-active: #9B7B6A;
 }
 
 /* ── Modo oscuro ── */

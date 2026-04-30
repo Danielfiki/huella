@@ -9,11 +9,11 @@
 }
 
 .header {
-  background: #F5EDE3 !important;
-  border-bottom: 1px solid #E8DACE !important;
+  background: #9B7B6A !important;
   padding: 0 20px;
   height: 56px;
   flex-shrink: 0;
+  border-bottom: none !important;
   box-shadow: none !important;
   border-bottom-left-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
@@ -29,7 +29,7 @@
 .logo {
   font-size: 22px;
   font-weight: 800;
-  color: #E56E26 !important;
+  color: white !important;
   letter-spacing: -1px;
 }
 
@@ -37,12 +37,12 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--color-surface-alt);
-  border: 1.5px solid var(--color-border);
+  background: rgba(255,255,255,0.2);
+  border: 1.5px solid rgba(255,255,255,0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted);
+  color: white;
   transition: background 0.15s;
 }
 
