@@ -14,6 +14,7 @@ import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
 import GraficoDiaSemana from '../../modules/panel/GraficoDiaSemana'
 import GraficoTipos from '../../modules/panel/GraficoTipos'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
+import BienvenidaModal from '../../components/ui/BienvenidaModal'
 import styles from './PanelPage.module.css'
 
 const CONTEXTOS_ESTRATEGIA = {
@@ -395,6 +396,7 @@ export default function PanelPage() {
   return (
     <div className={styles.page}>
 
+      <BienvenidaModal />
       <GuiaPrimerosPasos totalEpisodios={episodios.length} />
 
       {/* ── Saludo ── */}
