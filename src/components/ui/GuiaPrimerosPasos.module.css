@@ -1,0 +1,67 @@
+.card {
+  background: #FEE8D6;
+  border: 1px solid #F0C8A0;
+  border-left: 4px solid #E56E26;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.pasos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.pasoDone .pasoTexto {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.pasoIcon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.pasoTexto {
+  line-height: 1.4;
+}
+
+.btn {
+  align-self: flex-start;
+  background: #E56E26;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.88;
+}
