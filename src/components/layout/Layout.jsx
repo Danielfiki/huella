@@ -41,13 +41,13 @@ function SkeletonLoader() {
 
 export default function Layout() {
   const { state, dataLoading } = useHuella()
-  const [showOnboarding, setShowOnboarding] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(!localStorage.getItem('onboarding_done'))
   const location = useLocation()
 
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
+      {showOnboarding && <Onboarding onDone={() => { setShowOnboarding(false); localStorage.setItem('onboarding_done', '1'); }} />}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>

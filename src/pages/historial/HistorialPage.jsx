@@ -78,7 +78,7 @@ function calcularImpacto(estrategia, episodios) {
 }
 
 const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy intenso']
-const INTENSIDAD_COLOR = ['', '#a8d5b5', '#c4e0a8', '#f0dfa0', '#f5c4a8', '#e87878']
+const INTENSIDAD_COLOR = ['', '#8FA840', '#EE9452', '#F08070', '#E56E26', '#A07060']
 
 function formatHora(fechaStr) {
   return new Date(fechaStr).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
@@ -518,7 +518,7 @@ export default function HistorialPage() {
       {/* ── Filtros (solo pestaña episodios) ── */}
       {pestaña === 'episodios' && episodios.length > 0 && (
         <div className={styles.filtros}>
-          <p className={styles.filtrosHint}>Filtra los episodios para encontrar patrones</p>
+          <p className={styles.filtrosHint}>Usa los filtros para encontrar los episodios que necesitas según su tipo e intensidad</p>
           <div className={styles.filtroSection}>
             <span className={styles.filtroLabel}>Tipo</span>
             <div className={styles.filtroChips}>

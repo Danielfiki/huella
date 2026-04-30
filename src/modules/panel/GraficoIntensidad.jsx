@@ -1,6 +1,6 @@
 import React from 'react'
 
-const DOT_FILL = { 1: '#6dbf88', 2: '#a8d5b5', 3: '#f0dfa0', 4: '#f5c4a8', 5: '#e87878' }
+const DOT_FILL = { 1: '#8FA840', 2: '#8FA840', 3: '#F08070', 4: '#E56E26', 5: '#A07060' }
 
 export default function GraficoIntensidad({ episodios }) {
   // Chronological order, last 20

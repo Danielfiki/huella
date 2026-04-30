@@ -9,13 +9,14 @@
 }
 
 .header {
-  background: linear-gradient(135deg, #F2A97F, #E68A5C);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  background: #F5EDE3 !important;
+  border-bottom: 1px solid #E8DACE !important;
   padding: 0 20px;
   height: 56px;
   flex-shrink: 0;
+  box-shadow: none !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
 .headerContent {
@@ -27,27 +28,27 @@
 
 .logo {
   font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.5px;
+  font-weight: 800;
+  color: #E56E26 !important;
+  letter-spacing: -1px;
 }
 
 .profileBtn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--color-text-muted);
   transition: background 0.15s;
 }
 
 .profileBtn:hover {
-  background: rgba(255, 255, 255, 0.32);
-  color: #ffffff;
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .profileAvatar {
@@ -64,26 +65,22 @@
   padding-bottom: 8px;
 }
 
-/* ── Page fade-in wrapper ── */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-.pageWrap {
-  opacity: 0;
-}
+.pageWrap { opacity: 0; }
 
 .pageVisible {
   animation: fadeIn 500ms ease both;
 }
 
-/* ── Bottom nav ── */
 .bottomNav {
   display: flex;
   align-items: flex-end;
   background: var(--color-nav);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+  border-top: 1px solid var(--color-nav-border);
   padding: 6px 4px max(12px, env(safe-area-inset-bottom, 0px));
   flex-shrink: 0;
   overflow: visible;
@@ -105,19 +102,18 @@
 
 .navItem:hover {
   color: var(--color-primary);
-  background: rgba(230, 138, 92, 0.08);
+  background: rgba(229, 110, 38, 0.08);
 }
 
 .navItemActive {
   color: var(--color-nav-text-active);
-  background: rgba(230, 138, 92, 0.12);
+  background: rgba(229, 110, 38, 0.10);
 }
 
 .navItemActive svg {
   stroke: var(--color-nav-text-active);
 }
 
-/* ── Botón Registrar destacado ── */
 .navRegistrar {
   flex: 1;
   display: flex;
@@ -132,23 +128,23 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E68A5C, #F2A97F);
+  background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: -20px;
-  box-shadow: 0 6px 16px rgba(230, 138, 92, 0.35);
+  box-shadow: 0 6px 16px rgba(229, 110, 38, 0.35);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .navRegistrar:hover .navRegistrarBtn {
   transform: scale(1.06);
-  box-shadow: 0 8px 20px rgba(230, 138, 92, 0.45);
+  box-shadow: 0 8px 20px rgba(229, 110, 38, 0.45);
 }
 
 .navRegistrarActive .navRegistrarBtn {
-  background: linear-gradient(135deg, #C96A3C, #E68A5C);
+  background: var(--color-primary-dark);
 }
 
 .navRegistrarLabel {
@@ -156,7 +152,6 @@
   font-weight: 600;
 }
 
-/* ── Loading bar ── */
 .loadingBar {
   position: absolute;
   top: 0;
@@ -174,7 +169,6 @@
   100% { width: 100%; opacity: 0; }
 }
 
-/* ── Skeleton ── */
 .skeletonPage {
   display: flex;
   flex-direction: column;

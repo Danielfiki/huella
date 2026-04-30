@@ -2,7 +2,7 @@ import React from 'react'
 import styles from './GraficoTipos.module.css'
 
 const TIPO_META = {
-  rabieta:     { label: 'Rabieta',     emoji: '💥', color: '#e87878' },
+  rabieta:     { label: 'Rabieta',     emoji: '💥', color: '#A07060' },
   llanto:      { label: 'Llanto',      emoji: '😭', color: '#7C8FD4' },
   agresividad: { label: 'Agresividad', emoji: '👊', color: '#C4714A' },
   miedo:       { label: 'Miedo',       emoji: '🫣', color: '#9B8EC4' },

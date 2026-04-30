@@ -280,7 +280,7 @@
 }
 .toggleBtnRiesgo {
   background: #FEE4D0;
-  border-color: #C96A3C;
+  border-color: var(--color-primary-dark);
   color: #A84B28;
 }
 
