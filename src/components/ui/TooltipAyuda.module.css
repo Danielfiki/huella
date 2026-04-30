@@ -1,0 +1,57 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.trigger {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #9B7B6A;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.trigger:hover { opacity: 0.8; }
+
+.burbuja {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2A1A0E;
+  color: white;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 260px;
+  width: max-content;
+  z-index: 100;
+  font-family: var(--font-family);
+  font-weight: 400;
+}
+
+.flecha {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #2A1A0E;
+}

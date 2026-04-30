@@ -15,6 +15,7 @@ import GraficoDiaSemana from '../../modules/panel/GraficoDiaSemana'
 import GraficoTipos from '../../modules/panel/GraficoTipos'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import BienvenidaModal from '../../components/ui/BienvenidaModal'
+import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './PanelPage.module.css'
 
 const CONTEXTOS_ESTRATEGIA = {
@@ -406,7 +407,7 @@ export default function PanelPage() {
           : <div className={styles.greetingAvatarPlaceholder}>{nombreHijo.charAt(0).toUpperCase()}</div>
         }
         <div className={styles.greetingText}>
-          <h1 className={styles.greetingTitulo}>{titulo}</h1>
+          <h1 className={styles.greetingTitulo}>{titulo}<TooltipAyuda texto="Registra lo que pasa con tu hijo/a. Con el tiempo Huella identifica patrones y te da orientación concreta." /></h1>
           {hijo && <p className={styles.greetingSubtitulo}>{subtitulo}</p>}
           {!hijo && <p className={styles.greetingSubtitulo}>Configura el perfil de tu hijo/a para empezar.</p>}
         </div>

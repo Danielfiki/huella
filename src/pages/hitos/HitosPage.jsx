@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import CitaLoader from '../../components/ui/CitaLoader'
 import { renderMarkdown } from '../../utils/renderMarkdown'
+import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './HitosPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -733,7 +734,7 @@ export default function HitosPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <h2 className={styles.titulo}>Logros</h2>
+          <h2 className={styles.titulo}>Logros<TooltipAyuda texto="Aquí celebramos tu constancia. Cada episodio registrado es un paso hacia entender mejor a tu hijo/a." /></h2>
           <p className={styles.totalBadges}>{totalDesbloqueados} de {totalBadges} medallas</p>
         </div>
         <Button variant="primary" size="sm" onClick={() => { setMostrando(!mostrando); setPestaña('medallas') }}>

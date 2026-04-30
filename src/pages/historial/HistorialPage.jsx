@@ -4,6 +4,7 @@ import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
+import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './HistorialPage.module.css'
 
 const TIPOS = {
@@ -409,7 +410,7 @@ export default function HistorialPage() {
   if (totalRegistros === 0) {
     return (
       <div className={styles.page}>
-        <h2 className={styles.titulo}>Historial</h2>
+        <h2 className={styles.titulo}>Historial<TooltipAyuda texto="Aquí quedan todos tus registros. Filtra por tipo o intensidad para encontrar patrones." /></h2>
         <Card className={styles.emptyCard}>
           <BookOpen size={36} color="var(--color-primary-light)" />
           <h3>Sin registros aún</h3>
@@ -422,7 +423,7 @@ export default function HistorialPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h2 className={styles.titulo}>Historial</h2>
+        <h2 className={styles.titulo}>Historial<TooltipAyuda texto="Aquí quedan todos tus registros. Filtra por tipo o intensidad para encontrar patrones." /></h2>
         <span className={styles.count}>{countLabel}</span>
       </div>
 

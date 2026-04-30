@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import CitaLoader from '../../components/ui/CitaLoader'
+import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './EstrategiasPage.module.css'
 
 const CONTEXTOS = {
@@ -602,7 +603,7 @@ export default function EstrategiasPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h2 className={styles.titulo}>Estrategias</h2>
+        <h2 className={styles.titulo}>Estrategias<TooltipAyuda texto="Elige una habilidad a trabajar y Huella diseña un plan concreto de 4 semanas." /></h2>
         <Button variant="primary" size="sm" onClick={() => setVista('nueva')}>
           <Plus size={16} /> Nueva
         </Button>
