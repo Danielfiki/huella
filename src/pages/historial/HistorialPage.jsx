@@ -20,12 +20,18 @@ const TIPOS = {
 }
 
 const HABILIDAD_A_TIPOS = {
-  'Calmarse cuando explota':            ['rabieta', 'agresividad', 'desconexion'],
-  'Aceptar el "no" sin crisis':         ['oposicion'],
-  'Manejar el miedo y la angustia':     ['miedo', 'llanto'],
-  'Concentrarse y calmarse':            ['sueño'],
-  'Relacionarse mejor con otros niños': ['social'],
-  'Manejar los cambios de rutina':      ['rabieta', 'oposicion'],
+  'Calmarse cuando explota':                      ['rabieta', 'agresividad', 'desconexion'],
+  'Aceptar el "no" sin crisis':                   ['oposicion'],
+  'Manejar el miedo y la angustia':               ['miedo', 'llanto'],
+  'Concentrarse y calmarse':                      ['sueño'],
+  'Relacionarse mejor con otros niños':           ['social'],
+  'Manejar los cambios de rutina':                ['rabieta', 'oposicion'],
+  'Mejorar la atención y concentración':          ['sueño', 'desconexion'],
+  'Desarrollar autonomía e independencia':        ['oposicion', 'rabieta'],
+  'Mejorar vínculos sociales con otros niños':    ['social'],
+  'Establecer rutinas que funcionen':             ['rabieta', 'oposicion', 'sueño'],
+  'Motivación y autoestima':                      ['desconexion', 'llanto'],
+  'Dificultades en el colegio':                   ['social', 'oposicion', 'desconexion'],
 }
 
 function calcularImpacto(estrategia, episodios) {
