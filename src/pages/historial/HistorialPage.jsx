@@ -28,7 +28,6 @@ const HABILIDAD_A_TIPOS = {
   'Manejar los cambios de rutina':                ['rabieta', 'oposicion'],
   'Mejorar la atención y concentración':          ['sueño', 'desconexion'],
   'Desarrollar autonomía e independencia':        ['oposicion', 'rabieta'],
-  'Mejorar vínculos sociales con otros niños':    ['social'],
   'Establecer rutinas que funcionen':             ['rabieta', 'oposicion', 'sueño'],
   'Motivación y autoestima':                      ['desconexion', 'llanto'],
   'Dificultades en el colegio':                   ['social', 'oposicion', 'desconexion'],
