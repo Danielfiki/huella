@@ -916,7 +916,7 @@ export default function RegistroPage() {
         </div>
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-        <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setContexto} />
+        <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} />
 
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
@@ -967,7 +967,7 @@ export default function RegistroPage() {
       </div>
       <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-      <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setContexto} />
+      <NarrativaBar value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} />
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>

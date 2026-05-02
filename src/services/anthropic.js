@@ -176,11 +176,17 @@ CRIANZA EN CONTEXTO CULTURAL: Pamela Druckerman ("Bringing Up Bébé"): la crian
 
 export async function generarAccionInmediata({ hijo, episodio }) {
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años.
-Acaba de tener: ${episodio.tipo} (intensidad ${episodio.intensidad}/5).${episodio.emocion ? `\nEmoción del niño: ${episodio.emocion}` : ''}${episodio.contexto ? `\nContexto: ${episodio.contexto}` : ''}${episodio.gatillantes?.length ? `\nGatillantes: ${episodio.gatillantes.join(', ')}` : ''}${episodio.descripcionLibre ? `\nRelato del padre/madre: ${episodio.descripcionLibre}` : ''}
+Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Acaba de tener: ${episodio.tipo} (intensidad ${episodio.intensidad}/5).${episodio.emocion ? `\nEmoción del ${genero}: ${episodio.emocion}` : ''}${episodio.contexto ? `\nContexto: ${episodio.contexto}` : ''}${episodio.gatillantes?.length ? `\nGatillantes: ${episodio.gatillantes.join(', ')}` : ''}${episodio.descripcionLibre ? `\nRelato del padre/madre: ${episodio.descripcionLibre}` : ''}
 
 Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en los próximos 2 minutos. Máximo 3 líneas. Sin listas, sin títulos, sin markdown. Lenguaje simple y cálido, calibrado estrictamente para la edad indicada según el marco científico anterior. Empieza con "Ahora mismo:" y describe el gesto o acción física específica, incluyendo palabras exactas si aplica. Que sea algo que cualquier padre/madre pueda hacer en casa ahora, sin preparación. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
@@ -241,6 +247,12 @@ export async function interpretarPatrones({ hijo, episodios }) {
   }
 
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const resumen = episodios.slice(0, 20).map(e =>
     `${new Date(e.fecha).toLocaleDateString('es-CL')}: ${e.tipo} (intensidad ${e.intensidad}/5, gatillantes: ${e.gatillantes?.join(', ') || 'ninguno'})`
@@ -248,7 +260,7 @@ export async function interpretarPatrones({ hijo, episodios }) {
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 
 Historial de episodios (más recientes primero):
 ${resumen}
@@ -274,10 +286,16 @@ Esta orientación se basa en evidencia del desarrollo infantil y no constituye u
 
 export async function celebrarHito({ hijo, hito }) {
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años.
+Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 
 El padre/madre acaba de registrar este avance positivo:
 - Tipo: ${hito.categoria}
@@ -290,10 +308,16 @@ Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado
 
 export async function generarTareas({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 Habilidad a trabajar: ${habilidad}
 Contexto: ${descripcion || 'ninguno'}
 
@@ -319,6 +343,12 @@ Reglas por tarea: máximo 90 caracteres, verbo de acción concreto, realizable e
 
 export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias }) {
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const hace7 = new Date()
   hace7.setDate(hace7.getDate() - 7)
@@ -330,7 +360,7 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
     ? semanaEp.map((e) => {
         let line = `- ${e.tipo}, intensidad ${e.intensidad}/5`
         if (e.gatillantes?.length) line += `, gatillantes: ${e.gatillantes.join(', ')}`
-        if (e.emocion) line += `, emoción del niño: ${e.emocion}`
+        if (e.emocion) line += `, emoción del ${genero}: ${e.emocion}`
         if (e.estadoPadre) line += `, estado del padre/madre: ${e.estadoPadre}`
         if (e.contexto) line += ` | contexto: ${e.contexto.slice(0, 80)}`
         return line
@@ -346,7 +376,7 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años.
+Nombre: ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 
 Episodios esta semana (${semanaEp.length}):
 ${resumenEp}
@@ -359,10 +389,16 @@ INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy, fundamentado en el ma
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 Habilidad a fortalecer: ${habilidad}
 Contexto adicional: ${descripcion || 'ninguno'}
 
