@@ -447,6 +447,22 @@ export function HuellaProvider({ children }) {
     return inserted
   }
 
+  async function deleteHito(id) {
+    if (!user || !supabase) return
+    dispatch({ type: 'REMOVE_HITO', payload: id })
+    const { error } = await supabase
+      .from('hitos').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      const { data } = await supabase
+        .from('hitos').select('*')
+        .in('user_id', getPartnerIds())
+        .eq('hijo_id', state.hijoActivoId)
+        .order('fecha', { ascending: false })
+      if (data) dispatch({ type: 'SET_HITOS', payload: data })
+      throw new Error(error.message)
+    }
+  }
+
   async function updateHitoFoto(hitoId, fotoUrl) {
     if (!user) return
     await supabase.from('hitos').update({ foto_url: fotoUrl }).eq('id', hitoId).eq('user_id', user.id)
@@ -588,6 +604,7 @@ export function HuellaProvider({ children }) {
       updateEpisodio,
       deleteEpisodio,
       addHito,
+      deleteHito,
       updateHitoFoto,
       addEstrategia,
       updateEstrategia,

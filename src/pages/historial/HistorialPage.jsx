@@ -129,8 +129,21 @@ function agruparItemsPorDia(items) {
   return Array.from(grupos.values())
 }
 
-function HitoHistorialCard({ hito }) {
+function HitoHistorialCard({ hito, onDelete }) {
+  const [confirmando, setConfirmando] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
   const cat = CATEGORIAS_HITO[hito.categoria] || { label: hito.categoria || 'Avance', emoji: '⭐' }
+
+  async function handleEliminar() {
+    setEliminando(true)
+    try {
+      await onDelete(hito.id)
+    } catch {
+      setEliminando(false)
+      setConfirmando(false)
+    }
+  }
+
   return (
     <Card className={`${styles.card} ${styles.cardHito}`}>
       <div className={styles.hitoCardTop}>
@@ -142,6 +155,32 @@ function HitoHistorialCard({ hito }) {
           </p>
         </div>
         <span className={styles.hitoBadge}>avance</span>
+        {!confirmando ? (
+          <button
+            className={styles.deleteBtn}
+            onClick={() => setConfirmando(true)}
+            title="Eliminar avance"
+          >
+            <Trash2 size={14} />
+          </button>
+        ) : (
+          <div className={styles.confirmWrap}>
+            <button
+              className={styles.confirmSiBtn}
+              onClick={handleEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? '...' : 'Eliminar'}
+            </button>
+            <button
+              className={styles.confirmNoBtn}
+              onClick={() => setConfirmando(false)}
+              disabled={eliminando}
+            >
+              No
+            </button>
+          </div>
+        )}
       </div>
       {hito.descripcion ? (
         <p className={styles.contexto}>{hito.descripcion}</p>
@@ -328,7 +367,7 @@ const PESTANAS = [
 ]
 
 export default function HistorialPage() {
-  const { state, deleteEpisodio, updateEpisodio } = useHuella()
+  const { state, deleteEpisodio, updateEpisodio, deleteHito } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
   const [pestaña, setPestaña] = useState('todos')
   const [filtroTipos, setFiltroTipos] = useState(() => new Set())
@@ -503,7 +542,7 @@ export default function HistorialPage() {
                     conEstrategia={episodiosConEstrategia.has(item.data.id)}
                   />
                 ) : (
-                  <HitoHistorialCard key={item.data.id} hito={item.data} />
+                  <HitoHistorialCard key={item.data.id} hito={item.data} onDelete={deleteHito} />
                 )
               )}
             </div>
@@ -599,7 +638,7 @@ export default function HistorialPage() {
         ) : (
           <div className={styles.grupo}>
             {hitosOrdenados.map((h) => (
-              <HitoHistorialCard key={h.id} hito={h} />
+              <HitoHistorialCard key={h.id} hito={h} onDelete={deleteHito} />
             ))}
           </div>
         )
