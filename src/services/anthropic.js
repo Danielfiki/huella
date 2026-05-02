@@ -201,13 +201,17 @@ export async function analizarEpisodio({ hijo, episodio, historialReciente = [],
     ? `\n- Momento de la rutina diaria: "${bloqueRutina.nombre}" (${bloqueRutina.hora})${bloqueRutina.esMomentoRiesgo ? ' — marcado por los padres como momento de riesgo' : ''}${bloqueRutina.nota ? `. Nota: ${bloqueRutina.nota}` : ''}`
     : ''
 
+  const genero = hijo?.genero === 'niña' ? 'niña' : 'niño'
+  const pronombre = genero === 'niña' ? 'ella' : 'él'
+  const articulo = genero === 'niña' ? 'la' : 'lo'
+
   const prompt = `${marco}
 
-Niño/a: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años.
+${genero === 'niña' ? 'Niña' : 'Niño'}: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a ${pronombre}.
 
 Episodio registrado:
 - Tipo: ${episodio.tipo}
-- Intensidad: ${episodio.intensidad}/5${episodio.emocion ? `\n- Emoción del niño: ${episodio.emocion}` : ''}
+- Intensidad: ${episodio.intensidad}/5${episodio.emocion ? `\n- Emoción del ${genero}: ${episodio.emocion}` : ''}
 - Contexto: ${episodio.contexto || 'no especificado'}
 - Gatillantes posibles: ${episodio.gatillantes?.join(', ') || 'no especificados'}${episodio.descripcionLibre ? `\n- Relato del padre/madre: ${episodio.descripcionLibre}` : ''}${bloqueCtx}${contexto}
 
