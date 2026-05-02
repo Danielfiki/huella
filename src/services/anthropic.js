@@ -225,7 +225,7 @@ Responde con este formato exacto, calibrando cada sección al marco científico 
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 900)
+  return llamarAPI(prompt, 1400)
 }
 
 export async function interpretarPatrones({ hijo, episodios }) {
