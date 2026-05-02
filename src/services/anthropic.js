@@ -384,7 +384,7 @@ ${avgIntensidad ? `Intensidad promedio: ${avgIntensidad}/5.` : ''}${topGatillant
 
 INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy, fundamentado en el marco científico de la edad indicada. Menciona algo específico de los datos anteriores (un gatillante concreto, un patrón de intensidad, una emoción específica). Nada genérico. Si hay un patrón claro, nómbralo y da una acción concreta apropiada para la edad. Tono cálido, segunda persona, sin markdown, sin listas, sin disclaimer. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 150)
+  return llamarAPI(prompt, 400)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
