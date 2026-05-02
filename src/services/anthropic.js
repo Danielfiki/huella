@@ -182,9 +182,9 @@ export async function generarAccionInmediata({ hijo, episodio }) {
 Niño/a: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años.
 Acaba de tener: ${episodio.tipo} (intensidad ${episodio.intensidad}/5).${episodio.emocion ? `\nEmoción del niño: ${episodio.emocion}` : ''}${episodio.contexto ? `\nContexto: ${episodio.contexto}` : ''}${episodio.gatillantes?.length ? `\nGatillantes: ${episodio.gatillantes.join(', ')}` : ''}${episodio.descripcionLibre ? `\nRelato del padre/madre: ${episodio.descripcionLibre}` : ''}
 
-Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en los próximos 2 minutos. Máximo 3 líneas. Sin listas, sin títulos, sin markdown. Lenguaje simple y cálido, calibrado estrictamente para la edad indicada según el marco científico anterior. Empieza con "Ahora mismo:" y describe el gesto o acción física específica, incluyendo palabras exactas si aplica. Que sea algo que cualquier padre/madre pueda hacer en casa ahora, sin preparación.`
+Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en los próximos 2 minutos. Máximo 3 líneas. Sin listas, sin títulos, sin markdown. Lenguaje simple y cálido, calibrado estrictamente para la edad indicada según el marco científico anterior. Empieza con "Ahora mismo:" y describe el gesto o acción física específica, incluyendo palabras exactas si aplica. Que sea algo que cualquier padre/madre pueda hacer en casa ahora, sin preparación. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 120)
+  return llamarAPI(prompt, 350)
 }
 
 export async function analizarEpisodio({ hijo, episodio, historialReciente = [], bloqueRutina = null }) {
@@ -223,7 +223,7 @@ Responde con este formato exacto, calibrando cada sección al marco científico 
 **Qué evitar**
 - [cosa a evitar y por qué en 1 línea, específica para la edad]
 
-Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
+Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
   return llamarAPI(prompt, 900)
 }
@@ -260,7 +260,7 @@ Analiza estos patrones desde el marco científico de la edad indicada y responde
 **Próximos pasos sugeridos**
 [1-2 acciones concretas, calibradas a la edad, para los próximos días]
 
-Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico.`
+Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
   return llamarAPI(prompt, 1800)
 }
@@ -276,7 +276,7 @@ El padre/madre acaba de registrar este avance positivo:
 - Tipo: ${hito.categoria}
 - Descripción: ${hito.descripcion || '(sin descripción)'}
 
-Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado de este momento para el desarrollo del niño en esta etapa específica, explicando brevemente por qué este tipo de avance importa neurológicamente o conductualmente a esta edad según el marco científico anterior. Habla en segunda persona al padre/madre. No uses listas ni títulos. No incluyas disclaimer ni marco aplicado.`
+Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado de este momento para el desarrollo del niño en esta etapa específica, explicando brevemente por qué este tipo de avance importa neurológicamente o conductualmente a esta edad según el marco científico anterior. Habla en segunda persona al padre/madre. No uses listas ni títulos. No incluyas disclaimer ni marco aplicado. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
   return llamarAPI(prompt, 180)
 }
@@ -345,7 +345,7 @@ Episodios esta semana (${semanaEp.length}):
 ${resumenEp}
 ${avgIntensidad ? `Intensidad promedio: ${avgIntensidad}/5.` : ''}${topGatillante ? ` Gatillante más frecuente: "${topGatillante}".` : ''}${hitosCount > 0 ? ` Avances positivos esta semana: ${hitosCount}.` : ''}${estrategiaActiva ? ` Estrategia activa: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4).` : ''}
 
-INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy, fundamentado en el marco científico de la edad indicada. Menciona algo específico de los datos anteriores (un gatillante concreto, un patrón de intensidad, una emoción específica). Nada genérico. Si hay un patrón claro, nómbralo y da una acción concreta apropiada para la edad. Tono cálido, segunda persona, sin markdown, sin listas, sin disclaimer.`
+INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy, fundamentado en el marco científico de la edad indicada. Menciona algo específico de los datos anteriores (un gatillante concreto, un patrón de intensidad, una emoción específica). Nada genérico. Si hay un patrón claro, nómbralo y da una acción concreta apropiada para la edad. Tono cálido, segunda persona, sin markdown, sin listas, sin disclaimer. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
   return llamarAPI(prompt, 150)
 }
