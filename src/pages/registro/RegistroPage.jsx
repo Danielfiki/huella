@@ -755,7 +755,7 @@ export default function RegistroPage() {
       setLoadingAccion(true)
       setAccionIA('')
       const [texto] = await Promise.all([
-        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios, bloqueRutina })
+        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios.filter((e) => e.id !== episodio.id), bloqueRutina })
           .catch((e) => 'No se pudo obtener orientación: ' + e.message),
         generarAccionInmediata({ hijo: state.hijo, episodio })
           .then((a) => { setAccionIA(a); setLoadingAccion(false) })
