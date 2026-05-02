@@ -462,35 +462,35 @@ export default function PanelPage() {
           {/* ── Gráficos ── */}
           {episodios.length >= 3 && (
             <>
-              <Card className={styles.graficoCard}>
+              <Card className={styles.graficoCard} staggerDelay={0}>
                 <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
                 <GraficoFrecuenciaSemanal episodios={episodios} estrategiaInicio={estrategiaActiva?.fechaInicio} />
                 {narrativaFrecuencia && (
                   <p className={styles.narrativa}>{narrativaFrecuencia}</p>
                 )}
               </Card>
-              <Card className={styles.graficoCard}>
+              <Card className={styles.graficoCard} staggerDelay={60}>
                 <h3 className={styles.cardTitle}>Distribución por día</h3>
                 <GraficoDiaSemana episodios={episodios} />
                 {narrativaDiaSemana && (
                   <p className={styles.narrativa}>{narrativaDiaSemana}</p>
                 )}
               </Card>
-              <Card className={styles.graficoCard}>
+              <Card className={styles.graficoCard} staggerDelay={120}>
                 <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
                 <GraficoIntensidad episodios={episodios} />
                 {narrativaIntensidad && (
                   <p className={styles.narrativa}>{narrativaIntensidad}</p>
                 )}
               </Card>
-              <Card className={styles.graficoCard}>
+              <Card className={styles.graficoCard} staggerDelay={180}>
                 <h3 className={styles.cardTitle}>Tipos de episodio</h3>
                 <GraficoTipos episodios={episodios} />
                 {narrativaTipos && (
                   <p className={styles.narrativa}>{narrativaTipos}</p>
                 )}
               </Card>
-              <Card className={styles.graficoCard}>
+              <Card className={styles.graficoCard} staggerDelay={240}>
                 <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
                 <GraficoGatillantes episodios={episodios} />
                 {narrativaGatillantes && (
@@ -501,7 +501,7 @@ export default function PanelPage() {
           )}
 
           {/* ── Análisis de patrones ── */}
-          <Card className={styles.patronesCard}>
+          <Card className={styles.patronesCard} staggerDelay={300}>
             <div className={styles.patronesHeader}>
               <TrendingUp size={18} />
               <h3>Análisis de patrones</h3>

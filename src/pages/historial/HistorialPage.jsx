@@ -129,7 +129,7 @@ function agruparItemsPorDia(items) {
   return Array.from(grupos.values())
 }
 
-function HitoHistorialCard({ hito, onDelete }) {
+function HitoHistorialCard({ hito, onDelete, staggerDelay = 0 }) {
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const cat = CATEGORIAS_HITO[hito.categoria] || { label: hito.categoria || 'Avance', emoji: '⭐' }
@@ -145,7 +145,7 @@ function HitoHistorialCard({ hito, onDelete }) {
   }
 
   return (
-    <Card className={`${styles.card} ${styles.cardHito}`}>
+    <Card className={`${styles.card} ${styles.cardHito}`} staggerDelay={staggerDelay}>
       <div className={styles.hitoCardTop}>
         <span className={styles.hitoEmoji}>{cat.emoji}</span>
         <div>
@@ -197,7 +197,7 @@ function HitoHistorialCard({ hito, onDelete }) {
   )
 }
 
-function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
+function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia, staggerDelay = 0 }) {
   const [expandido, setExpandido] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -232,7 +232,7 @@ function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia }) {
   }
 
   return (
-    <Card className={styles.card}>
+    <Card className={styles.card} staggerDelay={staggerDelay}>
       <div className={styles.cardTop}>
         <div className={styles.tipoWrap}>
           <span className={styles.emoji}>{tipo.emoji}</span>
@@ -532,7 +532,7 @@ export default function HistorialPage() {
           gruposTodos.map((grupo) => (
             <div key={grupo.label} className={styles.grupo}>
               <p className={styles.grupoLabel}>{grupo.label}</p>
-              {grupo.items.map((item) =>
+              {grupo.items.map((item, i) =>
                 item.kind === 'episodio' ? (
                   <EpisodioCard
                     key={item.data.id}
@@ -540,9 +540,10 @@ export default function HistorialPage() {
                     onDelete={deleteEpisodio}
                     onUpdate={updateEpisodio}
                     conEstrategia={episodiosConEstrategia.has(item.data.id)}
+                    staggerDelay={i * 60}
                   />
                 ) : (
-                  <HitoHistorialCard key={item.data.id} hito={item.data} onDelete={deleteHito} />
+                  <HitoHistorialCard key={item.data.id} hito={item.data} onDelete={deleteHito} staggerDelay={i * 60} />
                 )
               )}
             </div>
@@ -614,13 +615,14 @@ export default function HistorialPage() {
             {gruposEpisodios.map((grupo) => (
               <div key={grupo.label} className={styles.grupo}>
                 <p className={styles.grupoLabel}>{grupo.label}</p>
-                {grupo.episodios.map((ep) => (
+                {grupo.episodios.map((ep, i) => (
                   <EpisodioCard
                     key={ep.id}
                     ep={ep}
                     onDelete={deleteEpisodio}
                     onUpdate={updateEpisodio}
                     conEstrategia={episodiosConEstrategia.has(ep.id)}
+                    staggerDelay={i * 60}
                   />
                 ))}
               </div>
@@ -637,8 +639,8 @@ export default function HistorialPage() {
           </Card>
         ) : (
           <div className={styles.grupo}>
-            {hitosOrdenados.map((h) => (
-              <HitoHistorialCard key={h.id} hito={h} onDelete={deleteHito} />
+            {hitosOrdenados.map((h, i) => (
+              <HitoHistorialCard key={h.id} hito={h} onDelete={deleteHito} staggerDelay={i * 60} />
             ))}
           </div>
         )

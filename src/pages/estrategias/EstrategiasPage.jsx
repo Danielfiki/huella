@@ -638,8 +638,8 @@ export default function EstrategiasPage() {
           </Button>
         </Card>
       ) : (
-        state.estrategias.map((e) => (
-          <Card key={e.id} onClick={() => abrirDetalle(e)}>
+        state.estrategias.map((e, i) => (
+          <Card key={e.id} onClick={() => abrirDetalle(e)} staggerDelay={i * 60}>
             <div className={styles.estrategiaHeader}>
               <h4 className={styles.estrategiaNombre}>{e.habilidad}</h4>
               <div className={styles.estrategiaHeaderRight}>

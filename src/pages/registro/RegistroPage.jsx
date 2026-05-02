@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Mic, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
@@ -707,6 +707,17 @@ export default function RegistroPage() {
   const [guardandoReflexion, setGuardandoReflexion] = useState(false)
   const [reflexionGuardada, setReflexionGuardada] = useState(false)
 
+  const pageRef = useRef(null)
+  const isFirstVistaRender = useRef(true)
+  useLayoutEffect(() => {
+    if (isFirstVistaRender.current) { isFirstVistaRender.current = false; return }
+    const el = pageRef.current
+    if (!el) return
+    el.classList.remove(styles.vistaEntra)
+    void el.offsetWidth
+    el.classList.add(styles.vistaEntra)
+  }, [vista])
+
   function handleCuando(id) {
     setCuandoPaso(id)
     if (id === 'custom' && !fechaCustom) setFechaCustom(nowLocal())
@@ -791,7 +802,7 @@ export default function RegistroPage() {
     const tipoObj = TIPOS.find((t) => t.id === tipo)
     const habilidadSugerida = TIPO_A_HABILIDAD[tipo] || ''
     return (
-      <div className={styles.page}>
+      <div ref={pageRef} className={styles.page}>
         <div className={styles.guardadoContainer}>
           <Card className={styles.guardadoCard}>
             <p className={styles.guardadoIcon}>✅</p>
@@ -877,7 +888,7 @@ export default function RegistroPage() {
   if (vista === 'elegir') {
     const nombreHijo = state.hijo?.nombre || 'tu hijo/a'
     return (
-      <div className={styles.page}>
+      <div ref={pageRef} className={styles.page}>
         <div className={styles.elegirHeader}>
           <h2 className={styles.titulo}>¿Cómo registrar?</h2>
           <p className={styles.elegirSub}>
@@ -909,7 +920,7 @@ export default function RegistroPage() {
   // ── VISTA: MODO RÁPIDO ────────────────────────────────────────────────────
   if (vista === 'rapido') {
     return (
-      <div className={styles.page}>
+      <div ref={pageRef} className={styles.page}>
         <div className={styles.vistaHeader}>
           <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
           <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>análisis básico</span>
@@ -960,7 +971,7 @@ export default function RegistroPage() {
 
   // ── VISTA: MODO DETALLADO ─────────────────────────────────────────────────
   return (
-    <div className={styles.page}>
+    <div ref={pageRef} className={styles.page}>
       <div className={styles.vistaHeader}>
         <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
         <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>

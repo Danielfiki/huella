@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import Onboarding from '../onboarding/Onboarding'
@@ -15,14 +15,28 @@ const navItems = [
   { to: '/hitos',       icon: Star,     label: 'Logros' },
 ]
 
-function PageFade({ children }) {
-  const [visible, setVisible] = useState(false)
+const NAV_PATHS = navItems.map((n) => n.to)
+
+function getNavIndex(pathname) {
+  return NAV_PATHS.findIndex((p) => pathname.startsWith(p))
+}
+
+function PageTransition({ children, direction }) {
+  const [ready, setReady] = useState(false)
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setVisible(true))
+    const raf = requestAnimationFrame(() => setReady(true))
     return () => cancelAnimationFrame(raf)
   }, [])
+
+  let animClass = ''
+  if (ready) {
+    if (direction === 'forward')   animClass = styles.pageSlideRight
+    else if (direction === 'backward') animClass = styles.pageSlideLeft
+    else                           animClass = styles.pageVisible
+  }
+
   return (
-    <div className={`${styles.pageWrap} ${visible ? styles.pageVisible : ''}`}>
+    <div className={`${styles.pageWrap}${animClass ? ` ${animClass}` : ''}`}>
       {children}
     </div>
   )
@@ -44,10 +58,20 @@ export default function Layout() {
   const [showOnboarding, setShowOnboarding] = useState(!localStorage.getItem('onboarding_done'))
   const location = useLocation()
 
+  const prevIndexRef = useRef(null)
+  const currentIndex = getNavIndex(location.pathname)
+  const prevIndex = prevIndexRef.current
+  prevIndexRef.current = currentIndex
+
+  let direction = 'none'
+  if (prevIndex !== null && prevIndex !== -1 && currentIndex !== -1 && prevIndex !== currentIndex) {
+    direction = currentIndex > prevIndex ? 'forward' : 'backward'
+  }
+
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {showOnboarding && <Onboarding onDone={() => { setShowOnboarding(false); localStorage.setItem('onboarding_done', '1'); }} />}
+      {showOnboarding && <Onboarding onDone={() => { setShowOnboarding(false); localStorage.setItem('onboarding_done', '1') }} />}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>
@@ -62,9 +86,9 @@ export default function Layout() {
       <main className={styles.main}>
         <NotifBanner />
         {dataLoading ? <SkeletonLoader /> : (
-          <PageFade key={location.key}>
+          <PageTransition key={location.key} direction={direction}>
             <Outlet />
-          </PageFade>
+          </PageTransition>
         )}
       </main>
 
