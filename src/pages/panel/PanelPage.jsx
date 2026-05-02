@@ -260,7 +260,6 @@ export default function PanelPage() {
     const prev5 = counts.slice(0, 5)
     const prevWeek = counts[4]
     const avg5 = prev5.reduce((s, c) => s + c, 0) / 5
-    const min5 = Math.min(...prev5.filter((_, i) => prev5.some((c) => c > 0)) )
     const hasHistory = prev5.some((c) => c > 0)
 
     // Impacto de estrategia (si empezó ≥14 días antes)
