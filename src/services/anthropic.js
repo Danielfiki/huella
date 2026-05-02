@@ -201,13 +201,16 @@ export async function analizarEpisodio({ hijo, episodio, historialReciente = [],
     ? `\n- Momento de la rutina diaria: "${bloqueRutina.nombre}" (${bloqueRutina.hora})${bloqueRutina.esMomentoRiesgo ? ' — marcado por los padres como momento de riesgo' : ''}${bloqueRutina.nota ? `. Nota: ${bloqueRutina.nota}` : ''}`
     : ''
 
-  const genero = hijo?.genero === 'niña' ? 'niña' : 'niño'
-  const pronombre = genero === 'niña' ? 'ella' : 'él'
-  const articulo = genero === 'niña' ? 'la' : 'lo'
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
 
   const prompt = `${marco}
 
-${genero === 'niña' ? 'Niña' : 'Niño'}: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a ${pronombre}.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 
 Episodio registrado:
 - Tipo: ${episodio.tipo}
