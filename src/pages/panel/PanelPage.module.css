@@ -230,7 +230,7 @@
 
 /* ── Consejo bubble ── */
 .consejoBubbleWrap {
-  position: fixed;
+  position: absolute;
   bottom: 88px;
   right: 20px;
   display: flex;
