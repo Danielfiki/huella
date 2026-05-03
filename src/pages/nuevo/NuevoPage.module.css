@@ -25,8 +25,8 @@
 .opcionCard:active { transform: scale(0.93); }
 
 .opcionEpisodio:hover { border-color: #7C8FD4; }
-.opcionAvance { border-color: var(--color-primary-light); background: var(--color-surface); }
-.opcionAvance:hover { border-color: var(--color-primary); }
+.opcionAvance { border: 1px solid var(--color-border); border-left: 3px solid #E8956D; background: var(--color-surface); }
+.opcionAvance:hover { border-color: var(--color-border); border-left-color: #E8956D; }
 
 .opcionEmoji { font-size: 46px; flex-shrink: 0; line-height: 1; }
 .opcionTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
