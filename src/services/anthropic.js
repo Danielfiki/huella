@@ -348,15 +348,19 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Datos de esta semana — ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años (${genero}):
+Episodios: ${semanaEp.length}${avgIntensidad ? `, intensidad promedio ${avgIntensidad}/5` : ''}${topGatillante ? `, gatillante más frecuente: "${topGatillante}"` : ''}${hitosCount > 0 ? `, avances positivos: ${hitosCount}` : ''}${estrategiaActiva ? `, estrategia activa: "${estrategiaActiva.habilidad}" semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4` : ''}.
+${semanaEp.length > 0 ? `Detalle: ${resumenEp}` : ''}
 
-Episodios esta semana (${semanaEp.length}):
-${resumenEp}
-${avgIntensidad ? `Intensidad promedio: ${avgIntensidad}/5.` : ''}${topGatillante ? ` Gatillante más frecuente: "${topGatillante}".` : ''}${hitosCount > 0 ? ` Avances positivos esta semana: ${hitosCount}.` : ''}${estrategiaActiva ? ` Estrategia activa: "${estrategiaActiva.habilidad}" (semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4).` : ''}
+INSTRUCCIÓN: Escribe exactamente dos bloques, sin títulos ni markdown.
 
-INSTRUCCIÓN: Escribe 2-3 oraciones como consejo para hoy, fundamentado en el marco científico de la edad indicada. Menciona algo específico de los datos anteriores (un gatillante concreto, un patrón de intensidad, una emoción específica). Nada genérico. Si hay un patrón claro, nómbralo y da una acción concreta apropiada para la edad. Tono cálido, segunda persona, sin markdown, sin listas, sin disclaimer. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
+Bloque 1 — insight (2-3 oraciones): Observa los datos anteriores y extrae algo concreto y útil que revelen sobre ${hijo?.nombre || 'tu hijo/a'} esta semana. Nombra el patrón real: un gatillante específico, un tipo de episodio que se repite, la intensidad en contexto. Sugiere algo accionable apropiado para la edad. Nada genérico. Segunda persona, tono directo y cálido.
 
-  return llamarAPI(prompt, 400)
+Bloque 2 — frase de acompañamiento (1 oración en cursiva con *): Una sola oración que nazca orgánicamente del marco científico (Siegel, Shanker, Perry, Greene, Lansbury o Maté según corresponda a la situación). Que suene humana y cálida, no académica ni motivacional. Que aporte comprensión real, no consuelo vacío. Escríbela en cursiva usando *frase*.
+
+Máximo 80 palabras en total. Sin listas. Sin disclaimer. Cuida la gramática: oraciones cortas, ninguna frase incompleta, adjetivos bien ubicados. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.`
+
+  return llamarAPI(prompt, 250)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
