@@ -177,19 +177,6 @@
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 .graficoCard { overflow: visible; border-left: 3px solid #8FA840; }
 
-.estaSemanaLabel {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--color-primary);
-  background: var(--color-primary-bg);
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-bottom: 8px;
-}
-
 .narrativa {
   margin: 12px 0 0;
   padding: 10px 12px;
@@ -200,38 +187,6 @@
   font-weight: 600;
   color: var(--color-text-muted);
   line-height: 1.5;
-}
-
-/* ── Gráficos secundarios (grid 2 columnas) ── */
-.graficoSecundariosGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.graficoSecundarioCard {
-  overflow: visible;
-  border-left: 3px solid #8FA840;
-  padding: 14px !important;
-}
-
-.cardTitleSecundario {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  margin-bottom: 8px;
-}
-
-.narrativaSecundaria {
-  margin: 8px 0 0;
-  padding: 7px 8px;
-  border-radius: var(--radius-sm, 8px);
-  background: var(--color-surface-alt);
-  border-left: 2px solid var(--color-primary-light);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  line-height: 1.45;
 }
 
 /* ── Estado vacío ── */

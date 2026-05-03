@@ -504,43 +504,40 @@ export default function PanelPage() {
           {episodios.length >= 3 && (
             <>
               <Card className={styles.graficoCard} staggerDelay={0}>
-                <span className={styles.estaSemanaLabel}>Esta semana</span>
                 <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
                 <GraficoFrecuenciaSemanal episodios={episodios} estrategiaInicio={estrategiaActiva?.fechaInicio} />
                 {narrativaFrecuencia && (
                   <p className={styles.narrativa}>{narrativaFrecuencia}</p>
                 )}
               </Card>
-              <div className={styles.graficoSecundariosGrid}>
-                <Card className={styles.graficoSecundarioCard} staggerDelay={60}>
-                  <h3 className={styles.cardTitleSecundario}>Por día</h3>
-                  <GraficoDiaSemana episodios={episodios} />
-                  {narrativaDiaSemana && (
-                    <p className={styles.narrativaSecundaria}>{narrativaDiaSemana}</p>
-                  )}
-                </Card>
-                <Card className={styles.graficoSecundarioCard} staggerDelay={120}>
-                  <h3 className={styles.cardTitleSecundario}>Intensidad</h3>
-                  <GraficoIntensidad episodios={episodios} />
-                  {narrativaIntensidad && (
-                    <p className={styles.narrativaSecundaria}>{narrativaIntensidad}</p>
-                  )}
-                </Card>
-                <Card className={styles.graficoSecundarioCard} staggerDelay={180}>
-                  <h3 className={styles.cardTitleSecundario}>Tipos</h3>
-                  <GraficoTipos episodios={episodios} />
-                  {narrativaTipos && (
-                    <p className={styles.narrativaSecundaria}>{narrativaTipos}</p>
-                  )}
-                </Card>
-                <Card className={styles.graficoSecundarioCard} staggerDelay={240}>
-                  <h3 className={styles.cardTitleSecundario}>Gatillantes</h3>
-                  <GraficoGatillantes episodios={episodios} />
-                  {narrativaGatillantes && (
-                    <p className={styles.narrativaSecundaria}>{narrativaGatillantes}</p>
-                  )}
-                </Card>
-              </div>
+              <Card className={styles.graficoCard} staggerDelay={60}>
+                <h3 className={styles.cardTitle}>Distribución por día</h3>
+                <GraficoDiaSemana episodios={episodios} />
+                {narrativaDiaSemana && (
+                  <p className={styles.narrativa}>{narrativaDiaSemana}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard} staggerDelay={120}>
+                <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
+                <GraficoIntensidad episodios={episodios} />
+                {narrativaIntensidad && (
+                  <p className={styles.narrativa}>{narrativaIntensidad}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard} staggerDelay={180}>
+                <h3 className={styles.cardTitle}>Tipos de episodio</h3>
+                <GraficoTipos episodios={episodios} />
+                {narrativaTipos && (
+                  <p className={styles.narrativa}>{narrativaTipos}</p>
+                )}
+              </Card>
+              <Card className={styles.graficoCard} staggerDelay={240}>
+                <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
+                <GraficoGatillantes episodios={episodios} />
+                {narrativaGatillantes && (
+                  <p className={styles.narrativa}>{narrativaGatillantes}</p>
+                )}
+              </Card>
             </>
           )}
 
