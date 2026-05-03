@@ -15,7 +15,7 @@
 }
 
 .cardVisible {
-  animation: slideUp 500ms ease both;
+  animation: slideUp 400ms ease both;
 }
 
 .clickable {

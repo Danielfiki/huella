@@ -6,7 +6,7 @@
 }
 
 .vistaEntra {
-  animation: vistaSlideUp 280ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: vistaSlideUp 400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 .error { font-size: 13px; color: var(--color-danger); text-align: center; padding: 4px 0; }
 .titulo { font-size: 22px; font-weight: 700; }

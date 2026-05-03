@@ -84,11 +84,11 @@
 .pageWrap { opacity: 0; }
 
 .pageSlideRight {
-  animation: slideInRight 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: slideInRight 480ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .pageSlideLeft {
-  animation: slideInLeft 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: slideInLeft 480ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .pageVisible {
