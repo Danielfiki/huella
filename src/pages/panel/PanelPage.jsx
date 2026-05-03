@@ -167,7 +167,7 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
     setVisible(true)
 
     const today = new Date().toISOString().split('T')[0]
-    const fraseKey = `huella_consejo_v3_${user.id}_${today}`
+    const fraseKey = `huella_consejo_v4_${user.id}_${today}`
     try {
       const cached = localStorage.getItem(fraseKey)
       if (cached) { setFrase(cached); return }
