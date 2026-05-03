@@ -16,7 +16,7 @@ export default function GraficoIntensidad({ episodios }) {
 
   const W = 300
   const H = 80
-  const P = { top: 8, right: 6, bottom: 4, left: 18 }
+  const P = { top: 8, right: 6, bottom: 4, left: 28 }
   const iW = W - P.left - P.right
   const iH = H - P.top - P.bottom
 
