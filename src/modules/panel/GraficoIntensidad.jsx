@@ -16,7 +16,7 @@ export default function GraficoIntensidad({ episodios }) {
 
   const W = 300
   const H = 80
-  const P = { top: 8, right: 6, bottom: 4, left: 28 }
+  const P = { top: 8, right: 6, bottom: 4, left: 36 }
   const iW = W - P.left - P.right
   const iH = H - P.top - P.bottom
 
@@ -67,7 +67,7 @@ export default function GraficoIntensidad({ episodios }) {
         {data.map((ep, i) => (
           <circle
             key={`${ep.id}-${i}`}
-            cx={cx(i)} cy={cy(ep.intensidad)} r="5"
+            cx={cx(i)} cy={cy(ep.intensidad)} r="4"
             fill={DOT_FILL[ep.intensidad] || 'var(--color-primary-light)'}
             stroke="white" strokeWidth="1.5"
           />
