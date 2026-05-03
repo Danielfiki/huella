@@ -50,9 +50,7 @@
 
 /* ── Resumen emocional ── */
 .resumenCard {
-  background: #FEF0E4;
-  border-color: var(--color-primary-light);
-  border-left: 4px solid #9B7B6A;
+  border-left: 3px solid #8FA840;
 }
 
 .resumenTop {
@@ -171,7 +169,7 @@
 
 /* ── Gráficos ── */
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.graficoCard { overflow: visible; border-left: 4px solid #8FA840; background: #F8FAEE; }
+.graficoCard { overflow: visible; border-left: 3px solid #8FA840; }
 
 .narrativa {
   margin: 12px 0 0;
@@ -193,6 +191,7 @@
   text-align: center;
   padding: 32px 20px 24px;
   gap: 12px;
+  border-left: 3px solid #8FA840;
 }
 
 .emptyIlustracion {
@@ -456,7 +455,7 @@
 }
 
 /* ── Análisis de patrones ── */
-.patronesCard { border-left: 4px solid #F08070; }
+.patronesCard { border-left: 3px solid #8FA840; }
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .patronesHeader h3 { font-size: 15px; font-weight: 600; }
 .patronesDesc { font-size: 14px; color: var(--color-text-muted); margin-bottom: 12px; }
