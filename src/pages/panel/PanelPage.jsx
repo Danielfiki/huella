@@ -553,9 +553,14 @@ export default function PanelPage() {
                 : `Tienes ${episodios.length} episodios registrados. La IA puede identificar patrones.`}
             </p>
             {episodios.length >= 3 && (
-              <Button variant="secondary" fullWidth onClick={handleAnalizarPatrones} loading={loadingAnalisis} className={styles.patronesBtn}>
-                Ver análisis de patrones
-              </Button>
+              <>
+                <Button variant="secondary" fullWidth onClick={handleAnalizarPatrones} loading={loadingAnalisis} className={styles.patronesBtn}>
+                  Ver análisis de patrones
+                </Button>
+                {!loadingAnalisis && (
+                  <p className={styles.patronesHint}>La IA revisa tus registros y encuentra conexiones — tarda ~10 segundos</p>
+                )}
+              </>
             )}
             {(analisis || loadingAnalisis) && (
               <RespuestaIA texto={analisis} loading={loadingAnalisis} mensajeCarga="Identificando patrones en el historial..." categoria="patrones" />

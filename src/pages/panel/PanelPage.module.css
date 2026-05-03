@@ -511,3 +511,4 @@
 .patronesHeader h3 { font-size: 15px; font-weight: 600; }
 .patronesDesc { font-size: 14px; color: var(--color-text-muted); margin-bottom: 12px; }
 .patronesBtn { margin-top: 8px; }
+.patronesHint { font-size: 12px; color: var(--color-text-muted); margin: 6px 0 0; text-align: center; }
