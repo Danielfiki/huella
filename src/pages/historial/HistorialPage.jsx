@@ -372,6 +372,7 @@ export default function HistorialPage() {
   const [pestaña, setPestaña] = useState('todos')
   const [filtroTipos, setFiltroTipos] = useState(() => new Set())
   const [filtroIntensidad, setFiltroIntensidad] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
 
   function toggleFiltroTipo(tipo) {
     setFiltroTipos((prev) => {
@@ -383,8 +384,9 @@ export default function HistorialPage() {
   function limpiarFiltros() {
     setFiltroTipos(new Set())
     setFiltroIntensidad(null)
+    setBusqueda('')
   }
-  const hayFiltros = filtroTipos.size > 0 || filtroIntensidad !== null
+  const hayFiltros = filtroTipos.size > 0 || filtroIntensidad !== null || busqueda.trim() !== ''
 
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find((e) => e.semanaActual < 4) ?? null,
@@ -421,8 +423,12 @@ export default function HistorialPage() {
   const episodiosFiltrados = useMemo(() => episodios.filter((ep) => {
     if (filtroTipos.size > 0 && !filtroTipos.has(ep.tipo)) return false
     if (filtroIntensidad !== null && ep.intensidad !== filtroIntensidad) return false
+    if (busqueda.trim()) {
+      const q = busqueda.toLowerCase()
+      if (!ep.descripcionLibre?.toLowerCase().includes(q) && !ep.contexto?.toLowerCase().includes(q)) return false
+    }
     return true
-  }), [episodios, filtroTipos, filtroIntensidad])
+  }), [episodios, filtroTipos, filtroIntensidad, busqueda])
 
   const gruposEpisodios = useMemo(() => agruparPorDia(episodiosFiltrados), [episodiosFiltrados])
 
@@ -558,6 +564,17 @@ export default function HistorialPage() {
           episodios={episodios}
           estrategias={estrategias}
           hitos={hitos}
+        />
+      )}
+
+      {/* ── Buscador (solo pestaña episodios) ── */}
+      {pestaña === 'episodios' && episodios.length > 0 && (
+        <input
+          className={styles.buscadorInput}
+          type="text"
+          placeholder="Buscar en tus registros..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
         />
       )}
 

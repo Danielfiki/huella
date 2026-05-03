@@ -120,8 +120,8 @@
 }
 
 .tipoWrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-.emoji { font-size: 26px; line-height: 1; }
-.tipoLabel { font-size: 14px; font-weight: 600; }
+.emoji { font-size: 28px; line-height: 1; }
+.tipoLabel { font-size: 17px; font-weight: 700; }
 .horaRow { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
 .hora { font-size: 12px; color: var(--color-text-muted); }
 .estrategiaBadge {
@@ -193,7 +193,7 @@
 .impacto_sin_datos .impactoIcon { color: var(--color-text-muted); }
 
 .intensidadBadge {
-  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  font-size: 13px; font-weight: 700; padding: 4px 12px;
   border-radius: 999px; color: var(--color-text);
   white-space: nowrap; flex-shrink: 0;
 }
@@ -451,3 +451,20 @@
   border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer;
 }
 .confirmNoBtn:disabled { opacity: 0.5; }
+
+/* ── Buscador ── */
+.buscadorInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.buscadorInput:focus { border-color: var(--color-primary-light); }
+.buscadorInput::placeholder { color: var(--color-text-light); }
