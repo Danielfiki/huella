@@ -358,7 +358,9 @@ Bloque 1 — insight (máximo 2 oraciones): Extrae el patrón más concreto que 
 
 Bloque 2 — frase de acompañamiento (1 oración entre *asteriscos*): Una sola oración que nazca del marco científico (Siegel, Shanker, Perry, Greene, Lansbury o Maté). Humana y cálida, no académica. Que aporte comprensión real. Escríbela entre *asteriscos*.
 
-Máximo 50 palabras en total. Sin listas. Sin disclaimer. Sin saltos de línea entre bloques. Oraciones cortas, ninguna incompleta. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.`
+Máximo 50 palabras en total. Sin listas. Sin disclaimer. Sin saltos de línea entre bloques. Oraciones cortas, ninguna incompleta. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.
+
+LÍMITE ESTRICTO: máximo 2 oraciones en total. Si escribes más de 2 oraciones, fallaste. La primera oración es el insight. La segunda oración es la frase teórica entre asteriscos. Nada más.`
 
   return llamarAPI(prompt, 150)
 }
