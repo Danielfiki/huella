@@ -219,7 +219,11 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
             <div className={styles.consejoModalBody}>
               {loadingFrase
                 ? <p className={styles.consejoModalCargando}>Preparando tu consejo…</p>
-                : <div className={styles.consejoModalTexto}>{renderMarkdown(frase)}</div>
+                : <div className={styles.consejoModalTexto}>{
+                    frase?.split(/\*([^*]+)\*/).map((part, i) =>
+                      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                    )
+                  }</div>
               }
             </div>
           </div>

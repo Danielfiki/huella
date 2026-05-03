@@ -354,13 +354,13 @@ ${semanaEp.length > 0 ? `Detalle: ${resumenEp}` : ''}
 
 INSTRUCCIÓN: Escribe exactamente dos bloques, sin títulos ni markdown.
 
-Bloque 1 — insight (2-3 oraciones): Observa los datos anteriores y extrae algo concreto y útil que revelen sobre ${hijo?.nombre || 'tu hijo/a'} esta semana. Nombra el patrón real: un gatillante específico, un tipo de episodio que se repite, la intensidad en contexto. Sugiere algo accionable apropiado para la edad. Nada genérico. Segunda persona, tono directo y cálido.
+Bloque 1 — insight (máximo 2 oraciones): Extrae el patrón más concreto que revelan los datos: un gatillante específico, un tipo recurrente, la intensidad en contexto. Una acción accionable para la edad. Nada genérico. Segunda persona, directo y cálido.
 
-Bloque 2 — frase de acompañamiento (1 oración en cursiva con *): Una sola oración que nazca orgánicamente del marco científico (Siegel, Shanker, Perry, Greene, Lansbury o Maté según corresponda a la situación). Que suene humana y cálida, no académica ni motivacional. Que aporte comprensión real, no consuelo vacío. Escríbela en cursiva usando *frase*.
+Bloque 2 — frase de acompañamiento (1 oración entre *asteriscos*): Una sola oración que nazca del marco científico (Siegel, Shanker, Perry, Greene, Lansbury o Maté). Humana y cálida, no académica. Que aporte comprensión real. Escríbela entre *asteriscos*.
 
-Máximo 80 palabras en total. Sin listas. Sin disclaimer. Cuida la gramática: oraciones cortas, ninguna frase incompleta, adjetivos bien ubicados. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.`
+Máximo 50 palabras en total. Sin listas. Sin disclaimer. Sin saltos de línea entre bloques. Oraciones cortas, ninguna incompleta. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.`
 
-  return llamarAPI(prompt, 250)
+  return llamarAPI(prompt, 150)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
