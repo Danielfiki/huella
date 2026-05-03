@@ -597,7 +597,7 @@ function NarrativaBar({ value, onChange, onVoiceResult }) {
           <>
             <textarea
               className={styles.narrativaTextarea}
-              placeholder="Cuéntanos qué pasó con tus propias palabras (opcional)…"
+              placeholder="Ej: Estábamos en el supermercado, pidió un juguete y al decirle que no empezó a gritar y tirarse al suelo..."
               value={value}
               onChange={(e) => onChange(e.target.value)}
               rows={2}
@@ -833,6 +833,7 @@ export default function RegistroPage() {
             mensajeCarga="Analizando lo que pasó con tu hijo..."
             categoria="regulacion"
           />
+          <p className={styles.registroMantram}>Cada registro es una conversación contigo mismo sobre cómo quieres criar.</p>
 
           <div className={styles.reflexionSection}>
             <p className={styles.reflexionLabel}>
@@ -841,7 +842,7 @@ export default function RegistroPage() {
             </p>
             <textarea
               className={styles.textarea}
-              placeholder="Este momento también es tuyo. Escribe lo que quieras…"
+              placeholder="¿Qué harías diferente la próxima vez?"
               value={reflexion}
               onChange={(e) => { setReflexion(e.target.value); setReflexionGuardada(false) }}
               rows={3}
@@ -899,7 +900,7 @@ export default function RegistroPage() {
         <button className={styles.modoCard} onClick={() => setVista('rapido')}>
           <div className={styles.modoCardTop}>
             <span className={styles.modoIcono}>⚡</span>
-            <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>análisis básico</span>
+            <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
           </div>
           <h3 className={styles.modoTitulo}>Registro rápido</h3>
           <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
@@ -923,7 +924,7 @@ export default function RegistroPage() {
       <div ref={pageRef} className={styles.page}>
         <div className={styles.vistaHeader}>
           <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
-          <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>análisis básico</span>
+          <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
         </div>
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
