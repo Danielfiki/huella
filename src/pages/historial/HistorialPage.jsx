@@ -572,7 +572,7 @@ export default function HistorialPage() {
         <input
           className={styles.buscadorInput}
           type="text"
-          placeholder="Buscar en tus registros..."
+          placeholder="Escribe una palabra clave para encontrar un episodio"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
