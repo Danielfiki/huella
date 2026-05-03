@@ -346,23 +346,20 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
     ? (semanaEp.reduce((s, e) => s + (e.intensidad || 0), 0) / semanaEp.length).toFixed(1)
     : null
 
+  const contexto = `Datos: ${semanaEp.length} episodios${avgIntensidad ? `, intensidad ${avgIntensidad}/5` : ''}${topGatillante ? `, gatillante frecuente: "${topGatillante}"` : ''}${hitosCount > 0 ? `, ${hitosCount} avances positivos` : ''}${estrategiaActiva ? `, estrategia activa: "${estrategiaActiva.habilidad}"` : ''}.${semanaEp.length > 0 ? ` Detalle: ${resumenEp}` : ''}`
+
   const prompt = `${marco}
 
-Datos de esta semana — ${hijo?.nombre || 'hijo/a'}, ${hijo?.edad || '?'} años (${genero}):
-Episodios: ${semanaEp.length}${avgIntensidad ? `, intensidad promedio ${avgIntensidad}/5` : ''}${topGatillante ? `, gatillante más frecuente: "${topGatillante}"` : ''}${hitosCount > 0 ? `, avances positivos: ${hitosCount}` : ''}${estrategiaActiva ? `, estrategia activa: "${estrategiaActiva.habilidad}" semana ${Math.min(estrategiaActiva.semanaActual, 4)}/4` : ''}.
-${semanaEp.length > 0 ? `Detalle: ${resumenEp}` : ''}
+${contexto}
 
-INSTRUCCIÓN: Escribe exactamente dos bloques, sin títulos ni markdown.
+Escribe exactamente 2 oraciones sobre ${hijo?.nombre || 'este niño'} (${genero}, ${hijo?.edad || '?'} años).
 
-Bloque 1 — insight (máximo 2 oraciones): Extrae el patrón más concreto que revelan los datos: un gatillante específico, un tipo recurrente, la intensidad en contexto. Una acción accionable para la edad. Nada genérico. Segunda persona, directo y cálido.
+Oración 1: El patrón más claro de esta semana y qué hacer. Máximo 20 palabras.
+Oración 2: Una frase entre *asteriscos* basada en el marco científico anterior que explique por qué. Máximo 15 palabras.
 
-Bloque 2 — frase de acompañamiento (1 oración entre *asteriscos*): Una sola oración que nazca del marco científico (Siegel, Shanker, Perry, Greene, Lansbury o Maté). Humana y cálida, no académica. Que aporte comprensión real. Escríbela entre *asteriscos*.
+Solo esas 2 oraciones. Sin títulos. Sin explicaciones extra.`
 
-Máximo 50 palabras en total. Sin listas. Sin disclaimer. Sin saltos de línea entre bloques. Oraciones cortas, ninguna incompleta. Usa "${genero}", "${pronombre}" y "${articulo}" al referirte a ${hijo?.nombre || 'tu hijo/a'}.
-
-LÍMITE ESTRICTO: máximo 2 oraciones en total. Si escribes más de 2 oraciones, fallaste. La primera oración es el insight. La segunda oración es la frase teórica entre asteriscos. Nada más.`
-
-  return llamarAPI(prompt, 150)
+  return llamarAPI(prompt, 200)
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
