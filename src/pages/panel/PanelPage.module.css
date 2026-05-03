@@ -48,6 +48,12 @@
   margin: 0;
 }
 
+.contextoSemanal {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: -8px 0 0;
+}
+
 /* ── Resumen emocional ── */
 .resumenCard {
   border-left: 3px solid #8FA840;

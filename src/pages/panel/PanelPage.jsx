@@ -354,6 +354,30 @@ export default function PanelPage() {
     return `${label} es el tipo más frecuente (${pct}%)`
   }, [episodios])
 
+  const contextoSemanal = useMemo(() => {
+    if (episodios.length === 0) return null
+    const now = new Date()
+    const dow = (now.getDay() + 6) % 7
+    const startThisWeek = new Date(now)
+    startThisWeek.setDate(now.getDate() - dow)
+    startThisWeek.setHours(0, 0, 0, 0)
+    const startLastWeek = new Date(startThisWeek)
+    startLastWeek.setDate(startThisWeek.getDate() - 7)
+    const thisWeek = episodios.filter((e) => new Date(e.fecha) >= startThisWeek).length
+    const lastWeek = episodios.filter((e) => {
+      const f = new Date(e.fecha); return f >= startLastWeek && f < startThisWeek
+    }).length
+    if (thisWeek === 0 && lastWeek === 0) return null
+    const nombre = hijo?.nombre || 'Tu hijo/a'
+    const ep = (n) => n === 1 ? 'episodio' : 'episodios'
+    if (thisWeek === 0) return `${nombre} no tuvo episodios esta semana.`
+    if (lastWeek === 0) return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana.`
+    const diff = thisWeek - lastWeek
+    if (diff === 0) return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana, igual que la anterior.`
+    const absDiff = Math.abs(diff)
+    return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana, ${absDiff} ${diff < 0 ? 'menos' : 'más'} que la anterior.`
+  }, [episodios, hijo])
+
   const narrativaGatillantes = useMemo(() => {
     const counts = {}
     for (const ep of episodios) {
@@ -411,6 +435,11 @@ export default function PanelPage() {
           {!hijo && <p className={styles.greetingSubtitulo}>Configura el perfil de tu hijo/a para empezar.</p>}
         </div>
       </div>
+
+      {/* ── Contexto semanal ── */}
+      {contextoSemanal && (
+        <p className={styles.contextoSemanal}>{contextoSemanal}</p>
+      )}
 
       {/* ── Selector de hijo activo (solo si hay más de uno) ── */}
       {hijos.length > 1 && (
