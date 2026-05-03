@@ -185,15 +185,23 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
 
   if (!visible) return null
 
+  const previewText = frase && !loadingFrase
+    ? frase.replace(/[#*_`]/g, '').trim().split(/\s+/).slice(0, 7).join(' ') + '…'
+    : null
+
   return (
     <>
-      <button
-        className={styles.consejoBubble}
-        onClick={() => setAbierto(true)}
-        aria-label="Tu consejo de hoy"
-      >
-        💡
-      </button>
+      <div className={styles.consejoBubbleWrap} onClick={() => setAbierto(true)}>
+        {previewText && !abierto && (
+          <span className={styles.consejoPreview}>{previewText}</span>
+        )}
+        <button
+          className={styles.consejoBubble}
+          aria-label="Tu consejo de hoy"
+        >
+          💡
+        </button>
+      </div>
 
       {abierto && (
         <div className={styles.consejoOverlay} onClick={() => setAbierto(false)}>
