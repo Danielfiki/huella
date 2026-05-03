@@ -24,7 +24,7 @@
 .opcionCard:active { transform: scale(0.93); }
 
 .opcionEpisodio:hover { border-color: #7C8FD4; }
-.opcionAvance { border-color: var(--color-primary-light); background: var(--color-primary-bg); }
+.opcionAvance { border-color: var(--color-primary-light); background: var(--color-surface); }
 .opcionAvance:hover { border-color: var(--color-primary); }
 
 .opcionEmoji { font-size: 46px; flex-shrink: 0; line-height: 1; }
