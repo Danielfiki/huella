@@ -78,9 +78,26 @@ function extraerTareasDePlan(planObj) {
 function parsePlan(texto) {
   if (!texto) return { intro: '', semanas: [] }
 
+  // Guard: objeto JS directo (viene de Supabase JSONB)
+  if (typeof texto === 'object') {
+    if (texto.semanas?.length) {
+      return {
+        intro: texto.porQueImporta || '',
+        semanas: texto.semanas.map((s) => ({
+          numero: s.numero,
+          titulo: s.titulo,
+          accion: s.accion,
+          indicador: s.indicador,
+        })),
+      }
+    }
+    // Objeto sin .semanas: convertir a string para que el parser legado lo intente
+    texto = JSON.stringify(texto)
+  }
+
   // JSON format (new)
   try {
-    let raw = typeof texto === 'string' ? JSON.parse(texto) : texto
+    let raw = JSON.parse(texto)
     // Doble serialización: JSON.parse devolvió un string en vez de un objeto
     if (typeof raw === 'string') raw = JSON.parse(raw)
     if (raw?.semanas?.length) {

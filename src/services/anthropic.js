@@ -27,7 +27,8 @@ async function llamarAPI(prompt, max_tokens) {
   }
 
   const data = await response.json()
-  return data.text
+  const text = data.text ?? ''
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
 }
 
 const TEMAS_CONTEMPORANEOS = `TEMAS ESPECÍFICOS Y DOLORES PARENTALES CONTEMPORÁNEOS:
