@@ -47,7 +47,7 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo, savePadreNombre } = useHuella()
+  const { state, setHijo, savePadreNombre, isPro, isAdmin } = useHuella()
   const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
@@ -531,6 +531,28 @@ export default function PerfilPage() {
           <Mail size={14} color="var(--color-text-muted)" />
           <span className={styles.emailText}>{user?.email}</span>
         </div>
+        <Link
+          to="/cuenta"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: '12px', padding: '10px 12px',
+            background: isPro() ? '#edf7f2' : '#fdf6f0',
+            borderRadius: '10px', textDecoration: 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '15px' }}>{isPro() ? '✨' : '🔓'}</span>
+            <span style={{ fontSize: '14px', color: '#3a2e28', fontWeight: 600 }}>
+              Mi plan
+            </span>
+          </div>
+          <span style={{
+            fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '12px',
+            background: isPro() ? '#4a9e6f' : '#c96f45', color: '#fff',
+          }}>
+            {isAdmin() ? 'Admin' : isPro() ? 'Pro' : 'Gratuito'}
+          </span>
+        </Link>
       </Card>
 
       <button className={styles.signOutLink} onClick={handleSignOut} disabled={loadingSignOut}>

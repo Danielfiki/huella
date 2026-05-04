@@ -19,6 +19,7 @@ import HijoPage from './pages/hijo/HijoPage'
 import TerminosPage from './pages/legal/TerminosPage'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
+import CuentaPage from './pages/cuenta/CuentaPage'
 
 class PageErrorBoundary extends React.Component {
   constructor(props) {
@@ -158,6 +159,7 @@ export default function App() {
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
                 <Route path="hijo"                    element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
                 <Route path="checkin/:episodioId"  element={<PageErrorBoundary><CheckinPage /></PageErrorBoundary>} />
+                <Route path="cuenta"              element={<PageErrorBoundary><CuentaPage /></PageErrorBoundary>} />
                 <Route path="*"                    element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
               </Route>
             </Routes>
