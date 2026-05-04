@@ -78,6 +78,10 @@ function extraerTareasDePlan(planObj) {
 function parsePlan(texto) {
   if (!texto) return { intro: '', semanas: [] }
 
+  // DEBUG TEMPORAL — eliminar tras diagnóstico
+  console.log('[parsePlan] typeof texto:', typeof texto)
+  console.log('[parsePlan] primeros 200 chars:', String(texto).slice(0, 200))
+
   // JSON format (new)
   try {
     let raw = typeof texto === 'string' ? JSON.parse(texto) : texto
