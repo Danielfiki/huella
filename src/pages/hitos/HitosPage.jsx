@@ -78,6 +78,22 @@ function tieneVentana(episodios, count, dias) {
   return null
 }
 
+function sieteDiasConsecutivos(episodios) {
+  if (episodios.length < 7) return null
+  const dias = [...new Set(episodios.map((e) => e.fecha.slice(0, 10)))].sort()
+  let streak = 1
+  for (let i = 1; i < dias.length; i++) {
+    const diff = (new Date(dias[i]) - new Date(dias[i - 1])) / 864e5
+    if (diff === 1) {
+      streak++
+      if (streak >= 7) return dias[i]
+    } else {
+      streak = 1
+    }
+  }
+  return null
+}
+
 // ── Definición de niveles ─────────────────────────────────────────────────
 
 const NIVELES = [
@@ -190,6 +206,49 @@ const NIVELES = [
         check: ({ estrategias }) => estrategias.length >= 3,
         fechaLogro: ({ estrategias }) =>
           estrategias.length >= 3 ? estrategias[estrategias.length - 3].fechaInicio : null,
+      },
+      {
+        id: 'ciclo_completo',
+        emoji: '🔄',
+        titulo: 'Ciclo completo',
+        desc: '1 seguimiento post-episodio realizado',
+        frase: 'Registraste, reflexionaste y volviste a revisar. Eso es lo que transforma.',
+        color: '#0ea5e9',
+        check: ({ checkinsCount }) => checkinsCount >= 1,
+        fechaLogro: () => null,
+      },
+      {
+        id: 'reflexivo',
+        emoji: '🪞',
+        titulo: 'Reflexivo',
+        desc: '5 seguimientos post-episodio realizados',
+        frase: 'Revisar lo que pasó es una de las herramientas más poderosas que tienes.',
+        color: '#8b5cf6',
+        check: ({ checkinsCount }) => checkinsCount >= 5,
+        fechaLogro: () => null,
+      },
+      {
+        id: 'constante_7',
+        emoji: '📆',
+        titulo: 'Constante',
+        desc: '7 días consecutivos con registros',
+        frase: 'Siete días seguidos. La constancia ya es parte de quién eres.',
+        color: '#f97316',
+        check: ({ episodios }) => sieteDiasConsecutivos(episodios) !== null,
+        fechaLogro: ({ episodios }) => sieteDiasConsecutivos(episodios),
+      },
+      {
+        id: 'comprometido_plan',
+        emoji: '💼',
+        titulo: 'Comprometido',
+        desc: 'Semana 2 de una estrategia alcanzada',
+        frase: 'Seguiste adelante cuando era difícil. Eso es lo que cambia todo.',
+        color: '#10b981',
+        check: ({ estrategias }) => estrategias.some((e) => e.semanaActual >= 2),
+        fechaLogro: ({ estrategias }) => {
+          const e = estrategias.find((e) => e.semanaActual >= 2)
+          return e ? e.fechaInicio : null
+        },
       },
     ],
   },
@@ -607,9 +666,14 @@ function HitoCard({ hito, user, updateHitoFoto }) {
 // ── Página ────────────────────────────────────────────────────────────────
 
 export default function HitosPage() {
-  const { state, addHito, updateHitoFoto } = useHuella()
+  const { state, addHito, updateHitoFoto, getCheckinsHechos } = useHuella()
   const { user } = useAuth()
   const [pestaña, setPestaña] = useState('medallas')
+  const [checkinsCount, setCheckinsCount] = useState(0)
+
+  useEffect(() => {
+    getCheckinsHechos().then(set => setCheckinsCount(set.size))
+  }, [])
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -625,7 +689,7 @@ export default function HitosPage() {
   const fotoInputRef = useRef(null)
 
   const { episodios, hitos, estrategias } = state
-  const dataBadge = { episodios, hitos, estrategias }
+  const dataBadge = { episodios, hitos, estrategias, checkinsCount }
 
   // ── Tracking de badges nuevos ─────────────────────────────────────────────
   const storageKey = `huella_badges_vistos_${user?.id || 'anon'}`

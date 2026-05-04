@@ -18,6 +18,11 @@ import BienvenidaModal from '../../components/ui/BienvenidaModal'
 import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './PanelPage.module.css'
 
+const CATEGORIA_EMOJIS = {
+  autorregulacion: '🌱', empatia: '💛', disculpa: '🤝',
+  frustration: '💪', social: '👫', otro: '⭐',
+}
+
 const CONTEXTOS_ESTRATEGIA = {
   'Calmarse cuando explota':            { emoji: '🌊' },
   'Aceptar el "no" sin crisis':         { emoji: '💪' },
@@ -152,6 +157,36 @@ function EstrategiaActivaPanel({ estrategia, onAbrir }) {
   )
 }
 
+function UltimoHitoCard({ hito, onVerLogros }) {
+  const emoji = CATEGORIA_EMOJIS[hito.categoria] || '⭐'
+  return (
+    <button
+      onClick={onVerLogros}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+        background: '#fff', border: '1.5px solid #f0e6de', borderRadius: '14px',
+        padding: '12px 14px', marginBottom: '12px', cursor: 'pointer', textAlign: 'left',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+      }}
+    >
+      {hito.foto_url
+        ? <img src={hito.foto_url} alt="Logro" style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />
+        : <div style={{ width: '52px', height: '52px', borderRadius: '10px', background: '#fdf0e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>{emoji}</div>
+      }
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#c96f45', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Último avance</p>
+        <p style={{ margin: '2px 0 0', fontSize: '14px', color: '#3a2e28', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {hito.descripcion || emoji}
+        </p>
+        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#8a7a70' }}>
+          {new Date(hito.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
+        </p>
+      </div>
+      <ChevronRight size={16} style={{ color: '#c96f45', flexShrink: 0 }} />
+    </button>
+  )
+}
+
 function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
   const [frase, setFrase] = useState(null)
   const [loadingFrase, setLoadingFrase] = useState(false)
@@ -248,6 +283,11 @@ export default function PanelPage() {
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find((e) => e.semanaActual < 4),
     [estrategias]
+  )
+
+  const ultimoHitoConFoto = useMemo(
+    () => hitos.find((h) => h.foto_url),
+    [hitos]
   )
 
   // ── Narrativas de gráficos ────────────────────────────────────────────────
@@ -485,6 +525,10 @@ export default function PanelPage() {
       ) : (
         <>
 
+          {/* ── Último hito con foto ── */}
+          {ultimoHitoConFoto && (
+            <UltimoHitoCard hito={ultimoHitoConFoto} onVerLogros={() => navigate('/hitos')} />
+          )}
 
           {/* ── CTA registrar ── */}
           <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/nuevo')}>
