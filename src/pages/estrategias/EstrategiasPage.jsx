@@ -81,6 +81,7 @@ function parsePlan(texto) {
   // DEBUG TEMPORAL — eliminar tras diagnóstico
   console.log('[parsePlan] typeof texto:', typeof texto)
   console.log('[parsePlan] primeros 200 chars:', String(texto).slice(0, 200))
+  console.log('[parsePlan] estructura JSON:', JSON.stringify(texto).slice(0, 300))
 
   // JSON format (new)
   try {
