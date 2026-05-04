@@ -78,14 +78,13 @@ function extraerTareasDePlan(planObj) {
 function parsePlan(texto) {
   if (!texto) return { intro: '', semanas: [] }
 
-  // DEBUG TEMPORAL — eliminar tras diagnóstico
-  console.log('[parsePlan] typeof texto:', typeof texto)
-  console.log('[parsePlan] primeros 200 chars:', String(texto).slice(0, 200))
-  console.log('[parsePlan] estructura JSON:', JSON.stringify(texto).slice(0, 300))
-
   // JSON format (new)
   try {
-    let raw = typeof texto === 'string' ? JSON.parse(texto) : texto
+    // Limpiar bloques markdown si el modelo los incluyó
+    const limpio = typeof texto === 'string'
+      ? texto.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+      : texto
+    let raw = typeof limpio === 'string' ? JSON.parse(limpio) : limpio
     // Doble serialización: JSON.parse devolvió un string en vez de un objeto
     if (typeof raw === 'string') raw = JSON.parse(raw)
     if (raw?.semanas?.length) {
