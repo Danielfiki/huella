@@ -80,8 +80,6 @@ function parsePlan(texto) {
 
   // JSON format (new)
   try {
-    // Limpiar bloques markdown si el modelo los incluyó
-    texto = typeof texto === 'string' ? texto.replace(/^[\s\S]*?```(?:json)?\s*/i, '').replace(/\s*```[\s\S]*$/i, '').trim() : texto
     let raw = typeof texto === 'string' ? JSON.parse(texto) : texto
     // Doble serialización: JSON.parse devolvió un string en vez de un objeto
     if (typeof raw === 'string') raw = JSON.parse(raw)
