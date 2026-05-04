@@ -380,9 +380,12 @@ export default function EstrategiasPage() {
 
   // ── VISTA: DETALLE ────────────────────────────────────────────────────────
   if (vista === 'detalle' && estrategiaSeleccionada) {
-    const planValido = estrategiaSeleccionada.plan &&
-      !estrategiaSeleccionada.plan.includes('VITE_ANTHROPIC') &&
-      estrategiaSeleccionada.plan.trim().length > 50
+    const planComoString = typeof estrategiaSeleccionada.plan === 'string'
+      ? estrategiaSeleccionada.plan
+      : JSON.stringify(estrategiaSeleccionada.plan ?? '')
+    const planValido = planComoString &&
+      !planComoString.includes('VITE_ANTHROPIC') &&
+      planComoString.trim().length > 50
     const { intro, semanas } = planValido ? parsePlan(estrategiaSeleccionada.plan) : { intro: '', semanas: [] }
     const semanaActual = estrategiaSeleccionada.semanaActual
     const tareas = estrategiaSeleccionada.tareas || {}

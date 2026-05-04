@@ -480,12 +480,16 @@ export function HuellaProvider({ children }) {
   async function addEstrategia(estrategia) {
     if (!user || !supabase) return null
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
+    const planNormalizado = (() => {
+      if (typeof estrategia.plan !== 'string') return estrategia.plan
+      try { return JSON.parse(estrategia.plan) } catch { return estrategia.plan }
+    })()
     const { data: inserted, error } = await supabase.from('estrategias').insert({
       user_id:            user.id,
       hijo_id:            state.hijoActivoId ?? null,
       habilidad:          estrategia.habilidad,
       descripcion:        estrategia.descripcion,
-      plan:               estrategia.plan,
+      plan:               planNormalizado,
       fecha_inicio:       estrategia.fechaInicio,
       semana_actual:      estrategia.semanaActual,
       tareas:             estrategia.tareas ?? {},
@@ -510,7 +514,13 @@ export function HuellaProvider({ children }) {
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
     const dbFields = {}
     if (partial.semanaActual !== undefined) dbFields.semana_actual = partial.semanaActual
-    if (partial.plan         !== undefined) dbFields.plan          = partial.plan
+    if (partial.plan !== undefined) {
+      const p = partial.plan
+      dbFields.plan = (() => {
+        if (typeof p !== 'string') return p
+        try { return JSON.parse(p) } catch { return p }
+      })()
+    }
     if (partial.habilidad    !== undefined) dbFields.habilidad     = partial.habilidad
     if (partial.tareas       !== undefined) dbFields.tareas        = partial.tareas
     if (partial.checkins     !== undefined) dbFields.checkins      = partial.checkins
