@@ -1,4 +1,5 @@
-import React, { useState, useRef, useMemo } from 'react'
+import React, { useState, useRef, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BookOpen, ChevronDown, ChevronUp, Trash2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
@@ -197,7 +198,11 @@ function HitoHistorialCard({ hito, onDelete, staggerDelay = 0 }) {
   )
 }
 
-function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia, staggerDelay = 0 }) {
+function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia, tieneCheckin, staggerDelay = 0 }) {
+  const navigate = useNavigate()
+  const horasDesde = (Date.now() - new Date(ep.fecha)) / 3600000
+  const mostrarBotonCheckin = !tieneCheckin && horasDesde >= 20 && horasDesde <= 48
+
   const [expandido, setExpandido] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -356,6 +361,31 @@ function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia, staggerDelay = 0 
           </div>
         )}
       </div>
+
+      {tieneCheckin && (
+        <div style={{ marginTop: '10px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            fontSize: '12px', fontWeight: 600, color: '#4a9e6f',
+            background: '#edf7f2', borderRadius: '20px', padding: '4px 10px',
+          }}>
+            ✓ Seguimiento hecho
+          </span>
+        </div>
+      )}
+      {mostrarBotonCheckin && (
+        <button
+          onClick={() => navigate(`/checkin/${ep.id}`)}
+          style={{
+            marginTop: '10px', width: '100%', padding: '10px',
+            background: '#fdf0e8', color: '#c96f45',
+            border: '1.5px solid #c96f45', borderRadius: '10px',
+            fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          ¿Cómo siguió? →
+        </button>
+      )}
     </Card>
   )
 }
@@ -367,9 +397,14 @@ const PESTANAS = [
 ]
 
 export default function HistorialPage() {
-  const { state, deleteEpisodio, updateEpisodio, deleteHito } = useHuella()
+  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
   const [pestaña, setPestaña] = useState('todos')
+  const [checkinsHechos, setCheckinsHechos] = useState(new Set())
+
+  useEffect(() => {
+    getCheckinsHechos().then(setCheckinsHechos)
+  }, [])
   const [filtroTipos, setFiltroTipos] = useState(() => new Set())
   const [filtroIntensidad, setFiltroIntensidad] = useState(null)
   const [busqueda, setBusqueda] = useState('')
@@ -546,6 +581,7 @@ export default function HistorialPage() {
                     onDelete={deleteEpisodio}
                     onUpdate={updateEpisodio}
                     conEstrategia={episodiosConEstrategia.has(item.data.id)}
+                    tieneCheckin={checkinsHechos.has(item.data.id)}
                     staggerDelay={i * 60}
                   />
                 ) : (
@@ -639,6 +675,7 @@ export default function HistorialPage() {
                     onDelete={deleteEpisodio}
                     onUpdate={updateEpisodio}
                     conEstrategia={episodiosConEstrategia.has(ep.id)}
+                    tieneCheckin={checkinsHechos.has(ep.id)}
                     staggerDelay={i * 60}
                   />
                 ))}

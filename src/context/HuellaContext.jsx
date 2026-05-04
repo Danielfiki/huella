@@ -593,6 +593,46 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // ── Check-ins de episodio ─────────────────────────────────────────────────
+
+  async function addCheckin(episodioId, datos) {
+    if (!user || !supabase) return null
+    const { data, error } = await supabase
+      .from('checkins_episodio')
+      .insert({
+        episodio_id:    episodioId,
+        user_id:        user.id,
+        que_intentaste: datos.queIntentaste ?? null,
+        respuesta_hijo: datos.respuestaHijo ?? null,
+        evolucion:      datos.evolucion     ?? null,
+        estado_padre:   datos.estadoPadre   ?? null,
+        reflexion_ia:   datos.reflexionIA   ?? null,
+      })
+      .select().single()
+    if (error) throw new Error(error.message)
+    return data
+  }
+
+  async function getCheckin(episodioId) {
+    if (!user || !supabase) return null
+    const { data } = await supabase
+      .from('checkins_episodio')
+      .select('*')
+      .eq('episodio_id', episodioId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    return data ?? null
+  }
+
+  async function getCheckinsHechos() {
+    if (!user || !supabase) return new Set()
+    const { data } = await supabase
+      .from('checkins_episodio')
+      .select('episodio_id')
+      .eq('user_id', user.id)
+    return new Set((data ?? []).map(r => r.episodio_id))
+  }
+
   // ── Perfil padre/madre ────────────────────────────────────────────────────
 
   async function savePadreNombre(nombre) {
@@ -625,6 +665,9 @@ export function HuellaProvider({ children }) {
       updateRutina,
       deleteRutina,
       savePadreNombre,
+      addCheckin,
+      getCheckin,
+      getCheckinsHechos,
     }}>
       {children}
     </HuellaContext.Provider>

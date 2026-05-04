@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       await Promise.all([
         supabase
           .from('episodios')
-          .select('fecha, intensidad')
+          .select('id, fecha, intensidad')
           .eq('user_id', userId)
           .gte('fecha', cutoff7d)
           .order('fecha', { ascending: false })
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
         notification = {
           title: 'Huella 💙',
           body: `Ayer fue un día difícil con ${nombreHijo}. ¿Cómo estás tú hoy?`,
-          url: '/historial',
+          url: `/checkin/${hardEp.id}`,
         }
       }
     }

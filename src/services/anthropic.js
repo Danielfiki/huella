@@ -385,6 +385,28 @@ Responde SOLO con JSON puro, sin bloques de código markdown, sin \`\`\`json, si
   return extraerJSON(raw)
 }
 
+export async function generarReflexionCheckin({ hijo, episodio, checkin }) {
+  const genero = (() => {
+    if (hijo?.genero === 'f')  return 'niña'
+    if (hijo?.genero === 'm')  return 'niño'
+    if (hijo?.genero === 'nb') return 'niñe'
+    return 'niño/a'
+  })()
+
+  const evolucionTexto = { mejoro: 'mejoró', igual: 'se mantuvo igual', empero: 'empeoró' }
+
+  const prompt = `El padre/madre tuvo un episodio con su ${genero} (${hijo?.nombre || 'su hijo/a'}, ${hijo?.edad || '?'} años): ${episodio?.tipo || 'dificultad'} de intensidad ${episodio?.intensidad || '?'}/5.
+
+Qué intentó hacer: ${checkin.queIntentaste || 'no especificado'}
+Cómo respondió el ${genero}: ${checkin.respuestaHijo || 'no especificado'}
+Evolución: ${evolucionTexto[checkin.evolucion] || checkin.evolucion || 'no especificada'}
+Cómo está el padre/madre ahora: ${checkin.estadoPadre || 'no especificado'}
+
+Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intentó el padre/madre, conecta la acción con el resultado que observó, y valida su esfuerzo. Sin consejos nuevos. Sin diagnósticos. Habla en segunda persona al padre/madre. Tono cálido y concreto. No uses listas ni títulos.`
+
+  return llamarAPI(prompt, 250)
+}
+
 function extraerJSON(raw) {
   if (typeof raw !== 'string') return raw
   // Eliminar bloques markdown al inicio y al final
