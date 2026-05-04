@@ -27,6 +27,7 @@ const initialState = {
   hitos:        [],
   rutinas:      [],
   padreNombre:  '',
+  plan:         null,
 }
 
 function syncHijo(state) {
@@ -242,7 +243,7 @@ export function HuellaProvider({ children }) {
       // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
       const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('perfiles').select('nombre').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre, plan').eq('user_id', userId).maybeSingle(),
       ])
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
@@ -288,6 +289,7 @@ export function HuellaProvider({ children }) {
           estrategias,
           rutinas,
           padreNombre: perfilRes.data?.nombre ?? '',
+          plan:        perfilRes.data?.plan   ?? null,
         },
       })
     } catch (e) {
@@ -635,6 +637,9 @@ export function HuellaProvider({ children }) {
 
   // ── Perfil padre/madre ────────────────────────────────────────────────────
 
+  const isPro   = () => state.plan === 'pro' || state.plan === 'admin'
+  const isAdmin = () => state.plan === 'admin'
+
   async function savePadreNombre(nombre) {
     if (!user) return
     dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
@@ -665,6 +670,8 @@ export function HuellaProvider({ children }) {
       updateRutina,
       deleteRutina,
       savePadreNombre,
+      isPro,
+      isAdmin,
       addCheckin,
       getCheckin,
       getCheckinsHechos,
