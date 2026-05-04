@@ -2,7 +2,9 @@ import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2, Trash2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
 import { generarEstrategia, generarTareas } from '../../services/anthropic'
+import { subscribeToPush } from '../../services/pushNotifications'
 import { renderMarkdown } from '../../utils/renderMarkdown'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -133,6 +135,7 @@ function parsePlan(texto) {
 
 export default function EstrategiasPage() {
   const { state, addEstrategia, updateEstrategia, deleteEstrategia } = useHuella()
+  const { user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const initNueva = location.state?.nueva === true
@@ -185,6 +188,8 @@ export default function EstrategiasPage() {
       })
       setSelectedId(realId)
       setVista('detalle')
+      // Solicitar permiso push al crear la primera estrategia (fire-and-forget)
+      if (user) subscribeToPush(user.id, state.hijoActivoId).catch(() => {})
     } catch (e) {
       setPlan('Error al generar el plan: ' + e.message)
     } finally {
