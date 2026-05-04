@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, ChevronDown, ChevronUp, Trash2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import Card from '../../components/ui/Card'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
@@ -397,7 +398,7 @@ const PESTANAS = [
 ]
 
 export default function HistorialPage() {
-  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos } = useHuella()
+  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro } = useHuella()
   const { episodios, estrategias, hitos, hijo } = state
   const [pestaña, setPestaña] = useState('todos')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
@@ -593,8 +594,8 @@ export default function HistorialPage() {
         )
       )}
 
-      {/* ── Botón PDF (solo pestaña episodios) ── */}
-      {pestaña === 'episodios' && episodios.length > 0 && (
+      {/* ── Botón PDF (solo Pro, solo pestaña episodios) ── */}
+      {pestaña === 'episodios' && episodios.length > 0 && isPro() && (
         <GenerarInformeBtn
           hijo={hijo}
           episodios={episodios}

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Target, Plus, ChevronRight, CheckCircle, Lock, Sprout, Circle, CheckCircle2, Trash2 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import { generarEstrategia, generarTareas } from '../../services/anthropic'
 import { subscribeToPush } from '../../services/pushNotifications'
 import { renderMarkdown } from '../../utils/renderMarkdown'
@@ -151,14 +152,15 @@ function parsePlan(texto) {
 }
 
 export default function EstrategiasPage() {
-  const { state, addEstrategia, updateEstrategia, deleteEstrategia } = useHuella()
+  const { state, addEstrategia, updateEstrategia, deleteEstrategia, isPro } = useHuella()
   const { user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const initNueva = location.state?.nueva === true
   const initHabilidad = location.state?.habilidad || ''
   const initEpisodioOrigenId = location.state?.episodioOrigenId || null
-  const [vista, setVista] = useState(initNueva ? 'nueva' : 'lista')
+  const [vista, setVista] = useState(initNueva && isPro() ? 'nueva' : 'lista')
+  const [showUpgrade, setShowUpgrade] = useState(initNueva && !isPro())
   const [selectedId, setSelectedId] = useState(null)
   const [habilidad, setHabilidad] = useState(initHabilidad)
   const [descripcion, setDescripcion] = useState('')
@@ -176,6 +178,11 @@ export default function EstrategiasPage() {
   const estrategiaSeleccionada = selectedId
     ? state.estrategias.find((e) => e.id === selectedId) ?? null
     : null
+
+  function openNueva() {
+    if (!isPro()) { setShowUpgrade(true); return }
+    setVista('nueva')
+  }
 
   function abrirDetalle(e) {
     setSelectedId(e.id)
@@ -616,7 +623,7 @@ export default function EstrategiasPage() {
             <Button variant="ghost" fullWidth onClick={() => navigate('/hitos')}>
               Ver en Logros →
             </Button>
-            <Button variant="primary" fullWidth onClick={() => setVista('nueva')}>
+            <Button variant="primary" fullWidth onClick={openNueva}>
               Crear nueva estrategia
             </Button>
           </Card>
@@ -633,7 +640,7 @@ export default function EstrategiasPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h2 className={styles.titulo}>Estrategias<TooltipAyuda texto="Elige una habilidad a trabajar y Huella diseña un plan concreto de 4 semanas." /></h2>
-        <Button variant="primary" size="sm" onClick={() => setVista('nueva')}>
+        <Button variant="primary" size="sm" onClick={openNueva}>
           <Plus size={16} /> Nueva
         </Button>
       </div>
@@ -664,7 +671,7 @@ export default function EstrategiasPage() {
           <Target size={36} color="var(--color-primary-light)" />
           <h3>Sin estrategias activas</h3>
           <p>Elige una habilidad a fortalecer y Huella diseña un plan concreto de 4 semanas.</p>
-          <Button variant="primary" onClick={() => setVista('nueva')}>
+          <Button variant="primary" onClick={openNueva}>
             Crear primera estrategia
           </Button>
         </Card>
@@ -720,6 +727,8 @@ export default function EstrategiasPage() {
           </div>
         </div>
       )}
+
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   )
 }

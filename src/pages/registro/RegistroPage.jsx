@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Mic, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -674,10 +675,11 @@ function NarrativaBar({ value, onChange, onVoiceResult }) {
 }
 
 export default function RegistroPage() {
-  const { state, addEpisodio, updateEpisodio } = useHuella()
+  const { state, addEpisodio, updateEpisodio, isPro } = useHuella()
   const navigate = useNavigate()
 
   const [vista, setVista] = useState('elegir')
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   // shared fields
   const [tipo, setTipo] = useState('')
@@ -717,6 +719,11 @@ export default function RegistroPage() {
     void el.offsetWidth
     el.classList.add(styles.vistaEntra)
   }, [vista])
+
+  function trySetVista(v) {
+    if (state.episodios.length >= 15 && !isPro()) { setShowUpgrade(true); return }
+    setVista(v)
+  }
 
   function handleCuando(id) {
     setCuandoPaso(id)
@@ -897,7 +904,7 @@ export default function RegistroPage() {
           </p>
         </div>
 
-        <button className={styles.modoCard} onClick={() => setVista('rapido')}>
+        <button className={styles.modoCard} onClick={() => trySetVista('rapido')}>
           <div className={styles.modoCardTop}>
             <span className={styles.modoIcono}>⚡</span>
             <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
@@ -906,7 +913,7 @@ export default function RegistroPage() {
           <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
         </button>
 
-        <button className={`${styles.modoCard} ${styles.modoCardDestacado}`} onClick={() => setVista('detallado')}>
+        <button className={`${styles.modoCard} ${styles.modoCardDestacado}`} onClick={() => trySetVista('detallado')}>
           <div className={styles.modoCardTop}>
             <span className={styles.modoIcono}>📊</span>
             <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
@@ -914,6 +921,7 @@ export default function RegistroPage() {
           <h3 className={styles.modoTitulo}>Registro detallado</h3>
           <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
         </button>
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       </div>
     )
   }
