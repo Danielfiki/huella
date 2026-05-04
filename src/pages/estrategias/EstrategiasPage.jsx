@@ -78,7 +78,9 @@ function parsePlan(texto) {
 
   // JSON format (new)
   try {
-    const raw = typeof texto === 'string' ? JSON.parse(texto) : texto
+    let raw = typeof texto === 'string' ? JSON.parse(texto) : texto
+    // Doble serialización: JSON.parse devolvió un string en vez de un objeto
+    if (typeof raw === 'string') raw = JSON.parse(raw)
     if (raw?.semanas?.length) {
       return {
         intro: raw.porQueImporta || '',
@@ -90,7 +92,9 @@ function parsePlan(texto) {
         })),
       }
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[parsePlan] No se pudo parsear el plan como JSON:', err.message)
+  }
 
   // Fallback: legacy markdown parser
   const lines = texto.split('\n')
