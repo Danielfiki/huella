@@ -171,14 +171,15 @@ function dbEpisodioToApp(row) {
 
 function dbEstrategiaToApp(row) {
   return {
-    id:           row.id,
-    habilidad:    row.habilidad,
-    descripcion:  row.descripcion,
-    plan:         row.plan,
-    fechaInicio:  row.fecha_inicio,
-    semanaActual: row.semana_actual,
-    tareas:       row.tareas   ?? {},
-    checkins:     row.checkins ?? {},
+    id:               row.id,
+    habilidad:        row.habilidad,
+    descripcion:      row.descripcion,
+    plan:             row.plan,
+    fechaInicio:      row.fecha_inicio,
+    semanaActual:     row.semana_actual,
+    tareas:           row.tareas            ?? {},
+    checkins:         row.checkins          ?? {},
+    episodioOrigenId: row.episodio_origen_id ?? null,
   }
 }
 
@@ -480,14 +481,15 @@ export function HuellaProvider({ children }) {
     if (!user || !supabase) return null
     dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
     const { data: inserted, error } = await supabase.from('estrategias').insert({
-      user_id:       user.id,
-      hijo_id:       state.hijoActivoId ?? null,
-      habilidad:     estrategia.habilidad,
-      descripcion:   estrategia.descripcion,
-      plan:          estrategia.plan,
-      fecha_inicio:  estrategia.fechaInicio,
-      semana_actual: estrategia.semanaActual,
-      tareas:        estrategia.tareas ?? {},
+      user_id:            user.id,
+      hijo_id:            state.hijoActivoId ?? null,
+      habilidad:          estrategia.habilidad,
+      descripcion:        estrategia.descripcion,
+      plan:               estrategia.plan,
+      fecha_inicio:       estrategia.fechaInicio,
+      semana_actual:      estrategia.semanaActual,
+      tareas:             estrategia.tareas ?? {},
+      episodio_origen_id: estrategia.episodioOrigenId ?? null,
     }).select().single()
     if (error) {
       dispatch({ type: 'REMOVE_ESTRATEGIA', payload: estrategia.id })

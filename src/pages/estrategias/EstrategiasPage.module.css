@@ -168,6 +168,11 @@
 .estrategiaNombre { font-size: 15px; font-weight: 600; min-width: 0; }
 .estrategiaHeaderRight { display: flex; align-items: center; gap: 8px; }
 .estrategiaFecha { font-size: 13px; color: var(--color-text-muted); }
+.episodioOrigen {
+  font-size: 11px;
+  color: var(--color-text-light);
+  margin-top: 2px;
+}
 
 .semanaTag {
   font-size: 12px; font-weight: 600; padding: 3px 10px;

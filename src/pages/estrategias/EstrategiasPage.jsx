@@ -133,6 +133,7 @@ export default function EstrategiasPage() {
   const navigate = useNavigate()
   const initNueva = location.state?.nueva === true
   const initHabilidad = location.state?.habilidad || ''
+  const initEpisodioOrigenId = location.state?.episodioOrigenId || null
   const [vista, setVista] = useState(initNueva ? 'nueva' : 'lista')
   const [selectedId, setSelectedId] = useState(null)
   const [habilidad, setHabilidad] = useState(initHabilidad)
@@ -176,6 +177,7 @@ export default function EstrategiasPage() {
         tareas,
         fechaInicio: new Date().toISOString(),
         semanaActual: 1,
+        episodioOrigenId: initEpisodioOrigenId,
       })
       setSelectedId(realId)
       setVista('detalle')
@@ -658,6 +660,15 @@ export default function EstrategiasPage() {
             <p className={styles.estrategiaFecha}>
               Iniciada el {new Date(e.fechaInicio).toLocaleDateString('es-CL')}
             </p>
+            {e.episodioOrigenId && (() => {
+              const ep = state.episodios.find((ep) => ep.id === e.episodioOrigenId)
+              if (!ep) return null
+              return (
+                <p className={styles.episodioOrigen}>
+                  Originada desde: {ep.tipo} · {new Date(ep.fecha).toLocaleDateString('es-CL')}
+                </p>
+              )
+            })()}
             <div className={styles.progressBar}>
               <div
                 className={styles.progressFill}

@@ -867,7 +867,7 @@ export default function RegistroPage() {
           {habilidadSugerida && (
             <button
               className={styles.estrategiaBtn}
-              onClick={() => navigate('/estrategias', { state: { nueva: true, habilidad: habilidadSugerida } })}
+              onClick={() => navigate('/estrategias', { state: { nueva: true, habilidad: habilidadSugerida, episodioOrigenId: episodioId } })}
             >
               <span className={styles.estrategiaBtnEmoji}>🌱</span>
               <span className={styles.estrategiaBtnTexto}>
