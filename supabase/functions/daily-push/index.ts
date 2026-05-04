@@ -25,14 +25,15 @@ Deno.serve(async () => {
 
   for (const sub of subs ?? []) {
     // Buscar estrategia activa del usuario para este hijo
-    const { data: estrategias } = await supabase
+    let query = supabase
       .from('estrategias')
       .select('habilidad, semana_actual, tareas')
       .eq('user_id', sub.user_id)
-      .eq('hijo_id', sub.hijo_id)
-      .lt('semana_actual', 4)
+      .lte('semana_actual', 4)
       .order('fecha_inicio', { ascending: false })
       .limit(1)
+    if (sub.hijo_id) query = query.eq('hijo_id', sub.hijo_id)
+    const { data: estrategias } = await query
 
     const estrategia = estrategias?.[0]
     if (!estrategia) continue
