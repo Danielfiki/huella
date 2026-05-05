@@ -14,6 +14,9 @@ Font.register({
     { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-400-normal.woff', fontWeight: 400 },
     { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-600-normal.woff', fontWeight: 600 },
     { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-700-normal.woff', fontWeight: 700 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-400-italic.woff', fontWeight: 400, fontStyle: 'italic' },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-600-italic.woff', fontWeight: 600, fontStyle: 'italic' },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-700-italic.woff', fontWeight: 700, fontStyle: 'italic' },
   ],
 })
 
