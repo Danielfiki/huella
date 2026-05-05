@@ -1,11 +1,29 @@
 import React from 'react'
 import {
   Document,
+  Font,
   Page,
   View,
   Text,
   StyleSheet,
 } from '@react-pdf/renderer'
+
+Font.register({
+  family: 'Plus Jakarta Sans',
+  fonts: [
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-400-normal.woff', fontWeight: 400 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-600-normal.woff', fontWeight: 600 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-700-normal.woff', fontWeight: 700 },
+  ],
+})
+
+Font.register({
+  family: 'Fraunces',
+  fonts: [
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5/files/fraunces-latin-600-normal.woff', fontWeight: 600 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5/files/fraunces-latin-700-normal.woff', fontWeight: 700 },
+  ],
+})
 
 // ── Paleta ──────────────────────────────────────────────────────────────────
 const C = {
@@ -28,20 +46,20 @@ const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy in
 const INTENSIDAD_COLOR = ['', '#a8d5b5', '#c4e0a8', C.yellow, C.primaryLight, C.red]
 
 const TIPOS = {
-  rabieta:     'Rabieta / explosion',
+  rabieta:     'Rabieta / explosión',
   llanto:      'Llanto intenso',
   agresividad: 'Golpes / agresividad',
   miedo:       'Miedo / angustia',
   sueno:       'No quiere dormir',
-  social:      'Se aislo / no quiso relacionarse',
-  desconexion: 'Se cerro / no respondia',
-  oposicion:   'Oposicion / no coopera',
+  social:      'Se aisló / no quiso relacionarse',
+  desconexion: 'Se cerró / no respondía',
+  oposicion:   'Oposición / no coopera',
   otro:        'Otro',
 }
 
 const s = StyleSheet.create({
   page: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Plus Jakarta Sans',
     fontSize: 10,
     color: C.text,
     paddingTop: 48,
@@ -63,7 +81,7 @@ const s = StyleSheet.create({
   },
   brandName: {
     fontSize: 28,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Fraunces', fontWeight: 700,
     color: C.primary,
     letterSpacing: 1,
   },
@@ -78,7 +96,7 @@ const s = StyleSheet.create({
   },
   hijoName: {
     fontSize: 14,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Fraunces', fontWeight: 700,
     color: C.text,
     marginTop: 8,
   },
@@ -95,7 +113,7 @@ const s = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Fraunces', fontWeight: 700,
     color: C.primaryDark,
     borderBottomWidth: 1,
     borderBottomColor: C.primaryLight,
@@ -120,7 +138,7 @@ const s = StyleSheet.create({
   },
   resumenNum: {
     fontSize: 22,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.primary,
   },
   resumenLabel: {
@@ -154,7 +172,7 @@ const s = StyleSheet.create({
   },
   resumenItemVal: {
     fontSize: 10,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.text,
   },
 
@@ -183,7 +201,7 @@ const s = StyleSheet.create({
   },
   triggerCount: {
     fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.primaryDark,
     width: 16,
     textAlign: 'right',
@@ -214,7 +232,7 @@ const s = StyleSheet.create({
   },
   epTipo: {
     fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.text,
   },
   epIntBadge: {
@@ -256,7 +274,7 @@ const s = StyleSheet.create({
   },
   epOrientacionLabel: {
     fontSize: 8,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.primaryDark,
     marginTop: 7,
     marginBottom: 3,
@@ -270,7 +288,7 @@ const s = StyleSheet.create({
   },
   epReflexionLabel: {
     fontSize: 8,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.muted,
     marginTop: 7,
     marginBottom: 2,
@@ -289,7 +307,7 @@ const s = StyleSheet.create({
   },
   mdHeading: {
     fontSize: 8.5,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.primaryDark,
     marginTop: 5,
     marginBottom: 2,
@@ -326,7 +344,7 @@ const s = StyleSheet.create({
   },
   estrategiaNombre: {
     fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.text,
   },
   estrategiaSemana: {
@@ -388,7 +406,7 @@ const s = StyleSheet.create({
   },
   vistaContext: {
     fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.text,
     marginBottom: 10,
   },
@@ -412,7 +430,7 @@ const s = StyleSheet.create({
   },
   vistaMetricVal: {
     fontSize: 13,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Plus Jakarta Sans', fontWeight: 700,
     color: C.primaryDark,
   },
   vistaMetricDelta: {
@@ -581,7 +599,7 @@ function renderInlineBold(line) {
   if (parts.length === 1) return line
   return parts.map((part, i) =>
     i % 2 === 1
-      ? <Text key={i} style={{ fontFamily: 'Helvetica-Bold' }}>{part}</Text>
+      ? <Text key={i} style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700 }}>{part}</Text>
       : part
   )
 }
@@ -644,18 +662,18 @@ function renderOrientacion(text) {
 // ── Sections ───────────────────────────────────────────────────────────────
 function HeaderSection({ hijo, generadoEl }) {
   const nombreHijo = hijo?.nombre || 'Sin nombre'
-  const edadStr = hijo?.edad != null ? `, ${hijo.edad} anos` : ''
+  const edadStr = hijo?.edad != null ? `, ${hijo.edad} años` : ''
   return (
     <View style={s.header}>
       <View style={s.headerTop}>
         <Text style={s.brandName}>Huella</Text>
         <Text style={s.reportDate}>Generado el {generadoEl}</Text>
       </View>
-      <Text style={s.headerSub}>Historial clinico familiar · Registro de desarrollo emocional</Text>
+      <Text style={s.headerSub}>Historial clínico familiar · Registro de desarrollo emocional</Text>
       <Text style={s.hijoName}>{nombreHijo}{edadStr}</Text>
       <Text style={s.disclaimer}>
-        Este documento es un registro de apoyo y no constituye un diagnostico clinico.
-        Elaborado para facilitar la comunicacion con profesionales de la salud.
+        Este documento es un registro de apoyo y no constituye un diagnóstico clínico.
+        Elaborado para facilitar la comunicación con profesionales de la salud.
       </Text>
     </View>
   )
@@ -727,8 +745,8 @@ function ResumenSection({ episodios }) {
 
   return (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Resumen de los ultimos 30 dias</Text>
-      <Text style={s.resumenPeriodo}>Periodo: {r.periodoStr}</Text>
+      <Text style={s.sectionTitle}>Resumen de los últimos 30 días</Text>
+      <Text style={s.resumenPeriodo}>Período: {r.periodoStr}</Text>
       <View style={s.resumenGrid}>
         <View style={s.resumenBox}>
           <Text style={s.resumenNum}>{r.total}</Text>
@@ -741,12 +759,12 @@ function ResumenSection({ episodios }) {
       </View>
       <View style={s.resumenFila}>
         <View style={s.resumenItem}>
-          <Text style={s.resumenItemLabel}>Tipo mas frecuente</Text>
+          <Text style={s.resumenItemLabel}>Tipo más frecuente</Text>
           <Text style={s.resumenItemVal}>{r.tipoTop}</Text>
         </View>
         {r.emocionTop && (
           <View style={s.resumenItem}>
-            <Text style={s.resumenItemLabel}>Emocion mas frecuente</Text>
+            <Text style={s.resumenItemLabel}>Emoción más frecuente</Text>
             <Text style={s.resumenItemVal}>{r.emocionTop}</Text>
           </View>
         )}
@@ -789,7 +807,7 @@ function GatillantesSection({ episodios }) {
   const max = top[0][1]
   return (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Gatillantes mas frecuentes</Text>
+      <Text style={s.sectionTitle}>Gatillantes más frecuentes</Text>
       {top.map(([label, count]) => (
         <View key={label} style={s.triggerRow}>
           <Text style={s.triggerLabel}>{label}</Text>
@@ -826,7 +844,7 @@ function EpisodiosSection({ episodios }) {
           </View>
 
           {ep.emocion ? (
-            <Text style={s.epEmocion}>Emocion: {ep.emocion}</Text>
+            <Text style={s.epEmocion}>Emoción: {ep.emocion}</Text>
           ) : null}
 
           {ep.contexto ? (
@@ -843,7 +861,7 @@ function EpisodiosSection({ episodios }) {
 
           {ep.orientacionIA ? (
             <>
-              <Text style={s.epOrientacionLabel}>Orientacion Huella</Text>
+              <Text style={s.epOrientacionLabel}>Orientación Huella</Text>
               <View style={s.epOrientacion}>
                 {renderOrientacion(ep.orientacionIA)}
               </View>
@@ -852,7 +870,7 @@ function EpisodiosSection({ episodios }) {
 
           {ep.reflexion ? (
             <>
-              <Text style={s.epReflexionLabel}>Reflexion del padre/madre</Text>
+              <Text style={s.epReflexionLabel}>Reflexión del padre/madre</Text>
               <Text style={s.epReflexion}>{ep.reflexion}</Text>
             </>
           ) : null}
@@ -916,7 +934,7 @@ function Footer() {
     <View style={s.footer} fixed>
       <Text style={s.footerText}>Huella · Registro de desarrollo emocional</Text>
       <Text style={s.footerText} render={({ pageNumber, totalPages }) =>
-        `Pagina ${pageNumber} de ${totalPages}`
+        `Página ${pageNumber} de ${totalPages}`
       } />
     </View>
   )
