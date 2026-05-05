@@ -407,6 +407,28 @@ Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intent
   return llamarAPI(prompt, 250)
 }
 
+export async function analizarReflexionesCuidador(reflexiones) {
+  const lista = reflexiones
+    .map((r, i) => `${i + 1}. (${r.tipoEpisodio}, ${r.fecha}): "${r.texto}"`)
+    .join('\n')
+
+  const prompt = `Eres un acompanante empatico para padres y madres que cuidan a hijos con desafios de desarrollo o conductuales.
+
+El padre o la madre ha compartido estas reflexiones personales al cerrar episodios dificiles:
+${lista}
+
+Escribe un parrafo corto (maximo 100 palabras) que:
+- Reconozca el esfuerzo sostenido de este cuidador
+- Conecte lo que expreso en sus propias palabras con el proceso que esta viviendo
+- Valide su capacidad de reflexionar como una fortaleza real del vinculo con su hijo/a
+- NO repita textualmente ninguna de las frases
+- NO ofrezca consejos ni diagnosticos
+- Hable en segunda persona al padre/madre
+- Tono calido, directo y concreto`
+
+  return llamarAPI(prompt, 250)
+}
+
 function extraerJSON(raw) {
   if (typeof raw !== 'string') return raw
   // Eliminar bloques markdown al inicio y al final

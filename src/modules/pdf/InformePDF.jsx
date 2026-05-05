@@ -378,6 +378,90 @@ const s = StyleSheet.create({
     borderLeftColor: C.primary,
   },
 
+  // ── Vista general ──
+  vistaBox: {
+    backgroundColor: C.surface,
+    borderRadius: 6,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: C.primaryLight,
+  },
+  vistaContext: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+    color: C.text,
+    marginBottom: 10,
+  },
+  vistaMetricGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 6,
+  },
+  vistaMetricBox: {
+    flex: 1,
+    backgroundColor: C.white,
+    borderRadius: 4,
+    padding: 8,
+  },
+  vistaMetricLabel: {
+    fontSize: 7,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 3,
+  },
+  vistaMetricVal: {
+    fontSize: 13,
+    fontFamily: 'Helvetica-Bold',
+    color: C.primaryDark,
+  },
+  vistaMetricDelta: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 2,
+  },
+  vistaFallback: {
+    fontSize: 9,
+    color: C.muted,
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  vistaEstrategia: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+
+  // ── Reflexiones cuidador ──
+  reflexionesBox: {
+    backgroundColor: C.surface,
+    borderRadius: 6,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: C.primaryLight,
+    marginBottom: 10,
+  },
+  reflexionRow: {
+    marginBottom: 6,
+    paddingLeft: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: C.border,
+  },
+  reflexionMeta: {
+    fontSize: 7,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  reflexionTexto: {
+    fontSize: 9,
+    color: C.text,
+    fontStyle: 'italic',
+    lineHeight: 1.4,
+  },
+
   // ── Footer ──
   footer: {
     position: 'absolute',
@@ -450,6 +534,44 @@ function calcTopGatillantes(episodios, n = 5) {
     for (const g of ep.gatillantes || [])
       counts[g] = (counts[g] || 0) + 1
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, n)
+}
+
+function calcVistaGeneral(episodios, estrategias) {
+  const ahora  = new Date()
+  const hace30 = new Date(ahora); hace30.setDate(ahora.getDate() - 30)
+  const hace60 = new Date(ahora); hace60.setDate(ahora.getDate() - 60)
+
+  const actual   = episodios.filter(e => new Date(e.fecha) >= hace30)
+  const anterior = episodios.filter(e => {
+    const f = new Date(e.fecha)
+    return f >= hace60 && f < hace30
+  })
+
+  const calcM = (eps) => {
+    if (!eps.length) return null
+    const total  = eps.length
+    const avgInt = eps.reduce((s, e) => s + e.intensidad, 0) / total
+    const tipoCount = {}
+    for (const ep of eps) tipoCount[ep.tipo] = (tipoCount[ep.tipo] || 0) + 1
+    const tipoTopKey = Object.entries(tipoCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+    const tipoTop    = TIPOS[tipoTopKey] || tipoTopKey || '-'
+    return { total, avgInt, tipoTop }
+  }
+
+  return {
+    periodoInicio:    fmtFechaCorta(hace30),
+    periodoFin:       fmtFechaCorta(ahora),
+    actual:           calcM(actual),
+    anterior:         calcM(anterior),
+    estrategiaActiva: (estrategias || []).find(e => e.semanaActual < 4) || null,
+  }
+}
+
+function pctDelta(actual, anterior) {
+  if (!anterior) return null
+  const p = Math.round(((actual - anterior) / anterior) * 100)
+  if (Math.abs(p) < 5) return 'estable'
+  return (p > 0 ? '+' : '') + p + '%'
 }
 
 // ── Markdown renderer ──────────────────────────────────────────────────────
@@ -539,6 +661,54 @@ function HeaderSection({ hijo, generadoEl }) {
   )
 }
 
+function VistaGeneralSection({ hijo, episodios, estrategias }) {
+  const v = calcVistaGeneral(episodios, estrategias)
+  const nombreHijo = hijo?.nombre || 'Sin nombre'
+  const edadStr    = hijo?.edad != null ? `, ${hijo.edad} anos` : ''
+
+  return (
+    <View style={s.section}>
+      <Text style={s.sectionTitle}>Vista general</Text>
+      <View style={s.vistaBox}>
+        <Text style={s.vistaContext}>
+          {nombreHijo}{edadStr}. Periodo: {v.periodoInicio} - {v.periodoFin}.
+        </Text>
+
+        {v.actual && v.anterior ? (
+          <View style={s.vistaMetricGrid}>
+            <View style={s.vistaMetricBox}>
+              <Text style={s.vistaMetricLabel}>Episodios</Text>
+              <Text style={s.vistaMetricVal}>{v.actual.total}</Text>
+              <Text style={s.vistaMetricDelta}>
+                {pctDelta(v.actual.total, v.anterior.total) ?? 'sin ref.'} vs mes anterior
+              </Text>
+            </View>
+            <View style={s.vistaMetricBox}>
+              <Text style={s.vistaMetricLabel}>Intensidad prom.</Text>
+              <Text style={s.vistaMetricVal}>{v.actual.avgInt.toFixed(1)}/5</Text>
+              <Text style={s.vistaMetricDelta}>
+                {pctDelta(v.actual.avgInt, v.anterior.avgInt) ?? 'sin ref.'} vs mes anterior
+              </Text>
+            </View>
+            <View style={s.vistaMetricBox}>
+              <Text style={s.vistaMetricLabel}>Tipo frecuente</Text>
+              <Text style={[s.vistaMetricVal, { fontSize: 9 }]}>{v.actual.tipoTop}</Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={s.vistaFallback}>Sin periodo previo para comparar todavia.</Text>
+        )}
+
+        {v.estrategiaActiva && (
+          <Text style={s.vistaEstrategia}>
+            Estrategia activa: {v.estrategiaActiva.habilidad} · Semana {v.estrategiaActiva.semanaActual}/4
+          </Text>
+        )}
+      </View>
+    </View>
+  )
+}
+
 function ResumenEjecutivoSection({ texto }) {
   if (!texto) return null
   return (
@@ -581,6 +751,34 @@ function ResumenSection({ episodios }) {
           </View>
         )}
       </View>
+    </View>
+  )
+}
+
+function ReflexionesCuidadorSection({ reflexionesCuidador, episodios }) {
+  const conReflexion = [...episodios]
+    .filter(e => e.reflexion)
+    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+    .slice(0, 3)
+
+  if (conReflexion.length < 3) return null
+
+  return (
+    <View style={s.section}>
+      <Text style={s.sectionTitle}>Reflexiones del cuidador</Text>
+      {reflexionesCuidador && (
+        <View style={s.reflexionesBox}>
+          {renderOrientacion(reflexionesCuidador)}
+        </View>
+      )}
+      {conReflexion.map((ep, i) => (
+        <View key={ep.id || i} style={s.reflexionRow}>
+          <Text style={s.reflexionMeta}>
+            {fmtFechaCorta(ep.fecha)} · {TIPOS[ep.tipo] || ep.tipo}
+          </Text>
+          <Text style={s.reflexionTexto}>"{ep.reflexion}"</Text>
+        </View>
+      ))}
     </View>
   )
 }
@@ -725,7 +923,7 @@ function Footer() {
 }
 
 // ── Document ───────────────────────────────────────────────────────────────
-export default function InformePDF({ hijo, episodios, estrategias, hitos, resumenEjecutivo }) {
+export default function InformePDF({ hijo, episodios, estrategias, hitos, resumenEjecutivo, reflexionesCuidador }) {
   const generadoEl = new Date().toLocaleDateString('es-CL', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
@@ -738,8 +936,10 @@ export default function InformePDF({ hijo, episodios, estrategias, hitos, resume
     >
       <Page size="A4" style={s.page}>
         <HeaderSection hijo={hijo} generadoEl={generadoEl} />
+        <VistaGeneralSection hijo={hijo} episodios={episodios} estrategias={estrategias} />
         <ResumenEjecutivoSection texto={resumenEjecutivo} />
         <ResumenSection episodios={episodios} />
+        <ReflexionesCuidadorSection reflexionesCuidador={reflexionesCuidador} episodios={episodios} />
         <GatillantesSection episodios={episodios} />
         <EstrategiasSection estrategias={estrategias} />
         <HitosSection hitos={hitos} />

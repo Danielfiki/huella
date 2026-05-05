@@ -30,3 +30,77 @@
 .spin {
   animation: spin 0.8s linear infinite;
 }
+
+/* ── Error state ── */
+.errorWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+}
+
+.errorContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorIcon {
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.errorMsg {
+  font-size: 14px;
+  color: var(--color-danger-text);
+  margin: 0;
+}
+
+.errorBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.retryBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.retryBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+.sinResumenBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sinResumenBtn:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
