@@ -576,12 +576,20 @@ function calcVistaGeneral(episodios, estrategias) {
     return { total, avgInt, tipoTop }
   }
 
+  const ests = estrategias || []
+  const primerEp = episodios.length > 0
+    ? episodios.reduce((min, e) => new Date(e.fecha) < new Date(min.fecha) ? e : min)
+    : null
+
   return {
     periodoInicio:    fmtFechaCorta(hace30),
     periodoFin:       fmtFechaCorta(ahora),
     actual:           calcM(actual),
     anterior:         calcM(anterior),
-    estrategiaActiva: (estrategias || []).find(e => e.semanaActual < 4) || null,
+    totalHistorico:   episodios.length,
+    primerEpisodio:   primerEp ? fmtFechaCorta(primerEp.fecha) : null,
+    estratsActivas:   ests.filter(e => e.semanaActual < 4).length,
+    estratsComplet:   ests.filter(e => e.semanaActual >= 4).length,
   }
 }
 
@@ -682,14 +690,14 @@ function HeaderSection({ hijo, generadoEl }) {
 function VistaGeneralSection({ hijo, episodios, estrategias }) {
   const v = calcVistaGeneral(episodios, estrategias)
   const nombreHijo = hijo?.nombre || 'Sin nombre'
-  const edadStr    = hijo?.edad != null ? `, ${hijo.edad} anos` : ''
+  const edadStr    = hijo?.edad != null ? `, ${hijo.edad} años` : ''
 
   return (
     <View style={s.section}>
       <Text style={s.sectionTitle}>Vista general</Text>
       <View style={s.vistaBox}>
         <Text style={s.vistaContext}>
-          {nombreHijo}{edadStr}. Periodo: {v.periodoInicio} - {v.periodoFin}.
+          {nombreHijo}{edadStr}. Período: {v.periodoInicio} – {v.periodoFin}.
         </Text>
 
         {v.actual && v.anterior ? (
@@ -714,12 +722,30 @@ function VistaGeneralSection({ hijo, episodios, estrategias }) {
             </View>
           </View>
         ) : (
-          <Text style={s.vistaFallback}>Sin periodo previo para comparar todavia.</Text>
+          <>
+            <View style={s.vistaMetricGrid}>
+              <View style={s.vistaMetricBox}>
+                <Text style={s.vistaMetricLabel}>Total histórico</Text>
+                <Text style={s.vistaMetricVal}>{v.totalHistorico}</Text>
+                <Text style={s.vistaMetricDelta}>episodios registrados</Text>
+              </View>
+              {v.primerEpisodio && (
+                <View style={s.vistaMetricBox}>
+                  <Text style={s.vistaMetricLabel}>Primer registro</Text>
+                  <Text style={[s.vistaMetricVal, { fontSize: 9 }]}>{v.primerEpisodio}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[s.vistaFallback, { marginTop: 4 }]}>
+              Este es el primer informe — no hay período anterior para comparar.
+              A medida que sigas registrando, este informe mostrará tendencias y comparaciones.
+            </Text>
+          </>
         )}
 
-        {v.estrategiaActiva && (
+        {(v.estratsActivas > 0 || v.estratsComplet > 0) && (
           <Text style={s.vistaEstrategia}>
-            Estrategia activa: {v.estrategiaActiva.habilidad} · Semana {v.estrategiaActiva.semanaActual}/4
+            Estrategias activas: {v.estratsActivas}. Completadas en este período: {v.estratsComplet}.
           </Text>
         )}
       </View>
