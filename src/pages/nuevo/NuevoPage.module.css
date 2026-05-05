@@ -14,7 +14,7 @@
   padding: 24px 20px;
   border-radius: var(--radius-lg, 16px);
   border: 2px solid var(--color-border);
-  border-left: 3px solid #8FA840;
+  border-left: 3px solid var(--color-accent-green);
   background: var(--color-surface);
   text-align: left;
   cursor: pointer;
@@ -24,9 +24,9 @@
 .opcionCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 .opcionCard:active { transform: scale(0.93); }
 
-.opcionEpisodio:hover { border-color: #7C8FD4; }
-.opcionAvance { border: 1px solid var(--color-border); border-left: 3px solid #E8956D; background: var(--color-surface); }
-.opcionAvance:hover { border-color: var(--color-border); border-left-color: #E8956D; }
+.opcionEpisodio:hover { border-color: var(--color-accent-blue); }
+.opcionAvance { border: 1px solid var(--color-border); border-left: 3px solid var(--color-accent-orange); background: var(--color-surface); }
+.opcionAvance:hover { border-color: var(--color-border); border-left-color: var(--color-accent-orange); }
 
 .opcionEmoji { font-size: 46px; flex-shrink: 0; line-height: 1; }
 .opcionTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

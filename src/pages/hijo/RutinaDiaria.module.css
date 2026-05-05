@@ -49,8 +49,8 @@
 }
 
 .bloqueRiesgo {
-  border-color: #E8C4A8;
-  background: #FFF8F4;
+  border-color: var(--color-risk-border);
+  background: var(--color-risk-bg);
 }
 
 .bloqueHora {
@@ -85,8 +85,8 @@
 .riesgoBadge {
   font-size: 11px;
   font-weight: 700;
-  color: #A84B28;
-  background: #FEE4D0;
+  color: var(--color-primary-deep);
+  background: var(--color-primary-tint);
   border-radius: 20px;
   padding: 2px 8px;
   flex-shrink: 0;
@@ -152,7 +152,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--color-scrim);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -279,9 +279,9 @@
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .toggleBtnRiesgo {
-  background: #FEE4D0;
+  background: var(--color-primary-tint);
   border-color: var(--color-primary-dark);
-  color: #A84B28;
+  color: var(--color-primary-deep);
 }
 
 /* ── Confirmar eliminación ── */

@@ -18,12 +18,12 @@
 .primary {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   color: white;
-  box-shadow: 0 6px 16px rgba(230, 138, 92, 0.3);
+  box-shadow: var(--shadow-primary-sm);
   border-radius: 16px;
 }
 .primary:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-  box-shadow: 0 8px 20px rgba(230, 138, 92, 0.4);
+  box-shadow: var(--shadow-primary-md);
 }
 
 .secondary {

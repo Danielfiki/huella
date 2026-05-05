@@ -20,6 +20,9 @@
 
   /* ── Tints semánticos ── */
   --color-primary-bg: #FEE8D6;
+  --color-primary-border: #F0C8A0;
+  --color-primary-tint: #FEE4D0;
+  --color-primary-deep: #A84B28;
   --color-success-bg: #EDF3DC;
   --color-celebration-start: #FEF0E4;
   --color-celebration-end: #FEE8D6;
@@ -33,9 +36,43 @@
   --color-accent-green: #8FA840;
   --color-accent-mocha: #9B7B6A;
   --color-accent-blue: #6C8EF5;
+  --color-accent-indigo: #7C8BFD;
+  --color-accent-orange: #E8956D;
   --color-accent-lavender: #CAC0E0;
   --color-accent-yellow: #F0DFA0;
   --color-strawberry: #E8756A;
+
+  /* ── Leaf green (gráficos/botones) ── */
+  --color-leaf-bg: #EFF4DC;
+  --color-leaf-border: #C8DCA0;
+  --color-bg-chart-green: #F8FAEE;
+
+  /* ── Coral / pink (gráficos) ── */
+  --color-coral: #F08070;
+  --color-coral-bg: #FFF5F0;
+
+  /* ── Amber ── */
+  --color-amber: #F59E0B;
+  --color-amber-bg: #FEF3C7;
+  --color-amber-dark: #92400E;
+  --color-amber-medium: #B45309;
+
+  /* ── Risk (rutina) ── */
+  --color-risk-bg: #FFF8F4;
+  --color-risk-border: #E8C4A8;
+
+  /* ── Info (notificaciones) ── */
+  --color-info: #5B8DB8;
+  --color-info-hover: #4A7AA8;
+  --color-info-bg: #EEF0FB;
+  --color-info-bg-end: #E8F1F8;
+  --color-info-border: #B0C8DC;
+
+  /* ── Emotion pills ── */
+  --color-pill-emocion-bg: #D4C4BC;
+  --color-pill-emocion-text: #4A2A18;
+  --color-pill-estado-bg: #F0C8A0;
+  --color-pill-estado-text: #7A3A10;
 
   /* ── Tags ── */
   --color-tag-green: #5A7A20;
@@ -61,6 +98,12 @@
   --shadow-sm: 0 2px 12px rgba(42, 26, 14, 0.06);
   --shadow-md: 0 6px 24px rgba(42, 26, 14, 0.10);
   --shadow-lg: 0 12px 48px rgba(42, 26, 14, 0.14);
+  --shadow-racha: 0 4px 20px rgba(193, 127, 94, 0.3);
+  --shadow-primary-sm: 0 6px 16px rgba(230, 138, 92, 0.3);
+  --shadow-primary-md: 0 8px 20px rgba(230, 138, 92, 0.4);
+
+  /* ── Scrim ── */
+  --color-scrim: rgba(0, 0, 0, 0.45);
 
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -84,6 +127,9 @@
     --color-primary-light: #2A1808;
     --color-primary-dark: #F0A870;
     --color-primary-bg: #2A1808;
+    --color-primary-border: #4A2A08;
+    --color-primary-tint: #3A1E08;
+    --color-primary-deep: #EE9870;
     --color-success-bg: #1A2208;
     --color-celebration-start: #241808;
     --color-celebration-end: #2A1808;
@@ -95,6 +141,25 @@
     --color-accent-blue: #2A3E52;
     --color-accent-lavender: #3A3058;
     --color-accent-yellow: #4A4018;
+    --color-leaf-bg: #162206;
+    --color-leaf-border: #2A4010;
+    --color-bg-chart-green: #141A06;
+    --color-coral-bg: #2E1008;
+    --color-amber: #FBBF24;
+    --color-amber-bg: #451A03;
+    --color-amber-dark: #FDE68A;
+    --color-amber-medium: #FCD34D;
+    --color-risk-bg: #2A1A08;
+    --color-risk-border: #4A2E14;
+    --color-info: #7FB3D3;
+    --color-info-hover: #A0C8E3;
+    --color-info-bg: #0A1828;
+    --color-info-bg-end: #0C1E30;
+    --color-info-border: #1E3A52;
+    --color-pill-emocion-bg: #3A2820;
+    --color-pill-emocion-text: #D4B49C;
+    --color-pill-estado-bg: #3A2808;
+    --color-pill-estado-text: #D4A880;
     --color-tag-green: #B0C870;
     --color-tag-blue: #7FB3D3;
     --color-text: #F5EDE3;
@@ -106,6 +171,10 @@
     --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.40);
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.55);
     --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.65);
+    --shadow-racha: 0 4px 20px rgba(0, 0, 0, 0.50);
+    --shadow-primary-sm: 0 6px 16px rgba(0, 0, 0, 0.40);
+    --shadow-primary-md: 0 8px 20px rgba(0, 0, 0, 0.50);
+    --color-scrim: rgba(0, 0, 0, 0.60);
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);
     --color-nav-text: #B0987A;

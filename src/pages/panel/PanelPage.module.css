@@ -56,7 +56,7 @@
 
 /* ── Resumen emocional ── */
 .resumenCard {
-  border-left: 3px solid #8FA840;
+  border-left: 3px solid var(--color-accent-green);
 }
 
 .resumenTop {
@@ -175,7 +175,7 @@
 
 /* ── Gráficos ── */
 .cardTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.graficoCard { overflow: visible; border-left: 3px solid #8FA840; }
+.graficoCard { overflow: visible; border-left: 3px solid var(--color-accent-green); }
 
 .narrativa {
   margin: 12px 0 0;
@@ -197,7 +197,7 @@
   text-align: center;
   padding: 32px 20px 24px;
   gap: 12px;
-  border-left: 3px solid #8FA840;
+  border-left: 3px solid var(--color-accent-green);
 }
 
 .emptyIlustracion {
@@ -367,7 +367,7 @@
 .consejoCard {
   background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
   border-color: var(--color-primary-light);
-  border-left: 4px solid #8FA840;
+  border-left: 4px solid var(--color-accent-green);
 }
 
 .consejoHeader {
@@ -506,7 +506,7 @@
 }
 
 /* ── Análisis de patrones ── */
-.patronesCard { border-left: 3px solid #8FA840; }
+.patronesCard { border-left: 3px solid var(--color-accent-green); }
 .patronesHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .patronesHeader h3 { font-size: 15px; font-weight: 600; }
 .patronesDesc { font-size: 14px; color: var(--color-text-muted); margin-bottom: 12px; }

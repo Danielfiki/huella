@@ -238,8 +238,8 @@
 
 .inviteStatusWarn {
   font-size: 13px;
-  color: #92400e;
-  background: #fef3c7;
+  color: var(--color-amber-dark);
+  background: var(--color-amber-bg);
   border-radius: var(--radius-sm);
   padding: 9px 12px;
   line-height: 1.5;

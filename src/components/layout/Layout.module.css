@@ -9,7 +9,7 @@
 }
 
 .header {
-  background: #9B7B6A !important;
+  background: var(--color-accent-mocha) !important;
   padding: 0 20px;
   height: 56px;
   flex-shrink: 0;

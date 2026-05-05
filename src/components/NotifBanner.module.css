@@ -3,8 +3,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #EEF0FB 0%, #E8F1F8 100%);
-  border: 1.5px solid #B0C8DC;
+  background: linear-gradient(135deg, var(--color-info-bg) 0%, var(--color-info-bg-end) 100%);
+  border: 1.5px solid var(--color-info-border);
   border-radius: var(--radius-md);
   margin-bottom: 4px;
   animation: bannerIn 0.5s ease both;
@@ -16,7 +16,7 @@
 }
 
 .icon {
-  color: #5B8DB8;
+  color: var(--color-info);
   flex-shrink: 0;
 }
 
@@ -38,7 +38,7 @@
 .btnActivar {
   padding: 5px 12px;
   border-radius: 999px;
-  background: #5B8DB8;
+  background: var(--color-info);
   color: white;
   font-size: 12px;
   font-weight: 600;
@@ -48,7 +48,7 @@
   transition: background 0.15s;
   font-family: var(--font-family);
 }
-.btnActivar:hover { background: #4a7aa8; }
+.btnActivar:hover { background: var(--color-info-hover); }
 .btnActivar:disabled { opacity: 0.6; cursor: default; }
 
 .btnDismiss {

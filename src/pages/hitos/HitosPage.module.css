@@ -21,8 +21,8 @@
   border-radius: calc(var(--radius-md) - 2px);
   font-size: 13px;
   font-weight: 600;
-  color: #7A6050;
-  background: #EDE4D8;
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
   border: none;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -30,9 +30,9 @@
 }
 
 .tabActive {
-  background: white;
+  background: var(--color-surface);
   color: var(--color-text);
-  border: 1.5px solid #9B7B6A;
+  border: 1.5px solid var(--color-accent-mocha);
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
@@ -379,7 +379,7 @@
 
 /* ── Avances registrados ── */
 .hitosList { display: flex; flex-direction: column; gap: 10px; }
-.hitoCard { display: flex; flex-direction: column; gap: 6px; border-left: 3px solid #8FA840; }
+.hitoCard { display: flex; flex-direction: column; gap: 6px; border-left: 3px solid var(--color-accent-green); }
 .hitoHeader { display: flex; align-items: center; gap: 12px; }
 .hitoEmoji { font-size: 26px; flex-shrink: 0; }
 .hitoCategoria { font-size: 14px; font-weight: 600; margin: 0; min-width: 0; }
@@ -404,9 +404,9 @@
   align-self: flex-start;
   padding: 5px 11px;
   border-radius: 20px;
-  border: 1.5px solid #8FA840;
-  background: #EFF4DC;
-  color: #5A7A20;
+  border: 1.5px solid var(--color-accent-green);
+  background: var(--color-leaf-bg);
+  color: var(--color-tag-green);
   font-size: 12px;
   font-weight: 600;
   font-family: var(--font-family);
