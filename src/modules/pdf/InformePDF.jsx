@@ -11,20 +11,20 @@ import {
 Font.register({
   family: 'Plus Jakarta Sans',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-400-normal.woff', fontWeight: 400 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-600-normal.woff', fontWeight: 600 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-700-normal.woff', fontWeight: 700 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-400-italic.woff', fontWeight: 400, fontStyle: 'italic' },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-600-italic.woff', fontWeight: 600, fontStyle: 'italic' },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-700-italic.woff', fontWeight: 700, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 400 },
+    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 600 },
+    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 700 },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 400, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 600, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 700, fontStyle: 'italic' },
   ],
 })
 
 Font.register({
   family: 'Fraunces',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5/files/fraunces-latin-600-normal.woff', fontWeight: 600 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5/files/fraunces-latin-700-normal.woff', fontWeight: 700 },
+    { src: '/fonts/Fraunces.ttf', fontWeight: 600 },
+    { src: '/fonts/Fraunces.ttf', fontWeight: 700 },
   ],
 })
 
