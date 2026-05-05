@@ -4,24 +4,45 @@ import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 
 const FREE_FEATURES = [
-  { ok: true,  text: 'Registro de episodios (hasta 15)' },
-  { ok: true,  text: 'Orientación IA post-episodio' },
-  { ok: true,  text: 'Logros y álbum de fotos' },
-  { ok: true,  text: 'Gráficos de patrones' },
-  { ok: false, text: 'Registro ilimitado de episodios' },
-  { ok: false, text: 'Estrategias personalizadas ilimitadas' },
-  { ok: false, text: 'Exportar informe PDF del historial' },
-  { ok: false, text: 'Seguimiento post-episodio (check-in)' },
+  { ok: true,  text: 'Hasta 15 episodios' },
+  { ok: true,  text: '1 hijo' },
+  { ok: true,  text: 'Orientación IA básica post-episodio' },
+  { ok: true,  text: 'Historial últimos 7 días' },
+  { ok: false, text: 'Episodios ilimitados' },
+  { ok: false, text: 'Hijos ilimitados' },
+  { ok: false, text: 'Orientación IA personalizada por episodio' },
+  { ok: false, text: 'Acción inmediata IA' },
+  { ok: false, text: 'Consejo diario personalizado' },
+  { ok: false, text: 'Análisis de patrones con IA' },
+  { ok: false, text: 'Estrategias de 4 semanas con tareas concretas' },
+  { ok: false, text: 'Check-in emocional al día siguiente' },
+  { ok: false, text: 'Historial completo sin límite de tiempo' },
+  { ok: false, text: 'Búsqueda en todos tus registros' },
+  { ok: false, text: 'Informe PDF exportable' },
+  { ok: false, text: 'Rutina diaria con marcadores de riesgo' },
+  { ok: false, text: 'Notificaciones inteligentes' },
+  { ok: false, text: 'Álbum de avances con fotos' },
+  { ok: false, text: 'Medallas y logros (34 badges)' },
+  { ok: false, text: 'Modo familia — conecta con tu pareja' },
 ]
 
 const PRO_FEATURES = [
-  'Registro ilimitado de episodios',
-  'Estrategias personalizadas ilimitadas',
-  'Exportar informe PDF del historial',
-  'Seguimiento post-episodio (check-in)',
-  'Orientación IA post-episodio',
-  'Logros y álbum de fotos',
-  'Gráficos de patrones',
+  { emoji: '♾️', text: 'Episodios ilimitados' },
+  { emoji: '👨‍👩‍👧‍👦', text: 'Hijos ilimitados' },
+  { emoji: '🧠', text: 'Orientación IA personalizada por episodio (calibrada a edad y perfil)' },
+  { emoji: '⚡', text: 'Acción inmediata IA — qué hacer en los próximos minutos' },
+  { emoji: '💡', text: 'Consejo diario personalizado basado en tus datos reales' },
+  { emoji: '📊', text: 'Análisis de patrones con IA — conexiones entre episodios en el tiempo' },
+  { emoji: '🎯', text: 'Estrategias de 4 semanas con tareas concretas por habilidad' },
+  { emoji: '🔄', text: 'Check-in emocional al día siguiente — seguimiento real de cada episodio' },
+  { emoji: '📂', text: 'Historial completo sin límite de tiempo' },
+  { emoji: '🔍', text: 'Búsqueda en todos tus registros' },
+  { emoji: '📄', text: 'Informe PDF exportable para psicólogo o especialista' },
+  { emoji: '🕐', text: 'Rutina diaria del hijo con marcadores de momentos de riesgo' },
+  { emoji: '🔔', text: 'Notificaciones inteligentes — recordatorios y check-ins automáticos' },
+  { emoji: '📸', text: 'Álbum de avances con fotos' },
+  { emoji: '🏅', text: 'Medallas y logros — 34 badges de progreso parental' },
+  { emoji: '👫', text: 'Modo familia — conecta con tu pareja' },
 ]
 
 export default function CuentaPage() {
@@ -82,11 +103,11 @@ export default function CuentaPage() {
           <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#8a7a70' }}>
             Tienes acceso completo a todas las funcionalidades de Huella.
           </p>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {PRO_FEATURES.map((f) => (
-              <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#3a2e28' }}>
-                <span style={{ color: '#4a9e6f', fontWeight: 700, fontSize: '15px', flexShrink: 0 }}>✓</span>
-                {f}
+              <li key={f.text} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '14px', color: '#3a2e28', lineHeight: 1.4 }}>
+                <span style={{ flexShrink: 0, fontSize: '16px', marginTop: '1px' }}>{f.emoji}</span>
+                {f.text}
               </li>
             ))}
           </ul>
