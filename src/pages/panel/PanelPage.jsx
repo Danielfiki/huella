@@ -120,7 +120,7 @@ function UltimoHitoCard({ hito, onVerLogros }) {
   )
 }
 
-function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
+function ConsejoBubble({ user, hijo, episodios, hitos, estrategias, hidden = false }) {
   const [frase, setFrase] = useState(null)
   const [loadingFrase, setLoadingFrase] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -149,7 +149,7 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
       .finally(() => setLoadingFrase(false))
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!visible) return null
+  if (!visible || hidden) return null
 
   const previewText = frase && !loadingFrase
     ? frase.replace(/[#*_`]/g, '').trim().split(/\s+/).slice(0, 7).join(' ') + '…'
@@ -514,6 +514,7 @@ export default function PanelPage() {
         episodios={episodios}
         hitos={hitos}
         estrategias={estrategias}
+        hidden={loadingAnalisis || !!analisis}
       />
     </div>
   )
