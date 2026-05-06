@@ -11,22 +11,27 @@ import {
 Font.register({
   family: 'Plus Jakarta Sans',
   fonts: [
-    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 400 },
-    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 600 },
-    { src: '/fonts/PlusJakartaSans.ttf', fontWeight: 700 },
-    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 400, fontStyle: 'italic' },
-    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 600, fontStyle: 'italic' },
-    { src: '/fonts/PlusJakartaSans-Italic.ttf', fontWeight: 700, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans-Regular.ttf',  fontWeight: 400 },
+    { src: '/fonts/PlusJakartaSans-Medium.ttf',   fontWeight: 500 },
+    { src: '/fonts/PlusJakartaSans-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/PlusJakartaSans-Bold.ttf',     fontWeight: 700 },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf',   fontWeight: 400, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf',   fontWeight: 600, fontStyle: 'italic' },
+    { src: '/fonts/PlusJakartaSans-Italic.ttf',   fontWeight: 700, fontStyle: 'italic' },
   ],
 })
 
 Font.register({
   family: 'Fraunces',
   fonts: [
-    { src: '/fonts/Fraunces.ttf', fontWeight: 600 },
-    { src: '/fonts/Fraunces.ttf', fontWeight: 700 },
+    { src: '/fonts/Fraunces_72pt-Regular.ttf',  fontWeight: 400 },
+    { src: '/fonts/Fraunces_72pt-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/Fraunces_72pt-Bold.ttf',     fontWeight: 700 },
+    { src: '/fonts/Fraunces_72pt-Italic.ttf',   fontWeight: 400, fontStyle: 'italic' },
   ],
 })
+
+Font.registerHyphenationCallback(word => [word])
 
 // ── Paleta ──────────────────────────────────────────────────────────────────
 const C = {
