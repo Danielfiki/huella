@@ -197,17 +197,20 @@ Episodio registrado:
 - Contexto: ${episodio.contexto || 'no especificado'}
 - Gatillantes posibles: ${episodio.gatillantes?.join(', ') || 'no especificados'}${episodio.descripcionLibre ? `\n- Relato del padre/madre: ${episodio.descripcionLibre}` : ''}${bloqueCtx}${contexto}
 
-Responde con este formato exacto, calibrando cada sección al marco científico de la edad indicada:
+Responde con este formato exacto, calibrando cada sección al marco científico de la edad indicada.
 
-**Qué está pasando** (1-2 oraciones explicando el mecanismo neurológico o de desarrollo específico para esta edad)
+FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown en la respuesta. Escribe cada título de sección en su propia línea con mayúscula inicial, sin negritas ni símbolos. Separa párrafos con una línea en blanco. Para listas usa 1., 2., 3. sin viñetas ni guiones.
 
-**Qué hacer ahora**
+Qué está pasando
+(1-2 oraciones explicando el mecanismo neurológico o de desarrollo específico para esta edad)
+
+Qué hacer ahora
 1. [paso concreto, apropiado para la edad]
 2. [paso concreto, apropiado para la edad]
 3. [paso concreto, apropiado para la edad]
 
-**Qué evitar**
-- [cosa a evitar y por qué en 1 línea, específica para la edad]
+Qué evitar
+1. [cosa a evitar y por qué en 1 línea, específica para la edad]
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
@@ -238,23 +241,25 @@ Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${
 Historial de episodios (más recientes primero):
 ${resumen}
 
-Analiza estos patrones desde el marco científico de la edad indicada y responde con:
+Analiza estos patrones desde el marco científico de la edad indicada y responde con estas secciones en orden.
 
-**Lo que está mejorando**
+FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown en la respuesta. Escribe cada título de sección en su propia línea con mayúscula inicial, sin negritas ni símbolos. Separa párrafos con una línea en blanco. Si enumeras pasos, usa 1., 2., 3. sin viñetas ni guiones.
+
+Lo que está mejorando
 [observación positiva basada en los datos, interpretada a la luz del desarrollo esperado para la edad]
 
-**Lo que merece atención**
+Lo que merece atención
 [patrón preocupante si existe, o "Sin patrones de alerta por ahora"; si hay patrón, explica brevemente por qué importa para esta etapa]
 
-**Posibles causas**
+Posibles causas
 [hipótesis basadas en los datos y en el marco de desarrollo para esta edad]
 
-**Próximos pasos sugeridos**
-[1-2 acciones concretas, calibradas a la edad, para los próximos días]
+Próximos pasos sugeridos
+[1-2 acciones concretas, calibradas a la edad, para los próximos días; usa 1., 2. si son más de una]
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 1800)
+  return llamarAPI(prompt, 2500)
 }
 
 export async function celebrarHito({ hijo, hito }) {
@@ -412,19 +417,20 @@ export async function analizarReflexionesCuidador(reflexiones) {
     .map((r, i) => `${i + 1}. (${r.tipoEpisodio}, ${r.fecha}): "${r.texto}"`)
     .join('\n')
 
-  const prompt = `Eres un acompanante empatico para padres y madres que cuidan a hijos con desafios de desarrollo o conductuales.
+  const prompt = `Eres un acompañante empático para padres y madres que cuidan a hijos con desafíos de desarrollo o conductuales.
 
-El padre o la madre ha compartido estas reflexiones personales al cerrar episodios dificiles:
+El padre o la madre ha compartido estas reflexiones personales al cerrar episodios difíciles:
 ${lista}
 
-Escribe un parrafo corto (maximo 100 palabras) que:
+Escribe un párrafo corto (máximo 100 palabras) que:
 - Reconozca el esfuerzo sostenido de este cuidador
-- Conecte lo que expreso en sus propias palabras con el proceso que esta viviendo
-- Valide su capacidad de reflexionar como una fortaleza real del vinculo con su hijo/a
+- Conecte lo que expresó en sus propias palabras con el proceso que está viviendo
+- Valide su capacidad de reflexionar como una fortaleza real del vínculo con su hijo/a
 - NO repita textualmente ninguna de las frases
-- NO ofrezca consejos ni diagnosticos
-- Hable en segunda persona al padre/madre
-- Tono calido, directo y concreto`
+- NO ofrezca consejos ni diagnósticos
+- Hable en segunda persona al padre/madre usando TÚ (tú, tienes, haces — nunca vos, tenés, hacés)
+- Tono cálido, directo y concreto
+- PROHIBIDO markdown en la respuesta: nada de #, ##, **, *, _ ni símbolos de formato`
 
   return llamarAPI(prompt, 250)
 }
