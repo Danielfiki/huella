@@ -85,9 +85,25 @@ Tablas con Row Level Security activo:
 - `hitos`: id, user_id, categoria, descripcion, fecha
 - `estrategias`: id, user_id, habilidad, descripcion, plan, fecha_inicio, semana_actual
 
-### 11. PDF exportable
-- Botón "Exportar informe PDF" en el historial (lazy-loaded)
-- Incluye historial clínico completo: episodios, estrategias, hitos
+### 11. PDF clínico exportable *(mejorado 2026-05-06)*
+- Botón "Descargar informe PDF" en el historial (lazy-loaded via `PDFSection.jsx`)
+- **Secciones del informe** (en orden):
+  1. **Vista General**: contexto del hijo, 3 métricas con % delta (últimos 30 días vs período anterior), conteos de estrategias activas/completadas. Cuando no hay período previo, muestra snapshot histórico total + primer registro + mensaje contextual.
+  2. **Resumen Ejecutivo**: análisis de patrones generado por IA (`interpretarPatrones`)
+  3. **Análisis clínico** por sección: gatillantes frecuentes, estrategias activas, hitos positivos
+  4. **Reflexiones del Cuidador**: análisis IA empático de hasta 10 reflexiones. Muestra las 3 más recientes con fecha y tipo de episodio. Se omite si hay menos de 3 reflexiones con texto.
+  5. Episodios completos con orientación IA por episodio
+- **Manejo de errores IA**: si falla la llamada a Anthropic, muestra estado de error con botón "Reintentar" y opción "Descargar sin resumen" (con texto placeholder)
+- **Fuentes tipográficas** *(resuelto 2026-05-06)*:
+  - 9 archivos TTF estáticos en `/public/fonts/` (un archivo por peso/estilo, sin variable fonts)
+  - Plus Jakarta Sans: Regular, Medium, SemiBold, Bold, Italic
+  - Fraunces: `_72pt-Regular`, `_72pt-SemiBold`, `_72pt-Bold`, `_72pt-Italic`
+  - `Font.registerHyphenationCallback(word => [word])` como mitigación GSUB adicional
+  - Tabla GSUB eliminada de los 9 TTF con `scripts/strip-gsub.mjs` (renombra el tag GSUB→XSUB en el binario — fontkit no la encuentra y nunca aplica sustituciones de ligaduras fi/fl)
+- **Formato del texto IA en el PDF** *(resuelto 2026-05-06)*:
+  - La IA devuelve texto plano (sin markdown). Los títulos de sección se detectan por string exacto en `renderOrientacion` y se pintan con `s.mdHeading` (negrita, color terracota)
+  - `SECTION_TITLES` Set en `InformePDF.jsx` con los 7 títulos reconocidos: "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas", "Próximos pasos sugeridos"
+  - El check de `**texto**` se mantiene como fallback para orientaciones antiguas guardadas en Supabase
 
 ---
 
@@ -224,7 +240,21 @@ Ver `api/anthropic.js` — el system prompt completo está implementado con todo
 
 ---
 
-## Diseño y UX
+## Diseño y UX *(actualizado 2026-05-05)*
+
+### CLAUDE.md
+- Creado en raíz del proyecto con: descripción de Huella, stack técnico, reglas inmutables del sistema de diseño (SIEMPRE/NUNCA), instrucciones de handoff desde Claude Design, estilo de comunicación, workflow de sesión.
+
+### Claude Design
+- Setup completado en claude.ai/design — design system generado leyendo el repo
+- **Pendiente**: subir los 9 TTF estáticos nuevos al asset panel de Claude Design (los variables viejos ya no existen en el repo)
+
+### CSS consolidado (index.css) *(2026-05-05)*
+- Todos los tokens de color, tipografía, sombras y radios consolidados en `src/index.css`
+- **Imperfecciones conocidas** (documentadas, no bloqueantes):
+  - Blues (`--color-blue`, `--color-blue-bg`, etc.) no completamente consolidados — algunos valores hex directos pueden quedar en módulos legacy
+  - `--color-accent` duplicado con un valor diferente en el bloque dark mode
+  - `--color-warning` comparte valor con `--color-primary-light` — ambos son el mismo terracota claro
 
 ### Sistema de tokens (index.css)
 - **Fondo**: `--color-bg: #FBF7F2` (crema cálido) · `--color-surface: #FFFFFF` · `--color-surface-alt: #F5EEE6`
@@ -244,4 +274,14 @@ Ver `api/anthropic.js` — el system prompt completo está implementado con todo
 
 ---
 
-*Última actualización: 2026-04-21*
+---
+
+## Pendientes próxima sesión
+
+1. **Verificar visualmente el PDF en producción** — generar un informe y confirmar que: (a) no aparecen ligaduras rotas como "identifcados" o "Refexión", (b) los títulos de sección se ven en negrita/terracota, (c) el Resumen Ejecutivo no se corta y el "Marco aplicado:" entra completo, (d) no hay voseo en el texto de la IA
+2. **Subir fuentes estáticas a Claude Design** — los 9 TTF nuevos (`PlusJakartaSans-Regular.ttf`, etc. y los `Fraunces_72pt-*.ttf`) al asset panel de claude.ai/design (reemplaza los variables viejos)
+3. **Paso 3 del rediseño visual: jerarquía de tarjetas** — usando Claude Design para generar los mockups antes de implementar
+
+---
+
+*Última actualización: 2026-05-06*
