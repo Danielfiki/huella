@@ -1,0 +1,67 @@
+.card {
+  background: var(--color-surface);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card-soft);
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.head h4 {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.range {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.cell {
+  text-align: center;
+  padding: 6px 4px;
+  border-right: 1px solid var(--color-border);
+}
+.cell:last-child { border-right: none; }
+.num {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+.numTang { color: var(--color-primary); }
+.emo {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
+}
+.lbl {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+.dash {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-light);
+}

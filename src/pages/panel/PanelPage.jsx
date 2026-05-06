@@ -1,26 +1,39 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, TrendingUp, ChevronRight } from 'lucide-react'
+import { Plus, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
 import { interpretarPatrones, generarConsejoDiario } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
-import RespuestaIA from '../../components/ui/RespuestaIA'
-import { renderMarkdown } from '../../utils/renderMarkdown'
-import GraficoFrecuenciaSemanal from '../../modules/panel/GraficoFrecuenciaSemanal'
-import GraficoIntensidad from '../../modules/panel/GraficoIntensidad'
-import GraficoGatillantes from '../../modules/panel/GraficoGatillantes'
-import GraficoDiaSemana from '../../modules/panel/GraficoDiaSemana'
-import GraficoTipos from '../../modules/panel/GraficoTipos'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import BienvenidaModal from '../../components/ui/BienvenidaModal'
-import TooltipAyuda from '../../components/ui/TooltipAyuda'
+import { Hero } from '../../components/panel/Hero'
+import { CTAPrimary } from '../../components/panel/CTAPrimary'
+import { CTAAskHuella } from '../../components/panel/CTAAskHuella'
+import { ResumenSemanal } from '../../components/panel/ResumenSemanal'
+import { ChartFrecuencia } from '../../components/panel/ChartFrecuencia'
+import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
+import { ChartGatillos } from '../../components/panel/ChartGatillos'
+import { AnalisisIA } from '../../components/panel/AnalisisIA'
+import { SectionEyebrow } from '../../components/panel/SectionEyebrow'
+import panelStyles from '../../components/panel/panel.module.css'
 import styles from './PanelPage.module.css'
 
-const CATEGORIA_EMOJIS = {
-  autorregulacion: '🌱', empatia: '💛', disculpa: '🤝',
-  frustration: '💪', social: '👫', otro: '⭐',
+// ── Emoji mapping for free-form trigger labels ──────────────────────────────
+
+const GATILLANTE_EMOJIS = {
+  comida: '🍽️', hambre: '🍽️', comer: '🍽️', almuerzo: '🍽️', desayuno: '🍽️',
+  sueño: '😴', dormir: '😴', cansancio: '😴', siesta: '😴',
+  escuela: '🏫', colegio: '🏫', tarea: '📚', jardín: '🏫',
+  hermano: '👫', hermanos: '👫', hermana: '👧',
+  pantallas: '📱', televisión: '📺', tele: '📺', celular: '📱', tablet: '📱',
+  rutina: '🔄', transición: '🚪', cambio: '🔄',
+  aburrimiento: '😑', juego: '🎮',
+  dolor: '💊', enfermedad: '🤒',
+  baño: '🚿', ducha: '🚿',
+  salida: '🚪', llegada: '🚪',
+  visita: '👥', social: '👥',
 }
 
 const CONTEXTOS_ESTRATEGIA = {
@@ -32,94 +45,14 @@ const CONTEXTOS_ESTRATEGIA = {
   'Concentrarse y calmarse':            { emoji: '🧘' },
 }
 
-function buildGreeting(hora, padreNombre, nombreHijo, edadHijo) {
-  const saludoHora = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'
-  const hijoLabel = edadHijo != null
-    ? `${nombreHijo} (${edadHijo} ${edadHijo === 1 ? 'año' : 'años'})`
-    : nombreHijo
-  const preguntaHora = hora < 12
-    ? `¿Cómo empezó el día con ${hijoLabel}?`
-    : hora < 20
-    ? `¿Cómo va la tarde con ${hijoLabel}?`
-    : `¿Cómo estuvo hoy con ${hijoLabel}?`
-
-  if (padreNombre) {
-    return { titulo: `Hola, ${padreNombre} 👋`, subtitulo: preguntaHora }
-  }
-  return { titulo: `${saludoHora} 👋`, subtitulo: preguntaHora }
+const CATEGORIA_EMOJIS = {
+  autorregulacion: '🌱', empatia: '💛', disculpa: '🤝',
+  frustration: '💪', social: '👫', otro: '⭐',
 }
 
-function buildResumenEmocional(episodios, hitos) {
-  const hace7 = new Date()
-  hace7.setDate(hace7.getDate() - 7)
-  const semana = episodios.filter((e) => new Date(e.fecha) >= hace7)
-  const total = semana.length
-  const hitosSemana = hitos.filter((h) => new Date(h.fecha) >= hace7).length
-  const promedio = total > 0
-    ? (semana.reduce((s, e) => s + (e.intensidad || 0), 0) / total).toFixed(1)
-    : 0
-  const diasSin = episodios.length > 0
-    ? Math.floor((new Date() - new Date(episodios[0].fecha)) / 864e5)
-    : null
+const DIAS_LABEL = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
 
-  if (diasSin !== null && diasSin >= 5) {
-    return { emoji: '🌱', frase: `Llevas ${diasSin} días sin registrar.`, detalle: 'Las semanas tranquilas también merecen un registro. Volver al hábito ayuda a ver el patrón.' }
-  }
-  if (total === 0) {
-    return { emoji: '✨', frase: 'Sin episodios esta semana.', detalle: 'Eso también es información valiosa. ¡Sigue así!' }
-  }
-  if (total >= 6) {
-    return { emoji: '💪', frase: `Semana intensa: ${total} episodios registrados.`, detalle: `Que los hayas anotado todos ya es un gran paso. Intensidad promedio ${promedio}/5.` }
-  }
-  if (hitosSemana > 0 && total > 0) {
-    return { emoji: '⚖️', frase: `${total} ${total === 1 ? 'episodio difícil' : 'episodios difíciles'} y ${hitosSemana} ${hitosSemana === 1 ? 'momento positivo' : 'momentos positivos'}.`, detalle: 'Registrar las dos caras de la semana es lo que construye el mapa completo de tu hijo.' }
-  }
-  if (Number(promedio) <= 2) {
-    return { emoji: '🌿', frase: `${total} ${total === 1 ? 'episodio' : 'episodios'} esta semana, con baja intensidad.`, detalle: 'Los episodios leves también construyen el patrón. Buen trabajo registrando.' }
-  }
-  return { emoji: '💪', frase: `Esta semana tuviste ${total} ${total === 1 ? 'momento difícil' : 'momentos difíciles'}, pero los registraste todos.`, detalle: `Intensidad promedio ${promedio}/5. Eso dice mucho de ti como padre/madre.` }
-}
-
-function ResumenEmocionalCard({ episodios, hitos }) {
-  const hace7 = new Date()
-  hace7.setDate(hace7.getDate() - 7)
-  const semana = episodios.filter((e) => new Date(e.fecha) >= hace7)
-  const total = semana.length
-  const hitosSemana = hitos.filter((h) => new Date(h.fecha) >= hace7).length
-  const promedio = total > 0
-    ? (semana.reduce((s, e) => s + (e.intensidad || 0), 0) / total).toFixed(1)
-    : '—'
-
-  const { emoji, frase, detalle } = buildResumenEmocional(episodios, hitos)
-
-  return (
-    <Card className={styles.resumenCard}>
-      <div className={styles.resumenTop}>
-        <span className={styles.resumenEmoji}>{emoji}</span>
-        <div className={styles.resumenTextos}>
-          <p className={styles.resumenFrase}>{frase}</p>
-          <p className={styles.resumenDetalle}>{detalle}</p>
-        </div>
-      </div>
-      <div className={styles.resumenStats}>
-        <div className={styles.resumenStat}>
-          <span className={styles.resumenStatNum}>{total}</span>
-          <span className={styles.resumenStatLabel}>episodios</span>
-        </div>
-        <div className={styles.resumenStatDivider} />
-        <div className={styles.resumenStat}>
-          <span className={styles.resumenStatNum}>{promedio}</span>
-          <span className={styles.resumenStatLabel}>intensidad</span>
-        </div>
-        <div className={styles.resumenStatDivider} />
-        <div className={styles.resumenStat}>
-          <span className={styles.resumenStatNum}>{hitosSemana}</span>
-          <span className={styles.resumenStatLabel}>hitos ⭐</span>
-        </div>
-      </div>
-    </Card>
-  )
-}
+// ── Componentes locales preservados ──────────────────────────────────────────
 
 function EstadoVacio({ nombreHijo, onRegistrar }) {
   return (
@@ -164,25 +97,25 @@ function UltimoHitoCard({ hito, onVerLogros }) {
       onClick={onVerLogros}
       style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
-        background: '#fff', border: '1.5px solid #f0e6de', borderRadius: '14px',
-        padding: '12px 14px', marginBottom: '12px', cursor: 'pointer', textAlign: 'left',
-        boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+        background: 'var(--color-surface)', border: '1.5px solid var(--color-primary-border)',
+        borderRadius: 'var(--radius-md)', padding: '12px 14px', cursor: 'pointer',
+        textAlign: 'left', boxShadow: 'var(--shadow-sm)',
       }}
     >
       {hito.foto_url
         ? <img src={hito.foto_url} alt="Logro" style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />
-        : <div style={{ width: '52px', height: '52px', borderRadius: '10px', background: '#fdf0e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>{emoji}</div>
+        : <div style={{ width: '52px', height: '52px', borderRadius: '10px', background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>{emoji}</div>
       }
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#c96f45', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Último avance</p>
-        <p style={{ margin: '2px 0 0', fontSize: '14px', color: '#3a2e28', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Último avance</p>
+        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {hito.descripcion || emoji}
         </p>
-        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#8a7a70' }}>
+        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
           {new Date(hito.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
         </p>
       </div>
-      <ChevronRight size={16} style={{ color: '#c96f45', flexShrink: 0 }} />
+      <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
     </button>
   )
 }
@@ -195,10 +128,8 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
 
   useEffect(() => {
     if (!user?.id) return
-
     const hasData = episodios.length >= 2 || hitos.length >= 1
     if (!hasData) return
-
     setVisible(true)
 
     const today = new Date().toISOString().split('T')[0]
@@ -230,10 +161,7 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
         {previewText && !abierto && (
           <span className={styles.consejoPreview}>{previewText}</span>
         )}
-        <button
-          className={styles.consejoBubble}
-          aria-label="Tu consejo de hoy"
-        >
+        <button className={styles.consejoBubble} aria-label="Tu consejo de hoy">
           💡
         </button>
       </div>
@@ -243,13 +171,7 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
           <div className={styles.consejoModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.consejoModalHeader}>
               <span className={styles.consejoModalTitle}>💡 Tu consejo de hoy</span>
-              <button
-                className={styles.consejoModalClose}
-                onClick={() => setAbierto(false)}
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
+              <button className={styles.consejoModalClose} onClick={() => setAbierto(false)} aria-label="Cerrar">✕</button>
             </div>
             <div className={styles.consejoModalBody}>
               {loadingFrase
@@ -268,60 +190,36 @@ function ConsejoBubble({ user, hijo, episodios, hitos, estrategias }) {
   )
 }
 
-export default function PanelPage() {
-  const { user } = useAuth()
-  const { state, setHijoActivo } = useHuella()
-  const navigate = useNavigate()
-  const [analisis, setAnalisis] = useState('')
-  const [loadingAnalisis, setLoadingAnalisis] = useState(false)
+// ── Computaciones de narrativas ───────────────────────────────────────────────
 
-  const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
-  const nombreHijo = hijo?.nombre || 'tu hijo/a'
-  const hora = new Date().getHours()
-  const { titulo, subtitulo } = buildGreeting(hora, padreNombre, nombreHijo, hijo?.edad)
-
-  const estrategiaActiva = useMemo(
-    () => (estrategias || []).find((e) => e.semanaActual < 4),
-    [estrategias]
-  )
-
-  const ultimoHitoConFoto = useMemo(
-    () => hitos.find((h) => h.foto_url),
-    [hitos]
-  )
-
-  // ── Narrativas de gráficos ────────────────────────────────────────────────
-
-  const narrativaFrecuencia = useMemo(() => {
+function useNarrativaFrecuencia(episodios, estrategias) {
+  return useMemo(() => {
     if (episodios.length < 3) return null
     const now = new Date()
     const monday = new Date(now)
     monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
     monday.setHours(0, 0, 0, 0)
     const weeks = Array.from({ length: 6 }, (_, i) => {
-      const start = new Date(monday)
-      start.setDate(monday.getDate() - (5 - i) * 7)
-      const end = new Date(start)
-      end.setDate(start.getDate() + 7)
+      const start = new Date(monday); start.setDate(monday.getDate() - (5 - i) * 7)
+      const end = new Date(start); end.setDate(start.getDate() + 7)
       return { start, end }
     })
-    const counts = weeks.map((w) =>
-      episodios.filter((e) => { const f = new Date(e.fecha); return f >= w.start && f < w.end }).length
+    const counts = weeks.map(w =>
+      episodios.filter(e => { const f = new Date(e.fecha); return f >= w.start && f < w.end }).length
     )
     const current = counts[5]
     const prev5 = counts.slice(0, 5)
     const prevWeek = counts[4]
     const avg5 = prev5.reduce((s, c) => s + c, 0) / 5
-    const hasHistory = prev5.some((c) => c > 0)
+    const hasHistory = prev5.some(c => c > 0)
 
-    // Impacto de estrategia (si empezó ≥14 días antes)
-    const estActiva = estrategias.find((e) => e.fechaInicio)
+    const estActiva = estrategias.find(e => e.fechaInicio)
     if (estActiva) {
       const inicio = new Date(estActiva.fechaInicio)
       const diasDesde = (Date.now() - inicio) / 864e5
       if (diasDesde >= 14) {
-        const antes = episodios.filter((e) => new Date(e.fecha) < inicio)
-        const despues = episodios.filter((e) => new Date(e.fecha) >= inicio)
+        const antes = episodios.filter(e => new Date(e.fecha) < inicio)
+        const despues = episodios.filter(e => new Date(e.fecha) >= inicio)
         if (antes.length >= 3 && despues.length >= 3) {
           const tasaAntes = antes.length / Math.max((inicio - new Date(antes.at(-1).fecha)) / 864e5, 1)
           const tasaDespues = despues.length / diasDesde
@@ -334,8 +232,7 @@ export default function PanelPage() {
     }
 
     if (current === 0) return 'Sin episodios esta semana 🌱'
-    if (hasHistory && prev5.every((c) => c === 0 || current < c))
-      return 'Mejor semana en los últimos 30 días 📈'
+    if (hasHistory && prev5.every(c => c === 0 || current < c)) return 'Mejor semana en los últimos 30 días 📈'
     if (prevWeek > 0 && current <= prevWeek * 0.6) {
       const pct = Math.round((1 - current / prevWeek) * 100)
       return `${pct}% menos episodios que la semana pasada 💪`
@@ -348,12 +245,14 @@ export default function PanelPage() {
     }
     return `${current} episodio${current !== 1 ? 's' : ''} esta semana — dentro de tu promedio`
   }, [episodios, estrategias])
+}
 
-  const narrativaIntensidad = useMemo(() => {
+function useNarrativaIntensidad(episodios) {
+  return useMemo(() => {
     const data = [...episodios].reverse().slice(-20)
     if (data.length < 4) return null
     const half = Math.floor(data.length / 2)
-    const avg = (arr) => arr.reduce((s, e) => s + e.intensidad, 0) / arr.length
+    const avg = arr => arr.reduce((s, e) => s + e.intensidad, 0) / arr.length
     const firstAvg = avg(data.slice(0, half))
     const secondAvg = avg(data.slice(-half))
     const delta = secondAvg - firstAvg
@@ -364,100 +263,139 @@ export default function PanelPage() {
       return `Los episodios recientes son más intensos (${secondAvg.toFixed(1)}/5) — considera reforzar la estrategia`
     return `Intensidad estable en los últimos registros — promedio ${overallAvg}/5`
   }, [episodios])
+}
 
-  const narrativaDiaSemana = useMemo(() => {
-    if (episodios.length < 5) return null
-    const counts = [0, 0, 0, 0, 0, 0, 0]
-    for (const ep of episodios) {
-      const d = new Date(ep.fecha).getDay()
-      counts[d === 0 ? 6 : d - 1]++
-    }
-    const DIAS_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
-    const peak = counts.indexOf(Math.max(...counts))
-    const total = counts.reduce((s, c) => s + c, 0)
-    const pct = Math.round((counts[peak] / total) * 100)
-    const weekend = counts[5] + counts[6]
-    const weekday = total - weekend
-    if (pct >= 30) return `El ${DIAS_FULL[peak]} concentra el ${pct}% de los episodios — algo pasa ese día`
-    if (weekend > 0 && weekday > 0 && weekend / 2 > (weekday / 5) * 1.5)
-      return 'Los fines de semana son más intensos — los cambios de rutina pueden estar influyendo'
-    return 'Los episodios se distribuyen en varios días — no hay un día claramente más difícil'
-  }, [episodios])
+// ── Página principal ──────────────────────────────────────────────────────────
 
-  const narrativaTipos = useMemo(() => {
-    const counts = {}
-    for (const ep of episodios) {
-      if (ep.tipo) counts[ep.tipo] = (counts[ep.tipo] || 0) + 1
-    }
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
-    if (entries.length === 0) return null
-    const total = entries.reduce((s, [, c]) => s + c, 0)
-    const [topTipo, topCount] = entries[0]
-    const TIPO_LABELS = {
-      rabieta: 'rabietas', llanto: 'llanto', agresividad: 'agresividad',
-      miedo: 'miedo', sueño: 'problemas de sueño', oposicion: 'oposición',
-      social: 'dificultades sociales', desconexion: 'desconexión', otro: 'otro tipo',
-    }
-    const label = TIPO_LABELS[topTipo] || topTipo
-    const pct = Math.round((topCount / total) * 100)
-    if (entries.length === 1) return `Todos los episodios son de ${label}`
-    if (pct >= 50) return `El ${pct}% de los episodios son ${label} — el patrón más claro`
-    if (entries.length >= 3) return `Los episodios varían entre ${entries.length} tipos — el contexto importa más que el tipo`
-    return `${label} es el tipo más frecuente (${pct}%)`
-  }, [episodios])
+export default function PanelPage() {
+  const { user } = useAuth()
+  const { state, setHijoActivo } = useHuella()
+  const navigate = useNavigate()
+  const [analisis, setAnalisis] = useState('')
+  const [loadingAnalisis, setLoadingAnalisis] = useState(false)
+  const analisisRef = useRef(null)
 
-  const contextoSemanal = useMemo(() => {
-    if (episodios.length === 0) return null
+  const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
+  const nombreHijo = hijo?.nombre || 'tu hijo/a'
+  const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
+
+  const estrategiaActiva = useMemo(
+    () => (estrategias || []).find(e => e.semanaActual < 4),
+    [estrategias]
+  )
+
+  const ultimoHitoConFoto = useMemo(
+    () => hitos.find(h => h.foto_url),
+    [hitos]
+  )
+
+  // ── Datos para ResumenSemanal ────────────────────────────────────────────
+
+  const weekData = useMemo(() => {
     const now = new Date()
-    const dow = (now.getDay() + 6) % 7
-    const startThisWeek = new Date(now)
-    startThisWeek.setDate(now.getDate() - dow)
-    startThisWeek.setHours(0, 0, 0, 0)
-    const startLastWeek = new Date(startThisWeek)
-    startLastWeek.setDate(startThisWeek.getDate() - 7)
-    const thisWeek = episodios.filter((e) => new Date(e.fecha) >= startThisWeek).length
-    const lastWeek = episodios.filter((e) => {
-      const f = new Date(e.fecha); return f >= startLastWeek && f < startThisWeek
-    }).length
-    if (thisWeek === 0 && lastWeek === 0) return null
-    const nombre = hijo?.nombre || 'Tu hijo/a'
-    const ep = (n) => n === 1 ? 'episodio' : 'episodios'
-    if (thisWeek === 0) return `${nombre} no tuvo episodios esta semana.`
-    if (lastWeek === 0) return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana.`
-    const diff = thisWeek - lastWeek
-    if (diff === 0) return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana, igual que la anterior.`
-    const absDiff = Math.abs(diff)
-    return `${nombre} tuvo ${thisWeek} ${ep(thisWeek)} esta semana, ${absDiff} ${diff < 0 ? 'menos' : 'más'} que la anterior.`
-  }, [episodios, hijo])
+    const hace7  = new Date(now); hace7.setDate(now.getDate() - 7)
+    const hace14 = new Date(now); hace14.setDate(now.getDate() - 14)
+    const rangeEnd   = now
+    const rangeStart = hace7
 
-  const narrativaGatillantes = useMemo(() => {
+    const thisWeekEps = episodios.filter(e => new Date(e.fecha) >= hace7)
+    const prevWeekEps = episodios.filter(e => { const f = new Date(e.fecha); return f >= hace14 && f < hace7 })
+
+    const episodes     = thisWeekEps.length
+    const prevEpisodes = prevWeekEps.length
+    const episodesDelta    = episodes - prevEpisodes
+    const episodesDeltaPct = prevEpisodes > 0 ? episodesDelta / prevEpisodes : 0
+
+    const intensityAvg = episodes > 0
+      ? thisWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / episodes
+      : 0
+    const prevIntensityAvg = prevEpisodes > 0
+      ? prevWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / prevEpisodes
+      : 0
+    const intensityDelta = intensityAvg - prevIntensityAvg
+
+    const hace30 = new Date(now); hace30.setDate(now.getDate() - 30)
+    const gCounts = {}
+    for (const ep of episodios.filter(e => new Date(e.fecha) >= hace30)) {
+      for (const g of ep.gatillantes || []) gCounts[g] = (gCounts[g] || 0) + 1
+    }
+    const topG = Object.entries(gCounts).sort((a, b) => b[1] - a[1])[0]
+    const topTriggerLabel = topG?.[0] || null
+    const topTriggerEmoji = topTriggerLabel
+      ? (GATILLANTE_EMOJIS[topTriggerLabel.toLowerCase()] || '⭐')
+      : null
+
+    const showDeltas = episodes >= 3 && prevEpisodes > 0
+
+    return {
+      rangeStart, rangeEnd,
+      episodes, episodesDelta, episodesDeltaPct,
+      intensityAvg, intensityDelta,
+      topTriggerEmoji, topTriggerLabel,
+      showDeltas,
+    }
+  }, [episodios])
+
+  // ── Datos para gráficos ──────────────────────────────────────────────────
+
+  const frecData = useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now); d.setDate(now.getDate() - (6 - i)); d.setHours(0, 0, 0, 0)
+      const next = new Date(d); next.setDate(d.getDate() + 1)
+      const dayIdx = (d.getDay() + 6) % 7
+      return {
+        day: DIAS_LABEL[dayIdx],
+        count: episodios.filter(e => { const f = new Date(e.fecha); return f >= d && f < next }).length,
+      }
+    })
+  }, [episodios])
+
+  const intData = useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now); d.setDate(now.getDate() - (6 - i)); d.setHours(0, 0, 0, 0)
+      const next = new Date(d); next.setDate(d.getDate() + 1)
+      const dayIdx = (d.getDay() + 6) % 7
+      const dayEps = episodios.filter(e => { const f = new Date(e.fecha); return f >= d && f < next })
+      const avg = dayEps.length > 0 ? dayEps.reduce((s, e) => s + (e.intensidad || 0), 0) / dayEps.length : 0
+      return { day: DIAS_LABEL[dayIdx], value: avg }
+    })
+  }, [episodios])
+
+  const gatillosTop3 = useMemo(() => {
+    const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30)
     const counts = {}
-    for (const ep of episodios) {
+    for (const ep of episodios.filter(e => new Date(e.fecha) >= hace30)) {
       for (const g of ep.gatillantes || []) counts[g] = (counts[g] || 0) + 1
     }
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
-    if (entries.length === 0) return null
-    const [topName, topCount] = entries[0]
-    const totalConGatillante = episodios.filter((e) => e.gatillantes?.length > 0).length
-    if (totalConGatillante === 0) return null
-
-    // ¿Está aumentando en las últimas 4 semanas?
-    const hace28 = new Date(); hace28.setDate(hace28.getDate() - 28)
-    const recientes = episodios.filter((e) => new Date(e.fecha) >= hace28)
-    const countReciente = recientes.filter((e) => e.gatillantes?.includes(topName)).length
-    const pctReciente = recientes.length > 0 ? countReciente / recientes.length : 0
-    const pctTotal = topCount / totalConGatillante
-
-    if (pctReciente > pctTotal * 1.4 && countReciente >= 3)
-      return `«${topName}» aparece cada vez más — algo cambió recientemente`
-    if (entries.length >= 3 && entries[0][1] <= entries[2][1] * 1.4)
-      return 'Los gatillantes varían — no hay uno dominante, el contexto importa más'
-    if (pctTotal >= 0.5)
-      return `«${topName}» aparece en más de la mitad de los episodios — el patrón más claro`
-    return `«${topName}» es el gatillante más frecuente con ${topCount} ${topCount === 1 ? 'aparición' : 'apariciones'}`
+    const BG = ['pill-emocion-bg', 'leaf-bg', 'info-bg']
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([label, count], i) => ({
+        emoji: GATILLANTE_EMOJIS[label.toLowerCase()] || '⭐',
+        label,
+        count,
+        bgToken: BG[i],
+      }))
   }, [episodios])
 
+  const narrativaFrecuencia = useNarrativaFrecuencia(episodios, estrategias)
+  const narrativaIntensidad = useNarrativaIntensidad(episodios)
+
+  // ── Scroll al análisis cuando se activa ─────────────────────────────────
+
+  useEffect(() => {
+    if (loadingAnalisis) {
+      setTimeout(() => {
+        analisisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+    }
+  }, [loadingAnalisis])
+
   async function handleAnalizarPatrones() {
+    if (loadingAnalisis) return
     setLoadingAnalisis(true)
     try {
       const texto = await interpretarPatrones({ hijo, episodios })
@@ -469,151 +407,114 @@ export default function PanelPage() {
     }
   }
 
-  return (
-    <div className={styles.page}>
+  // ── Render ───────────────────────────────────────────────────────────────
 
+  return (
+    <div className={panelStyles.panel}>
       <BienvenidaModal />
       <GuiaPrimerosPasos totalEpisodios={episodios.length} />
 
-      {/* ── Saludo ── */}
-      <div className={styles.greeting}>
-        {hijo?.avatarUrl
-          ? <img src={hijo.avatarUrl} alt="Avatar" className={styles.greetingAvatar} />
-          : <div className={styles.greetingAvatarPlaceholder}>{nombreHijo.charAt(0).toUpperCase()}</div>
-        }
-        <div className={styles.greetingText}>
-          <h1 className={styles.greetingTitulo}>{titulo}<TooltipAyuda texto="Registra lo que pasa con tu hijo/a. Con el tiempo Huella identifica patrones y te da orientación concreta." /></h1>
-          {hijo && <p className={styles.greetingSubtitulo}>{subtitulo}</p>}
-          {!hijo && <p className={styles.greetingSubtitulo}>Configura el perfil de tu hijo/a para empezar.</p>}
-        </div>
-      </div>
+      <Hero
+        userName={userName}
+        childName={nombreHijo}
+        date={new Date()}
+        onProfileClick={() => navigate('/perfil')}
+      />
 
-      {/* ── Contexto semanal ── */}
-      {contextoSemanal && (
-        <p className={styles.contextoSemanal}>{contextoSemanal}</p>
-      )}
+      <main className={panelStyles.body}>
 
-      {/* ── Selector de hijo activo (solo si hay más de uno) ── */}
-      {hijos.length > 1 && (
-        <div className={styles.selectorHijos}>
-          {hijos.map((h) => (
+        {/* ── Selector de hijo (solo si hay más de uno) ── */}
+        {hijos.length > 1 && (
+          <div className={styles.selectorHijos}>
+            {hijos.map(h => (
+              <button
+                key={h.id}
+                type="button"
+                className={`${styles.selectorChip} ${h.id === state.hijoActivoId ? styles.selectorChipActivo : ''}`}
+                onClick={() => setHijoActivo(h.id)}
+              >
+                {h.nombre}
+              </button>
+            ))}
             <button
-              key={h.id}
               type="button"
-              className={`${styles.selectorChip} ${h.id === state.hijoActivoId ? styles.selectorChipActivo : ''}`}
-              onClick={() => setHijoActivo(h.id)}
+              className={styles.selectorAddBtn}
+              onClick={() => navigate('/hijo?nuevo=true')}
+              aria-label="Agregar hijo"
             >
-              {h.nombre}
+              <Plus size={14} />
             </button>
-          ))}
-          <button
-            type="button"
-            className={styles.selectorAddBtn}
-            onClick={() => navigate('/hijo?nuevo=true')}
-            aria-label="Agregar hijo"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-      )}
+          </div>
+        )}
 
-      {episodios.length === 0 ? (
+        {/* ── CTA primario ── */}
+        <CTAPrimary onClick={() => navigate('/nuevo')} />
 
-        /* ── Estado vacío ── */
-        <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
+        {/* ── CTA Pregúntale a Huella (visible solo con datos suficientes) ── */}
+        {episodios.length >= 3 && (
+          <CTAAskHuella
+            onClick={handleAnalizarPatrones}
+            loading={loadingAnalisis}
+          />
+        )}
 
-      ) : (
-        <>
+        {episodios.length === 0 ? (
 
-          {/* ── Último hito con foto ── */}
-          {ultimoHitoConFoto && (
-            <UltimoHitoCard hito={ultimoHitoConFoto} onVerLogros={() => navigate('/hitos')} />
-          )}
+          /* ── Estado vacío ── */
+          <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
 
-          {/* ── CTA registrar ── */}
-          <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/nuevo')}>
-            <Plus size={20} />
-            Registrar episodio
-          </Button>
+        ) : (
+          <>
+            {ultimoHitoConFoto && (
+              <UltimoHitoCard hito={ultimoHitoConFoto} onVerLogros={() => navigate('/hitos')} />
+            )}
 
-          {/* ── Estrategia activa ── */}
-          {estrategiaActiva && (
-            <EstrategiaActivaPanel
-              estrategia={estrategiaActiva}
-              onAbrir={() => navigate('/estrategias')}
-            />
-          )}
+            {/* ── Resumen semanal ── */}
+            <SectionEyebrow>Esta semana · contexto</SectionEyebrow>
+            <ResumenSemanal data={weekData} />
 
-          {/* ── Gráficos ── */}
-          {episodios.length >= 3 && (
-            <>
-              <Card className={styles.graficoCard} staggerDelay={0}>
-                <h3 className={styles.cardTitle}>Frecuencia semanal</h3>
-                <GraficoFrecuenciaSemanal episodios={episodios} estrategiaInicio={estrategiaActiva?.fechaInicio} />
-                {narrativaFrecuencia && (
-                  <p className={styles.narrativa}>{narrativaFrecuencia}</p>
-                )}
-              </Card>
-              <Card className={styles.graficoCard} staggerDelay={60}>
-                <h3 className={styles.cardTitle}>Distribución por día</h3>
-                <GraficoDiaSemana episodios={episodios} />
-                {narrativaDiaSemana && (
-                  <p className={styles.narrativa}>{narrativaDiaSemana}</p>
-                )}
-              </Card>
-              <Card className={styles.graficoCard} staggerDelay={120}>
-                <h3 className={styles.cardTitle}>Intensidad en el tiempo</h3>
-                <GraficoIntensidad episodios={episodios} />
-                {narrativaIntensidad && (
-                  <p className={styles.narrativa}>{narrativaIntensidad}</p>
-                )}
-              </Card>
-              <Card className={styles.graficoCard} staggerDelay={180}>
-                <h3 className={styles.cardTitle}>Tipos de episodio</h3>
-                <GraficoTipos episodios={episodios} />
-                {narrativaTipos && (
-                  <p className={styles.narrativa}>{narrativaTipos}</p>
-                )}
-              </Card>
-              <Card className={styles.graficoCard} staggerDelay={240}>
-                <h3 className={styles.cardTitle}>Gatillantes más frecuentes</h3>
-                <GraficoGatillantes episodios={episodios} />
-                {narrativaGatillantes && (
-                  <p className={styles.narrativa}>{narrativaGatillantes}</p>
-                )}
-              </Card>
-            </>
-          )}
-
-          {/* ── Análisis de patrones ── */}
-          <Card className={styles.patronesCard} staggerDelay={300}>
-            <div className={styles.patronesHeader}>
-              <TrendingUp size={18} />
-              <h3>Análisis de patrones</h3>
-            </div>
-            <p className={styles.patronesDesc}>
-              {episodios.length < 3
-                ? 'Registra al menos 3 episodios para activar el análisis de patrones.'
-                : `Tienes ${episodios.length} episodios registrados. La IA puede identificar patrones.`}
-            </p>
+            {/* ── Gráficos (desde 3 episodios) ── */}
             {episodios.length >= 3 && (
               <>
-                <Button variant="secondary" fullWidth onClick={handleAnalizarPatrones} loading={loadingAnalisis} className={styles.patronesBtn}>
-                  Ver análisis de patrones
-                </Button>
-                {!loadingAnalisis && (
-                  <p className={styles.patronesHint}>La IA revisa tus registros y encuentra conexiones — tarda ~10 segundos</p>
-                )}
+                <SectionEyebrow>Cómo se ve la semana</SectionEyebrow>
+                <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
+                <ChartIntensidad data={intData} caption={narrativaIntensidad} />
+                {gatillosTop3.length > 0 && <ChartGatillos data={gatillosTop3} />}
               </>
             )}
-            {(analisis || loadingAnalisis) && (
-              <RespuestaIA texto={analisis} loading={loadingAnalisis} mensajeCarga="Identificando patrones en el historial..." categoria="patrones" />
-            )}
-          </Card>
-        </>
-      )}
 
-      <ConsejoBubble user={user} hijo={hijo} episodios={episodios} hitos={hitos} estrategias={estrategias} />
+            {/* ── Estrategia activa ── */}
+            {estrategiaActiva && (
+              <EstrategiaActivaPanel
+                estrategia={estrategiaActiva}
+                onAbrir={() => navigate('/estrategias')}
+              />
+            )}
+
+            {/* ── Análisis IA (desde 3 episodios) ── */}
+            {episodios.length >= 3 && (
+              <div ref={analisisRef}>
+                <SectionEyebrow>Análisis de patrones</SectionEyebrow>
+                <AnalisisIA
+                  loading={loadingAnalisis}
+                  texto={analisis}
+                  onAnalizar={handleAnalizarPatrones}
+                  onAccept={() => navigate('/estrategias')}
+                  onDismiss={() => setAnalisis('')}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <ConsejoBubble
+        user={user}
+        hijo={hijo}
+        episodios={episodios}
+        hitos={hitos}
+        estrategias={estrategias}
+      />
     </div>
   )
 }

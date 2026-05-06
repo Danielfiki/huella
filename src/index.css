@@ -12,6 +12,7 @@
   --color-surface: #FFFFFF;
   --color-surface-alt: #EDE4D8;
   --color-border: #E8DACE;
+  --color-white: #FFFFFF;
 
   /* ── Primario — Tangerine ── */
   --color-primary: #E56E26;
@@ -93,6 +94,7 @@
   --radius-md: 16px;
   --radius-lg: 20px;
   --radius-xl: 28px;
+  --radius-cta: 22px;
 
   /* ── Sombras ── */
   --shadow-sm: 0 2px 12px rgba(42, 26, 14, 0.06);
@@ -101,6 +103,10 @@
   --shadow-racha: 0 4px 20px rgba(193, 127, 94, 0.3);
   --shadow-primary-sm: 0 6px 16px rgba(230, 138, 92, 0.3);
   --shadow-primary-md: 0 8px 20px rgba(230, 138, 92, 0.4);
+  --shadow-card-soft: 0 4px 14px rgba(42, 26, 14, 0.05);
+  --shadow-card-medium: 0 6px 18px rgba(42, 26, 14, 0.06);
+  --shadow-cta-primary: 0 12px 28px rgba(229, 110, 38, 0.32);
+  --shadow-fab: 0 8px 18px rgba(229, 110, 38, 0.4);
 
   /* ── Scrim ── */
   --color-scrim: rgba(0, 0, 0, 0.45);
@@ -174,6 +180,10 @@
     --shadow-racha: 0 4px 20px rgba(0, 0, 0, 0.50);
     --shadow-primary-sm: 0 6px 16px rgba(0, 0, 0, 0.40);
     --shadow-primary-md: 0 8px 20px rgba(0, 0, 0, 0.50);
+    --shadow-card-soft: 0 4px 14px rgba(0, 0, 0, 0.35);
+    --shadow-card-medium: 0 6px 18px rgba(0, 0, 0, 0.40);
+    --shadow-cta-primary: 0 12px 28px rgba(229, 110, 38, 0.45);
+    --shadow-fab: 0 8px 18px rgba(229, 110, 38, 0.5);
     --color-scrim: rgba(0, 0, 0, 0.60);
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);
