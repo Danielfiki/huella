@@ -610,6 +610,17 @@ function pctDelta(actual, anterior) {
 
 // ── Markdown renderer ──────────────────────────────────────────────────────
 // Convierte el markdown de la IA (negritas, listas) en elementos react-pdf.
+
+const SECTION_TITLES = new Set([
+  'Qué está pasando',
+  'Qué hacer ahora',
+  'Qué evitar',
+  'Lo que está mejorando',
+  'Lo que merece atención',
+  'Posibles causas',
+  'Próximos pasos sugeridos',
+])
+
 function renderInlineBold(line) {
   const parts = line.split(/\*\*([^*]+)\*\*/g)
   if (parts.length === 1) return line
@@ -634,7 +645,13 @@ function renderOrientacion(text) {
       return
     }
 
-    // Encabezado: **texto** solo (toda la línea entre **)
+    // Título de sección conocido (texto plano, sin markdown)
+    if (SECTION_TITLES.has(line.trim())) {
+      elements.push(<Text key={i} style={s.mdHeading}>{line.trim()}</Text>)
+      return
+    }
+
+    // Encabezado markdown **texto** — compatibilidad con orientaciones guardadas en formato antiguo
     if (/^\*\*[^*]+\*\*$/.test(line.trim())) {
       const content = line.trim().replace(/^\*\*|\*\*$/g, '')
       elements.push(<Text key={i} style={s.mdHeading}>{content}</Text>)
