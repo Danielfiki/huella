@@ -5,6 +5,7 @@
   border-radius: var(--radius-lg);
   padding: 18px 20px;
   box-shadow: var(--shadow-card-medium);
+  margin-top: 16px;
 }
 .head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .logo {
