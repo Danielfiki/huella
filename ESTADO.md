@@ -276,11 +276,30 @@ Ver `api/anthropic.js` — el system prompt completo está implementado con todo
 
 ---
 
+### 12. Rediseño visual del Panel de Inicio *(implementado 2026-05-06)*
+
+Implementado desde handoff `handoff-panel-inicio.md` (guardado en raíz del proyecto):
+- **Hero mocha** full-width con saludo dinámico por franja horaria (madrugada/mañana/tarde/noche), fecha formateada, botón de perfil, wordmark "huella"
+- **CTAPrimary** — botón tangerina grande con gradiente, sombra y glyph "+" como acción dominante → navega a `/nuevo`
+- **CTAAskHuella** — card secundaria "Pregúntale a Huella" → dispara `interpretarPatrones()` y hace scroll automático a la sección de análisis
+- **ResumenSemanal** — 3 tiles (episodios + delta %, intensidad media + delta, top gatillo con emoji) con `showDeltas` condicional (≥3 episodios de semana anterior)
+- **ChartFrecuencia** — barras verticales 7 días con peak destacado en gradiente tangerina, caption narrativo
+- **ChartIntensidad** — sparkline SVG mocha con área degradada, punto peak y punto final, caption narrativo
+- **ChartGatillos** — ranking horizontal con emoji por chip, barra de progreso mocha, mapping `GATILLANTE_EMOJIS`
+- **AnalisisIA** — 3 estados: idle (prompt)/loading/resultado con título extraído de primera línea, botones "Ver estrategias" + "Cerrar" (o "Reintentar" en error)
+- **SectionEyebrow** — etiqueta tipográfica entre secciones
+- **Delta** — indicador de cambio con `positiveDirection` (para esta app siempre "down")
+- 6 tokens nuevos en `src/index.css`: `--shadow-card-soft`, `--shadow-card-medium`, `--shadow-cta-primary`, `--shadow-fab`, `--radius-cta: 22px`, `--color-white`; con overrides dark mode
+- Toda la funcionalidad existente preservada: ConsejoBubble, EstrategiaActivaPanel, EstadoVacio, selector de hijos múltiples, UltimoHitoCard, BienvenidaModal, GuiaPrimerosPasos
+- 22 archivos nuevos en `src/components/panel/` (10 JSX + 11 CSS modules + 1 panel.module.css)
+
+---
+
 ## Pendientes próxima sesión
 
-1. **Verificar visualmente el PDF en producción** — generar un informe y confirmar que: (a) no aparecen ligaduras rotas como "identifcados" o "Refexión", (b) los títulos de sección se ven en negrita/terracota, (c) el Resumen Ejecutivo no se corta y el "Marco aplicado:" entra completo, (d) no hay voseo en el texto de la IA
-2. **Subir fuentes estáticas a Claude Design** — los 9 TTF nuevos (`PlusJakartaSans-Regular.ttf`, etc. y los `Fraunces_72pt-*.ttf`) al asset panel de claude.ai/design (reemplaza los variables viejos)
-3. **Paso 3 del rediseño visual: jerarquía de tarjetas** — usando Claude Design para generar los mockups antes de implementar
+1. **Verificar visualmente el panel rediseñado en producción** (huella-theta.vercel.app) — confirmar: (a) Hero mocha se ve completo arriba, (b) CTAPrimary tiene la sombra tangerina, (c) CTAAskHuella hace scroll y dispara el análisis, (d) ResumenSemanal muestra los 3 tiles, (e) gráficos visibles desde 3+ episodios
+2. **Verificar el PDF en producción** — ligaduras, títulos de sección, sin voseo
+3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
 
 ---
 
