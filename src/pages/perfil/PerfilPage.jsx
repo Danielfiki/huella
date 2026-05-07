@@ -7,6 +7,7 @@ import { useFamily } from '../../context/FamilyContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import ConsejoBubble from '../../components/ui/ConsejoBubble'
 import styles from './PerfilPage.module.css'
 
 function isoToDisplay(iso) {
@@ -593,6 +594,14 @@ export default function PerfilPage() {
           Términos y privacidad
         </Link>
       </p>
+
+      <ConsejoBubble
+        user={user}
+        hijo={state.hijo}
+        episodios={state.episodios}
+        hitos={state.hitos}
+        estrategias={state.estrategias}
+      />
     </div>
   )
 }

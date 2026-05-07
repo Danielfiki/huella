@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 16px;
   padding-bottom: 24px;
+  position: relative;
 }
 
 .titulo {

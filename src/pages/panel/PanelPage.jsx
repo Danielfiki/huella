@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
-import { interpretarPatrones, generarConsejoDiario } from '../../services/anthropic'
+import { interpretarPatrones } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
@@ -117,76 +117,6 @@ function UltimoHitoCard({ hito, onVerLogros }) {
       </div>
       <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
     </button>
-  )
-}
-
-function ConsejoBubble({ user, hijo, episodios, hitos, estrategias, hidden = false }) {
-  const [frase, setFrase] = useState(null)
-  const [loadingFrase, setLoadingFrase] = useState(false)
-  const [visible, setVisible] = useState(false)
-  const [abierto, setAbierto] = useState(false)
-
-  useEffect(() => {
-    if (!user?.id) return
-    const hasData = episodios.length >= 2 || hitos.length >= 1
-    if (!hasData) return
-    setVisible(true)
-
-    const today = new Date().toISOString().split('T')[0]
-    const fraseKey = `huella_consejo_v7_${user.id}_${today}`
-    try {
-      const cached = localStorage.getItem(fraseKey)
-      if (cached) { setFrase(cached); return }
-    } catch {}
-
-    setLoadingFrase(true)
-    generarConsejoDiario({ hijo, episodios, hitos, estrategias })
-      .then((text) => {
-        setFrase(text)
-        try { localStorage.setItem(fraseKey, text) } catch {}
-      })
-      .catch(() => {})
-      .finally(() => setLoadingFrase(false))
-  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!visible || hidden) return null
-
-  const previewText = frase && !loadingFrase
-    ? frase.replace(/[#*_`]/g, '').trim().split(/\s+/).slice(0, 7).join(' ') + '…'
-    : null
-
-  return (
-    <>
-      <div className={styles.consejoBubbleWrap} onClick={() => setAbierto(true)}>
-        {previewText && !abierto && (
-          <span className={styles.consejoPreview}>{previewText}</span>
-        )}
-        <button className={styles.consejoBubble} aria-label="Tu consejo de hoy">
-          💡
-        </button>
-      </div>
-
-      {abierto && (
-        <div className={styles.consejoOverlay} onClick={() => setAbierto(false)}>
-          <div className={styles.consejoModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.consejoModalHeader}>
-              <span className={styles.consejoModalTitle}>💡 Tu consejo de hoy</span>
-              <button className={styles.consejoModalClose} onClick={() => setAbierto(false)} aria-label="Cerrar">✕</button>
-            </div>
-            <div className={styles.consejoModalBody}>
-              {loadingFrase
-                ? <p className={styles.consejoModalCargando}>Preparando tu consejo…</p>
-                : <div className={styles.consejoModalTexto}>{
-                    frase?.split(/\*([^*]+)\*/).map((part, i) =>
-                      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
-                    )
-                  }</div>
-              }
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   )
 }
 
@@ -508,14 +438,6 @@ export default function PanelPage() {
         )}
       </main>
 
-      <ConsejoBubble
-        user={user}
-        hijo={hijo}
-        episodios={episodios}
-        hitos={hitos}
-        estrategias={estrategias}
-        hidden={loadingAnalisis || !!analisis}
-      />
     </div>
   )
 }
