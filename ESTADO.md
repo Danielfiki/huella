@@ -297,7 +297,7 @@ Implementado desde handoff `handoff-panel-inicio.md` (guardado en raíz del proy
 
 ### 13. Rediseño visual del Historial *(implementado 2026-05-07)*
 
-Implementado desde handoff `handoff-historial.md` (guardado en raíz del proyecto):
+Implementado desde handoff `handoff-historial-cronologico-denso` (zip en Downloads):
 - **HistorialHeader** — barra mocha con gradientes de luz, título "Historial", búsqueda, estadísticas (Momentos · Intensidad media · rango dinámico), botón PDF con dot indicador (solo Pro)
 - **FiltroChips** — sticky bar con 3 filtros: Todos / Difíciles / Avances + chips de contexto hijo y rango
 - **EpisodioCard** — grid emoji-tile + body: emoji tile coloreado (5 colores), título, hora, delete con confirmación, descripción, pills coloreadas por categoría de gatillante (5 tonos), IntensidadDots (5 dots), botón inline "Ver orientación" con panel OrientacionIA expandible `grid-column: 1/-1`
@@ -312,13 +312,25 @@ Implementado desde handoff `handoff-historial.md` (guardado en raíz del proyect
 - Fix handoff: `--color-error` → `--color-danger` en `--color-int-peak`
 - 16 archivos nuevos en `src/components/historial/` (7 JSX + 8 CSS modules + 1 helpers.js)
 
+**Fixes post-implementación (misma sesión):**
+- Botón PDF centrado durante loading: Suspense fallback cambiado de `<p>` a `<button className={pdfLoadingBtn}>` con spinner Loader; `width: 100%` en `.link` de `GenerarInformeBtn.module.css` para que `<button>` se comporte igual que `<a>`
+- Lupa (buscador inline) conectada al filtro real: `showSearch` + `busqueda` state en HistorialPage; input con autoFocus y botón ✕; filtro en `filtered` useMemo sobre descripción, descripcionLibre y gatillantes (con fallback `|| ''` y soporte para gatillantes objeto con `.nombre`)
+- Espaciado buscador→contenido: `.busquedaWrap` con `padding-bottom: 12px` en lugar de 0
+
+---
+
+### 14. Fixes del Panel de Inicio *(2026-05-07)*
+
+- **ConsejoBubble movido del Panel al Perfil del hijo** — libera espacio visual en el Panel de Inicio; aparece ahora en la pantalla de perfil de cada hijo
+- **Avatar del Hero muestra foto del hijo activo** — `Hero.jsx` acepta prop `childAvatarUrl`; si existe muestra `<img object-fit:cover>`, si no muestra inicial del nombre del hijo (antes mostraba inicial del padre). Campo real en el contexto: `hijo.avatarUrl` (mapeado desde `avatar_url` en Supabase). Círculo agrandado de 40px → 48px con `font-size: 16px` y `overflow: hidden`. Click sigue navegando a `/perfil`
+
 ---
 
 ## Pendientes próxima sesión
 
-1. **Verificar visualmente el Historial rediseñado en producción** (huella-theta.vercel.app) — confirmar: (a) header mocha con stats, (b) FiltroChips sticky, (c) pills coloreadas en cards, (d) panel OrientacionIA expande y cierra, (e) delete funciona, (f) reflexión se guarda, (g) filtro Difíciles/Avances filtra correctamente
-2. **Verificar visualmente el Panel de Inicio rediseñado** — Hero mocha, CTAPrimary, gráficos
-3. **Verificar el PDF en producción** — ligaduras, títulos de sección, sin voseo
+1. **Rediseño de la pantalla Estrategias** — mismo flujo: Claude Design genera 3 enfoques conceptuales → elegimos → mockup visual → handoff bundle → Claude Code implementa con adaptaciones
+2. **Verificar visualmente en producción** (huella-theta.vercel.app): (a) Historial — header mocha, FiltroChips, pills coloreadas, OrientacionIA expandible, delete, reflexión, buscador inline, filtros; (b) Panel — avatar del hijo en el Hero, ConsejoBubble en Perfil
+3. **Verificar el PDF en producción** — ligaduras, títulos de sección
 4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
 
 ---
