@@ -295,12 +295,32 @@ Implementado desde handoff `handoff-panel-inicio.md` (guardado en raíz del proy
 
 ---
 
-## Pendientes próxima sesión
+### 13. Rediseño visual del Historial *(implementado 2026-05-07)*
 
-1. **Verificar visualmente el panel rediseñado en producción** (huella-theta.vercel.app) — confirmar: (a) Hero mocha se ve completo arriba, (b) CTAPrimary tiene la sombra tangerina, (c) CTAAskHuella hace scroll y dispara el análisis, (d) ResumenSemanal muestra los 3 tiles, (e) gráficos visibles desde 3+ episodios
-2. **Verificar el PDF en producción** — ligaduras, títulos de sección, sin voseo
-3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+Implementado desde handoff `handoff-historial.md` (guardado en raíz del proyecto):
+- **HistorialHeader** — barra mocha con gradientes de luz, título "Historial", búsqueda, estadísticas (Momentos · Intensidad media · rango dinámico), botón PDF con dot indicador (solo Pro)
+- **FiltroChips** — sticky bar con 3 filtros: Todos / Difíciles / Avances + chips de contexto hijo y rango
+- **EpisodioCard** — grid emoji-tile + body: emoji tile coloreado (5 colores), título, hora, delete con confirmación, descripción, pills coloreadas por categoría de gatillante (5 tonos), IntensidadDots (5 dots), botón inline "Ver orientación" con panel OrientacionIA expandible `grid-column: 1/-1`
+- **Features existentes preservadas**: delete con confirmación, reflexión editable con guardar, badge "Seguimiento hecho", botón "¿Cómo siguió?" condicional
+- **DaySeparator** — separador con label (Hoy/Ayer/día de semana/rango), meta count, punto tangerina para "Hoy"
+- **IntensidadDots** — 5 dots con semántica: empty/low/peak/calm según tipo e intensidad
+- **OrientacionIA** — panel inline con badge "h", label, título parseado, resumen; sin botón "Ver completo" (simplificado)
+- **Adapter de datos**: merge episodios + hitos en lista unificada normalizada; mapper tipo→emoji/titulo; intensidad→nivel; orientacion_ia text→{titulo,resumen,completa}; parser SECTION_TITLES para extraer titulo legible
+- **PDF clínico**: integrado en header (solo Pro) con lazy PDFSection; dot indicador desaparece al activar
+- **EstrategiaActiva removida del historial** — quedó solo en Panel de Inicio
+- 17 tokens CSS nuevos en `src/index.css` (pills saturadas ×10, intensity dots ×4, stat colors ×3) con dark mode overrides
+- Fix handoff: `--color-error` → `--color-danger` en `--color-int-peak`
+- 16 archivos nuevos en `src/components/historial/` (7 JSX + 8 CSS modules + 1 helpers.js)
 
 ---
 
-*Última actualización: 2026-05-06*
+## Pendientes próxima sesión
+
+1. **Verificar visualmente el Historial rediseñado en producción** (huella-theta.vercel.app) — confirmar: (a) header mocha con stats, (b) FiltroChips sticky, (c) pills coloreadas en cards, (d) panel OrientacionIA expande y cierra, (e) delete funciona, (f) reflexión se guarda, (g) filtro Difíciles/Avances filtra correctamente
+2. **Verificar visualmente el Panel de Inicio rediseñado** — Hero mocha, CTAPrimary, gráficos
+3. **Verificar el PDF en producción** — ligaduras, títulos de sección, sin voseo
+4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+
+---
+
+*Última actualización: 2026-05-07*
