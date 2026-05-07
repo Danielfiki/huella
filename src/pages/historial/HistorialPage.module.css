@@ -29,10 +29,55 @@
   margin: 0;
 }
 
-.pdfLoading {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  padding: 16px 0;
-  text-align: center;
-  margin: 0;
+/* ─── Buscador inline ─── */
+.busquedaWrap {
+  position: relative;
+  padding: 10px 20px 0;
 }
+.busquedaInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 36px 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary-light);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.busquedaInput:focus { border-color: var(--color-primary); }
+.busquedaInput::placeholder { color: var(--color-text-light); }
+.busquedaClear {
+  position: absolute;
+  right: 30px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  font-size: 13px; color: var(--color-text-muted);
+  cursor: pointer; padding: 4px;
+  line-height: 1;
+}
+
+/* ─── PDF loading btn (Suspense fallback) ─── */
+.pdfLoadingBtn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: wait;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+@keyframes pdfSpin { to { transform: rotate(360deg); } }
+.pdfSpin { animation: pdfSpin 0.8s linear infinite; }

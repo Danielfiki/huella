@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+import { Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 import HistorialHeader from '../../components/historial/HistorialHeader'
@@ -53,6 +54,8 @@ export default function HistorialPage() {
   const { episodios, hitos, hijo, estrategias } = state
 
   const [filtro, setFiltro] = useState('todos')
+  const [showSearch, setShowSearch] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
   const [pdfActivado, setPdfActivado] = useState(false)
 
@@ -116,10 +119,21 @@ export default function HistorialPage() {
   )
 
   const filtered = useMemo(() => {
-    if (filtro === 'dificiles') return episodiosNorm.filter((e) => e.nivel >= 3)
-    if (filtro === 'logros') return hitosNorm
-    return todosUnificados
-  }, [filtro, todosUnificados, episodiosNorm, hitosNorm])
+    let result
+    if (filtro === 'dificiles') result = episodiosNorm.filter((e) => e.nivel >= 3)
+    else if (filtro === 'logros') result = hitosNorm
+    else result = todosUnificados
+
+    if (busqueda.trim()) {
+      const q = busqueda.toLowerCase()
+      result = result.filter(
+        (ep) =>
+          ep.descripcion?.toLowerCase().includes(q) ||
+          (ep.gatillantes || []).some((g) => g.toLowerCase().includes(q))
+      )
+    }
+    return result
+  }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda])
 
   const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
 
@@ -157,7 +171,7 @@ export default function HistorialPage() {
   if (totalRegistros === 0) {
     return (
       <div className={styles.page}>
-        <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => {}} />
+        <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />
         <div className={styles.empty}>
           <p className={styles.emptyText}>
             Sin registros aún — cuando empieces a registrar, aquí aparecerá todo.
@@ -174,7 +188,7 @@ export default function HistorialPage() {
         promedio={promedio}
         rango={rango}
         onBack={() => navigate(-1)}
-        onSearch={() => {}}
+        onSearch={() => { setShowSearch((s) => !s); setBusqueda('') }}
         onExportPDF={proConEpisodios ? () => setPdfActivado(true) : undefined}
         hasNewExport={proConEpisodios && !pdfActivado}
       />
@@ -185,9 +199,34 @@ export default function HistorialPage() {
         hijo={hijo?.nombre}
         rango={rango}
       />
+      {showSearch && (
+        <div className={styles.busquedaWrap}>
+          <input
+            className={styles.busquedaInput}
+            type="text"
+            autoFocus
+            placeholder="Buscar por contexto o gatillante…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          {busqueda && (
+            <button className={styles.busquedaClear} onClick={() => setBusqueda('')}>
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={styles.body}>
         {pdfActivado && (
-          <Suspense fallback={<p className={styles.pdfLoading}>Cargando PDF…</p>}>
+          <Suspense
+            fallback={
+              <button className={styles.pdfLoadingBtn} disabled>
+                <Loader size={15} className={styles.pdfSpin} />
+                Preparando informe…
+              </button>
+            }
+          >
             <PDFSection
               hijo={hijo}
               episodios={episodios}
