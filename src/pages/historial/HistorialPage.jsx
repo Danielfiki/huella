@@ -1,13 +1,14 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, ChevronDown, ChevronUp, Trash2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
-import UpgradeModal from '../../components/ui/UpgradeModal'
-import Card from '../../components/ui/Card'
-import RespuestaIA from '../../components/ui/RespuestaIA'
-import GenerarInformeBtn from '../../modules/pdf/GenerarInformeBtn'
-import TooltipAyuda from '../../components/ui/TooltipAyuda'
+import HistorialHeader from '../../components/historial/HistorialHeader'
+import FiltroChips from '../../components/historial/FiltroChips'
+import DaySeparator from '../../components/historial/DaySeparator'
+import EpisodioCard from '../../components/historial/EpisodioCard'
+import { groupEpisodios } from '../../components/historial/helpers'
 import styles from './HistorialPage.module.css'
+
+const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
 
 const TIPOS = {
   rabieta:     { label: 'Rabieta / explosión',              emoji: '💥' },
@@ -21,87 +22,6 @@ const TIPOS = {
   otro:        { label: 'Otro',                             emoji: '📝' },
 }
 
-const HABILIDAD_A_TIPOS = {
-  'Calmarse cuando explota':                      ['rabieta', 'agresividad', 'desconexion'],
-  'Aceptar el "no" sin crisis':                   ['oposicion'],
-  'Manejar el miedo y la angustia':               ['miedo', 'llanto'],
-  'Concentrarse y calmarse':                      ['sueño'],
-  'Relacionarse mejor con otros niños':           ['social'],
-  'Manejar los cambios de rutina':                ['rabieta', 'oposicion'],
-  'Mejorar la atención y concentración':          ['sueño', 'desconexion'],
-  'Desarrollar autonomía e independencia':        ['oposicion', 'rabieta'],
-  'Establecer rutinas que funcionen':             ['rabieta', 'oposicion', 'sueño'],
-  'Motivación y autoestima':                      ['desconexion', 'llanto'],
-  'Dificultades en el colegio':                   ['social', 'oposicion', 'desconexion'],
-}
-
-function calcularImpacto(estrategia, episodios) {
-  const inicio = new Date(estrategia.fechaInicio)
-  const ahora = new Date()
-  const diasDesde = Math.max(1, Math.floor((ahora - inicio) / 864e5))
-  const ventanaAntes = new Date(inicio)
-  ventanaAntes.setDate(ventanaAntes.getDate() - diasDesde)
-
-  const tipos = HABILIDAD_A_TIPOS[estrategia.habilidad] || []
-  const tipoLabel = tipos[0] ? (TIPOS[tipos[0]]?.label || estrategia.habilidad) : estrategia.habilidad
-
-  const antes = episodios.filter((e) => {
-    const f = new Date(e.fecha)
-    return f >= ventanaAntes && f < inicio && tipos.includes(e.tipo)
-  }).length
-  const despues = episodios.filter((e) => {
-    const f = new Date(e.fecha)
-    return f >= inicio && tipos.includes(e.tipo)
-  }).length
-
-  // normalizar a tasa semanal para comparar períodos desiguales
-  const ratAntes  = (antes  / diasDesde) * 7
-  const ratDespues = (despues / diasDesde) * 7
-  const diff = ratDespues - ratAntes
-
-  let tendencia, mensaje, detalle
-  if (diasDesde < 5) {
-    tendencia = 'inicio'
-    mensaje = `Llevas ${diasDesde} ${diasDesde === 1 ? 'día' : 'días'} con esta estrategia.`
-    detalle = 'Sigue registrando para ver si hay cambios.'
-  } else if (antes === 0 && despues === 0) {
-    tendencia = 'sin_datos'
-    mensaje = `Sin episodios de "${tipoLabel}" para comparar.`
-    detalle = 'No hay datos suficientes todavía.'
-  } else if (diff < -0.4) {
-    tendencia = 'bajaron'
-    mensaje = `Los episodios de "${tipoLabel}" bajaron.`
-    detalle = `Antes: ${antes} · Después: ${despues}. Algo está funcionando. 💪`
-  } else if (diff > 0.4) {
-    tendencia = 'subieron'
-    mensaje = `Los episodios de "${tipoLabel}" aumentaron.`
-    detalle = `Antes: ${antes} · Después: ${despues}. Puede pasar al inicio — el cambio lleva tiempo.`
-  } else {
-    tendencia = 'igual'
-    mensaje = `Los episodios de "${tipoLabel}" se mantuvieron similares.`
-    detalle = `Antes: ${antes} · Después: ${despues}. Sigue registrando para ver el patrón.`
-  }
-
-  return { diasDesde, tendencia, mensaje, detalle }
-}
-
-const INTENSIDAD_LABEL = ['', 'Muy leve', 'Leve', 'Moderado', 'Intenso', 'Muy intenso']
-const INTENSIDAD_COLOR = ['', '#8FA840', '#EE9452', '#F08070', '#E56E26', '#A07060']
-
-function formatHora(fechaStr) {
-  return new Date(fechaStr).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
-}
-
-function labelDia(fechaStr) {
-  const fecha = new Date(fechaStr)
-  const hoy = new Date()
-  const ayer = new Date()
-  ayer.setDate(hoy.getDate() - 1)
-  if (fecha.toDateString() === hoy.toDateString()) return 'Hoy'
-  if (fecha.toDateString() === ayer.toDateString()) return 'Ayer'
-  return fecha.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
-}
-
 const CATEGORIAS_HITO = {
   autorregulacion: { label: 'Se calmó solo',   emoji: '🌱' },
   empatia:         { label: 'Mostró empatía',  emoji: '💛' },
@@ -111,595 +31,198 @@ const CATEGORIAS_HITO = {
   otro:            { label: 'Otro avance',     emoji: '⭐' },
 }
 
-function agruparPorDia(episodios) {
-  const grupos = new Map()
-  for (const ep of episodios) {
-    const key = new Date(ep.fecha).toDateString()
-    if (!grupos.has(key)) grupos.set(key, { label: labelDia(ep.fecha), episodios: [] })
-    grupos.get(key).episodios.push(ep)
-  }
-  return Array.from(grupos.values())
+const SECTION_TITLES = new Set([
+  'Qué está pasando', 'Qué hacer ahora', 'Qué evitar',
+  'Lo que está mejorando', 'Lo que merece atención',
+  'Posibles causas', 'Próximos pasos sugeridos',
+])
+
+function parseOrientacionIA(text) {
+  if (!text) return null
+  const lines = text.trim().split('\n').filter((l) => l.trim())
+  const rawFirst = lines[0]?.replace(/^[*#\s]+/, '').trim() || ''
+  const titulo = SECTION_TITLES.has(rawFirst) ? 'Orientación de Huella' : rawFirst || 'Orientación de Huella'
+  const bodyLines = lines.slice(1)
+  const resumen = bodyLines.slice(0, 4).join(' ').replace(/\s+/g, ' ').trim()
+  return { titulo, resumen, completa: text }
 }
-
-function agruparItemsPorDia(items) {
-  const grupos = new Map()
-  for (const item of items) {
-    const key = new Date(item.fecha).toDateString()
-    if (!grupos.has(key)) grupos.set(key, { label: labelDia(item.fecha), items: [] })
-    grupos.get(key).items.push(item)
-  }
-  return Array.from(grupos.values())
-}
-
-function HitoHistorialCard({ hito, onDelete, staggerDelay = 0 }) {
-  const [confirmando, setConfirmando] = useState(false)
-  const [eliminando, setEliminando] = useState(false)
-  const cat = CATEGORIAS_HITO[hito.categoria] || { label: hito.categoria || 'Avance', emoji: '⭐' }
-
-  async function handleEliminar() {
-    setEliminando(true)
-    try {
-      await onDelete(hito.id)
-    } catch {
-      setEliminando(false)
-      setConfirmando(false)
-    }
-  }
-
-  return (
-    <Card className={`${styles.card} ${styles.cardHito}`} staggerDelay={staggerDelay}>
-      <div className={styles.hitoCardTop}>
-        <span className={styles.hitoEmoji}>{cat.emoji}</span>
-        <div>
-          <p className={styles.tipoLabel}>{cat.label}</p>
-          <p className={styles.hora}>
-            {new Date(hito.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-        <span className={styles.hitoBadge}>avance</span>
-        {!confirmando ? (
-          <button
-            className={styles.deleteBtn}
-            onClick={() => setConfirmando(true)}
-            title="Eliminar avance"
-          >
-            <Trash2 size={14} />
-          </button>
-        ) : (
-          <div className={styles.confirmWrap}>
-            <button
-              className={styles.confirmSiBtn}
-              onClick={handleEliminar}
-              disabled={eliminando}
-            >
-              {eliminando ? '...' : 'Eliminar'}
-            </button>
-            <button
-              className={styles.confirmNoBtn}
-              onClick={() => setConfirmando(false)}
-              disabled={eliminando}
-            >
-              No
-            </button>
-          </div>
-        )}
-      </div>
-      {hito.descripcion ? (
-        <p className={styles.contexto}>{hito.descripcion}</p>
-      ) : null}
-      {hito.foto_url ? (
-        <img
-          src={hito.foto_url}
-          alt="Foto del avance"
-          className={styles.hitoFoto}
-          onClick={() => window.open(hito.foto_url, '_blank')}
-        />
-      ) : null}
-    </Card>
-  )
-}
-
-function EpisodioCard({ ep, onDelete, onUpdate, conEstrategia, tieneCheckin, staggerDelay = 0 }) {
-  const navigate = useNavigate()
-  const horasDesde = (Date.now() - new Date(ep.fecha)) / 3600000
-  const mostrarBotonCheckin = !tieneCheckin && horasDesde >= 20 && horasDesde <= 48
-
-  const [expandido, setExpandido] = useState(false)
-  const [confirmando, setConfirmando] = useState(false)
-  const [eliminando, setEliminando] = useState(false)
-  const [reflexion, setReflexion] = useState(ep.reflexion ?? '')
-  const [guardando, setGuardando] = useState(false)
-  const [guardado, setGuardado] = useState(false)
-  const guardadoTimerRef = useRef(null)
-  const tipo = TIPOS[ep.tipo] || { label: ep.tipo, emoji: '📝' }
-
-  const reflexionDirty = reflexion !== (ep.reflexion ?? '')
-
-  async function handleEliminar() {
-    setEliminando(true)
-    try {
-      await onDelete(ep.id)
-    } catch {
-      setEliminando(false)
-      setConfirmando(false)
-    }
-  }
-
-  async function handleGuardarReflexion() {
-    setGuardando(true)
-    try {
-      await onUpdate({ id: ep.id, reflexion: reflexion || null })
-      clearTimeout(guardadoTimerRef.current)
-      setGuardado(true)
-      guardadoTimerRef.current = setTimeout(() => setGuardado(false), 2500)
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <Card className={styles.card} staggerDelay={staggerDelay}>
-      <div className={styles.cardTop}>
-        <div className={styles.tipoWrap}>
-          <span className={styles.emoji}>{tipo.emoji}</span>
-          <div>
-            <p className={styles.tipoLabel}>{tipo.label}</p>
-            <div className={styles.horaRow}>
-              <p className={styles.hora}>{formatHora(ep.fecha)}</p>
-              {conEstrategia && (
-                <span className={styles.estrategiaBadge}>con estrategia activa</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className={styles.cardTopRight}>
-          <span
-            className={styles.intensidadBadge}
-            style={{ background: INTENSIDAD_COLOR[ep.intensidad] }}
-          >
-            {INTENSIDAD_LABEL[ep.intensidad]}
-          </span>
-          {!confirmando ? (
-            <button
-              className={styles.deleteBtn}
-              onClick={() => setConfirmando(true)}
-              title="Eliminar episodio"
-            >
-              <Trash2 size={14} />
-            </button>
-          ) : (
-            <div className={styles.confirmWrap}>
-              <button
-                className={styles.confirmSiBtn}
-                onClick={handleEliminar}
-                disabled={eliminando}
-              >
-                {eliminando ? '...' : 'Eliminar'}
-              </button>
-              <button
-                className={styles.confirmNoBtn}
-                onClick={() => setConfirmando(false)}
-                disabled={eliminando}
-              >
-                No
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {ep.contexto ? (
-        <p className={styles.contexto}>{ep.contexto}</p>
-      ) : null}
-
-      {ep.gatillantes?.length > 0 ? (
-        <div className={styles.gatillantes}>
-          {ep.gatillantes.map((g) => (
-            <span key={g} className={styles.gatillante}>{g}</span>
-          ))}
-        </div>
-      ) : null}
-
-      {(ep.emocion || ep.estadoPadre) ? (
-        <div className={styles.emocionEstadoRow}>
-          {ep.emocion && (
-            <span className={styles.emocionPill}>
-              <span className={styles.emocionPillLabel}>niño/a</span>
-              {ep.emocion}
-            </span>
-          )}
-          {ep.estadoPadre && (
-            <span className={styles.estadoPill}>
-              <span className={styles.estadoPillLabel}>yo</span>
-              {ep.estadoPadre}
-            </span>
-          )}
-        </div>
-      ) : null}
-
-      {ep.descripcionLibre ? (
-        <div className={styles.descripcionLibreWrap}>
-          <span className={styles.descripcionLibreLabel}>Relato del momento</span>
-          <p className={styles.descripcionLibre}>{ep.descripcionLibre}</p>
-        </div>
-      ) : null}
-
-      {ep.orientacionIA ? (
-        <>
-          <button
-            className={styles.toggleBtn}
-            onClick={() => setExpandido(!expandido)}
-          >
-            {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            {expandido ? 'Ocultar orientación' : 'Ver orientación de Huella'}
-          </button>
-          {expandido && <RespuestaIA texto={ep.orientacionIA} compact />}
-        </>
-      ) : null}
-
-      <div className={styles.reflexionWrap}>
-        <span className={styles.reflexionLabel}>Mi reflexión</span>
-        <textarea
-          className={styles.reflexionTextarea}
-          placeholder="¿Qué aprendiste de este momento? ¿Qué harías diferente?"
-          value={reflexion}
-          onChange={(e) => { setReflexion(e.target.value); setGuardado(false) }}
-          rows={reflexion ? undefined : 2}
-        />
-        {(reflexionDirty || guardado) && (
-          <div className={styles.reflexionActions}>
-            {guardado ? (
-              <span className={styles.reflexionGuardado}>✓ Guardado</span>
-            ) : (
-              <button
-                className={styles.reflexionBtn}
-                onClick={handleGuardarReflexion}
-                disabled={guardando}
-              >
-                {guardando ? 'Guardando…' : 'Guardar reflexión'}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {tieneCheckin && (
-        <div style={{ marginTop: '10px' }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            fontSize: '12px', fontWeight: 600, color: '#4a9e6f',
-            background: '#edf7f2', borderRadius: '20px', padding: '4px 10px',
-          }}>
-            ✓ Seguimiento hecho
-          </span>
-        </div>
-      )}
-      {mostrarBotonCheckin && (
-        <button
-          onClick={() => navigate(`/checkin/${ep.id}`)}
-          style={{
-            marginTop: '10px', width: '100%', padding: '10px',
-            background: '#fdf0e8', color: '#c96f45',
-            border: '1.5px solid #c96f45', borderRadius: '10px',
-            fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-          }}
-        >
-          ¿Cómo siguió? →
-        </button>
-      )}
-    </Card>
-  )
-}
-
-const PESTANAS = [
-  { id: 'todos',     label: 'Todos' },
-  { id: 'episodios', label: 'Episodios' },
-  { id: 'avances',   label: 'Avances' },
-]
 
 export default function HistorialPage() {
+  const navigate = useNavigate()
   const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro } = useHuella()
-  const { episodios, estrategias, hitos, hijo } = state
-  const [pestaña, setPestaña] = useState('todos')
+  const { episodios, hitos, hijo, estrategias } = state
+
+  const [filtro, setFiltro] = useState('todos')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
+  const [pdfActivado, setPdfActivado] = useState(false)
 
   useEffect(() => {
     getCheckinsHechos().then(setCheckinsHechos)
   }, [])
-  const [filtroTipos, setFiltroTipos] = useState(() => new Set())
-  const [filtroIntensidad, setFiltroIntensidad] = useState(null)
-  const [busqueda, setBusqueda] = useState('')
 
-  function toggleFiltroTipo(tipo) {
-    setFiltroTipos((prev) => {
-      const next = new Set(prev)
-      next.has(tipo) ? next.delete(tipo) : next.add(tipo)
-      return next
-    })
-  }
-  function limpiarFiltros() {
-    setFiltroTipos(new Set())
-    setFiltroIntensidad(null)
-    setBusqueda('')
-  }
-  const hayFiltros = filtroTipos.size > 0 || filtroIntensidad !== null || busqueda.trim() !== ''
-
-  const estrategiaActiva = useMemo(
-    () => (estrategias || []).find((e) => e.semanaActual < 4) ?? null,
-    [estrategias]
+  const episodiosNorm = useMemo(
+    () =>
+      episodios.map((ep) => ({
+        id: ep.id,
+        fecha: ep.fecha,
+        emoji: TIPOS[ep.tipo]?.emoji ?? '📝',
+        titulo: TIPOS[ep.tipo]?.label ?? ep.tipo,
+        descripcion: ep.contexto || null,
+        tipo: ep.tipo,
+        nivel: ep.intensidad,
+        gatillantes: ep.gatillantes ?? [],
+        orientacionIA: parseOrientacionIA(ep.orientacionIA),
+        estadoPadre: ep.estadoPadre ?? null,
+        emocion: ep.emocion ?? null,
+        descripcionLibre: ep.descripcionLibre ?? null,
+        reflexion: ep.reflexion ?? null,
+        fotoUrl: ep.fotoUrl ?? null,
+        _source: 'episodio',
+      })),
+    [episodios]
   )
 
-  const impacto = useMemo(
-    () => estrategiaActiva ? calcularImpacto(estrategiaActiva, episodios) : null,
-    [estrategiaActiva, episodios]
-  )
-
-  const episodiosConEstrategia = useMemo(() => {
-    const set = new Set()
-    for (const ep of episodios) {
-      const fEp = new Date(ep.fecha)
-      for (const est of (estrategias || [])) {
-        const fIni = new Date(est.fechaInicio)
-        const fFin = new Date(est.fechaInicio)
-        fFin.setDate(fFin.getDate() + 28)
-        if (fEp >= fIni && fEp <= fFin) { set.add(ep.id); break }
-      }
-    }
-    return set
-  }, [episodios, estrategias])
-
-  const gruposTodos = useMemo(() => {
-    const items = [
-      ...episodios.map((ep) => ({ kind: 'episodio', fecha: ep.fecha, data: ep })),
-      ...hitos.map((h)  => ({ kind: 'hito',     fecha: h.fecha,  data: h  })),
-    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    return agruparItemsPorDia(items)
-  }, [episodios, hitos])
-
-  const episodiosFiltrados = useMemo(() => episodios.filter((ep) => {
-    if (filtroTipos.size > 0 && !filtroTipos.has(ep.tipo)) return false
-    if (filtroIntensidad !== null && ep.intensidad !== filtroIntensidad) return false
-    if (busqueda.trim()) {
-      const q = busqueda.toLowerCase()
-      if (!ep.descripcionLibre?.toLowerCase().includes(q) && !ep.contexto?.toLowerCase().includes(q)) return false
-    }
-    return true
-  }), [episodios, filtroTipos, filtroIntensidad, busqueda])
-
-  const gruposEpisodios = useMemo(() => agruparPorDia(episodiosFiltrados), [episodiosFiltrados])
-
-  const hitosOrdenados = useMemo(
-    () => [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
+  const hitosNorm = useMemo(
+    () =>
+      hitos.map((h) => {
+        const cat = CATEGORIAS_HITO[h.categoria] || { label: h.categoria || 'Avance', emoji: '⭐' }
+        return {
+          id: h.id,
+          fecha: h.fecha,
+          emoji: cat.emoji,
+          titulo: cat.label,
+          descripcion: h.descripcion || null,
+          tipo: 'logro',
+          nivel: null,
+          gatillantes: [],
+          orientacionIA: null,
+          estadoPadre: null,
+          emocion: null,
+          descripcionLibre: null,
+          reflexion: null,
+          fotoUrl: h.foto_url ?? null,
+          _source: 'hito',
+        }
+      }),
     [hitos]
   )
 
-  const ImpactoIcon = impacto?.tendencia === 'bajaron'
-    ? TrendingDown
-    : impacto?.tendencia === 'subieron'
-    ? TrendingUp
-    : Minus
+  const todosUnificados = useMemo(
+    () =>
+      [...episodiosNorm, ...hitosNorm].sort(
+        (a, b) => new Date(b.fecha) - new Date(a.fecha)
+      ),
+    [episodiosNorm, hitosNorm]
+  )
 
-  const hace7 = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 7); return d }, [])
-  const epSemana = useMemo(() => episodios.filter((e) => new Date(e.fecha) >= hace7), [episodios, hace7])
-  const totalSemana = epSemana.length
+  const filtered = useMemo(() => {
+    if (filtro === 'dificiles') return episodiosNorm.filter((e) => e.nivel >= 3)
+    if (filtro === 'logros') return hitosNorm
+    return todosUnificados
+  }, [filtro, todosUnificados, episodiosNorm, hitosNorm])
+
+  const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
+
+  const promedio = useMemo(() => {
+    const vals = episodiosNorm.map((e) => e.nivel).filter((n) => n != null)
+    if (!vals.length) return 0
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
+  }, [episodiosNorm])
+
+  const rango = useMemo(() => {
+    if (!todosUnificados.length) return ''
+    const oldest = new Date(todosUnificados[todosUnificados.length - 1].fecha)
+    const days = Math.ceil((new Date() - oldest) / 86400000)
+    if (days <= 1) return 'Hoy'
+    if (days <= 30) return `Últ. ${days} días`
+    return `Últ. ${Math.ceil(days / 30)} meses`
+  }, [todosUnificados])
+
+  const counts = useMemo(
+    () => ({
+      todos: todosUnificados.length,
+      dificiles: episodiosNorm.filter((e) => e.nivel >= 3).length,
+      logros: hitosNorm.length,
+    }),
+    [todosUnificados, episodiosNorm, hitosNorm]
+  )
 
   const totalRegistros = episodios.length + hitos.length
-  const countLabel =
-    pestaña === 'todos'
-      ? `${totalRegistros} registro${totalRegistros !== 1 ? 's' : ''}`
-      : pestaña === 'episodios'
-      ? hayFiltros
-        ? `${episodiosFiltrados.length} de ${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
-        : `${episodios.length} episodio${episodios.length !== 1 ? 's' : ''}`
-      : `${hitos.length} avance${hitos.length !== 1 ? 's' : ''}`
+  const proConEpisodios = isPro() && episodios.length > 0
+
+  function handleDelete(id, source) {
+    return source === 'hito' ? deleteHito(id) : deleteEpisodio(id)
+  }
 
   if (totalRegistros === 0) {
     return (
       <div className={styles.page}>
-        <h2 className={styles.titulo}>Historial<TooltipAyuda texto="Aquí quedan todos tus registros. Filtra por tipo o intensidad para encontrar patrones." /></h2>
-        <Card className={styles.emptyCard}>
-          <BookOpen size={36} color="var(--color-primary-light)" />
-          <h3>Sin registros aún</h3>
-          <p>Aquí aparecerán tus episodios y avances cuando empieces a registrar.</p>
-        </Card>
+        <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => {}} />
+        <div className={styles.empty}>
+          <p className={styles.emptyText}>
+            Sin registros aún — cuando empieces a registrar, aquí aparecerá todo.
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h2 className={styles.titulo}>Historial<TooltipAyuda texto="Aquí quedan todos tus registros. Filtra por tipo o intensidad para encontrar patrones." /></h2>
-        <span className={styles.count}>{countLabel}</span>
-      </div>
+      <HistorialHeader
+        count={totalRegistros}
+        promedio={promedio}
+        rango={rango}
+        onBack={() => navigate(-1)}
+        onSearch={() => {}}
+        onExportPDF={proConEpisodios ? () => setPdfActivado(true) : undefined}
+        hasNewExport={proConEpisodios && !pdfActivado}
+      />
+      <FiltroChips
+        active={filtro}
+        onChange={setFiltro}
+        counts={counts}
+        hijo={hijo?.nombre}
+        rango={rango}
+      />
+      <div className={styles.body}>
+        {pdfActivado && (
+          <Suspense fallback={<p className={styles.pdfLoading}>Cargando PDF…</p>}>
+            <PDFSection
+              hijo={hijo}
+              episodios={episodios}
+              estrategias={estrategias}
+              hitos={hitos}
+            />
+          </Suspense>
+        )}
 
-      {/* ── Resumen semanal ── */}
-      {episodios.length > 0 && (
-        <div className={styles.semanaCard}>
-          <span className={styles.semanaEmoji}>
-            {totalSemana === 0 ? '🌱' : totalSemana >= 5 ? '💪' : '✨'}
-          </span>
-          <div className={styles.semanaInfo}>
-            <p className={styles.semanaTexto}>
-              {totalSemana === 0
-                ? 'Sin episodios esta semana'
-                : `${totalSemana} ${totalSemana === 1 ? 'episodio' : 'episodios'} esta semana`}
-            </p>
-            <p className={styles.semanaDetalle}>
-              {totalSemana === 0
-                ? 'Las semanas tranquilas también cuentan.'
-                : totalSemana >= 5
-                ? 'Que los hayas anotado ya es un gran paso.'
-                : 'Seguís registrando — eso construye el patrón.'}
-            </p>
-          </div>
-        </div>
-      )}
+        {grupos.length === 0 && (
+          <p className={styles.emptyFilter}>
+            {filtro === 'dificiles'
+              ? 'Sin episodios difíciles registrados.'
+              : filtro === 'logros'
+              ? 'Sin avances registrados aún.'
+              : 'Sin registros.'}
+          </p>
+        )}
 
-      {/* ── Pestañas ── */}
-      <div className={styles.tabs}>
-        {PESTANAS.map((p) => (
-          <button
-            key={p.id}
-            className={`${styles.tab} ${pestaña === p.id ? styles.tabActive : ''}`}
-            onClick={() => setPestaña(p.id)}
-          >
-            {p.label}
-          </button>
+        {grupos.map((g, i) => (
+          <React.Fragment key={i}>
+            <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} />
+            {g.episodios.map((ep) => (
+              <EpisodioCard
+                key={ep.id}
+                episodio={ep}
+                onDelete={(id) => handleDelete(id, ep._source)}
+                onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
+                tieneCheckin={checkinsHechos.has(ep.id)}
+                onNavigate={navigate}
+              />
+            ))}
+          </React.Fragment>
         ))}
       </div>
-
-      {/* ── Impacto estrategia (solo en episodios) ── */}
-      {pestaña === 'episodios' && impacto && estrategiaActiva && (
-        <Card className={`${styles.impactoCard} ${styles[`impacto_${impacto.tendencia}`]}`}>
-          <div className={styles.impactoHeader}>
-            <ImpactoIcon size={16} className={styles.impactoIcon} />
-            <p className={styles.impactoLabel}>
-              Estrategia activa · hace {impacto.diasDesde} {impacto.diasDesde === 1 ? 'día' : 'días'}
-            </p>
-          </div>
-          <p className={styles.impactoNombre}>"{estrategiaActiva.habilidad}"</p>
-          <p className={styles.impactoMensaje}>{impacto.mensaje}</p>
-          <p className={styles.impactoDetalle}>{impacto.detalle}</p>
-        </Card>
-      )}
-
-      {/* ── TODOS ── */}
-      {pestaña === 'todos' && (
-        totalRegistros === 0 ? (
-          <Card className={styles.emptyCard}>
-            <p>Sin registros aún.</p>
-          </Card>
-        ) : (
-          gruposTodos.map((grupo) => (
-            <div key={grupo.label} className={styles.grupo}>
-              <p className={styles.grupoLabel}>{grupo.label}</p>
-              {grupo.items.map((item, i) =>
-                item.kind === 'episodio' ? (
-                  <EpisodioCard
-                    key={item.data.id}
-                    ep={item.data}
-                    onDelete={deleteEpisodio}
-                    onUpdate={updateEpisodio}
-                    conEstrategia={episodiosConEstrategia.has(item.data.id)}
-                    tieneCheckin={checkinsHechos.has(item.data.id)}
-                    staggerDelay={i * 60}
-                  />
-                ) : (
-                  <HitoHistorialCard key={item.data.id} hito={item.data} onDelete={deleteHito} staggerDelay={i * 60} />
-                )
-              )}
-            </div>
-          ))
-        )
-      )}
-
-      {/* ── Botón PDF (solo Pro, solo pestaña episodios) ── */}
-      {pestaña === 'episodios' && episodios.length > 0 && isPro() && (
-        <GenerarInformeBtn
-          hijo={hijo}
-          episodios={episodios}
-          estrategias={estrategias}
-          hitos={hitos}
-        />
-      )}
-
-      {/* ── Buscador (solo pestaña episodios) ── */}
-      {pestaña === 'episodios' && episodios.length > 0 && (
-        <input
-          className={styles.buscadorInput}
-          type="text"
-          placeholder="Escribe una palabra clave para encontrar un episodio"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-      )}
-
-      {/* ── Filtros (solo pestaña episodios) ── */}
-      {pestaña === 'episodios' && episodios.length > 0 && (
-        <div className={styles.filtros}>
-          <p className={styles.filtrosHint}>Usa los filtros para encontrar los episodios que necesitas según su tipo e intensidad</p>
-          <div className={styles.filtroSection}>
-            <span className={styles.filtroLabel}>Tipo</span>
-            <div className={styles.filtroChips}>
-              {Object.entries(TIPOS).map(([id, { emoji, label }]) => (
-                <button
-                  key={id}
-                  className={`${styles.filtroChip} ${filtroTipos.has(id) ? styles.filtroChipActive : ''}`}
-                  onClick={() => toggleFiltroTipo(id)}
-                  title={label}
-                  type="button"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.filtroSection}>
-            <span className={styles.filtroLabel}>Intensidad</span>
-            <div className={styles.filtroChips}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  className={`${styles.filtroChip} ${filtroIntensidad === n ? styles.filtroChipActive : ''}`}
-                  onClick={() => setFiltroIntensidad((prev) => prev === n ? null : n)}
-                  type="button"
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-          {hayFiltros && (
-            <button className={styles.limpiarFiltros} onClick={limpiarFiltros} type="button">
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ── EPISODIOS ── */}
-      {pestaña === 'episodios' && (
-        episodios.length === 0 ? (
-          <Card className={styles.emptyCard}>
-            <p>Sin episodios registrados.</p>
-          </Card>
-        ) : (
-          <>
-            {gruposEpisodios.map((grupo) => (
-              <div key={grupo.label} className={styles.grupo}>
-                <p className={styles.grupoLabel}>{grupo.label}</p>
-                {grupo.episodios.map((ep, i) => (
-                  <EpisodioCard
-                    key={ep.id}
-                    ep={ep}
-                    onDelete={deleteEpisodio}
-                    onUpdate={updateEpisodio}
-                    conEstrategia={episodiosConEstrategia.has(ep.id)}
-                    tieneCheckin={checkinsHechos.has(ep.id)}
-                    staggerDelay={i * 60}
-                  />
-                ))}
-              </div>
-            ))}
-          </>
-        )
-      )}
-
-      {/* ── AVANCES ── */}
-      {pestaña === 'avances' && (
-        hitos.length === 0 ? (
-          <Card className={styles.emptyCard}>
-            <p>Sin avances registrados aún.</p>
-          </Card>
-        ) : (
-          <div className={styles.grupo}>
-            {hitosOrdenados.map((h, i) => (
-              <HitoHistorialCard key={h.id} hito={h} onDelete={deleteHito} staggerDelay={i * 60} />
-            ))}
-          </div>
-        )
-      )}
     </div>
   )
 }

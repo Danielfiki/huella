@@ -1,0 +1,17 @@
+.dots {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+  align-items: center;
+  padding-left: 6px;
+}
+.dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+}
+.empty { background: var(--color-int-empty); }
+.low   { background: var(--color-int-low); }
+.peak  { background: var(--color-int-peak); }
+.calm  { background: var(--color-int-calm); }
