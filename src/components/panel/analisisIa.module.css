@@ -53,17 +53,21 @@
   color: var(--color-text);
 }
 .body {
+  margin-bottom: 12px;
+}
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 12px 0 2px;
+  letter-spacing: -0.005em;
+}
+.bodyLine {
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--color-text);
-  margin-bottom: 12px;
-  white-space: pre-wrap;
-}
-.loading {
-  font-size: 13.5px;
-  color: var(--color-text-muted);
-  margin-bottom: 12px;
-  font-style: italic;
+  margin: 0 0 4px;
 }
 .actions { display: flex; gap: 8px; }
 .btn {
