@@ -34,15 +34,17 @@ function formatHumanDate(d) {
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day} ${month}`
 }
 
-export function Hero({ userName, childName, date, onProfileClick }) {
+export function Hero({ userName, childName, childAvatarUrl, date, onProfileClick }) {
   const { title, sub } = getGreeting(date, userName, childName)
-  const initial = userName ? userName.charAt(0).toUpperCase() : 'H'
+  const initial = childName ? childName.charAt(0).toUpperCase() : 'H'
 
   return (
     <header className={styles.hero}>
       <div className={styles.row}>
-        <button className={styles.profile} onClick={onProfileClick} aria-label="Perfil">
-          {initial}
+        <button className={styles.profile} onClick={onProfileClick} aria-label="Perfil del hijo">
+          {childAvatarUrl
+            ? <img src={childAvatarUrl} alt={childName} className={styles.profileImg} />
+            : initial}
         </button>
         <div className={styles.nameWrap}>
           <div className={styles.dateLabel}>{formatHumanDate(date)}</div>

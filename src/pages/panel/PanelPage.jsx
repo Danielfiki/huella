@@ -347,6 +347,7 @@ export default function PanelPage() {
       <Hero
         userName={userName}
         childName={nombreHijo}
+        childAvatarUrl={hijo?.avatarUrl ?? null}
         date={new Date()}
         onProfileClick={() => navigate('/perfil')}
       />
