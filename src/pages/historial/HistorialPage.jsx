@@ -126,11 +126,14 @@ export default function HistorialPage() {
 
     if (busqueda.trim()) {
       const q = busqueda.toLowerCase()
-      result = result.filter(
-        (ep) =>
-          ep.descripcion?.toLowerCase().includes(q) ||
-          (ep.gatillantes || []).some((g) => g.toLowerCase().includes(q))
-      )
+      result = result.filter((ep) => {
+        const enDescripcion = (ep.descripcion || '').toLowerCase().includes(q)
+        const enDescLibre = (ep.descripcionLibre || '').toLowerCase().includes(q)
+        const enGatillantes = (ep.gatillantes || []).some(
+          (g) => (g.nombre || g).toString().toLowerCase().includes(q)
+        )
+        return enDescripcion || enDescLibre || enGatillantes
+      })
     }
     return result
   }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda])
