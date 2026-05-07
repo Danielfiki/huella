@@ -72,3 +72,10 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+.emptyNote {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  line-height: 1.5;
+}

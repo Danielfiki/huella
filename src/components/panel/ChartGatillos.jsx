@@ -32,6 +32,11 @@ export function ChartGatillos({ data }) {
           </div>
         </div>
       ))}
+      {data.length < 3 && (
+        <p className={styles.emptyNote}>
+          Aún hay pocos datos para detectar patrones. Sigue registrando episodios para ver tendencias.
+        </p>
+      )}
     </section>
   )
 }

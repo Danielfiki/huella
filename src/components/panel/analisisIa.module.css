@@ -69,7 +69,7 @@
   color: var(--color-text);
   margin: 0 0 4px;
 }
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 8px; margin-top: 14px; }
 .btn {
   flex: 1;
   padding: 10px;
