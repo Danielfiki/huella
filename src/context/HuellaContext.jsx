@@ -19,15 +19,16 @@ export function calcularEdad(fechaNacimiento) {
 // Es un campo derivado mantenido por el reducer — la UI existente
 // que lee state.hijo sigue funcionando sin cambios.
 const initialState = {
-  hijos:        [],
-  hijoActivoId: null,
-  hijo:         null,   // derivado: hijos.find(h => h.id === hijoActivoId) ?? null
-  episodios:    [],
-  estrategias:  [],
-  hitos:        [],
-  rutinas:      [],
-  padreNombre:  '',
-  plan:         null,
+  hijos:                [],
+  hijoActivoId:         null,
+  hijo:                 null,   // derivado: hijos.find(h => h.id === hijoActivoId) ?? null
+  episodios:            [],
+  estrategias:          [],
+  hitos:                [],
+  rutinas:              [],
+  padreNombre:          '',
+  plan:                 null,
+  sugerenciaEstrategia: null,
 }
 
 function syncHijo(state) {
@@ -133,6 +134,9 @@ function reducer(state, action) {
           e.id === action.payload.id ? { ...e, ...action.payload } : e
         ),
       }
+
+    case 'SET_SUGERENCIA_ESTRATEGIA':
+      return { ...state, sugerenciaEstrategia: action.payload }
 
     case 'SET_PADRE_NOMBRE':
       return { ...state, padreNombre: action.payload }

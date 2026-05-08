@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
-import { interpretarPatrones } from '../../services/anthropic'
+import { interpretarPatrones, detectarPatronesEstructurado } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
@@ -199,7 +199,7 @@ function useNarrativaIntensidad(episodios) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, setHijoActivo } = useHuella()
+  const { state, dispatch, setHijoActivo } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
@@ -210,7 +210,7 @@ export default function PanelPage() {
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
   const estrategiaActiva = useMemo(
-    () => (estrategias || []).find(e => e.semanaActual < 4),
+    () => (estrategias || []).find(e => e.semanaActual <= 4 && !e.completado_at),
     [estrategias]
   )
 
@@ -328,8 +328,12 @@ export default function PanelPage() {
     if (loadingAnalisis) return
     setLoadingAnalisis(true)
     try {
-      const texto = await interpretarPatrones({ hijo, episodios })
+      const [texto, interpretacion] = await Promise.all([
+        interpretarPatrones({ hijo, episodios }),
+        detectarPatronesEstructurado({ hijo_id: hijo?.id, hijo_edad: hijo?.edad, episodios }),
+      ])
       setAnalisis(texto)
+      dispatch({ type: 'SET_SUGERENCIA_ESTRATEGIA', payload: interpretacion })
     } catch (e) {
       setAnalisis('Error al conectar con la IA: ' + e.message)
     } finally {
@@ -430,7 +434,7 @@ export default function PanelPage() {
                   loading={loadingAnalisis}
                   texto={analisis}
                   onAnalizar={handleAnalizarPatrones}
-                  onAccept={() => navigate('/estrategias')}
+                  onAccept={() => navigate('/estrategias', { state: { sugerencia_precocida: state.sugerenciaEstrategia } })}
                   onDismiss={() => setAnalisis('')}
                 />
               </div>

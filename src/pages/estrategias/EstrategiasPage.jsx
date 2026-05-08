@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { detectarPatronesEstructurado } from '../../services/anthropic';
 import { supabase } from '../../lib/supabase';
@@ -18,6 +18,8 @@ import styles from './EstrategiasPage.module.css';
 
 export default function EstrategiasPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
   const { state, deleteEstrategia } = useHuella();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const hijo = state.hijo;
@@ -69,6 +71,13 @@ export default function EstrategiasPage() {
     if (planActivo) { setSugerencia(null); return; }
     if (!hijo?.id || episodios.length < 3) { setSugerencia(null); return; }
 
+    // Si venimos del Panel con análisis ya hecho, usarlo directamente
+    if (sugerenciaPrecocida) {
+      const sug = buildSugerenciaFromInterpretacion(sugerenciaPrecocida, episodios);
+      setSugerencia(sug);
+      return;
+    }
+
     let cancel = false;
     (async () => {
       setLoadingPatrones(true);
@@ -85,7 +94,7 @@ export default function EstrategiasPage() {
       }
     })();
     return () => { cancel = true; };
-  }, [hijo?.id, episodios, planActivo]);
+  }, [hijo?.id, episodios, planActivo, sugerenciaPrecocida]);
 
   const sugerenciaVisible = debeMostrarSugerencia(sugerencia, descartes);
 

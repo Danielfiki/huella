@@ -3,11 +3,12 @@ import Button from '../../../components/ui/Button';
 import { md } from '../helpers';
 import styles from './SemanaActiva.module.css';
 
-export default function SemanaActiva({ semana, numero, total, reflexion, onReflexionChange, onAvanzar, onToggleTarea }) {
+export default function SemanaActiva({ semana, numero, total, reflexion, onReflexionChange, onAvanzar, onToggleTarea, onGenerarTareas, generandoTareas }) {
   const [tareas, setTareas] = useState(semana.tareas || []);
 
+  const sinTareas = tareas.length === 0;
   const completas = tareas.filter((t) => t.completada).length;
-  const puedeAvanzar = completas >= 2;
+  const puedeAvanzar = !sinTareas && completas >= 2;
   const esUltima = numero === total;
 
   const toggleTarea = (id) => {
@@ -23,7 +24,17 @@ export default function SemanaActiva({ semana, numero, total, reflexion, onRefle
         <p className={styles.sub} dangerouslySetInnerHTML={{ __html: md(semana.descripcion) }} />
       </header>
       <div className={styles.tasks}>
-        {tareas.map((t) => (
+        {sinTareas ? (
+          <button
+            className={styles.task}
+            onClick={() => onGenerarTareas?.()}
+            disabled={generandoTareas}
+          >
+            <span className={styles.copy}>
+              {generandoTareas ? 'Generando tareas…' : 'Generar tareas de esta semana'}
+            </span>
+          </button>
+        ) : tareas.map((t) => (
           <button
             key={t.id}
             className={`${styles.task} ${t.completada ? styles.done : ''}`}

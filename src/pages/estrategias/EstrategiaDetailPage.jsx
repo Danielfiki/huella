@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { supabase } from '../../lib/supabase';
+import { generarTareas } from '../../services/anthropic';
 import HeaderMocha from './components/HeaderMocha';
 import SemanaActiva from './components/SemanaActiva';
 import SemanaPasada from './components/SemanaPasada';
@@ -17,6 +18,7 @@ export default function EstrategiaDetailPage() {
   const plan = (state.estrategias || []).find((p) => p.id === id);
   const hijo = state.hijo;
   const [reflexion, setReflexion] = useState('');
+  const [generandoTareas, setGenerandoTareas] = useState(false);
 
   const estado = useMemo(() => plan && estadoPlan(plan), [plan]);
 
@@ -46,6 +48,40 @@ export default function EstrategiaDetailPage() {
         emoji: '·',
       }));
   }, [plan, state.episodios]);
+
+  const episodiosDurante = useMemo(() => {
+    if (!plan.fecha_inicio) return null;
+    const inicio = new Date(plan.fecha_inicio);
+    const fin = plan.completado_at ? new Date(plan.completado_at) : new Date();
+    const count = (state.episodios || []).filter((e) => {
+      const f = new Date(e.fecha);
+      return f >= inicio && f <= fin;
+    }).length;
+    return count > 0 ? count : null;
+  }, [plan.fecha_inicio, plan.completado_at, state.episodios]);
+
+  const onGenerarTareas = async () => {
+    setGenerandoTareas(true);
+    try {
+      const result = await generarTareas({
+        hijo,
+        habilidad: plan.habilidad_nombre || plan.habilidad,
+        descripcion: plan.descripcion,
+      });
+      if (!result) return;
+      const updatedSemanas = (plan.plan?.semanas || []).map((s, i) => ({
+        ...s,
+        tareas: result[(i + 1).toString()] || [],
+      }));
+      const updatedPlan = { ...plan.plan, semanas: updatedSemanas };
+      await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
+      dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: updatedPlan } });
+    } catch (e) {
+      console.error('generarTareas falló', e);
+    } finally {
+      setGenerandoTareas(false);
+    }
+  };
 
   const onToggleTarea = async (tareaId) => {
     const idx = actual - 1;
@@ -96,7 +132,7 @@ export default function EstrategiaDetailPage() {
       />
 
       <div className={styles.body}>
-        {estado === 'completado' && <BannerCompletado plan={plan} hijoNombre={hijo?.nombre} />}
+        {estado === 'completado' && <BannerCompletado plan={plan} hijoNombre={hijo?.nombre} episodiosDurante={episodiosDurante} />}
 
         {semanasConReflexion.filter((s) => s.numero < actual && estado === 'activo').map((s) => (
           <SemanaPasada key={s.numero} numero={s.numero} semana={s} />
@@ -111,6 +147,8 @@ export default function EstrategiaDetailPage() {
             onReflexionChange={setReflexion}
             onAvanzar={onAvanzar}
             onToggleTarea={onToggleTarea}
+            onGenerarTareas={onGenerarTareas}
+            generandoTareas={generandoTareas}
           />
         )}
 
