@@ -154,3 +154,158 @@ export function fraseAleatoria(categoria = 'general') {
   const lista = FRASES[categoria] ?? FRASES.general
   return lista[Math.floor(Math.random() * lista.length)]
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Frases para el taskbar de carga al crear un plan (4 fases)
+// ─────────────────────────────────────────────────────────────────────
+
+export const FRASES_LOADING = {
+
+  // Fase 0 — "Leyendo lo que registraste": valor de observar antes de intervenir
+  fase1: [
+    { texto: 'El niño no necesita que lo corrijas en cada momento. Necesita que lo veas.', autor: 'T. Berry Brazelton' },
+    { texto: 'Antes de actuar, observa. El niño que te parece difícil a menudo te está enseñando lo que necesita.', autor: 'T. Berry Brazelton' },
+    { texto: 'El buen-suficiente padre no es el padre perfecto: es el que está presente y dispuesto a aprender.', autor: 'D.W. Winnicott' },
+    { texto: 'Los momentos difíciles son ventanas, no paredes. Mira a través de ellos.', autor: 'D.W. Winnicott' },
+    { texto: 'Cuando describes lo que ves en lugar de juzgar lo que sientes, el niño puede escucharte.', autor: 'Adele Faber' },
+    { texto: 'Los registros que haces de tu hijo son el acto más honesto de atención que existe.', autor: 'Adele Faber' },
+    { texto: 'El niño nos enseña qué necesita si lo observamos sin la urgencia de corregirlo.', autor: 'Janet Lansbury' },
+    { texto: 'La observación sin agenda es la habilidad más valiosa que puede desarrollar un padre.', autor: 'Janet Lansbury' },
+  ],
+
+  // Fase 1 — "Buscando bibliografía pediátrica": por habilidad elegida
+  fase2: {
+    regulacion_emocional: [
+      { texto: 'La autorregulación no se enseña con palabras: se construye con co-regulación repetida a lo largo de años.', autor: 'Daniel J. Siegel' },
+      { texto: 'Cuando reduces el estrés del niño antes de intervenir, cambias el resultado de todo lo que sigue.', autor: 'Stuart Shanker' },
+      { texto: 'El niño explosivo no carece de voluntad: le faltan las herramientas que aún no ha podido desarrollar.', autor: 'Ross W. Greene' },
+      { texto: 'Conecta antes de redirigir. El vínculo es la puerta de entrada al aprendizaje.', autor: 'Daniel J. Siegel' },
+    ],
+    limites: [
+      { texto: 'Un límite dado con calma y firmeza no necesita defensa. Es simplemente la realidad.', autor: 'Janet Lansbury' },
+      { texto: 'Tolerar el no es aprender que el mundo no gira alrededor de uno. Es una de las habilidades más valiosas de la vida adulta.', autor: 'Adele Faber' },
+      { texto: 'Los límites que se mantienen con calidez construyen seguridad; los que se abandonan bajo presión construyen ansiedad.', autor: 'Alfie Kohn' },
+      { texto: 'La frustración dentro de un vínculo seguro es la materia prima de la resiliencia.', autor: 'Gordon Neufeld' },
+    ],
+    social: [
+      { texto: 'Las conexiones positivas tempranas son el mayor predictor de bienestar emocional adulto.', autor: 'John Gottman' },
+      { texto: 'Cuando el niño aprende a reparar una ruptura con un par, aprende la habilidad más valiosa de su vida social.', autor: 'John Gottman' },
+      { texto: 'El niño con vínculos seguros con adultos tiene la base para relacionarse bien con sus pares.', autor: 'Gordon Neufeld' },
+      { texto: 'Las habilidades sociales no se enseñan en abstracto: emergen del juego libre y las relaciones reales.', autor: 'Lawrence J. Cohen' },
+    ],
+    ansiedad: [
+      { texto: 'No se trata de eliminar el miedo del niño, sino de enseñarle a moverse a pesar de él.', autor: 'Tamar Chansky' },
+      { texto: 'El padre que sobreprotege al niño ansioso, con la mejor intención, le confirma que el mundo es peligroso.', autor: 'Lynn Lyons' },
+      { texto: 'Aprender a regular el miedo desde pequeño protege la salud mental a largo plazo.', autor: 'Daniel J. Siegel' },
+      { texto: 'El cerebro ansioso distorsiona la probabilidad de la amenaza. Enseñar a cuestionarlo cambia el circuito.', autor: 'Tamar Chansky' },
+    ],
+    atencion: [
+      { texto: 'El TDAH es un trastorno del desarrollo de la autorregulación, no de la inteligencia ni de la voluntad.', autor: 'Russell A. Barkley' },
+      { texto: 'La atención sostenida se entrena como un músculo. Pequeños ejercicios diarios generan cambios duraderos.', autor: 'Russell A. Barkley' },
+      { texto: 'Antes de concluir que el niño no puede prestar atención, pregúntate a qué sí puede: ahí está la llave.', autor: 'Edward Hallowell' },
+      { texto: 'Una conducta que no responde a consecuencias puede estar respondiendo a un perfil neurológico, no a la voluntad.', autor: 'Mona Delahooke' },
+    ],
+    autonomia: [
+      { texto: 'Cada cosa pequeña que el niño hace solo construye la confianza que después lo lleva a intentar lo grande.', autor: 'T. Berry Brazelton' },
+      { texto: 'Resolver el problema antes de que el niño lo intente no es ayudarlo: es quitarle la oportunidad.', autor: 'Janet Lansbury' },
+      { texto: 'La autonomía genuina no se concede de golpe: se construye en pasos, con acompañamiento que se retira gradualmente.', autor: 'Lev Vygotsky' },
+      { texto: 'Confiar en el proceso del niño es la forma más profunda de respeto hacia su desarrollo.', autor: 'Janet Lansbury' },
+    ],
+    rutinas: [
+      { texto: 'Las rutinas predecibles reducen la ansiedad y liberan energía mental para aprender y crecer.', autor: 'T. Berry Brazelton' },
+      { texto: 'El sueño insuficiente produce síntomas indistinguibles del TDAH. El sueño es la primera intervención.', autor: 'Marc Weissbluth' },
+      { texto: 'Un hogar predecible no es un hogar aburrido: es un hogar donde el niño puede relajarse y aprender.', autor: 'Stuart Shanker' },
+      { texto: 'Los horarios consistentes no son rigidez: son el andamiaje que permite la libertad.', autor: 'Harvey Karp' },
+    ],
+    autoestima: [
+      { texto: 'La vergüenza — "soy malo" — destruye la autoestima. La culpa — "hice algo malo" — la fortalece.', autor: 'Brené Brown' },
+      { texto: 'El elogio que evalúa la persona daña más que el silencio. Describe el esfuerzo, no el rasgo.', autor: 'Alfie Kohn' },
+      { texto: 'Un niño que se siente capaz intenta cosas nuevas. La autoestima se construye en los logros cotidianos.', autor: 'John Gottman' },
+      { texto: 'El amor que no depende de la conducta del niño es la base de toda motivación intrínseca.', autor: 'Alfie Kohn' },
+    ],
+    aprendizaje: [
+      { texto: 'Las funciones ejecutivas predicen el éxito escolar más que el coeficiente intelectual.', autor: 'Adele Diamond' },
+      { texto: 'El niño que no aprende en el formato estándar puede estar aprendiendo profundamente en otro canal.', autor: 'Howard Gardner' },
+      { texto: 'El aprendizaje óptimo ocurre en la zona de lo que el niño no puede hacer solo pero sí con apoyo guiado.', autor: 'Lev Vygotsky' },
+      { texto: 'Antes de diagnosticar el problema en el niño, pregúntate si el entorno está diseñado para que pueda tener éxito.', autor: 'Ross W. Greene' },
+    ],
+    fallback: [
+      { texto: 'La bibliografía más importante sobre tu hijo eres tú mismo, que lo conoces mejor que nadie.', autor: 'T. Berry Brazelton' },
+      { texto: 'Cada habilidad que se trabaja en la infancia es una inversión en la salud mental del adulto que será.', autor: 'Daniel J. Siegel' },
+      { texto: 'El cambio consistente y pequeño produce resultados más duraderos que los cambios drásticos e intermitentes.', autor: 'Stuart Shanker' },
+    ],
+  },
+
+  // Fase 2 — "Adaptando a la edad de tu hijo": por rango de edad
+  fase3: {
+    '0-2': [
+      { texto: 'El bebé no manipula: comunica. Cada señal es un intento de conexión que merece respuesta.', autor: 'T. Berry Brazelton' },
+      { texto: 'La mayor enseñanza que recibe un bebé no viene de lo que le decimos, sino de cómo lo sostenemos.', autor: 'D.W. Winnicott' },
+      { texto: 'La co-regulación es el mecanismo por el cual el sistema nervioso del bebé aprende a regularse a través del del cuidador.', autor: 'Allan N. Schore' },
+    ],
+    '2-6': [
+      { texto: 'A esta edad, el niño vive en el cerebro límbico. Conectar antes de corregir no es una opción: es una ley neurológica.', autor: 'Daniel J. Siegel' },
+      { texto: 'El padre que se regula primero a sí mismo cambia el resultado de toda interacción difícil que sigue.', autor: 'T. Berry Brazelton' },
+      { texto: 'El berrinche no es manipulación: es la única herramienta que tiene para procesar una emoción que lo desborda.', autor: 'Adele Faber' },
+    ],
+    '6-12': [
+      { texto: 'La colaboración para resolver problemas produce cambios más duraderos que las consecuencias impuestas.', autor: 'Ross W. Greene' },
+      { texto: 'Las funciones ejecutivas están en pleno desarrollo a esta edad. Las exigencias deben calibrarse a ese proceso.', autor: 'Adele Diamond' },
+      { texto: 'El niño que se siente genuinamente escuchado por un adulto tiene acceso a su corteza prefrontal. El que se siente juzgado, no.', autor: 'Lawrence J. Cohen' },
+    ],
+    '12-18': [
+      { texto: 'El cerebro adolescente no está roto: está en construcción. La intensidad emocional es parte del proceso.', autor: 'Daniel J. Siegel' },
+      { texto: 'La oposición adolescente no es fracaso de la crianza: es el proceso de individuación haciendo su trabajo.', autor: 'Lisa Damour' },
+      { texto: 'Mantener el vínculo mientras se sostienen los límites es la tarea más exigente — y más importante — de esta etapa.', autor: 'Daniel J. Siegel' },
+    ],
+  },
+
+  // Fase 3 — "Escribiendo tu plan personalizado": confianza en el proceso
+  fase4: [
+    { texto: 'Lo que hagas hoy con calma vale más que lo que harías mañana con culpa.', autor: 'Janet Lansbury' },
+    { texto: 'No necesitas ser el padre perfecto: necesitas ser el padre suficientemente bueno que está aquí.', autor: 'D.W. Winnicott' },
+    { texto: 'El cambio real en los niños no ocurre en una semana: ocurre en las miles de interacciones pequeñas que componen meses.', autor: 'T. Berry Brazelton' },
+    { texto: 'Tu disposición a intentarlo de nuevo mañana es, en sí misma, un acto de crianza extraordinario.', autor: 'Laura Markham' },
+    { texto: 'Un plan no es un compromiso de perfección: es una dirección. La dirección importa más que la velocidad.', autor: 'T. Berry Brazelton' },
+    { texto: 'El niño no necesita un padre sin errores. Necesita un padre que repare y siga adelante.', autor: 'D.W. Winnicott' },
+    { texto: 'Confiar en que el proceso funciona, incluso cuando no ves resultados todavía, es la habilidad más difícil y la más importante.', autor: 'Janet Lansbury' },
+    { texto: 'La regulación emocional del padre es la intervención más poderosa que existe. Y eso lo tienes tú.', autor: 'Laura Markham' },
+  ],
+}
+
+const HABILIDAD_A_GRUPO_FASE2 = {
+  calmarse_explosion:    'regulacion_emocional',
+  concentrarse_calmarse: 'regulacion_emocional',
+  aceptar_no:            'limites',
+  manejar_cambios:       'limites',
+  relacionarse_ninos:    'social',
+  manejar_miedo:         'ansiedad',
+  mejorar_atencion:      'atencion',
+  autonomia_independencia: 'autonomia',
+  rutinas_funcionen:     'rutinas',
+  motivacion_autoestima: 'autoestima',
+  dificultades_colegio:  'aprendizaje',
+}
+
+function aleatorio(lista) {
+  if (!lista || lista.length === 0) return null
+  return lista[Math.floor(Math.random() * lista.length)]
+}
+
+// Devuelve { texto, autor } para la fase activa del taskbar de creación de plan.
+// fase: 0-3 correspondiente al pasoActual de LoadingDignificado
+// habilidadId: id del catálogo de habilidades (opcional)
+// edad: edad del hijo en años (string o number, opcional)
+export function fraseCarga(fase, habilidadId, edad) {
+  if (fase === 0) return aleatorio(FRASES_LOADING.fase1)
+  if (fase === 1) {
+    const grupo = HABILIDAD_A_GRUPO_FASE2[habilidadId] ?? 'fallback'
+    return aleatorio(FRASES_LOADING.fase2[grupo] ?? FRASES_LOADING.fase2.fallback)
+  }
+  if (fase === 2) {
+    const n = parseInt(edad, 10)
+    const rango = isNaN(n) ? '2-6' : n <= 2 ? '0-2' : n <= 6 ? '2-6' : n <= 12 ? '6-12' : '12-18'
+    return aleatorio(FRASES_LOADING.fase3[rango])
+  }
+  return aleatorio(FRASES_LOADING.fase4)
+}

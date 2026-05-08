@@ -448,6 +448,24 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
 - `EmptyPuerta1.jsx`: sin cambios (ya usaba el prop `postRechazo` correctamente)
 - Nota de producto respetada: filtro 90 días aplica solo a Puerta 1, no al selector manual (Puerta 2)
 
+---
+
+### 19. Round 4 — Frases de autores en el taskbar de carga del plan *(2026-05-08)*
+
+**Archivos tocados:**
+- `src/lib/frases.js`: agregado `FRASES_LOADING` con 4 grupos (fase1/fase2/fase3/fase4), `HABILIDAD_A_GRUPO_FASE2` (mapping interno), y función exportada `fraseCarga(fase, habilidadId, edad)`
+- `src/pages/estrategias/components/LoadingDignificado.jsx`: acepta `habilidadId` y `hijoEdad`; inicializa 4 frases al montar (`useState(() => ...)`); muestra la frase del paso activo con `key={pasoActual}` para disparo automático del fade
+- `src/pages/estrategias/components/LoadingDignificado.module.css`: agregados `.fraseWrap` (fade-in 350ms), `.fraseTexto` (Fraunces italic 16px ink, centrado), `.fraseAutor` (13px mocha)
+- `src/pages/estrategias/EstrategiaNuevaPage.jsx`: pasa `habilidadId={habilidad.id}` y `hijoEdad={hijo?.edad}` a LoadingDignificado
+
+**Grupos de frases:**
+- **Fase 0** ("Leyendo lo que registraste"): Brazelton, Winnicott, Faber, Lansbury — observar antes de intervenir
+- **Fase 1** ("Buscando bibliografía"): por habilidad — 9 grupos (regulacion_emocional, limites, social, ansiedad, atencion, autonomia, rutinas, autoestima, aprendizaje) + fallback
+- **Fase 2** ("Adaptando a la edad"): 4 rangos (0-2, 2-6, 6-12, 12-18), referentes calibrados por edad
+- **Fase 3** ("Escribiendo el plan"): Brazelton, Lansbury, Winnicott, Markham — paciencia y confianza en el proceso
+
+**Total: 51 frases nuevas de 27 autores.**
+
 ## Pendientes próxima sesión
 
 1. **SQL a correr en Supabase SQL Editor** (necesario para que el descarte guarde el conteo):

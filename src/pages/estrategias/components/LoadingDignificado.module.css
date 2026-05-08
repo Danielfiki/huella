@@ -4,6 +4,30 @@
 @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.85; } }
 .ttl { font-family: var(--font-heading); font-weight: 700; font-size: 19px; color: var(--color-ink); line-height: 1.2; }
 .sub { font-size: 13px; color: var(--color-muted); margin: 0; line-height: 1.5; }
+.fraseWrap {
+  width: 100%;
+  text-align: center;
+  padding: 6px 4px;
+  animation: fraseFadeIn 0.35s ease both;
+}
+@keyframes fraseFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fraseTexto {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-ink);
+  line-height: 1.5;
+  margin: 0 0 7px;
+}
+.fraseAutor {
+  font-size: 13px;
+  color: var(--color-mocha);
+  font-weight: 500;
+}
 .steps { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .steps li { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; transition: opacity 0.2s; }
 .steps .ic { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; flex-shrink: 0; }

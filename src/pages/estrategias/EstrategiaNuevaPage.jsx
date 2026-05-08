@@ -163,6 +163,8 @@ export default function EstrategiaNuevaPage() {
             sub="Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."
             pasos={PASOS_LOADING}
             pasoActual={pasoActual}
+            habilidadId={habilidad.id}
+            hijoEdad={hijo?.edad}
           />
         </div>
       </div>
