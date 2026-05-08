@@ -116,7 +116,7 @@ export default function EstrategiasPage() {
       />
 
       <div className={styles.body}>
-        {planActivoEnriquecido ? (
+        {planActivoEnriquecido && (
           <section className={styles.section}>
             <div className={styles.sectionLbl}>Lo que estás trabajando</div>
             <EstrategiaActivaCard
@@ -125,28 +125,28 @@ export default function EstrategiasPage() {
               onAbrir={() => navigate(`/estrategias/${planActivoEnriquecido.id}`)}
             />
           </section>
-        ) : (
-          <>
-            <section className={styles.section}>
-              <div className={styles.sectionLbl}>
-                <span className={styles.dotDot} /> Sugerencias para vos
-              </div>
-              {sugerenciaVisible ? (
-                <SugerenciaIACard
-                  sugerencia={sugerencia}
-                  onAceptar={onAceptarSugerencia}
-                  onCerrar={onCerrarSugerencia}
-                />
-              ) : (
-                <EmptyPuerta1 totalEpisodios={episodios.length} />
-              )}
-            </section>
-
-            <section className={styles.section}>
-              <SelectorHabilidades onElegir={onElegirHabilidad} />
-            </section>
-          </>
         )}
+
+        {!planActivoEnriquecido && (
+          <section className={styles.section}>
+            <div className={styles.sectionLbl}>
+              <span className={styles.dotDot} /> Sugerencias para vos
+            </div>
+            {sugerenciaVisible ? (
+              <SugerenciaIACard
+                sugerencia={sugerencia}
+                onAceptar={onAceptarSugerencia}
+                onCerrar={onCerrarSugerencia}
+              />
+            ) : (
+              <EmptyPuerta1 totalEpisodios={episodios.length} />
+            )}
+          </section>
+        )}
+
+        <section className={styles.section}>
+          <SelectorHabilidades onElegir={onElegirHabilidad} />
+        </section>
 
         {planesPasados.length > 0 && (
           <DrawerPasados planes={planesPasados} />
