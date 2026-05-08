@@ -11,3 +11,5 @@
 .ic.ab { background: var(--color-bg); color: var(--color-muted); }
 .nm { flex: 1; font-size: 13px; color: var(--color-ink); }
 .meta { font-size: 11px; color: var(--color-muted); }
+.del { background: none; border: none; color: var(--color-muted); font-size: 13px; cursor: pointer; padding: 4px 6px; flex-shrink: 0; border-radius: var(--radius-xs); line-height: 1; }
+.del:hover { color: #D94040; }

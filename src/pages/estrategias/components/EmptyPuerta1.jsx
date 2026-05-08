@@ -10,7 +10,7 @@ export default function EmptyPuerta1({ totalEpisodios }) {
       <p className={styles.sub}>
         {conData
           ? `Llevas ${totalEpisodios} ${totalEpisodios === 1 ? 'momento' : 'momentos'}. Con unos pocos más empezamos a ver tendencias.`
-          : 'Empezá registrando un momento cualquiera — bueno, regular o difícil. Con un puñado, ya empezamos a ver tendencias.'
+          : 'Empieza registrando un momento cualquiera — bueno, regular o difícil. Con un puñado, ya empezamos a ver tendencias.'
         }
       </p>
     </div>

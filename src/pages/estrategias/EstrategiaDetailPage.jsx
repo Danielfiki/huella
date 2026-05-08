@@ -47,6 +47,21 @@ export default function EstrategiaDetailPage() {
       }));
   }, [plan, state.episodios]);
 
+  const onToggleTarea = async (tareaId) => {
+    const idx = actual - 1;
+    const semanaObj = plan.plan?.semanas?.[idx];
+    if (!semanaObj) return;
+    const updatedTareas = (semanaObj.tareas || []).map((t) =>
+      t.id === tareaId ? { ...t, completada: !t.completada } : t
+    );
+    const updatedSemanas = (plan.plan.semanas || []).map((s, i) =>
+      i === idx ? { ...s, tareas: updatedTareas } : s
+    );
+    const updatedPlan = { ...plan.plan, semanas: updatedSemanas };
+    await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
+    dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: updatedPlan } });
+  };
+
   const onAvanzar = async () => {
     const esUltima = actual === (plan.total_semanas || 4);
     const newCheckin = {
@@ -95,6 +110,7 @@ export default function EstrategiaDetailPage() {
             reflexion={reflexion}
             onReflexionChange={setReflexion}
             onAvanzar={onAvanzar}
+            onToggleTarea={onToggleTarea}
           />
         )}
 

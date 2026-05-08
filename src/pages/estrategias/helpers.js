@@ -105,9 +105,9 @@ export function buildSugerenciaFromInterpretacion(interpretacion, episodios) {
     .filter(Boolean)
     .map((e) => ({
       id: e.id,
-      titulo: e.titulo || e.resumen?.slice(0, 40) || 'Momento',
+      titulo: e.descripcionLibre?.slice(0, 40) || e.tipo || 'Momento',
       emoji: e.emoji || '·',
-      fecha_label: relativoCorto(e.created_at),
+      fecha_label: relativoCorto(e.fecha),
       intensidad: e.intensidad || 3,
       categoria: e.categoria || 'rutina',
     }));

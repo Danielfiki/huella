@@ -18,7 +18,8 @@ import styles from './EstrategiasPage.module.css';
 
 export default function EstrategiasPage() {
   const navigate = useNavigate();
-  const { state } = useHuella();
+  const { state, deleteEstrategia } = useHuella();
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const hijo = state.hijo;
   const planes = state.estrategias || [];
   const episodios = state.episodios || [];
@@ -108,6 +109,11 @@ export default function EstrategiasPage() {
     navigate(`/estrategias/nuevo?habilidad=${hab.id}`);
   };
 
+  const handleEliminar = async (id) => {
+    await deleteEstrategia(id);
+    setConfirmDeleteId(null);
+  };
+
   return (
     <div className={styles.page}>
       <HeaderMocha
@@ -123,6 +129,7 @@ export default function EstrategiasPage() {
               plan={planActivoEnriquecido}
               hijo={hijo}
               onAbrir={() => navigate(`/estrategias/${planActivoEnriquecido.id}`)}
+              onEliminar={setConfirmDeleteId}
             />
           </section>
         )}
@@ -130,9 +137,11 @@ export default function EstrategiasPage() {
         {!planActivoEnriquecido && (
           <section className={styles.section}>
             <div className={styles.sectionLbl}>
-              <span className={styles.dotDot} /> Sugerencias para vos
+              <span className={styles.dotDot} /> Sugerencias para ti
             </div>
-            {sugerenciaVisible ? (
+            {loadingPatrones ? (
+              <div className={styles.loadingPuerta1}>Analizando tus registros…</div>
+            ) : sugerenciaVisible ? (
               <SugerenciaIACard
                 sugerencia={sugerencia}
                 onAceptar={onAceptarSugerencia}
@@ -149,9 +158,22 @@ export default function EstrategiasPage() {
         </section>
 
         {planesPasados.length > 0 && (
-          <DrawerPasados planes={planesPasados} />
+          <DrawerPasados planes={planesPasados} onEliminar={setConfirmDeleteId} />
         )}
       </div>
+
+      {confirmDeleteId && (
+        <div className={styles.modalOverlay} onClick={() => setConfirmDeleteId(null)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.modalTtl}>¿Eliminar este plan?</p>
+            <p className={styles.modalSub}>Esta acción no se puede deshacer.</p>
+            <div className={styles.modalBtns}>
+              <button className={styles.modalCancel} onClick={() => setConfirmDeleteId(null)}>Cancelar</button>
+              <button className={styles.modalDanger} onClick={() => handleEliminar(confirmDeleteId)}>Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

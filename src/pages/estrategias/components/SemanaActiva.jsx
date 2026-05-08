@@ -3,7 +3,7 @@ import Button from '../../../components/ui/Button';
 import { md } from '../helpers';
 import styles from './SemanaActiva.module.css';
 
-export default function SemanaActiva({ semana, numero, total, reflexion, onReflexionChange, onAvanzar }) {
+export default function SemanaActiva({ semana, numero, total, reflexion, onReflexionChange, onAvanzar, onToggleTarea }) {
   const [tareas, setTareas] = useState(semana.tareas || []);
 
   const completas = tareas.filter((t) => t.completada).length;
@@ -12,6 +12,7 @@ export default function SemanaActiva({ semana, numero, total, reflexion, onRefle
 
   const toggleTarea = (id) => {
     setTareas((prev) => prev.map((t) => t.id === id ? { ...t, completada: !t.completada } : t));
+    onToggleTarea?.(id);
   };
 
   return (

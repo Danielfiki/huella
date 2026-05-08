@@ -19,5 +19,7 @@
 .pillVin { background: var(--pill-vin-bg); color: var(--pill-vin-fg); }
 .pillJue { background: var(--pill-jue-bg); color: var(--pill-jue-fg); }
 .pillSal { background: var(--pill-sal-bg); color: var(--pill-sal-fg); }
-.cta { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--color-mocha); color: #fff; border: none; border-radius: var(--radius-md); padding: 14px 18px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+.cta { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--color-tangerine); color: #fff; border: none; border-radius: var(--radius-md); padding: 14px 18px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
 .arr { font-size: 18px; }
+.del { background: none; border: none; color: var(--color-muted); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
+.del:hover { color: #D94040; }

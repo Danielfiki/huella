@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
+import { useAuth } from '../../context/AuthContext';
 import { generarEstrategia } from '../../services/anthropic';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
@@ -20,6 +21,7 @@ export default function EstrategiaNuevaPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { state, dispatch } = useHuella();
+  const { user } = useAuth();
   const hijo = state.hijo;
 
   const habilidadId = params.get('habilidad');
@@ -74,6 +76,7 @@ export default function EstrategiaNuevaPage() {
       const { data: row, error: insertErr } = await supabase
         .from('estrategias')
         .insert({
+          user_id: user.id,
           hijo_id: hijo.id,
           habilidad: habilidad.label,
           habilidad_grupo: habilidad.grupoNombre,
@@ -129,7 +132,7 @@ export default function EstrategiaNuevaPage() {
         <div className={styles.body}>
           <LoadingDignificado
             titulo="Estamos armando tu plan."
-            sub="Tarda menos de un minuto. Podés cerrar la app — te avisamos cuando esté listo."
+            sub="Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."
             pasos={PASOS_LOADING}
             pasoActual={pasoActual}
           />
@@ -175,7 +178,7 @@ export default function EstrategiaNuevaPage() {
         </div>
 
         <label className={styles.lbl}>
-          <span>¿Algo más que querés que tengamos en cuenta? <em>(opcional)</em></span>
+          <span>¿Algo más que quieres que tengamos en cuenta? <em>(opcional)</em></span>
           <textarea
             placeholder="Ej: 'esto pasa más a la noche', 'tiene un hermano de 6 años'…"
             value={contextoExtra}
