@@ -1,11 +1,10 @@
 
 .box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
 .head { display: flex; align-items: center; gap: 10px; }
-.num { width: 22px; height: 22px; border-radius: 50%; background: var(--color-bg); color: var(--color-muted); display: grid; place-items: center; font-family: var(--font-heading); font-weight: 700; font-size: 12px; }
 .headTtl { font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-ink); }
 .group { display: flex; flex-direction: column; gap: 8px; }
 .grpName { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-muted); font-weight: 600; }
-.skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.skills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .skill { display: inline-flex; align-items: center; gap: 6px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 100px; padding: 8px 14px; font: inherit; font-size: 13px; color: var(--color-ink); cursor: pointer; }
 .skill:hover { border-color: var(--color-mocha); }
 .skill.on { background: var(--color-tangerine); color: #fff; border-color: var(--color-tangerine); }

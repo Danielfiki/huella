@@ -10,7 +10,6 @@ export default function SelectorHabilidades({ seleccionada, onElegir }) {
   return (
     <div className={styles.box}>
       <header className={styles.head}>
-        <span className={styles.num}>2</span>
         <span className={styles.headTtl}>Elige una habilidad</span>
       </header>
       {grupos.map(([key, grupo]) => (

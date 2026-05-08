@@ -466,6 +466,22 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
 
 **Total: 51 frases nuevas de 27 autores.**
 
+### 20. Round 5 mini — Limpieza visual en SelectorHabilidades *(2026-05-08)*
+
+**Cambio A — Quitar el círculo "2" del título:**
+- `SelectorHabilidades.jsx`: eliminado `<span className={styles.num}>2</span>` del header
+- `SelectorHabilidades.module.css`: eliminada regla `.num` (ya sin referencias)
+
+**Cambio B — Centrar los chips de habilidades:**
+- `SelectorHabilidades.module.css`: agregado `justify-content: center` en `.skills`
+- Los chips siguen siendo `flex-wrap: wrap` — se centran como grupo en cada línea
+
+**Archivos tocados:**
+- `src/pages/estrategias/components/SelectorHabilidades.jsx`
+- `src/pages/estrategias/components/SelectorHabilidades.module.css`
+
+---
+
 ## Pendientes próxima sesión
 
 1. **SQL a correr en Supabase SQL Editor** (necesario para que el descarte guarde el conteo):
@@ -477,6 +493,7 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
    - Con ≥5 episodios y habilidades todas excluidas por 90 días → expandir módulo "Sugerencias" → debe mostrar "Sin sugerencias activas por ahora."
    - Módulo colapsable: primera visita auto-expandido + badge "1 nueva"; segunda visita colapsado sin badge
    - 3 planes activos → intentar crear uno nuevo → confirmar modal de cap
+   - `SelectorHabilidades`: chips centrados horizontalmente, sin círculo "2" en el título
 3. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
 4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
 
