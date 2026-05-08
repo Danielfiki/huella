@@ -140,6 +140,7 @@ export default function EstrategiaDetailPage() {
 
         {estado === 'activo' && semanasConReflexion[actual - 1] && (
           <SemanaActiva
+            key={actual}
             semana={semanasConReflexion[actual - 1]}
             numero={actual}
             total={plan.total_semanas || 4}

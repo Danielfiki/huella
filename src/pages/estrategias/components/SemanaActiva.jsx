@@ -4,9 +4,9 @@ import { md } from '../helpers';
 import styles from './SemanaActiva.module.css';
 
 export default function SemanaActiva({ semana, numero, total, reflexion, onReflexionChange, onAvanzar, onToggleTarea, onGenerarTareas, generandoTareas }) {
-  const [tareas, setTareas] = useState(semana.tareas || []);
+  const [tareas, setTareas] = useState(Array.isArray(semana.tareas) ? semana.tareas : []);
 
-  const sinTareas = tareas.length === 0;
+  const sinTareas = !Array.isArray(tareas) || tareas.length === 0;
   const completas = tareas.filter((t) => t.completada).length;
   const puedeAvanzar = !sinTareas && completas >= 2;
   const esUltima = numero === total;

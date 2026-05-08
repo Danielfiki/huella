@@ -191,6 +191,14 @@ function dbEpisodioToApp(row) {
   }
 }
 
+function parsePlanField(raw) {
+  if (!raw) return null
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw) } catch { return null }
+  }
+  return raw
+}
+
 function dbEstrategiaToApp(row) {
   return {
     // snake_case — usado por los nuevos componentes de estrategias
@@ -200,7 +208,7 @@ function dbEstrategiaToApp(row) {
     habilidad_nombre:         row.habilidad                ?? null,
     habilidad_grupo:          row.habilidad_grupo          ?? null,
     descripcion:              row.descripcion,
-    plan:                     row.plan,
+    plan:                     parsePlanField(row.plan),
     checkins:                 Array.isArray(row.checkins) ? row.checkins : (row.checkins ?? []),
     tareas:                   row.tareas                   ?? {},
     semana_actual:            row.semana_actual            ?? 1,
