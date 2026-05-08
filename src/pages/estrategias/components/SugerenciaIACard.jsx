@@ -2,16 +2,15 @@ import React from 'react';
 import styles from './SugerenciaIACard.module.css';
 
 export default function SugerenciaIACard({ sugerencia, onAceptar, onCerrar }) {
-  const { narrativa, episodios_detonantes } = sugerencia;
+  const { narrativa, episodios_detonantes, habilidad_nombre } = sugerencia;
   const primer = episodios_detonantes[0];
   const extras = Math.max(0, episodios_detonantes.length - 1);
   return (
     <article className={styles.card}>
-      <div className={styles.head}>
-        <span className={styles.h}>h</span>
-        <span className={styles.lab}>Sugerencia de Huella</span>
+      <div className={styles.skill}>
+        <div className={styles.skillPre}>Vamos a trabajar:</div>
+        <div className={styles.skillNombre}>{habilidad_nombre}</div>
       </div>
-      <div className={styles.ttl}>{narrativa.titulo}</div>
       <p className={styles.bajada}>{narrativa.bajada}</p>
       {primer && (
         <div className={styles.epPreview}>

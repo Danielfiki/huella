@@ -403,14 +403,46 @@ ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;
 
 ---
 
+### 17. Round 2 de Estrategias — refinamientos y UX *(2026-05-08)*
+
+**Cambios implementados en una sola pasada:**
+
+1. **Cap de 3 planes activos** — `MAX_PLANES_ACTIVOS_FREE = 3` en helpers.js. `EstrategiaNuevaPage` verifica antes de llamar a `generar()`; si supera el cap, muestra modal para abandonar un plan existente antes de crear uno nuevo. `abandonarPlanYCrear(id)` hace UPDATE en Supabase + dispatch optimista.
+
+2. **Regla de descarte mejorada (7d / 5 eps)** — reemplaza la anterior (14 días fijos). `debeMostrarSugerencia` en helpers.js: compara contra el rechazo más reciente del hijo; muestra si pasaron ≥7 días O se registraron ≥5 episodios desde ese rechazo. Incluye `episodios_count_al_rechazar` en el INSERT de descarte. **Requiere SQL:** `ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodios_count_al_rechazar integer DEFAULT 0;`
+
+3. **Filtro de habilidades ya trabajadas** — `habilidadesExcluidas` en EstrategiasPage: descarta planes activos o completados/abandonados en los últimos 90 días. Si la sugerencia IA propone una habilidad ya trabajada, no se muestra.
+
+4. **SugerenciaIACard rediseñada** — sin badge "SUGERENCIA DE HUELLA" ni título narrativo. Nueva sección "Vamos a trabajar:" + nombre de habilidad en Fraunces grande.
+
+5. **Módulo colapsable "🌱 Sugerencias de Huella"** — header siempre visible con chevron; badge "1 nueva" tangerine cuando es la primera vez que se ve la sugerencia. Auto-expande cuando la sugerencia es nueva (no vista en sessionStorage). Se considera "vista" al navegar fuera de la pantalla o al hacer click en el header. Llave sessionStorage: `huella_sug_{hijo.id}` con array de fingerprints vistos.
+
+6. **"Nace de" chips movidos del HeaderMocha** — ahora en banda cream debajo del header (EstrategiaDetailPage), con chips strawberry por cada episodio detonante.
+
+7. **BannerCompletado** — botón primario en tangerine (era mocha).
+
+8. **Estado post-rechazo diferenciado** — `esPostRechazo` distingue entre "sin sugerencia porque rechazaste hace poco" vs "sin sugerencia por falta de datos". EmptyPuerta1 acepta prop `postRechazo` y muestra mensaje diferente.
+
+9. **SemanaPasada títulos sin truncado** — `white-space: normal; word-break: break-word` en `.nm`.
+
+**SQL pendiente (dar al usuario):**
+```sql
+ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodios_count_al_rechazar integer DEFAULT 0;
+```
+
+---
+
 ## Pendientes próxima sesión
 
-1. **Verificar visualmente en producción** (huella-theta.vercel.app):
+1. **SQL a correr en Supabase SQL Editor** (necesario para que el descarte guarde el conteo):
+   ```sql
+   ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodios_count_al_rechazar integer DEFAULT 0;
+   ```
+2. **Verificar visualmente en producción** (huella-theta.vercel.app):
    - Crear plan nuevo → recargar → confirmar que tareas aparecen
-   - Avanzar semana → confirmar que semana 2 muestra sus propias tareas
-   - Plan legacy sin tareas → confirmar que aparece botón "Generar tareas de esta semana"
-   - Banner completado → confirmar cuenta de episodios y ruta `/hitos`
-2. **Verificar el PDF en producción** — ligaduras, títulos de sección
+   - Módulo colapsable: primera visita auto-expandido + badge "1 nueva"; segunda visita colapsado sin badge
+   - Rechazar sugerencia → confirmar estado post-rechazo en EmptyPuerta1
+   - 3 planes activos → intentar crear uno nuevo → confirmar modal de cap
 3. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
 4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
 

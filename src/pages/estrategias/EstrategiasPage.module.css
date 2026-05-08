@@ -9,6 +9,10 @@
 }
 .dotDot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-tangerine); }
 .loadingPuerta1 { font-size: 13px; color: var(--color-muted); padding: 20px 0; text-align: center; }
+.sectionHeader { display: flex; align-items: center; gap: 8px; width: 100%; background: transparent; border: none; cursor: pointer; padding: 0; font: inherit; }
+.sectionLblText { font-family: var(--font-heading); font-weight: 600; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted); flex: 1; text-align: left; }
+.sectionChev { font-size: 11px; color: var(--color-muted); }
+.badgeNueva { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--color-tangerine); color: #fff; border-radius: 100px; padding: 2px 7px; }
 .modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: grid; place-items: center; padding: 24px; }
 .modalCard { background: var(--color-surface); border-radius: var(--radius-lg); padding: 24px; max-width: 320px; width: 100%; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.3); }
 .modalTtl { font-family: var(--font-heading); font-weight: 700; font-size: 18px; color: var(--color-ink); margin: 0; }

@@ -2,6 +2,8 @@
 // Catálogo de habilidades (11 habilidades · 2 grupos · lenguaje situacional)
 // + utilidades varias
 
+export const MAX_PLANES_ACTIVOS_FREE = 3;
+
 export const HABILIDADES_CATALOGO = {
   emocional: {
     nombre: 'Regulación emocional',
@@ -139,11 +141,18 @@ function relativoCorto(iso) {
 
 // ─────────────────────────────────────────────────────────────────────
 // Lógica de descarte de sugerencia IA
+// Regla: no mostrar sugerencia hasta que pasen ≥7 días desde el último
+// rechazo O el usuario registre ≥5 episodios nuevos desde ese rechazo.
 // ─────────────────────────────────────────────────────────────────────
-export function debeMostrarSugerencia(sugerencia, descartes) {
+export function debeMostrarSugerencia(sugerencia, descartes, totalEpisodios = 0) {
   if (!sugerencia) return false;
-  const d = descartes.find((x) => x.fingerprint === sugerencia.fingerprint);
-  if (!d) return true;
-  const dias = (Date.now() - new Date(d.descartada_at).getTime()) / 86400000;
-  return dias > 14;
+  if (!descartes.length) return true;
+  const ultimoRechazo = descartes.reduce((latest, d) =>
+    !latest || new Date(d.descartada_at) > new Date(latest.descartada_at) ? d : latest, null);
+  if (!ultimoRechazo) return true;
+  const dias = (Date.now() - new Date(ultimoRechazo.descartada_at).getTime()) / 86400000;
+  if (dias >= 7) return true;
+  const epCountAtReject = ultimoRechazo.episodios_count_al_rechazar ?? 0;
+  if (totalEpisodios - epCountAtReject >= 5) return true;
+  return false;
 }

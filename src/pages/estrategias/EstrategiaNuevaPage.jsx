@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import HeaderMocha from './components/HeaderMocha';
 import LoadingDignificado from './components/LoadingDignificado';
-import { HABILIDADES_CATALOGO, CONTEXTOS_HABILIDAD } from './helpers';
+import { HABILIDADES_CATALOGO, CONTEXTOS_HABILIDAD, MAX_PLANES_ACTIVOS_FREE, estadoPlan } from './helpers';
 import styles from './EstrategiaNuevaPage.module.css';
 
 const PASOS_LOADING = [
@@ -42,6 +42,34 @@ export default function EstrategiaNuevaPage() {
   const [estado, setEstado] = useState('paso-1-confirmar');
   const [pasoActual, setPasoActual] = useState(0);
   const [error, setError] = useState(null);
+  const [showCapModal, setShowCapModal] = useState(false);
+  const [planesActivosCap, setPlanesActivosCap] = useState([]);
+  const [abandonandoId, setAbandonandoId] = useState(null);
+
+  const iniciarCreacion = () => {
+    const activos = (state.estrategias || []).filter(
+      (p) => p.hijo_id === hijo?.id && estadoPlan(p) === 'activo'
+    );
+    if (activos.length >= MAX_PLANES_ACTIVOS_FREE) {
+      setPlanesActivosCap(activos);
+      setShowCapModal(true);
+      return;
+    }
+    generar();
+  };
+
+  const abandonarPlanYCrear = async (id) => {
+    setAbandonandoId(id);
+    try {
+      const abandonado_at = new Date().toISOString();
+      await supabase.from('estrategias').update({ abandonado_at }).eq('id', id);
+      dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id, abandonado_at } });
+      setShowCapModal(false);
+      generar();
+    } finally {
+      setAbandonandoId(null);
+    }
+  };
 
   const generar = async () => {
     setEstado('generando');
@@ -186,8 +214,30 @@ export default function EstrategiaNuevaPage() {
           />
         </label>
 
-        <Button className={styles.cta} onClick={generar}>Generar mi plan</Button>
+        <Button className={styles.cta} onClick={iniciarCreacion}>Generar mi plan</Button>
       </div>
+
+      {showCapModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowCapModal(false)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.modalTtl}>Tienes {MAX_PLANES_ACTIVOS_FREE} planes activos</p>
+            <p className={styles.modalSub}>Límite del plan Explorador. ¿Cuál quieres cerrar para empezar este nuevo?</p>
+            <div className={styles.modalPlanes}>
+              {planesActivosCap.map((p) => (
+                <button
+                  key={p.id}
+                  className={styles.modalPlanBtn}
+                  onClick={() => abandonarPlanYCrear(p.id)}
+                  disabled={!!abandonandoId}
+                >
+                  {abandonandoId === p.id ? 'Cerrando…' : (p.habilidad_nombre || p.habilidad)}
+                </button>
+              ))}
+            </div>
+            <button className={styles.modalCancel} onClick={() => setShowCapModal(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

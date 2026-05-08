@@ -128,8 +128,19 @@ export default function EstrategiaDetailPage() {
         titulo={plan.habilidad_nombre || plan.habilidad}
         onBack={() => navigate('/estrategias')}
         progreso={{ actual, total: plan.total_semanas || 4 }}
-        episodiosOrigen={episodiosDetonantes}
       />
+
+      {episodiosDetonantes.length > 0 && (
+        <div className={styles.naceDe}>
+          <span className={styles.naceDeLabel}>Nace de</span>
+          {episodiosDetonantes.slice(0, 3).map((e) => (
+            <span key={e.id} className={styles.naceDeChip}>
+              <span style={{ fontSize: 11, lineHeight: 1 }}>{e.emoji || '·'}</span>
+              {e.titulo}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className={styles.body}>
         {estado === 'completado' && <BannerCompletado plan={plan} hijoNombre={hijo?.nombre} episodiosDurante={episodiosDurante} />}
