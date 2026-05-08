@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Sparkles, Lock, Camera, X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
@@ -513,7 +514,7 @@ const NIVELES = [
 function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado, esNuevo }) {
   const locked = nivelBloqueado || !desbloqueado
   return (
-    <div className={`${styles.badgeCard} ${locked ? styles.badgeLocked : styles.badgeUnlocked} ${esNuevo ? styles.badgeNuevo : ''}`}>
+    <div id={badge.id} className={`${styles.badgeCard} ${locked ? styles.badgeLocked : styles.badgeUnlocked} ${esNuevo ? styles.badgeNuevo : ''}`}>
       <div
         className={styles.badgeEmojiWrap}
         style={!locked ? { background: badge.color + '22', borderColor: badge.color + '66' } : {}}
@@ -668,12 +669,22 @@ function HitoCard({ hito, user, updateHitoFoto }) {
 export default function HitosPage() {
   const { state, addHito, updateHitoFoto, getCheckinsHechos } = useHuella()
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const highlight = searchParams.get('highlight')
   const [pestaña, setPestaña] = useState('medallas')
   const [checkinsCount, setCheckinsCount] = useState(0)
 
   useEffect(() => {
     getCheckinsHechos().then(set => setCheckinsCount(set.size))
   }, [])
+
+  useEffect(() => {
+    if (!highlight) return
+    const timer = setTimeout(() => {
+      document.getElementById(highlight)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [highlight])
   const [mostrando, setMostrando] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [descripcion, setDescripcion] = useState('')

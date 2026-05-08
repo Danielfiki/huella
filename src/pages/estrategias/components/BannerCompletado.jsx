@@ -17,7 +17,7 @@ export default function BannerCompletado({ plan, hijoNombre, episodiosDurante })
         Tu reflexión final ya quedó guardada en Hitos.
       </p>
       <div className={styles.acts}>
-        <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/hitos')}>Ver tu hito</button>
+        <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/hitos?highlight=plan_completo')}>Ver tu hito</button>
         <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate(`/estrategias/${plan.id}`)}>Releer reflexiones</button>
       </div>
     </div>

@@ -126,18 +126,8 @@ export default function EstrategiasPage() {
   // Cambio 2: nueva lógica 7d / 5ep (usando sugerenciaFiltrada)
   const sugerenciaVisible = debeMostrarSugerencia(sugerenciaFiltrada, descartes, episodios.length);
 
-  // Cambio 8: estado post-rechazo vs empty state real
-  const esPostRechazo = useMemo(() => {
-    if (sugerenciaVisible) return false;
-    if (!descartes.length) return false;
-    if (episodios.length < 5) return false;
-    const ultimoRechazo = descartes.reduce((latest, d) =>
-      !latest || new Date(d.descartada_at) > new Date(latest.descartada_at) ? d : latest, null);
-    if (!ultimoRechazo) return false;
-    const dias = (Date.now() - new Date(ultimoRechazo.descartada_at).getTime()) / 86400000;
-    const epCountAtReject = ultimoRechazo.episodios_count_al_rechazar ?? 0;
-    return dias < 7 && (episodios.length - epCountAtReject) < 5;
-  }, [sugerenciaVisible, descartes, episodios.length]);
+  // sin sugerencia pero con datos suficientes: post-rechazo, filtro 90d o IA sin patrón
+  const esPostRechazo = !sugerenciaVisible && episodios.length >= 5 && !loadingPatrones;
 
   // Cambio 5: auto-expand si sugerencia es nueva (no vista en esta sesión)
   useEffect(() => {

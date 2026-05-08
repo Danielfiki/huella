@@ -432,6 +432,22 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
 
 ---
 
+---
+
+### 18. Round 3 mini — fixes post-verificación *(2026-05-08)*
+
+**Cambio A — "Ver tu hito" lleva a la medalla específica:**
+- `BannerCompletado.jsx`: `navigate('/hitos')` → `navigate('/hitos?highlight=plan_completo')`
+- `HitosPage.jsx`: importa `useSearchParams`, lee param `highlight`, hace `scrollIntoView` al badge con ese DOM id 350ms después del mount
+- `BadgeCard`: agregado `id={badge.id}` en el div raíz (cada badge tiene id único en NIVELES)
+- Decisión de producto: no existe URL `/hitos/:id` ni registro DB por badge — los badges son computados client-side. La medalla de completar un plan es siempre `plan_completo`. Se usa query param + scroll.
+
+**Cambio B — Mensaje correcto cuando filtro bloquea sugerencias:**
+- `EstrategiasPage.jsx`: `esPostRechazo` simplificado de useMemo complejo a `const esPostRechazo = !sugerenciaVisible && episodios.length >= 5 && !loadingPatrones`
+- Cubre los 3 subcasos: post-rechazo, filtro 90 días, IA sin patrón detectado
+- `EmptyPuerta1.jsx`: sin cambios (ya usaba el prop `postRechazo` correctamente)
+- Nota de producto respetada: filtro 90 días aplica solo a Puerta 1, no al selector manual (Puerta 2)
+
 ## Pendientes próxima sesión
 
 1. **SQL a correr en Supabase SQL Editor** (necesario para que el descarte guarde el conteo):
@@ -439,9 +455,9 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
    ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodios_count_al_rechazar integer DEFAULT 0;
    ```
 2. **Verificar visualmente en producción** (huella-theta.vercel.app):
-   - Crear plan nuevo → recargar → confirmar que tareas aparecen
+   - Completar plan → click "Ver tu hito" → debe hacer scroll al badge 🏆 "4 semanas" con animación pulsante
+   - Con ≥5 episodios y habilidades todas excluidas por 90 días → expandir módulo "Sugerencias" → debe mostrar "Sin sugerencias activas por ahora."
    - Módulo colapsable: primera visita auto-expandido + badge "1 nueva"; segunda visita colapsado sin badge
-   - Rechazar sugerencia → confirmar estado post-rechazo en EmptyPuerta1
    - 3 planes activos → intentar crear uno nuevo → confirmar modal de cap
 3. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
 4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
