@@ -385,16 +385,35 @@ Implementado desde handoff bundle `design_handoff_estrategias/` (en raíz del pr
 
 ---
 
-## Pendientes próxima sesión
+---
 
-1. **Verificar visualmente en producción** (huella-theta.vercel.app):
-   - `/estrategias` — lista con sugerencia IA o SelectorHabilidades, empty state
-   - `/estrategias/nuevo` — confirmación del plan, pantalla loading, generación
-   - `/estrategias/:id` — semanas, toggle tareas, avanzar semana, banner completado
-   - Confirmar que el PDF y el Historial no tienen regresiones
-2. **Verificar el PDF en producción** — ligaduras, títulos de sección
-3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+### 16. Fix crítico — tareas no persistían tras reload *(2026-05-08)*
+
+**Root cause:** columna `plan` en tabla `estrategias` es `TEXT`, no `JSONB`. Supabase serializa el objeto JS como JSON string al insertar. Al leer de vuelta, `row.plan` es un string; `plan.plan?.semanas = undefined`; `SemanaActiva` nunca renderizaba.
+
+**Fixes aplicados (commit d8ae7c3):**
+- `HuellaContext.jsx` — `parsePlanField()` parsea `row.plan` si es string; los planes ya creados con el bug se recuperan automáticamente.
+- `SemanaActiva.jsx` — init defensivo `Array.isArray(semana.tareas)` cubre `{}`, `undefined`, `null` además de `[]`.
+- `EstrategiaDetailPage.jsx` — `key={actual}` en `SemanaActiva` fuerza remount al avanzar semana; corrige bug de tareas de semana 1 que se repetían en semana 2 (stale useState).
+
+**Migración SQL recomendada (no urgente):** Cambiar la columna a JSONB es limpiador pero no bloquea. Correr en SQL Editor cuando sea conveniente:
+```sql
+ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;
+```
 
 ---
 
-*Última actualización: 2026-05-07*
+## Pendientes próxima sesión
+
+1. **Verificar visualmente en producción** (huella-theta.vercel.app):
+   - Crear plan nuevo → recargar → confirmar que tareas aparecen
+   - Avanzar semana → confirmar que semana 2 muestra sus propias tareas
+   - Plan legacy sin tareas → confirmar que aparece botón "Generar tareas de esta semana"
+   - Banner completado → confirmar cuenta de episodios y ruta `/hitos`
+2. **Verificar el PDF en producción** — ligaduras, títulos de sección
+3. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
+4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+
+---
+
+*Última actualización: 2026-05-08*

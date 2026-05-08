@@ -204,3 +204,19 @@ La paleta cálida (salmón/crema) es coherente con el tono emocional del product
 ---
 
 *Archivo generado por revisión de código + análisis UX. Actualizar a medida que se implementen mejoras.*
+
+---
+
+## Deuda técnica detectada — Estrategias (2026-05-08)
+
+### Migración SQL pendiente (no urgente)
+La columna `plan` en tabla `estrategias` es `TEXT`. Funciona porque ahora la parseamos en `parsePlanField()`, pero JSONB sería más limpio y permitiría queries directas. Correr cuando sea conveniente:
+```sql
+ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;
+```
+
+### Posible bug de duplicados al crear plan de misma habilidad
+No verificado, pero sospechoso: si el usuario presiona "Generar mi plan" dos veces rápido (por doble-tap o red lenta), `EstrategiaNuevaPage` podría hacer dos INSERTs. La variable `estado` pasa a `'generando'` en el primer click, lo que desactiva el botón, pero no hay `useRef` ni flag persistente. Agregar un guard con `useRef(false)` o deshabilitar el botón con `disabled={estado !== 'paso-1-confirmar'}`.
+
+### `checkins` column — default `'{}'::jsonb` pero se espera array
+El schema define `checkins jsonb default '{}'::jsonb` (objeto vacío) pero el código trata `checkins` como array: `Array.isArray(row.checkins)`. Si un plan nuevo tiene `checkins = {}`, `Array.isArray({})` = false, y se devuelve `{}` (no array). El `checkin.find(...)` fallaría. En la práctica, los planes nuevos nunca tienen checkins al crear (se inicializa en `[]` en el dispatch), pero si alguien consulta un plan antes de hacer el primer check-in podría haber un edge case. Solución: cambiar el default a `'[]'::jsonb` en el schema, o manejar `{}` en el mapper.
