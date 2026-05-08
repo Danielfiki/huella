@@ -1,0 +1,23 @@
+
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; gap: 14px; }
+.head { display: flex; flex-direction: column; gap: 12px; }
+.row1 { display: flex; align-items: flex-start; gap: 12px; }
+.child { width: 36px; height: 36px; border-radius: 50%; background: var(--color-mocha); color: #fff; display: grid; place-items: center; font-family: var(--font-heading); font-weight: 600; font-size: 15px; flex-shrink: 0; }
+.ttls { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.eye { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted); }
+.ttl { font-family: var(--font-heading); font-weight: 700; font-size: 19px; color: var(--color-ink); line-height: 1.2; }
+.week { font-size: 13px; color: var(--color-muted); margin-top: 2px; }
+.progRow { display: flex; gap: 6px; }
+.seg { flex: 1; height: 6px; border-radius: 3px; background: var(--color-border); }
+.seg.done { background: var(--color-mocha); }
+.seg.now { background: var(--color-tangerine); }
+.origRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px dashed var(--color-border); }
+.origLbl { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted); margin-right: 4px; }
+.ep { display: inline-flex; align-items: center; gap: 6px; border-radius: 100px; padding: 4px 10px; font-size: 12px; }
+.pillEmo { background: var(--pill-emo-bg); color: var(--pill-emo-fg); }
+.pillRut { background: var(--pill-rut-bg); color: var(--pill-rut-fg); }
+.pillVin { background: var(--pill-vin-bg); color: var(--pill-vin-fg); }
+.pillJue { background: var(--pill-jue-bg); color: var(--pill-jue-fg); }
+.pillSal { background: var(--pill-sal-bg); color: var(--pill-sal-fg); }
+.cta { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--color-mocha); color: #fff; border: none; border-radius: var(--radius-md); padding: 14px 18px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+.arr { font-size: 18px; }

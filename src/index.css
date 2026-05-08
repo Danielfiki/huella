@@ -143,6 +143,24 @@
   --color-stat-calm:   #A8C99B;
   --color-stat-warm:   var(--color-primary-light);
   --color-stat-alert:  #E8967D;
+
+  /* ═══ Estrategias · Aliases semánticos ═══ */
+  --color-mocha:     var(--color-accent-mocha);
+  --color-tangerine: var(--color-primary);
+  --color-cream:     var(--color-bg);
+  --color-ink:       var(--color-text);
+  --color-muted:     var(--color-text-muted);
+  --radius-xs:       6px;
+
+  /* ═══ Estrategias · Pills por categoría de episodio ═══ */
+  --pill-emo-bg: #FCE9D8;   --pill-emo-fg: #7A3F12;
+  --pill-rut-bg: #E8E0D2;   --pill-rut-fg: #4F4232;
+  --pill-vin-bg: #DCE7DD;   --pill-vin-fg: #2E4A36;
+  --pill-jue-bg: #E5DDF0;   --pill-jue-fg: #432F66;
+  --pill-sal-bg: #DEE7EC;   --pill-sal-fg: #2D4452;
+
+  /* ═══ Estrategias · Sombra dignificada ═══ */
+  --shadow-soft: 0 6px 18px -8px rgba(67, 47, 32, 0.18);
 }
 
 /* ── Modo oscuro ── */
@@ -230,6 +248,15 @@
     --color-stat-calm:   #A8C99B;
     --color-stat-warm:   var(--color-primary-light);
     --color-stat-alert:  #E8967D;
+
+    /* ═══ Estrategias · dark overrides ═══ */
+    --color-mocha:     #7A6050;
+    --pill-emo-bg: #4A2E18;   --pill-emo-fg: #FCD9B5;
+    --pill-rut-bg: #3A332A;   --pill-rut-fg: #E8DFCF;
+    --pill-vin-bg: #2C3D31;   --pill-vin-fg: #C7DDC9;
+    --pill-jue-bg: #322843;   --pill-jue-fg: #D7C8EC;
+    --pill-sal-bg: #2A3A45;   --pill-sal-fg: #C7DAE3;
+    --shadow-soft: 0 6px 18px -8px rgba(0, 0, 0, 0.5);
   }
 }
 

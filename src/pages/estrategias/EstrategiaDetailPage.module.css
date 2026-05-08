@@ -1,0 +1,4 @@
+
+.page { display: flex; flex-direction: column; min-height: 100vh; background: var(--color-bg); }
+.body { display: flex; flex-direction: column; gap: 14px; padding: 20px 16px 100px; }
+.loading { padding: 80px 20px; text-align: center; color: var(--color-muted); }

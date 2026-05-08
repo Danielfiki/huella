@@ -101,6 +101,23 @@ function reducer(state, action) {
     case 'REMOVE_ESTRATEGIA':
       return { ...state, estrategias: state.estrategias.filter(e => e.id !== action.payload) }
 
+    case 'ESTRATEGIA_CREADA':
+      return { ...state, estrategias: [...state.estrategias, action.plan] }
+
+    case 'ESTRATEGIA_AVANZADA':
+      return {
+        ...state,
+        estrategias: state.estrategias.map((p) =>
+          p.id !== action.plan_id ? p : {
+            ...p,
+            semana_actual:  action.semana_actual  ?? p.semana_actual,
+            semanaActual:   action.semana_actual  ?? p.semanaActual,
+            completado_at:  action.completado_at  ?? p.completado_at,
+            checkins:       action.checkins       ?? p.checkins,
+          }
+        ),
+      }
+
     case 'UPDATE_EPISODIO':
       return {
         ...state,
@@ -172,15 +189,28 @@ function dbEpisodioToApp(row) {
 
 function dbEstrategiaToApp(row) {
   return {
-    id:               row.id,
-    habilidad:        row.habilidad,
-    descripcion:      row.descripcion,
-    plan:             row.plan,
-    fechaInicio:      row.fecha_inicio,
-    semanaActual:     row.semana_actual,
-    tareas:           row.tareas            ?? {},
-    checkins:         row.checkins          ?? {},
-    episodioOrigenId: row.episodio_origen_id ?? null,
+    // snake_case — usado por los nuevos componentes de estrategias
+    id:                       row.id,
+    hijo_id:                  row.hijo_id                  ?? null,
+    habilidad:                row.habilidad,
+    habilidad_nombre:         row.habilidad                ?? null,
+    habilidad_grupo:          row.habilidad_grupo          ?? null,
+    descripcion:              row.descripcion,
+    plan:                     row.plan,
+    checkins:                 Array.isArray(row.checkins) ? row.checkins : (row.checkins ?? []),
+    tareas:                   row.tareas                   ?? {},
+    semana_actual:            row.semana_actual            ?? 1,
+    total_semanas:            row.total_semanas            ?? 4,
+    completado_at:            row.completado_at            ?? null,
+    abandonado_at:            row.abandonado_at            ?? null,
+    episodios_detonantes_ids: row.episodios_detonantes_ids ?? [],
+    episodio_origen_id:       row.episodio_origen_id       ?? null,
+    created_at:               row.created_at               ?? null,
+    fecha_inicio:             row.fecha_inicio             ?? null,
+    // camelCase — mantenidos para compatibilidad con código existente
+    fechaInicio:              row.fecha_inicio,
+    semanaActual:             row.semana_actual,
+    episodioOrigenId:         row.episodio_origen_id       ?? null,
   }
 }
 
