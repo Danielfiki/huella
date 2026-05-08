@@ -1,29 +1,44 @@
 // helpers.js — Estrategias
-// Catálogo de habilidades (mockup aprobado: 11 habilidades · 2 grupos)
+// Catálogo de habilidades (11 habilidades · 2 grupos · lenguaje situacional)
 // + utilidades varias
 
 export const HABILIDADES_CATALOGO = {
   emocional: {
     nombre: 'Regulación emocional',
     items: [
-      { id: 'berrinches',  label: 'Berrinches',  emoji: '🌋' },
-      { id: 'tristeza',    label: 'Tristeza',    emoji: '💧' },
-      { id: 'miedos',      label: 'Miedos',      emoji: '🫧' },
-      { id: 'frustracion', label: 'Frustración', emoji: '😤' },
-      { id: 'ansiedad',    label: 'Ansiedad',    emoji: '🌀' },
-      { id: 'enojo',       label: 'Enojo',       emoji: '🔥' },
+      { id: 'calmarse_explosion',    label: 'Calmarse cuando explota',               emoji: '🌊' },
+      { id: 'aceptar_no',            label: 'Aceptar el "no" sin crisis',             emoji: '💪' },
+      { id: 'manejar_cambios',       label: 'Manejar los cambios de rutina',          emoji: '🔄' },
+      { id: 'relacionarse_ninos',    label: 'Relacionarse mejor con otros niños',     emoji: '🤝' },
+      { id: 'manejar_miedo',         label: 'Manejar el miedo y la angustia',         emoji: '🛡️' },
+      { id: 'concentrarse_calmarse', label: 'Concentrarse y calmarse',               emoji: '🧘' },
     ],
   },
   desarrollo: {
     nombre: 'Desarrollo y aprendizaje',
     items: [
-      { id: 'socializar',   label: 'Socializar',   emoji: '👋' },
-      { id: 'limites',      label: 'Límites',      emoji: '🤝' },
-      { id: 'sueno',        label: 'Sueño',        emoji: '🌙' },
-      { id: 'alimentacion', label: 'Alimentación', emoji: '🍽️' },
-      { id: 'autonomia',    label: 'Autonomía',    emoji: '🌱' },
+      { id: 'mejorar_atencion',        label: 'Mejorar la atención y concentración',   emoji: '🎯' },
+      { id: 'autonomia_independencia', label: 'Desarrollar autonomía e independencia', emoji: '🌱' },
+      { id: 'rutinas_funcionen',       label: 'Establecer rutinas que funcionen',      emoji: '📅' },
+      { id: 'motivacion_autoestima',   label: 'Motivación y autoestima',               emoji: '🌟' },
+      { id: 'dificultades_colegio',    label: 'Dificultades en el colegio',            emoji: '🏫' },
     ],
   },
+};
+
+// Frases clínicas por habilidad — se muestran en la pantalla de confirmación del plan
+export const CONTEXTOS_HABILIDAD = {
+  calmarse_explosion:    'La autorregulación emocional es la base de todas las demás habilidades sociales y relacionales.',
+  aceptar_no:            'Tolerar la frustración construye resiliencia duradera. Es una de las habilidades más valiosas en la vida adulta.',
+  manejar_cambios:       'La flexibilidad ante los cambios reduce el estrés y mejora la adaptación en todo contexto.',
+  relacionarse_ninos:    'Las conexiones positivas tempranas son el mayor predictor de bienestar emocional adulto.',
+  manejar_miedo:         'Aprender a regular el miedo desde pequeño protege la salud mental a largo plazo.',
+  concentrarse_calmarse: 'La calma y el foco son habilidades entrenables con práctica constante, no rasgos fijos.',
+  mejorar_atencion:      'La atención sostenida se entrena como un músculo — pequeños ejercicios diarios generan cambios duraderos.',
+  autonomia_independencia: 'Cada pequeño paso que hace solo construye confianza en sí mismo y en el mundo.',
+  rutinas_funcionen:     'Las rutinas predecibles reducen la ansiedad y liberan energía mental para aprender y crecer.',
+  motivacion_autoestima: 'Un niño que se siente capaz intenta cosas nuevas. La autoestima se construye en los pequeños logros de cada día.',
+  dificultades_colegio:  'El colegio es un entorno exigente. Con las estrategias correctas, los desafíos se vuelven oportunidades de crecer.',
 };
 
 // Lookup helper — devuelve { id, label, emoji, grupo, grupoNombre } o null

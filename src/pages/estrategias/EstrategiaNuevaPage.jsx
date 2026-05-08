@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import HeaderMocha from './components/HeaderMocha';
 import LoadingDignificado from './components/LoadingDignificado';
-import { HABILIDADES_CATALOGO } from './helpers';
+import { HABILIDADES_CATALOGO, CONTEXTOS_HABILIDAD } from './helpers';
 import styles from './EstrategiaNuevaPage.module.css';
 
 const PASOS_LOADING = [
@@ -31,8 +31,10 @@ export default function EstrategiaNuevaPage() {
       const it = grupo.items.find((x) => x.id === habilidadId);
       if (it) return { ...it, grupoNombre: grupo.nombre };
     }
-    return { id: habilidadId || 'otra', label: 'Habilidad personalizada', emoji: '·', grupoNombre: 'Otra' };
+    return { id: habilidadId || 'otra', label: habilidadId || 'Habilidad personalizada', emoji: '·', grupoNombre: 'Otra' };
   })();
+
+  const contextoHabilidad = CONTEXTOS_HABILIDAD[habilidad.id] || null;
 
   const [contextoExtra, setContextoExtra] = useState('');
   const [estado, setEstado] = useState('paso-1-confirmar');
@@ -157,6 +159,7 @@ export default function EstrategiaNuevaPage() {
         <div className={styles.hero}>
           <div className={styles.eye}>Vamos a trabajar</div>
           <h2 className={styles.ttl}>{habilidad.label}</h2>
+          {contextoHabilidad && <p className={styles.ctx}>{contextoHabilidad}</p>}
           <p className={styles.sub}>Para {hijo?.nombre} · {hijo?.edad} años</p>
           {episodiosDetonantes.length > 0 && (
             <div className={styles.epList}>

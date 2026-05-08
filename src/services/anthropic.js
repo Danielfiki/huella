@@ -467,8 +467,8 @@ const PROMPT_DETECTAR_PATRONES = `Eres un asistente clínico para una app de cri
 Tu tarea: identificar UN solo patrón en los episodios registrados que sugiera trabajar una habilidad concreta.
 
 Habilidades disponibles (usar EXACTAMENTE uno de estos ids como "tipo"):
-- berrinches, tristeza, miedos, frustracion, ansiedad, enojo
-- socializar, limites, sueno, alimentacion, autonomia
+- calmarse_explosion, aceptar_no, manejar_cambios, relacionarse_ninos, manejar_miedo, concentrarse_calmarse
+- mejorar_atencion, autonomia_independencia, rutinas_funcionen, motivacion_autoestima, dificultades_colegio
 
 Reglas:
 1. Sólo devolver un patrón si hay ≥3 episodios coherentes que lo respalden en los últimos 30 días.
