@@ -319,6 +319,65 @@ Implementado desde handoff `handoff-historial-cronologico-denso` (zip en Downloa
 
 ---
 
+### 15. Rediseño completo de Estrategias *(implementado 2026-05-07)*
+
+Implementado desde handoff bundle `design_handoff_estrategias/` (en raíz del proyecto):
+
+**Arquitectura nueva:**
+- 3 páginas separadas: `/estrategias` (Lista), `/estrategias/nuevo` (Creación), `/estrategias/:id` (Detalle)
+- 11 componentes nuevos con sus CSS modules en `src/pages/estrategias/components/`
+- `helpers.js` con catálogo de 11 habilidades (2 grupos: Regulación emocional / Desarrollo y aprendizaje)
+
+**Puerta 1 — Sugerencia IA:**
+- `detectarPatronesEstructurado()` nueva función en `anthropic.js` — llama a la IA y devuelve JSON estructurado `{ patrones: [{ tipo, descripcion, bajada, episodios_ids, confianza }] }`
+- `SugerenciaIACard` muestra sugerencia con episodio detonante, botones Empezar / ✕
+- Descarte persistido en `estrategia_sugerencias_descartadas` (fingerprint, reaparece en 14 días)
+- `EmptyPuerta1` cuando hay < 3 episodios o la sugerencia fue descartada
+
+**Puerta 2 — Selector manual:**
+- `SelectorHabilidades` con las 11 habilidades en 2 grupos como chips seleccionables
+- Opción "Otra situación" con textarea libre
+
+**Creación del plan:**
+- `EstrategiaNuevaPage` llama a `generarEstrategia({ hijo, habilidad, descripcion })`
+- Normaliza tareas de `string[]` → `{id, texto, completada: false}` y `accion` → `descripcion`
+- `LoadingDignificado` con pasos animados durante la generación IA
+- Persistencia: INSERT en `estrategias` con columna `plan` JSONB (sin `estrategia_semanas`)
+
+**Vista detalle:**
+- `EstrategiaDetailPage` — semanas activa/pasadas/futuras con merge de reflexiones desde `checkins` JSONB
+- `SemanaActiva` con toggle de tareas (useState local, no muta props) + checkin semanal
+- `SemanaPasada` expandible con reflexión · `SemanaFutura` bloqueada
+- `BannerCompletado` cuando se cierra la última semana
+- `onAvanzar` persiste en JSONB (`estrategias.checkins` append-only + `semana_actual`)
+
+**HuellaContext:**
+- `dbEstrategiaToApp` actualizado: expone snake_case nuevas columnas (`semana_actual`, `total_semanas`, `completado_at`, `abandonado_at`, `episodios_detonantes_ids`, `hijo_id`, `habilidad_nombre`, `created_at`) + camelCase aliases para backward compat
+- Reducer: nuevos casos `ESTRATEGIA_CREADA` y `ESTRATEGIA_AVANZADA`
+
+**CSS tokens nuevos en index.css:**
+- Aliases semánticos: `--color-mocha`, `--color-tangerine`, `--color-cream`, `--color-ink`, `--color-muted`, `--radius-xs`
+- Pills por categoría: `--pill-emo-bg/fg`, `--pill-rut-bg/fg`, `--pill-vin-bg/fg`, `--pill-jue-bg/fg`, `--pill-sal-bg/fg`
+- `--shadow-soft` · todos con dark mode overrides
+
+**SQL (ya ejecutado):** `design_handoff_estrategias/sql/001_estrategias_rediseno.sql`
+- Tabla `estrategia_sugerencias_descartadas` con RLS
+- 5 columnas nuevas en `estrategias` con IF NOT EXISTS
+- Migración de `episodio_origen_id` → `episodios_detonantes_ids`
+
+**Bugs corregidos sobre el bundle:**
+- Import path supabase: `services/supabase` → `lib/supabase`
+- `interpretarPatrones` → `detectarPatronesEstructurado` (JSON estructurado, no texto)
+- `generarEstrategia` signature adaptada al API real
+- `generarTareas` removida (innecesaria, `generarEstrategia` ya incluye semanas)
+- `hijo.edad_label` → `hijo.edad`
+- `plan.semanas` → `plan.plan?.semanas` (JSONB path correcto)
+- `estrategia_semanas` table writes eliminados → JSONB
+- `contenido_ia` column → `plan` column
+- `SemanaActiva.toggleTarea` directo mutation → useState local
+
+---
+
 ### 14. Fixes del Panel de Inicio *(2026-05-07)*
 
 - **ConsejoBubble movido del Panel al Perfil del hijo** — libera espacio visual en el Panel de Inicio; aparece ahora en la pantalla de perfil de cada hijo
@@ -328,10 +387,13 @@ Implementado desde handoff `handoff-historial-cronologico-denso` (zip en Downloa
 
 ## Pendientes próxima sesión
 
-1. **Rediseño de la pantalla Estrategias** — mismo flujo: Claude Design genera 3 enfoques conceptuales → elegimos → mockup visual → handoff bundle → Claude Code implementa con adaptaciones
-2. **Verificar visualmente en producción** (huella-theta.vercel.app): (a) Historial — header mocha, FiltroChips, pills coloreadas, OrientacionIA expandible, delete, reflexión, buscador inline, filtros; (b) Panel — avatar del hijo en el Hero, ConsejoBubble en Perfil
-3. **Verificar el PDF en producción** — ligaduras, títulos de sección
-4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+1. **Verificar visualmente en producción** (huella-theta.vercel.app):
+   - `/estrategias` — lista con sugerencia IA o SelectorHabilidades, empty state
+   - `/estrategias/nuevo` — confirmación del plan, pantalla loading, generación
+   - `/estrategias/:id` — semanas, toggle tareas, avanzar semana, banner completado
+   - Confirmar que el PDF y el Historial no tienen regresiones
+2. **Verificar el PDF en producción** — ligaduras, títulos de sección
+3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
 
 ---
 
