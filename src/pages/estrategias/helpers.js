@@ -8,9 +8,9 @@ export const HABILIDADES_CATALOGO = {
   emocional: {
     nombre: 'Regulación emocional',
     items: [
-      { id: 'calmarse_explosion',    label: 'Calmarse cuando explota',               emoji: '🌊' },
-      { id: 'aceptar_no',            label: 'Aceptar el "no" sin crisis',             emoji: '💪' },
-      { id: 'manejar_cambios',       label: 'Manejar los cambios de rutina',          emoji: '🔄' },
+      { id: 'calmarse_explosion',    label: 'Calmarse cuando explota',               emoji: '🌊', tags: ['regulacion_emocional', 'enojo', 'berrinches'] },
+      { id: 'aceptar_no',            label: 'Aceptar el "no" sin crisis',             emoji: '💪', tags: ['regulacion_emocional', 'berrinches', 'frustracion'] },
+      { id: 'manejar_cambios',       label: 'Manejar los cambios de rutina',          emoji: '🔄', tags: ['regulacion_emocional', 'frustracion'] },
       { id: 'relacionarse_ninos',    label: 'Relacionarse mejor con otros niños',     emoji: '🤝' },
       { id: 'manejar_miedo',         label: 'Manejar el miedo y la angustia',         emoji: '🛡️' },
       { id: 'concentrarse_calmarse', label: 'Concentrarse y calmarse',               emoji: '🧘' },

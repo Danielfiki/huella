@@ -1,16 +1,26 @@
 
-.box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
 .head { display: flex; align-items: center; gap: 10px; }
 .headTtl { font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-ink); }
-.group { display: flex; flex-direction: column; gap: 8px; }
-.grpName { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-muted); font-weight: 600; }
+.intro { font-size: 12px; color: var(--color-muted); margin: 0; }
+.bloqueadaMsg { font-size: 12px; color: var(--color-muted); background: var(--color-bg); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
+
+.cat { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.catHeader { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 14px; background: var(--color-bg); border: none; font: inherit; cursor: pointer; text-align: left; }
+.catHeader:hover { background: var(--color-surface-alt); }
+.catHeaderOpen { background: var(--color-surface-alt); }
+.catName { flex: 1; font-size: 13px; font-weight: 600; color: var(--color-ink); }
+.catCount { font-size: 11px; color: var(--color-muted); }
+.catChev { font-size: 10px; color: var(--color-muted); }
+.catContent { padding: 12px 14px; background: var(--color-surface); border-top: 1px solid var(--color-border); }
+
 .skills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .skill { display: inline-flex; align-items: center; gap: 6px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 100px; padding: 8px 14px; font: inherit; font-size: 13px; color: var(--color-ink); cursor: pointer; }
 .skill:hover { border-color: var(--color-mocha); }
 .skill.on { background: var(--color-tangerine); color: #fff; border-color: var(--color-tangerine); }
 .skill.bloqueada { opacity: 0.4; cursor: not-allowed; }
-.bloqueadaMsg { font-size: 12px; color: var(--color-muted); background: var(--color-bg); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
 .e { font-size: 14px; }
+
 .other { background: transparent; border: 1px dashed var(--color-border); border-radius: var(--radius-md); padding: 12px; font: inherit; font-size: 13px; color: var(--color-muted); cursor: pointer; }
 .otraBox { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--color-bg); border-radius: var(--radius-md); }
 .otraBox textarea { font: inherit; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); min-height: 70px; }

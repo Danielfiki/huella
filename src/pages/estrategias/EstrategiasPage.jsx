@@ -213,7 +213,7 @@ export default function EstrategiasPage() {
     <div className={styles.page}>
       <HeaderMocha
         titulo="Estrategias"
-        clinical={`Basadas en ${episodios.length} ${episodios.length === 1 ? 'momento registrado' : 'momentos registrados'}`}
+        clinical={`Tus planes se construyen con ${episodios.length} ${episodios.length === 1 ? 'momento que has registrado' : 'momentos que has registrado'}.`}
       />
 
       <div className={styles.body}>
@@ -235,7 +235,7 @@ export default function EstrategiasPage() {
         {planesActivos.length < MAX_PLANES_ACTIVOS_FREE && (
           <section className={styles.section}>
             <button className={styles.sectionHeader} onClick={handleToggle} aria-expanded={expanded}>
-              <span className={styles.sectionLblText}>🌱 Sugerencias de Huella</span>
+              <span className={styles.sectionLblText}>Lo que más se repite en tus registros</span>
               {esNueva && sugerenciaVisible && (
                 <span className={styles.badgeNueva}>1 nueva</span>
               )}

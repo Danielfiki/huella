@@ -229,7 +229,7 @@ export default function EstrategiaNuevaPage() {
           />
         </label>
 
-        <Button className={styles.cta} onClick={iniciarCreacion}>Generar mi plan</Button>
+        <Button className={styles.cta} onClick={iniciarCreacion}>Empecemos juntos</Button>
       </div>
 
       {showCapModal && (
