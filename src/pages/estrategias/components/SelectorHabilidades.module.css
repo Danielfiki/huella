@@ -40,9 +40,3 @@
 .rowTags { display: flex; flex-wrap: wrap; gap: 4px; }
 .tagChip { background: var(--color-surface-alt); color: var(--color-muted); font-size: 9px; border-radius: 4px; padding: 2px 6px; line-height: 1.4; }
 
-/* ── Otra situación ── */
-.other { background: transparent; border: 1px dashed var(--color-border); border-radius: var(--radius-md); padding: 12px; font: inherit; font-size: 13px; color: var(--color-muted); cursor: pointer; text-align: left; }
-.otraBox { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--color-bg); border-radius: var(--radius-md); }
-.otraBox textarea { font: inherit; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); min-height: 70px; resize: vertical; }
-.otraBox button { padding: 10px; font: inherit; font-weight: 600; background: var(--color-tangerine); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; }
-.otraBox button:disabled { opacity: 0.4; cursor: not-allowed; }

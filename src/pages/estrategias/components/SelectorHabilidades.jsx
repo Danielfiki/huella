@@ -38,8 +38,6 @@ export default function SelectorHabilidades({ seleccionada, onElegir, onCasoLibr
   const [activeFilter, setActiveFilter] = useState(null);
   const [casoTexto, setCasoTexto] = useState('');
   const [casoError, setCasoError] = useState('');
-  const [otra, setOtra] = useState(false);
-  const [otraTexto, setOtraTexto] = useState('');
   const [msgBloqueada, setMsgBloqueada] = useState('');
 
   const handleClickHabilidad = (it) => {
@@ -139,25 +137,6 @@ export default function SelectorHabilidades({ seleccionada, onElegir, onCasoLibr
         );
       })}
 
-      {!otra ? (
-        <button className={styles.other} onClick={() => setOtra(true)}>
-          + Otra situación · escríbelo en tus palabras
-        </button>
-      ) : (
-        <div className={styles.otraBox}>
-          <textarea
-            placeholder="Describí la situación en tus palabras…"
-            value={otraTexto}
-            onChange={(e) => setOtraTexto(e.target.value)}
-          />
-          <button
-            disabled={otraTexto.trim().length < 10}
-            onClick={() => onElegir({ id: 'otra', label: otraTexto.trim(), grupo: 'otra', grupoNombre: 'Otra' })}
-          >
-            Usar este texto
-          </button>
-        </div>
-      )}
     </div>
   );
 }
