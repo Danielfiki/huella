@@ -2,27 +2,40 @@ import React, { useState } from 'react';
 import { HABILIDADES_CATALOGO } from '../helpers';
 import styles from './SelectorHabilidades.module.css';
 
-export default function SelectorHabilidades({ seleccionada, onElegir }) {
+export default function SelectorHabilidades({ seleccionada, onElegir, habilidadesEnPlanActivo }) {
   const [otra, setOtra] = useState(false);
   const [otraTexto, setOtraTexto] = useState('');
+  const [msgBloqueada, setMsgBloqueada] = useState('');
   const grupos = Object.entries(HABILIDADES_CATALOGO);
+
+  const handleClickHabilidad = (it, key, grupo) => {
+    const bloqueada = habilidadesEnPlanActivo?.has(it.label);
+    if (bloqueada) {
+      setMsgBloqueada(`Ya tienes un plan activo de "${it.label}".`);
+      setTimeout(() => setMsgBloqueada(''), 3000);
+      return;
+    }
+    onElegir({ ...it, grupo: key, grupoNombre: grupo.nombre });
+  };
 
   return (
     <div className={styles.box}>
       <header className={styles.head}>
         <span className={styles.headTtl}>Elige una habilidad</span>
       </header>
+      {msgBloqueada && <p className={styles.bloqueadaMsg}>{msgBloqueada}</p>}
       {grupos.map(([key, grupo]) => (
         <div key={key} className={styles.group}>
           <div className={styles.grpName}>{grupo.nombre}</div>
           <div className={styles.skills}>
             {grupo.items.map((it) => {
               const on = seleccionada === it.id;
+              const bloqueada = habilidadesEnPlanActivo?.has(it.label);
               return (
                 <button
                   key={it.id}
-                  className={`${styles.skill} ${on ? styles.on : ''}`}
-                  onClick={() => onElegir({ ...it, grupo: key, grupoNombre: grupo.nombre })}
+                  className={`${styles.skill} ${on ? styles.on : ''} ${bloqueada ? styles.bloqueada : ''}`}
+                  onClick={() => handleClickHabilidad(it, key, grupo)}
                 >
                   <span className={styles.e}>{it.emoji}</span>
                   {it.label}

@@ -5,3 +5,4 @@
 .naceDeChip { display: inline-flex; align-items: center; gap: 5px; background: var(--color-strawberry); color: #fff; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 500; }
 .body { display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 100px; }
 .loading { padding: 80px 20px; text-align: center; color: var(--color-muted); }
+.errToggle { font-size: 13px; color: var(--color-danger); padding: 0 16px 8px; text-align: center; }

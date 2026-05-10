@@ -33,3 +33,4 @@
 .modalPlanBtn:hover:not(:disabled) { border-color: var(--color-mocha); }
 .modalPlanBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .modalCancel { padding: 12px; font: inherit; font-weight: 600; border: none; border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-muted); cursor: pointer; }
+.modalErr { font-size: 13px; color: var(--color-danger); margin: 0; text-align: center; }

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
+import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { generarTareas } from '../../services/anthropic';
 import HeaderMocha from './components/HeaderMocha';
@@ -14,11 +15,16 @@ import styles from './EstrategiaDetailPage.module.css';
 export default function EstrategiaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, dispatch } = useHuella();
+  const { state, dispatch, addHito } = useHuella();
+  const { user } = useAuth();
   const plan = (state.estrategias || []).find((p) => p.id === id);
   const hijo = state.hijo;
   const [reflexion, setReflexion] = useState('');
   const [generandoTareas, setGenerandoTareas] = useState(false);
+  const [avanzando, setAvanzando] = useState(false);
+  const [avanzarErr, setAvanzarErr] = useState('');
+  const [tareaKey, setTareaKey] = useState(0);
+  const [toggleErr, setToggleErr] = useState('');
 
   const estado = useMemo(() => plan && estadoPlan(plan), [plan]);
 
@@ -94,11 +100,20 @@ export default function EstrategiaDetailPage() {
       i === idx ? { ...s, tareas: updatedTareas } : s
     );
     const updatedPlan = { ...plan.plan, semanas: updatedSemanas };
-    await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: updatedPlan } });
+    const { error: dbErr } = await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
+    if (dbErr) {
+      dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: plan.plan } });
+      setTareaKey((k) => k + 1);
+      setToggleErr('No se pudo guardar el cambio. Intenta de nuevo.');
+      setTimeout(() => setToggleErr(''), 4000);
+    }
   };
 
   const onAvanzar = async () => {
+    if (avanzando) return;
+    setAvanzando(true);
+    setAvanzarErr('');
     const esUltima = actual === (plan.total_semanas || 4);
     const newCheckin = {
       semana_numero: actual,
@@ -111,15 +126,34 @@ export default function EstrategiaDetailPage() {
       ? { completado_at: new Date().toISOString(), checkins: newCheckins }
       : { semana_actual: actual + 1, checkins: newCheckins };
 
-    await supabase.from('estrategias').update(upd).eq('id', plan.id);
-    dispatch({
-      type: 'ESTRATEGIA_AVANZADA',
-      plan_id: plan.id,
-      ...upd,
-      semana_completada: actual,
-      reflexion,
-    });
-    setReflexion('');
+    try {
+      const { error: dbErr } = await supabase.from('estrategias').update(upd).eq('id', plan.id);
+      if (dbErr) throw new Error(dbErr.message);
+
+      dispatch({
+        type: 'ESTRATEGIA_AVANZADA',
+        plan_id: plan.id,
+        ...upd,
+        semana_completada: actual,
+        reflexion,
+      });
+      setReflexion('');
+
+      if (esUltima && reflexion.trim()) {
+        try {
+          await addHito({
+            id: Date.now().toString(),
+            categoria: 'otro',
+            descripcion: `Plan completado: "${plan.habilidad_nombre || plan.habilidad}" (${plan.total_semanas || 4} semanas). Reflexión final: ${reflexion.trim()}`,
+            fecha: new Date().toISOString(),
+          });
+        } catch { /* hito es no-crítico — el plan se completó igual */ }
+      }
+    } catch {
+      setAvanzarErr('No se pudo guardar. Verifica tu conexión e intenta de nuevo.');
+    } finally {
+      setAvanzando(false);
+    }
   };
 
   return (
@@ -149,9 +183,10 @@ export default function EstrategiaDetailPage() {
           <SemanaPasada key={s.numero} numero={s.numero} semana={s} />
         ))}
 
+        {toggleErr && <p className={styles.errToggle}>{toggleErr}</p>}
         {estado === 'activo' && semanasConReflexion[actual - 1] && (
           <SemanaActiva
-            key={actual}
+            key={`${actual}-${tareaKey}`}
             semana={semanasConReflexion[actual - 1]}
             numero={actual}
             total={plan.total_semanas || 4}
@@ -161,6 +196,8 @@ export default function EstrategiaDetailPage() {
             onToggleTarea={onToggleTarea}
             onGenerarTareas={onGenerarTareas}
             generandoTareas={generandoTareas}
+            avanzando={avanzando}
+            errMsg={avanzarErr}
           />
         )}
 

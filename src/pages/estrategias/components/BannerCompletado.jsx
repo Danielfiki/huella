@@ -14,7 +14,7 @@ export default function BannerCompletado({ plan, hijoNombre, episodiosDurante })
       <div className={styles.ttl}>{plan.total_semanas} semanas trabajando {(plan.habilidad_nombre || plan.habilidad || '').toLowerCase()} con {hijoNombre}.</div>
       <p className={styles.sub}>
         Anotaste {momentosTxt} durante el plan.
-        Tu reflexión final ya quedó guardada en Hitos.
+        Tu reflexión quedó guardada en el álbum de logros.
       </p>
       <div className={styles.acts}>
         <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/hitos?highlight=plan_completo')}>Ver tu hito</button>

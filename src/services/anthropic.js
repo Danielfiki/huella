@@ -450,7 +450,9 @@ function extraerJSON(raw) {
   const start = texto.indexOf('{')
   const end   = texto.lastIndexOf('}')
   if (start === -1 || end === -1 || end < start) return raw
-  const jsonStr = texto.slice(start, end + 1)
+  // Reemplazar newlines literales por espacio antes de parsear.
+  // El modelo los genera dentro de strings multi-frase (JSON inválido).
+  const jsonStr = texto.slice(start, end + 1).replace(/[\r\n]+/g, ' ')
   try {
     return JSON.parse(jsonStr)
   } catch {

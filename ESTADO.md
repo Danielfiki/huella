@@ -482,21 +482,75 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
 
 ---
 
-## Pendientes próxima sesión
+---
 
-1. **SQL a correr en Supabase SQL Editor** (necesario para que el descarte guarde el conteo):
-   ```sql
-   ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodios_count_al_rechazar integer DEFAULT 0;
-   ```
-2. **Verificar visualmente en producción** (huella-theta.vercel.app):
-   - Completar plan → click "Ver tu hito" → debe hacer scroll al badge 🏆 "4 semanas" con animación pulsante
-   - Con ≥5 episodios y habilidades todas excluidas por 90 días → expandir módulo "Sugerencias" → debe mostrar "Sin sugerencias activas por ahora."
-   - Módulo colapsable: primera visita auto-expandido + badge "1 nueva"; segunda visita colapsado sin badge
-   - 3 planes activos → intentar crear uno nuevo → confirmar modal de cap
-   - `SelectorHabilidades`: chips centrados horizontalmente, sin círculo "2" en el título
-3. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
-4. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+### 21. Round 6 — Robustez y multi-planes *(2026-05-09)*
+
+**Auditoría técnica previa:** `AUDITORIA_ESTRATEGIAS.md` (43 hallazgos en 8 dimensiones). Round 6 ataca 4 ALTAS + 5 MEDIAS.
+
+**Cambios implementados:**
+
+1. **H2.6 — BannerCompletado: texto corregido + INSERT real a hitos** (`EstrategiaDetailPage.jsx`, `BannerCompletado.jsx`)
+   - Texto: "Tu reflexión final ya quedó guardada en Hitos." → "Tu reflexión quedó guardada en el álbum de logros."
+   - Al completar la última semana, `onAvanzar` llama `addHito()` con `categoria: 'otro'` y descripción con nombre de habilidad + semanas + reflexión
+
+2. **H4.1 — Mostrar TODOS los planes activos** (`EstrategiasPage.jsx`)
+   - `planActivo = planes.find(...)` → `planesActivos = planes.filter(...)`
+   - `planActivoEnriquecido` (singular) → `planesActivosEnriquecidos` (array)
+   - Render: `planesActivosEnriquecidos.map(plan => <EstrategiaActivaCard key={plan.id} ... />)`
+   - Sugerencias ahora visibles cuando `planesActivos.length < MAX_PLANES_ACTIVOS_FREE` (antes solo si 0 activos)
+
+3. **H1.3 — Loading + error en onAvanzar** (`EstrategiaDetailPage.jsx`)
+   - Estados `avanzando` (bool) y `avanzarErr` (string)
+   - Guard anti-doble-tap: `if (avanzando) return;`
+   - Supabase v2: `const { error: dbErr } = await supabase...` + `if (dbErr) throw`
+   - `setAvanzarErr(...)` en catch; `avanzando` pasado como prop a SemanaActiva
+
+4. **H1.4 — Optimistic rollback en onToggleTarea** (`EstrategiaDetailPage.jsx`)
+   - Dispatch optimista primero; si DB falla, revierte dispatch + incrementa `tareaKey`
+   - `tareaKey` fuerza remount de SemanaActiva (resets local useState `tareas`)
+   - `toggleErr` mostrado 4s sobre la card de semana activa
+
+5. **H1.5 — abandonarPlanYCrear verifica error de Supabase** (`EstrategiaNuevaPage.jsx`)
+   - `const { error: dbErr } = await supabase...` + `if (dbErr) throw`
+   - `capError` state con mensaje inline en el modal de cap
+
+6. **H1.2 — Guard doble-tap en "Generar mi plan"** (`EstrategiaNuevaPage.jsx`)
+   - `generando = useRef(false)` — sincrónico, no batched
+   - `generar()`: early return si `generando.current`; set true antes del primer await; reset en finally
+
+7. **H2.2 — Modal de confirmación para "Cerrar el plan"** (`SemanaActiva.jsx`, `SemanaActiva.module.css`)
+   - Botón "Cerrar el plan ✓" → abre modal; botón "Avanzar a Semana N →" → llama onAvanzar directamente
+   - Modal con backdrop, "¿Listo para cerrar el plan?" + "Esta acción no se puede deshacer."
+   - `avanzando` y `errMsg` pasados como props desde EstrategiaDetailPage
+
+8. **H6.7 — SelectorHabilidades bloquea habilidades con plan activo** (`SelectorHabilidades.jsx`, `.module.css`, `EstrategiasPage.jsx`)
+   - `habilidadesEnPlanActivo = new Set(planesActivos.map(p => p.habilidad_nombre || p.habilidad))` computado en EstrategiasPage
+   - Pasado como prop a SelectorHabilidades
+   - Chips bloqueados: `.bloqueada` (opacity 0.4, cursor not-allowed) + mensaje inline 3s al hacer click
+
+**SQL H7.2 — YA APLICADO EN PRODUCCIÓN:**
+La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas` fue aplicada en la sesión anterior. No requiere acción.
 
 ---
 
-*Última actualización: 2026-05-08*
+## Pendientes próxima sesión
+
+1. **Verificar visualmente en producción** (huella-theta.vercel.app):
+   - 2+ planes activos → ambos deben aparecer en EstrategiasPage (antes solo aparecía 1)
+   - Habilidad con plan activo → chip bloqueado en SelectorHabilidades + mensaje 3s
+   - Última semana → botón "Cerrar el plan" → debe abrir modal de confirmación
+   - Toggle tarea offline → debe revertir con mensaje de error 4s
+   - Doble-tap en "Generar mi plan" → solo debe generar una vez
+2. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
+3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
+4. **Hallazgos MEDIOS pendientes de auditoría** (prioridad siguiente ronda):
+   - H3.2: `SemanaActiva` no recibe `tareaKey` como key en componente de Selector (menor — ya solucionado en este round con `key={\`${actual}-${tareaKey}\`}`)
+   - H5.1: No hay estado de error visual en `onGenerarTareas`
+   - H5.2: `onGenerarTareas` sin guard anti-doble-tap
+   - H6.1: `BannerCompletado` botón "Releer reflexiones" navega a sí mismo (loop)
+   - H6.3: SemanaPasada sin título cuando `semana.titulo` es vacío
+
+---
+
+*Última actualización: 2026-05-09*

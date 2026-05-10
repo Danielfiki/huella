@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { useAuth } from '../../context/AuthContext';
@@ -45,6 +45,8 @@ export default function EstrategiaNuevaPage() {
   const [showCapModal, setShowCapModal] = useState(false);
   const [planesActivosCap, setPlanesActivosCap] = useState([]);
   const [abandonandoId, setAbandonandoId] = useState(null);
+  const [capError, setCapError] = useState('');
+  const generando = useRef(false);
 
   const iniciarCreacion = () => {
     const activos = (state.estrategias || []).filter(
@@ -60,18 +62,24 @@ export default function EstrategiaNuevaPage() {
 
   const abandonarPlanYCrear = async (id) => {
     setAbandonandoId(id);
+    setCapError('');
     try {
       const abandonado_at = new Date().toISOString();
-      await supabase.from('estrategias').update({ abandonado_at }).eq('id', id);
+      const { error: dbErr } = await supabase.from('estrategias').update({ abandonado_at }).eq('id', id);
+      if (dbErr) throw new Error(dbErr.message);
       dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id, abandonado_at } });
       setShowCapModal(false);
       generar();
+    } catch {
+      setCapError('No se pudo cerrar ese plan. Intenta de nuevo.');
     } finally {
       setAbandonandoId(null);
     }
   };
 
   const generar = async () => {
+    if (generando.current) return;
+    generando.current = true;
     setEstado('generando');
     setPasoActual(0);
     try {
@@ -82,6 +90,9 @@ export default function EstrategiaNuevaPage() {
         habilidad: habilidad.label,
         descripcion: contextoExtra || '',
       });
+      if (!planBase || typeof planBase !== 'object' || !Array.isArray(planBase.semanas) || planBase.semanas.length === 0) {
+        throw new Error('El plan no se generó correctamente. Intenta de nuevo.');
+      }
       setPasoActual(2);
 
       // Normalizar semanas: mapear tareas de string[] a {id, texto, completada}
@@ -150,6 +161,8 @@ export default function EstrategiaNuevaPage() {
       console.error('generar estrategia falló', err);
       setError(err.message || 'Algo falló al generar el plan.');
       setEstado('error');
+    } finally {
+      generando.current = false;
     }
   };
 
@@ -236,6 +249,7 @@ export default function EstrategiaNuevaPage() {
                 </button>
               ))}
             </div>
+            {capError && <p className={styles.modalErr}>{capError}</p>}
             <button className={styles.modalCancel} onClick={() => setShowCapModal(false)}>Cancelar</button>
           </div>
         </div>

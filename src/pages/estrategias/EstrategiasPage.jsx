@@ -13,6 +13,7 @@ import {
   buildSugerenciaFromInterpretacion,
   debeMostrarSugerencia,
   estadoPlan,
+  MAX_PLANES_ACTIVOS_FREE,
 } from './helpers';
 import styles from './EstrategiasPage.module.css';
 
@@ -34,8 +35,8 @@ export default function EstrategiasPage() {
   const sugerenciaRef = useRef(null);
   const hijoIdRef = useRef(null);
 
-  const planActivo = useMemo(
-    () => planes.find((p) => estadoPlan(p) === 'activo' && p.hijo_id === hijo?.id),
+  const planesActivos = useMemo(
+    () => planes.filter((p) => estadoPlan(p) === 'activo' && p.hijo_id === hijo?.id),
     [planes, hijo]
   );
   const planesPasados = useMemo(
@@ -43,22 +44,29 @@ export default function EstrategiasPage() {
     [planes, hijo]
   );
 
-  // Enriquecer plan activo con episodios_detonantes computados desde IDs
-  const planActivoEnriquecido = useMemo(() => {
-    if (!planActivo) return null;
-    if (planActivo.episodios_detonantes?.length) return planActivo;
-    const ids = planActivo.episodios_detonantes_ids || [];
-    const detonantes = ids
-      .map((id) => episodios.find((e) => e.id === id))
-      .filter(Boolean)
-      .map((e) => ({
-        id: e.id,
-        titulo: e.descripcionLibre?.slice(0, 40) || e.tipo || 'Momento',
-        emoji: '·',
-        categoria: 'rutina',
-      }));
-    return { ...planActivo, episodios_detonantes: detonantes };
-  }, [planActivo, episodios]);
+  // Enriquecer todos los planes activos con episodios_detonantes computados desde IDs
+  const planesActivosEnriquecidos = useMemo(() => {
+    return planesActivos.map((plan) => {
+      if (plan.episodios_detonantes?.length) return plan;
+      const ids = plan.episodios_detonantes_ids || [];
+      const detonantes = ids
+        .map((id) => episodios.find((e) => e.id === id))
+        .filter(Boolean)
+        .map((e) => ({
+          id: e.id,
+          titulo: e.descripcionLibre?.slice(0, 40) || e.tipo || 'Momento',
+          emoji: '·',
+          categoria: 'rutina',
+        }));
+      return { ...plan, episodios_detonantes: detonantes };
+    });
+  }, [planesActivos, episodios]);
+
+  // Habilidades que ya tienen un plan activo (para bloquear en SelectorHabilidades)
+  const habilidadesEnPlanActivo = useMemo(
+    () => new Set(planesActivos.map((p) => p.habilidad_nombre || p.habilidad)),
+    [planesActivos]
+  );
 
   useEffect(() => {
     if (!hijo?.id) return;
@@ -72,7 +80,7 @@ export default function EstrategiasPage() {
   }, [hijo?.id]);
 
   useEffect(() => {
-    if (planActivo) { setSugerencia(null); return; }
+    if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) { setSugerencia(null); return; }
     if (!hijo?.id || episodios.length < 3) { setSugerencia(null); return; }
 
     // Si venimos del Panel con análisis ya hecho, usarlo directamente
@@ -98,7 +106,7 @@ export default function EstrategiasPage() {
       }
     })();
     return () => { cancel = true; };
-  }, [hijo?.id, episodios, planActivo, sugerenciaPrecocida]);
+  }, [hijo?.id, episodios, planesActivos, sugerenciaPrecocida]);
 
   // Cambio 3: habilidades que ya se están trabajando o se trabajaron en 90 días
   const habilidadesExcluidas = useMemo(() => {
@@ -209,19 +217,22 @@ export default function EstrategiasPage() {
       />
 
       <div className={styles.body}>
-        {planActivoEnriquecido && (
+        {planesActivosEnriquecidos.length > 0 && (
           <section className={styles.section}>
             <div className={styles.sectionLbl}>Lo que estás trabajando</div>
-            <EstrategiaActivaCard
-              plan={planActivoEnriquecido}
-              hijo={hijo}
-              onAbrir={() => navigate(`/estrategias/${planActivoEnriquecido.id}`)}
-              onEliminar={setConfirmDeleteId}
-            />
+            {planesActivosEnriquecidos.map((plan) => (
+              <EstrategiaActivaCard
+                key={plan.id}
+                plan={plan}
+                hijo={hijo}
+                onAbrir={() => navigate(`/estrategias/${plan.id}`)}
+                onEliminar={setConfirmDeleteId}
+              />
+            ))}
           </section>
         )}
 
-        {!planActivoEnriquecido && (
+        {planesActivos.length < MAX_PLANES_ACTIVOS_FREE && (
           <section className={styles.section}>
             <button className={styles.sectionHeader} onClick={handleToggle} aria-expanded={expanded}>
               <span className={styles.sectionLblText}>🌱 Sugerencias de Huella</span>
@@ -247,7 +258,7 @@ export default function EstrategiasPage() {
         )}
 
         <section className={styles.section}>
-          <SelectorHabilidades onElegir={onElegirHabilidad} />
+          <SelectorHabilidades onElegir={onElegirHabilidad} habilidadesEnPlanActivo={habilidadesEnPlanActivo} />
         </section>
 
         {planesPasados.length > 0 && (
