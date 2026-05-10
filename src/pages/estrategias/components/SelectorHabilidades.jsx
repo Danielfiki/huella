@@ -2,28 +2,30 @@ import React, { useState } from 'react';
 import { HABILIDADES_CATALOGO } from '../helpers';
 import styles from './SelectorHabilidades.module.css';
 
-const TAG_LABELS = {
-  regulacion_emocional: 'Regulación emocional',
-  berrinches: 'Berrinches',
-  frustracion: 'Frustración',
-  enojo: 'Enojo',
+const FILTER_CHIPS = [
+  { label: 'Todos',      slug: null },
+  { label: 'Berrinches', slug: 'berrinches' },
+  { label: 'Enojo',      slug: 'enojo' },
+  { label: 'Frustración',slug: 'frustracion' },
+  { label: 'Miedos',     slug: 'miedos' },
+  { label: 'Sociales',   slug: 'sociales' },
+  { label: 'Atención',   slug: 'atencion' },
+  { label: 'Rutinas',    slug: 'rutinas' },
+  { label: 'Autonomía',  slug: 'autonomia' },
+  { label: 'Autoestima', slug: 'autoestima' },
+  { label: 'Colegio',    slug: 'colegio' },
+];
+
+const TAG_DISPLAY = {
+  berrinches: 'Berrinches', enojo: 'Enojo', frustracion: 'Frustración',
+  miedos: 'Miedos', sociales: 'Sociales', atencion: 'Atención',
+  rutinas: 'Rutinas', autonomia: 'Autonomía', autoestima: 'Autoestima', colegio: 'Colegio',
 };
-const TAG_ORDER = ['regulacion_emocional', 'berrinches', 'frustracion', 'enojo'];
 
-function buildCategories() {
-  const cats = {};
-  for (const grupo of Object.values(HABILIDADES_CATALOGO)) {
-    for (const item of grupo.items) {
-      for (const tag of (item.tags || [])) {
-        if (!cats[tag]) cats[tag] = [];
-        if (!cats[tag].find((x) => x.id === item.id)) cats[tag].push(item);
-      }
-    }
-  }
-  return cats;
-}
-
-const CATEGORIES = buildCategories();
+const GROUPS = [
+  { key: 'emocional',   label: 'REGULACIÓN EMOCIONAL',    items: HABILIDADES_CATALOGO.emocional.items },
+  { key: 'desarrollo',  label: 'DESARROLLO Y APRENDIZAJE', items: HABILIDADES_CATALOGO.desarrollo.items },
+];
 
 function resolveGrupo(it) {
   for (const [key, g] of Object.entries(HABILIDADES_CATALOGO)) {
@@ -33,12 +35,10 @@ function resolveGrupo(it) {
 }
 
 export default function SelectorHabilidades({ seleccionada, onElegir, habilidadesEnPlanActivo }) {
-  const [expandedCats, setExpandedCats] = useState({ berrinches: true });
+  const [activeFilter, setActiveFilter] = useState(null);
   const [otra, setOtra] = useState(false);
   const [otraTexto, setOtraTexto] = useState('');
   const [msgBloqueada, setMsgBloqueada] = useState('');
-
-  const visibleTags = TAG_ORDER.filter((tag) => CATEGORIES[tag]?.length > 0);
 
   const handleClickHabilidad = (it) => {
     const bloqueada = habilidadesEnPlanActivo?.has(it.label);
@@ -51,56 +51,59 @@ export default function SelectorHabilidades({ seleccionada, onElegir, habilidade
     onElegir({ ...it, grupo, grupoNombre });
   };
 
-  const toggleCat = (tag) => {
-    setExpandedCats((prev) => ({ ...prev, [tag]: !prev[tag] }));
-  };
+  const filterItem = (it) => !activeFilter || (it.tags || []).includes(activeFilter);
 
   return (
     <div className={styles.box}>
-      <header className={styles.head}>
-        <span className={styles.headTtl}>Elige una habilidad</span>
-      </header>
+      <h3 className={styles.titulo}>¿Qué quieres trabajar?</h3>
       <p className={styles.intro}>Si vienes con algo específico en mente, busca por aquí.</p>
+
+      <div className={styles.filters} role="group" aria-label="Filtrar por tema">
+        {FILTER_CHIPS.map((chip) => {
+          const isActive = activeFilter === chip.slug;
+          return (
+            <button
+              key={chip.slug ?? 'todos'}
+              className={`${styles.filterChip} ${isActive ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveFilter(chip.slug)}
+              aria-pressed={isActive}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
       {msgBloqueada && <p className={styles.bloqueadaMsg}>{msgBloqueada}</p>}
 
-      {visibleTags.map((tag) => {
-        const items = CATEGORIES[tag];
-        const isExpanded = !!expandedCats[tag];
+      {GROUPS.map((group) => {
+        const visibles = group.items.filter(filterItem);
+        if (visibles.length === 0) return null;
         return (
-          <div key={tag} className={styles.cat}>
-            <button
-              className={`${styles.catHeader} ${isExpanded ? styles.catHeaderOpen : ''}`}
-              onClick={() => toggleCat(tag)}
-              aria-expanded={isExpanded}
-            >
-              <span className={styles.catName}>{TAG_LABELS[tag]}</span>
-              {!isExpanded && (
-                <span className={styles.catCount}>
-                  {items.length} {items.length === 1 ? 'habilidad' : 'habilidades'}
-                </span>
-              )}
-              <span className={styles.catChev} aria-hidden="true">{isExpanded ? '▲' : '▼'}</span>
-            </button>
-            {isExpanded && (
-              <div className={styles.catContent}>
-                <div className={styles.skills}>
-                  {items.map((it) => {
-                    const on = seleccionada === it.id;
-                    const bloqueada = habilidadesEnPlanActivo?.has(it.label);
-                    return (
-                      <button
-                        key={it.id}
-                        className={`${styles.skill} ${on ? styles.on : ''} ${bloqueada ? styles.bloqueada : ''}`}
-                        onClick={() => handleClickHabilidad(it)}
-                      >
-                        <span className={styles.e}>{it.emoji}</span>
-                        {it.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+          <div key={group.key} className={styles.group}>
+            <div className={styles.groupDivider}>{group.label}</div>
+            {visibles.map((it) => {
+              const bloqueada = habilidadesEnPlanActivo?.has(it.label);
+              return (
+                <button
+                  key={it.id}
+                  className={`${styles.row} ${bloqueada ? styles.rowBloqueada : ''}`}
+                  onClick={() => handleClickHabilidad(it)}
+                >
+                  <span className={styles.rowEmoji} aria-hidden="true">{it.emoji}</span>
+                  <span className={styles.rowBody}>
+                    <span className={styles.rowLabel}>{it.label}</span>
+                    {(it.tags || []).length > 0 && (
+                      <span className={styles.rowTags}>
+                        {(it.tags || []).map((t) => (
+                          <span key={t} className={styles.tagChip}>{TAG_DISPLAY[t] || t}</span>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         );
       })}

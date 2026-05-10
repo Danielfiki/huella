@@ -8,22 +8,22 @@ export const HABILIDADES_CATALOGO = {
   emocional: {
     nombre: 'Regulación emocional',
     items: [
-      { id: 'calmarse_explosion',    label: 'Calmarse cuando explota',               emoji: '🌊', tags: ['regulacion_emocional', 'enojo', 'berrinches'] },
-      { id: 'aceptar_no',            label: 'Aceptar el "no" sin crisis',             emoji: '💪', tags: ['regulacion_emocional', 'berrinches', 'frustracion'] },
-      { id: 'manejar_cambios',       label: 'Manejar los cambios de rutina',          emoji: '🔄', tags: ['regulacion_emocional', 'frustracion'] },
-      { id: 'relacionarse_ninos',    label: 'Relacionarse mejor con otros niños',     emoji: '🤝' },
-      { id: 'manejar_miedo',         label: 'Manejar el miedo y la angustia',         emoji: '🛡️' },
-      { id: 'concentrarse_calmarse', label: 'Concentrarse y calmarse',               emoji: '🧘' },
+      { id: 'calmarse_explosion',    label: 'Calmarse cuando explota',               emoji: '🌊', tags: ['enojo', 'berrinches'] },
+      { id: 'aceptar_no',            label: 'Aceptar el "no" sin crisis',             emoji: '💪', tags: ['berrinches', 'frustracion'] },
+      { id: 'manejar_cambios',       label: 'Manejar los cambios de rutina',          emoji: '🔄', tags: ['frustracion', 'rutinas'] },
+      { id: 'relacionarse_ninos',    label: 'Relacionarse mejor con otros niños',     emoji: '🤝', tags: ['sociales'] },
+      { id: 'manejar_miedo',         label: 'Manejar el miedo y la angustia',         emoji: '🛡️', tags: ['miedos'] },
+      { id: 'concentrarse_calmarse', label: 'Concentrarse y calmarse',               emoji: '🧘', tags: ['atencion', 'frustracion'] },
     ],
   },
   desarrollo: {
     nombre: 'Desarrollo y aprendizaje',
     items: [
-      { id: 'mejorar_atencion',        label: 'Mejorar la atención y concentración',   emoji: '🎯' },
-      { id: 'autonomia_independencia', label: 'Desarrollar autonomía e independencia', emoji: '🌱' },
-      { id: 'rutinas_funcionen',       label: 'Establecer rutinas que funcionen',      emoji: '📅' },
-      { id: 'motivacion_autoestima',   label: 'Motivación y autoestima',               emoji: '🌟' },
-      { id: 'dificultades_colegio',    label: 'Dificultades en el colegio',            emoji: '🏫' },
+      { id: 'mejorar_atencion',        label: 'Mejorar la atención y concentración',   emoji: '🎯', tags: ['atencion', 'colegio'] },
+      { id: 'autonomia_independencia', label: 'Desarrollar autonomía e independencia', emoji: '🌱', tags: ['autonomia'] },
+      { id: 'rutinas_funcionen',       label: 'Establecer rutinas que funcionen',      emoji: '📅', tags: ['rutinas'] },
+      { id: 'motivacion_autoestima',   label: 'Motivación y autoestima',               emoji: '🌟', tags: ['autoestima'] },
+      { id: 'dificultades_colegio',    label: 'Dificultades en el colegio',            emoji: '🏫', tags: ['colegio', 'atencion'] },
     ],
   },
 };
