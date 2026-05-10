@@ -461,6 +461,58 @@ function extraerJSON(raw) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// generarEstrategiaDesdeContexto — alimenta el flujo "Cuéntame tu caso"
+// Parámetros: { texto_libre, hijo, edad_hijo }
+// Devuelve el mismo shape que generarEstrategia + habilidad_id/label_inferido
+// ════════════════════════════════════════════════════════════════════
+
+const CATALOGO_PROMPT = `CATÁLOGO DE HABILIDADES (usa el id exacto si el caso calza):
+emocional:
+- calmarse_explosion "Calmarse cuando explota" [enojo, berrinches]
+- aceptar_no "Aceptar el \\"no\\" sin crisis" [berrinches, frustracion]
+- manejar_cambios "Manejar los cambios de rutina" [frustracion, rutinas]
+- relacionarse_ninos "Relacionarse mejor con otros niños" [sociales]
+- manejar_miedo "Manejar el miedo y la angustia" [miedos]
+- concentrarse_calmarse "Concentrarse y calmarse" [atencion, frustracion]
+desarrollo:
+- mejorar_atencion "Mejorar la atención y concentración" [atencion, colegio]
+- autonomia_independencia "Desarrollar autonomía e independencia" [autonomia]
+- rutinas_funcionen "Establecer rutinas que funcionen" [rutinas]
+- motivacion_autoestima "Motivación y autoestima" [autoestima]
+- dificultades_colegio "Dificultades en el colegio" [colegio, atencion]`
+
+export async function generarEstrategiaDesdeContexto({ texto_libre, hijo, edad_hijo }) {
+  const edad = edad_hijo ?? hijo?.edad
+  const marco = marcoEdad(edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
+
+  const prompt = `${marco}
+
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+
+El padre/madre describe esta situación en sus propias palabras:
+"${texto_libre}"
+
+${CATALOGO_PROMPT}
+
+Analiza la situación y genera un plan de 4 semanas calibrado a la edad. Reglas:
+1. Si el caso calza claramente con una habilidad del catálogo, pon su id exacto en habilidad_id y su label oficial en label_usado.
+2. Si no calza claramente, pon null en habilidad_id y en label_inferido escribe una frase CÁLIDA y EMOCIONAL que resuma el caso (ej: "Acompañar la frustración al apagar pantallas", nunca un slug técnico).
+3. El plan debe estar calibrado al marco científico de la edad.
+
+Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adicional:
+{"habilidad_id":"<id exacto del catálogo o null>","label_usado":"<label oficial si hay habilidad_id, sino null>","label_inferido":"<frase cálida si habilidad_id es null, sino null>","porQueImporta":"2-3 frases sobre por qué trabajar esto importa en esta etapa, sin markdown","semanas":[{"numero":1,"titulo":"Observar y preparar","accion":"Acción concreta para esta semana, máximo 2 frases, en segunda persona al padre/madre, apropiada para la edad","indicador":"Cómo saber si está funcionando, 1 frase","tareas":["tarea 1, max 90 caracteres, segunda persona","tarea 2","tarea 3"]},{"numero":2,"titulo":"Introducir","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":3,"titulo":"Practicar","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":4,"titulo":"Consolidar","accion":"...","indicador":"...","tareas":["...","...","..."]}]}`
+
+  const raw = await llamarAPI(prompt, 4000)
+  return extraerJSON(raw)
+}
+
+// ════════════════════════════════════════════════════════════════════
 // detectarPatronesEstructurado — alimenta SugerenciaIACard
 // Devuelve { patrones: [{ tipo, descripcion, bajada, episodios_ids, confianza }] }
 // ════════════════════════════════════════════════════════════════════

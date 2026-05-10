@@ -23,8 +23,8 @@ const TAG_DISPLAY = {
 };
 
 const GROUPS = [
-  { key: 'emocional',   label: 'REGULACIÓN EMOCIONAL',    items: HABILIDADES_CATALOGO.emocional.items },
-  { key: 'desarrollo',  label: 'DESARROLLO Y APRENDIZAJE', items: HABILIDADES_CATALOGO.desarrollo.items },
+  { key: 'emocional',  label: 'REGULACIÓN EMOCIONAL',    items: HABILIDADES_CATALOGO.emocional.items },
+  { key: 'desarrollo', label: 'DESARROLLO Y APRENDIZAJE', items: HABILIDADES_CATALOGO.desarrollo.items },
 ];
 
 function resolveGrupo(it) {
@@ -34,8 +34,10 @@ function resolveGrupo(it) {
   return { grupo: 'emocional', grupoNombre: '' };
 }
 
-export default function SelectorHabilidades({ seleccionada, onElegir, habilidadesEnPlanActivo }) {
+export default function SelectorHabilidades({ seleccionada, onElegir, onCasoLibre, habilidadesEnPlanActivo }) {
   const [activeFilter, setActiveFilter] = useState(null);
+  const [casoTexto, setCasoTexto] = useState('');
+  const [casoError, setCasoError] = useState('');
   const [otra, setOtra] = useState(false);
   const [otraTexto, setOtraTexto] = useState('');
   const [msgBloqueada, setMsgBloqueada] = useState('');
@@ -51,13 +53,41 @@ export default function SelectorHabilidades({ seleccionada, onElegir, habilidade
     onElegir({ ...it, grupo, grupoNombre });
   };
 
+  const handleCasoLibreClick = () => {
+    if (!casoTexto.trim()) {
+      setCasoError('Cuéntanos un poco para poder armar tu plan.');
+      return;
+    }
+    setCasoError('');
+    onCasoLibre?.(casoTexto.trim());
+  };
+
   const filterItem = (it) => !activeFilter || (it.tags || []).includes(activeFilter);
 
   return (
     <div className={styles.box}>
-      <h3 className={styles.titulo}>¿Qué quieres trabajar?</h3>
-      <p className={styles.intro}>Si vienes con algo específico en mente, busca por aquí.</p>
+      {/* Card "Cuéntame tu caso" */}
+      <div className={styles.casoCard}>
+        <div className={styles.casoEyebrow}>CUÉNTAME TU CASO</div>
+        <h4 className={styles.casoTitulo}>Describe tu situación</h4>
+        <p className={styles.casoSub}>En tus palabras. Armamos un plan único para ti.</p>
+        <textarea
+          className={styles.casoTextarea}
+          rows={4}
+          placeholder="Mi hijo se frustra cuando le digo que apague el celular..."
+          value={casoTexto}
+          onChange={(e) => { setCasoTexto(e.target.value); if (casoError) setCasoError(''); }}
+        />
+        {casoError && <p className={styles.casoErrorMsg}>{casoError}</p>}
+        <button className={styles.casoCta} onClick={handleCasoLibreClick}>
+          Empecemos juntos →
+        </button>
+      </div>
 
+      {/* Divider */}
+      <div className={styles.divider}><span>o busca por aquí</span></div>
+
+      {/* Filter chips */}
       <div className={styles.filters} role="group" aria-label="Filtrar por tema">
         {FILTER_CHIPS.map((chip) => {
           const isActive = activeFilter === chip.slug;
@@ -76,6 +106,7 @@ export default function SelectorHabilidades({ seleccionada, onElegir, habilidade
 
       {msgBloqueada && <p className={styles.bloqueadaMsg}>{msgBloqueada}</p>}
 
+      {/* Flat list with visual group dividers */}
       {GROUPS.map((group) => {
         const visibles = group.items.filter(filterItem);
         if (visibles.length === 0) return null;

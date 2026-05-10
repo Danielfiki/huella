@@ -1,9 +1,23 @@
 
 .box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
 
-.titulo { font-family: var(--font-heading); font-size: 16px; font-weight: 600; color: var(--color-ink); margin: 0; }
-.intro { font-size: 12px; color: var(--color-muted); margin: 0; }
+/* ── Caso libre card ── */
+.casoCard { background: var(--color-surface); border: 1px solid var(--color-border); border-left: 3px solid var(--color-accent); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.casoEyebrow { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; color: var(--color-tag-green); text-transform: uppercase; }
+.casoTitulo { font-family: var(--font-heading); font-size: 15px; font-weight: 500; color: var(--color-ink); }
+.casoSub { font-size: 12px; color: var(--color-text-muted); }
+.casoTextarea { font: inherit; font-size: 13px; padding: 10px 12px; background: var(--color-leaf-bg); border: 1px dashed var(--color-accent); border-radius: var(--radius-sm); min-height: 80px; resize: vertical; color: var(--color-ink); width: 100%; }
+.casoTextarea::placeholder { color: var(--color-text-muted); }
+.casoErrorMsg { font-size: 11px; color: var(--color-danger); margin: 0; }
+.casoCta { padding: 11px 20px; font: inherit; font-size: 13px; font-weight: 600; background: var(--color-text); color: #fff; border: none; border-radius: 20px; cursor: pointer; align-self: flex-start; }
+.casoCta:hover { opacity: 0.85; }
+.casoCta:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
+/* ── Divider ── */
+.divider { display: flex; align-items: center; gap: 10px; color: var(--color-text-muted); font-size: 11px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+
+/* ── Filter chips ── */
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }
 .filterChip { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 100px; padding: 5px 12px; font: inherit; font-size: 12px; color: var(--color-muted); cursor: pointer; }
 .filterChip:hover { border-color: var(--color-mocha); color: var(--color-ink); }
@@ -12,9 +26,9 @@
 
 .bloqueadaMsg { font-size: 12px; color: var(--color-muted); background: var(--color-bg); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
 
+/* ── Group + rows ── */
 .group { display: flex; flex-direction: column; gap: 6px; }
 .groupDivider { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: var(--color-primary); padding: 2px 0; }
-
 .row { display: flex; align-items: flex-start; gap: 10px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 12px 14px; font: inherit; cursor: pointer; text-align: left; width: 100%; }
 .row:hover { border-color: var(--color-mocha); background: var(--color-bg); }
 .row:focus-visible { outline: 2px solid var(--color-tangerine); outline-offset: 2px; }
@@ -26,6 +40,7 @@
 .rowTags { display: flex; flex-wrap: wrap; gap: 4px; }
 .tagChip { background: var(--color-surface-alt); color: var(--color-muted); font-size: 9px; border-radius: 4px; padding: 2px 6px; line-height: 1.4; }
 
+/* ── Otra situación ── */
 .other { background: transparent; border: 1px dashed var(--color-border); border-radius: var(--radius-md); padding: 12px; font: inherit; font-size: 13px; color: var(--color-muted); cursor: pointer; text-align: left; }
 .otraBox { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--color-bg); border-radius: var(--radius-md); }
 .otraBox textarea { font: inherit; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); min-height: 70px; resize: vertical; }
