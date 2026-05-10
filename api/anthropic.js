@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const DAILY_LIMIT = 20
+const OWNER_ID = '04ddd97a-e674-4e59-8f37-78cb38d46090'
 
 async function verificarRateLimit(token) {
   const url = process.env.VITE_SUPABASE_URL
@@ -16,6 +17,7 @@ async function verificarRateLimit(token) {
     const { data: userResponse } = await client.auth.getUser()
     const userId = userResponse?.user?.id
     if (!userId) return { permitido: true }
+    if (userId === OWNER_ID) return { permitido: true }
 
     const today = new Date().toISOString().split('T')[0]
 
