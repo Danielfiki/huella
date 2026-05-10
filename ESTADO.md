@@ -534,23 +534,36 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ---
 
-## Pendientes próxima sesión
+---
 
-1. **Verificar visualmente en producción** (huella-theta.vercel.app):
-   - 2+ planes activos → ambos deben aparecer en EstrategiasPage (antes solo aparecía 1)
-   - Habilidad con plan activo → chip bloqueado en SelectorHabilidades + mensaje 3s
-   - Última semana → botón "Cerrar el plan" → debe abrir modal de confirmación
-   - Toggle tarea offline → debe revertir con mensaje de error 4s
-   - Doble-tap en "Generar mi plan" → solo debe generar una vez
-2. **Migración SQL opcional:** `ALTER TABLE estrategias ALTER COLUMN plan TYPE jsonb USING plan::jsonb;`
-3. **Subir fuentes estáticas a Claude Design** — los 9 TTF al asset panel de claude.ai/design
-4. **Hallazgos MEDIOS pendientes de auditoría** (prioridad siguiente ronda):
-   - H3.2: `SemanaActiva` no recibe `tareaKey` como key en componente de Selector (menor — ya solucionado en este round con `key={\`${actual}-${tareaKey}\`}`)
-   - H5.1: No hay estado de error visual en `onGenerarTareas`
-   - H5.2: `onGenerarTareas` sin guard anti-doble-tap
-   - H6.1: `BannerCompletado` botón "Releer reflexiones" navega a sí mismo (loop)
-   - H6.3: SemanaPasada sin título cuando `semana.titulo` es vacío
+## ÚLTIMA SESIÓN — 10 mayo 2026
+
+- **Bug plan vacío: RESUELTO de raíz** (max_tokens 1200→4000 en `generarEstrategia`)
+- **Owner override rate limit:** verificado y activo (UUID `04ddd97a-e674-4e59-8f37-78cb38d46090`, en `api/anthropic.js` → `verificarRateLimit` desde commit `092e71c`)
+- **Round 6 commiteado y desplegado:** multi-planes activos visibles, INSERT real a hitos, modal cierre plan, opacity habilidades en plan
+- **Bloque 3.1 (commit `9b6d186`):** selector con lista plana, chips de filtro horizontal, grupos visuales (REGULACIÓN EMOCIONAL / DESARROLLO Y APRENDIZAJE), 11 habilidades con tags completos
+- **Bloque 3.2 (commit `b96cbeb`):** "Cuéntame tu caso" con función `generarEstrategiaDesdeContexto`, plan ad-hoc personalizado o usando habilidad existente según calce
+- **Duplicación "+ Otra situación" eliminada** (commit `82ba5b6`)
+- **Wording emocional aplicado:** "Lo que estás trabajando", "Lo que más se repite en tus registros", "Empecemos juntos"
 
 ---
 
-*Última actualización: 2026-05-09*
+## Pendientes próxima sesión
+
+1. **Audio en textarea "Cuéntame tu caso"** — reutilizar componente de grabación + transcripción que existe en Registrar episodio
+2. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
+3. **Gran tarea del usuario** (a definir mañana)
+4. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
+
+---
+
+## Arquitectura actual — Módulo Estrategias
+
+- 11 habilidades en `src/pages/estrategias/helpers.js` con tags definidos
+- Chips de filtro: Todos · Berrinches · Enojo · Frustración · Miedos · Sociales · Atención · Rutinas · Autonomía · Autoestima · Colegio
+- Card "Cuéntame tu caso" arriba del divisor "— o —" en `SelectorHabilidades`
+- Catálogo curado con 2 grupos visuales como divisores sutiles (no contenedores colapsables)
+
+---
+
+*Última actualización: 2026-05-10*
