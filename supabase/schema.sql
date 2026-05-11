@@ -417,13 +417,19 @@ $$;
 grant execute on function public.get_invitation_by_token(text) to anon, authenticated;
 
 -- Aceptar invitación (operación atómica)
+-- Lógica de 3 casos para resolver duplicación de hijos:
+--   Caso A: invitada sin hijos propios → join directo
+--   Caso B: invitada tiene hijos pero sin datos derivados → borrar hijos vacíos, luego join
+--   Caso C: invitada tiene datos propios → rechazar con error_code pending_data (no modifica nada)
 create or replace function public.accept_partner_invitation(p_token text)
 returns jsonb
 language plpgsql security definer
 as $$
 declare
-  v_inv       partner_invitations%rowtype;
-  v_in_family uuid;
+  v_inv            partner_invitations%rowtype;
+  v_in_family      uuid;
+  v_partner_hijos  uuid[];
+  v_has_data       boolean;
 begin
   select * into v_inv
   from public.partner_invitations
@@ -444,18 +450,39 @@ begin
     return jsonb_build_object('success', false, 'error', 'Ya perteneces a una familia');
   end if;
 
-  -- Vincular el hijo canónico del owner a esta familia si aún no lo está.
-  -- Cubre el caso en que el owner creó su hijo antes o después de crear
-  -- la familia y create_family_and_invite no alcanzó a enlazarlo.
+  -- Detectar hijos propios de la invitada
+  select array_agg(id) into v_partner_hijos
+  from public.hijos
+  where user_id = auth.uid();
+
+  if v_partner_hijos is not null then
+    -- Verificar si hay datos derivados asociados a este usuario
+    select (
+      exists(select 1 from public.episodios   where user_id = auth.uid() limit 1) or
+      exists(select 1 from public.hitos        where user_id = auth.uid() limit 1) or
+      exists(select 1 from public.estrategias  where user_id = auth.uid() limit 1) or
+      exists(select 1 from public.rutinas      where user_id = auth.uid() limit 1)
+    ) into v_has_data;
+
+    if v_has_data then
+      -- Caso C: tiene datos → no modificar nada, devolver error específico
+      return jsonb_build_object(
+        'success',    false,
+        'error_code', 'pending_data',
+        'error',      'Tienes datos previos registrados. Contáctanos para que te ayudemos a unificar tu historial.'
+      );
+    else
+      -- Caso B: tiene hijos pero vacíos → borrarlos para evitar duplicados
+      delete from public.hijos where user_id = auth.uid();
+    end if;
+  end if;
+
+  -- Caso A y B (post-limpieza): vincular la familia
+
+  -- Safety net: asegurar que los hijos del invitador estén vinculados a la familia
   update public.hijos
   set family_id = v_inv.family_id
   where user_id = v_inv.inviter_id
-    and family_id is null;
-
-  -- Vincular los hijos del partner a la familia
-  update public.hijos
-  set family_id = v_inv.family_id
-  where user_id = auth.uid()
     and family_id is null;
 
   insert into public.family_members (family_id, user_id, role)

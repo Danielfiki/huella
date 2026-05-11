@@ -14,7 +14,7 @@ export default function InvitarPage() {
   const { refreshFamily } = useFamily()
   const { reloadData } = useHuella()
 
-  const [status, setStatus] = useState('loading')    // loading | invalid | ready | accepting | done | error
+  const [status, setStatus] = useState('loading')    // loading | invalid | ready | accepting | done | error | pending_data
   const [invitation, setInvitation] = useState(null) // { inviterEmail, inviteeEmail, expiresAt }
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -47,7 +47,13 @@ export default function InvitarPage() {
     try {
       const { data, error } = await supabase.rpc('accept_partner_invitation', { p_token: token })
       if (error) throw new Error(error.message)
-      if (!data?.success) throw new Error(data?.error ?? 'No se pudo aceptar')
+      if (!data?.success) {
+        if (data?.error_code === 'pending_data') {
+          setStatus('pending_data')
+          return
+        }
+        throw new Error(data?.error ?? 'No se pudo aceptar')
+      }
       const newFamily = await refreshFamily()
       if (newFamily) reloadData(newFamily)
       setStatus('done')
@@ -146,6 +152,25 @@ export default function InvitarPage() {
             <p className={styles.subtitle}>
               Ya pueden ver y registrar episodios juntos. Redirigiendo al panel…
             </p>
+          </div>
+        )}
+
+        {status === 'pending_data' && (
+          <div className={styles.center}>
+            <div className={styles.icon}>📋</div>
+            <h2 className={styles.title}>Tienes datos previos</h2>
+            <p className={styles.subtitle}>
+              Ya tienes episodios o registros en tu cuenta. Para unirte a la familia de{' '}
+              <strong>{invitation?.inviterEmail}</strong> sin perder tus datos, escríbenos
+              y te ayudamos a unificar tu historial.
+            </p>
+            <a
+              href="mailto:hola@huella.app"
+              className={styles.btnPrimary}
+            >
+              Contactar soporte
+            </a>
+            <Link to="/panel" className={styles.btnSecondary}>Ir a mi panel</Link>
           </div>
         )}
 
