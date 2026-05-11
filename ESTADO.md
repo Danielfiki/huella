@@ -674,11 +674,25 @@ La función `get_partner_info()` fue actualizada en `supabase/schema.sql` con el
 
 ## Pendientes próxima sesión
 
-1. **⚠️ Correr SQL `get_partner_info()` en Supabase** — para que el nombre del partner fluya a la UI (Fase 2)
-2. **⚠️ Verificar el fix del Historial** — confirmar que la partner ve los episodios del owner
-3. **⚠️ Verificar Fase 3 en producción** — probar con ambas cuentas que los botones aparecen/desaparecen correctamente
-4. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
-5. *(Opcional, futuro)* **Generación incremental por semana**
+### SQL pendiente (correr en Supabase antes de verificar)
+- **`get_partner_info()`** — busca la función en `supabase/schema.sql` (~línea 130) y corre el bloque `CREATE OR REPLACE FUNCTION` completo. Necesario para que el nombre del partner aparezca en Fase 2.
+- **`accept_partner_invitation`** — mismo archivo (~línea 419), correr el bloque completo. Ya commiteado, falta aplicar en producción.
+- **RLS sugerencias descartadas** — correr `supabase/migrations/002_fix_rls_descartadas_family.sql`.
+
+### Verificaciones en producción
+1. **⚠️ Verificar fix Historial (RPC)** — abrir con cuenta partner y confirmar que el Historial muestra los episodios del owner
+2. **⚠️ Verificar Fase 3 (permisos UI)** — probar con ambas cuentas que los botones de eliminar/editar desaparecen en entries ajenos
+
+### Bugs conocidos
+3. **Bug email de invitación** — el email de invitación al partner no llega. Investigar: revisar logs de Resend, verificar que `RESEND_API_KEY` está activa en Vercel y que el dominio está verificado.
+4. **13 episodios sin hijo_id** — backfill SQL pendiente. Esos episodios no aparecen al filtrar por hijo activo. Requiere query de asignación manual en SQL Editor.
+
+### Decisiones de producto parqueadas
+5. **Capa de monetización Mi Familia** — 3 opciones en evaluación (freemium 1 adulto / paywall invitación / add-on familiar). Insight clave: el momento de enviar la invitación es el punto de upsell natural. Pendiente conversación con Daniel para decidir.
+6. **"Funciones nuevas" del usuario** — tarea 3 original de la sesión, quedó parqueada mientras se trabajó Mi Familia. Retomar en próxima sesión con conversación de Claude.
+
+### Diseño
+7. **Pass de diseño coherente** — usar Claude Design cuando vuelva el límite semanal
 
 ---
 
