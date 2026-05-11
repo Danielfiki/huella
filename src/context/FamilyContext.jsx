@@ -25,13 +25,10 @@ export function FamilyProvider({ children }) {
     setFamilyLoading(true)
     let newFamily = null
     try {
-      // Round 1: own membership + pending invitation (parallel)
-      const [{ data: membership, error: memberError }, invitationRes] = await Promise.all([
-        supabase
-          .from('family_members')
-          .select('family_id, role')
-          .eq('user_id', user.id)
-          .maybeSingle(),
+      // Usamos get_partner_info (SECURITY DEFINER) para evitar la RLS
+      // auto-referencial de family_members que bloquea la query directa.
+      const [partnerInfoRes, invitationRes] = await Promise.all([
+        supabase.rpc('get_partner_info'),
         supabase
           .from('partner_invitations')
           .select('id, invitee_email, token, created_at')
@@ -40,21 +37,12 @@ export function FamilyProvider({ children }) {
           .maybeSingle(),
       ])
 
-
-
-      if (membership?.family_id) {
-        // Round 2: find the other member in this family
-        const { data: partnerMember } = await supabase
-          .from('family_members')
-          .select('user_id')
-          .eq('family_id', membership.family_id)
-          .neq('user_id', user.id)
-          .maybeSingle()
-
+      const pInfo = partnerInfoRes.data
+      if (pInfo?.hasFamily) {
         newFamily = {
-          familyId: membership.family_id,
-          role: membership.role,
-          partner: partnerMember?.user_id ? { id: partnerMember.user_id } : null,
+          familyId: pInfo.familyId,
+          role:     pInfo.role,
+          partner:  pInfo.partner ?? null,
         }
       }
 
@@ -63,10 +51,10 @@ export function FamilyProvider({ children }) {
       setPendingInvitation(
         invitationRes.data
           ? {
-              id: invitationRes.data.id,
+              id:           invitationRes.data.id,
               inviteeEmail: invitationRes.data.invitee_email,
-              token: invitationRes.data.token,
-              createdAt: invitationRes.data.created_at,
+              token:        invitationRes.data.token,
+              createdAt:    invitationRes.data.created_at,
             }
           : null
       )
