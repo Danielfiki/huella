@@ -484,6 +484,22 @@ ALTER TABLE estrategia_sugerencias_descartadas ADD COLUMN IF NOT EXISTS episodio
 
 ---
 
+### 22. Audio en "Cuéntame tu caso" — VoiceTextarea *(2026-05-11)*
+
+**Refactor puro: NarrativaBar → componente reutilizable VoiceTextarea**
+
+- **Archivos creados:**
+  - `src/components/ui/VoiceTextarea.jsx` — componente extraído de NarrativaBar con prop `placeholder` opcional
+  - `src/components/ui/VoiceTextarea.module.css` — estilos narrativa* y voz* movidos desde RegistroPage.module.css
+- **Archivos modificados:**
+  - `src/pages/registro/RegistroPage.jsx` — elimina NarrativaBar inline, importa VoiceTextarea; props idénticas en ambos usos (modo rápido y detallado)
+  - `src/pages/registro/RegistroPage.module.css` — eliminadas clases narrativa*/voz* (movidas al módulo del componente)
+  - `src/pages/estrategias/components/SelectorHabilidades.jsx` — reemplaza `<textarea>` plano por `<VoiceTextarea>` en la card "Cuéntame tu caso"
+- **API**: Web Speech API nativa del browser (sin Whisper, sin Anthropic, sin env vars)
+- **Commit:** `5088c90`
+
+---
+
 ### 21. Round 6 — Robustez y multi-planes *(2026-05-09)*
 
 **Auditoría técnica previa:** `AUDITORIA_ESTRATEGIAS.md` (43 hallazgos en 8 dimensiones). Round 6 ataca 4 ALTAS + 5 MEDIAS.
@@ -550,16 +566,9 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ## Pendientes próxima sesión
 
-1. **Audio en textarea "Cuéntame tu caso"** — investigación completa (sesión 11 mayo). Plan listo, esperando aprobación de Daniel para implementar. Ver reporte completo en conversación.
-2. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
-3. **Gran tarea del usuario** (a definir)
-4. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
-
-### Plan audio "Cuéntame tu caso" (listo para implementar)
-- Componente origen: `NarrativaBar` — inline en `src/pages/registro/RegistroPage.jsx` (líneas 406-675)
-- API: Web Speech API nativa del browser (sin Whisper, sin Anthropic, sin env vars)
-- Plan: extraer a `src/components/ui/VoiceTextarea.jsx` + `VoiceTextarea.module.css`, actualizar RegistroPage para importarlo, conectar en SelectorHabilidades
-- Archivos a tocar: 4 (2 crear, 2 modificar)
+1. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
+2. **Gran tarea del usuario** (a definir)
+3. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
 
 ---
 
@@ -569,6 +578,12 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 - Chips de filtro: Todos · Berrinches · Enojo · Frustración · Miedos · Sociales · Atención · Rutinas · Autonomía · Autoestima · Colegio
 - Card "Cuéntame tu caso" arriba del divisor "— o —" en `SelectorHabilidades`
 - Catálogo curado con 2 grupos visuales como divisores sutiles (no contenedores colapsables)
+
+---
+
+## ÚLTIMA SESIÓN — 11 mayo 2026
+
+- **Audio en "Cuéntame tu caso": IMPLEMENTADO** — VoiceTextarea extraído, conectado en SelectorHabilidades, commit `5088c90` pusheado a main
 
 ---
 
