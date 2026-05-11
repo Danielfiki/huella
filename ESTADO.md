@@ -579,8 +579,34 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ## ÚLTIMA SESIÓN — 11 mayo 2026 (continúa)
 
-- **Audio en "Cuéntame tu caso": IMPLEMENTADO** — VoiceTextarea extraído, conectado en SelectorHabilidades, commit `5088c90` pusheado a main
-- **Diagnóstico bug Mi Familia: COMPLETO** — investigación punta a punta completada. Ver reporte en conversación.
+- **Audio en "Cuéntame tu caso": IMPLEMENTADO** — VoiceTextarea extraído, conectado en SelectorHabilidades, commit `5088c90`
+- **Diagnóstico bug Mi Familia: COMPLETO** — investigación punta a punta completada
+- **Fase 1 bug Mi Familia: IMPLEMENTADO** — commit `a25fcc7` pusheado a main
+
+### Fase 1 bug Mi Familia — Qué se hizo (commit a25fcc7)
+
+**Problema resuelto**: `accept_partner_invitation` creaba un segundo `hijo` duplicado para el partner, causando que los datos del invitador (con su `hijo_id`) fueran invisibles para el partner (que tenía un `hijo_id` diferente).
+
+**SQL reescrito** (`supabase/schema.sql` → función `accept_partner_invitation`):
+- **Caso A**: partner sin hijos propios → join directo (igual que antes)
+- **Caso B**: partner tiene hijos pero sin datos derivados (episodios/hitos/estrategias/rutinas) → borra los hijos vacíos, luego join. Evita el duplicado.
+- **Caso C**: partner tiene datos propios → retorna `{ success: false, error_code: 'pending_data' }` sin tocar nada en la BD. La invitación queda pendiente.
+
+**Frontend** (`src/pages/invitar/InvitarPage.jsx`):
+- Nuevo estado `pending_data`: pantalla con emoji 📋, explicación amigable y CTA "Contactar soporte" (`mailto:hola@huella.app`) + "Ir a mi panel"
+
+**Limpieza**:
+- `supabase/modo_pareja.sql` → renombrado a `modo_pareja.deprecated.sql`
+- `supabase/migrations/001_add_hijo_id_columns.sql` → documenta columnas hijo_id (ya en prod)
+- `supabase/migrations/002_fix_rls_descartadas_family.sql` → SQL listo para correr en Supabase
+
+### ⚠️ ACCIÓN REQUERIDA — correr en Supabase SQL Editor
+
+**1. Nueva función `accept_partner_invitation`** (lo más importante):
+Copiar y pegar el bloque completo desde `supabase/schema.sql` (buscar la función, línea ~419). La función está actualizada en el archivo; hay que aplicarla en producción.
+
+**2. Fix RLS de sugerencias descartadas** (para que las parejas puedan compartir descartes):
+Copiar y correr el contenido de `supabase/migrations/002_fix_rls_descartadas_family.sql`.
 
 ### Decisiones de producto tomadas (Mi Familia) — NO cuestionar
 
@@ -588,32 +614,20 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 2. Cada adulto solo puede editar/eliminar lo que él mismo creó. Todos los de la familia pueden VER todo
 3. Aplica a TODO: episodios, estrategias, hitos, casos "Cuéntame tu caso" y demás datos del hijo
 
-### Bug Mi Familia — Diagnóstico resumido
+### Fases pendientes
 
-**Causa raíz**: modelo de datos con `hijo` duplicado — cada adulto tiene su propio registro `hijos` con UUID distinto. Los episodios/hitos/estrategias están atados a un `hijo_id` específico. Cuando la mamá acepta la invitación y ve los hijos del papá, el `hijoActivoId` puede no coincidir con el `hijo_id` que tienen los datos del papá, o puede priorizarse el hijo propio de la mamá que tiene datos vacíos.
-
-**Bugs adicionales identificados**:
-- Dos archivos SQL con versiones distintas de `accept_partner_invitation` (`modo_pareja.sql` vs `schema.sql`). Se desconoce cuál está activo en producción
-- Columna `hijo_id` en `episodios`, `hitos`, `estrategias` NO está en los archivos SQL (fue agregada manualmente)
-- Mappers `dbEpisodioToApp` etc. no exponen `user_id` → imposible mostrar "quién registró" sin cambio en frontend
-- Tabla `estrategia_sugerencias_descartadas` tiene política RLS obsoleta (usa `hijos where user_id = auth.uid()` en vez de familia)
-
-**Capa de monetización "Mi familia"**: parqueada — resolver primero el fix funcional, después evaluar si el modo pareja pasa a ser feature Pro.
-
-### Plan propuesto (pendiente implementar)
-
-Tres fases en orden de prioridad:
-1. **Fase 1** — Fix funcional: unificar el hijo canónico al aceptar invitación + actualizar `hijo_id` en todos los datos del partner
-2. **Fase 2** — "Quién registró": exponer `user_id` en los mappers + UI con avatar/label del adulto
-3. **Fase 3** — Permisos de edición: ya cubiertos por RLS (`WITH CHECK auth.uid() = user_id`), solo necesitan surfacearse en UI (deshabilitar botón editar/borrar si no eres el creador)
+- **Fase 2** — "Quién registró": exponer `user_id` en los mappers (`dbEpisodioToApp`, etc.) + UI con avatar/label del adulto creador
+- **Fase 3** — Permisos de edición: ya cubiertos por RLS (`WITH CHECK auth.uid() = user_id`), solo necesitan surfacearse en UI (deshabilitar botones editar/borrar si no eres el creador)
 
 ---
 
 ## Pendientes próxima sesión
 
-1. **Fix bug Mi Familia** — implementar las tres fases del plan (ver diagnóstico arriba)
-2. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
-3. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
+1. **⚠️ Correr SQL en Supabase** — dos queries en el SQL Editor (ver sección arriba)
+2. **Probar flujo Mi Familia** — papá invita → mamá acepta → mamá ve datos del papá correctamente
+3. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (cuando esté confirmado que Fase 1 funciona)
+4. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal, con el brief ya preparado en el chat de Claude
+5. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar
 
 ---
 
