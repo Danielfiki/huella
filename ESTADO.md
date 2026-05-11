@@ -621,13 +621,41 @@ Copiar y correr el contenido de `supabase/migrations/002_fix_rls_descartadas_fam
 
 ---
 
+### Bug Historial vacío — Investigación frontend (sesión actual)
+
+**Contexto**: Fase 1 SQL aplicada y verificada. DB correcta. Pero el Historial de la partner sigue vacío.
+
+**Diagnóstico**: El bug NO está en HistorialPage (lee `state.episodios` sin filtros adicionales). Está en `HuellaContext.jsx:293-295` — la selección de `hijoActivoId`.
+
+**Bug principal (casi certero)**:
+La vieja `accept_partner_invitation` (antes del fix Fase 1) hacía `UPDATE hijos SET family_id` en el hijo de la partner en vez de borrarlo. Resultado: mama tiene `hijo_B` propio (vacío) + ve `hijo_A` del papá (via family RLS). Ambos con el mismo `family_id`. La query `loadUserData` pide hijos ordenados por `created_at ASC` → `hijos[0] = hijo_B` (más viejo) → `hijoActivoId = hijo_B.id` → todos los filtros de episodios/hitos/estrategias apuntan a `hijo_B` → 0 resultados. Los 22 episodios del papá tienen `hijo_id = hijo_A.id`.
+
+**Bug secundario (posible agravante)**:
+La política `family_members_read` es auto-referencial. Si falla en Supabase/PostgREST, `FamilyContext` no puede leer la fila del papá → `family.partner = null` → `partnerIds = [mama.id]` → episodios del papá (con `user_id = papa.id`) no se traen aunque `hijo_id` sea correcto.
+
+**Query de diagnóstico para Daniel** (correr en SQL Editor como la cuenta de la partner):
+```sql
+SELECT id, user_id, nombre, family_id, created_at
+FROM hijos ORDER BY created_at ASC;
+-- Si devuelve 2 filas → bug del hijo duplicado confirmado
+-- Si devuelve 1 fila → bug está en partnerIds / family.partner
+```
+
+**Plan de fix (pendiente aprobación)**:
+- **Fix A** (SQL, para usuarios existentes): DELETE del hijo vacío de mama que quedó de la migración vieja
+- **Fix B** (Frontend): cambiar `hijoActivoId` para no elegir ciegamente `hijos[0]`
+- **Fix C** (RLS opcional): reemplazar política `family_members_read` con helper SECURITY DEFINER, o usar el RPC `get_partner_info()` en FamilyContext
+
+---
+
 ## Pendientes próxima sesión
 
-1. **⚠️ Correr SQL en Supabase** — dos queries en el SQL Editor (ver sección arriba)
-2. **Probar flujo Mi Familia** — papá invita → mamá acepta → mamá ve datos del papá correctamente
-3. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (cuando esté confirmado que Fase 1 funciona)
-4. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal, con el brief ya preparado en el chat de Claude
-5. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar
+1. **Daniel corre la query diagnóstico** (ver arriba) y confirma si hay 1 o 2 hijos visibles para la partner
+2. **Implementar fix** según confirmación (Fix A + posiblemente B o C)
+3. **Probar flujo Mi Familia** — papá invita → mamá acepta → mamá ve datos del papá correctamente
+4. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (cuando esté confirmado que el fix funciona)
+5. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
+6. *(Opcional, futuro)* **Generación incremental por semana**
 
 ---
 
