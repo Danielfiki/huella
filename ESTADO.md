@@ -641,12 +641,30 @@ Copiar y correr el contenido de `supabase/migrations/002_fix_rls_descartadas_fam
 
 ---
 
+### Fase 2 — Mostrar autor de cada entry (commit 8199ae7) ✅
+
+**Qué se hizo:**
+- `get_partner_info()` extendida con LEFT JOIN a `perfiles` para incluir `nombre` del partner
+- `HuellaContext.jsx`: `dbEpisodioToApp`, `dbEstrategiaToApp`, `dbRutinaToApp` exponen `userId`; nuevo `profilesByUserId` useMemo expuesto en el contexto
+- `src/utils/authorDisplay.js`: helper `getAuthorDisplay(userId, profilesByUserId)` — retorna `''` si solo hay 1 adulto en la familia
+- `EpisodioCard.jsx` + `EpisodioCard.module.css`: prop `authorName`, renderizado inline `· Nombre` junto a la hora, clase `.author`
+- `HistorialPage.jsx`: pasa `authorName` a cada `<EpisodioCard>` (episodios y hitos), agrega `userId` en ambos norms
+- `PanelPage.jsx`: `UltimoHitoCard` y `EstrategiaActivaPanel` aceptan y renderizan `authorName`
+- `EstrategiaActivaCard.jsx` + `.module.css`: `authorName` junto a "Semana X de Y", clase `.author`
+- `EstrategiasPage.jsx`: pasa `authorName` a cada `<EstrategiaActivaCard>`
+
+**⚠️ ACCIÓN REQUERIDA — correr en Supabase SQL Editor:**
+La función `get_partner_info()` fue actualizada en `supabase/schema.sql` con el JOIN a `perfiles`. Debe aplicarse en producción para que el nombre del partner aparezca. Busca la función en el archivo (línea ~130 aprox.) y corre el bloque completo `CREATE OR REPLACE FUNCTION public.get_partner_info()` hasta el `GRANT EXECUTE`.
+
+---
+
 ## Pendientes próxima sesión
 
-1. **⚠️ Verificar el fix** — abrir la app como la partner y confirmar que el Historial muestra los datos del owner
-2. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (una vez confirmado el fix)
-3. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
-4. *(Opcional, futuro)* **Generación incremental por semana**
+1. **⚠️ Correr SQL `get_partner_info()` en Supabase** — para que el nombre del partner fluya a la UI
+2. **⚠️ Verificar el fix del Historial** — confirmar que la partner ve los episodios del owner
+3. **Fase 3 Mi Familia** — deshabilitar botones editar/borrar cuando el entry no es tuyo (RLS ya lo bloquea en DB, solo falta surfacearlo en UI)
+4. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
+5. *(Opcional, futuro)* **Generación incremental por semana**
 
 ---
 
