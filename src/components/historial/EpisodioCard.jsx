@@ -9,7 +9,7 @@ function formatHora(fecha) {
   return new Date(fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneCheckin, onNavigate }) {
+export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneCheckin, onNavigate, authorName }) {
   const [iaOpen, setIaOpen] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -58,6 +58,7 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
         <div className={styles.top}>
           <h3 className={styles.ttl}>{episodio.titulo}</h3>
           <span className={styles.time}>{formatHora(episodio.fecha)}</span>
+          {authorName && <span className={styles.author}>· {authorName}</span>}
           {!confirmando ? (
             <button className={styles.deleteBtn} onClick={() => setConfirmando(true)} aria-label="Eliminar">
               <Trash2 size={13} />

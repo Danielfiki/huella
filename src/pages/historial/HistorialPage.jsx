@@ -7,6 +7,7 @@ import FiltroChips from '../../components/historial/FiltroChips'
 import DaySeparator from '../../components/historial/DaySeparator'
 import EpisodioCard from '../../components/historial/EpisodioCard'
 import { groupEpisodios } from '../../components/historial/helpers'
+import { getAuthorDisplay } from '../../utils/authorDisplay'
 import styles from './HistorialPage.module.css'
 
 const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
@@ -50,7 +51,7 @@ function parseOrientacionIA(text) {
 
 export default function HistorialPage() {
   const navigate = useNavigate()
-  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro } = useHuella()
+  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro, profilesByUserId } = useHuella()
   const { episodios, hitos, hijo, estrategias } = state
 
   const [filtro, setFiltro] = useState('todos')
@@ -80,6 +81,7 @@ export default function HistorialPage() {
         descripcionLibre: ep.descripcionLibre ?? null,
         reflexion: ep.reflexion ?? null,
         fotoUrl: ep.fotoUrl ?? null,
+        userId: ep.userId ?? null,
         _source: 'episodio',
       })),
     [episodios]
@@ -104,6 +106,7 @@ export default function HistorialPage() {
           descripcionLibre: null,
           reflexion: null,
           fotoUrl: h.foto_url ?? null,
+          userId: h.user_id ?? null,
           _source: 'hito',
         }
       }),
@@ -260,6 +263,7 @@ export default function HistorialPage() {
                 onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
                 tieneCheckin={checkinsHechos.has(ep.id)}
                 onNavigate={navigate}
+                authorName={getAuthorDisplay(ep.userId, profilesByUserId)}
               />
             ))}
           </React.Fragment>

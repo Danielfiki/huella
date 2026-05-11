@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
@@ -154,6 +154,7 @@ function reducer(state, action) {
 function dbRutinaToApp(row) {
   return {
     id:              row.id,
+    userId:          row.user_id,
     hijoId:          row.hijo_id,
     hora:            row.hora,
     nombre:          row.nombre,
@@ -177,6 +178,7 @@ function dbHijoToApp(row) {
 function dbEpisodioToApp(row) {
   return {
     id:               row.id,
+    userId:           row.user_id,
     tipo:             row.tipo,
     intensidad:       row.intensidad,
     contexto:         row.contexto,
@@ -203,6 +205,7 @@ function dbEstrategiaToApp(row) {
   return {
     // snake_case — usado por los nuevos componentes de estrategias
     id:                       row.id,
+    userId:                   row.user_id,
     hijo_id:                  row.hijo_id                  ?? null,
     habilidad:                row.habilidad,
     habilidad_nombre:         row.habilidad                ?? null,
@@ -682,6 +685,15 @@ export function HuellaProvider({ children }) {
   const isPro   = () => state.plan === 'pro' || state.plan === 'admin'
   const isAdmin = () => state.plan === 'admin'
 
+  // Lookup userId → { nombre } para mostrar quién registró cada entry.
+  // Solo tiene 2 entradas cuando hay familia activa; vacío para usuarios solos.
+  const profilesByUserId = useMemo(() => {
+    const map = {}
+    if (user?.id) map[user.id] = { nombre: state.padreNombre || '' }
+    if (family?.partner?.id) map[family.partner.id] = { nombre: family.partner.nombre || '' }
+    return map
+  }, [user?.id, state.padreNombre, family?.partner?.id, family?.partner?.nombre])
+
   async function savePadreNombre(nombre) {
     if (!user) return
     dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
@@ -697,6 +709,7 @@ export function HuellaProvider({ children }) {
       dispatch,
       dataLoading,
       reloadData,
+      profilesByUserId,
       setHijo,
       setHijoActivo,
       addEpisodio,

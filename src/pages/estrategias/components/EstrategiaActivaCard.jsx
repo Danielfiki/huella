@@ -2,7 +2,7 @@ import React from 'react';
 import { pillClassFor } from '../helpers';
 import styles from './EstrategiaActivaCard.module.css';
 
-export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar }) {
+export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar, authorName }) {
   const total = plan.total_semanas || 4;
   const actual = plan.semana_actual || 1;
   const inicial = (hijo?.nombre || '·')[0].toUpperCase();
@@ -14,7 +14,10 @@ export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar }
           <div className={styles.ttls}>
             <div className={styles.eye}>{hijo?.nombre} · {hijo?.edad} años</div>
             <div className={styles.ttl}>{plan.habilidad_nombre || plan.habilidad}</div>
-            <div className={styles.week}>Semana {actual} de {total}</div>
+            <div className={styles.week}>
+              Semana {actual} de {total}
+              {authorName && <span className={styles.author}> · {authorName}</span>}
+            </div>
           </div>
           {onEliminar && (
             <button className={styles.del} onClick={() => onEliminar(plan.id)} aria-label="Eliminar plan">✕</button>

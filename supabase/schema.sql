@@ -515,10 +515,11 @@ begin
     return jsonb_build_object('hasFamily', false);
   end if;
 
-  select jsonb_build_object('id', fm.user_id, 'email', au.email)
+  select jsonb_build_object('id', fm.user_id, 'email', au.email, 'nombre', p.nombre)
   into v_partner
   from public.family_members fm
   join auth.users au on au.id = fm.user_id
+  left join public.perfiles p on p.user_id = fm.user_id
   where fm.family_id = v_family_id and fm.user_id != auth.uid()
   limit 1;
 

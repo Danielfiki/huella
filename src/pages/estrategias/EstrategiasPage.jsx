@@ -18,13 +18,14 @@ import {
   MAX_PLANES_ACTIVOS_FREE,
   HABILIDADES_CATALOGO,
 } from './helpers';
+import { getAuthorDisplay } from '../../utils/authorDisplay';
 import styles from './EstrategiasPage.module.css';
 
 export default function EstrategiasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
-  const { state, deleteEstrategia, dispatch } = useHuella();
+  const { state, deleteEstrategia, dispatch, profilesByUserId } = useHuella();
   const { user } = useAuth();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [casoLibreEstado, setCasoLibreEstado] = useState('idle');
@@ -352,6 +353,7 @@ export default function EstrategiasPage() {
                 hijo={hijo}
                 onAbrir={() => navigate(`/estrategias/${plan.id}`)}
                 onEliminar={setConfirmDeleteId}
+                authorName={getAuthorDisplay(plan.userId, profilesByUserId)}
               />
             ))}
           </section>

@@ -18,6 +18,7 @@ import { ChartGatillos } from '../../components/panel/ChartGatillos'
 import { AnalisisIA } from '../../components/panel/AnalisisIA'
 import { SectionEyebrow } from '../../components/panel/SectionEyebrow'
 import panelStyles from '../../components/panel/panel.module.css'
+import { getAuthorDisplay } from '../../utils/authorDisplay'
 import styles from './PanelPage.module.css'
 
 // ── Emoji mapping for free-form trigger labels ──────────────────────────────
@@ -73,7 +74,7 @@ function EstadoVacio({ nombreHijo, onRegistrar }) {
   )
 }
 
-function EstrategiaActivaPanel({ estrategia, onAbrir }) {
+function EstrategiaActivaPanel({ estrategia, onAbrir, authorName }) {
   const ctx = CONTEXTOS_ESTRATEGIA[estrategia.habilidad] || { emoji: '🎯' }
   const semana = Math.min(estrategia.semanaActual, 4)
   return (
@@ -81,7 +82,10 @@ function EstrategiaActivaPanel({ estrategia, onAbrir }) {
       <div className={styles.estrategiaCardLeft}>
         <span className={styles.estrategiaEmoji}>{ctx.emoji}</span>
         <div>
-          <p className={styles.estrategiaLabel}>Estrategia activa — Semana {semana}/4</p>
+          <p className={styles.estrategiaLabel}>
+            Estrategia activa — Semana {semana}/4
+            {authorName && <span style={{ fontWeight: 600, color: 'var(--color-text-light)', marginLeft: '4px' }}>· {authorName}</span>}
+          </p>
           <p className={styles.estrategiaTitulo}>{estrategia.habilidad}</p>
         </div>
       </div>
@@ -90,7 +94,7 @@ function EstrategiaActivaPanel({ estrategia, onAbrir }) {
   )
 }
 
-function UltimoHitoCard({ hito, onVerLogros }) {
+function UltimoHitoCard({ hito, onVerLogros, authorName }) {
   const emoji = CATEGORIA_EMOJIS[hito.categoria] || '⭐'
   return (
     <button
@@ -111,8 +115,9 @@ function UltimoHitoCard({ hito, onVerLogros }) {
         <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {hito.descripcion || emoji}
         </p>
-        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           {new Date(hito.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
+          {authorName && <span style={{ fontWeight: 600 }}>· {authorName}</span>}
         </p>
       </div>
       <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
@@ -199,7 +204,7 @@ function useNarrativaIntensidad(episodios) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, dispatch, setHijoActivo } = useHuella()
+  const { state, dispatch, setHijoActivo, profilesByUserId } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
@@ -401,7 +406,11 @@ export default function PanelPage() {
         ) : (
           <>
             {ultimoHitoConFoto && (
-              <UltimoHitoCard hito={ultimoHitoConFoto} onVerLogros={() => navigate('/hitos')} />
+              <UltimoHitoCard
+                hito={ultimoHitoConFoto}
+                onVerLogros={() => navigate('/hitos')}
+                authorName={getAuthorDisplay(ultimoHitoConFoto.user_id, profilesByUserId)}
+              />
             )}
 
             {/* ── Resumen semanal ── */}
@@ -423,6 +432,7 @@ export default function PanelPage() {
               <EstrategiaActivaPanel
                 estrategia={estrategiaActiva}
                 onAbrir={() => navigate('/estrategias')}
+                authorName={getAuthorDisplay(estrategiaActiva.userId, profilesByUserId)}
               />
             )}
 
