@@ -658,11 +658,25 @@ La función `get_partner_info()` fue actualizada en `supabase/schema.sql` con el
 
 ---
 
+### Fase 3 — Permisos de edición en UI (commit c4a04a2) ✅
+
+**Qué se hizo:**
+- `canModify(entryUserId, currentUserId)` en `src/utils/authorDisplay.js` — retorna `true` si no hay userId (usuario solo), `false` si IDs difieren
+- `EpisodioCard.jsx`: importa `useAuth`, oculta botón delete + reflexión entera si `!canModify`
+- `EstrategiaActivaCard.jsx`: importa `useAuth`, oculta botón ✕. Botón "Ver tu semana" (navegación) permanece
+- `DrawerPasados.jsx`: importa `useAuth`, oculta ✕ por plan individual (no todos, solo los ajenos)
+- `RutinaDiaria.jsx`: importa `useAuth`, oculta div de acciones (Pencil + Trash2) para bloques ajenos. Botón "Agregar bloque" siempre visible (crea entry propio)
+- `HitosPage → HitoCard`: importa `canModify`, oculta "Agregar foto" para hitos de la pareja. La foto existente sigue siendo visible (es navegación)
+
+**Comportamiento entries propios:** idéntico al anterior — todos los botones siguen apareciendo.
+
+---
+
 ## Pendientes próxima sesión
 
-1. **⚠️ Correr SQL `get_partner_info()` en Supabase** — para que el nombre del partner fluya a la UI
+1. **⚠️ Correr SQL `get_partner_info()` en Supabase** — para que el nombre del partner fluya a la UI (Fase 2)
 2. **⚠️ Verificar el fix del Historial** — confirmar que la partner ve los episodios del owner
-3. **Fase 3 Mi Familia** — deshabilitar botones editar/borrar cuando el entry no es tuyo (RLS ya lo bloquea en DB, solo falta surfacearlo en UI)
+3. **⚠️ Verificar Fase 3 en producción** — probar con ambas cuentas que los botones aparecen/desaparecen correctamente
 4. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
 5. *(Opcional, futuro)* **Generación incremental por semana**
 
