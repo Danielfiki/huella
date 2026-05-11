@@ -1,8 +1,12 @@
 import React from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { pillClassFor } from '../helpers';
+import { canModify } from '../../../utils/authorDisplay';
 import styles from './EstrategiaActivaCard.module.css';
 
 export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar, authorName }) {
+  const { user } = useAuth();
+  const mine = canModify(plan.userId, user?.id);
   const total = plan.total_semanas || 4;
   const actual = plan.semana_actual || 1;
   const inicial = (hijo?.nombre || '·')[0].toUpperCase();
@@ -19,7 +23,7 @@ export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar, 
               {authorName && <span className={styles.author}> · {authorName}</span>}
             </div>
           </div>
-          {onEliminar && (
+          {onEliminar && mine && (
             <button className={styles.del} onClick={() => onEliminar(plan.id)} aria-label="Eliminar plan">✕</button>
           )}
         </div>

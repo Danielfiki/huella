@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button'
 import CitaLoader from '../../components/ui/CitaLoader'
 import { renderMarkdown } from '../../utils/renderMarkdown'
 import TooltipAyuda from '../../components/ui/TooltipAyuda'
+import { canModify } from '../../utils/authorDisplay'
 import styles from './HitosPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -641,7 +642,7 @@ function HitoCard({ hito, user, updateHitoFoto }) {
           className={styles.hitoFotoImg}
           onClick={() => window.open(hito.foto_url, '_blank')}
         />
-      ) : (
+      ) : canModify(hito.user_id, user?.id) ? (
         <button
           className={styles.hitoCameraBtn}
           onClick={() => fotoInputRef.current?.click()}
@@ -650,7 +651,7 @@ function HitoCard({ hito, user, updateHitoFoto }) {
           <Camera size={13} />
           {subiendoFoto ? 'Subiendo…' : 'Agregar foto'}
         </button>
-      )}
+      ) : null}
       {errorFoto && <p className={styles.hitoFotoError}>{errorFoto}</p>}
       <input
         ref={fotoInputRef}

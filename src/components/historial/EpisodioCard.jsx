@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 import IntensidadDots from './IntensidadDots'
 import OrientacionIA from './OrientacionIA'
 import { pillClassFor, emoTileClass } from './helpers'
+import { canModify } from '../../utils/authorDisplay'
 import styles from './EpisodioCard.module.css'
 
 function formatHora(fecha) {
@@ -17,6 +19,9 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
   const timerRef = useRef(null)
+
+  const { user } = useAuth()
+  const mine = canModify(episodio.userId, user?.id)
 
   const tipoClass = emoTileClass(episodio.tipo)
   const hasIA = !!episodio.orientacionIA
@@ -59,19 +64,21 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
           <h3 className={styles.ttl}>{episodio.titulo}</h3>
           <span className={styles.time}>{formatHora(episodio.fecha)}</span>
           {authorName && <span className={styles.author}>· {authorName}</span>}
-          {!confirmando ? (
-            <button className={styles.deleteBtn} onClick={() => setConfirmando(true)} aria-label="Eliminar">
-              <Trash2 size={13} />
-            </button>
-          ) : (
-            <div className={styles.confirmWrap}>
-              <button className={styles.confirmSi} onClick={handleEliminar} disabled={eliminando}>
-                {eliminando ? '…' : 'Borrar'}
+          {mine && (
+            !confirmando ? (
+              <button className={styles.deleteBtn} onClick={() => setConfirmando(true)} aria-label="Eliminar">
+                <Trash2 size={13} />
               </button>
-              <button className={styles.confirmNo} onClick={() => setConfirmando(false)} disabled={eliminando}>
-                No
-              </button>
-            </div>
+            ) : (
+              <div className={styles.confirmWrap}>
+                <button className={styles.confirmSi} onClick={handleEliminar} disabled={eliminando}>
+                  {eliminando ? '…' : 'Borrar'}
+                </button>
+                <button className={styles.confirmNo} onClick={() => setConfirmando(false)} disabled={eliminando}>
+                  No
+                </button>
+              </div>
+            )
           )}
         </div>
 
@@ -124,7 +131,7 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
           />
         )}
 
-        {!isHito && (
+        {!isHito && mine && (
           <div className={styles.reflexionWrap}>
             <textarea
               className={styles.reflexionArea}

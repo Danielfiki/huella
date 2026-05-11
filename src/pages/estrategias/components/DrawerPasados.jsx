@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { estadoPlan, mesCortoDe } from '../helpers';
+import { canModify } from '../../../utils/authorDisplay';
 import styles from './DrawerPasados.module.css';
 
 export default function DrawerPasados({ planes, onEliminar }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   return (
     <div className={styles.box}>
@@ -24,7 +27,7 @@ export default function DrawerPasados({ planes, onEliminar }) {
                   {p.habilidad_nombre || p.habilidad} · {estado === 'completado' ? `${p.total_semanas} sem` : `abandonado en sem ${p.semana_actual}`}
                 </span>
                 <span className={styles.meta}>{mesCortoDe(p.created_at)}</span>
-                {onEliminar && (
+                {onEliminar && canModify(p.userId, user?.id) && (
                   <button className={styles.del} onClick={() => onEliminar(p.id)} aria-label="Eliminar">✕</button>
                 )}
               </li>

@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
+import { canModify } from '../../utils/authorDisplay'
 import Button from '../../components/ui/Button'
 import styles from './RutinaDiaria.module.css'
 
 export default function RutinaDiaria() {
   const { state, addRutina, updateRutina, deleteRutina } = useHuella()
+  const { user } = useAuth()
   const { rutinas, hijo } = state
 
   const [modal, setModal]           = useState(null) // null | { modo, id?, hora, nombre, nota, esMomentoRiesgo }
@@ -89,18 +92,20 @@ export default function RutinaDiaria() {
                 </div>
                 {b.nota && <p className={styles.bloqueNota}>{b.nota}</p>}
               </div>
-              <div className={styles.bloqueAcciones}>
-                <button className={styles.accionBtn} onClick={() => abrirEditar(b)} aria-label="Editar">
-                  <Pencil size={14} />
-                </button>
-                <button
-                  className={`${styles.accionBtn} ${styles.accionBtnDanger}`}
-                  onClick={() => setConfirmDelete(b.id)}
-                  aria-label="Eliminar"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
+              {canModify(b.userId, user?.id) && (
+                <div className={styles.bloqueAcciones}>
+                  <button className={styles.accionBtn} onClick={() => abrirEditar(b)} aria-label="Editar">
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    className={`${styles.accionBtn} ${styles.accionBtnDanger}`}
+                    onClick={() => setConfirmDelete(b.id)}
+                    aria-label="Eliminar"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
