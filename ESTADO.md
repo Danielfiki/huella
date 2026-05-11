@@ -621,41 +621,32 @@ Copiar y correr el contenido de `supabase/migrations/002_fix_rls_descartadas_fam
 
 ---
 
-### Bug Historial vacío — Investigación frontend (sesión actual)
+### Bug Historial vacío — Fix aplicado (commit 3bbddad)
 
-**Contexto**: Fase 1 SQL aplicada y verificada. DB correcta. Pero el Historial de la partner sigue vacío.
+**Causa raíz confirmada**: La política `family_members_read` en Supabase tiene una subquery auto-referencial sobre la misma tabla. Esto causa que la query directa desde `FamilyContext` devuelva `null` para la fila del partner → `family.partner = null` → `partnerIds = [mama.id]` → los datos del owner (con `user_id = papa.id`) nunca se traían al frontend.
 
-**Diagnóstico**: El bug NO está en HistorialPage (lee `state.episodios` sin filtros adicionales). Está en `HuellaContext.jsx:293-295` — la selección de `hijoActivoId`.
+**Fix aplicado** (`src/context/FamilyContext.jsx`):
+- **Antes**: dos queries directas a `family_members` (sujetas a RLS auto-referencial)
+- **Ahora**: una llamada al RPC `get_partner_info()` que es `SECURITY DEFINER` y bypassa la RLS
 
-**Bug principal (casi certero)**:
-La vieja `accept_partner_invitation` (antes del fix Fase 1) hacía `UPDATE hijos SET family_id` en el hijo de la partner en vez de borrarlo. Resultado: mama tiene `hijo_B` propio (vacío) + ve `hijo_A` del papá (via family RLS). Ambos con el mismo `family_id`. La query `loadUserData` pide hijos ordenados por `created_at ASC` → `hijos[0] = hijo_B` (más viejo) → `hijoActivoId = hijo_B.id` → todos los filtros de episodios/hitos/estrategias apuntan a `hijo_B` → 0 resultados. Los 22 episodios del papá tienen `hijo_id = hijo_A.id`.
+`get_partner_info()` retorna `{ hasFamily, familyId, role, partner: { id, email } | null }`. La shape del objeto `family` en el contexto no cambió — `partner.id` sigue siendo el mismo UUID.
 
-**Bug secundario (posible agravante)**:
-La política `family_members_read` es auto-referencial. Si falla en Supabase/PostgREST, `FamilyContext` no puede leer la fila del papá → `family.partner = null` → `partnerIds = [mama.id]` → episodios del papá (con `user_id = papa.id`) no se traen aunque `hijo_id` sea correcto.
+**Casos cubiertos**:
+- Owner sin partner: `partner: null` ✓
+- Owner con partner: `partner: { id, email }` ✓
+- Partner (mama): antes devolvía `null`, ahora devuelve correctamente al owner ✓
+- Sin familia: `hasFamily: false` → `family = null` ✓
 
-**Query de diagnóstico para Daniel** (correr en SQL Editor como la cuenta de la partner):
-```sql
-SELECT id, user_id, nombre, family_id, created_at
-FROM hijos ORDER BY created_at ASC;
--- Si devuelve 2 filas → bug del hijo duplicado confirmado
--- Si devuelve 1 fila → bug está en partnerIds / family.partner
-```
-
-**Plan de fix (pendiente aprobación)**:
-- **Fix A** (SQL, para usuarios existentes): DELETE del hijo vacío de mama que quedó de la migración vieja
-- **Fix B** (Frontend): cambiar `hijoActivoId` para no elegir ciegamente `hijos[0]`
-- **Fix C** (RLS opcional): reemplazar política `family_members_read` con helper SECURITY DEFINER, o usar el RPC `get_partner_info()` en FamilyContext
+**⚠️ Verificar en producción**: Daniel debe abrir la app con la cuenta de la partner y confirmar que el Historial ahora muestra los episodios del owner.
 
 ---
 
 ## Pendientes próxima sesión
 
-1. **Daniel corre la query diagnóstico** (ver arriba) y confirma si hay 1 o 2 hijos visibles para la partner
-2. **Implementar fix** según confirmación (Fix A + posiblemente B o C)
-3. **Probar flujo Mi Familia** — papá invita → mamá acepta → mamá ve datos del papá correctamente
-4. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (cuando esté confirmado que el fix funciona)
-5. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
-6. *(Opcional, futuro)* **Generación incremental por semana**
+1. **⚠️ Verificar el fix** — abrir la app como la partner y confirmar que el Historial muestra los datos del owner
+2. **Fase 2 + 3 Mi Familia** — "quién registró" en UI y permisos de edición (una vez confirmado el fix)
+3. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal
+4. *(Opcional, futuro)* **Generación incremental por semana**
 
 ---
 
