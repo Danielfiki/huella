@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HABILIDADES_CATALOGO } from '../helpers';
 import styles from './SelectorHabilidades.module.css';
+import VoiceTextarea from '../../../components/ui/VoiceTextarea';
 
 const FILTER_CHIPS = [
   { label: 'Todos',      slug: null },
@@ -69,12 +70,11 @@ export default function SelectorHabilidades({ seleccionada, onElegir, onCasoLibr
         <div className={styles.casoEyebrow}>CUÉNTAME TU CASO</div>
         <h4 className={styles.casoTitulo}>Describe tu situación</h4>
         <p className={styles.casoSub}>En tus palabras. Armamos un plan único para ti.</p>
-        <textarea
-          className={styles.casoTextarea}
-          rows={4}
-          placeholder="Mi hijo se frustra cuando le digo que apague el celular..."
+        <VoiceTextarea
           value={casoTexto}
-          onChange={(e) => { setCasoTexto(e.target.value); if (casoError) setCasoError(''); }}
+          onChange={setCasoTexto}
+          onVoiceResult={setCasoTexto}
+          placeholder="Mi hijo se frustra cuando le digo que apague el celular..."
         />
         {casoError && <p className={styles.casoErrorMsg}>{casoError}</p>}
         <button className={styles.casoCta} onClick={handleCasoLibreClick}>

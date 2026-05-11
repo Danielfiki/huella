@@ -1,0 +1,259 @@
+/* ── Barra narrativa (estilo chat) ────────────────────── */
+
+.narrativaWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.narrativaBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  border-radius: 22px;
+  padding: 8px 8px 8px 14px;
+  transition: border-color 0.15s;
+}
+.narrativaBar:focus-within { border-color: var(--color-primary); }
+
+.narrativaTextarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  resize: none;
+  outline: none;
+  min-height: 22px;
+  max-height: 110px;
+  line-height: 1.5;
+  padding: 2px 0;
+  overflow-y: auto;
+}
+.narrativaTextarea::placeholder { color: var(--color-text-light); }
+
+.narrativaBtns {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding-bottom: 1px;
+}
+
+.narrativaMicBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.narrativaMicBtn:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+
+.narrativaMicBtnActivo {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  animation: micPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+  50%       { box-shadow: 0 0 0 7px rgba(220, 38, 38, 0); }
+}
+
+.narrativaEnviarBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, opacity 0.15s;
+}
+.narrativaEnviarBtn:not(:disabled):hover { background: var(--color-primary-dark, var(--color-primary)); filter: brightness(0.9); }
+.narrativaEnviarBtn:disabled { opacity: 0.35; cursor: default; }
+
+.narrativaSpinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: narrativaSpin 0.7s linear infinite;
+}
+
+@keyframes narrativaSpin { to { transform: rotate(360deg); } }
+
+.narrativaOk {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin: 0;
+  padding: 0 4px;
+  animation: narrativaFadeIn 0.2s ease both;
+}
+
+@keyframes narrativaFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Estados de grabación de voz ─────────────────────── */
+
+.vozWaveformArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 0;
+}
+
+.vozRecDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  flex-shrink: 0;
+  animation: vozDotBlink 1s ease-in-out infinite;
+}
+
+@keyframes vozDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.vozBars {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  height: 40px;
+}
+
+.vozBar {
+  width: 4px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  height: 3px;
+  transition: height 0.07s ease-out;
+  /* animationDelay se aplica vía inline style en el JSX */
+  animation: vozBarPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes vozBarPulse {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 1; }
+}
+
+.vozRevisando {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.vozTranscriptText {
+  font-size: 13px;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.45;
+  /* clamp a 3 líneas máximo */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vozTranscriptVacio {
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+.vozRevisandoBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vozCancelarBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.vozCancelarBtn:hover { border-color: var(--color-danger); color: var(--color-danger); }
+
+.vozConfirmarBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.vozConfirmarBtn:hover { opacity: 0.88; }
+
+.vozProcesandoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.vozSpinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: narrativaSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.vozProcesandoLabel {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.vozErrorRow {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.vozErrorMsg {
+  font-size: 12px;
+  color: var(--color-danger, #dc2626);
+  line-height: 1.4;
+}

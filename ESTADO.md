@@ -550,10 +550,16 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ## Pendientes próxima sesión
 
-1. **Audio en textarea "Cuéntame tu caso"** — reutilizar componente de grabación + transcripción que existe en Registrar episodio
+1. **Audio en textarea "Cuéntame tu caso"** — investigación completa (sesión 11 mayo). Plan listo, esperando aprobación de Daniel para implementar. Ver reporte completo en conversación.
 2. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
-3. **Gran tarea del usuario** (a definir mañana)
+3. **Gran tarea del usuario** (a definir)
 4. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
+
+### Plan audio "Cuéntame tu caso" (listo para implementar)
+- Componente origen: `NarrativaBar` — inline en `src/pages/registro/RegistroPage.jsx` (líneas 406-675)
+- API: Web Speech API nativa del browser (sin Whisper, sin Anthropic, sin env vars)
+- Plan: extraer a `src/components/ui/VoiceTextarea.jsx` + `VoiceTextarea.module.css`, actualizar RegistroPage para importarlo, conectar en SelectorHabilidades
+- Archivos a tocar: 4 (2 crear, 2 modificar)
 
 ---
 
@@ -566,4 +572,4 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ---
 
-*Última actualización: 2026-05-10*
+*Última actualización: 2026-05-11*
