@@ -564,11 +564,7 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ---
 
-## Pendientes próxima sesión
-
-1. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
-2. **Gran tarea del usuario** (a definir)
-3. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
+## Pendientes (actualizados abajo, ver sección ÚLTIMA SESIÓN)
 
 ---
 
@@ -581,9 +577,43 @@ La columna `episodios_count_al_rechazar` en `estrategia_sugerencias_descartadas`
 
 ---
 
-## ÚLTIMA SESIÓN — 11 mayo 2026
+## ÚLTIMA SESIÓN — 11 mayo 2026 (continúa)
 
 - **Audio en "Cuéntame tu caso": IMPLEMENTADO** — VoiceTextarea extraído, conectado en SelectorHabilidades, commit `5088c90` pusheado a main
+- **Diagnóstico bug Mi Familia: COMPLETO** — investigación punta a punta completada. Ver reporte en conversación.
+
+### Decisiones de producto tomadas (Mi Familia) — NO cuestionar
+
+1. Cada episodio/dato derivado muestra quién lo registró (avatar del adulto creador)
+2. Cada adulto solo puede editar/eliminar lo que él mismo creó. Todos los de la familia pueden VER todo
+3. Aplica a TODO: episodios, estrategias, hitos, casos "Cuéntame tu caso" y demás datos del hijo
+
+### Bug Mi Familia — Diagnóstico resumido
+
+**Causa raíz**: modelo de datos con `hijo` duplicado — cada adulto tiene su propio registro `hijos` con UUID distinto. Los episodios/hitos/estrategias están atados a un `hijo_id` específico. Cuando la mamá acepta la invitación y ve los hijos del papá, el `hijoActivoId` puede no coincidir con el `hijo_id` que tienen los datos del papá, o puede priorizarse el hijo propio de la mamá que tiene datos vacíos.
+
+**Bugs adicionales identificados**:
+- Dos archivos SQL con versiones distintas de `accept_partner_invitation` (`modo_pareja.sql` vs `schema.sql`). Se desconoce cuál está activo en producción
+- Columna `hijo_id` en `episodios`, `hitos`, `estrategias` NO está en los archivos SQL (fue agregada manualmente)
+- Mappers `dbEpisodioToApp` etc. no exponen `user_id` → imposible mostrar "quién registró" sin cambio en frontend
+- Tabla `estrategia_sugerencias_descartadas` tiene política RLS obsoleta (usa `hijos where user_id = auth.uid()` en vez de familia)
+
+**Capa de monetización "Mi familia"**: parqueada — resolver primero el fix funcional, después evaluar si el modo pareja pasa a ser feature Pro.
+
+### Plan propuesto (pendiente implementar)
+
+Tres fases en orden de prioridad:
+1. **Fase 1** — Fix funcional: unificar el hijo canónico al aceptar invitación + actualizar `hijo_id` en todos los datos del partner
+2. **Fase 2** — "Quién registró": exponer `user_id` en los mappers + UI con avatar/label del adulto
+3. **Fase 3** — Permisos de edición: ya cubiertos por RLS (`WITH CHECK auth.uid() = user_id`), solo necesitan surfacearse en UI (deshabilitar botón editar/borrar si no eres el creador)
+
+---
+
+## Pendientes próxima sesión
+
+1. **Fix bug Mi Familia** — implementar las tres fases del plan (ver diagnóstico arriba)
+2. **Pass de diseño coherente con Inicio e Historial** — usar Claude Design cuando vuelva el límite semanal del usuario, con el brief ya preparado en el chat de Claude
+3. *(Opcional, futuro)* **Generación incremental por semana** — generar solo semana 1 al inicio, las siguientes al avanzar — para reducir tiempo de espera de ~10s a ~3s
 
 ---
 
