@@ -31,9 +31,11 @@ export function FamilyProvider({ children }) {
         supabase.rpc('get_partner_info'),
         supabase
           .from('partner_invitations')
-          .select('id, invitee_email, token, created_at')
+          .select('id, invitee_email, token, created_at, status')
           .eq('inviter_id', user.id)
-          .eq('status', 'pending')
+          .in('status', ['pending', 'rejected_pending_data'])
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle(),
       ])
 
@@ -55,6 +57,7 @@ export function FamilyProvider({ children }) {
               inviteeEmail: invitationRes.data.invitee_email,
               token:        invitationRes.data.token,
               createdAt:    invitationRes.data.created_at,
+              status:       invitationRes.data.status,
             }
           : null
       )

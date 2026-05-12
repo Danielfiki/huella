@@ -376,7 +376,7 @@ begin
 
   update public.partner_invitations
   set status = 'cancelled'
-  where family_id = v_family_id and status = 'pending';
+  where family_id = v_family_id and status in ('pending', 'rejected_pending_data');
 
   v_token := encode(gen_random_bytes(32), 'hex');
   insert into public.partner_invitations (inviter_id, invitee_email, family_id, token)
@@ -420,16 +420,22 @@ grant execute on function public.get_invitation_by_token(text) to anon, authenti
 -- Lógica de 3 casos para resolver duplicación de hijos:
 --   Caso A: invitada sin hijos propios → join directo
 --   Caso B: invitada tiene hijos pero sin datos derivados → borrar hijos vacíos, luego join
---   Caso C: invitada tiene datos propios → rechazar con error_code pending_data (no modifica nada)
+--   Caso C: invitada tiene datos propios → rechazar con error_code pending_data
+--           (no modifica datos del partner, pero marca la invitación como
+--           rejected_pending_data para que el owner sepa por qué quedó colgada)
 create or replace function public.accept_partner_invitation(p_token text)
 returns jsonb
 language plpgsql security definer
 as $$
 declare
-  v_inv            partner_invitations%rowtype;
-  v_in_family      uuid;
-  v_partner_hijos  uuid[];
-  v_has_data       boolean;
+  v_inv             partner_invitations%rowtype;
+  v_in_family       uuid;
+  v_partner_hijos   uuid[];
+  v_has_data        boolean;
+  v_count_eps       integer;
+  v_count_hitos     integer;
+  v_count_estrat    integer;
+  v_count_rutinas   integer;
 begin
   select * into v_inv
   from public.partner_invitations
@@ -465,11 +471,28 @@ begin
     ) into v_has_data;
 
     if v_has_data then
-      -- Caso C: tiene datos → no modificar nada, devolver error específico
+      -- Caso C: contar datos para detallar el mensaje al usuario
+      select count(*) into v_count_eps     from public.episodios  where user_id = auth.uid();
+      select count(*) into v_count_hitos   from public.hitos       where user_id = auth.uid();
+      select count(*) into v_count_estrat  from public.estrategias where user_id = auth.uid();
+      select count(*) into v_count_rutinas from public.rutinas     where user_id = auth.uid();
+
+      -- Marcar la invitación como auto-rechazada para que el owner
+      -- pueda actuar sin esperar la expiración a los 7 días
+      update public.partner_invitations
+      set status = 'rejected_pending_data'
+      where id = v_inv.id;
+
       return jsonb_build_object(
         'success',    false,
         'error_code', 'pending_data',
-        'error',      'Tienes datos previos registrados. Contáctanos para que te ayudemos a unificar tu historial.'
+        'error',      'Tienes datos previos registrados. Contáctanos para que te ayudemos a unificar tu historial.',
+        'counts',     jsonb_build_object(
+          'episodios',   v_count_eps,
+          'hitos',       v_count_hitos,
+          'estrategias', v_count_estrat,
+          'rutinas',     v_count_rutinas
+        )
       );
     else
       -- Caso B: tiene hijos pero vacíos → borrarlos para evitar duplicados
@@ -605,6 +628,14 @@ begin
       raise exception 'Hijo no encontrado o sin permisos: %', p_hijo_id;
     end if;
   else
+    -- Defensa en profundidad: si el usuario pertenece a una familia,
+    -- solo el owner puede crear hijos nuevos (la UI ya esconde el botón).
+    if v_family_id is not null then
+      if (select role from public.family_members where user_id = auth.uid() limit 1) <> 'owner' then
+        raise exception 'Solo el owner puede agregar hijos a la familia';
+      end if;
+    end if;
+
     -- Insertar hijo nuevo
     insert into public.hijos (user_id, family_id, nombre, edad, avatar_url, fecha_nacimiento, genero)
     values (auth.uid(), v_family_id, p_nombre, p_edad, p_avatar_url, p_fecha_nacimiento, p_genero)

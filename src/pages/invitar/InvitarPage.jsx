@@ -17,6 +17,7 @@ export default function InvitarPage() {
   const [status, setStatus] = useState('loading')    // loading | invalid | ready | accepting | done | error | pending_data
   const [invitation, setInvitation] = useState(null) // { inviterEmail, inviteeEmail, expiresAt }
   const [errorMsg, setErrorMsg] = useState('')
+  const [pendingCounts, setPendingCounts] = useState(null) // { episodios, hitos, estrategias, rutinas }
 
   useEffect(() => {
     if (!token) {
@@ -49,6 +50,7 @@ export default function InvitarPage() {
       if (error) throw new Error(error.message)
       if (!data?.success) {
         if (data?.error_code === 'pending_data') {
+          setPendingCounts(data.counts ?? null)
           setStatus('pending_data')
           return
         }
@@ -65,6 +67,19 @@ export default function InvitarPage() {
   }
 
   const loginUrl = `/login?redirect=${encodeURIComponent(`/invitar?token=${token}`)}`
+
+  function describirCounts(counts) {
+    if (!counts) return null
+    const items = []
+    if (counts.episodios   > 0) items.push(`${counts.episodios} ${counts.episodios   === 1 ? 'episodio'   : 'episodios'}`)
+    if (counts.hitos       > 0) items.push(`${counts.hitos} ${counts.hitos           === 1 ? 'hito'       : 'hitos'}`)
+    if (counts.estrategias > 0) items.push(`${counts.estrategias} ${counts.estrategias === 1 ? 'estrategia' : 'estrategias'}`)
+    if (counts.rutinas     > 0) items.push(`${counts.rutinas} ${counts.rutinas       === 1 ? 'rutina'     : 'rutinas'}`)
+    if (items.length === 0) return null
+    if (items.length === 1) return items[0]
+    if (items.length === 2) return `${items[0]} y ${items[1]}`
+    return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
+  }
 
   return (
     <div className={styles.page}>
@@ -160,9 +175,20 @@ export default function InvitarPage() {
             <div className={styles.icon}>📋</div>
             <h2 className={styles.title}>Tienes datos previos</h2>
             <p className={styles.subtitle}>
-              Ya tienes episodios o registros en tu cuenta. Para unirte a la familia de{' '}
-              <strong>{invitation?.inviterEmail}</strong> sin perder tus datos, escríbenos
-              y te ayudamos a unificar tu historial.
+              {describirCounts(pendingCounts) ? (
+                <>
+                  Ya tienes <strong>{describirCounts(pendingCounts)}</strong> en tu cuenta.
+                  Para unirte a la familia de <strong>{invitation?.inviterEmail}</strong>{' '}
+                  sin perderlos, escríbenos a <strong>hola@huella.app</strong> y te ayudamos
+                  a unificar tu historial.
+                </>
+              ) : (
+                <>
+                  Ya tienes episodios o registros en tu cuenta. Para unirte a la familia de{' '}
+                  <strong>{invitation?.inviterEmail}</strong> sin perder tus datos, escríbenos
+                  y te ayudamos a unificar tu historial.
+                </>
+              )}
             </p>
             <a
               href="mailto:hola@huella.app"

@@ -409,7 +409,7 @@ export default function PanelPage() {
               <UltimoHitoCard
                 hito={ultimoHitoConFoto}
                 onVerLogros={() => navigate('/hitos')}
-                authorName={getAuthorDisplay(ultimoHitoConFoto.user_id, profilesByUserId)}
+                authorName={getAuthorDisplay(ultimoHitoConFoto.user_id, profilesByUserId, user?.id)}
               />
             )}
 
@@ -432,7 +432,7 @@ export default function PanelPage() {
               <EstrategiaActivaPanel
                 estrategia={estrategiaActiva}
                 onAbrir={() => navigate('/estrategias')}
-                authorName={getAuthorDisplay(estrategiaActiva.userId, profilesByUserId)}
+                authorName={getAuthorDisplay(estrategiaActiva.userId, profilesByUserId, user?.id)}
               />
             )}
 

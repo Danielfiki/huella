@@ -353,7 +353,7 @@ export default function EstrategiasPage() {
                 hijo={hijo}
                 onAbrir={() => navigate(`/estrategias/${plan.id}`)}
                 onEliminar={setConfirmDeleteId}
-                authorName={getAuthorDisplay(plan.userId, profilesByUserId)}
+                authorName={getAuthorDisplay(plan.userId, profilesByUserId, user?.id)}
               />
             ))}
           </section>

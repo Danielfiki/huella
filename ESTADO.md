@@ -696,4 +696,43 @@ La función `get_partner_info()` fue actualizada en `supabase/schema.sql` con el
 
 ---
 
-*Última actualización: 2026-05-11*
+## ÚLTIMA SESIÓN — 12 mayo 2026
+
+### Cerrado hoy
+
+**Los 3 SQL pendientes de la sesión anterior se aplicaron en producción** (`accept_partner_invitation` v1, `get_partner_info` con JOIN a `perfiles`, fix RLS de `estrategia_sugerencias_descartadas`). Verificado con queries read-only: `pg_get_functiondef` y `pg_policy`.
+
+**5 cambios consolidados antes del QA final de Mi Familia:**
+
+1. **Placeholder "Pareja"** (`src/utils/authorDisplay.js` + 4 call sites en HistorialPage / PanelPage / EstrategiasPage) — `getAuthorDisplay` ahora recibe `currentUserId` como tercer argumento. Si el autor es otro adulto de la familia sin nombre seteado → muestra `'Pareja'`. Si eres tú → siempre `''`. Si el `userId` no está en el mapa → `''`. Antes mostraba vacío y parecía bug.
+
+2. **Banner persistente sin nombre** (`src/pages/perfil/PerfilPage.jsx` + `.module.css`) — si `state.padreNombre` está vacío y `!dataLoading`, aparece un banner amber arriba de la Card "Tú" con texto invitando a completar el nombre. Click → `scrollIntoView` + `focus()` al input. Desaparece automáticamente al guardar. Tokens reutilizados (`--color-amber-bg`, `--color-amber-dark`).
+
+3. **Solo el owner agrega hijos** — UI: botón "+ Agregar otro hijo/a" envuelto en `{(!family || family.role === 'owner') && …}`. SQL: guard en `upsert_family_child` que `raise exception` si `v_family_id is not null` y el role del usuario `<> 'owner'`. Solo aplica a INSERT — UPDATE sigue compartido. Usuario solo sin familia sigue viendo el botón.
+
+4. **Counts en mensaje de Caso C** — SQL: `accept_partner_invitation` ahora cuenta episodios/hitos/estrategias/rutinas en `pending_data` y devuelve `counts` en el response. UI: `InvitarPage.jsx` con función `describirCounts()` que arma texto humano con singular/plural y combina con coma + "y". Ejemplo: "Ya tienes 3 episodios, 1 hito y 2 estrategias en tu cuenta."
+
+5. **Auto-rechazo de invitación en Caso C** — nuevo status `'rejected_pending_data'` en `partner_invitations`. `accept_partner_invitation` marca la invitación con ese status antes de retornar pending_data. `create_family_and_invite` ahora cancela también `'rejected_pending_data'` al reinvitar. `FamilyContext` trae invitaciones con `.in('status', ['pending', 'rejected_pending_data'])` y expone el status. `PerfilPage` muestra rama nueva con bloque amber "Tu pareja no pudo unirse" + botón "Descartar invitación".
+
+**SQL aplicado hoy en Supabase (3 bloques):**
+- `upsert_family_child` actualizada (guard del Cambio 3)
+- `create_family_and_invite` actualizada (cancela también `rejected_pending_data`)
+- `accept_partner_invitation` actualizada (counts + status nuevo)
+
+### Decisión de producto descartada esta sesión
+
+**Cambio 4 (RLS DELETE en hijos)** — al inspeccionar `pg_policy` se confirmó que producción ya tiene 4 policies separadas (`hijos_select/insert/update/delete`) con DELETE restringido a `user_id = auth.uid()`. La policy `family_data` que aparecía en `schema.sql` nunca llegó a producción. Cambio descartado.
+
+### Deuda técnica anotada
+
+1. **`supabase/schema.sql` desalineado con producción** — el archivo del repo declara policies `family_data` `FOR ALL` sobre `hijos` (líneas 327-352) que no existen en prod. En prod hay 4 policies separadas por operación.
+2. **Policies de `estrategia_sugerencias_descartadas` también más sofisticadas en prod que en repo** — el fix RLS de la sesión anterior se aplicó pero el archivo no se actualizó.
+3. **Próxima sesión sin urgencia**: alinear `schema.sql` con `pg_policy` de prod para evitar futuras confusiones.
+
+### Próximo paso
+
+**QA completo de Mi Familia con la checklist armada en sesión previa** (4 cuentas de prueba, 3 casos de aceptación, verificación de placeholder/banner/permisos, mensaje específico Caso C, descarte de invitación rejected_pending_data).
+
+---
+
+*Última actualización: 2026-05-12*

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus, UserCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdad } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
@@ -48,10 +48,11 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo, savePadreNombre, isPro, isAdmin } = useHuella()
+  const { state, setHijo, savePadreNombre, isPro, isAdmin, dataLoading } = useHuella()
   const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
+  const padreInputRef = useRef(null)
 
   const [nombre, setNombre] = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
@@ -238,9 +239,31 @@ export default function PerfilPage() {
     }
   }
 
+  const necesitaCompletarNombre = !dataLoading && !state.padreNombre?.trim()
+
+  function scrollAPadre() {
+    padreInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => padreInputRef.current?.focus(), 350)
+  }
+
   return (
     <div className={styles.page}>
       <h2 className={styles.titulo}>Perfil</h2>
+
+      {necesitaCompletarNombre && (
+        <button
+          type="button"
+          className={styles.nombreBanner}
+          onClick={scrollAPadre}
+        >
+          <span className={styles.nombreBannerIcon} aria-hidden="true">
+            <UserCircle size={18} />
+          </span>
+          <span className={styles.nombreBannerText}>
+            Completa tu nombre para que tu familia lo vea junto a los episodios que registras.
+          </span>
+        </button>
+      )}
 
       {/* ── Padre/madre ──────────────────────────────── */}
       <Card>
@@ -255,6 +278,7 @@ export default function PerfilPage() {
           <div className={styles.field}>
             <label className={styles.label}>¿Cómo te llamamos?</label>
             <input
+              ref={padreInputRef}
               className={styles.input}
               type="text"
               placeholder="Tu nombre"
@@ -385,14 +409,16 @@ export default function PerfilPage() {
           </Button>
         </form>
 
-        <button
-          type="button"
-          className={styles.agregarHijoBtn}
-          onClick={() => navigate('/hijo?nuevo=true')}
-        >
-          <Plus size={14} />
-          Agregar otro hijo/a
-        </button>
+        {(!family || family.role === 'owner') && (
+          <button
+            type="button"
+            className={styles.agregarHijoBtn}
+            onClick={() => navigate('/hijo?nuevo=true')}
+          >
+            <Plus size={14} />
+            Agregar otro hijo/a
+          </button>
+        )}
       </Card>
 
       {/* ── Mi Familia ───────────────────────────────── */}
@@ -434,6 +460,24 @@ export default function PerfilPage() {
                 </button>
               )
             )}
+          </div>
+        ) : pendingInvitation?.status === 'rejected_pending_data' ? (
+          /* Estado D: la pareja intentó aceptar pero tenía datos previos */
+          <div className={styles.familyRejected}>
+            <p className={styles.familyRejectedTitle}>
+              <span className={styles.familyRejectedIcon} aria-hidden="true">📋</span>
+              Tu pareja no pudo unirse
+            </p>
+            <p className={styles.familyRejectedDesc}>
+              <strong>{pendingInvitation.inviteeEmail}</strong> ya tiene datos en su propia cuenta.
+              Contáctanos a <strong>hola@huella.app</strong> para ayudarles a unificar el historial.
+            </p>
+            <button
+              className={styles.familyDiscardBtn}
+              onClick={cancelInvitation}
+            >
+              Descartar invitación
+            </button>
           </div>
         ) : pendingInvitation || inviteLink ? (
           /* Estado B: invitación pendiente */

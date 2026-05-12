@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
 import HistorialHeader from '../../components/historial/HistorialHeader'
 import FiltroChips from '../../components/historial/FiltroChips'
 import DaySeparator from '../../components/historial/DaySeparator'
@@ -52,6 +53,7 @@ function parseOrientacionIA(text) {
 export default function HistorialPage() {
   const navigate = useNavigate()
   const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro, profilesByUserId } = useHuella()
+  const { user } = useAuth()
   const { episodios, hitos, hijo, estrategias } = state
 
   const [filtro, setFiltro] = useState('todos')
@@ -263,7 +265,7 @@ export default function HistorialPage() {
                 onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
                 tieneCheckin={checkinsHechos.has(ep.id)}
                 onNavigate={navigate}
-                authorName={getAuthorDisplay(ep.userId, profilesByUserId)}
+                authorName={getAuthorDisplay(ep.userId, profilesByUserId, user?.id)}
               />
             ))}
           </React.Fragment>
