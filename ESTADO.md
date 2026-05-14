@@ -1007,3 +1007,52 @@ Qué quedó pendiente:
 - Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js basado en el estado del ciclo activo.
 - Fase 5: 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
 - Fase 2b (DROP de 8 columnas legacy) cuando Fase 4 + 5 estén verificadas.
+
+---
+
+### Sesión 14 mayo 2026 — Fase 4 Bloque 2A implementado (pendiente verificación de Daniel)
+
+Qué se hizo:
+- Bloque 2A de Fase 4 implementado: 3 funciones de creación de estrategia ahora escriben en el modelo nuevo (identidad + ciclo 1 activo) en lugar de las columnas legacy.
+- Decisión durante el bloque: se detectaron 3 funciones de creación (no 2 como decía el prompt original). Daniel aprobó extender el scope a las 3:
+  1. addEstrategia (HuellaContext.jsx) — código zombie sin caller, se refactorizó igual para que quede lista.
+  2. handleCasoLibre (EstrategiasPage.jsx) — flujo "Cuéntame tu caso".
+  3. generar (EstrategiaNuevaPage.jsx) — flujo principal "elegir habilidad → wizard". Era el más crítico: sin este bloque, las estrategias nuevas creadas por el flujo más usado aparecían con plan=null en pantalla por el shim de Bloque 1.
+- Helper compartido en HuellaContext.jsx:
+  - crearEstrategiaConCiclo({ hijo_id, habilidad, habilidad_grupo, descripcion, plan, fecha_inicio, episodio_origen_id, episodios_detonantes_ids }):
+    * INSERT identidad en estrategias (user_id, hijo_id, habilidad, descripcion, fecha_inicio, episodio_origen_id, episodios_detonantes_ids, habilidad_grupo si aplica). Las columnas plan/semana_actual/total_semanas/tareas/completado_at/abandonado_at NO se escriben (quedan NULL, se borran en Fase 2b).
+    * INSERT ciclo 1 en estrategia_ciclos (numero_ciclo=1, estado='activo', plan jsonb, semana_actual=1, duracion_semanas derivado de plan.semanas.length con fallback 4, usar_memoria_ia=false).
+    * Cleanup: si el segundo INSERT falla, DELETE de la fila de estrategias para no dejar huérfanos.
+    * Retorna la row de identidad. NO hace dispatch (el caller decide).
+  - reloadEstrategias(): refresca solo el array de estrategias del hijo activo con join anidado a estrategia_ciclos (mismo shape de query que loadHijoDatos del Bloque 1).
+  - Ambas expuestas en el value del context.
+- addEstrategia (HuellaContext.jsx) reescrito:
+  - Quitó el dispatch optimista ADD_ESTRATEGIA (no aporta valor, nadie llama esta función hoy).
+  - Llama al helper + reloadEstrategias. Retorna el id como antes para no romper la firma.
+- handleCasoLibre (EstrategiasPage.jsx) reescrito:
+  - Quitó el INSERT directo a Supabase + el dispatch ESTRATEGIA_CREADA con objeto manual.
+  - Llama al helper + reloadEstrategias + navigate al detalle.
+  - Quité dispatch del destructure de useHuella() porque ya no se usa.
+- generar (EstrategiaNuevaPage.jsx) reescrito:
+  - Quitó el INSERT directo + dispatch ESTRATEGIA_CREADA con nuevoPlan manual.
+  - Llama al helper + reloadEstrategias + navigate al detalle.
+  - Quitó useAuth import + const user (quedó huérfano tras el refactor).
+- 0 cambios en abandonarPlanYCrear (es Bloque 2C). 0 cambios en updateEstrategia / deleteEstrategia / onAvanzar / onGenerarTareas / onToggleTarea (son Bloque 2B). 0 cambios en UI.
+
+Stat del diff:
+- src/context/HuellaContext.jsx: +123 / -... (helper + reloadEstrategias + refactor addEstrategia + 2 keys nuevas en context value).
+- src/pages/estrategias/EstrategiasPage.jsx: 47 líneas removidas en handleCasoLibre, 8 agregadas.
+- src/pages/estrategias/EstrategiaNuevaPage.jsx: 55 líneas removidas en generar, 9 agregadas. Import useAuth y const user huérfanos eliminados.
+
+Por qué funciona sin romper nada:
+- Las estrategias creadas con cualquiera de los 3 flujos ahora viven en el modelo nuevo. El shim de Bloque 1 las aplana automáticamente: el ciclo 1 activo se ve como "plan, semana_actual=1, estado activo" en la UI.
+- Las estrategias viejas (creadas antes de Bloque 2A) siguen leyéndose vía el ciclo 1 poblado por Fase 2a — coexisten sin problema.
+- Sigue escribiendo fecha_inicio en estrategias para mantener el ORDER BY funcionando. Deuda anotada: cambiar ORDER BY a created_at o a estrategia_ciclos.fecha_inicio antes de correr Fase 2b (que dropea fecha_inicio).
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL del flujo de creación (mejor por "elegir habilidad", que es el más usado).
+- Bloque 2B: onAvanzar, onGenerarTareas, onToggleTarea en EstrategiaDetailPage.jsx. Tocan UPDATE de estrategias.* legacy hoy; tienen que apuntar a estrategia_ciclos.
+- Bloque 2C: abandonarPlanYCrear en EstrategiaNuevaPage.jsx. Hoy es un UPDATE que setea abandonado_at en estrategias.* legacy. En el modelo nuevo debe cerrar el ciclo activo (estado='cerrado' + fecha_cierre).
+- Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js.
+- Fase 5: 5 pantallas nuevas. Fase 2b después.
+- Deuda anotada: cambiar el ORDER BY de loadHijoDatos / loadUserData / reloadEstrategias antes de Fase 2b.

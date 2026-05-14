@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
-import { useAuth } from '../../context/AuthContext';
 import { generarEstrategia } from '../../services/anthropic';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
@@ -20,8 +19,7 @@ const PASOS_LOADING = [
 export default function EstrategiaNuevaPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { state, dispatch } = useHuella();
-  const { user } = useAuth();
+  const { state, dispatch, crearEstrategiaConCiclo, reloadEstrategias } = useHuella();
   const hijo = state.hijo;
 
   const habilidadId = params.get('habilidad');
@@ -112,50 +110,15 @@ export default function EstrategiaNuevaPage() {
       };
       setPasoActual(3);
 
-      const { data: row, error: insertErr } = await supabase
-        .from('estrategias')
-        .insert({
-          user_id: user.id,
-          hijo_id: hijo.id,
-          habilidad: habilidad.label,
-          habilidad_grupo: habilidad.grupoNombre,
-          total_semanas: planData.semanas.length || 4,
-          semana_actual: 1,
-          plan: planData,
-          episodios_detonantes_ids: episodiosIds.filter(Boolean),
-        })
-        .select()
-        .single();
-
-      if (insertErr) throw new Error(insertErr.message);
-
-      // Construir objeto en formato app-state para dispatch
-      const nuevoPlan = {
-        id: row.id,
-        hijo_id: hijo.id,
-        habilidad: habilidad.label,
-        habilidad_nombre: habilidad.label,
-        habilidad_grupo: habilidad.grupoNombre,
-        plan: planData,
-        checkins: [],
-        semana_actual: 1,
-        semanaActual: 1,
-        total_semanas: planData.semanas.length || 4,
-        completado_at: null,
-        abandonado_at: null,
+      // Fase 4 Bloque 2A: dual insert (identidad + ciclo 1) vía helper del contexto.
+      const row = await crearEstrategiaConCiclo({
+        hijo_id:                  hijo.id,
+        habilidad:                habilidad.label,
+        habilidad_grupo:          habilidad.grupoNombre,
+        plan:                     planData,
         episodios_detonantes_ids: episodiosIds.filter(Boolean),
-        episodios_detonantes: episodiosDetonantes.map((e) => ({
-          id: e.id,
-          titulo: e.descripcionLibre?.slice(0, 40) || e.tipo || 'Momento',
-          emoji: '·',
-          categoria: 'rutina',
-        })),
-        created_at: row.created_at,
-        fecha_inicio: row.fecha_inicio,
-        fechaInicio: row.fecha_inicio,
-      };
-
-      dispatch({ type: 'ESTRATEGIA_CREADA', plan: nuevoPlan });
+      });
+      await reloadEstrategias();
       navigate(`/estrategias/${row.id}`, { replace: true });
     } catch (err) {
       console.error('generar estrategia falló', err);

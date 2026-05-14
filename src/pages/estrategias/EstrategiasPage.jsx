@@ -25,7 +25,7 @@ export default function EstrategiasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
-  const { state, deleteEstrategia, dispatch, profilesByUserId } = useHuella();
+  const { state, deleteEstrategia, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId } = useHuella();
   const { user } = useAuth();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [casoLibreEstado, setCasoLibreEstado] = useState('idle');
@@ -245,45 +245,14 @@ export default function EstrategiasPage() {
         })),
       };
 
-      const { data: row, error: insertErr } = await supabase
-        .from('estrategias')
-        .insert({
-          user_id: user.id,
-          hijo_id: hijo.id,
-          habilidad: habilidadLabel,
-          habilidad_grupo: grupoMatch,
-          total_semanas: planData.semanas.length || 4,
-          semana_actual: 1,
-          plan: planData,
-          episodios_detonantes_ids: [],
-        })
-        .select()
-        .single();
-
-      if (insertErr) throw new Error(insertErr.message);
-
-      dispatch({
-        type: 'ESTRATEGIA_CREADA',
-        plan: {
-          id: row.id,
-          hijo_id: hijo.id,
-          habilidad: habilidadLabel,
-          habilidad_nombre: habilidadLabel,
-          habilidad_grupo: grupoMatch,
-          plan: planData,
-          checkins: [],
-          semana_actual: 1,
-          semanaActual: 1,
-          total_semanas: planData.semanas.length || 4,
-          completado_at: null,
-          abandonado_at: null,
-          episodios_detonantes_ids: [],
-          episodios_detonantes: [],
-          created_at: row.created_at,
-          fecha_inicio: row.fecha_inicio,
-          fechaInicio: row.fecha_inicio,
-        },
+      // Fase 4 Bloque 2A: dual insert (identidad + ciclo 1) vía helper del contexto.
+      const row = await crearEstrategiaConCiclo({
+        hijo_id:         hijo.id,
+        habilidad:       habilidadLabel,
+        habilidad_grupo: grupoMatch,
+        plan:            planData,
       });
+      await reloadEstrategias();
       navigate(`/estrategias/${row.id}`, { replace: true });
     } catch (err) {
       console.error('caso libre falló', err);

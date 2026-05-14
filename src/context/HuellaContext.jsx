@@ -604,36 +604,111 @@ export function HuellaProvider({ children }) {
 
   // ── Estrategias ───────────────────────────────────────────────────────────
 
-  async function addEstrategia(estrategia) {
-    if (!user || !supabase) return null
-    dispatch({ type: 'ADD_ESTRATEGIA', payload: estrategia })
-    const planNormalizado = (() => {
-      if (typeof estrategia.plan !== 'string') return estrategia.plan
-      try { return JSON.parse(estrategia.plan) } catch { return estrategia.plan }
+  // Helper compartido de Fase 4 Bloque 2A — rediseño Estrategias con Ciclos.
+  // Crea una estrategia en el modelo nuevo: identidad en `estrategias` +
+  // ciclo 1 activo en `estrategia_ciclos`. Si el segundo INSERT falla,
+  // borra la fila huérfana de identidad. Retorna la row de identidad.
+  // No hace dispatch — el caller decide cómo refrescar el estado.
+  async function crearEstrategiaConCiclo(input) {
+    if (!user || !supabase) throw new Error('Sesión inválida.')
+
+    const plan = (() => {
+      if (input.plan == null) return null
+      if (typeof input.plan !== 'string') return input.plan
+      try { return JSON.parse(input.plan) } catch { return input.plan }
     })()
-    const { data: inserted, error } = await supabase.from('estrategias').insert({
-      user_id:            user.id,
-      hijo_id:            state.hijoActivoId ?? null,
-      habilidad:          estrategia.habilidad,
-      descripcion:        estrategia.descripcion,
-      plan:               planNormalizado,
-      fecha_inicio:       estrategia.fechaInicio,
-      semana_actual:      estrategia.semanaActual,
-      tareas:             estrategia.tareas ?? {},
-      episodio_origen_id: estrategia.episodioOrigenId ?? null,
-    }).select().single()
-    if (error) {
-      dispatch({ type: 'REMOVE_ESTRATEGIA', payload: estrategia.id })
-      throw new Error(error.message)
+
+    const duracion = Array.isArray(plan?.semanas)
+      ? plan.semanas.length
+      : 4
+
+    // 1. INSERT de identidad (las columnas legacy de plan/semana/etc.
+    //    quedan NULL — se borran en Fase 2b).
+    const fieldsIdentidad = {
+      user_id:                  user.id,
+      hijo_id:                  input.hijo_id ?? null,
+      habilidad:                input.habilidad,
+      descripcion:              input.descripcion ?? null,
+      fecha_inicio:             input.fecha_inicio ?? new Date().toISOString(),
+      episodio_origen_id:       input.episodio_origen_id ?? null,
+      episodios_detonantes_ids: input.episodios_detonantes_ids ?? [],
     }
-    const realId = inserted?.id ?? estrategia.id
+    if (input.habilidad_grupo) fieldsIdentidad.habilidad_grupo = input.habilidad_grupo
+
+    const { data: estrategiaRow, error: errIdent } = await supabase
+      .from('estrategias')
+      .insert(fieldsIdentidad)
+      .select()
+      .single()
+
+    if (errIdent) throw new Error(errIdent.message)
+
+    // 2. INSERT del ciclo 1 activo. Si falla, limpiamos la identidad
+    //    para no dejar una estrategia huérfana sin plan visible.
+    const { error: errCiclo } = await supabase
+      .from('estrategia_ciclos')
+      .insert({
+        estrategia_id:    estrategiaRow.id,
+        user_id:          user.id,
+        hijo_id:          input.hijo_id ?? null,
+        numero_ciclo:     1,
+        estado:           'activo',
+        plan:             plan,
+        semana_actual:    1,
+        duracion_semanas: duracion,
+        usar_memoria_ia:  false,
+      })
+
+    if (errCiclo) {
+      await supabase
+        .from('estrategias')
+        .delete()
+        .eq('id', estrategiaRow.id)
+        .eq('user_id', user.id)
+      throw new Error(errCiclo.message)
+    }
+
+    return estrategiaRow
+  }
+
+  // Refresca solo el array de estrategias del hijo activo con el join
+  // anidado a estrategia_ciclos (mismo shape que loadHijoDatos).
+  async function reloadEstrategias() {
+    if (!user || !supabase || !state.hijoActivoId) return
     const { data } = await supabase
-      .from('estrategias').select('*')
+      .from('estrategias')
+      .select(`
+        *,
+        estrategia_ciclos (
+          id, numero_ciclo, estado, plan,
+          semana_actual, fecha_inicio, fecha_cierre, duracion_semanas,
+          cierre_analisis, checkins_legacy, usar_memoria_ia,
+          created_at, updated_at
+        )
+      `)
       .in('user_id', getPartnerIds())
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha_inicio', { ascending: false })
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
-    return realId
+  }
+
+  async function addEstrategia(estrategia) {
+    if (!user || !supabase) return null
+    try {
+      const row = await crearEstrategiaConCiclo({
+        hijo_id:            state.hijoActivoId ?? null,
+        habilidad:          estrategia.habilidad,
+        descripcion:        estrategia.descripcion,
+        plan:               estrategia.plan,
+        fecha_inicio:       estrategia.fechaInicio,
+        episodio_origen_id: estrategia.episodioOrigenId ?? null,
+      })
+      await reloadEstrategias()
+      return row.id
+    } catch (err) {
+      console.error('addEstrategia falló', err)
+      throw err
+    }
   }
 
   async function updateEstrategia(partial) {
@@ -799,6 +874,8 @@ export function HuellaProvider({ children }) {
       deleteHito,
       updateHitoFoto,
       addEstrategia,
+      crearEstrategiaConCiclo,
+      reloadEstrategias,
       updateEstrategia,
       deleteEstrategia,
       addRutina,
