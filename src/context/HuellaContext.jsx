@@ -201,9 +201,42 @@ function parsePlanField(raw) {
   return raw
 }
 
+// Shim de Fase 4 Bloque 1 — rediseño Estrategias con Ciclos.
+// Lee del modelo nuevo (estrategia_ciclos) y aplana el "ciclo visible"
+// en las claves legacy que la UI sigue esperando. Suma claves aditivas
+// para que Bloques 2 y 3 puedan migrar sin tocar este mapper.
+//
+// Ciclo visible = primero el que está 'activo'; si no hay ninguno
+// activo, el más reciente por numero_ciclo. Garantiza continuidad
+// visual cuando una estrategia está "entre ciclos".
 function dbEstrategiaToApp(row) {
-  return {
-    // snake_case — usado por los nuevos componentes de estrategias
+  const ciclosRaw = Array.isArray(row.estrategia_ciclos)
+    ? [...row.estrategia_ciclos].sort(
+        (a, b) => (b.numero_ciclo ?? 0) - (a.numero_ciclo ?? 0)
+      )
+    : []
+
+  const ciclos = ciclosRaw.map((c) => ({
+    id:               c.id,
+    numero_ciclo:     c.numero_ciclo,
+    estado:           c.estado,
+    plan:             parsePlanField(c.plan),
+    semana_actual:    c.semana_actual    ?? 1,
+    fecha_inicio:     c.fecha_inicio     ?? null,
+    fecha_cierre:     c.fecha_cierre     ?? null,
+    duracion_semanas: c.duracion_semanas ?? null,
+    cierre_analisis:  c.cierre_analisis  ?? null,
+    checkins_legacy:  c.checkins_legacy  ?? null,
+    usar_memoria_ia:  c.usar_memoria_ia  ?? true,
+    created_at:       c.created_at       ?? null,
+    updated_at:       c.updated_at       ?? null,
+  }))
+
+  const cicloVisible =
+    ciclos.find((c) => c.estado === 'activo') ?? ciclos[0] ?? null
+
+  // Claves que no dependen del ciclo (viven en la fila padre estrategias).
+  const base = {
     id:                       row.id,
     userId:                   row.user_id,
     hijo_id:                  row.hijo_id                  ?? null,
@@ -211,21 +244,50 @@ function dbEstrategiaToApp(row) {
     habilidad_nombre:         row.habilidad                ?? null,
     habilidad_grupo:          row.habilidad_grupo          ?? null,
     descripcion:              row.descripcion,
-    plan:                     parsePlanField(row.plan),
-    checkins:                 Array.isArray(row.checkins) ? row.checkins : (row.checkins ?? []),
-    tareas:                   row.tareas                   ?? {},
-    semana_actual:            row.semana_actual            ?? 1,
-    total_semanas:            row.total_semanas            ?? 4,
-    completado_at:            row.completado_at            ?? null,
-    abandonado_at:            row.abandonado_at            ?? null,
     episodios_detonantes_ids: row.episodios_detonantes_ids ?? [],
     episodio_origen_id:       row.episodio_origen_id       ?? null,
     created_at:               row.created_at               ?? null,
     fecha_inicio:             row.fecha_inicio             ?? null,
-    // camelCase — mantenidos para compatibilidad con código existente
     fechaInicio:              row.fecha_inicio,
-    semanaActual:             row.semana_actual,
     episodioOrigenId:         row.episodio_origen_id       ?? null,
+    // Claves aditivas del modelo de ciclos (consumidas por Bloques 2/3 y Fase 5).
+    ciclos,
+    ciclo_activo_id:          cicloVisible?.id           ?? null,
+    numero_ciclo_actual:      cicloVisible?.numero_ciclo ?? null,
+  }
+
+  // Sin ciclos cargados (estrategia recién creada o join vacío):
+  // valores neutros que la UI legacy puede consumir sin romperse.
+  if (!cicloVisible) {
+    return {
+      ...base,
+      plan:            null,
+      checkins:        [],
+      tareas:          {},
+      semana_actual:   1,
+      semanaActual:    1,
+      total_semanas:   row.total_semanas ?? 4,
+      completado_at:   null,
+      abandonado_at:   null,
+      cierre_analisis: null,
+    }
+  }
+
+  // Aplanamos el ciclo visible en las claves que la UI legacy lee.
+  // completado_at se deriva: solo está poblado si el ciclo está cerrado.
+  return {
+    ...base,
+    plan:            cicloVisible.plan,
+    checkins:        Array.isArray(cicloVisible.checkins_legacy)
+                       ? cicloVisible.checkins_legacy
+                       : [],
+    tareas:          {},
+    semana_actual:   cicloVisible.semana_actual ?? 1,
+    semanaActual:    cicloVisible.semana_actual ?? 1,
+    total_semanas:   cicloVisible.duracion_semanas ?? row.total_semanas ?? 4,
+    completado_at:   cicloVisible.estado === 'cerrado' ? cicloVisible.fecha_cierre : null,
+    abandonado_at:   null,
+    cierre_analisis: cicloVisible.cierre_analisis ?? null,
   }
 }
 
@@ -266,7 +328,16 @@ export function HuellaProvider({ children }) {
         .eq('hijo_id', hijoId)
         .order('fecha', { ascending: false }),
       supabase.from('estrategias')
-        .select('*').in('user_id', partnerIds)
+        .select(`
+          *,
+          estrategia_ciclos (
+            id, numero_ciclo, estado, plan,
+            semana_actual, fecha_inicio, fecha_cierre, duracion_semanas,
+            cierre_analisis, checkins_legacy, usar_memoria_ia,
+            created_at, updated_at
+          )
+        `)
+        .in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
         .order('fecha_inicio', { ascending: false }),
       supabase.from('rutinas')
@@ -310,7 +381,16 @@ export function HuellaProvider({ children }) {
             .eq('hijo_id', hijoActivoId)
             .order('fecha', { ascending: false }),
           supabase.from('estrategias')
-            .select('*').in('user_id', partnerIds)
+            .select(`
+              *,
+              estrategia_ciclos (
+                id, numero_ciclo, estado, plan,
+                semana_actual, fecha_inicio, fecha_cierre, duracion_semanas,
+                cierre_analisis, checkins_legacy, usar_memoria_ia,
+                created_at, updated_at
+              )
+            `)
+            .in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
             .order('fecha_inicio', { ascending: false }),
           supabase.from('rutinas')

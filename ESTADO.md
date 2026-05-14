@@ -735,4 +735,275 @@ La función `get_partner_info()` fue actualizada en `supabase/schema.sql` con el
 
 ---
 
-*Última actualización: 2026-05-12*
+---
+
+## ÚLTIMA SESIÓN — 13 mayo 2026
+
+### Proyecto activo
+
+**Rediseño completo de Estrategias bajo modelo "estrategia con ciclos".** Una estrategia pasa a ser un contenedor continuo sobre una habilidad. Dentro vive uno o más ciclos cronológicos (Ciclo 1 = 4 semanas como hoy; ciclos 2+ con duración variable). Cada ciclo activo tiene bitácora (notas + episodios vinculados) y al cerrar dispara análisis IA en 3 secciones (Qué cambió / Qué quedó pendiente / Recomendaciones para integrar). Volver a una habilidad ofrece "Ciclo N con memoria" usando lo aprendido en ciclos anteriores.
+
+Cap: 3 estrategias activas máx., 1 ciclo activo por estrategia.
+
+### Hecho hasta ahora
+
+- **Informe técnico-funcional inicial** del estado actual de Estrategias y PDF clínico. Mapea pantallas, modelo de datos, funciones SQL/RPC/IA, puntos de contacto con otras secciones y riesgos. Sirve como baseline.
+- **18 approaches conceptuales** (3 por pantalla × 6 pantallas) entregados para que Daniel eligiera dirección.
+- **6 mockups detallados** pixel-coherentes en 3 lotes:
+  - **Lote 1** — Pantalla 1 (lista con timeline horizontal por estrategia, approach 1A) + Pantalla 2 (detalle del ciclo con bitácora "Lo que está pasando", approach 2C).
+  - **Lote 2** — Pantalla 3 (cierre del ciclo con 2 CTAs gemelas y 3 secciones IA, approach 3A) + Pantalla 4 (modal Ciclo 2 con preview del historial y fallback sin análisis IA, approach 4B).
+  - **Lote 3** — Pantalla 5 (PDF tabla maestra + dossier por ciclo, con versión con y sin columna Δ Intensidad, approach 5B) + Pantalla 6 (card Panel "en descanso" con tono muted, approach 6A).
+
+### Correcciones ya aplicadas al Lote 1
+
+1. **Sin modo readonly del DetailPage.** El sheet de ciclo pasado en la Pantalla 1 pasó de "Ver detalle completo" a "Ver bitácora completa de este ciclo", escalado en 2 niveles dentro del mismo sheet (resumen → bitácora). Toda la info de un ciclo pasado vive en sheets ligeros.
+2. **Sin long-press para eliminar.** Reemplazado por menú "..." (lucide `MoreHorizontal`) en el header de cada carril, con `<MenuPopover>` reusable. Item único actual: "Eliminar estrategia". Estructura preparada para futuras opciones.
+
+### Pendiente — aplicar al inicio de la próxima sesión
+
+1. **Pantalla 4 · "Ciclo independiente".** Debe crear un Ciclo N+1 dentro de la misma estrategia (sin memoria IA), NO una estrategia paralela. Preserva la invariante "una habilidad = una estrategia". La spec actual hace lo contrario; hay que actualizar §4.7 del Lote 2.
+2. **Pantalla 6 · icono.** Reemplazar `Moon` (lucide) por emoji 🌿 para coherencia con el resto de la app. Mantener el resto del componente igual.
+3. **Pantalla 6 · persistencia "Ocultar de aquí".** Pasar de sessionStorage a persistencia real (DB o localStorage). Si no se persiste, recargar vuelve a mostrar la card. Decidir: tabla nueva `estrategias_panel_descartadas` (mismo patrón que `estrategia_sugerencias_descartadas`) o `localStorage` por user_id. Recomendación: DB para que funcione cross-device de la pareja.
+
+### Después de las 3 correcciones
+
+Generar **bundle de implementación** que Claude Code pueda consumir sin ambigüedad. Debe incluir:
+- Tokens CSS finales (los existentes que se usan y cualquiera nuevo justificado).
+- Props y comportamientos por componente (`EstrategiaCarril`, `MenuPopover`, sheets de 2 niveles, `NotaCard`, `EpisodioVinculadoCard`, `EstrategiaDescansoCard`, etc.).
+- Schema SQL nuevo: tabla `estrategia_ciclos` (extracción del modelo plano actual), `estrategia_bitacora_notas`, columna `ciclo_id` en `episodios` para vincular, posibles tablas auxiliares para "panel descartadas".
+- Migración de datos desde el modelo actual (cada `estrategias` existente → 1 estrategia + 1 ciclo).
+- Contract IA para 2 funciones nuevas en `services/anthropic.js`:
+  - `analizarCierreCiclo({ ciclo, notas, episodios, hijo })` → `{ queCambio: string, queQuedoPendiente: string, recomendaciones: string[] }`.
+  - `analizarHistorialEstrategias({ estrategias_con_ciclos, hijo })` → texto narrativo 3-5 frases para fallback PDF cuando no se incluye Δ Intensidad.
+
+### Decisión clave de flujo
+
+**Claude Code primero (mockups + implementación), Claude Design después para pulir estética.** El rediseño es estructural y funcional, no solo visual — la prioridad es construir el modelo nuevo (DB + lógica + componentes) y validar que funciona end-to-end. El pulido de diseño se hace sobre algo ya operativo.
+
+### Reglas duras del rediseño (no negociables)
+
+- NO se tocan Mi Familia, Historial, pantallas de Hitos/Perfil hijo/Perfil padre.
+- Panel/Inicio: los componentes existentes (`EstrategiaActivaPanel`, etc.) NO se rediseñan. Sólo se agrega `EstrategiaDescansoCard` debajo de `EstrategiaActivaPanel`.
+- Tokens visuales existentes (`--color-mocha`, `--color-tangerine`, `--color-cream`, `--color-surface-alt`, `--color-amber-bg/dark`, etc.) son la fuente de verdad. No introducir tokens nuevos sin justificación.
+
+---
+
+## ÚLTIMA SESIÓN — 13 mayo 2026 (cont.) — Mockups, viewer y Fase 0 del bundle de implementación
+
+### Lo que se hizo
+
+1. **Lote completo de 6 mockups** del rediseño "Estrategias con Ciclos" generado en `design_handoff_estrategias/mockups/` (13 archivos: README + 6 pares `.jsx` / `.module.css`).
+2. **3 correcciones aplicadas durante la generación inicial**:
+   - **P4** — copy del "Ciclo independiente" deja claro que sigue dentro de la misma estrategia (sin memoria IA al prompt). El handler de confirmación crea ciclo N+1 con `usar_memoria_ia = false`, NO una estrategia paralela.
+   - **P6** — emoji 🌿 reemplaza icono `Moon` de lucide. Sin import de `Moon`.
+   - **P6** — persistencia "Ocultar de aquí" con `localStorage` (clave `huella_descanso_ocultado_${estrategiaId}`). Se lee al montar y oculta sin confirmación.
+3. **2 correcciones finales aplicadas tras revisión visual**:
+   - **P3** — CTAs gemelas sin sesgo ("Trabajar libre" / "Iniciar nuevo ciclo"), mismo tamaño y peso visual, sin íconos, sin `ctaPrim/ctaSec`. Pregunta neutral "¿Qué quieres hacer ahora?". Side-by-side en ≥520px, apiladas en mobile.
+   - **P1** — redefinición de "estrategia activa" — solo cuentan estrategias con ciclo en curso (`ciclos.some(c => c.estado === 'activo')`). Header dinámico "N activas · M en descanso". Sección "EN DESCANSO" separada con cards atenuadas (opacity 0.7 + `--color-surface-alt`).
+4. **Viewer temporal montado en `/mockups`** (ruta pública fuera de `ProtectedRoute`):
+   - Archivos: `design_handoff_estrategias/mockups/MockupViewer.jsx` + `.module.css`
+   - Modificación en `src/App.jsx`: línea 25 (import) + línea 147 (Route hermana de `/invitar`).
+   - Comando de revert documentado: `git checkout -- src/App.jsx && rm design_handoff_estrategias/mockups/MockupViewer.jsx design_handoff_estrategias/mockups/MockupViewer.module.css`
+5. **Diagnóstico técnico completo** realizado: mapeo de DB actual, código actual, brecha con modelo de ciclos, riesgos por tipo de migración (destructiva vs aditiva).
+6. **7 decisiones de implementación tomadas** (todas confirmadas por Daniel):
+   - ALTER `plan` TEXT→JSONB se corre **dentro del script de migración a ciclos**.
+   - Episodios vinculados al ciclo: **columna `ciclo_id` en tabla `episodios`** (no pivote N:N).
+   - "Ocultar de aquí" del Panel descanso: **tabla `estrategias_panel_descartadas` en DB** (cross-device para parejas).
+   - `tareas jsonb` (dead column): se borra en la misma migración.
+   - Migración con **ventana de mantenimiento corta** (madrugada chilena), no lectura doble en cliente.
+   - Análisis IA al cerrar ciclo: se guarda en DB (columna `cierre_analisis jsonb` en `estrategia_ciclos`).
+   - Validar policies RLS prod vs repo antes de la migración: **HECHO en Fase 0 de esta sesión**.
+
+### Fase 0 — Validación previa: COMPLETADA con luz verde
+
+- **Q1 (policies):** `estrategias.family_data` coincide perfecto con el repo. En `estrategia_sugerencias_descartadas` aparecen 3 policies legacy ("delete propio", "insert propio", "select propio") junto a "family members can manage discards". No bloquea (la nueva es más permisiva, gana por OR). Queda anotado para limpiar en Fase 6.
+- **Q2 (columnas):** las 16 columnas de `estrategias` en prod coinciden con la referencia del repo. `plan` sigue como `text` (esperado), `tareas jsonb` presente (planeado borrar en Fase 2).
+- **Q3 (planes corruptos):** 0 filas. ALTER `plan::jsonb` va a correr limpio.
+
+### Plan de implementación acordado (6 fases)
+
+- **Fase 0:** Validación previa — DONE.
+- **Fase 1:** DB aditiva — crear tablas `estrategia_ciclos`, `estrategia_bitacora_notas`, `estrategias_panel_descartadas`; agregar columna `ciclo_id` a `episodios`. No destructivo.
+- **Fase 2:** Migración destructiva con ventana de mantenimiento — ALTER `plan` a JSONB, copiar datos a ciclos, borrar columnas legacy. ÚNICA fase con riesgo alto, requiere backup previo.
+- **Fase 3:** Backend IA — función `analizarCierreCiclo()` y soporte para "Ciclo independiente" (flag `usar_memoria_ia` en `generarEstrategia`).
+- **Fase 4:** Cliente adapta lectura — `HuellaContext`, `PanelPage`, `InformePDF` migran al modelo de ciclos sin cambiar UI todavía.
+- **Fase 5:** Nueva UI por pantalla — se despliega pantalla por pantalla a medida que están listas. Decisión Daniel: **P5 (PDF rediseñado) se pospone para iteración posterior**; las 5 restantes son obligatorias.
+- **Fase 6:** Limpieza — quitar viewer `/mockups`, mover catálogo a `src/lib/habilidades.js`, borrar dead code, limpiar las 3 policies legacy de Q1.
+
+### Próximo paso para la siguiente sesión
+
+Arrancar **Fase 1**: Claude Code escribe el SQL de las 3 tablas nuevas + columna `ciclo_id` en `episodios`, con policies `family_data` análogas a `estrategias`. Daniel lo corre en Supabase y valida.
+
+### Pendiente (deuda anotada)
+
+- Limpiar las 3 policies legacy en `estrategia_sugerencias_descartadas` (Fase 6).
+- Eliminar viewer `/mockups` después de terminar el rediseño (Fase 6).
+- Decisión Daniel: **P5 (PDF rediseñado) queda para después de las otras 5 pantallas**.
+
+---
+
+*Última actualización: 2026-05-14*
+
+---
+
+## ÚLTIMA SESIÓN — 14 mayo 2026
+
+### Sesión 14 mayo 2026
+
+Qué se hizo:
+- Fase 1 del rediseño Estrategias con Ciclos COMPLETADA.
+- SQL ejecutado en producción Supabase desde snippet `fase1_estrategias_ciclos`:
+  - 3 tablas nuevas: estrategia_ciclos, estrategia_bitacora_notas, estrategias_panel_descartadas.
+  - Columna ciclo_id agregada a episodios (uuid, FK a estrategia_ciclos, ON DELETE SET NULL).
+  - Policies family_data ALL en las 3 tablas, clonando el patrón exacto de estrategias en prod (USING = user_id ∈ get_family_user_ids, WITH CHECK = auth.uid() = user_id).
+  - RLS habilitado en las 3 tablas.
+  - Índice único parcial uniq_ciclo_activo_por_estrategia garantiza 1 ciclo activo máx por estrategia.
+  - UNIQUE (estrategia_id, numero_ciclo) evita ciclos duplicados.
+- SQL guardado como migración histórica en design_handoff_estrategias/sql/002_estrategias_ciclos_fase1.sql.
+- Validación post-migración: query devolvió 10 filas exactas (3 tablas + 1 columna + 3 policies + 3 RLS).
+
+Qué quedó pendiente:
+- Fase 2 — Migración destructiva (la única peligrosa). Requiere:
+  - Backup previo de la DB.
+  - Ventana de mantenimiento (madrugada chilena).
+  - ALTER plan TEXT→JSONB en estrategias.
+  - Borrar columna `tareas jsonb` (dead column).
+  - Definir y ejecutar mapeo de datos legacy de estrategias.plan hacia estrategia_ciclos.
+- Pendientes de QA Mi Familia en producción (heredados de sesiones anteriores) siguen abiertos pero no bloquean Fase 2.
+
+---
+
+### Sesión 14 mayo 2026 — continuación
+
+Qué se hizo:
+- SQL completo de Fase 2 escrito y guardado en design_handoff_estrategias/sql/003_estrategias_ciclos_fase2.sql.
+- NO ejecutado. Espera a que Fase 3 y Fase 4 estén desplegadas.
+- Decisiones de mapeo legacy → ciclos tomadas por Claude (no descargadas a Daniel) según regla nueva en memoria:
+  - completado_at o abandonado_at → fecha_cierre + estado='cerrado'. NO se preserva distinción completado vs abandonado.
+  - checkins → preservar como checkins_legacy jsonb en ciclos (ALTER aditivo en estrategia_ciclos dentro del SQL).
+  - tareas → se borra (decisión 4 ya tomada, 2 estrategias tenían datos en tareas, se pierden).
+  - semana_actual → se persiste como columna nueva en estrategia_ciclos.
+  - episodios.ciclo_id se pobla desde episodio_origen_id + episodios_detonantes_ids de cada estrategia.
+- Counts de recon (snippet fase2_recon_datos): 5 estrategias totales / 3 activas / 2 completadas / 0 abandonadas / 0 planes corruptos / 3 con checkins / 2 con tareas / 0 FK episodios→estrategias.
+- Bug detectado y corregido en el SQL: la sintaxis JOIN LATERAL ... ON det.episodio_id = ep.id no es válida en UPDATE de PostgreSQL. Reemplazada por ep.id = ANY(e.episodios_detonantes_ids) en parte C.2.
+
+Qué quedó pendiente:
+- Arrancar Fase 3 (backend IA: función analizarCierreCiclo + soporte "Ciclo independiente" con flag usar_memoria_ia).
+- Después Fase 4 (cliente adapta lectura al modelo de ciclos sin cambiar UI).
+- Cuando Fase 3 y Fase 4 estén desplegadas: ejecutar 003_estrategias_ciclos_fase2.sql en ventana corta de madrugada chilena + backup previo.
+
+---
+
+### Sesión 14 mayo 2026 — Fase 3 completada
+
+Qué se hizo:
+- Fase 3 del rediseño Estrategias con Ciclos COMPLETADA.
+- 2 funciones nuevas agregadas a src/services/anthropic.js:
+  - analizarCierreCiclo({ hijo, ciclo, notas_bitacora, episodios_vinculados }): al cerrar un ciclo genera análisis estructurado en JSON (que_cambio, que_quedo_pendiente, recomendaciones). max_tokens 2000. Se guarda en estrategia_ciclos.cierre_analisis (jsonb).
+  - generarCicloN({ hijo, habilidad, descripcion, usar_memoria_ia, ciclo_anterior, numero_ciclo }): genera el plan de un ciclo 2+. Si usar_memoria_ia es false o no hay ciclo_anterior, reutiliza generarEstrategia (4 semanas fijas, mismo prompt que ciclo 1). Si es true y hay ciclo_anterior, prompt nuevo con contexto histórico del ciclo previo (plan + cierre_analisis), duración variable 2-6 semanas controlada por semanas.length. max_tokens 4000.
+- Ajustes de robustez aplicados a generarCicloN tras revisión crítica:
+  - Guard al inicio: rechaza llamadas con numero_ciclo no entero o menor a 2.
+  - IIFE de género usando valores consistentes con el resto del archivo (niña / niño / niñe / niño/a).
+  - Validación de coherencia: duracion_semanas = parsed.semanas.length, con rango exigido 2-6.
+  - Prompt actualizado para que la IA sepa que el array semanas es la fuente de verdad.
+- Bug detectado y corregido durante implementación: spec original de analizarCierreCiclo usaba JSON.parse(extraerJSON(raw)), que siempre fallaba porque extraerJSON ya devuelve objeto parseado. Corregido a const parsed = extraerJSON(raw) con guard de tipo. Mismo patrón aplicado en generarCicloN.
+- Total de líneas de src/services/anthropic.js: 573 → 779 (+206 líneas, todas insertadas, ninguna línea pre-existente modificada).
+
+Qué quedó pendiente:
+- Fase 4: cliente adapta lectura al modelo de ciclos sin cambiar UI. Los puntos que hoy leen de estrategias.plan, estrategias.semana_actual, estrategias.completado_at, etc., deben migrar a estrategia_ciclos del ciclo activo. HuellaContext, PanelPage, EstrategiasPage, InformePDF son los principales call sites.
+- Fase 5: implementación de 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
+- Fase 6: limpieza (eliminar viewer /mockups, mover catálogo a src/lib/habilidades.js, limpiar 3 policies legacy en estrategia_sugerencias_descartadas).
+- Cuando Fase 4 esté desplegada y verificada en producción: ejecutar 003_estrategias_ciclos_fase2.sql en ventana corta de madrugada chilena + backup previo.
+
+Deudas técnicas anotadas para roadmap futuro:
+- Bloque IIFE de género duplicado N veces en src/services/anthropic.js. Extraer a helper compartido cuando haya una refactorización general.
+- Validación interna de cada elemento del array semanas ausente en generarCicloN, generarEstrategia y generarTareas. Patrón a unificar en pasada futura.
+- 'el niño/a' en el default del IIFE de género no es estrictamente un pronombre. Trampa semántica para el futuro si se extrae a helper sin revisar.
+- En generarCicloN el IIFE de género devuelve { genero, pronombre, articulo } pero solo se destructura { genero }, coherente con el patrón estructural del archivo. Si se extrae a helper, los otros 2 campos quedan disponibles para funciones que sí los necesiten.
+
+---
+
+### Sesión 14 mayo 2026 — Fase 2 dividida en 2a/2b
+
+Qué se hizo:
+- Decisión arquitectónica revisada: Fase 2 se divide en 2a (aditivo) y 2b (destructivo).
+- Razón: Fase 4 (cliente adapta lectura) necesita datos reales en estrategia_ciclos para desarrollarse y testearse. Si Fase 2 se ejecuta entera en ventana corta, Fase 4 no se puede validar contra prod hasta el último momento.
+- Respeta decisión 5 (no lectura doble en cliente): mientras Fase 4 no esté desplegada, el cliente actual sigue leyendo solo del modelo viejo. La duplicación temporal vive en DB, no en lectura.
+- Archivos SQL reorganizados:
+  - design_handoff_estrategias/sql/003_estrategias_ciclos_fase2a_aditivo.sql: ALTER ADD COLUMN + INSERT estrategia_ciclos + UPDATE episodios.ciclo_id. NO destructivo.
+  - design_handoff_estrategias/sql/004_estrategias_ciclos_fase2b_destructivo.sql: solo DROP COLUMN de las 8 columnas legacy en estrategias.
+
+Qué quedó pendiente:
+- Ejecutar 003 (Fase 2a) en producción Supabase. Validar con queries.
+- Implementar Fase 4 en bloques (mapper + loads, escrituras, helpers).
+- Implementar Fase 5 (5 pantallas nuevas).
+- Cuando Fase 4+5 estén desplegadas y verificadas: ventana corta para ejecutar 004 (Fase 2b). Antes de eso, re-correr la PARTE B de 003 para capturar estrategias nuevas creadas en el intervalo.
+
+---
+
+### Sesión 14 mayo 2026 — Fase 2a ejecutada
+
+Qué se hizo:
+- SQL 003_estrategias_ciclos_fase2a_aditivo.sql actualizado con ON CONFLICT DO UPDATE en la PARTE B para que sea idempotente Y sincronizadora.
+- Ejecutado en producción Supabase. Output: Success.
+- Validación post-ejecución (snippet fase2a_verificacion) devolvió 10 filas exactas como se esperaba:
+  - 5 ciclos totales, todos numero_ciclo=1.
+  - 3 activos (estado='activo'), 2 cerrados (estado='cerrado').
+  - 5 con plan, 2 con fecha_cierre, 3 con checkins_legacy.
+  - 3 episodios vinculados al ciclo vía PARTE C.
+  - Las 2 columnas nuevas (semana_actual, checkins_legacy) en estrategia_ciclos confirmadas.
+- A partir de este momento, los datos viven DUPLICADOS en estrategias.* y estrategia_ciclos.* hasta la ventana de Fase 2b.
+
+Regla crítica para roadmap:
+- 003 se re-corre solo dentro de la ventana de Fase 2b, justo antes del DROP de columnas.
+- NUNCA re-correr 003 después de que Fase 4 esté desplegada en producción, porque sobrescribiría progreso real del usuario con datos viejos de estrategias.*.
+
+Qué quedó pendiente:
+- Implementar Fase 4 (cliente adapta lectura al modelo de ciclos sin cambiar UI). Plan en 3 bloques:
+  - Bloque 1: adaptar mapper dbEstrategiaToApp + loadHijoDatos + loadUserData en src/context/HuellaContext.jsx para que aplanen el ciclo activo en las claves que la UI ya espera (shim de compatibilidad).
+  - Bloque 2: adaptar las funciones de escritura para que apunten a estrategia_ciclos en vez de estrategias. Call sites: addEstrategia y updateEstrategia en HuellaContext.jsx; onAvanzar / onGenerarTareas / onToggleTarea en EstrategiaDetailPage.jsx; abandonarPlanYCrear en EstrategiaNuevaPage.jsx; handleCasoLibre en EstrategiasPage.jsx.
+  - Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js (basado en el estado del ciclo activo, no en completado_at/abandonado_at).
+- Implementar Fase 5: 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
+- Cuando Fase 4 + Fase 5 estén desplegadas y verificadas en producción: ventana corta para ejecutar 004_estrategias_ciclos_fase2b_destructivo.sql. Antes del DROP, re-correr 003 una última vez para capturar cualquier cambio hecho desde el cliente viejo en el intervalo.
+
+Reporte de auditoría de Fase 4 (resumen):
+- 80 call sites identificados (60 lecturas + 20 escrituras) a columnas legacy de estrategias.
+- Centro de gravedad: HuellaContext.jsx (mapper dbEstrategiaToApp + funciones add/updateEstrategia + loads).
+- Approach decidido: shim de compatibilidad en el mapper (mantener mismas claves que la UI espera, leer internamente del ciclo activo). 80% de los componentes no requieren cambios.
+
+---
+
+### Sesión 14 mayo 2026 — Fase 4 Bloque 1 implementado (pendiente verificación de Daniel)
+
+Qué se hizo:
+- Bloque 1 de Fase 4 implementado en src/context/HuellaContext.jsx. Todos los cambios son de LECTURA — ninguna escritura tocada (eso es Bloque 2).
+- dbEstrategiaToApp reescrito como shim de compatibilidad:
+  - Lee row.estrategia_ciclos (array que viene del join anidado).
+  - Ordena ciclos por numero_ciclo desc.
+  - Elige el "ciclo visible": primero el que tiene estado='activo'; si no hay activo, el más reciente. Garantiza continuidad cuando una estrategia está "entre ciclos".
+  - Aplana el ciclo visible en las claves legacy que la UI ya espera: plan, semana_actual, semanaActual, total_semanas, completado_at, checkins, cierre_analisis.
+  - Suma claves aditivas para Bloques 2/3 y Fase 5: ciclos[] (array completo con shape de app), ciclo_activo_id, numero_ciclo_actual.
+  - Caso sin ciclos (estrategia recién creada o join vacío): valores neutros coherentes con shape legacy.
+- Decisiones de traducción legacy → ciclos aplicadas (aprobadas previamente por Daniel):
+  - plan jsonb se sigue leyendo con parsePlanField — defensivo por si algún ciclo viejo quedó como string.
+  - semana_activa NO se aplana (no existe en el modelo nuevo, posible confusión con semana_actual).
+  - completado_at se deriva: cicloVisible.estado === 'cerrado' ? cicloVisible.fecha_cierre : null.
+  - checkins legacy se leen desde cicloVisible.checkins_legacy ?? [] (Fase 2a los movió ahí).
+  - total_semanas = cicloVisible.duracion_semanas ?? row.total_semanas ?? 4.
+  - tareas siempre {} (dead column, se borra en Fase 2b).
+  - abandonado_at siempre null (decisión 4: no se preserva la distinción completado/abandonado).
+- loadHijoDatos: query a estrategias ahora hace .select() con join anidado a estrategia_ciclos (13 columnas explícitas, no *).
+- loadUserData (fase 2 interna): mismo join anidado en la query de estrategias.
+- 0 cambios en escrituras (addEstrategia, updateEstrategia, deleteEstrategia siguen apuntando a estrategias.* legacy — eso es Bloque 2).
+- 0 cambios en UI ni en otros archivos.
+
+Por qué funciona sin romper nada:
+- Los datos viven duplicados en estrategias.* y estrategia_ciclos.* desde Fase 2a. El shim lee del modelo nuevo y devuelve el shape viejo.
+- 80% de los componentes no se enteran del cambio. Los que sí leen claves aditivas (ciclos[], ciclo_activo_id) tendrán datos disponibles desde ya, listos para Bloques 2/3 y Fase 5.
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL (auto-deploy en Vercel después del push). Solo cuando confirme, este bloque pasa a "completado".
+- Bloque 2: adaptar escrituras (addEstrategia, updateEstrategia, onAvanzar, onGenerarTareas, onToggleTarea, abandonarPlanYCrear, handleCasoLibre) para que apunten a estrategia_ciclos.
+- Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js basado en el estado del ciclo activo.
+- Fase 5: 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
+- Fase 2b (DROP de 8 columnas legacy) cuando Fase 4 + 5 estén verificadas.
