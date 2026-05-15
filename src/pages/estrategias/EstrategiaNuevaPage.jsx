@@ -19,7 +19,7 @@ const PASOS_LOADING = [
 export default function EstrategiaNuevaPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { state, dispatch, crearEstrategiaConCiclo, reloadEstrategias } = useHuella();
+  const { state, crearEstrategiaConCiclo, reloadEstrategias } = useHuella();
   const hijo = state.hijo;
 
   const habilidadId = params.get('habilidad');
@@ -58,18 +58,39 @@ export default function EstrategiaNuevaPage() {
     generar();
   };
 
+  // Fase 4 Bloque 2C: cierra el ciclo activo del plan que se abandona
+  // en el modelo de ciclos. La creación del nuevo plan la hace
+  // generar() (ya migrado en Bloque 2A). Caso 2 de la migración:
+  // estado solo admite 'activo'/'cerrado', así que el motivo
+  // "abandonado" se guarda en cierre_analisis (jsonb).
   const abandonarPlanYCrear = async (id) => {
     setAbandonandoId(id);
     setCapError('');
     try {
-      const abandonado_at = new Date().toISOString();
-      const { error: dbErr } = await supabase.from('estrategias').update({ abandonado_at }).eq('id', id);
+      const planViejo = (state.estrategias || []).find((p) => p.id === id);
+      const cicloActivo = (planViejo?.ciclos || []).find((c) => c.estado === 'activo');
+      if (!cicloActivo) {
+        console.error('abandonarPlanYCrear: sin ciclo activo', id);
+        setCapError('No pudimos cerrar tu plan actual. Recarga la app e inténtalo de nuevo.');
+        setAbandonandoId(null);
+        return;
+      }
+
+      const { error: dbErr } = await supabase
+        .from('estrategia_ciclos')
+        .update({
+          estado: 'cerrado',
+          fecha_cierre: new Date().toISOString().slice(0, 10),
+          cierre_analisis: { motivo: 'abandonado', abandonado_at: new Date().toISOString() },
+        })
+        .eq('id', cicloActivo.id)
+        .eq('estado', 'activo');
       if (dbErr) throw new Error(dbErr.message);
-      dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id, abandonado_at } });
+
       setShowCapModal(false);
       generar();
     } catch {
-      setCapError('No se pudo cerrar ese plan. Intenta de nuevo.');
+      setCapError('No pudimos cerrar tu plan actual. Inténtalo de nuevo.');
     } finally {
       setAbandonandoId(null);
     }

@@ -1094,3 +1094,35 @@ Qué quedó pendiente:
 - Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js.
 - Fase 5: 5 pantallas nuevas. Fase 2b después.
 - Deuda: ORDER BY antes de Fase 2b; limpieza de zombies (reducer + funciones expuestas sin caller).
+
+---
+
+### Sesión 15 mayo 2026 — Fase 4 Bloque 2C implementado (pendiente verificación de Daniel)
+
+Qué se hizo:
+- Bloque 2C de Fase 4 implementado: abandonar un plan para crear otro ahora cierra el ciclo activo en el modelo de ciclos.
+- Hallazgo durante el bloque: abandonarPlanYCrear NO crea la estrategia nueva. Solo cierra el plan viejo y delega en generar(), que ya fue migrado en Bloque 2A (usa crearEstrategiaConCiclo + reloadEstrategias + navigate). El pseudo-código del prompt habría duplicado la creación (2 estrategias por abandono). Daniel aprobó el scope reducido: solo refactorizar el cierre.
+- abandonarPlanYCrear (EstrategiaNuevaPage.jsx) refactorizado:
+  - Busca el plan viejo en state.estrategias y su ciclo activo en .ciclos[] (el shim de Bloque 1 lo expone).
+  - Guard: si no hay ciclo activo → setCapError("No pudimos cerrar tu plan actual. Recarga la app e inténtalo de nuevo.") + abortar SIN llamar generar().
+  - UPDATE a estrategia_ciclos: estado='cerrado', fecha_cierre=hoy (date), cierre_analisis={ motivo:'abandonado', abandonado_at:<ISO> }. Filtros .eq('id', cicloActivo.id).eq('estado','activo') (cinturón anti-race).
+  - Manejo de error reforzado: si el UPDATE del cierre falla, NO se llama generar() (evita que el papá termine con 2 estrategias activas). Solo si el cierre tuvo éxito → setShowCapModal(false) + generar().
+  - Quitado el dispatch optimista (generar() hace reloadEstrategias al final). dispatch quedó huérfano en el archivo → eliminado del destructure de useHuella().
+- Caso 2 confirmado contra migración 002: la columna estado de estrategia_ciclos solo admite 'activo'/'cerrado' (CHECK constraint). Por eso el motivo "abandonado" va en cierre_analisis, no en estado.
+- 0 cambios en generar() (Bloque 2A), HuellaContext, helpers.js, UI.
+
+Stat del diff:
+- src/pages/estrategias/EstrategiaNuevaPage.jsx: +26/-5 (refactor abandonarPlanYCrear + limpieza dispatch huérfano).
+
+Cómo queda la semántica:
+- Un plan abandonado: su ciclo queda estado='cerrado' + fecha_cierre + cierre_analisis con motivo='abandonado'. El shim de Bloque 1 lo traduce a completado_at poblado → estadoPlan lo saca de "activos" y lo manda a planes pasados. NO se preserva la distinción visual completado vs abandonado en la UI actual (decisión 4 del rediseño). El rastro del abandono queda en cierre_analisis para Fase 5.
+
+Deuda menor anotada (NO se borra en este bloque):
+- cierre_analisis tiene ahora dos shapes posibles: análisis IA de Fase 3 ({ que_cambio, que_quedo_pendiente, recomendaciones }) vs cierre por abandono ({ motivo:'abandonado', abandonado_at }). Fase 5 (pantalla de cierre P3) debe ramificar por presencia de la clave 'motivo'. Anotado para Fase 5.
+- Sigue pendiente: reducer ESTRATEGIA_AVANZADA huérfano (Bloque 2B), ORDER BY antes de Fase 2b, limpieza general de zombies.
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL del flujo abandonar+crear.
+- Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js (basado en estado del ciclo activo, no en completado_at/abandonado_at legacy).
+- Fase 5: 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
+- Fase 2b (DROP de 8 columnas legacy) cuando Fase 4 + 5 estén verificadas.
