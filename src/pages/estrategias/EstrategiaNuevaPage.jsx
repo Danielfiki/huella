@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { generarEstrategia } from '../../services/anthropic';
+import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import HeaderMocha from './components/HeaderMocha';
@@ -103,12 +104,18 @@ export default function EstrategiaNuevaPage() {
     setPasoActual(0);
     try {
       setPasoActual(1);
-      // generarEstrategia espera { hijo, habilidad, descripcion }
-      const planBase = await generarEstrategia({
-        hijo,
-        habilidad: habilidad.label,
-        descripcion: contextoExtra || '',
-      });
+      // generarEstrategia espera { hijo, habilidad, descripcion }.
+      // Retry silencioso (2 reintentos, backoff 1s/2s) solo para
+      // errores transitorios de red/timeout/5xx. El papá no ve nada
+      // distinto: el loader sigue rotando.
+      const planBase = await retryAsync(
+        () => generarEstrategia({
+          hijo,
+          habilidad: habilidad.label,
+          descripcion: contextoExtra || '',
+        }),
+        { esReintentable: esErrorIAReintentable }
+      );
       if (!planBase || typeof planBase !== 'object' || !Array.isArray(planBase.semanas) || planBase.semanas.length === 0) {
         throw new Error('El plan no se generó correctamente. Intenta de nuevo.');
       }
@@ -157,7 +164,7 @@ export default function EstrategiaNuevaPage() {
         <div className={styles.body}>
           <LoadingDignificado
             titulo="Estamos armando tu plan."
-            sub="Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."
+            sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
             pasos={PASOS_LOADING}
             pasoActual={pasoActual}
             habilidadId={habilidad.id}

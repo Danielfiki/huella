@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { fraseCarga } from '../../../lib/frases';
 import styles from './LoadingDignificado.module.css';
 
-const INTERVALO_MS = 4500;
+const INTERVALO_MS = 5500;
 const FADE_MS = 300;
 
 // Construye un pool contextualizado muestreando fraseCarga con la

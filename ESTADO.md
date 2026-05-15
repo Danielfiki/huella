@@ -1188,3 +1188,38 @@ Stat del diff:
 
 Qué quedó pendiente:
 - VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: rotación cada ~4.5s con fade suave, barra animada continua, frases contextualizadas a habilidad/edad.
+
+---
+
+### Sesión 15 mayo 2026 — Loader: rotación 5.5s, copy honesto, retry silencioso (pendiente verificación de Daniel)
+
+Trabajo independiente de Fase 4 (cerrada).
+
+Qué se hizo:
+- Rotación de frases: INTERVALO_MS 4500 → 5500 en LoadingDignificado.jsx (más tiempo para leer cada frase). Único cambio en ese archivo.
+- Copy honesto: el sub del loader prometía una notificación push que la app NO implementa ("Puedes cerrar la app — te avisamos cuando esté listo."). Cambiado en los 2 callers (el copy vive ahí como prop sub, no en LoadingDignificado):
+  - EstrategiaNuevaPage.jsx y EstrategiasPage.jsx → "Tarda menos de un minuto. Quédate por acá mientras tanto."
+  - El titulo "Estamos armando tu plan." se mantiene igual.
+- Retry automático silencioso en la llamada IA:
+  - Nuevo helper compartido src/utils/retryAsync.js: retryAsync(fn, { maxAttempts=3, esReintentable }) con backoff [0, 1000, 2000] (intento 2 espera 1s, intento 3 espera 2s). Aborta inmediato si esReintentable(err) === false.
+  - esErrorIAReintentable: heurística ajustada tras LEER src/services/anthropic.js (función llamarAPI, líneas 3-32, sin modificarla). Blacklist con prioridad (cuota 429 / auth / validación / JSON malformado → no reintenta). Whitelist (TypeError de fetch, mensajes red/timeout, status>=500, y el fallback genérico 'Error al conectar con la IA' que el backend lanza para !response.ok sin body útil → reintenta). Default conservador: ante la duda no reintenta.
+  - Integrado en generar() (EstrategiaNuevaPage) y handleCasoLibre (EstrategiasPage): el retry envuelve SOLO la llamada IA. La validación del JSON y crearEstrategiaConCiclo quedan FUERA del retry, en el flujo lineal. La pantalla "Algo falló" solo se muestra tras los 3 intentos fallidos.
+- 0 cambios en anthropic.js (solo lectura), frases.js, ni en la lógica de pool/fade/barra.
+
+Stat del diff:
+- src/utils/retryAsync.js: archivo nuevo (~45 líneas).
+- LoadingDignificado.jsx: 1 línea (constante).
+- EstrategiaNuevaPage.jsx: +import, retry wrap en generar(), copy.
+- EstrategiasPage.jsx: +import, retry wrap en handleCasoLibre, copy.
+
+Hallazgos sobre anthropic.js (NO modificado — anotados para mejora futura):
+- llamarAPI línea 26: throw new Error(err.error || 'Error al conectar con la IA') DESCARTA response.status. Imposible distinguir 5xx (reintentable) de 4xx (no) de forma fiable desde el caller. Mejora futura obvia: adjuntar el status al Error (const e = new Error(...); e.status = response.status; throw e).
+- llamarAPI líneas 20/25: await response.json() puede lanzar SyntaxError si el backend responde un body no-JSON en un error (ej. 502 de Vercel con HTML). Ese SyntaxError no matchea la whitelist (contiene patrón tipo 'JSON'/'parse') → se trataría como NO reintentable, cuando un 502 SÍ es transitorio. Caso borde conocido; costo bajo (muestra el error como hoy). Documentado, no corregido (decisión: excluir 'parse' es explícita).
+
+---
+
+## Pendientes UX post-Fase 4
+
+- [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de LoadingDignificado en EstrategiaNuevaPage.jsx y EstrategiasPage.jsx) el copy original honesto-con-push: `"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`. Hoy el copy honesto-sin-push es `"Tarda menos de un minuto. Quédate por acá mientras tanto."`.
+- [ ] Mejora opcional en `src/services/anthropic.js` (función `llamarAPI`): adjuntar `response.status` al Error lanzado para que el retry del caller pueda distinguir 5xx de 4xx con precisión. Hoy se infiere por mensaje.
+- [ ] Pendientes de verificación en producción acumulados (Fase 4 Bloque 3 estadoPlan; mejoras del loader).

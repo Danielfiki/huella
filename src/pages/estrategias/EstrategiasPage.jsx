@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { useAuth } from '../../context/AuthContext';
 import { detectarPatronesEstructurado, generarEstrategiaDesdeContexto } from '../../services/anthropic';
+import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync';
 import { supabase } from '../../lib/supabase';
 import HeaderMocha from './components/HeaderMocha';
 import EstrategiaActivaCard from './components/EstrategiaActivaCard';
@@ -222,7 +223,12 @@ export default function EstrategiasPage() {
     generandoCasoLibreRef.current = true;
     setCasoLibreEstado('generando');
     try {
-      const planBase = await generarEstrategiaDesdeContexto({ texto_libre: texto, hijo });
+      // Retry silencioso (2 reintentos, backoff 1s/2s) solo para
+      // errores transitorios de red/timeout/5xx. Transparente al papá.
+      const planBase = await retryAsync(
+        () => generarEstrategiaDesdeContexto({ texto_libre: texto, hijo }),
+        { esReintentable: esErrorIAReintentable }
+      );
       if (!planBase || typeof planBase !== 'object' || !Array.isArray(planBase.semanas) || planBase.semanas.length === 0) {
         throw new Error('El plan no se generó correctamente. Intenta de nuevo.');
       }
@@ -275,7 +281,7 @@ export default function EstrategiasPage() {
         <div className={styles.body}>
           <LoadingDignificado
             titulo="Estamos armando tu plan."
-            sub="Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."
+            sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
             pasos={['Leyendo lo que describiste', 'Buscando bibliografía pediátrica', 'Adaptando a la edad de tu hijo', 'Escribiendo tu plan personalizado']}
             pasoActual={0}
             hijoEdad={hijo?.edad}
