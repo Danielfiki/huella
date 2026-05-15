@@ -64,11 +64,25 @@ export function pillClassFor(categoria) {
   return map[categoria] || 'pillRut';
 }
 
-// Estado del plan (sin "pausado" — esa lógica vendrá en iteración futura)
+// Estado del plan (sin "pausado" — esa lógica vendrá en iteración futura).
+// Fase 4 Bloque 3: decide a partir de los ciclos del shim de Bloque 1,
+// no de las columnas legacy completado_at/abandonado_at (que se dropean
+// en Fase 2b). API sin cambios: retorna 'activo' | 'completado' | 'abandonado'.
 export function estadoPlan(p) {
-  if (p.completado_at) return 'completado';
-  if (p.abandonado_at) return 'abandonado';
-  return 'activo';
+  const ciclos = Array.isArray(p?.ciclos) ? p.ciclos : [];
+
+  // 1. Cualquier ciclo activo → la estrategia está activa.
+  if (ciclos.some((c) => c.estado === 'activo')) return 'activo';
+
+  // 2. Sin ciclos (caso borde, no debería pasar post-2A): replica el
+  //    default legacy.
+  const cicloReciente = ciclos[0]; // el shim los entrega ordenados desc
+  if (!cicloReciente) return 'activo';
+
+  // 3. Cerrado: el motivo en cierre_analisis distingue abandonado de
+  //    completado (Bloque 2C escribe { motivo: 'abandonado', ... }).
+  if (cicloReciente.cierre_analisis?.motivo === 'abandonado') return 'abandonado';
+  return 'completado';
 }
 
 export function mesCortoDe(iso) {

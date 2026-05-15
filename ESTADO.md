@@ -1126,3 +1126,37 @@ Qué quedó pendiente:
 - Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js (basado en estado del ciclo activo, no en completado_at/abandonado_at legacy).
 - Fase 5: 5 pantallas nuevas (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso). P5 PDF pospuesto.
 - Fase 2b (DROP de 8 columnas legacy) cuando Fase 4 + 5 estén verificadas.
+
+---
+
+### Sesión 15 mayo 2026 — Fase 4 Bloque 3 implementado — FASE 4 COMPLETA (pendiente verificación final de Daniel)
+
+Qué se hizo:
+- Bloque 3 de Fase 4 implementado: estadoPlan (src/pages/estrategias/helpers.js) decide a partir de los ciclos del shim de Bloque 1, no de columnas legacy.
+- estadoPlan refactorizado (misma API, mismos 3 valores de retorno):
+  1. Si algún ciclo tiene estado='activo' → 'activo'.
+  2. Si no hay ciclos (caso borde post-2A improbable) → 'activo' (replica el default legacy exacto: antes retornaba 'activo' cuando no había completado_at ni abandonado_at).
+  3. Si el ciclo más reciente (ciclos[0], el shim los entrega ordenados desc por numero_ciclo) tiene cierre_analisis?.motivo === 'abandonado' → 'abandonado'.
+  4. Cualquier otro ciclo cerrado → 'completado'.
+- Defensivo: p?.ciclos puede ser undefined/[]; cierre_analisis puede ser null. Optional chaining en ambos.
+- Bug latente corregido: antes de este bloque, post-2C, un plan abandonado se clasificaba MAL como 'completado'. Causa: el shim de Bloque 1 expone abandonado_at siempre null y deriva completado_at de cualquier ciclo estado='cerrado' (incluido el abandonado). Ahora la distinción se hace por cierre_analisis.motivo.
+- Callers verificados (6 sitios, 4 archivos), ninguno necesita cambios porque la API no cambió:
+  - EstrategiaNuevaPage.jsx:51 (cap de 3 activos).
+  - EstrategiaDetailPage.jsx:29 (BannerCompletado + render de semanas).
+  - EstrategiasPage.jsx:47/51/126 (planesActivos / planesPasados / exclusión 90 días).
+  - DrawerPasados.jsx:20 (distingue completado ✓ "X sem" vs abandonado ✕ "abandonado en sem N").
+- estadoPlan no depende de otros helpers internos. 0 cambios fuera de la función.
+
+Stat del diff:
+- src/pages/estrategias/helpers.js: +18/-4 (solo estadoPlan).
+
+ESTADO DE FASE 4: COMPLETA en código (Bloques 1 + 2A + 2B + 2C + 3), pendiente verificación final de Daniel en producción. Una vez verificada toda la Fase 4, se puede arrancar Fase 5 y, tras Fase 5, la ventana de Fase 2b.
+
+Recordatorio crítico de roadmap (sigue vigente):
+- NUNCA re-correr 003_estrategias_ciclos_fase2a_aditivo.sql ahora que Fase 4 escribe directo a estrategia_ciclos. Solo dentro de la ventana de Fase 2b, justo antes del DROP, para capturar cambios del cliente viejo (que ya no existe).
+
+Deuda menor (NO se borra, fuera de scope de Bloque 3):
+- reducer ESTRATEGIA_AVANZADA huérfano (Bloque 2B). Posible ESTRATEGIA_CREADA también huérfano tras 2A — verificar en limpieza futura.
+- cierre_analisis con dos shapes (análisis IA Fase 3 vs { motivo:'abandonado' }). Fase 5 P3 debe ramificar por la clave 'motivo'.
+- ORDER BY de loadHijoDatos/loadUserData/reloadEstrategias usa estrategias.fecha_inicio (se dropea en Fase 2b). Cambiar a created_at o estrategia_ciclos.fecha_inicio antes de correr 004.
+- Limpieza general de zombies (addEstrategia/updateEstrategia expuestas sin caller).
