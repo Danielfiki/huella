@@ -1218,8 +1218,43 @@ Hallazgos sobre anthropic.js (NO modificado — anotados para mejora futura):
 
 ---
 
+# ═══════════════════════════════════════════════════════════════
+# CIERRE DE SESIÓN — 15 mayo 2026 — FASE 4 CERRADA
+# (Esta sección es la fuente de verdad del estado actual)
+# ═══════════════════════════════════════════════════════════════
+
+## Estado verificado en producción
+
+Daniel confirmó visualmente todo en producción esta sesión:
+
+- ✅ Fase 4 Bloque 1 — shim de lectura — VERIFICADO
+- ✅ Fase 4 Bloque 2A — crear estrategia — VERIFICADO
+- ✅ Fase 4 Bloque 2B — interacciones (marcar tarea, avanzar, completar) — VERIFICADO
+- ✅ Fase 4 Bloque 2C — abandonar y reemplazar — VERIFICADO
+- ✅ Fase 4 Bloque 3 — estadoPlan — VERIFICADO
+- ✅ Mejora UX loader (rotación 5.5s + copy honesto + retry silencioso) — VERIFICADO
+
+**🟢 FASE 4 COMPLETA — CERRADA.** El cliente lee y escribe íntegramente sobre el modelo de ciclos (estrategia_ciclos). Las columnas legacy de `estrategias` ya no se leen ni se escriben; quedan congeladas hasta el DROP de Fase 2b.
+
 ## Pendientes UX post-Fase 4
 
-- [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de LoadingDignificado en EstrategiaNuevaPage.jsx y EstrategiasPage.jsx) el copy original honesto-con-push: `"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`. Hoy el copy honesto-sin-push es `"Tarda menos de un minuto. Quédate por acá mientras tanto."`.
-- [ ] Mejora opcional en `src/services/anthropic.js` (función `llamarAPI`): adjuntar `response.status` al Error lanzado para que el retry del caller pueda distinguir 5xx de 4xx con precisión. Hoy se infiere por mensaje.
-- [ ] Pendientes de verificación en producción acumulados (Fase 4 Bloque 3 estadoPlan; mejoras del loader).
+- [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de `LoadingDignificado`, presente en `EstrategiaNuevaPage.jsx` y `EstrategiasPage.jsx`) el copy original: **`"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`**. Copy interim actual (sin push): **`"Tarda menos de un minuto. Quédate por acá mientras tanto."`**.
+- [ ] **Detalle de plan pasado no abre.** En la sección "Lo que ya trabajaste" (DrawerPasados), el clic sobre un plan completado o abandonado no abre su detalle. Deuda PREEXISTENTE confirmada por Daniel — **NO es regresión de Fase 4 Bloque 3**. Hay que cablear la navegación al detalle del plan al hacer clic.
+
+## Deudas técnicas
+
+- Reducer `ESTRATEGIA_AVANZADA` quedó huérfano tras Bloque 2B (onAvanzar pasó a reloadEstrategias). Código muerto inofensivo; limpiar en pasada futura junto con otros zombies (addEstrategia/updateEstrategia expuestas sin caller, posible ESTRATEGIA_CREADA).
+- `cierre_analisis` tiene dos shapes posibles: análisis IA de Fase 3 (`{ que_cambio, que_quedo_pendiente, recomendaciones }`) vs cierre por abandono (`{ motivo: 'abandonado', abandonado_at }`). Fase 5 (pantalla de cierre P3) debe ramificar por presencia de la clave `motivo`.
+- El `ORDER BY` de loadHijoDatos / loadUserData / reloadEstrategias usa `estrategias.fecha_inicio`, que se DROPea en Fase 2b. Cambiar a otro campo (`created_at` o `estrategia_ciclos.fecha_inicio`) ANTES de correr el 004.
+- `llamarAPI` en `anthropic.js` (línea 26) descarta `response.status` al lanzar el Error. Imposible distinguir 5xx de 4xx con precisión desde el caller; el retry lo infiere por mensaje. Mejora futura: adjuntar el status al Error.
+- `await response.json()` en `llamarAPI` (líneas 20/25) puede lanzar `SyntaxError` si el backend responde body no-JSON (ej. 502 HTML de Vercel). El retry lo trata como NO reintentable (falso negativo conocido). No rompe nada: muestra el error como hoy.
+
+## Próximo trabajo
+
+1. **Pendientes UX chicos** (ver sección "Pendientes UX post-Fase 4"): copy con notificaciones push, y clic en plan pasado abre su detalle.
+2. **Fase 5 — 5 pantallas nuevas** (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso; P5 PDF pospuesto). Workflow Claude Design. Requiere integrar archivos que hoy viven solo en local:
+   - `src/services/anthropic.js` — funciones `analizarCierreCiclo` y `generarCicloN` de Fase 3.
+   - `src/App.jsx` — viewer de mockups (`/mockups`).
+   - carpeta `design_handoff_estrategias/` — mockups + SQL del rediseño.
+3. **Fase 2b — DROP destructivo** de las 8 columnas legacy de `estrategias` (`plan`, `semana_actual`, `completado_at`, `semana_activa`, `total_semanas`, `tareas`, `abandonado_at`, `checkins`). Ventana corta de mantenimiento, requiere backup previo. SOLO cuando Fase 5 esté estable. Antes del DROP: resolver la deuda del `ORDER BY`. NUNCA re-correr el 003 después de Fase 4 salvo dentro de esta ventana, justo antes del DROP.
+4. **Fase 6 — limpieza**: eliminar viewer `/mockups`, mover catálogo a `src/lib/habilidades.js`, borrar zombies y dead code, limpiar las 3 policies legacy de `estrategia_sugerencias_descartadas`.
