@@ -15,7 +15,7 @@ import styles from './EstrategiaDetailPage.module.css';
 export default function EstrategiaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, dispatch, addHito } = useHuella();
+  const { state, dispatch, addHito, reloadEstrategias } = useHuella();
   const { user } = useAuth();
   const plan = (state.estrategias || []).find((p) => p.id === id);
   const hijo = state.hijo;
@@ -66,7 +66,21 @@ export default function EstrategiaDetailPage() {
     return count > 0 ? count : null;
   }, [plan.fecha_inicio, plan.completado_at, state.episodios]);
 
+  // Fase 4 Bloque 2B: las escrituras van al ciclo activo en
+  // estrategia_ciclos, no a columnas legacy de estrategias.
+  // Guard: si no hay ciclo activo (no debería pasar tras 2A), se
+  // loguea y se retorna sin escribir. Refuerzo: el UPDATE filtra
+  // además por estado='activo' para no escribir sobre un ciclo que
+  // cambió de estado entre el guard y la escritura (race cross-tab).
+  const getCicloActivo = () =>
+    (plan.ciclos || []).find((c) => c.estado === 'activo') || null;
+
   const onGenerarTareas = async () => {
+    const cicloActivo = getCicloActivo();
+    if (!cicloActivo) {
+      console.error('onGenerarTareas: sin ciclo activo', plan.id);
+      return;
+    }
     setGenerandoTareas(true);
     try {
       const result = await generarTareas({
@@ -80,7 +94,11 @@ export default function EstrategiaDetailPage() {
         tareas: result[(i + 1).toString()] || [],
       }));
       const updatedPlan = { ...plan.plan, semanas: updatedSemanas };
-      await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
+      await supabase
+        .from('estrategia_ciclos')
+        .update({ plan: updatedPlan })
+        .eq('id', cicloActivo.id)
+        .eq('estado', 'activo');
       dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: updatedPlan } });
     } catch (e) {
       console.error('generarTareas falló', e);
@@ -90,6 +108,11 @@ export default function EstrategiaDetailPage() {
   };
 
   const onToggleTarea = async (tareaId) => {
+    const cicloActivo = getCicloActivo();
+    if (!cicloActivo) {
+      console.error('onToggleTarea: sin ciclo activo', plan.id);
+      return;
+    }
     const idx = actual - 1;
     const semanaObj = plan.plan?.semanas?.[idx];
     if (!semanaObj) return;
@@ -101,20 +124,32 @@ export default function EstrategiaDetailPage() {
     );
     const updatedPlan = { ...plan.plan, semanas: updatedSemanas };
     dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: updatedPlan } });
-    const { error: dbErr } = await supabase.from('estrategias').update({ plan: updatedPlan }).eq('id', plan.id);
+    const { error: dbErr } = await supabase
+      .from('estrategia_ciclos')
+      .update({ plan: updatedPlan })
+      .eq('id', cicloActivo.id)
+      .eq('estado', 'activo');
     if (dbErr) {
       dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: plan.plan } });
       setTareaKey((k) => k + 1);
-      setToggleErr('No se pudo guardar el cambio. Intenta de nuevo.');
+      setToggleErr('No se pudo guardar el cambio. Inténtalo de nuevo.');
       setTimeout(() => setToggleErr(''), 4000);
     }
   };
 
   const onAvanzar = async () => {
     if (avanzando) return;
+    const cicloActivo = getCicloActivo();
+    if (!cicloActivo) {
+      console.error('onAvanzar: sin ciclo activo', plan.id);
+      setAvanzarErr('No se pudo guardar. Recarga la app e intenta de nuevo.');
+      return;
+    }
     setAvanzando(true);
     setAvanzarErr('');
-    const esUltima = actual === (plan.total_semanas || 4);
+
+    const dur = cicloActivo.duracion_semanas ?? plan.total_semanas ?? 4;
+    const esUltima = actual + 1 > dur;
     const newCheckin = {
       semana_numero: actual,
       reflexion,
@@ -123,32 +158,35 @@ export default function EstrategiaDetailPage() {
     const newCheckins = [...checkins, newCheckin];
 
     const upd = esUltima
-      ? { completado_at: new Date().toISOString(), checkins: newCheckins }
-      : { semana_actual: actual + 1, checkins: newCheckins };
+      ? {
+          estado: 'cerrado',
+          fecha_cierre: new Date().toISOString().slice(0, 10),
+          semana_actual: dur,
+          checkins_legacy: newCheckins,
+        }
+      : { semana_actual: actual + 1, checkins_legacy: newCheckins };
 
     try {
-      const { error: dbErr } = await supabase.from('estrategias').update(upd).eq('id', plan.id);
+      const { error: dbErr } = await supabase
+        .from('estrategia_ciclos')
+        .update(upd)
+        .eq('id', cicloActivo.id)
+        .eq('estado', 'activo');
       if (dbErr) throw new Error(dbErr.message);
-
-      dispatch({
-        type: 'ESTRATEGIA_AVANZADA',
-        plan_id: plan.id,
-        ...upd,
-        semana_completada: actual,
-        reflexion,
-      });
-      setReflexion('');
 
       if (esUltima && reflexion.trim()) {
         try {
           await addHito({
             id: Date.now().toString(),
             categoria: 'otro',
-            descripcion: `Plan completado: "${plan.habilidad_nombre || plan.habilidad}" (${plan.total_semanas || 4} semanas). Reflexión final: ${reflexion.trim()}`,
+            descripcion: `Plan completado: "${plan.habilidad_nombre || plan.habilidad}" (${dur} semanas). Reflexión final: ${reflexion.trim()}`,
             fecha: new Date().toISOString(),
           });
         } catch { /* hito es no-crítico — el plan se completó igual */ }
       }
+
+      setReflexion('');
+      await reloadEstrategias();
     } catch {
       setAvanzarErr('No se pudo guardar. Verifica tu conexión e intenta de nuevo.');
     } finally {

@@ -711,9 +711,12 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // ZOMBIE: sin callers reales hoy. Refactor de Fase 4 Bloque 2B para
+  // que, si algún flujo futuro la usa, escriba en el ciclo activo y no
+  // en columnas legacy de estrategias (que se dropean en Fase 2b).
+  // Sin rama de identidad (habilidad/descripcion): nadie la pasa.
   async function updateEstrategia(partial) {
-    if (!user) return
-    dispatch({ type: 'UPDATE_ESTRATEGIA', payload: partial })
+    if (!user || !supabase || !partial?.id) return
     const dbFields = {}
     if (partial.semanaActual !== undefined) dbFields.semana_actual = partial.semanaActual
     if (partial.plan !== undefined) {
@@ -723,10 +726,15 @@ export function HuellaProvider({ children }) {
         try { return JSON.parse(p) } catch { return p }
       })()
     }
-    if (partial.habilidad    !== undefined) dbFields.habilidad     = partial.habilidad
-    if (partial.tareas       !== undefined) dbFields.tareas        = partial.tareas
-    if (partial.checkins     !== undefined) dbFields.checkins      = partial.checkins
-    await supabase.from('estrategias').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+    if (partial.checkins !== undefined) dbFields.checkins_legacy = partial.checkins
+    if (Object.keys(dbFields).length === 0) return
+    const { error } = await supabase
+      .from('estrategia_ciclos')
+      .update(dbFields)
+      .eq('estrategia_id', partial.id)
+      .eq('estado', 'activo')
+    if (error) throw new Error(error.message)
+    await reloadEstrategias()
   }
 
   async function deleteEstrategia(id) {

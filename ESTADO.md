@@ -1056,3 +1056,41 @@ Qué quedó pendiente:
 - Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js.
 - Fase 5: 5 pantallas nuevas. Fase 2b después.
 - Deuda anotada: cambiar el ORDER BY de loadHijoDatos / loadUserData / reloadEstrategias antes de Fase 2b.
+
+---
+
+### Sesión 15 mayo 2026 — Fase 4 Bloque 2B implementado (pendiente verificación de Daniel)
+
+Qué se hizo:
+- Bloque 2B de Fase 4 implementado: las interacciones con un plan ya creado escriben en el ciclo activo de estrategia_ciclos, no en columnas legacy de estrategias.
+- Patrón único aplicado en las 3 acciones de EstrategiaDetailPage.jsx:
+  - Helper local getCicloActivo(): busca el ciclo con estado='activo' dentro de plan.ciclos (que el shim de Bloque 1 expone). Si no hay, loguea y retorna sin escribir (no inventa ciclo).
+  - UPDATE targeteado por PK del ciclo activo: .eq('id', cicloActivo.id).eq('estado', 'activo'). El segundo filtro es refuerzo anti-race: si el ciclo cambió de estado entre el guard JS y la escritura (otra pestaña/dispositivo), el UPDATE afecta 0 filas en vez de escribir sobre un ciclo cerrado.
+- onToggleTarea: mantiene dispatch optimista + revert (checkbox instantáneo). Solo cambió el target del UPDATE a estrategia_ciclos.plan del ciclo activo.
+- onGenerarTareas: mantiene dispatch optimista. La llamada a la IA (generarTareas) no cambió. Solo cambió el target del UPDATE a estrategia_ciclos.plan.
+- onAvanzar: reescrito sin dispatch optimista. Hace UPDATE a estrategia_ciclos + reloadEstrategias() (patrón Bloque 2A). El estado avanzando absorbe el round-trip.
+  - Avance normal: { semana_actual: actual + 1, checkins_legacy: newCheckins }.
+  - Cierre de ciclo (cuando actual + 1 > duracion_semanas): { estado: 'cerrado', fecha_cierre: hoy (date, slice 0-10), semana_actual: dur, checkins_legacy: newCheckins }. El shim de Bloque 1 traduce estado='cerrado'+fecha_cierre a completado_at para la UI; el BannerCompletado aparece tras el reload.
+  - duracion_semanas se lee del ciclo activo (cicloActivo.duracion_semanas) con fallback a plan.total_semanas ?? 4.
+  - El check-in semanal se escribe en checkins_legacy con el shape exacto del legacy: { semana_numero, reflexion, completada_at } (completada_at con 'a' final — NO se "corrigió" a 'o', el shim lo lee así).
+  - El INSERT de hito al completar (addHito) se conserva igual; es no-crítico.
+- updateEstrategia (HuellaContext.jsx) — código ZOMBIE sin callers reales. Refactorizado igual para que, si algún flujo futuro la usa, escriba en estrategia_ciclos del ciclo activo (WHERE estrategia_id = id AND estado = 'activo') en lugar de columnas legacy. Sin rama de identidad (habilidad/descripcion): nadie la pasa. Quitado el dispatch optimista (coherente con addEstrategia de 2B). checkins → checkins_legacy; plan → plan; semanaActual → semana_actual.
+- 0 cambios en abandonarPlanYCrear (Bloque 2C), deleteEstrategia, helpers.js/estadoPlan (Bloque 3), UI de componentes.
+
+Stat del diff:
+- src/context/HuellaContext.jsx: ~+12/-8 (refactor updateEstrategia zombie).
+- src/pages/estrategias/EstrategiaDetailPage.jsx: ~+55/-20 (3 acciones + helper getCicloActivo + reloadEstrategias en destructure).
+
+Por qué funciona sin romper nada:
+- Las escrituras ahora van al mismo ciclo activo que el shim de Bloque 1 lee. Marcar tarea / avanzar / completar persiste y se ve tras recargar.
+- onToggleTarea/onGenerarTareas siguen sintiéndose instantáneos por el optimista; onAvanzar muestra "Avanzando…/Cerrando…" durante el round-trip.
+
+Deuda menor anotada (NO se borra en este bloque, fuera de scope):
+- El reducer case ESTRATEGIA_AVANZADA en HuellaContext.jsx quedó sin uso tras pasar onAvanzar a reloadEstrategias. Es código muerto inofensivo. Limpiar en una pasada futura junto con otros zombies (addEstrategia/updateEstrategia exposiciones, ESTRATEGIA_CREADA si también queda sin uso).
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL de las 3 acciones (marcar tarea, avanzar de semana, completar plan).
+- Bloque 2C: abandonarPlanYCrear en EstrategiaNuevaPage.jsx → cerrar el ciclo activo (estado='cerrado' + fecha_cierre) en vez de setear abandonado_at legacy.
+- Bloque 3: refactor de estadoPlan en src/pages/estrategias/helpers.js.
+- Fase 5: 5 pantallas nuevas. Fase 2b después.
+- Deuda: ORDER BY antes de Fase 2b; limpieza de zombies (reducer + funciones expuestas sin caller).
