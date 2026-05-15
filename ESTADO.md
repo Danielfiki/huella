@@ -1160,3 +1160,31 @@ Deuda menor (NO se borra, fuera de scope de Bloque 3):
 - cierre_analisis con dos shapes (análisis IA Fase 3 vs { motivo:'abandonado' }). Fase 5 P3 debe ramificar por la clave 'motivo'.
 - ORDER BY de loadHijoDatos/loadUserData/reloadEstrategias usa estrategias.fecha_inicio (se dropea en Fase 2b). Cambiar a created_at o estrategia_ciclos.fecha_inicio antes de correr 004.
 - Limpieza general de zombies (addEstrategia/updateEstrategia expuestas sin caller).
+
+---
+
+### Sesión 15 mayo 2026 — Mejora UX loader de generación de plan (pendiente verificación de Daniel)
+
+Trabajo independiente de Fase 4 (que está cerrada). Mejora del componente LoadingDignificado que se ve al crear/regenerar/abandonar+crear un plan.
+
+Qué se hizo:
+- src/pages/estrategias/components/LoadingDignificado.jsx reescrito:
+  - Antes: fijaba 4 frases al montar (una por pasoActual 0-3); la frase cambiaba solo al avanzar el paso de generación.
+  - Ahora: construye un pool contextualizado al montar (useMemo, una sola vez) muestreando fraseCarga con habilidadId + hijoEdad reales del hijo. Dedup por texto. ~20-24 frases. Fallback: si el pool queda < 8 (habilidadId/edad desconocidos), insiste con fases generales 0 y 3 (no dependen de habilidad ni edad).
+  - Pool barajado (Fisher-Yates). Rotación cada 4.5s recorriendo el array barajado con módulo → sin repetición inmediata. La generación dura 30-60s (~7-13 frases), nunca completa el ciclo de 22, así que no se ve repetición.
+  - Transición fade out/in de 300ms controlada por estado visible + opacity inline + CSS transition.
+  - Desacople deliberado frase↔paso (aprobado): la frase ya no corresponde al paso activo, rota por tiempo. La personalización por habilidad+edad se conserva (es lo que importa pedagógicamente).
+  - Barra de progreso indeterminada agregada debajo de los 4 pasos (role=progressbar, aria-label). Sin porcentajes ni tiempos.
+- src/pages/estrategias/components/LoadingDignificado.module.css:
+  - .fraseWrap: quitada la animación fraseFadeIn (+ su @keyframes, ahora muerto, eliminado). Reemplazada por transition: opacity 300ms ease. Agregado min-height: 64px para que el layout no salte cuando cambia el largo de la frase (evita que la barra brinque).
+  - Nuevas .barra (track, var(--color-border)) y .barraFill (var(--color-tangerine), animación barraIndeterminada 1.5s ease-in-out infinite, ping-pong con translateX).
+  - prefers-reduced-motion: frase sin transición (cambio abrupto), barra sin animación (fill estático al 100% opacity 0.4).
+- 0 tokens nuevos en index.css (se usaron --color-border y --color-tangerine existentes, ambos con override dark mode).
+- 0 cambios en frases.js, en los callers (generar/handleCasoLibre/abandonarPlanYCrear) ni en los textos de los 4 pasos.
+
+Stat del diff:
+- LoadingDignificado.jsx: +68/-? (reescritura del componente).
+- LoadingDignificado.module.css: +38/-11 (fade por transition + barra + reduced-motion).
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: rotación cada ~4.5s con fade suave, barra animada continua, frases contextualizadas a habilidad/edad.
