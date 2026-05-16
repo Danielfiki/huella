@@ -1,0 +1,34 @@
+/* ════════════════════════════════════════════════════════════════════
+   ESTRATEGIAS REDISEÑO · tokens nuevos
+   Pegar dentro de :root en src/index.css (después de tokens existentes)
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Pills por categoría de episodio (5 tonos del sistema) ─ ya pueden existir
+     parcialmente; agregar las que falten. Si ya existen con otro nombre,
+     reemplazar las referencias en EstrategiaActivaCard.module.css y
+     HeaderMocha.module.css. */
+  --pill-emo-bg: #FCE9D8;   --pill-emo-fg: #7A3F12;  /* emocional · durazno */
+  --pill-rut-bg: #E8E0D2;   --pill-rut-fg: #4F4232;  /* rutina · arena */
+  --pill-vin-bg: #DCE7DD;   --pill-vin-fg: #2E4A36;  /* vínculo · verde suave */
+  --pill-jue-bg: #E5DDF0;   --pill-jue-fg: #432F66;  /* juego · lavanda */
+  --pill-sal-bg: #DEE7EC;   --pill-sal-fg: #2D4452;  /* salud · azul-grafito */
+
+  /* Celebration gradient (ya existe en repo) ─ confirmar que estos tokens
+     están definidos: --color-celebration-start, --color-celebration-end */
+
+  /* Sombra dignificada para la card activa y de loading */
+  --shadow-soft: 0 6px 18px -8px rgba(67, 47, 32, 0.18);
+}
+
+/* Override para dark mode (si hay scheme dark) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pill-emo-bg: #4A2E18;   --pill-emo-fg: #FCD9B5;
+    --pill-rut-bg: #3A332A;   --pill-rut-fg: #E8DFCF;
+    --pill-vin-bg: #2C3D31;   --pill-vin-fg: #C7DDC9;
+    --pill-jue-bg: #322843;   --pill-jue-fg: #D7C8EC;
+    --pill-sal-bg: #2A3A45;   --pill-sal-fg: #C7DAE3;
+    --shadow-soft: 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,0 +1,185 @@
+.viewer {
+  min-height: 100vh;
+  background: #E8E0D8;
+  font-family: var(--font-family);
+  color: var(--color-ink);
+  padding: 24px 16px 48px;
+}
+
+.toolbar {
+  max-width: 700px;
+  margin: 0 auto 20px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-card-soft);
+}
+.toolbarLbl {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-ink);
+  cursor: pointer;
+  user-select: none;
+}
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* ── Hoja A4 simulada ── */
+.hoja {
+  max-width: 700px;
+  margin: 0 auto 28px;
+  background: var(--color-white);
+  padding: 36px 40px 32px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-lg);
+  color: #1F1611;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.hojaHead {
+  border-bottom: 2px solid #6E3416;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.hojaTtl {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: #6E3416;
+  margin-bottom: 4px;
+}
+.hojaSub {
+  font-size: 11px;
+  color: #6B5A4E;
+  letter-spacing: 0.02em;
+}
+
+.intro {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #2A1A0E;
+  margin-bottom: 18px;
+}
+
+/* ── Tabla maestra ── */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 11px;
+}
+.tabla th {
+  background: #F5EDE3;
+  color: #6E3416;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 2px solid #C8B8A8;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tabla td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #E8DACE;
+  vertical-align: top;
+}
+.habilCell {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  color: #6E3416;
+  background: #FBF5EE;
+  vertical-align: top;
+}
+.numCell { text-align: right; font-variant-numeric: tabular-nums; }
+.estado_completado { color: #5A7A20; font-weight: 600; }
+.estado_activo { color: #C45A18; font-weight: 600; }
+.estado_abandonado { color: #7A6050; font-style: italic; }
+.deltaGood { color: #5A7A20; font-weight: 700; }
+.deltaBad  { color: #A83228; font-weight: 700; }
+.deltaNa   { color: #B0987A; }
+
+.narrativaFallback {
+  background: #FBF5EE;
+  border-left: 3px solid #C45A18;
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 12px;
+  color: #2A1A0E;
+  border-radius: 2px;
+}
+
+.pageNum {
+  text-align: center;
+  font-size: 10px;
+  color: #9B8770;
+  margin-top: 24px;
+}
+
+/* ── Dossier por ciclo ── */
+.seccion {
+  margin-bottom: 18px;
+}
+.seccionTtl {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: #6E3416;
+  margin-bottom: 8px;
+  text-transform: none;
+}
+.subTtl {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: #C45A18;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+.ul { list-style: disc; padding-left: 20px; }
+.li {
+  font-size: 12px;
+  line-height: 1.55;
+  margin-bottom: 4px;
+  color: #2A1A0E;
+}
+.p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #2A1A0E;
+  margin-bottom: 4px;
+}
+.pSm {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6B5A4E;
+}
+
+.disclaimer {
+  margin-top: 16px;
+  font-size: 10px;
+  color: #9B8770;
+  font-style: italic;
+  text-align: center;
+  border-top: 1px solid #E8DACE;
+  padding-top: 10px;
+}

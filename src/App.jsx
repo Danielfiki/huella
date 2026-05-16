@@ -22,6 +22,7 @@ import TerminosPage from './pages/legal/TerminosPage'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
+import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
 
 class PageErrorBoundary extends React.Component {
   constructor(props) {
@@ -143,6 +144,7 @@ export default function App() {
               <Route path="/signup"   element={<SignupPage />} />
               <Route path="/terminos" element={<TerminosPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
+              <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
               <Route
                 path="/"
                 element={

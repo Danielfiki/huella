@@ -1,0 +1,103 @@
+.wrap {
+  min-height: 100vh;
+  background: #FAF6F0;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #2A1A0E;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E8DACE;
+  box-shadow: 0 2px 8px rgba(42, 26, 14, 0.04);
+}
+.barInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.brandTag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #C45A18;
+}
+.brandTtl {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2A1A0E;
+  line-height: 1.2;
+}
+
+.nav {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  padding: 8px 12px;
+  background: #FAF3EC;
+  border: 1px solid #E8DACE;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6E3416;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: #F0E4D4;
+  border-color: #C8B8A8;
+}
+.btnActive {
+  background: #E56E26;
+  color: #FFFFFF;
+  border-color: #C45A18;
+  box-shadow: 0 2px 6px rgba(229, 110, 38, 0.25);
+}
+.btnActive:hover {
+  background: #C45A18;
+  border-color: #A84B28;
+}
+
+.currentLbl {
+  font-size: 11px;
+  color: #7A6050;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.currentLblTag {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: #9B8770;
+  margin-right: 4px;
+}
+
+.stage {
+  /* deja que cada mockup gestione su propio layout, fondo, etc. */
+}
+
+@media (max-width: 720px) {
+  .nav { justify-content: flex-start; }
+  .currentLbl { display: none; }
+  .brandTtl { font-size: 14px; }
+}

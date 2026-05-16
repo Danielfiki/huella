@@ -1,0 +1,56 @@
+/* ════════════════════════════════════════════════════════════════════
+   PATCH para src/index.css — Estrategias rediseño
+   Pegar dentro del :root principal. Todos son tokens nuevos.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Sombras suaves de cards ─── */
+  --shadow-card-soft: 0 6px 18px rgba(42, 26, 14, 0.06);
+  --shadow-card-flat: 0 3px 12px rgba(42, 26, 14, 0.04);
+  --shadow-cta-primary: 0 4px 14px rgba(229, 110, 38, 0.32);
+  --shadow-cta-success: 0 6px 18px rgba(143, 168, 64, 0.28);
+  --shadow-fab: 0 8px 18px rgba(229, 110, 38, 0.40);
+
+  /* ─── Gradientes de header y banners ─── */
+  --grad-header-mocha:
+    radial-gradient(55% 70% at 20% 110%, rgba(255, 200, 150, 0.28), transparent 60%),
+    radial-gradient(45% 60% at 90% 0%, rgba(229, 110, 38, 0.32), transparent 65%),
+    radial-gradient(70% 90% at 50% 130%, rgba(255, 255, 255, 0.10), transparent 70%);
+  --grad-card-celebration: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+  --grad-banner-completado: linear-gradient(135deg, var(--color-accent-green) 0%, #6E8F44 100%);
+  --grad-fab: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+
+  /* ─── Colores de pills de origen (uno por categoría de episodio) ─── */
+  --pill-emocion-bg: var(--color-pill-emocion-bg);
+  --pill-emocion-fg: #6E3416;
+  --pill-estado-bg: #DCCFEC;
+  --pill-estado-fg: #3E2E5C;
+  --pill-transicion-bg: #C8DAEA;
+  --pill-transicion-fg: #1F3F5F;
+  --pill-conducta-bg: #F5DDC4;
+  --pill-conducta-fg: #5C3E1A;
+  --pill-otro-bg: var(--color-surface-alt);
+  --pill-otro-fg: var(--color-text);
+
+  /* ─── Spacing y radii específicos ─── */
+  --radius-card-lg: 22px;
+  --radius-card-md: 18px;
+  --radius-card-sm: 14px;
+  --radius-pill: 999px;
+  --radius-skill-tile: 11px;
+
+  /* ─── Strip de progreso del header de detalle ─── */
+  --bar-track: rgba(255, 255, 255, 0.16);
+  --bar-segment-empty: rgba(255, 255, 255, 0.18);
+  --bar-segment-done: #C9DDB1;          /* pistachio claro */
+  --bar-segment-now: var(--color-primary-light);
+}
+
+/* DARK MODE override (si el repo lo soporta en index.css) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-card-soft: 0 6px 18px rgba(0, 0, 0, 0.4);
+    --shadow-card-flat: 0 3px 12px rgba(0, 0, 0, 0.3);
+    --shadow-cta-primary: 0 4px 14px rgba(229, 110, 38, 0.45);
+  }
+}

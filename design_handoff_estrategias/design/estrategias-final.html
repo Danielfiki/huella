@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estrategias · De la vida al plan</title>
+  <link rel="stylesheet" href="../../colors_and_type.css" />
+  <link rel="stylesheet" href="screens.css" />
+  <style>
+    body { margin: 0; background: var(--color-surface-alt); padding: 40px 24px 80px; font-family: var(--font-family); color: var(--color-text); }
+    .page { max-width: 1480px; margin: 0 auto; }
+    .pageHead { margin-bottom: 36px; max-width: 880px; }
+    .pageHead .eye { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-primary); margin-bottom: 8px; }
+    .pageHead h1 { font-family: var(--font-heading); font-size: 44px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; margin-bottom: 14px; }
+    .pageHead p { font-size: 15px; line-height: 1.6; color: var(--color-text-muted); max-width: 64ch; }
+    .pageHead .twoDoors {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-top: 22px;
+      max-width: 720px;
+    }
+    .doorPill {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .doorPill .lab { font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-primary); margin-bottom: 6px; }
+    .doorPill .ttl { font-family: var(--font-heading); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 4px; }
+    .doorPill .sub { font-size: 12px; color: var(--color-text-muted); line-height: 1.5; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 430px);
+      gap: 36px;
+      align-items: start;
+      margin-top: 24px;
+      overflow-x: auto;
+      padding-bottom: 24px;
+      scroll-snap-type: x mandatory;
+    }
+    .col { scroll-snap-align: start; }
+    .colHead {
+      margin-bottom: 14px;
+    }
+    .colHead .nm { font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px; }
+    .colHead h2 { font-family: var(--font-heading); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 6px; }
+    .colHead p { font-size: 12.5px; color: var(--color-text-muted); line-height: 1.5; max-width: 42ch; }
+
+    /* device */
+    .device {
+      width: 430px;
+      background: #1A1208;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 0 24px 60px rgba(42, 26, 14, 0.22);
+    }
+    .scr {
+      width: 100%;
+      background: var(--color-bg);
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      max-height: 1100px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-primary-border) transparent;
+    }
+    .scr::-webkit-scrollbar { width: 5px; }
+    .scr::-webkit-scrollbar-thumb { background: var(--color-primary-border); border-radius: 3px; }
+
+    .sb {
+      height: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 26px 0 30px;
+      font-size: 14.5px; font-weight: 700;
+      letter-spacing: -0.01em; color: #fff;
+      background: var(--color-accent-mocha);
+    }
+
+    /* Header mocha */
+    .top {
+      background: var(--color-accent-mocha);
+      color: #fff;
+      padding: 6px 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .top::after {
+      content: "";
+      position: absolute;
+      left: -10%; right: -10%;
+      top: -20%; bottom: -10%;
+      background:
+        radial-gradient(55% 70% at 20% 110%, rgba(255, 200, 150, 0.28), transparent 60%),
+        radial-gradient(45% 60% at 90% 0%, rgba(229,110,38,0.32), transparent 65%),
+        radial-gradient(70% 90% at 50% 130%, rgba(255,255,255,0.10), transparent 70%);
+      pointer-events: none;
+    }
+    .top > * { position: relative; z-index: 1; }
+    .top .row { display: flex; align-items: center; gap: 10px; }
+    .top .iconBtn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.14);
+      display: grid; place-items: center; color: #fff;
+      flex-shrink: 0; border: none;
+    }
+    .top .iconBtn svg { width: 18px; height: 18px; }
+    .top h1 {
+      flex: 1;
+      font-family: var(--font-heading);
+      font-size: 24px; font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .top .stats { display: flex; gap: 10px; align-items: baseline; margin-top: 12px; flex-wrap: wrap; }
+    .top .stat .num { font-family: var(--font-heading); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #C9DDB1; }
+    .top .stat .lbl { font-size: 9.5px; letter-spacing: 0.12em; opacity: 0.78; text-transform: uppercase; font-weight: 700; margin-left: 4px; }
+    .top .stat + .stat { margin-left: 14px; }
+    .top .clinical {
+      margin-top: 10px;
+      font-size: 11.5px; opacity: 0.78;
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    /* progress strip in detail header */
+    .top .progStrip {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 14px;
+    }
+    .top .progStrip .bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      padding: 2px;
+    }
+    .top .progStrip .bar i {
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
+      display: block;
+    }
+    .top .progStrip .bar i.done { background: #C9DDB1; }
+    .top .progStrip .bar i.now { background: var(--color-primary-light); }
+    .top .progStrip .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+
+    .top .origin {
+      margin-top: 12px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+      align-items: center;
+    }
+    .top .origin .lbl { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; opacity: 0.7; margin-right: 2px; }
+    .top .origin .ep {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 9px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .top .origin .ep .e { font-size: 11px; line-height: 1; }
+
+    /* body */
+    .body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* section header */
+    .secH { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+    .secH .ttl { font-family: var(--font-heading); font-size: 14px; font-weight: 700; letter-spacing: -0.005em; }
+    .secH .meta { font-size: 10.5px; color: var(--color-text-muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+    .secH .line { flex: 1; height: 1px; background: var(--color-border); }
+
+    /* Activa card */
+    .actCard {
+      background: var(--color-surface);
+      border-radius: 20px;
+      box-shadow: 0 6px 18px rgba(42, 26, 14, 0.06);
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+    }
+    .actCard .head {
+      padding: 16px 18px 14px;
+      background: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .actCard .head .row1 {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .actCard .child {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #C9DDB1, var(--color-accent-green));
+      color: #fff;
+      display: grid; place-items: center;
+      font-family: var(--font-heading); font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .actCard .ttls { flex: 1; min-width: 0; }
+    .actCard .eye { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: var(--color-primary); }
+    .actCard .ttl { font-family: var(--font-heading); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-top: 2px; }
+    .actCard .week { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); margin-top: 2px; }
+
+    .actCard .progRow {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 4px; margin-top: 12px;
+    }
+    .actCard .progRow .seg {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--color-surface-alt);
+    }
+    .actCard .progRow .seg.done { background: var(--color-accent-green); }
+    .actCard .progRow .seg.now {
+      background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    }
+
+    .actCard .origRow {
+      padding: 12px 18px 14px;
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .actCard .origRow .lbl {
+      font-size: 9.5px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--color-text-light);
+      margin-right: 2px;
+    }
+    .actCard .origRow .ep {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 9px;
+      background: var(--color-pill-emocion-bg);
+      color: #6E3416;
+      border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .actCard .origRow .ep.estado { background: #DCCFEC; color: #3E2E5C; }
+    .actCard .origRow .ep.trans { background: #C8DAEA; color: #1F3F5F; }
+    .actCard .origRow .ep .e { font-size: 11px; line-height: 1; }
+
+    .actCard .cta {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--color-text);
+      color: #fff;
+      border: none;
+      font-family: var(--font-family);
+      font-size: 13.5px; font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: left;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+    }
+    .actCard .cta .arr { margin-left: auto; }
+    .actCard .cta svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    /* IA suggestion card (Puerta 1) */
+    .iaCard {
+      background: var(--color-surface);
+      border-radius: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--color-primary-border);
+      border-left: 3px solid var(--color-accent-green);
+      box-shadow: 0 3px 12px rgba(42, 26, 14, 0.04);
+      position: relative;
+    }
+    .iaCard + .iaCard { margin-top: 10px; }
+    .iaCard .head {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px;
+    }
+    .iaCard .h {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: var(--color-accent-green);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: 700; font-size: 12px;
+      display: grid; place-items: center; line-height: 1;
+    }
+    .iaCard .lab { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-tag-green); }
+    .iaCard .ttl { font-family: var(--font-heading); font-size: 15.5px; font-weight: 700; letter-spacing: -0.005em; line-height: 1.25; }
+    .iaCard .body { font-size: 12.5px; color: var(--color-text-muted); line-height: 1.5; margin-top: 4px; }
+    .iaCard .body strong { color: var(--color-text); font-weight: 600; }
+
+    .iaCard .epPreview {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--color-surface-alt);
+      border-radius: 12px;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .iaCard .epPreview .emo { width: 28px; height: 28px; border-radius: 9px; background: var(--color-pill-emocion-bg); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+    .iaCard .epPreview .copy { flex: 1; min-width: 0; }
+    .iaCard .epPreview .copy .ttl2 { font-family: var(--font-heading); font-size: 12.5px; font-weight: 700; line-height: 1.2; letter-spacing: -0.005em; }
+    .iaCard .epPreview .copy .meta { font-size: 10.5px; color: var(--color-text-muted); margin-top: 2px; }
+    .iaCard .epPreview .meta2 { font-size: 10px; color: var(--color-text-light); font-weight: 700; letter-spacing: 0.04em; flex-shrink: 0; text-align: right; }
+
+    .iaCard .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .iaCard .actions .btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 11px;
+      border: none;
+      font-family: var(--font-family);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+    .iaCard .actions .btn.primary {
+      background: var(--color-accent-green);
+      color: #fff;
+    }
+    .iaCard .actions .btn.ghost {
+      background: transparent;
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-muted);
+      flex: 0 0 auto;
+      padding: 10px 14px;
+    }
+
+    /* Puerta 2 — selector de habilidades */
+    .door2 {
+      background: var(--color-surface);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      box-shadow: 0 3px 12px rgba(42, 26, 14, 0.04);
+      border: 1px solid var(--color-border);
+    }
+    .door2 .head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .door2 .head .num {
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      background: var(--color-primary);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: 700; font-size: 13px;
+      display: grid; place-items: center; line-height: 1;
+    }
+    .door2 .head .ttl { font-family: var(--font-heading); font-size: 15.5px; font-weight: 700; letter-spacing: -0.005em; line-height: 1.2; }
+    .door2 .group { margin-bottom: 10px; }
+    .door2 .group:last-of-type { margin-bottom: 14px; }
+    .door2 .grpName { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 8px; padding: 0 2px; }
+    .door2 .skills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .door2 .skill {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 0;
+      padding: 9px 11px;
+      background: var(--color-surface-alt);
+      border: 1.5px solid transparent;
+      border-radius: 11px;
+      font-size: 12px; font-weight: 600;
+      color: var(--color-text);
+      text-align: left;
+      display: flex; align-items: center; gap: 7px;
+      cursor: pointer;
+    }
+    .door2 .skill .e { font-size: 14px; line-height: 1; flex-shrink: 0; }
+    .door2 .skill.on {
+      background: var(--color-primary-bg);
+      border-color: var(--color-primary);
+      color: var(--color-primary-dark);
+    }
+    .door2 .other {
+      width: 100%;
+      padding: 11px 12px;
+      background: transparent;
+      border: 1.5px dashed var(--color-border);
+      border-radius: 12px;
+      font-family: var(--font-family);
+      font-size: 12px; font-weight: 600;
+      color: var(--color-text-muted);
+      text-align: left;
+      display: flex; align-items: center; gap: 7px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .door2 .other svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .door2 .genBtn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px 14px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-family);
+      font-size: 13.5px; font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      box-shadow: 0 4px 14px rgba(229,110,38,0.32);
+    }
+    .door2 .genBtn:disabled {
+      background: var(--color-surface-alt);
+      color: var(--color-text-light);
+      box-shadow: none;
+    }
+    .door2 .genBtn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+
+    /* Drawer pasados */
+    .pasados {
+      background: var(--color-surface);
+      border-radius: 16px;
+      padding: 4px 14px;
+      border: 1px solid var(--color-border);
+    }
+    .pasadosHead {
+      display: flex; align-items: center; padding: 12px 4px 10px;
+      cursor: pointer;
+    }
+    .pasadosHead .ttl { font-family: var(--font-heading); font-size: 13.5px; font-weight: 700; letter-spacing: -0.005em; flex: 1; }
+    .pasadosHead .count { font-size: 10.5px; color: var(--color-text-muted); font-weight: 700; letter-spacing: 0.06em; }
+    .pasadosHead .chev { margin-left: 8px; color: var(--color-text-muted); }
+    .pasadosHead .chev svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .pasados ul { list-style: none; padding: 0 0 8px; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+    .pasados li {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 10px;
+      padding: 8px 4px;
+      align-items: center;
+      font-size: 12.5px;
+      border-top: 1px dashed var(--color-border);
+    }
+    .pasados li .ic { color: var(--color-accent-green); }
+    .pasados li .ic.ab { color: var(--color-text-light); }
+    .pasados li .ic svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.5; fill: none; }
+    .pasados li .nm { font-weight: 600; color: var(--color-text); }
+    .pasados li .meta { font-size: 10px; color: var(--color-text-muted); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    /* DETAIL VIEW — week cards */
+    .weekActive {
+      background: var(--color-surface);
+      border-radius: 22px;
+      box-shadow: 0 6px 18px rgba(42, 26, 14, 0.06);
+      border: 1px solid var(--color-primary-border);
+      overflow: hidden;
+    }
+    .weekActive .head {
+      padding: 16px 18px 12px;
+      background: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .weekActive .head .eye { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-primary); font-weight: 700; }
+    .weekActive .head .ttl { font-family: var(--font-heading); font-size: 19px; font-weight: 700; letter-spacing: -0.018em; line-height: 1.15; margin-top: 4px; }
+    .weekActive .head .sub { font-size: 12.5px; color: var(--color-text-muted); margin-top: 6px; line-height: 1.5; }
+
+    .weekActive .tasks { padding: 12px 18px 8px; display: flex; flex-direction: column; gap: 8px; }
+    .weekActive .task {
+      display: grid; grid-template-columns: 22px 1fr;
+      gap: 10px; align-items: start;
+      padding: 10px 12px;
+      background: var(--color-surface-alt);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .weekActive .task .chk {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .weekActive .task.done .chk {
+      background: var(--color-accent-green);
+      border-color: var(--color-accent-green);
+      display: grid; place-items: center;
+    }
+    .weekActive .task.done .chk::after {
+      content: "";
+      width: 10px; height: 6px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: translateY(-1px) rotate(-45deg);
+    }
+    .weekActive .task .copy { font-size: 13px; line-height: 1.45; }
+    .weekActive .task.done .copy { color: var(--color-text-muted); text-decoration: line-through; text-decoration-color: var(--color-text-light); }
+
+    .weekActive .checkin {
+      padding: 12px 18px 16px;
+      border-top: 1px dashed var(--color-border);
+    }
+    .weekActive .checkin .lbl { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--color-tag-green); margin-bottom: 6px; }
+    .weekActive .checkin .ask { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; letter-spacing: -0.005em; line-height: 1.3; margin-bottom: 8px; }
+    .weekActive .checkin textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 12px;
+      font-family: var(--font-family);
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--color-text);
+      resize: none;
+      min-height: 56px;
+      background: var(--color-bg);
+    }
+    .weekActive .advBtn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 13px 14px;
+      background: var(--color-text);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-family);
+      font-size: 13.5px; font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .weekActive .advBtn:disabled {
+      background: var(--color-surface-alt);
+      color: var(--color-text-light);
+    }
+    .weekActive .advBtn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+
+    /* Past week chip */
+    .weekPast {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px; align-items: center;
+      padding: 12px 14px;
+      background: var(--color-surface);
+      border-radius: 14px;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+    }
+    .weekPast + .weekPast { margin-top: 6px; }
+    .weekPast.expanded { display: block; }
+    .weekPast .num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--color-accent-green);
+      color: #fff;
+      font-family: var(--font-heading); font-weight: 700;
+      font-size: 12px;
+      display: grid; place-items: center;
+    }
+    .weekPast .num::after {
+      content: "";
+      width: 10px; height: 6px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translate(2px, -2px);
+    }
+    .weekPast .num span { display: none; }
+    .weekPast .meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .weekPast .meta .nm { font-family: var(--font-heading); font-size: 13px; font-weight: 700; letter-spacing: -0.005em; }
+    .weekPast .meta .reflex { font-size: 11px; color: var(--color-text-muted); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .weekPast .ic svg { width: 14px; height: 14px; stroke: var(--color-text-light); stroke-width: 2; fill: none; }
+
+    /* Future week locked */
+    .weekFuture {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px; align-items: center;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1.5px dashed var(--color-border);
+      opacity: 0.65;
+    }
+    .weekFuture + .weekFuture, .weekFuture + .weekPast, .weekPast + .weekFuture { margin-top: 6px; }
+    .weekFuture .num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--color-surface-alt);
+      color: var(--color-text-light);
+      font-family: var(--font-heading); font-weight: 700;
+      font-size: 12px;
+      display: grid; place-items: center;
+    }
+    .weekFuture .nm { font-family: var(--font-heading); font-size: 13px; font-weight: 700; color: var(--color-text-muted); letter-spacing: -0.005em; }
+    .weekFuture .lock svg { width: 13px; height: 13px; stroke: var(--color-text-light); stroke-width: 2; fill: none; }
+
+    /* Empty state Puerta 1 */
+    .emptyP1 {
+      background: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+      border: 1.5px dashed var(--color-primary-border);
+      border-radius: 18px;
+      padding: 18px 18px 20px;
+      text-align: center;
+    }
+    .emptyP1 .em { font-size: 28px; line-height: 1; margin-bottom: 6px; }
+    .emptyP1 .ttl { font-family: var(--font-heading); font-size: 15px; font-weight: 700; letter-spacing: -0.005em; margin-bottom: 6px; }
+    .emptyP1 .sub { font-size: 12px; color: var(--color-text-muted); line-height: 1.55; max-width: 32ch; margin: 0 auto; }
+    .emptyP1 .progress {
+      margin-top: 12px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+      color: var(--color-tag-green);
+      justify-content: center;
+    }
+    .emptyP1 .progress .bar {
+      width: 80px; height: 5px;
+      border-radius: 999px;
+      background: rgba(42,26,14,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .emptyP1 .progress .bar::after {
+      content: "";
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 60%; background: var(--color-accent-green);
+      border-radius: 999px;
+    }
+
+    /* Hero card on creation flow */
+    .heroBlock {
+      background: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid var(--color-primary-border);
+    }
+    .heroBlock .lab { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-primary); margin-bottom: 4px; }
+    .heroBlock .ttl { font-family: var(--font-heading); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 8px; }
+    .heroBlock .epRow { display: flex; gap: 6px; flex-wrap: wrap; }
+    .heroBlock .ep {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 9px;
+      background: var(--color-surface);
+      border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      border: 1px solid var(--color-border);
+    }
+
+    .formField { display: flex; flex-direction: column; gap: 6px; }
+    .formField label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-light); }
+    .formField textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 12px;
+      font-family: var(--font-family);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--color-text);
+      resize: none;
+      min-height: 80px;
+      background: var(--color-surface);
+    }
+
+    /* Banner plan completado */
+    .doneBanner {
+      background: linear-gradient(135deg, var(--color-accent-green) 0%, #6E8F44 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .doneBanner::after {
+      content: "";
+      position: absolute; right: -30px; top: -30px;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .doneBanner .em { font-size: 28px; line-height: 1; margin-bottom: 6px; }
+    .doneBanner .lab { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.86; }
+    .doneBanner .ttl { font-family: var(--font-heading); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-top: 4px; }
+    .doneBanner .sub { font-size: 12.5px; line-height: 1.55; opacity: 0.88; margin-top: 8px; max-width: 36ch; }
+    .doneBanner .acts { display: flex; gap: 8px; margin-top: 14px; }
+    .doneBanner .acts .btn {
+      padding: 10px 14px;
+      border-radius: 11px;
+      font-family: var(--font-family);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.02em;
+      border: none;
+      cursor: pointer;
+    }
+    .doneBanner .acts .btn.primary { background: #fff; color: #2F4D1E; }
+    .doneBanner .acts .btn.ghost { background: rgba(255,255,255,0.18); color: #fff; }
+
+    /* Gen loading */
+    .genCard {
+      background: var(--color-surface);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(42, 26, 14, 0.06);
+      text-align: center;
+      border: 1px solid var(--color-border);
+    }
+    .genCard .pulse {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      color: #fff;
+      display: grid; place-items: center;
+      margin: 0 auto 14px;
+      font-family: var(--font-heading); font-weight: 700; font-size: 30px;
+      box-shadow: 0 0 0 0 rgba(229,110,38,0.5);
+      animation: pulse 1.8s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(229,110,38,0.5); }
+      100% { box-shadow: 0 0 0 24px rgba(229,110,38,0); }
+    }
+    .genCard .ttl { font-family: var(--font-heading); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 8px; }
+    .genCard .sub { font-size: 12.5px; color: var(--color-text-muted); line-height: 1.55; max-width: 30ch; margin: 0 auto 16px; }
+    .genCard .stepList { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: var(--color-surface-alt); border-radius: 12px; }
+    .genCard .stepList .stp { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .genCard .stepList .stp .ic {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 10px;
+    }
+    .genCard .stepList .stp.done .ic { background: var(--color-accent-green); color: #fff; }
+    .genCard .stepList .stp.now .ic { background: var(--color-primary); color: #fff; }
+    .genCard .stepList .stp.next .ic { background: var(--color-surface); color: var(--color-text-light); border: 1.5px solid var(--color-border); }
+    .genCard .stepList .stp.done .copy { color: var(--color-text-muted); text-decoration: line-through; text-decoration-color: var(--color-text-light); }
+    .genCard .stepList .stp.next .copy { color: var(--color-text-light); }
+
+    /* bottom nav */
+    .bn {
+      position: sticky;
+      bottom: 0;
+      background: var(--color-nav);
+      border-top: 1px solid var(--color-nav-border);
+      padding: 8px 4px 18px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+    }
+    .bn .item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600;
+      color: var(--color-nav-text);
+      letter-spacing: 0.02em; padding: 4px 0;
+    }
+    .bn .item.on { color: var(--color-nav-text-active); }
+    .bn .item svg { width: 22px; height: 22px; stroke-width: 2; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+    .bn .fabSlot { display: flex; justify-content: center; }
+    .bn .fab {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      color: #fff;
+      display: grid; place-items: center;
+      margin-top: -22px;
+      box-shadow: 0 8px 18px rgba(229, 110, 38, 0.4);
+      border: none;
+    }
+    .bn .fab svg { width: 26px; height: 26px; stroke-width: 2.5; fill: none; stroke: currentColor; stroke-linecap: round; }
+
+    /* notes */
+    .notesSec {
+      max-width: 1280px;
+      margin: 60px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .noteCard {
+      background: var(--color-surface);
+      border-radius: 18px;
+      padding: 22px 26px;
+      box-shadow: 0 4px 14px rgba(42, 26, 14, 0.04);
+      border: 1px solid var(--color-border);
+    }
+    .noteCard .eye {
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--color-primary); margin-bottom: 6px;
+    }
+    .noteCard h3 {
+      font-family: var(--font-heading);
+      font-size: 18px; font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.2; margin-bottom: 14px;
+    }
+    .noteCard ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    .noteCard li {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 14px;
+      font-size: 13px; line-height: 1.55;
+      color: var(--color-text); align-items: baseline;
+    }
+    .noteCard li .k {
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 11px; font-weight: 700;
+      color: var(--color-primary-dark);
+      background: var(--color-primary-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-align: center;
+      letter-spacing: -0.01em;
+    }
+    .noteCard li .v { color: var(--color-text-muted); }
+    .noteCard li .v strong { color: var(--color-text); font-weight: 600; }
+    .noteCard.wide { grid-column: 1 / -1; }
+
+    .copyTable { display: grid; grid-template-columns: 180px 1fr; gap: 6px 16px; font-size: 12.5px; }
+    .copyTable .k { font-weight: 700; color: var(--color-primary-dark); padding: 6px 0; }
+    .copyTable .v { color: var(--color-text-muted); padding: 6px 0; border-bottom: 1px dashed var(--color-border); line-height: 1.5; }
+    .copyTable .k { border-bottom: 1px dashed var(--color-border); }
+
+    .scrollHint {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--color-text-light); display: flex; align-items: center; gap: 8px;
+      margin-top: -10px; margin-bottom: 4px;
+    }
+    .scrollHint svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="pageHead">
+      <div class="eye">Estrategias · Rediseño</div>
+      <h1>De la vida al plan.</h1>
+      <p>La conexión entre lo que vives con tu hijo y los planes que armas con Huella deja de ser una nota al pie. Hay dos puertas equivalentes para empezar: una que escucha lo que la app está observando, y otra que escucha lo que tú decides trabajar. Cinco vistas, mismo sistema mocha.</p>
+      <div class="twoDoors">
+        <div class="doorPill">
+          <div class="lab">Puerta 1</div>
+          <div class="ttl">Algo que la vida te muestra</div>
+          <div class="sub">La IA detecta patrones en tus episodios y los propone como plan, con el momento detonante visible.</div>
+        </div>
+        <div class="doorPill">
+          <div class="lab">Puerta 2</div>
+          <div class="ttl">Algo que tú quieres trabajar</div>
+          <div class="sub">Selector completo de habilidades y "otra situación" siempre visibles, sin enterrar detrás de un menú.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scrollHint">
+      <svg viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+      Desliza horizontal para ver las 5 vistas · scroll vertical dentro de cada device
+    </div>
+
+    <div class="grid">
+
+      <!-- ════════ COL 1 · VISTA PRINCIPAL ════════ -->
+      <div class="col">
+        <div class="colHead">
+          <div class="nm">Vista 1 de 5</div>
+          <h2>Principal · con plan activo</h2>
+          <p>Lo que ve un padre con un plan en marcha y data en Historial. Las dos puertas conviven debajo del activo.</p>
+        </div>
+        <div class="device">
+          <div class="scr">
+            <div class="sb"><span>9:41</span><span></span></div>
+            <div class="top">
+              <div class="row">
+                <h1>Estrategias</h1>
+                <button class="iconBtn" aria-label="Ajustes">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+              </div>
+              <div class="stats">
+                <div class="stat"><span class="num">3</span><span class="lbl">Habilidades</span></div>
+                <div class="stat"><span class="num">12</span><span class="lbl">Sem totales</span></div>
+              </div>
+              <div class="clinical">Tus planes se construyen con 28 momentos registrados.</div>
+            </div>
+
+            <div class="body">
+
+              <!-- LO QUE ESTÁS TRABAJANDO -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">Lo que estás trabajando</span>
+                  <span class="line"></span>
+                </div>
+                <div class="actCard">
+                  <div class="head">
+                    <div class="row1">
+                      <div class="child">L</div>
+                      <div class="ttls">
+                        <div class="eye">Lucas · 3 años</div>
+                        <div class="ttl">Regulación emocional</div>
+                        <div class="week">Semana 2 de 4</div>
+                      </div>
+                    </div>
+                    <div class="progRow">
+                      <span class="seg done"></span>
+                      <span class="seg now"></span>
+                      <span class="seg"></span>
+                      <span class="seg"></span>
+                    </div>
+                  </div>
+                  <div class="origRow">
+                    <span class="lbl">Nace de</span>
+                    <span class="ep"><span class="e">😡</span>Rabieta cena</span>
+                    <span class="ep estado"><span class="e">😴</span>Sueño frag.</span>
+                    <span class="ep trans"><span class="e">😨</span>Pelea zapatos</span>
+                  </div>
+                  <button class="cta">
+                    Ver tu semana 2
+                    <span class="arr"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- PUERTA 1 -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">Patrones recientes</span>
+                  <span class="meta">Puerta 1 · IA</span>
+                  <span class="line"></span>
+                </div>
+
+                <div class="iaCard">
+                  <div class="head">
+                    <span class="h">h</span>
+                    <span class="lab">Sugerencia de Huella</span>
+                  </div>
+                  <div class="ttl">Notamos 3 momentos de transición en 10 días.</div>
+                  <p class="body">Las despedidas y los cambios de actividad le están pesando. <strong>Trabajar transiciones con respeto</strong> podría ayudar este mes.</p>
+                  <div class="epPreview">
+                    <span class="emo">😢</span>
+                    <div class="copy">
+                      <div class="ttl2">Despedida del parque</div>
+                      <div class="meta">Dom · 17:45 · 3/5 · uno de tres</div>
+                    </div>
+                    <div class="meta2">+2<br/>más</div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn primary">Empezar este plan</button>
+                    <button class="btn ghost" aria-label="No por ahora">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;display:block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PUERTA 2 -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">¿Quieres trabajar otra cosa?</span>
+                  <span class="meta">Puerta 2</span>
+                  <span class="line"></span>
+                </div>
+
+                <div class="door2">
+                  <div class="head">
+                    <span class="num">2</span>
+                    <span class="ttl">Elige una habilidad</span>
+                  </div>
+
+                  <div class="group">
+                    <div class="grpName">Regulación emocional</div>
+                    <div class="skills">
+                      <button class="skill"><span class="e">😤</span>Berrinches</button>
+                      <button class="skill"><span class="e">💧</span>Tristeza</button>
+                      <button class="skill"><span class="e">😨</span>Miedos</button>
+                      <button class="skill"><span class="e">🫂</span>Frustración</button>
+                      <button class="skill"><span class="e">🌪</span>Ansiedad</button>
+                      <button class="skill"><span class="e">😡</span>Enojo</button>
+                    </div>
+                  </div>
+
+                  <div class="group">
+                    <div class="grpName">Desarrollo y aprendizaje</div>
+                    <div class="skills">
+                      <button class="skill"><span class="e">🤝</span>Socializar</button>
+                      <button class="skill"><span class="e">🚧</span>Límites</button>
+                      <button class="skill"><span class="e">🌙</span>Sueño</button>
+                      <button class="skill"><span class="e">🍎</span>Alimentación</button>
+                      <button class="skill"><span class="e">🚽</span>Autonomía</button>
+                    </div>
+                  </div>
+
+                  <button class="other">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Otra situación · escríbelo en tus palabras
+                  </button>
+
+                  <button class="genBtn" disabled>
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Generar plan de 4 semanas
+                  </button>
+                </div>
+              </div>
+
+              <!-- DRAWER PASADOS -->
+              <div class="pasados">
+                <div class="pasadosHead">
+                  <span class="ttl">Lo que ya trabajaste</span>
+                  <span class="count">2 planes</span>
+                  <span class="chev"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+                </div>
+                <ul>
+                  <li>
+                    <span class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="nm">Sueño · 4 semanas</span>
+                    <span class="meta">Sept</span>
+                  </li>
+                  <li>
+                    <span class="ic ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M16 8L8 16M8 8l8 8"/></svg></span>
+                    <span class="nm">Límites · abandonado en sem 2</span>
+                    <span class="meta">Jul</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            <div class="bn">
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Inicio</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Historial</span></div>
+              <div class="fabSlot"><button class="fab"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+              <div class="item on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Estrat.</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5"/></svg><span>Logros</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ COL 2 · DETALLE ════════ -->
+      <div class="col">
+        <div class="colHead">
+          <div class="nm">Vista 2 de 5</div>
+          <h2>Detalle del plan activo</h2>
+          <p>Solo la semana actual protagoniza. Pasadas como chips, futuras bloqueadas. El episodio-origen se ancla en el header.</p>
+        </div>
+        <div class="device">
+          <div class="scr">
+            <div class="sb"><span>9:41</span><span></span></div>
+
+            <div class="top">
+              <div class="row">
+                <button class="iconBtn" aria-label="Atrás"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+                <h1>Regulación emocional</h1>
+              </div>
+              <div class="progStrip">
+                <div class="bar">
+                  <i class="done"></i>
+                  <i class="now"></i>
+                  <i></i>
+                  <i></i>
+                </div>
+                <span class="lbl">Sem 2/4</span>
+              </div>
+              <div class="origin">
+                <span class="lbl">Nace de</span>
+                <span class="ep"><span class="e">😡</span>Rabieta cena</span>
+                <span class="ep"><span class="e">😴</span>Sueño frag.</span>
+                <span class="ep"><span class="e">😨</span>Pelea zapatos</span>
+              </div>
+            </div>
+
+            <div class="body">
+
+              <div class="weekActive">
+                <div class="head">
+                  <div class="eye">Esta semana · activa</div>
+                  <div class="ttl">Nombrar la emoción antes de la solución.</div>
+                  <div class="sub">Cuando Lucas llore o se enoje, párate, agacha y dile lo que ves: <em>"estás muy frustrado porque…"</em>. Espera a que respire antes de proponer salida.</div>
+                </div>
+                <div class="tasks">
+                  <div class="task done">
+                    <span class="chk"></span>
+                    <div class="copy">Identificar 2 momentos del día para practicar (cena · baño)</div>
+                  </div>
+                  <div class="task done">
+                    <span class="chk"></span>
+                    <div class="copy">Practicar 3 nombramientos en voz alta sin proponer solución</div>
+                  </div>
+                  <div class="task">
+                    <span class="chk"></span>
+                    <div class="copy">Anotar en Historial qué pasó después del nombramiento</div>
+                  </div>
+                </div>
+                <div class="checkin">
+                  <div class="lbl">Check-in semanal</div>
+                  <div class="ask">¿Qué viste cambiar esta semana?</div>
+                  <textarea placeholder="Una o dos frases. Lo que viste, no lo que esperabas ver…">El martes después de nombrarle la frustración, se calmó solo. No tuve que proponer nada.</textarea>
+                  <button class="advBtn">
+                    Avanzar a Semana 3
+                    <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="secH">
+                  <span class="ttl">Otras semanas</span>
+                  <span class="line"></span>
+                </div>
+
+                <div class="weekPast">
+                  <span class="num"><span></span></span>
+                  <div class="meta">
+                    <span class="nm">Sem 1 · Observar sin intervenir</span>
+                    <span class="reflex">"Me costó no saltar a resolver. Vi que él tiene su propio ritmo…"</span>
+                  </div>
+                  <span class="ic"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></span>
+                </div>
+
+                <div class="weekFuture">
+                  <span class="num">3</span>
+                  <span class="nm">Modelar regulación con tu propio cuerpo</span>
+                  <span class="lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                </div>
+                <div class="weekFuture">
+                  <span class="num">4</span>
+                  <span class="nm">Cerrar el ciclo · reflexión final</span>
+                  <span class="lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="bn">
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Inicio</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Historial</span></div>
+              <div class="fabSlot"><button class="fab"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+              <div class="item on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Estrat.</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5"/></svg><span>Logros</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ COL 3 · ESTADO VACÍO ════════ -->
+      <div class="col">
+        <div class="colHead">
+          <div class="nm">Vista 3 de 5</div>
+          <h2>Estado vacío · usuario nuevo</h2>
+          <p>Sin estrategias y con pocos episodios registrados. La Puerta 2 sigue funcional. La Puerta 1 invita.</p>
+        </div>
+        <div class="device">
+          <div class="scr">
+            <div class="sb"><span>9:41</span><span></span></div>
+
+            <div class="top">
+              <div class="row">
+                <h1>Estrategias</h1>
+                <button class="iconBtn" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+              </div>
+              <div class="clinical" style="margin-top: 14px;">Aún no hay un plan en marcha. Empieza por donde te haga sentido.</div>
+            </div>
+
+            <div class="body">
+
+              <!-- PUERTA 1 INVITACIÓN -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">Patrones recientes</span>
+                  <span class="meta">Puerta 1</span>
+                  <span class="line"></span>
+                </div>
+                <div class="emptyP1">
+                  <div class="em">🌱</div>
+                  <div class="ttl">Cuando registres más vida, Huella encontrará patrones para sugerirte.</div>
+                  <p class="sub">Llevas 3 momentos registrados. Con unos 8 más empezamos a ver tendencias.</p>
+                  <div class="progress">
+                    <span>3 de 10</span>
+                    <span class="bar"></span>
+                    <span>vamos</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PUERTA 2 ACTIVA -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">¿Qué quieres trabajar?</span>
+                  <span class="meta">Puerta 2</span>
+                  <span class="line"></span>
+                </div>
+
+                <div class="door2">
+                  <div class="head">
+                    <span class="num">2</span>
+                    <span class="ttl">Elige una habilidad</span>
+                  </div>
+
+                  <div class="group">
+                    <div class="grpName">Regulación emocional</div>
+                    <div class="skills">
+                      <button class="skill"><span class="e">😤</span>Berrinches</button>
+                      <button class="skill on"><span class="e">💧</span>Tristeza</button>
+                      <button class="skill"><span class="e">😨</span>Miedos</button>
+                      <button class="skill"><span class="e">🫂</span>Frustración</button>
+                      <button class="skill"><span class="e">🌪</span>Ansiedad</button>
+                      <button class="skill"><span class="e">😡</span>Enojo</button>
+                    </div>
+                  </div>
+
+                  <div class="group">
+                    <div class="grpName">Desarrollo y aprendizaje</div>
+                    <div class="skills">
+                      <button class="skill"><span class="e">🤝</span>Socializar</button>
+                      <button class="skill"><span class="e">🚧</span>Límites</button>
+                      <button class="skill"><span class="e">🌙</span>Sueño</button>
+                      <button class="skill"><span class="e">🍎</span>Alimentación</button>
+                      <button class="skill"><span class="e">🚽</span>Autonomía</button>
+                    </div>
+                  </div>
+
+                  <button class="other">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Otra situación · escríbelo en tus palabras
+                  </button>
+
+                  <button class="genBtn">
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Generar plan de 4 semanas
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="bn">
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Inicio</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Historial</span></div>
+              <div class="fabSlot"><button class="fab"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+              <div class="item on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Estrat.</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5"/></svg><span>Logros</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ COL 4 · CREACIÓN PUERTA 1 ════════ -->
+      <div class="col">
+        <div class="colHead">
+          <div class="nm">Vista 4 de 5</div>
+          <h2>Creando · entrada Puerta 1</h2>
+          <p>Llega con habilidad preseleccionada y episodios anclados. Solo confirma contexto y genera. Loading dignificado.</p>
+        </div>
+        <div class="device">
+          <div class="scr">
+            <div class="sb"><span>9:41</span><span></span></div>
+
+            <div class="top">
+              <div class="row">
+                <button class="iconBtn" aria-label="Atrás"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+                <h1>Nuevo plan</h1>
+              </div>
+              <div class="clinical">Paso 2 de 3 · Confirmar y generar</div>
+            </div>
+
+            <div class="body">
+
+              <div class="heroBlock">
+                <div class="lab">Habilidad · preseleccionada</div>
+                <div class="ttl">Trabajar transiciones con respeto</div>
+                <div class="epRow">
+                  <span class="ep"><span style="font-size:13px;line-height:1;">😢</span>Despedida parque</span>
+                  <span class="ep"><span style="font-size:13px;line-height:1;">😨</span>Pelea zapatos</span>
+                  <span class="ep"><span style="font-size:13px;line-height:1;">😡</span>Bañera</span>
+                </div>
+              </div>
+
+              <div class="formField">
+                <label>Algo más que Huella debería saber</label>
+                <textarea placeholder="Opcional · una o dos frases">Está empezando guardería en 2 semanas. Las despedidas las lleva mejor con su papá.</textarea>
+              </div>
+
+              <!-- Generation in progress -->
+              <div class="genCard">
+                <div class="pulse">h</div>
+                <div class="ttl">Construyendo el plan de Lucas</div>
+                <p class="sub">Esto toma unos 20 segundos. Estamos leyendo los 3 momentos para ajustar el lenguaje a lo que vives.</p>
+                <div class="stepList">
+                  <div class="stp done">
+                    <span class="ic">✓</span>
+                    <span class="copy">Leyendo episodios detonantes</span>
+                  </div>
+                  <div class="stp now">
+                    <span class="ic">·</span>
+                    <span class="copy">Diseñando 4 semanas progresivas</span>
+                  </div>
+                  <div class="stp next">
+                    <span class="ic">·</span>
+                    <span class="copy">Adaptando tareas al ritmo familiar</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="bn">
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Inicio</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Historial</span></div>
+              <div class="fabSlot"><button class="fab"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+              <div class="item on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Estrat.</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5"/></svg><span>Logros</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ COL 5 · COMPLETADO ════════ -->
+      <div class="col">
+        <div class="colHead">
+          <div class="nm">Vista 5 de 5</div>
+          <h2>Plan completado · semana 4</h2>
+          <p>Banner verde celebrativo encima de la vista principal. Puente a Hitos · Historial. La Puerta 2 sigue accesible.</p>
+        </div>
+        <div class="device">
+          <div class="scr">
+            <div class="sb"><span>9:41</span><span></span></div>
+
+            <div class="top">
+              <div class="row">
+                <h1>Estrategias</h1>
+                <button class="iconBtn" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+              </div>
+              <div class="stats">
+                <div class="stat"><span class="num">3</span><span class="lbl">Habilidades</span></div>
+                <div class="stat"><span class="num">12</span><span class="lbl">Sem totales</span></div>
+              </div>
+            </div>
+
+            <div class="body">
+
+              <div class="doneBanner">
+                <div class="em">🌿</div>
+                <div class="lab">Plan completado</div>
+                <div class="ttl">4 semanas trabajando regulación emocional con Lucas.</div>
+                <div class="sub">Anotaste 11 momentos durante el plan. Tu reflexión final ya quedó guardada en Hitos.</div>
+                <div class="acts">
+                  <button class="btn primary">Ver tu hito</button>
+                  <button class="btn ghost">Releer reflexiones</button>
+                </div>
+              </div>
+
+              <!-- PUERTA 1 -->
+              <div>
+                <div class="secH">
+                  <span class="ttl">¿Qué sigue?</span>
+                  <span class="meta">Sugerencias</span>
+                  <span class="line"></span>
+                </div>
+
+                <div class="iaCard">
+                  <div class="head">
+                    <span class="h">h</span>
+                    <span class="lab">Sugerencia de Huella</span>
+                  </div>
+                  <div class="ttl">Ahora que regulación está sólida, transiciones podría ser el siguiente paso.</div>
+                  <p class="body">Detectamos 3 momentos de transición durante tu plan actual. Podrían trabajarse mejor con la base que ya tienes.</p>
+                  <div class="actions">
+                    <button class="btn primary">Empezar este plan</button>
+                    <button class="btn ghost" aria-label="No por ahora">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;display:block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PUERTA 2 colapsada -->
+              <div class="pasados">
+                <div class="pasadosHead">
+                  <span class="ttl">Elegir otra habilidad</span>
+                  <span class="count">11 áreas</span>
+                  <span class="chev"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+                </div>
+              </div>
+
+              <!-- DRAWER PASADOS -->
+              <div class="pasados">
+                <div class="pasadosHead">
+                  <span class="ttl">Lo que ya trabajaste</span>
+                  <span class="count">2 planes</span>
+                  <span class="chev" style="transform: rotate(180deg);"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+                </div>
+                <ul>
+                  <li>
+                    <span class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="nm">Regulación emocional · 4 sem ✓ hoy</span>
+                    <span class="meta">Nov</span>
+                  </li>
+                  <li>
+                    <span class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="nm">Sueño · 4 sem</span>
+                    <span class="meta">Sept</span>
+                  </li>
+                  
+                </ul>
+              </div>
+
+            </div>
+
+            <div class="bn">
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Inicio</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Historial</span></div>
+              <div class="fabSlot"><button class="fab"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+              <div class="item on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Estrat.</span></div>
+              <div class="item"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5"/></svg><span>Logros</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════ NOTAS ════════ -->
+    <div class="notesSec">
+
+      <div class="noteCard">
+        <div class="eye">Jerarquía · qué pesa</div>
+        <h3>Cómo se lee la pantalla principal</h3>
+        <ul>
+          <li>
+            <span class="k">Header</span>
+            <span class="v">Mocha sólido con título, dos métricas (habilidades trabajadas · semanas totales) y una <strong>línea clínica</strong> ("Tus planes se construyen con 28 momentos") que ancla el posicionamiento basado-en-evidencia.</span>
+          </li>
+          <li>
+            <span class="k">Activa</span>
+            <span class="v">Card grande con avatar mocha-pistacho del hijo, habilidad en Fraunces 17pt, semana N/4. <strong>Episodios-origen visibles bajo el título</strong> como mini-pills coloreadas — la fricción que más resolvía el enfoque queda aquí explícita.</span>
+          </li>
+          <li>
+            <span class="k">Puerta 1</span>
+            <span class="v">Card crema-verde con badge <code>h</code> de Huella, título narrativo, preview del episodio detonante, dos acciones (primaria verde + cerrar X).</span>
+          </li>
+          <li>
+            <span class="k">Puerta 2</span>
+            <span class="v">Bloque blanco con número 2 tangerina · selector completo en dos grupos · "otra situación" con borde dashed · CTA "Generar plan" disabled hasta selección.</span>
+          </li>
+          <li>
+            <span class="k">Pasados</span>
+            <span class="v">Drawer al pie con planes históricos en una línea cada uno — ✓ verde para completados, ✕ gris para abandonados. Tap para expandir reflexiones.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="noteCard">
+        <div class="eye">Detalle del plan · jerarquía</div>
+        <h3>Por qué solo la activa protagoniza</h3>
+        <ul>
+          <li>
+            <span class="k">Header</span>
+            <span class="v">Habilidad como título principal + barra de 4 segmentos integrada · <strong>chips de origen</strong> visibles permanentemente (no se pierden cuando avanzas semanas).</span>
+          </li>
+          <li>
+            <span class="k">Sem activa</span>
+            <span class="v">Card protagonista con borde primary-soft. Eye-label "esta semana · activa", título Fraunces 19pt, descripción narrativa, tareas checkeable, check-in <strong>inline al pie</strong> con textarea + botón "Avanzar a Semana N+1".</span>
+          </li>
+          <li>
+            <span class="k">Pasadas</span>
+            <span class="v">Chips contraídos · num verde con check · reflexión escrita visible truncada · tap expande. Sin volver a mostrar el contenido teórico de la IA.</span>
+          </li>
+          <li>
+            <span class="k">Futuras</span>
+            <span class="v">Chips dashed con candado · solo el nombre de la semana visible · sin tap interactivo. La IA reservó el detalle para cuando llegues.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="noteCard wide">
+        <div class="eye">Episodio-origen · tratamiento</div>
+        <h3>Cómo se mantiene visible el puente vida → plan</h3>
+        <p style="font-size:13px; line-height:1.65; color:var(--color-text); margin-bottom: 14px; max-width: 76ch;">Es la fricción más importante del enfoque. La regla: <strong>el episodio-origen aparece en cada superficie del plan, en distinto registro</strong> — pill compacta en lista, ancla persistente en detalle, preview del momento real en sugerencias IA. Nunca se esconde.</p>
+        <ul>
+          <li>
+            <span class="k">Lista</span>
+            <span class="v">3 chips coloreados bajo el título de la activa, con emoji + nombre corto. Función: identidad rápida del plan.</span>
+          </li>
+          <li>
+            <span class="k">Detalle</span>
+            <span class="v">3 chips en el header mocha justo bajo la barra de progreso. Función: ancla permanente — recuerda <em>por qué</em> estás haciendo este plan mientras lo ejecutas.</span>
+          </li>
+          <li>
+            <span class="k">Puerta 1</span>
+            <span class="v">Mini-card de un episodio real (con emoji, título, fecha, intensidad) más "<strong>+2 más</strong>" cuando son varios. Función: prueba — la IA no inventa, leyó momentos concretos tuyos.</span>
+          </li>
+          <li>
+            <span class="k">Creación P1</span>
+            <span class="v">Hero-block crema-verde con habilidad pre-llenada y los 3 chips del episodio-origen visibles. Función: confirmación — vas a generar un plan basado <em>exactamente</em> en estos momentos.</span>
+          </li>
+          <li>
+            <span class="k">Check-in</span>
+            <span class="v">Pregunta narrativa 14.5pt Fraunces ("¿qué viste cambiar esta semana?") con prompt secundario opcional ("¿Volvió a pasar el escenario que originó este plan?") — cierra el ciclo evidencia → intervención → evidencia.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="noteCard wide">
+        <div class="eye">Copy clave · sugerencias</div>
+        <h3>Frases tipo para los estados sensibles</h3>
+        <div class="copyTable">
+          <div class="k">Vacío P1 (con data)</div>
+          <div class="v">"Cuando registres más vida, Huella encontrará patrones para sugerirte." + progress "3 de 10 momentos · vamos"</div>
+
+          <div class="k">Vacío P1 (sin data)</div>
+          <div class="v">"Empezá registrando un momento cualquiera — bueno, regular o difícil. Con un puñado, ya empezamos a ver tendencias."</div>
+
+          <div class="k">Cabecera clínica</div>
+          <div class="v">"Tus planes se construyen con N momentos registrados." (cuando hay data) / "Aún no hay un plan en marcha. Empieza por donde te haga sentido." (vacío)</div>
+
+          <div class="k">Sugerencia IA</div>
+          <div class="v">"Notamos N momentos de [categoría] en M días." → bajada: "[Habilidad sugerida en lenguaje narrativo, no clínico] podría ayudar este mes."</div>
+
+          <div class="k">Check-in pregunta</div>
+          <div class="v">"¿Qué viste cambiar esta semana?" — placeholder: "Una o dos frases. Lo que viste, no lo que esperabas ver."</div>
+
+          <div class="k">Banner completado</div>
+          <div class="v">"4 semanas trabajando [habilidad] con [nombre]." + sub: "Anotaste N momentos durante el plan. Tu reflexión final ya quedó guardada en Hitos."</div>
+
+          <div class="k">Puerta 2 CTA</div>
+          <div class="v">"Generar plan de 4 semanas" (disabled hasta selección de habilidad) — sin "Crear", sin "Continuar"</div>
+
+          <div class="k">Pasado · abandonado</div>
+          <div class="v">"Límites · abandonado en sem 2" — neutral, sin juicio. La funcionalidad de pausar/retomar no está en este rediseño.</div>
+        </div>
+      </div>
+
+      <div class="noteCard">
+        <div class="eye">Microinteracciones</div>
+        <h3>Detalles que hay que cuidar</h3>
+        <ul>
+          <li>
+            <span class="k">Generar</span>
+            <span class="v">El loading <strong>se llama loading dignificado</strong>: pulse mocha-tangerina, copy "Construyendo el plan de [nombre]", lista de pasos que se van marcando ✓ — la espera de 20s justifica el costo del prompt.</span>
+          </li>
+          <li>
+            <span class="k">Avanzar</span>
+            <span class="v">Animación: la barra de progreso del header del detalle <strong>se llena un segmento</strong> en 600ms con easing, y la card de semana hace flip vertical hacia la siguiente. Sin modal de confirmación.</span>
+          </li>
+          <li>
+            <span class="k">Sugerencia X</span>
+            <span class="v">El cerrar de la card IA no la elimina — la <strong>deja en estado "no por ahora"</strong> en una pestaña drawer. Reaparece en 2 semanas si el patrón persiste.</span>
+          </li>
+          <li>
+            <span class="k">Plan pasado</span>
+            <span class="v">Tap expande inline el drawer con los 4 chips de semanas + reflexiones. Si fue abandonado, una opción discreta "trabajar de nuevo esta habilidad" preselecciona en Puerta 2.</span>
+          </li>
+          <li>
+            <span class="k">Empty P1</span>
+            <span class="v">La barra de progreso "3 de 10" usa el token <code>--color-accent-green</code> y se llena visualmente con cada episodio nuevo registrado — el padre ve el avance hacia el desbloqueo de sugerencias.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="noteCard">
+        <div class="eye">Diálogo con el sistema</div>
+        <h3>Cómo conecta con Panel e Historial</h3>
+        <ul>
+          <li>
+            <span class="k">Panel</span>
+            <span class="v">Elimina su EstrategiaActivaPanel (era duplicado del Activa). Reemplaza por un módulo "Tu semana 2 · Regulación" que linkea directo al <strong>detalle</strong>, no a la lista — un tap menos.</span>
+          </li>
+          <li>
+            <span class="k">Historial</span>
+            <span class="v">Episodios que alimentaron una sugerencia (o un plan activo) muestran al pie un mini-link: <strong>"Este momento alimenta tu plan de Regulación →"</strong>. Tap lleva al detalle del plan con scroll a la pill correspondiente.</span>
+          </li>
+          <li>
+            <span class="k">Episodio nuevo</span>
+            <span class="v">Tras registrar un episodio, si la IA detecta patrón, el botón "Crear estrategia desde esto" se eleva a CTA principal del banner final del flujo, no a un link 11pt. Lleva directo a Vista 4 (Creación P1).</span>
+          </li>
+          <li>
+            <span class="k">Hitos</span>
+            <span class="v">Cada plan completado deposita un hito automático con la reflexión final. El banner completado linkea al hito creado — cierre del ciclo.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="noteCard wide">
+        <div class="eye">Asunciones y pendientes</div>
+        <h3>Lo que asumí · lo que faltó · lo que decidirás</h3>
+        <ul>
+          <li>
+            <span class="k">Avatar hijo</span>
+            <span class="v"><strong>Asumido</strong>: la card activa muestra inicial del nombre en tile pistacho-verde (44px). Si el repo tiene foto subida, se reemplaza. Si no hay nombre todavía, fallback a 🌱.</span>
+          </li>
+          <li>
+            <span class="k">Multi-hijo</span>
+            <span class="v"><strong>Pendiente</strong>: no diseñé selector de hijo en el header. Si la app soporta múltiples hijos, hay que añadir un switcher entre el título y las stats. Asumí 1 hijo activo por ahora.</span>
+          </li>
+          <li>
+            <span class="k">Detección de patrones</span>
+            <span class="v"><strong>Asunción operativa</strong>: la IA expone una endpoint <code>detectarPatrones(episodios)</code> que devuelve max 2 sugerencias con habilidad, episodios-detonante y narrativa. Si esto no existe, hay trabajo backend antes de implementar Puerta 1.</span>
+          </li>
+          <li>
+            <span class="k">Threshold "+2 más"</span>
+            <span class="v"><strong>Decisión por tomar</strong>: ¿qué hace el tap? Opciones: a) expande inline los otros 2 episodios, b) abre modal con los 3 visibles + scroll, c) lleva a Historial filtrado. Recomiendo (a).</span>
+          </li>
+          <li>
+            <span class="k">Pausar plan</span>
+            <span class="v"><strong>Fuera de scope</strong>: la funcionalidad de pausar plan llega en una iteración futura. El drawer de pasados solo muestra completados (✓) y abandonados (✕), sin estado intermedio.</span>
+          </li>
+          <li>
+            <span class="k">Editar tarea</span>
+            <span class="v"><strong>Asumido</strong>: las tareas son inmutables (vienen de la IA). Si el padre quiere agregar una propia, no está cubierto en esta vuelta. Discusión pendiente.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

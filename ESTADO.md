@@ -1355,3 +1355,25 @@ Stat del diff:
 Qué quedó pendiente:
 - VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: plan completado → ✓ verdes en las N semanas; plan abandonado en sem 1 → ✓ neutro solo en sem 1, círculos vacíos en 2/3/4.
 - Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.
+
+---
+
+### Sesión 16 mayo 2026 — Fase 5: Housekeeping completado
+
+Antes de arrancar Fase 5 se integraron al repo los archivos que llevaban sesiones en local sin pushear. No cambia comportamiento de la app para el papá (Vercel deploya pero se ve igual). No requiere verificación visual de Daniel.
+
+Los 3 ítems quedaron pusheados:
+1. **src/services/anthropic.js** — Fase 3 IA: +206 líneas con analizarCierreCiclo y generarCicloN (necesarias para P3 Cierre y P4 Ciclo 2 de Fase 5). Diff confirmado: exactamente +206, ninguna línea pre-existente tocada.
+2. **src/App.jsx** — viewer /mockups: +2 líneas (import + Route hermana de /invitar). Diff confirmado: exactamente +2.
+3. **design_handoff_estrategias/** — carpeta completa (mockups de las 6 pantallas + 4 SQL del rediseño + src de referencia + design + READMEs internos). Más los .md sueltos relacionados en raíz: README.md (resultó ser el documento de handoff de Estrategias, NO un README genérico), AUDITORIA_ESTRATEGIAS.md, REPORTE_ROUND2/3/4/6.md.
+
+Total: 66 archivos en el commit (2 modificados + 64 nuevos).
+
+Verificaciones de seguridad antes del commit:
+- Escaneo de secretos (sk-ant, tokens JWT, service_role, passwords, claves API) sobre todos los .md de raíz y sobre toda la carpeta design_handoff_estrategias/: 0 hallazgos. Las únicas coincidencias de patrón estaban en ESTADO.md (líneas 13-15) y son referencias seguras ("ver `.env` → ANTHROPIC_API_KEY"), sin valores reales.
+- Nada excluido: no había notas privadas, temporales ni secretos. Todos los untracked eran del scope Fase 5.
+- Los diffs de los 2 archivos rastreados coincidieron exactamente con lo documentado en sesiones previas (sin cambios inesperados).
+
+Nota operativa: a partir de ahora estos archivos viven en main. El viewer /mockups quedó accesible en producción (ruta pública) — se elimina en Fase 6 (limpieza), como ya estaba anotado.
+
+Estado: listo para arrancar Fase 5 (5 pantallas nuevas).

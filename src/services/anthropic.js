@@ -512,6 +512,212 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adi
   return extraerJSON(raw)
 }
 
+/**
+ * Fase 3 del rediseño Estrategias con Ciclos.
+ * Genera el análisis estructurado al cerrar un ciclo de una estrategia.
+ * El resultado se guarda en estrategia_ciclos.cierre_analisis (jsonb).
+ *
+ * @param {Object} args
+ * @param {Object} args.hijo - { nombre, edad, genero }
+ * @param {Object} args.ciclo - { numero_ciclo, plan, fecha_inicio, fecha_cierre, duracion_semanas }
+ * @param {Array}  args.notas_bitacora - [{ contenido, created_at, ... }]
+ * @param {Array}  args.episodios_vinculados - [{ fecha, tipo, intensidad, gatillantes, ... }]
+ * @returns {Promise<{que_cambio: string, que_quedo_pendiente: string, recomendaciones: string}>}
+ */
+export async function analizarCierreCiclo({ hijo, ciclo, notas_bitacora = [], episodios_vinculados = [] }) {
+  const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
+
+  const diasReales = ciclo.fecha_cierre && ciclo.fecha_inicio
+    ? Math.round((new Date(ciclo.fecha_cierre) - new Date(ciclo.fecha_inicio)) / (1000 * 60 * 60 * 24))
+    : null
+
+  const notasTexto = notas_bitacora.length > 0
+    ? notas_bitacora.map(n => `[${n.created_at}] ${n.contenido}`).join('\n')
+    : 'Sin notas registradas en la bitácora.'
+
+  const episodiosTexto = episodios_vinculados.length > 0
+    ? episodios_vinculados.map(e => `[${e.fecha || e.created_at}] Tipo: ${e.tipo || 's/d'}, Intensidad: ${e.intensidad || 's/d'}, Gatillantes: ${(e.gatillantes || []).join(', ') || 's/d'}`).join('\n')
+    : 'Sin episodios registrados durante el ciclo.'
+
+  const prompt = `${marco}
+
+DATOS DEL HIJO/A
+Nombre: ${hijo?.nombre || 'el niño/a'}
+Edad: ${hijo?.edad || 's/d'} años
+Género: ${genero}
+
+CICLO QUE SE ESTÁ CERRANDO
+Ciclo N°: ${ciclo.numero_ciclo}
+Duración planificada: ${ciclo.duracion_semanas || 4} semanas
+Duración real: ${diasReales !== null ? `${diasReales} días` : 's/d'} (de ${ciclo.fecha_inicio || 's/d'} a ${ciclo.fecha_cierre || 's/d'})
+
+Plan que se trabajó:
+${JSON.stringify(ciclo.plan || {}, null, 2)}
+
+NOTAS DE BITÁCORA (${notas_bitacora.length} entradas)
+${notasTexto}
+
+EPISODIOS REGISTRADOS DURANTE EL CICLO (${episodios_vinculados.length})
+${episodiosTexto}
+
+TAREA
+Genera un análisis del cierre de este ciclo con TRES secciones:
+1. que_cambio: qué evolución observable hubo durante este ciclo (en el hijo/a, en ${pronombre} ${articulo}, en la dinámica familiar). Concreto, observacional, sin diagnóstico.
+2. que_quedo_pendiente: qué del plan no se logró, qué patrones siguen presentes, qué obstáculos aparecieron. Honesto pero sin culpabilizar.
+3. recomendaciones: 2 a 3 sugerencias prácticas y específicas para el próximo paso (un nuevo ciclo o un cierre definitivo de esta habilidad).
+
+REGLAS DURAS
+- TUTEO CHILENO: tú, tienes, puedes, decides, observas. NUNCA voseo argentino: nada de tenés, querés, hacés, fijate, podés. Esta regla es crítica.
+- Habla AL padre o madre en segunda persona singular.
+- Sin diagnósticos clínicos del hijo/a ni del adulto.
+- Sin frases cliché ("recuerda que cada niño es único", "estás haciendo un gran trabajo", "lo importante es el proceso").
+- Sin markdown: prohibido #, ##, ###, **, *, -, _.
+- Cada sección entre 2 y 4 oraciones. Concretas, observacionales.
+- Sin numerar las recomendaciones con "1.", "2." dentro del string — usa frases corridas o conectores.
+
+FORMATO DE RESPUESTA
+Devuelve SOLO un JSON válido con esta estructura exacta:
+{
+  "que_cambio": "...",
+  "que_quedo_pendiente": "...",
+  "recomendaciones": "..."
+}
+Sin texto antes ni después del JSON. Sin cercas de markdown. Sin comentarios.`
+
+  try {
+    const raw = await llamarAPI(prompt, 2000)
+    const parsed = extraerJSON(raw)
+    if (!parsed || typeof parsed !== 'object') {
+      return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: '' }
+    }
+    return {
+      que_cambio: typeof parsed.que_cambio === 'string' ? parsed.que_cambio : '',
+      que_quedo_pendiente: typeof parsed.que_quedo_pendiente === 'string' ? parsed.que_quedo_pendiente : '',
+      recomendaciones: typeof parsed.recomendaciones === 'string' ? parsed.recomendaciones : ''
+    }
+  } catch (err) {
+    console.error('analizarCierreCiclo failed:', err)
+    return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: '' }
+  }
+}
+
+/**
+ * Fase 3 del rediseño Estrategias con Ciclos.
+ * Genera el plan de un ciclo 2+ de una estrategia.
+ * Si usar_memoria_ia es false o no hay ciclo_anterior: reutiliza generarEstrategia (4 semanas fijas, sin contexto histórico).
+ * Si usar_memoria_ia es true y hay ciclo_anterior: genera plan adaptado al contexto del ciclo previo, con duración variable (2-6 semanas).
+ *
+ * @param {Object} args
+ * @param {Object} args.hijo - { nombre, edad, genero }
+ * @param {string} args.habilidad - habilidad que se está trabajando
+ * @param {string} [args.descripcion] - contexto adicional
+ * @param {boolean} args.usar_memoria_ia - si la IA debe considerar el ciclo anterior
+ * @param {Object} [args.ciclo_anterior] - { plan, cierre_analisis } del ciclo previo
+ * @param {number} args.numero_ciclo - número del ciclo que se está generando (2, 3, 4...)
+ * @returns {Promise<{porQueImporta: string, duracion_semanas: number, semanas: Array} | null>}
+ */
+export async function generarCicloN({ hijo, habilidad, descripcion, usar_memoria_ia, ciclo_anterior, numero_ciclo }) {
+  if (!Number.isInteger(numero_ciclo) || numero_ciclo < 2) {
+    return null
+  }
+
+  if (!usar_memoria_ia || !ciclo_anterior) {
+    const resultado = await generarEstrategia({ hijo, habilidad, descripcion })
+    if (!resultado || typeof resultado !== 'object' || !Array.isArray(resultado.semanas)) {
+      return null
+    }
+    return { ...resultado, duracion_semanas: 4 }
+  }
+
+  const marco = marcoEdad(hijo?.edad)
+  const { genero } = (() => {
+    const g = hijo?.genero
+    if (g === 'f') return { genero: 'niña', pronombre: 'ella', articulo: 'la' }
+    if (g === 'm') return { genero: 'niño', pronombre: 'él', articulo: 'el' }
+    if (g === 'nb') return { genero: 'niñe', pronombre: 'elle', articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'el niño/a', articulo: 'al niño/a' }
+  })()
+
+  const planAnterior = JSON.stringify(ciclo_anterior?.plan || {}, null, 2)
+  const cierreAnalisis = ciclo_anterior?.cierre_analisis || {}
+
+  const prompt = `${marco}
+
+DATOS DEL HIJO/A
+Nombre: ${hijo?.nombre || 'el niño/a'}
+Edad: ${hijo?.edad || 's/d'} años
+Género: ${genero}
+
+HABILIDAD QUE SE ESTÁ TRABAJANDO
+${habilidad}
+${descripcion ? 'Contexto adicional: ' + descripcion : ''}
+
+NÚMERO DE CICLO
+Este es el Ciclo ${numero_ciclo} de esta estrategia.
+
+CICLO ANTERIOR (Ciclo ${numero_ciclo - 1})
+Plan que se trabajó:
+${planAnterior}
+
+Análisis al cierre del ciclo anterior:
+- Qué cambió: ${cierreAnalisis.que_cambio || 's/d'}
+- Qué quedó pendiente: ${cierreAnalisis.que_quedo_pendiente || 's/d'}
+- Recomendaciones del cierre: ${cierreAnalisis.recomendaciones || 's/d'}
+
+TAREA
+Diseña el plan del Ciclo ${numero_ciclo} CONSIDERANDO lo aprendido en el ciclo anterior:
+- Construye sobre lo que cambió. No repitas lo que ya está consolidado.
+- Aborda lo que quedó pendiente con un enfoque distinto si el anterior no resultó.
+- Incorpora las recomendaciones del cierre.
+- Decide la duración del ciclo entre 2 y 6 semanas según la complejidad de lo que queda por trabajar. Más simple = menos semanas. Más complejo o que requiere consolidación = más semanas.
+
+REGLAS DURAS
+- TUTEO CHILENO: tú, tienes, puedes, decides, observas. NUNCA voseo argentino: tenés, querés, hacés, fijate, podés. Esta regla es crítica.
+- Habla AL padre o madre en segunda persona singular.
+- Sin diagnósticos clínicos.
+- Sin markdown: prohibido #, ##, ###, **, *, -, _.
+- Cada tarea en máximo 90 caracteres, empezando con verbo de acción.
+- Exactamente 3 tareas por semana.
+
+FORMATO DE RESPUESTA
+Devuelve SOLO un JSON válido con esta estructura exacta:
+{
+  "porQueImporta": "2-3 frases sobre por qué importa seguir trabajando esta habilidad en este nuevo ciclo, dado lo aprendido.",
+  "duracion_semanas": 4,
+  "semanas": [
+    {"numero": 1, "titulo": "...", "accion": "...", "indicador": "...", "tareas": ["...", "...", "..."]},
+    {"numero": 2, "titulo": "...", "accion": "...", "indicador": "...", "tareas": ["...", "...", "..."]}
+  ]
+}
+
+El array semanas es la fuente de verdad: duracion_semanas debe ser igual a semanas.length. Si decides que el ciclo dura 4 semanas, genera exactamente 4 objetos en el array. Sin texto fuera del JSON. Sin cercas de markdown.`
+
+  try {
+    const raw = await llamarAPI(prompt, 4000)
+    const parsed = extraerJSON(raw)
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.semanas)) {
+      return null
+    }
+    if (parsed.semanas.length < 2 || parsed.semanas.length > 6) {
+      return null
+    }
+    return {
+      porQueImporta: typeof parsed.porQueImporta === 'string' ? parsed.porQueImporta : '',
+      duracion_semanas: parsed.semanas.length,
+      semanas: parsed.semanas
+    }
+  } catch (err) {
+    console.error('generarCicloN failed:', err)
+    return null
+  }
+}
+
 // ════════════════════════════════════════════════════════════════════
 // detectarPatronesEstructurado — alimenta SugerenciaIACard
 // Devuelve { patrones: [{ tipo, descripcion, bajada, episodios_ids, confianza }] }

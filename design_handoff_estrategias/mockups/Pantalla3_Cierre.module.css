@@ -1,0 +1,210 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-cream);
+  font-family: var(--font-family);
+  color: var(--color-ink);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--color-celebration-start), var(--color-celebration-end));
+  padding: 36px 20px 32px;
+  text-align: center;
+}
+.headerInner {
+  max-width: 480px;
+  margin: 0 auto;
+}
+.celebrationDot {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-primary-md);
+}
+.eye {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-deep);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.h1 {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 10px;
+}
+.lead {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Stats row ── */
+.stats {
+  display: flex;
+  gap: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  box-shadow: var(--shadow-card-soft);
+}
+.stat {
+  flex: 1;
+  text-align: center;
+  padding: 4px 6px;
+}
+.stat + .stat { border-left: 1px solid var(--color-border); }
+.statNum {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-primary-deep);
+}
+.statLbl {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* ── Bloques análisis ── */
+.analisis {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bloque {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 20px;
+  box-shadow: var(--shadow-card-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+.bloqueIco {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 18px;
+  color: var(--color-primary);
+  opacity: 0.75;
+}
+.h3 {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-mocha);
+}
+.p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+.ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.li {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-ink);
+  padding-left: 18px;
+  position: relative;
+}
+.li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  top: -2px;
+  color: var(--color-primary);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ── CTAs gemelas — mismo tamaño, mismo estilo, sin jerarquía visual ── */
+.ctasWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.ctasLead {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--color-ink);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cta {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--shadow-card-soft);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.cta:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-primary-border);
+  transform: translateY(-1px);
+}
+
+.ctaText { width: 100%; }
+.ctaTtl {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+.ctaSub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+@media (min-width: 520px) {
+  .ctas { flex-direction: row; }
+}
+
+.disclaimer {
+  font-size: 11px;
+  text-align: center;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin-top: 8px;
+  padding: 0 16px;
+}
