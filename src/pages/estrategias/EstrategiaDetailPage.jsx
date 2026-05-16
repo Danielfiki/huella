@@ -253,9 +253,13 @@ export default function EstrategiaDetailPage() {
           <SemanaFutura key={s.numero} numero={s.numero} titulo={s.titulo} />
         ))}
 
-        {estado !== 'activo' && semanasConReflexion.map((s) => (
-          <SemanaPasada key={s.numero} numero={s.numero} semana={s} />
-        ))}
+        {estado !== 'activo' && semanasConReflexion.map((s) => {
+          const marca =
+            estado === 'completado' ? 'ok'
+            : s.numero <= (plan.semana_actual || 1) ? 'hecha'
+            : 'no-hecha';
+          return <SemanaPasada key={s.numero} numero={s.numero} semana={s} marca={marca} />;
+        })}
       </div>
     </div>
   );

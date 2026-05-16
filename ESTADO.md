@@ -1324,3 +1324,34 @@ Tokens elegidos (reportados y usados):
 Qué quedó pendiente:
 - VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: abrir un plan completado (header pistachio "Plan completado · N semanas"), abrir uno abandonado (header neutro "Abandonado en semana N", sin banner verde), y confirmar que el textarea del check-in (en un plan activo, semana activa) ya no se puede redimensionar arrastrando la esquina.
 - Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.
+
+---
+
+### Sesión 16 mayo 2026 — ✓ por semana según estado real del plan (pendiente verificación de Daniel)
+
+Micro-commit. Daniel verificó el header y detectó que (1) el verde de completado solo vivía en el header (se pierde al scrollear) y (2) los ✓ por semana eran idénticos en completado vs abandonado, engañoso (un abandonado en sem 1 mostraba ✓ en semanas 2/3/4 que nunca se trabajaron).
+
+Componente: src/pages/estrategias/components/SemanaPasada.jsx. Usado SOLO en EstrategiaDetailPage (2 sitios: línea ~231 rama activo, línea ~256 rama cerrado). No se usa en otras pantallas.
+
+Qué se hizo:
+- SemanaPasada.jsx: nueva prop `marca` con default 'hecha' (= comportamiento legacy exacto, ✓ neutro beige). Valores:
+  - 'hecha' → ✓ con clase .num actual (sin cambios).
+  - 'ok' → ✓ con .num .numOk (verde pistachio, refuerza el estado completado a lo largo de la pantalla).
+  - 'no-hecha' → contenido vacío con .num .numEmpty (círculo/aro tenue, comunica "esta semana nunca se trabajó").
+- SemanaPasada.module.css: +`.num.numOk { background: var(--color-success-bg); color: var(--color-accent-green) }` y +`.num.numEmpty { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-light) }`. Tokens existentes, 0 nuevos. Coherente con el header: mismo --color-accent-green para completado, mismo --color-text-light/--color-border para abandonado.
+- EstrategiaDetailPage.jsx:
+  - Rama activo (semanas pasadas de plan en curso): NO se tocó. SemanaPasada sin prop marca → default 'hecha' → comportamiento legacy intacto (decisión C).
+  - Rama cerrado: marca calculada por semana:
+    * estado === 'completado' → 'ok' en TODAS las semanas.
+    * estado === 'abandonado' → s.numero <= (plan.semana_actual || 1) ? 'hecha' : 'no-hecha'. N = semana_actual del ciclo al cierre (el shim lo aplana en la raíz).
+- estadoPlan() es la fuente de verdad del estado (decisión D). No se inspeccionó cierre_analisis directo.
+- 0 cambios en HeaderMocha, BannerCompletado, SemanaActiva, lógica Fase 4.
+
+Stat del diff:
+- SemanaPasada.jsx: +prop marca + numClass + contenido condicional del ✓.
+- SemanaPasada.module.css: +2 clases (numOk, numEmpty).
+- EstrategiaDetailPage.jsx: rama cerrado calcula marca por semana (la rama activo intacta).
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: plan completado → ✓ verdes en las N semanas; plan abandonado en sem 1 → ✓ neutro solo en sem 1, círculos vacíos en 2/3/4.
+- Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.
