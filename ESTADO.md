@@ -1233,14 +1233,20 @@ Daniel confirmó visualmente todo en producción esta sesión:
 - ✅ Fase 4 Bloque 2C — abandonar y reemplazar — VERIFICADO
 - ✅ Fase 4 Bloque 3 — estadoPlan — VERIFICADO
 - ✅ Mejora UX loader (rotación 5.5s + copy honesto + retry silencioso) — VERIFICADO
+- ✅ Clic en planes pasados abre detalle (commit 40b3e38) — VERIFICADO 16 mayo
+- ✅ Header de plan cerrado con badge según estado + textarea resize:none (commit cfe91f1) — VERIFICADO 16 mayo
+- ✅ ✓ por semana según estado real: verde en completado, círculo vacío en semanas no trabajadas de abandonado (commit 91e1f68) — VERIFICADO 16 mayo
 
 **🟢 FASE 4 COMPLETA — CERRADA.** El cliente lee y escribe íntegramente sobre el modelo de ciclos (estrategia_ciclos). Las columnas legacy de `estrategias` ya no se leen ni se escriben; quedan congeladas hasta el DROP de Fase 2b.
 
 ## Pendientes UX post-Fase 4
 
-- [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de `LoadingDignificado`, presente en `EstrategiaNuevaPage.jsx` y `EstrategiasPage.jsx`) el copy original: **`"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`**. Copy interim actual (sin push): **`"Tarda menos de un minuto. Quédate por acá mientras tanto."`**.
-- [x] ~~**Detalle de plan pasado no abre.**~~ RESUELTO 16 mayo 2026 (pendiente verificación de Daniel). Ver bitácora "Sesión 16 mayo 2026 — Clic en plan pasado abre detalle" más abajo.
-- [x] ~~**Header del detalle no distingue estado del plan + textarea redimensionable.**~~ RESUELTO 16 mayo 2026 (pendiente verificación de Daniel). 4 ajustes: header completado/abandonado con texto y barra propios, textarea check-in sin resize. Ver bitácora "Sesión 16 mayo 2026 — Detalle de plan cerrado + textarea resize" más abajo.
+- [x] ~~Detalle de plan pasado abre~~ — RESUELTO Y VERIFICADO (commit 40b3e38).
+- [x] ~~Header del detalle distingue completado vs abandonado~~ — RESUELTO Y VERIFICADO (commit cfe91f1).
+- [x] ~~Barra del header muestra estado correcto en plan cerrado~~ — RESUELTO Y VERIFICADO (commit cfe91f1).
+- [x] ~~Textarea del check-in semanal no redimensionable~~ — RESUELTO Y VERIFICADO (commit cfe91f1).
+- [x] ~~✓ por semana refleja estado real~~ — RESUELTO Y VERIFICADO (commit 91e1f68).
+- [ ] **Notificaciones push reales** — ÚNICO pendiente UX abierto. Cuando se implementen, restaurar en el loader (prop `sub` de `LoadingDignificado`, en `EstrategiaNuevaPage.jsx` y `EstrategiasPage.jsx`) el copy original: **`"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`**. Copy interim actual (sin push): **`"Tarda menos de un minuto. Quédate por acá mientras tanto."`**.
 
 ## Deudas técnicas
 
@@ -1252,13 +1258,12 @@ Daniel confirmó visualmente todo en producción esta sesión:
 
 ## Próximo trabajo
 
-1. **Pendientes UX chicos** (ver sección "Pendientes UX post-Fase 4"): queda solo el copy con notificaciones push. (Clic en plan pasado → RESUELTO 16 mayo, pendiente verificación.)
-2. **Fase 5 — 5 pantallas nuevas** (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso; P5 PDF pospuesto). Workflow Claude Design. Requiere integrar archivos que hoy viven solo en local:
-   - `src/services/anthropic.js` — funciones `analizarCierreCiclo` y `generarCicloN` de Fase 3.
-   - `src/App.jsx` — viewer de mockups (`/mockups`).
-   - carpeta `design_handoff_estrategias/` — mockups + SQL del rediseño.
-3. **Fase 2b — DROP destructivo** de las 8 columnas legacy de `estrategias` (`plan`, `semana_actual`, `completado_at`, `semana_activa`, `total_semanas`, `tareas`, `abandonado_at`, `checkins`). Ventana corta de mantenimiento, requiere backup previo. SOLO cuando Fase 5 esté estable. Antes del DROP: resolver la deuda del `ORDER BY`. NUNCA re-correr el 003 después de Fase 4 salvo dentro de esta ventana, justo antes del DROP.
-4. **Fase 6 — limpieza**: eliminar viewer `/mockups`, mover catálogo a `src/lib/habilidades.js`, borrar zombies y dead code, limpiar las 3 policies legacy de `estrategia_sugerencias_descartadas`.
+1. **Fase 5 — 5 pantallas nuevas.** Housekeeping ya completo (commit fe78a37: `anthropic.js` Fase 3 + `App.jsx` viewer + `design_handoff_estrategias/` integrados al repo).
+   - **Siguiente paso concreto: arrancar implementación de P3 Cierre** — la pantalla más valiosa y la que mejor aprovecha Fase 4 + las funciones `analizarCierreCiclo` y `generarCicloN` ya pusheadas.
+   - Orden tentativo después de P3: P4 Modal Ciclo 2 → P1 Lista → P2 Detalle → P6 Panel descanso. P5 PDF pospuesto.
+2. **Notificaciones push reales** (proyecto mediano-grande: Service Workers + backend para disparar push + permisos de navegador). Ver "Pendientes UX post-Fase 4" para el copy a restaurar.
+3. **Fase 2b — DROP destructivo** de las 8 columnas legacy de `estrategias` (`plan`, `semana_actual`, `completado_at`, `semana_activa`, `total_semanas`, `tareas`, `abandonado_at`, `checkins`). Ventana corta de mantenimiento, requiere backup previo. SOLO cuando Fase 5 esté estable. Antes del DROP: resolver la deuda del `ORDER BY` (cambiar a `created_at` o `estrategia_ciclos.fecha_inicio`). NUNCA re-correr el 003 salvo dentro de esta ventana, justo antes del DROP.
+4. **Fase 6 — limpieza**: eliminar viewer `/mockups` (ahora público en producción), mover catálogo a `src/lib/habilidades.js`, borrar zombies y dead code, limpiar las 3 policies legacy de `estrategia_sugerencias_descartadas`.
 
 ---
 
