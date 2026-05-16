@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { estadoPlan, mesCortoDe } from '../helpers';
 import { canModify } from '../../../utils/authorDisplay';
@@ -6,6 +7,7 @@ import styles from './DrawerPasados.module.css';
 
 export default function DrawerPasados({ planes, onEliminar }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   return (
     <div className={styles.box}>
@@ -19,7 +21,11 @@ export default function DrawerPasados({ planes, onEliminar }) {
           {planes.map((p) => {
             const estado = estadoPlan(p);
             return (
-              <li key={p.id} className={styles.item}>
+              <li
+                key={p.id}
+                className={styles.item}
+                onClick={() => navigate(`/estrategias/${p.id}`)}
+              >
                 <span className={`${styles.ic} ${estado === 'abandonado' ? styles.ab : ''}`}>
                   {estado === 'completado' ? '✓' : '✕'}
                 </span>
@@ -28,7 +34,11 @@ export default function DrawerPasados({ planes, onEliminar }) {
                 </span>
                 <span className={styles.meta}>{mesCortoDe(p.created_at)}</span>
                 {onEliminar && canModify(p.userId, user?.id) && (
-                  <button className={styles.del} onClick={() => onEliminar(p.id)} aria-label="Eliminar">✕</button>
+                  <button
+                    className={styles.del}
+                    onClick={(e) => { e.stopPropagation(); onEliminar(p.id); }}
+                    aria-label="Eliminar"
+                  >✕</button>
                 )}
               </li>
             );

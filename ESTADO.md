@@ -1239,7 +1239,7 @@ Daniel confirmó visualmente todo en producción esta sesión:
 ## Pendientes UX post-Fase 4
 
 - [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de `LoadingDignificado`, presente en `EstrategiaNuevaPage.jsx` y `EstrategiasPage.jsx`) el copy original: **`"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`**. Copy interim actual (sin push): **`"Tarda menos de un minuto. Quédate por acá mientras tanto."`**.
-- [ ] **Detalle de plan pasado no abre.** En la sección "Lo que ya trabajaste" (DrawerPasados), el clic sobre un plan completado o abandonado no abre su detalle. Deuda PREEXISTENTE confirmada por Daniel — **NO es regresión de Fase 4 Bloque 3**. Hay que cablear la navegación al detalle del plan al hacer clic.
+- [x] ~~**Detalle de plan pasado no abre.**~~ RESUELTO 16 mayo 2026 (pendiente verificación de Daniel). Ver bitácora "Sesión 16 mayo 2026 — Clic en plan pasado abre detalle" más abajo.
 
 ## Deudas técnicas
 
@@ -1251,10 +1251,37 @@ Daniel confirmó visualmente todo en producción esta sesión:
 
 ## Próximo trabajo
 
-1. **Pendientes UX chicos** (ver sección "Pendientes UX post-Fase 4"): copy con notificaciones push, y clic en plan pasado abre su detalle.
+1. **Pendientes UX chicos** (ver sección "Pendientes UX post-Fase 4"): queda solo el copy con notificaciones push. (Clic en plan pasado → RESUELTO 16 mayo, pendiente verificación.)
 2. **Fase 5 — 5 pantallas nuevas** (P1 Lista, P2 Detalle, P3 Cierre, P4 Modal Ciclo 2, P6 Panel descanso; P5 PDF pospuesto). Workflow Claude Design. Requiere integrar archivos que hoy viven solo en local:
    - `src/services/anthropic.js` — funciones `analizarCierreCiclo` y `generarCicloN` de Fase 3.
    - `src/App.jsx` — viewer de mockups (`/mockups`).
    - carpeta `design_handoff_estrategias/` — mockups + SQL del rediseño.
 3. **Fase 2b — DROP destructivo** de las 8 columnas legacy de `estrategias` (`plan`, `semana_actual`, `completado_at`, `semana_activa`, `total_semanas`, `tareas`, `abandonado_at`, `checkins`). Ventana corta de mantenimiento, requiere backup previo. SOLO cuando Fase 5 esté estable. Antes del DROP: resolver la deuda del `ORDER BY`. NUNCA re-correr el 003 después de Fase 4 salvo dentro de esta ventana, justo antes del DROP.
 4. **Fase 6 — limpieza**: eliminar viewer `/mockups`, mover catálogo a `src/lib/habilidades.js`, borrar zombies y dead code, limpiar las 3 policies legacy de `estrategia_sugerencias_descartadas`.
+
+---
+
+### Sesión 16 mayo 2026 — Clic en plan pasado abre detalle (pendiente verificación de Daniel)
+
+Pendiente UX preexistente (NO regresión de Fase 4). Resuelto con scope mínimo.
+
+Qué se hizo:
+- src/pages/estrategias/components/DrawerPasados.jsx:
+  - Importado useNavigate; instanciado navigate.
+  - El `<li>` de cada plan pasado ahora tiene onClick → navigate(`/estrategias/${p.id}`).
+  - El botón de eliminar (✕) ahora hace e.stopPropagation() antes de llamar onEliminar, para que el clic en eliminar no dispare también la navegación.
+- src/pages/estrategias/components/DrawerPasados.module.css:
+  - .item: agregado cursor: pointer.
+  - Nueva regla .item:hover { background: var(--color-surface-alt) } (token existente con override dark) para feedback de que es clickeable.
+
+Hallazgo (decisión B del prompt resultó innecesaria):
+- EstrategiaDetailPage YA renderiza bien cualquier id (activo/completado/abandonado), sin rama especial. Para un plan COMPLETADO muestra BannerCompletado verde + semanas como SemanaPasada (solo lectura). Para un ABANDONADO el BannerCompletado NO aparece (está condicionado a estado==='completado'), y las semanas se ven como SemanaPasada. NO hay bug de banner verde incorrecto en abandonados → no hubo que adaptar el banner. Modo solo lectura (decisión A) y botón atrás (decisión C) ya se cumplían sin tocar nada.
+- Cosmético opcional NO incluido (fuera de scope): el detalle de un plan abandonado no comunica visualmente que fue abandonado (solo no muestra el banner). Mejora futura si Daniel la pide.
+
+Stat del diff:
+- DrawerPasados.jsx: +import useNavigate, +navigate, onClick en `<li>`, stopPropagation en botón eliminar.
+- DrawerPasados.module.css: +2 (cursor pointer + regla hover).
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: en "Lo que ya trabajaste", tocar un plan completado y uno abandonado, confirmar que abren su detalle y que el botón atrás vuelve a Estrategias.
+- Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.
