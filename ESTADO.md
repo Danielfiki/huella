@@ -1240,6 +1240,7 @@ Daniel confirmó visualmente todo en producción esta sesión:
 
 - [ ] **Notificaciones push reales.** Cuando se implementen, restaurar en el loader (prop `sub` de `LoadingDignificado`, presente en `EstrategiaNuevaPage.jsx` y `EstrategiasPage.jsx`) el copy original: **`"Tarda menos de un minuto. Puedes cerrar la app — te avisamos cuando esté listo."`**. Copy interim actual (sin push): **`"Tarda menos de un minuto. Quédate por acá mientras tanto."`**.
 - [x] ~~**Detalle de plan pasado no abre.**~~ RESUELTO 16 mayo 2026 (pendiente verificación de Daniel). Ver bitácora "Sesión 16 mayo 2026 — Clic en plan pasado abre detalle" más abajo.
+- [x] ~~**Header del detalle no distingue estado del plan + textarea redimensionable.**~~ RESUELTO 16 mayo 2026 (pendiente verificación de Daniel). 4 ajustes: header completado/abandonado con texto y barra propios, textarea check-in sin resize. Ver bitácora "Sesión 16 mayo 2026 — Detalle de plan cerrado + textarea resize" más abajo.
 
 ## Deudas técnicas
 
@@ -1284,4 +1285,42 @@ Stat del diff:
 
 Qué quedó pendiente:
 - VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: en "Lo que ya trabajaste", tocar un plan completado y uno abandonado, confirmar que abren su detalle y que el botón atrás vuelve a Estrategias.
+- Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.
+
+---
+
+### Sesión 16 mayo 2026 — Detalle de plan cerrado + textarea resize (pendiente verificación de Daniel)
+
+Daniel verificó el clic en planes pasados y reportó 4 problemas UX. Resueltos en 1 commit.
+
+Diagnóstico: los 3 primeros problemas eran el MISMO bug — HeaderMocha siempre renderizaba "Sem N/M" con barras tangerine, sin distinguir el estado del plan. Un solo fix (header según estadoPlan) resuelve los 3.
+
+Qué se hizo:
+- src/pages/estrategias/components/HeaderMocha.jsx: el strip de progreso ahora ramifica por progreso.variante:
+  - 'completado': todas las barras con clase doneOk (pistachio). Label = progreso.label.
+  - 'abandonado': barras llenas hasta progreso.actual con clase doneMuted (neutro). Label = progreso.label.
+  - default (activo o cualquier caller que no pase variante): comportamiento legacy intacto (done/now, label "Sem N/M" por fallback `progreso.label || ...`). Cero ruptura para otros usos del componente compartido.
+- src/pages/estrategias/components/HeaderMocha.module.css: + `.bar i.doneOk { background: var(--color-accent-green) }` (pistachio, verde de éxito de la paleta Mocha Mix, con override dark) y `.bar i.doneMuted { background: var(--color-text-light) }` (marrón neutro apagado, sin connotación de error — NO se usó Strawberry). Tokens existentes, 0 nuevos.
+- src/pages/estrategias/EstrategiaDetailPage.jsx: la prop progreso se arma según estado (de estadoPlan(), ya disponible):
+  - completado → { variante:'completado', label:`Plan completado · N semanas` } (N = plan.total_semanas = duracion_semanas del ciclo). Todas las barras llenas.
+  - abandonado → { variante:'abandonado', label:`Abandonado en semana N` } (N = plan.semana_actual al cierre). Barras llenas hasta N.
+  - activo → { actual, total } igual que antes (decisión A: sin cambios).
+- src/pages/estrategias/components/SemanaActiva.module.css:17: agregado resize: none a `.checkin textarea` (único textarea de check-in; SemanaActiva solo se renderiza en planes activos, no hay otros que reportar).
+
+Sobre el bug #2 (banner verde no aparece al volver desde "Lo que ya trabajaste"):
+- BannerCompletado NO se tocó (decisión F). Sigue renderizándose en EstrategiaDetailPage:218 cuando estado==='completado', como complemento.
+- La inconsistencia se resuelve porque ahora el HEADER PERMANENTE siempre comunica "Plan completado · N semanas" en barra pistachio, haya o no banner. El header es la fuente visual permanente; el banner es complementario.
+
+Stat del diff:
+- HeaderMocha.jsx: render del strip ramificado por variante + label con fallback.
+- HeaderMocha.module.css: +2 clases (doneOk, doneMuted).
+- EstrategiaDetailPage.jsx: prop progreso calculada por estado (IIFE).
+- SemanaActiva.module.css: +resize: none (1 propiedad).
+
+Tokens elegidos (reportados y usados):
+- Completado / pistachio → var(--color-accent-green) (#8FA840, dark #8FA840). No existe token literal "pistachio"; éste es el verde de éxito de la paleta.
+- Abandonado / neutro → var(--color-text-light) (#B0987A claro, #7A6050 dark). Preferido sobre --color-border (muy tenue) y --color-muted (peor lectura de "lleno").
+
+Qué quedó pendiente:
+- VERIFICACIÓN EN PRODUCCIÓN POR DANIEL: abrir un plan completado (header pistachio "Plan completado · N semanas"), abrir uno abandonado (header neutro "Abandonado en semana N", sin banner verde), y confirmar que el textarea del check-in (en un plan activo, semana activa) ya no se puede redimensionar arrastrando la esquina.
 - Único pendiente UX que queda abierto: copy del loader con notificaciones push reales.

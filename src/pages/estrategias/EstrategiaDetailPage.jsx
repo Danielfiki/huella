@@ -199,7 +199,17 @@ export default function EstrategiaDetailPage() {
       <HeaderMocha
         titulo={plan.habilidad_nombre || plan.habilidad}
         onBack={() => navigate('/estrategias')}
-        progreso={{ actual, total: plan.total_semanas || 4 }}
+        progreso={(() => {
+          const dur = plan.total_semanas || 4;
+          if (estado === 'completado') {
+            return { actual: dur, total: dur, variante: 'completado', label: `Plan completado · ${dur} ${dur === 1 ? 'semana' : 'semanas'}` };
+          }
+          if (estado === 'abandonado') {
+            const n = plan.semana_actual || 1;
+            return { actual: n, total: dur, variante: 'abandonado', label: `Abandonado en semana ${n}` };
+          }
+          return { actual, total: dur };
+        })()}
       />
 
       {episodiosDetonantes.length > 0 && (

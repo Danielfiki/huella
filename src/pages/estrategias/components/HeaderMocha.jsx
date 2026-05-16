@@ -33,11 +33,22 @@ export default function HeaderMocha({ titulo, onBack, stats, clinical, progreso,
       {progreso && (
         <div className={styles.progStrip}>
           <div className={styles.bar}>
-            {Array.from({ length: progreso.total }).map((_, i) => (
-              <i key={i} className={i + 1 < progreso.actual ? styles.done : i + 1 === progreso.actual ? styles.now : ''} />
-            ))}
+            {Array.from({ length: progreso.total }).map((_, i) => {
+              const n = i + 1;
+              let cls = '';
+              if (progreso.variante === 'completado') {
+                cls = styles.doneOk;
+              } else if (progreso.variante === 'abandonado') {
+                cls = n <= progreso.actual ? styles.doneMuted : '';
+              } else {
+                cls = n < progreso.actual ? styles.done : n === progreso.actual ? styles.now : '';
+              }
+              return <i key={i} className={cls} />;
+            })}
           </div>
-          <span className={styles.barLbl}>Sem {progreso.actual}/{progreso.total}</span>
+          <span className={styles.barLbl}>
+            {progreso.label || `Sem ${progreso.actual}/${progreso.total}`}
+          </span>
         </div>
       )}
       {episodiosOrigen && episodiosOrigen.length > 0 && (
