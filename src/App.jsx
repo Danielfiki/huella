@@ -14,6 +14,7 @@ import NuevoPage from './pages/nuevo/NuevoPage'
 import EstrategiasPage from './pages/estrategias/EstrategiasPage'
 import EstrategiaNuevaPage from './pages/estrategias/EstrategiaNuevaPage'
 import EstrategiaDetailPage from './pages/estrategias/EstrategiaDetailPage'
+import EstrategiaCierrePage from './pages/estrategias/EstrategiaCierrePage'
 import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
 import PerfilPage from './pages/perfil/PerfilPage'
@@ -160,6 +161,7 @@ export default function App() {
                 <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
                 <Route path="estrategias/nuevo" element={<PageErrorBoundary><EstrategiaNuevaPage /></PageErrorBoundary>} />
                 <Route path="estrategias/:id" element={<PageErrorBoundary><EstrategiaDetailPage /></PageErrorBoundary>} />
+                <Route path="estrategias/:id/cierre/:cicloNumero" element={<PageErrorBoundary><EstrategiaCierrePage /></PageErrorBoundary>} />
                 <Route path="hitos"       element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
                 <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />

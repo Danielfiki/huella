@@ -150,6 +150,7 @@ export default function EstrategiaDetailPage() {
 
     const dur = cicloActivo.duracion_semanas ?? plan.total_semanas ?? 4;
     const esUltima = actual + 1 > dur;
+    const numeroCicloCerrado = cicloActivo.numero_ciclo;
     const newCheckin = {
       semana_numero: actual,
       reflexion,
@@ -187,6 +188,9 @@ export default function EstrategiaDetailPage() {
 
       setReflexion('');
       await reloadEstrategias();
+      if (esUltima) {
+        navigate(`/estrategias/${id}/cierre/${numeroCicloCerrado}`);
+      }
     } catch {
       setAvanzarErr('No se pudo guardar. Verifica tu conexión e intenta de nuevo.');
     } finally {
