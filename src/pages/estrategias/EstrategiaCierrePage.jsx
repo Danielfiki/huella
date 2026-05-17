@@ -5,11 +5,16 @@ import { supabase } from '../../lib/supabase'
 import { analizarCierreCiclo } from '../../services/anthropic'
 import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync'
 import LoadingDignificado from './components/LoadingDignificado'
+import Pantalla3_Cierre from './Pantalla3_Cierre'
 
-// Bloque 2 de Fase 5 P3 Cierre. Render crudo a propósito: la UI bonita
-// (mockup Pantalla3_Cierre) llega en el Bloque 3. Aquí solo verificamos
-// el flujo de punta a punta: montar tras el cierre, generar el análisis
-// con la IA, persistirlo en estrategia_ciclos.cierre_analisis y mostrarlo.
+// EstrategiaCierrePage.jsx · Bloque 3 de Fase 5 P3 Cierre.
+// Contenedor con toda la lógica: carga del plan y ciclo, generación
+// del análisis IA con retryAsync, persistencia en
+// estrategia_ciclos.cierre_analisis, manejo de estados (inicial /
+// cargando / listo / error / abandonado), guarda por
+// motivo === 'abandonado' e idempotencia con yaGenerado.
+// El estado 'listo' renderiza <Pantalla3_Cierre /> que es la UI
+// visual entregada por Claude Design.
 
 const PASOS_LOADING_CIERRE = [
   'Releyendo tus reflexiones',
@@ -182,28 +187,17 @@ export default function EstrategiaCierrePage() {
 
   // estado === 'listo'
   return (
-    <div style={{ padding: 24, maxWidth: 480, margin: '0 auto', fontFamily: 'inherit' }}>
-      <h2>Cierre del ciclo {ciclo.numero_ciclo} (BLOQUE 2 — render crudo)</h2>
-      <p><strong>Plan:</strong> {plan.habilidad_nombre || plan.habilidad}</p>
-      <p><strong>Hijo/a:</strong> {hijo?.nombre || '—'}</p>
-      <p><strong>Duración:</strong> {ciclo.duracion_semanas} semanas</p>
-      <p><strong>Notas:</strong> {notas_bitacora.length}</p>
-      <p><strong>Episodios vinculados:</strong> {episodios_vinculados.length}</p>
-
-      <h3>Qué cambió</h3>
-      <p>{analisis?.que_cambio || '(vacío)'}</p>
-
-      <h3>Qué quedó pendiente</h3>
-      <p>{analisis?.que_quedo_pendiente || '(vacío)'}</p>
-
-      <h3>Recomendaciones</h3>
-      {analisis?.recomendaciones?.length > 0 ? (
-        <ul>{analisis.recomendaciones.map((r, i) => <li key={i}>{r}</li>)}</ul>
-      ) : <p>(vacío)</p>}
-
-      <div style={{ marginTop: 32 }}>
-        <button onClick={() => navigate(`/estrategias/${id}`)}>Volver al detalle</button>
-      </div>
-    </div>
+    <Pantalla3_Cierre
+      plan={{
+        habilidad_nombre: plan.habilidad_nombre || plan.habilidad,
+        habilidad_id: plan.habilidad_id || plan.habilidad,
+        total_semanas: ciclo.duracion_semanas,
+        notas_count: notas_bitacora.length,
+        episodios_count: episodios_vinculados.length,
+      }}
+      cierreAnalisis={analisis}
+      hijoNombre={hijo?.nombre ?? 'tu hijo'}
+      cicloNumero={ciclo.numero_ciclo}
+    />
   )
 }

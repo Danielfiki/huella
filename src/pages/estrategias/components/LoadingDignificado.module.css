@@ -5,25 +5,33 @@
 .ttl { font-family: var(--font-heading); font-weight: 700; font-size: 19px; color: var(--color-ink); line-height: 1.2; }
 .sub { font-size: 13px; color: var(--color-muted); margin: 0; line-height: 1.5; }
 .fraseWrap {
-  width: 100%;
-  text-align: center;
-  padding: 6px 4px;
-  min-height: 64px;
+  margin: 8px 0 0;
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-celebration-start) 100%);
+  border-left: 3px solid var(--color-accent-green);
+  box-shadow: var(--shadow-card-medium, 0 6px 18px rgba(42, 26, 14, 0.06));
+  border-radius: var(--radius-lg, 20px);
+  padding: 18px 20px;
   transition: opacity 300ms ease;
+  text-align: center;
+  min-height: 64px;
 }
 .fraseTexto {
-  font-family: var(--font-heading);
-  font-size: 16px;
+  font-family: var(--font-family);
   font-style: italic;
-  font-weight: 500;
-  color: var(--color-ink);
-  line-height: 1.5;
-  margin: 0 0 7px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
 }
 .fraseAutor {
-  font-size: 13px;
-  color: var(--color-mocha);
-  font-weight: 500;
+  font-family: var(--font-family);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-top: 10px;
 }
 .steps { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .steps li { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; transition: opacity 0.2s; }
