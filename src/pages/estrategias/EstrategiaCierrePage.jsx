@@ -49,6 +49,8 @@ export default function EstrategiaCierrePage() {
   const [estado, setEstado] = useState('inicial')
   const [analisis, setAnalisis] = useState(null)
 
+  const yaGenerado = Boolean(ciclo?.cierre_analisis?.que_cambio)
+
   const hijo = useMemo(
     () => (state.hijos || []).find((h) => h.id === plan?.hijo_id),
     [state.hijos, plan?.hijo_id]
@@ -77,21 +79,22 @@ export default function EstrategiaCierrePage() {
   useEffect(() => {
     if (!plan || !ciclo) return
     if (fueAbandonado) return
-    if (generadoRef.current) return
-
     // Idempotencia: si ya hay análisis IA persistido, no re-llamamos.
-    if (ciclo.cierre_analisis?.que_cambio) {
+    if (yaGenerado) {
       setAnalisis(ciclo.cierre_analisis)
       setEstado('listo')
       return
     }
+    if (generadoRef.current) return
 
     let cancelado = false
     generadoRef.current = true
 
     async function generar() {
       setEstado('cargando')
+      console.log('[P3 Cierre] generar() iniciado para ciclo', ciclo?.id)
       try {
+        console.log('[P3 Cierre] llamando analizarCierreCiclo...')
         const resultado = await retryAsync(
           () => analizarCierreCiclo({
             hijo: hijo
@@ -109,6 +112,7 @@ export default function EstrategiaCierrePage() {
           }),
           { esReintentable: esErrorIAReintentable }
         )
+        console.log('[P3 Cierre] analizarCierreCiclo respondió:', resultado)
         if (cancelado) return
 
         const { error: dbErr } = await supabase
@@ -134,7 +138,7 @@ export default function EstrategiaCierrePage() {
 
     generar()
     return () => { cancelado = true }
-  }, [plan, ciclo, fueAbandonado, hijo, notas_bitacora, episodios_vinculados, reloadEstrategias])
+  }, [plan?.id, ciclo?.id, fueAbandonado, yaGenerado])
 
   if (!plan || !ciclo) {
     return <div style={{ padding: 24 }}>Cargando…</div>
