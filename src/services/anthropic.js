@@ -522,7 +522,9 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adi
  * @param {Object} args.ciclo - { numero_ciclo, plan, fecha_inicio, fecha_cierre, duracion_semanas }
  * @param {Array}  args.notas_bitacora - [{ contenido, created_at, ... }]
  * @param {Array}  args.episodios_vinculados - [{ fecha, tipo, intensidad, gatillantes, ... }]
- * @returns {Promise<{que_cambio: string, que_quedo_pendiente: string, recomendaciones: string}>}
+ * @returns {Promise<{que_cambio: string, que_quedo_pendiente: string, recomendaciones: string[]}>}
+ *          recomendaciones es SIEMPRE un array de strings (posiblemente vacío);
+ *          la UI (P3 Cierre) decide cómo listarlo.
  */
 export async function analizarCierreCiclo({ hijo, ciclo, notas_bitacora = [], episodios_vinculados = [] }) {
   const marco = marcoEdad(hijo?.edad)
@@ -570,7 +572,7 @@ TAREA
 Genera un análisis del cierre de este ciclo con TRES secciones:
 1. que_cambio: qué evolución observable hubo durante este ciclo (en el hijo/a, en ${pronombre} ${articulo}, en la dinámica familiar). Concreto, observacional, sin diagnóstico.
 2. que_quedo_pendiente: qué del plan no se logró, qué patrones siguen presentes, qué obstáculos aparecieron. Honesto pero sin culpabilizar.
-3. recomendaciones: 2 a 3 sugerencias prácticas y específicas para el próximo paso (un nuevo ciclo o un cierre definitivo de esta habilidad).
+3. recomendaciones: 3 a 4 sugerencias prácticas y específicas para el próximo paso (un nuevo ciclo o un cierre definitivo de esta habilidad). Cada recomendación es una frase corta y accionable de 1 a 2 oraciones, NO un párrafo. Concreta, no abstracta. Dirigida al papá o mamá en segunda persona con tuteo chileno ("fíjate", "intenta", "prueba", "ten en cuenta"). Sin numeración dentro del texto del ítem (nada de "1.", "2.") — la UI decide cómo listarlas.
 
 REGLAS DURAS
 - TUTEO CHILENO: tú, tienes, puedes, decides, observas. NUNCA voseo argentino: nada de tenés, querés, hacés, fijate, podés. Esta regla es crítica.
@@ -578,32 +580,35 @@ REGLAS DURAS
 - Sin diagnósticos clínicos del hijo/a ni del adulto.
 - Sin frases cliché ("recuerda que cada niño es único", "estás haciendo un gran trabajo", "lo importante es el proceso").
 - Sin markdown: prohibido #, ##, ###, **, *, -, _.
-- Cada sección entre 2 y 4 oraciones. Concretas, observacionales.
-- Sin numerar las recomendaciones con "1.", "2." dentro del string — usa frases corridas o conectores.
+- que_cambio y que_quedo_pendiente: entre 2 y 4 oraciones cada una. Concretas, observacionales.
+- recomendaciones: 3 a 4 ítems, cada uno una frase corta y accionable (1 a 2 oraciones), sin numeración dentro del texto del ítem.
 
 FORMATO DE RESPUESTA
 Devuelve SOLO un JSON válido con esta estructura exacta:
 {
   "que_cambio": "...",
   "que_quedo_pendiente": "...",
-  "recomendaciones": "..."
+  "recomendaciones": ["primera recomendación accionable...", "segunda recomendación accionable...", "tercera recomendación accionable..."]
 }
+recomendaciones DEBE ser un array de strings (3 a 4 elementos), nunca un string único.
 Sin texto antes ni después del JSON. Sin cercas de markdown. Sin comentarios.`
 
   try {
     const raw = await llamarAPI(prompt, 2000)
     const parsed = extraerJSON(raw)
     if (!parsed || typeof parsed !== 'object') {
-      return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: '' }
+      return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: [] }
     }
     return {
       que_cambio: typeof parsed.que_cambio === 'string' ? parsed.que_cambio : '',
       que_quedo_pendiente: typeof parsed.que_quedo_pendiente === 'string' ? parsed.que_quedo_pendiente : '',
-      recomendaciones: typeof parsed.recomendaciones === 'string' ? parsed.recomendaciones : ''
+      recomendaciones: Array.isArray(parsed.recomendaciones)
+        ? parsed.recomendaciones.filter((item) => typeof item === 'string' && item.trim().length > 0)
+        : []
     }
   } catch (err) {
     console.error('analizarCierreCiclo failed:', err)
-    return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: '' }
+    return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: [] }
   }
 }
 
