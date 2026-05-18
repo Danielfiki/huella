@@ -1484,3 +1484,44 @@ Opciones presentadas:
 - **D)** Otra cosa
 
 Próxima sesión arranca con la decisión de Daniel sobre A/B/C/D.
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 18 mayo 2026 (tarde) — FASE 6 LIMPIEZA ESTRATEGIAS
+# ═══════════════════════════════════════════════════════════════
+
+Decisión de Daniel: opción **A) Limpieza Fase 6**.
+
+## RESUELTO ESTA SESIÓN (3 commits)
+
+**Item 1 — "Eliminar plan" restaurado en P2 Detalle** (commit `82793e8`)
+- Diagnóstico: el modal de borrado vivía en `EstrategiasPage.jsx` (P1 Lista) y era inalcanzable (el nuevo `EstrategiaActivaCard` ni recibe `onEliminar`).
+- Solución: modal **autocontenido nuevo en P2 Detalle** (no se tocó P1 Lista para esto). Acción de texto secundaria "Eliminar este plan" al final del detalle (link muted subrayado, no rojo, con separador y margen amplio). Al confirmar: `deleteEstrategia(plan.id)` → navega a `/estrategias`. Manejo de error inline + estado "Eliminando…". Estilos nuevos en `EstrategiaDetailPage.module.css` con tokens (`--color-danger` en vez del `#D94040` hardcodeado del modal viejo).
+
+**Item 2 — DrawerPasados huérfano eliminado** (commit `ad50ed5`)
+- Confirmado sin imports externos en `src/` (solo su auto-import de CSS). Borrados `DrawerPasados.jsx` + `.module.css`.
+- Nota: quedan referencias en `design_handoff_estrategias/` (bundle de handoff, fuera del build) — intencionalmente no tocadas.
+
+**Item 3 — Código muerto limpiado + onEliminar consolidado** (commit `e1dcc33`)
+- `EstrategiaDetailPage.jsx`: removidos `useMemo episodiosDetonantes` y estado `toggleErr` (nunca renderizados). El rollback optimista del toggle da feedback visual implícito (comentado en el código).
+- `EstrategiaDetailPage.module.css`: borradas clases huérfanas `.naceDe`, `.naceDeLabel`, `.naceDeChip`, `.errToggle`.
+- `EstrategiasPage.jsx` (P1 Lista): **Daniel autorizó tocarlo** para limpiar el modal muerto. Removidos `confirmDeleteId`, `handleEliminar`, `onEliminar={setConfirmDeleteId}`, `deleteEstrategia` del destructure y el JSX del modal inalcanzable. Borradas clases CSS huérfanas `.modal*` de `EstrategiasPage.module.css`.
+
+Build verde en los 3 commits. Todo pusheado a `main`.
+
+## ⚠️ FALTA VERIFICACIÓN EN PRODUCCIÓN POR DANIEL
+
+Nada de esto está verificado en producción. Daniel debe probar en huella-theta.vercel.app:
+1. Entrar a un plan (P2 Detalle) → "Eliminar este plan" al final → modal → Cancelar (no borra) y Eliminar (borra, vuelve a la lista, el plan ya no aparece).
+2. Probar con plan activo y con plan pasado (completado/abandonado).
+3. Confirmar que P1 Lista y P3 Cierre siguen funcionando igual (no se tocó su comportamiento visible).
+
+## DEUDAS QUE QUEDAN PARA FASE 6 (no implementadas, fuera de alcance de esta sesión)
+
+- **Wiring muerto restante en `EstrategiasPage.jsx`**: `authorName={getAuthorDisplay(...)}` y el enrichment `planesActivosEnriquecidos` (`episodios_detonantes`) se pasan a `EstrategiaActivaCard`, que ya no los usa. Solo se consolidó `onEliminar` esta sesión.
+- Deuda 4 previa: modal de confirmación de cierre eliminado en `SemanaActiva` (decisión intencional del bundle P3). Registrado por si se quiere recuperar.
+- Deuda 7 previa: auditar `onGenerarTareas`/`generandoTareas`/`avanzando`/`tareaKey` en `EstrategiaDetailPage` — siguen vivos y usados, pero conviene revisar si hay muertos puros.
+- Deuda 8 previa: `#C19E8C` hardcodeado en gradient del avatar de `EstrategiaActivaCard.module.css` (sin token equivalente).
+- Deuda 9 previa: `ciclosAnterioresDe`/`cicloNumeroDe` agrupan por `p.habilidad` (nombre visible); riesgo en planes "caso libre" con label inferido por IA.
+- `AUDITORIA_ESTRATEGIAS.md` referencia `#D94040` en DrawerPasados (ya eliminado) — doc desactualizada, limpiar referencias muertas en docs si se quiere.
+
+Deuda 6 previa ("Nace de" / useMemo `episodiosDetonantes`): **resuelta** esta sesión (Item 3).
