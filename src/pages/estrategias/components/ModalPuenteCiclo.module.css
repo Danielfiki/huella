@@ -1,0 +1,243 @@
+/* ModalPuenteCiclo (P4) — diseño "Hilo como columna".
+   Solo tokens del sistema (src/index.css). Sin hex/rgb/radii hardcodeados.
+   El patrón fraseWrap está replicado desde LoadingDignificado.module.css
+   (NO se importa ni modifica ese módulo). */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: var(--color-cream);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 32px 20px 48px;
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  opacity: 1;
+  animation: p4Entrada 250ms ease-out both;
+}
+
+@keyframes p4Entrada {
+  from { opacity: 0.78; transform: translateY(8px); }
+  to   { opacity: 1;    transform: translateY(0); }
+}
+
+.close {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.close:hover { color: var(--color-ink); }
+.close:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Hilo ──────────────────────────────────────────────── */
+
+.thread {
+  position: relative;
+  padding: 28px 0 0;
+}
+
+.spine {
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 64px;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--color-accent-green) 0%,
+    var(--color-primary-border) 50%,
+    var(--color-primary-light) 100%
+  );
+  opacity: 0.42;
+}
+
+.station {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 30px;
+}
+
+.stationCta { margin-bottom: 0; }
+
+.node {
+  position: absolute;
+  left: 1px;
+  top: 6px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--color-cream);
+  border: 3px solid var(--color-primary-border);
+}
+
+.stationCta .node {
+  border-color: var(--color-accent-green);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Tipografía de bloques ─────────────────────────────── */
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+/* ── B·2 Cita (patrón fraseWrap replicado) ─────────────── */
+
+.fraseWrap {
+  margin: 0;
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-celebration-start) 100%);
+  border-left: 3px solid var(--color-accent-green);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  text-align: center;
+}
+
+.fraseTexto {
+  font-family: var(--font-family);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.fraseAutor {
+  font-family: var(--font-family);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-top: 10px;
+}
+
+/* ── B·4 CTAs ──────────────────────────────────────────── */
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 15px 20px;
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-mocha);
+  color: #fff;
+  cursor: pointer;
+}
+
+.ctaPrimary:disabled { opacity: 0.6; cursor: default; }
+
+.ctaGhost {
+  align-self: center;
+  margin-top: 28px;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ctaGhost:hover { color: var(--color-ink); }
+.ctaGhost:disabled { opacity: 0.5; cursor: default; }
+
+.err {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: p4Spin 0.7s linear infinite;
+}
+
+@keyframes p4Spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Skeletons ─────────────────────────────────────────── */
+
+.skel {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 0%,
+    var(--color-surface) 50%,
+    var(--color-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: p4Shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes p4Shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Reduced motion ────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation: none; opacity: 1; transform: none; }
+  .spinner { animation-duration: 1.4s; }
+  .skel { animation: none; }
+}
