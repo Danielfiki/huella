@@ -26,7 +26,10 @@ const plural = (n, singular, plural) => `${n} ${n === 1 ? singular : plural}`;
 function copyReflejo({ semanas, episodiosDurante, habilidad, diasDesdeUltimo }) {
   const enSemanas = `En ${semanas === 1 ? 'esta' : 'estas'} ${plural(semanas, 'semana', 'semanas')}`;
   if (episodiosDurante > 0 && diasDesdeUltimo !== null && diasDesdeUltimo !== undefined) {
-    return `${enSemanas} registraste ${plural(episodiosDurante, 'episodio', 'episodios')} de ${habilidad}. El último fue hace ${plural(diasDesdeUltimo, 'día', 'días')}.`;
+    const ultimo = diasDesdeUltimo === 0
+      ? 'El último fue hoy.'
+      : `El último fue hace ${plural(diasDesdeUltimo, 'día', 'días')}.`;
+    return `${enSemanas} registraste ${plural(episodiosDurante, 'episodio', 'episodios')} de ${habilidad}. ${ultimo}`;
   }
   if (episodiosDurante > 0) {
     return `${enSemanas} registraste ${plural(episodiosDurante, 'episodio', 'episodios')} de ${habilidad}.`;
