@@ -1525,3 +1525,106 @@ Nada de esto está verificado en producción. Daniel debe probar en huella-theta
 - `AUDITORIA_ESTRATEGIAS.md` referencia `#D94040` en DrawerPasados (ya eliminado) — doc desactualizada, limpiar referencias muertas en docs si se quiere.
 
 Deuda 6 previa ("Nace de" / useMemo `episodiosDetonantes`): **resuelta** esta sesión (Item 3).
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 18 mayo 2026 (tarde) — FASE 5 P4: BIENVENIDA AL CICLO 2
+# ═══════════════════════════════════════════════════════════════
+
+## SPEC REFORMULADO (decisión de Daniel a mitad de sesión)
+
+El spec original definía P4 como un **puente que crea el Ciclo 2**. El
+diagnóstico encontró que P3 Cierre (`EstrategiaCierrePage` →
+`handleIniciarNuevoCiclo`) **ya es** el puente técnico Ciclo 1 → Ciclo 2
+con generación IA (`generarCicloN`) + insert en `estrategia_ciclos`.
+Daniel reformuló P4 como **BIENVENIDA al Ciclo 2 ya creado** — cero
+duplicación con P3. P4 no avanza ningún ciclo: solo informa y registra
+que se mostró.
+
+## DISCREPANCIAS SPEC vs CÓDIGO REAL (diagnóstico, causa raíz)
+
+1. No existe columna `ciclo_actual`. Los ciclos son filas en
+   `estrategia_ciclos`. "Avanzar de ciclo" = generar plan con IA +
+   INSERT de fila nueva (ya existe en P3 Cierre).
+2. `BannerCompletado` es presentacional puro: no persiste nada. La
+   premisa del Paso 3 (disparar P4 desde ahí "tras persistir el
+   cierre") era imposible → **Paso 3 cancelado por Daniel**.
+3. `marcoEdad` (anthropic.js) no está exportado y devuelve un
+   bloque-prompt científico, NO autores. El B·2 del spec ("filtrar
+   frases por autor de marcoEdad") era inimplementable → se usa
+   `FRASES.estrategia` de `src/lib/frases.js` (contexto declarado:
+   "crear estrategia, avanzar semanas, cambio de conducta").
+
+## IMPLEMENTADO (3 commits — Paso 3 cancelado, sin commit)
+
+- **Commit `8d33d05`** — `supabase/migrations/p4_visto_at.sql`:
+  `ALTER TABLE estrategias ADD COLUMN IF NOT EXISTS p4_visto_at
+  TIMESTAMPTZ`. ⚠️ Pendiente de correr por Daniel en Supabase.
+- **Commit `0068ce5`** — `ModalPuenteCiclo.jsx` + `.module.css`:
+  diseño "Hilo como columna" (spine con gradiente verde→primary-border
+  →primary-light @0.42, 4 estaciones colgando de nodos, ritmo 30px).
+  Estados loading/entry/CTA-en-curso, focus trap, ESC→posponer,
+  backdrop no cierra, swipe-down, prefers-reduced-motion,
+  role=dialog/aria-modal. Cita B·2 = `FRASES.estrategia` random.
+  Solo tokens del sistema.
+- **Commit `090d3cc`** — orquestación:
+  - `HuellaContext.jsx`: `dbEstrategiaToApp` mapea `p4_visto_at`;
+    nuevo wrapper `marcarP4Visto(estrategiaId)` (escribe en
+    `estrategias`, no en `estrategia_ciclos`; refresca con
+    `reloadEstrategias`). Expuesto en el value del provider.
+  - `EstrategiaDetailPage.jsx`: state `modalP4Abierto` + ref
+    `p4DisparadoRef` (una vez por mount). `useEffect` abre el modal si
+    `estado==='activo'` && `numero_ciclo_actual===2` &&
+    `p4_visto_at==null` && hay plan. `onConfirmar`/`onPosponer`
+    idénticos → `marcarP4Visto` + cerrar. Sin CTA extra. Datos del
+    reflejo (semanas/episodios/días del Ciclo 1) derivados de estado,
+    sin queries extra.
+  - `ModalPuenteCiclo.jsx` copy: B·0 "Empezó tu Ciclo 2", B·3
+    reescrito en presente con duración real del Ciclo 2, CTAs
+    "Vamos al Ciclo 2" / "Lo veo después".
+
+## DECISIÓN DE COPY A REVISAR POR DANIEL
+
+B·0 heading se cambió de "Cerraste el Ciclo 1" a **"Empezó tu Ciclo 2"**.
+Daniel solo pidió explícitamente cambios en B·3/B·4, pero dejar
+"Cerraste el Ciclo 1" contradecía la reformulación (es bienvenida, no
+cierre). Si no te gusta, dilo y lo ajusto.
+
+## ARCHIVOS
+
+Creados:
+- `supabase/migrations/p4_visto_at.sql`
+- `src/pages/estrategias/components/ModalPuenteCiclo.jsx`
+- `src/pages/estrategias/components/ModalPuenteCiclo.module.css`
+
+Modificados:
+- `src/context/HuellaContext.jsx` (mapper + wrapper `marcarP4Visto`)
+- `src/pages/estrategias/EstrategiaDetailPage.jsx` (orquestación P4)
+
+NO tocados (confirmado): `BannerCompletado`, `MapaCiclo`, `StatsPlan`,
+acordeón de semanas, P1 Lista, P3 Cierre.
+
+## ⚠️ PASO OBLIGATORIO DE DANIEL ANTES DE PROBAR
+
+Pega y ejecuta `supabase/migrations/p4_visto_at.sql` en Supabase SQL
+Editor. La columna `p4_visto_at` no existe en la base hasta que la
+crees; sin ella el modal nunca se gatilla (queda `undefined`, tratado
+como null, pero el `update` fallaría).
+
+## CHECKLIST DE VERIFICACIÓN PARA DANIEL (post-SQL + redeploy Vercel)
+
+1. Plan con Ciclo 2 activo recién creado (vía P3 Cierre) y
+   `p4_visto_at` NULL → al abrir el detail aparece el modal P4 una
+   sola vez.
+2. "Vamos al Ciclo 2" → modal cierra, `p4_visto_at` se setea, quedas
+   en el detail del Ciclo 2.
+3. "Lo veo después" → idéntico: modal cierra, `p4_visto_at` se setea,
+   quedas en el detail del Ciclo 2.
+4. Hard refresh con `p4_visto_at` ya seteado → el modal NO reaparece.
+5. P1 Lista, P3 Cierre, BannerCompletado, MapaCiclo, StatsPlan:
+   idénticos a antes.
+6. Plan todavía en Ciclo 1: el modal P4 nunca debe aparecer.
+7. (a11y) ESC cierra (= posponer); click en el fondo NO cierra; foco
+   inicial en el CTA primario; foco vuelve al abrir/cerrar.
+
+Falta verificación en producción por Daniel — nada de esto está
+verificado en prod.
