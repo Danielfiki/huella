@@ -1628,3 +1628,51 @@ como null, pero el `update` fallaría).
 
 Falta verificación en producción por Daniel — nada de esto está
 verificado en prod.
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 18 mayo 2026 (tarde) — P4 ajustes finos post-verificación
+# ═══════════════════════════════════════════════════════════════
+
+Ajustes detectados por Daniel verificando en producción. Commit
+`88c0d3d` ("fix(estrategias): P4 pluralización, heading Comienza tu
+Ciclo 2, diferenciar Lo veo después"). Pusheado a main.
+
+**Ajuste 1 — Pluralización completa en B·1 (reflejo)**
+- `ModalPuenteCiclo.jsx`: helper `plural(n, sing, plur)` a nivel de
+  módulo. `copyReflejo` aplica plural a episodios, días y semanas en
+  las 3 variantes (normal / sub-fallback / fallback).
+- Además se ajustó el artículo: "En esta 1 semana" vs "En estas N
+  semanas" (sin el ajuste quedaba "estas 1 semana", agramatical).
+- Edge cases: N=0 → variante fallback "trabajaste {hab}"; N=1 →
+  "1 episodio"; días=null → sin cláusula de días; días=1 → "hace
+  1 día"; semanas=1 → "esta 1 semana". (días=0 queda "hace 0 días" —
+  fuera del alcance del spec, que solo definió la regla 1 vs >1.)
+
+**Ajuste 2 — Heading B·0**
+- "Empezó tu Ciclo 2" → "Comienza tu Ciclo 2".
+
+**Ajuste 3 — Diferenciar posponer de confirmar**
+- `EstrategiaDetailPage.jsx`: `cerrarP4` se separó en dos:
+  - `cerrarP4Confirmar` (onConfirmar / "Vamos al Ciclo 2"): marca
+    visto + cierra, se queda en el detail. Sin cambio de conducta.
+  - `cerrarP4Posponer` (onPosponer / "Lo veo después", X, ESC,
+    swipe): marca visto + cierra + `navigate('/estrategias')`.
+- El modal ya enrutaba X/ESC/swipe-down a `onPosponer`
+  (`cerrarPosponiendo`) — no requirió cambios; solo se verificó.
+
+Archivos modificados: `ModalPuenteCiclo.jsx`,
+`EstrategiaDetailPage.jsx`. Build verde.
+
+## Falta verificación en producción por Daniel (post-redeploy Vercel)
+
+1. "1 episodio" / "1 día" / "esta 1 semana" en singular cuando
+   corresponde; plurales en N>1.
+2. Heading dice "Comienza tu Ciclo 2".
+3. "Lo veo después" vuelve a la lista de Estrategias (P1).
+4. La X arriba derecha también vuelve a la lista.
+5. "Vamos al Ciclo 2" se queda en el detail (sin cambio).
+6. El modal sigue apareciendo solo una vez por plan.
+
+Recordatorio vigente: la columna `p4_visto_at` debe estar creada en
+Supabase (migración `supabase/migrations/p4_visto_at.sql`) para que
+todo el flujo P4 funcione.
