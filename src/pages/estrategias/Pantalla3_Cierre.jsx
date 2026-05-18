@@ -27,6 +27,8 @@ export default function Pantalla3_Cierre({
   cierreAnalisis,
   hijoNombre = 'tu hijo',
   cicloNumero = 1,
+  onIniciarNuevoCiclo,
+  onTrabajarLibre,
 }) {
   const navigate = useNavigate();
 
@@ -39,15 +41,24 @@ export default function Pantalla3_Cierre({
   const queQuedoPendiente = cierreAnalisis?.que_quedo_pendiente;
   const recomendaciones = cierreAnalisis?.recomendaciones ?? [];
 
-  // TODO Bloque 4: debe llamar a generarCicloN() para crear ciclo N+1
-  // del MISMO plan, no un plan nuevo. Por ahora es placeholder.
+  // Si el contenedor (EstrategiaCierrePage) pasa los callbacks reales,
+  // se usan. En modo standalone (sin callbacks) cae a los placeholders.
   const iniciarNuevoCiclo = () => {
+    if (typeof onIniciarNuevoCiclo === 'function') {
+      onIniciarNuevoCiclo();
+      return;
+    }
+    // placeholder fallback (modo standalone)
     navigate(`/estrategias/nuevo?habilidad=${plan?.habilidad_id ?? ''}`);
   };
 
-  // TODO Bloque 4: debe marcar el plan en estado descanso, no navegar
-  // al listado. Por ahora es placeholder.
-  const trabajarLibre = () => navigate('/estrategias');
+  const trabajarLibre = () => {
+    if (typeof onTrabajarLibre === 'function') {
+      onTrabajarLibre();
+      return;
+    }
+    navigate('/estrategias');
+  };
 
   return (
     <div className={styles.page}>

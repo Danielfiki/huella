@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { analizarCierreCiclo } from '../../services/anthropic'
+import { analizarCierreCiclo, generarCicloN } from '../../services/anthropic'
 import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync'
 import LoadingDignificado from './components/LoadingDignificado'
 import Pantalla3_Cierre from './Pantalla3_Cierre'
@@ -23,10 +24,18 @@ const PASOS_LOADING_CIERRE = [
   'Escribiendo tu análisis'
 ]
 
+const PASOS_LOADING_CICLO_NUEVO = [
+  'Releyendo el cierre del ciclo anterior',
+  'Adaptando las próximas semanas',
+  'Conectando con bibliografía pediátrica',
+  'Escribiendo tu nuevo ciclo'
+]
+
 export default function EstrategiaCierrePage() {
   const { id, cicloNumero } = useParams()
   const navigate = useNavigate()
   const { state, reloadEstrategias } = useHuella()
+  const { user } = useAuth()
   const generadoRef = useRef(false)
 
   const plan = useMemo(
@@ -145,6 +154,70 @@ export default function EstrategiaCierrePage() {
     return () => { cancelado = true }
   }, [plan?.id, ciclo?.id, fueAbandonado, yaGenerado])
 
+  const handleIniciarNuevoCiclo = async () => {
+    if (!plan || !ciclo || !hijo) return
+    setEstado('creando_ciclo')
+    try {
+      console.log('[P3 Cierre] iniciando creación de ciclo N+1')
+      const resultado = await retryAsync(
+        () => generarCicloN({
+          hijo: { nombre: hijo.nombre, edad: hijo.edad, genero: hijo.genero },
+          habilidad: plan.habilidad_nombre || plan.habilidad,
+          descripcion: '',
+          usar_memoria_ia: true,
+          ciclo_anterior: { plan: ciclo.plan, cierre_analisis: ciclo.cierre_analisis },
+          numero_ciclo: ciclo.numero_ciclo + 1,
+        }),
+        { esReintentable: esErrorIAReintentable }
+      )
+      if (!resultado) throw new Error('generarCicloN retornó null')
+      console.log('[P3 Cierre] generarCicloN OK, normalizando...')
+
+      // Normalización idéntica al patrón de EstrategiaNuevaPage
+      const planNormalizado = {
+        porQueImporta: resultado.porQueImporta || '',
+        duracion_semanas: resultado.duracion_semanas,
+        semanas: (resultado.semanas || []).map((s, si) => ({
+          numero: s.numero ?? si + 1,
+          titulo: s.titulo || '',
+          descripcion: s.accion || s.descripcion || '',
+          tareas: (s.tareas || []).map((t, ti) =>
+            typeof t === 'string'
+              ? { id: `s${si + 1}t${ti + 1}`, texto: t, completada: false }
+              : t
+          ),
+        })),
+      }
+
+      // Insert del nuevo ciclo
+      const { error: dbErr } = await supabase
+        .from('estrategia_ciclos')
+        .insert({
+          estrategia_id: plan.id,
+          user_id: user?.id ?? plan.userId,
+          hijo_id: plan.hijo_id,
+          numero_ciclo: ciclo.numero_ciclo + 1,
+          estado: 'activo',
+          plan: planNormalizado,
+          semana_actual: 1,
+          duracion_semanas: planNormalizado.duracion_semanas,
+          usar_memoria_ia: true,
+        })
+      if (dbErr) throw new Error(dbErr.message)
+      console.log('[P3 Cierre] insert OK, recargando estado')
+
+      await reloadEstrategias()
+      navigate(`/estrategias/${id}`, { replace: true })
+    } catch (err) {
+      console.error('handleIniciarNuevoCiclo failed:', err)
+      setEstado('error_ciclo')
+    }
+  }
+
+  const handleTrabajarLibre = () => {
+    navigate('/estrategias')
+  }
+
   if (!plan || !ciclo) {
     return <div style={{ padding: 24 }}>Cargando…</div>
   }
@@ -185,6 +258,31 @@ export default function EstrategiaCierrePage() {
     )
   }
 
+  if (estado === 'creando_ciclo') {
+    return (
+      <LoadingDignificado
+        titulo="Estamos armando tu próximo ciclo."
+        sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
+        pasos={PASOS_LOADING_CICLO_NUEVO}
+        pasoActual={0}
+        habilidadId={plan?.habilidad_id || plan?.habilidad}
+        hijoEdad={hijo?.edad}
+      />
+    )
+  }
+
+  if (estado === 'error_ciclo') {
+    return (
+      <div style={{ padding: 24, maxWidth: 480, margin: '0 auto' }}>
+        <p>No pudimos crear el nuevo ciclo. Intenta de nuevo.</p>
+        <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+          <button onClick={handleIniciarNuevoCiclo}>Reintentar</button>
+          <button onClick={() => setEstado('listo')}>Volver al cierre</button>
+        </div>
+      </div>
+    )
+  }
+
   // estado === 'listo'
   return (
     <Pantalla3_Cierre
@@ -198,6 +296,8 @@ export default function EstrategiaCierrePage() {
       cierreAnalisis={analisis}
       hijoNombre={hijo?.nombre ?? 'tu hijo'}
       cicloNumero={ciclo.numero_ciclo}
+      onIniciarNuevoCiclo={handleIniciarNuevoCiclo}
+      onTrabajarLibre={handleTrabajarLibre}
     />
   )
 }
