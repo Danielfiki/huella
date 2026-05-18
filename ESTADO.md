@@ -1382,3 +1382,42 @@ Verificaciones de seguridad antes del commit:
 Nota operativa: a partir de ahora estos archivos viven en main. El viewer /mockups quedó accesible en producción (ruta pública) — se elimina en Fase 6 (limpieza), como ya estaba anotado.
 
 Estado: listo para arrancar Fase 5 (5 pantallas nuevas).
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# CIERRE DE SESIÓN — 17 MAYO 2026 — BLOQUES 1, 2 (+HOTFIX) Y 3 DE FASE 5 P3 CIERRE CERRADOS
+# ═══════════════════════════════════════════════════════════════
+
+## LO CERRADO Y VERIFICADO EN PRODUCCIÓN
+
+- **Bloque 1 (commit 5ce1e2c):** `analizarCierreCiclo` retorna `recomendaciones` como array de 3 a 4 ítems. Prompt al modelo reescrito. Fallback y coerción defensiva alineados. JSDoc actualizado.
+- **Bloque 2 (commit d542060):** nueva pantalla P3 Cierre con render crudo. Ruta `/estrategias/:id/cierre/:cicloNumero`. `EstrategiaCierrePage.jsx` con generación IA, persistencia inline en `estrategia_ciclos.cierre_analisis`, manejo de estados, guarda por `motivo === 'abandonado'`, idempotencia con `useRef`, navegación automática desde `onAvanzar` al cerrar el último día. `notas_bitacora` mapeada desde `checkins_legacy` (la tabla no existe). `episodios_vinculados` filtrados por ventana del ciclo. Cita de cierre sin notas/episodios: fallback de la función IA.
+- **Hotfix Bloque 2 (commit b0b73a8 aprox):** loader infinito por deps inestables del `useEffect`. Solución: `yaGenerado` como const derivada, deps reducidas a primitivos `[plan?.id, ciclo?.id, fueAbandonado, yaGenerado]`, idempotencia antes de `generadoRef`, 3 logs de trazabilidad. Verificado end-to-end en producción.
+- **Bloque 3 (commit 2588945):** UI final de P3 Cierre integrada. `Pantalla3_Cierre.jsx` + `.module.css` nuevos con bundle refinado de Claude Design (header mocha sólido, sub-bloque celebrate, stats, 3 tarjetas de análisis, CTAs primaria/ghost con subtítulos, disclaimer original). `EstrategiaCierrePage.jsx`: el estado `'listo'` renderiza `<Pantalla3_Cierre />` con props snake_case. Tokens base, no aliases. `LoadingDignificado.module.css`: `fraseWrap` unificado con patrón de cita IA de Home (gradiente surface→celebration-start, border-left verde, shadow-card-medium, radius-lg). Tipografía de cita alineada con CitaLoader. Preservadas `transition opacity`, `text-align center` y `min-height 64px`.
+
+## PRÓXIMO TRABAJO
+
+- **Bloque 4 (siguiente sesión):** handlers reales de las dos CTAs de P3.
+  - **"Iniciar nuevo ciclo":** hoy va a `/estrategias/nuevo` (placeholder incorrecto). Debe llamar a `generarCicloN()` para crear el ciclo N+1 del MISMO plan y navegar al detalle. Es el corazón del modelo de ciclos.
+  - **"Trabajar libre":** hoy va a `/estrategias` (placeholder). Debe marcar el plan en estado descanso (sin crear nuevo ciclo).
+- **Bloque 5:** ajustar `BannerCompletado` real para que su CTA principal apunte a P3 (`/estrategias/:id/cierre/:cicloNumero` del último ciclo). "Ver tu hito" queda como secundaria.
+- **Orden tentativo después:** P4 Modal Ciclo 2 → P1 Lista → P2 Detalle → P6 Panel descanso. P5 PDF pospuesto.
+
+## DEUDA FLAGEADA (no urgente, registrar y avanzar)
+
+- `plan.habilidad_id` no existe en el shim. Usar `plan.habilidad`. Afecta el `habilidadId` que se pasa a `LoadingDignificado` en P3.
+- Bug heredado de `episodiosDurante`: `fecha_cierre` se guarda como `slice(0,10)` sin hora, lo que subcuenta episodios del último día registrados después de medianoche. Aplicable también al ciclo.
+- Política explícita cuando la IA devuelve `cierre_analisis` con todos los campos vacíos (hoy persiste vacío e induce remount con regeneración perpetua si no entra a idempotencia).
+- 3 errores rojos en consola del navegador en producción son de extensiones de Chrome del usuario, no del código de Huella.
+
+## DEUDAS PREEXISTENTES YA REGISTRADAS EN OTRA PARTE
+
+- Bugs de `EstrategiasPage` que P1 Lista resolverá: plan completado aparece en "LO QUE ESTÁS TRABAJANDO" en vez de "Lo que ya trabajaste"; tras cierre muestra "Semana 1 de 4" en vez de "Semana 4 de 4".
+- Deudas visuales Fase 6: doble nomenclatura de tokens (Home/Historial base vs Estrategias aliases), `Card.jsx` con `border-radius:16px` y sombra hardcodeados, `#fff` hardcoded en varios componentes, CSS muerto en `PanelPage.module.css`, 4 tratamientos de sombra coexistiendo.
+- Notificaciones push reales para recuperar copy "te avisamos cuando esté listo" en `LoadingDignificado`.
+- Idea polish: mover "consejo de hoy" de burbuja de Perfil a campana del header de Home con puntito de notificación.
+
+## VEREDICTO
+
+**BLOQUES 1, 2 (+HOTFIX) Y 3 COMPLETOS — CERRADOS.** Próxima sesión arranca con Bloque 4.
