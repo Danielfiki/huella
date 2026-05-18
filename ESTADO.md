@@ -1698,3 +1698,33 @@ Pusheado a main, build verde.
 - Plan cuyo último episodio del Ciclo 1 fue hoy → el reflejo dice
   "El último fue hoy." (no "hace 0 días").
 - Casos 1 día / N días siguen correctos.
+
+═══════════════════════════════════════════
+PRÓXIMA SESIÓN — POTENCIAR PUERTA 1
+═══════════════════════════════════════════
+
+Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3, P4 implementados y verificados en producción).
+
+Próximo bloque: rediseño de Puerta 1 ("LO QUE MÁS SE REPITE EN TUS REGISTROS") en P1 Lista de Estrategias.
+
+Decisiones de producto ya tomadas (no redecidas):
+1. Renombrar: "LO QUE MÁS SE REPITE EN TUS REGISTROS" → "LO QUE HUELLA VE EN {nombre del hijo}"
+2. Reposicionar dinámicamente: con sugerencia activa sube encima del plan activo; sin sugerencia queda recogido debajo
+3. Tratamiento de "hallazgo" con jerarquía visual fuerte cuando hay sugerencia
+4. Estado vacío motivacional + link sutil a Puerta 2 (selector manual)
+5. Estados a contemplar: con sugerencia / sin sugerencia / generando
+
+Flujo previsto:
+1. Daniel pegará brief a Claude Design para 3 conceptos visuales (brief ya armado en chat con Claude)
+2. Auditoría visual obligatoria contra Home, Historial, P1-P4 antes de proponer
+3. Daniel elige concepto → pulido + handoff bundle → revisión de Claude → implementación en Claude Code
+
+Después de Puerta 1:
+- P6 Panel descanso (último pendiente de Fase 5)
+- Monetización (definición de muros y puntos de upgrade ANTES de Registro)
+- Registro con Claude Design
+- Deudas visuales Fase 6 (tokens unificados, Card.jsx, hardcodes)
+
+Deuda menor pendiente de verificación natural: en ModalPuenteCiclo, el caso "El último fue hoy" (diasDesdeUltimo === 0) está implementado pero no se ha visto aún en producción porque requiere un episodio con fecha de hoy en un plan en Ciclo 2.
+
+═══════════════════════════════════════════
