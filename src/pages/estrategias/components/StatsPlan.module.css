@@ -1,0 +1,26 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card-medium, 0 6px 18px rgba(42, 26, 14, 0.06));
+  padding: 12px 10px;
+  text-align: center;
+}
+.num {
+  font-family: var(--font-heading);
+  font-size: 22px; font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.lbl {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}

@@ -9,6 +9,8 @@ import SemanaActiva from './components/SemanaActiva';
 import SemanaPasada from './components/SemanaPasada';
 import SemanaFutura from './components/SemanaFutura';
 import BannerCompletado from './components/BannerCompletado';
+import MapaCiclo from './components/MapaCiclo';
+import StatsPlan from './components/StatsPlan';
 import { estadoPlan } from './helpers';
 import styles from './EstrategiaDetailPage.module.css';
 
@@ -33,6 +35,9 @@ export default function EstrategiaDetailPage() {
   // plan.plan es el JSONB guardado (porQueImporta, semanas[])
   const semanas = plan.plan?.semanas || [];
   const actual = plan.semana_actual || 1;
+  const total = plan.total_semanas || 4;
+  const ciclo = plan.numero_ciclo_actual || 1;
+  const esActivo = estado === 'activo';
 
   // Merge reflexiones desde el array checkins
   const checkins = Array.isArray(plan.checkins) ? plan.checkins : [];
@@ -217,54 +222,65 @@ export default function EstrategiaDetailPage() {
         })()}
       />
 
-      {episodiosDetonantes.length > 0 && (
-        <div className={styles.naceDe}>
-          <span className={styles.naceDeLabel}>Nace de</span>
-          {episodiosDetonantes.slice(0, 3).map((e) => (
-            <span key={e.id} className={styles.naceDeChip}>
-              <span style={{ fontSize: 11, lineHeight: 1 }}>{e.emoji || '·'}</span>
-              {e.titulo}
-            </span>
-          ))}
-        </div>
-      )}
-
       <div className={styles.body}>
-        {estado === 'completado' && <BannerCompletado plan={plan} hijoNombre={hijo?.nombre} episodiosDurante={episodiosDurante} />}
-
-        {semanasConReflexion.filter((s) => s.numero < actual && estado === 'activo').map((s) => (
-          <SemanaPasada key={s.numero} numero={s.numero} semana={s} />
-        ))}
-
-        {toggleErr && <p className={styles.errToggle}>{toggleErr}</p>}
-        {estado === 'activo' && semanasConReflexion[actual - 1] && (
-          <SemanaActiva
-            key={`${actual}-${tareaKey}`}
-            semana={semanasConReflexion[actual - 1]}
-            numero={actual}
-            total={plan.total_semanas || 4}
-            reflexion={reflexion}
-            onReflexionChange={setReflexion}
-            onAvanzar={onAvanzar}
-            onToggleTarea={onToggleTarea}
-            onGenerarTareas={onGenerarTareas}
-            generandoTareas={generandoTareas}
-            avanzando={avanzando}
-            errMsg={avanzarErr}
-          />
+        {estado === 'completado' && (
+          <BannerCompletado plan={plan} hijoNombre={hijo?.nombre} episodiosDurante={episodiosDurante} />
         )}
 
-        {estado === 'activo' && semanasConReflexion.filter((s) => s.numero > actual).map((s) => (
-          <SemanaFutura key={s.numero} numero={s.numero} titulo={s.titulo} />
-        ))}
+        <MapaCiclo
+          semanaActual={actual}
+          totalSemanas={total}
+          ciclo={ciclo}
+          estado={estado}
+          tituloActivo={semanasConReflexion[actual - 1]?.titulo || semanasConReflexion[actual - 1]?.nombre || ''}
+          completadoAt={plan.completado_at}
+        />
 
-        {estado !== 'activo' && semanasConReflexion.map((s) => {
-          const marca =
-            estado === 'completado' ? 'ok'
-            : s.numero <= (plan.semana_actual || 1) ? 'hecha'
-            : 'no-hecha';
-          return <SemanaPasada key={s.numero} numero={s.numero} semana={s} marca={marca} />;
-        })}
+        <StatsPlan plan={plan} semanas={semanasConReflexion} estado={estado} episodiosDurante={episodiosDurante} />
+
+        <section className={styles.section}>
+          <header className={styles.secHead}>
+            <span className={styles.secTitle}>
+              {esActivo ? 'Semanas del ciclo' : 'Releer el ciclo'}
+            </span>
+            <span className={styles.secLine} />
+          </header>
+          <div className={styles.stack}>
+            {semanasConReflexion.map((s, idx) => {
+              const numero = idx + 1;
+              const titulo = s.titulo || s.nombre || `Semana ${numero}`;
+              if (esActivo) {
+                if (numero < actual) return <SemanaPasada key={numero} numero={numero} semana={s} />;
+                if (numero === actual) return (
+                  <SemanaActiva
+                    key={numero}
+                    semana={s}
+                    numero={numero}
+                    total={total}
+                    reflexion={reflexion}
+                    onReflexionChange={setReflexion}
+                    onAvanzar={onAvanzar}
+                    onToggleTarea={onToggleTarea}
+                    onGenerarTareas={onGenerarTareas}
+                    generandoTareas={generandoTareas}
+                    avanzando={avanzando}
+                    errMsg={avanzarErr}
+                  />
+                );
+                return <SemanaFutura key={numero} numero={numero} titulo={titulo} esUltima={numero === total} />;
+              }
+              return (
+                <SemanaPasada
+                  key={numero}
+                  numero={numero}
+                  semana={s}
+                  esCierre={numero === total}
+                  defaultOpen={numero === total}
+                />
+              );
+            })}
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -1,27 +1,110 @@
-
-.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; gap: 18px; }
-.head { display: flex; flex-direction: column; gap: 6px; }
-.eye { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-tangerine); font-weight: 600; }
-.ttl { font-family: var(--font-heading); font-weight: 700; font-size: 22px; color: var(--color-ink); line-height: 1.2; margin: 0; }
-.sub { font-size: 14px; color: var(--color-ink); line-height: 1.55; margin: 4px 0 0; }
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-medium, 0 6px 18px rgba(42, 26, 14, 0.06));
+  overflow: hidden;
+}
+.head {
+  padding: 16px 18px 14px;
+  background: linear-gradient(180deg, var(--color-primary-bg) 0%, var(--color-surface) 100%);
+  border-bottom: 1px solid var(--color-primary-border);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.eye {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--color-primary);
+}
+.ttl {
+  font-family: var(--font-heading);
+  font-size: 21px; font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  color: var(--color-text);
+  margin: 0;
+}
+.desc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 4px 0 0;
+}
+.desc em { color: var(--color-text); font-style: italic; }
+.body {
+  padding: 14px 18px 18px;
+  display: flex; flex-direction: column; gap: 14px;
+}
 .tasks { display: flex; flex-direction: column; gap: 8px; }
-.task { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); font: inherit; text-align: left; cursor: pointer; }
-.chk { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--color-border); flex-shrink: 0; margin-top: 2px; transition: all 0.15s; }
-.task.done .chk { background: var(--color-mocha); border-color: var(--color-mocha); position: relative; }
-.task.done .chk::after { content: '✓'; position: absolute; inset: 0; color: #fff; font-size: 12px; display: grid; place-items: center; }
-.task.done .copy { color: var(--color-muted); text-decoration: line-through; }
-.copy { flex: 1; font-size: 14px; color: var(--color-ink); line-height: 1.4; }
-.checkin { background: var(--color-celebration-end); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-.lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); font-weight: 600; }
-.ask { font-family: var(--font-heading); font-weight: 600; font-size: 16px; color: var(--color-ink); }
-.checkin textarea { font: inherit; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); min-height: 70px; background: var(--color-surface); resize: none; }
-.advBtn { width: 100%; }
-.errMsg { font-size: 13px; color: var(--color-danger); text-align: center; padding: 4px 0; }
-.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: grid; place-items: center; padding: 24px; }
-.modalCard { background: var(--color-surface); border-radius: var(--radius-lg); padding: 24px; max-width: 320px; width: 100%; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.3); }
-.modalTtl { font-family: var(--font-heading); font-weight: 700; font-size: 18px; color: var(--color-ink); margin: 0; }
-.modalSub { font-size: 13px; color: var(--color-muted); margin: 0; line-height: 1.5; }
-.modalBtns { display: flex; gap: 10px; }
-.modalCancel { flex: 1; padding: 12px; font: inherit; font-weight: 600; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink); cursor: pointer; }
-.modalConfirm { flex: 1; padding: 12px; font: inherit; font-weight: 600; border: none; border-radius: var(--radius-md); background: var(--color-tangerine); color: #fff; cursor: pointer; }
-.modalConfirm:disabled { opacity: 0.5; cursor: not-allowed; }
+.task {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.chk {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0; margin-top: 1px;
+  display: grid; place-items: center;
+  transition: all 0.15s ease;
+}
+.taskDone .chk {
+  background: var(--color-accent-mocha);
+  border-color: var(--color-accent-mocha);
+  color: #fff;
+}
+.taskDone .chk::after {
+  content: '✓'; font-size: 11px; font-weight: 700;
+}
+.copy {
+  flex: 1; font-size: 13.5px; line-height: 1.45;
+  color: var(--color-text);
+}
+.taskDone .copy {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-light);
+}
+.checkin {
+  background: var(--color-celebration-end);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.checkinLbl {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.checkinAsk {
+  font-family: var(--font-heading);
+  font-weight: 700; font-size: 15px;
+  color: var(--color-text);
+}
+.checkinArea {
+  font: inherit; font-size: 13.5px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  min-height: 60px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  resize: vertical;
+}
+.checkinArea:focus {
+  outline: none;
+  border-color: var(--color-primary-border);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+.adv { width: 100%; margin-top: 2px; }
+.errMsg {
+  font-size: 13px;
+  color: var(--color-danger, #c0392b);
+  text-align: center;
+  padding: 4px 0;
+  margin: 0;
+}
