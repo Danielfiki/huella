@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,13 +11,14 @@ import SemanaFutura from './components/SemanaFutura';
 import BannerCompletado from './components/BannerCompletado';
 import MapaCiclo from './components/MapaCiclo';
 import StatsPlan from './components/StatsPlan';
+import ModalPuenteCiclo from './components/ModalPuenteCiclo';
 import { estadoPlan } from './helpers';
 import styles from './EstrategiaDetailPage.module.css';
 
 export default function EstrategiaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, dispatch, addHito, reloadEstrategias, deleteEstrategia } = useHuella();
+  const { state, dispatch, addHito, reloadEstrategias, deleteEstrategia, marcarP4Visto } = useHuella();
   const { user } = useAuth();
   const plan = (state.estrategias || []).find((p) => p.id === id);
   const hijo = state.hijo;
@@ -29,8 +30,23 @@ export default function EstrategiaDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [eliminarErr, setEliminarErr] = useState('');
+  const [modalP4Abierto, setModalP4Abierto] = useState(false);
+  const p4DisparadoRef = useRef(false);
 
   const estado = useMemo(() => plan && estadoPlan(plan), [plan]);
+
+  // P4 — bienvenida al Ciclo 2: se abre una sola vez por mount cuando el
+  // ciclo activo es el 2 y nunca se mostró (p4_visto_at IS NULL). El
+  // Ciclo 2 ya fue creado por P3 Cierre; P4 no avanza nada.
+  useEffect(() => {
+    if (p4DisparadoRef.current) return;
+    if (!plan || !plan.plan) return;
+    if (estado !== 'activo') return;
+    if (plan.numero_ciclo_actual !== 2) return;
+    if (plan.p4_visto_at != null) return;
+    p4DisparadoRef.current = true;
+    setModalP4Abierto(true);
+  }, [plan, estado]);
 
   if (!plan) return <div className={styles.loading}>Cargando…</div>;
 
@@ -204,6 +220,38 @@ export default function EstrategiaDetailPage() {
     }
   };
 
+  // P4: confirmar y posponer son funcionalmente idénticos — solo
+  // registran p4_visto_at vía el wrapper del contexto (que refresca el
+  // detail) y cierran el modal. La diferencia es solo el botón usado.
+  const cerrarP4 = async () => {
+    await marcarP4Visto(plan.id);
+    setModalP4Abierto(false);
+  };
+
+  // Datos del Ciclo 1 (ya cerrado) para el reflejo del modal. Se derivan
+  // de lo que ya está en estado — sin queries extra a Supabase.
+  const ciclo1 = (plan.ciclos || []).find((c) => c.numero_ciclo === 1) || null;
+  const semanasCiclo1 = ciclo1?.duracion_semanas ?? 3;
+  const episodiosCiclo1 = (() => {
+    if (!ciclo1?.fecha_inicio) return 0;
+    const ini = new Date(ciclo1.fecha_inicio);
+    const fin = ciclo1.fecha_cierre ? new Date(ciclo1.fecha_cierre) : new Date();
+    return (state.episodios || []).filter((e) => {
+      const f = new Date(e.fecha);
+      return f >= ini && f <= fin;
+    }).length;
+  })();
+  const diasDesdeUltimoCiclo1 = (() => {
+    if (!ciclo1?.fecha_inicio) return null;
+    const ini = new Date(ciclo1.fecha_inicio);
+    const fin = ciclo1.fecha_cierre ? new Date(ciclo1.fecha_cierre) : new Date();
+    const eps = (state.episodios || [])
+      .filter((e) => { const f = new Date(e.fecha); return f >= ini && f <= fin; })
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    if (eps.length === 0) return null;
+    return Math.floor((Date.now() - new Date(eps[0].fecha).getTime()) / 86400000);
+  })();
+
   return (
     <div className={styles.page}>
       <HeaderMocha
@@ -321,6 +369,20 @@ export default function EstrategiaDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {modalP4Abierto && (
+        <ModalPuenteCiclo
+          planActivo={plan}
+          semanas={semanasCiclo1}
+          habilidad={plan.habilidad_nombre || plan.habilidad}
+          episodiosDurante={episodiosCiclo1}
+          diasDesdeUltimo={diasDesdeUltimoCiclo1}
+          edadHijo={hijo?.edad}
+          hijoNombre={hijo?.nombre}
+          onConfirmar={cerrarP4}
+          onPosponer={cerrarP4}
+        />
       )}
     </div>
   );

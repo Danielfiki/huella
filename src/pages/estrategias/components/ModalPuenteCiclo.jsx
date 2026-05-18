@@ -56,6 +56,7 @@ export default function ModalPuenteCiclo({
   const frase = useMemo(() => elegirFrase(), []);
 
   const reflejo = copyReflejo({ semanas, episodiosDurante, habilidad, diasDesdeUltimo });
+  const duracionCiclo2 = planActivo?.total_semanas || 4;
 
   const cerrarPosponiendo = async () => {
     if (ocupado) return;
@@ -77,7 +78,7 @@ export default function ModalPuenteCiclo({
       await onConfirmar?.();
     } catch {
       setAccion('idle');
-      setErrMsg('No se pudo abrir el Ciclo 2. Verifica tu conexión e intenta de nuevo.');
+      setErrMsg('No se pudo guardar. Verifica tu conexión e intenta de nuevo.');
     }
   };
 
@@ -172,7 +173,7 @@ export default function ModalPuenteCiclo({
                 {hijoNombre || 'Tu hijo'}{edadHijo ? ` · ${edadHijo} años` : ''}
               </p>
               <h2 id={headingId} className={styles.heading}>
-                Cerraste el Ciclo 1
+                Empezó tu Ciclo 2
               </h2>
             </div>
           </section>
@@ -216,9 +217,9 @@ export default function ModalPuenteCiclo({
                 </>
               ) : (
                 <p className={styles.body}>
-                  El Ciclo 2 no sube la dificultad: profundiza lo que ya empezaste.
+                  Lo que sigue ahora es profundizar en {habilidad}.
                   <br />
-                  Toma lo aprendido en estas semanas y lo lleva un paso más adentro, al ritmo de {hijoNombre || 'tu hijo'}.
+                  El Ciclo 2 son {duracionCiclo2} semanas que se construyen sobre lo que ya trabajaron.
                 </p>
               )}
             </div>
@@ -239,10 +240,10 @@ export default function ModalPuenteCiclo({
                 {accion === 'confirmando' ? (
                   <>
                     <span className={styles.spinner} aria-hidden="true" />
-                    Abriendo Ciclo 2…
+                    Guardando…
                   </>
                 ) : (
-                  'Empezar Ciclo 2'
+                  'Vamos al Ciclo 2'
                 )}
               </button>
               <button
@@ -251,7 +252,7 @@ export default function ModalPuenteCiclo({
                 onClick={cerrarPosponiendo}
                 disabled={ocupado}
               >
-                {accion === 'posponiendo' ? 'Guardando…' : 'Tomarme un tiempo antes'}
+                {accion === 'posponiendo' ? 'Guardando…' : 'Lo veo después'}
               </button>
             </div>
           </section>

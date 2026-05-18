@@ -246,6 +246,7 @@ function dbEstrategiaToApp(row) {
     descripcion:              row.descripcion,
     episodios_detonantes_ids: row.episodios_detonantes_ids ?? [],
     episodio_origen_id:       row.episodio_origen_id       ?? null,
+    p4_visto_at:              row.p4_visto_at              ?? null,
     created_at:               row.created_at               ?? null,
     fecha_inicio:             row.fecha_inicio             ?? null,
     fechaInicio:              row.fecha_inicio,
@@ -753,6 +754,20 @@ export function HuellaProvider({ children }) {
     }
   }
 
+  // Marca el modal P4 (bienvenida al Ciclo 2) como visto. Escribe en la
+  // fila padre `estrategias`, no en `estrategia_ciclos`: P4 no avanza el
+  // ciclo (ya está creado por P3 Cierre), solo registra que se mostró.
+  async function marcarP4Visto(estrategiaId) {
+    if (!user || !supabase || !estrategiaId) return
+    const { error } = await supabase
+      .from('estrategias')
+      .update({ p4_visto_at: new Date().toISOString() })
+      .eq('id', estrategiaId)
+      .eq('user_id', user.id)
+    if (error) throw new Error(error.message)
+    await reloadEstrategias()
+  }
+
   // ── Rutinas ───────────────────────────────────────────────────────────────
 
   async function addRutina(rutina) {
@@ -886,6 +901,7 @@ export function HuellaProvider({ children }) {
       reloadEstrategias,
       updateEstrategia,
       deleteEstrategia,
+      marcarP4Visto,
       addRutina,
       updateRutina,
       deleteRutina,
