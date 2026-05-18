@@ -1676,3 +1676,25 @@ Archivos modificados: `ModalPuenteCiclo.jsx`,
 Recordatorio vigente: la columna `p4_visto_at` debe estar creada en
 Supabase (migración `supabase/migrations/p4_visto_at.sql`) para que
 todo el flujo P4 funcione.
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 18 mayo 2026 (tarde) — P4 mini-fix "hace 0 días"
+# ═══════════════════════════════════════════════════════════════
+
+Edge anotado en la sesión anterior, ahora resuelto. Commit
+`78fdfff` ("fix(estrategias): P4 reflejo dice 'hoy' cuando dias=0").
+Pusheado a main, build verde.
+
+- `ModalPuenteCiclo.jsx` → `copyReflejo`, variante normal: si
+  `diasDesdeUltimo === 0` el copy ahora dice "El último fue hoy."
+  en vez de "El último fue hace 0 días."
+- `=== 1` → "hace 1 día" (sin cambio, ya correcto).
+- `> 1` → "hace N días" (sin cambio, ya correcto).
+- `=== null` → sigue cayendo al sub-fallback (omite la cláusula del
+  último), sin cambio.
+
+## Falta verificación en producción por Daniel (post-redeploy Vercel)
+
+- Plan cuyo último episodio del Ciclo 1 fue hoy → el reflejo dice
+  "El último fue hoy." (no "hace 0 días").
+- Casos 1 día / N días siguen correctos.
