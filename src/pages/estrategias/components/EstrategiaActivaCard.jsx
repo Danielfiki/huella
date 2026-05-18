@@ -1,53 +1,118 @@
 import React from 'react';
-import { useAuth } from '../../../context/AuthContext';
-import { pillClassFor } from '../helpers';
-import { canModify } from '../../../utils/authorDisplay';
 import styles from './EstrategiaActivaCard.module.css';
 
-export default function EstrategiaActivaCard({ plan, hijo, onAbrir, onEliminar, authorName }) {
-  const { user } = useAuth();
-  const mine = canModify(plan.userId, user?.id);
-  const total = plan.total_semanas || 4;
-  const actual = plan.semana_actual || 1;
-  const inicial = (hijo?.nombre || '·')[0].toUpperCase();
+export default function EstrategiaActivaCard({
+  plan,
+  hijo,
+  ciclosAnteriores = [],
+  onAbrir,
+}) {
+  const totalSem = plan.total_semanas || 4;
+  const semActual = plan.semana_actual || 1;
+  const cicloActual = ciclosAnteriores.length + 1;
+  const inicial = (hijo?.nombre || '·').charAt(0).toUpperCase();
+
+  const totalCiclos = ciclosAnteriores.length + 1;
+  let lineasPrevias = ciclosAnteriores;
+  let resumen = null;
+  if (totalCiclos >= 4) {
+    const aColapsar = ciclosAnteriores.slice(0, -1);
+    lineasPrevias = ciclosAnteriores.slice(-1);
+    resumen = {
+      desde: aColapsar[0].numero,
+      hasta: aColapsar[aColapsar.length - 1].numero,
+      semanas: aColapsar.reduce(
+        (acc, c) => acc + (c.semanas_completadas || 0),
+        0,
+      ),
+    };
+  }
+
   return (
     <article className={styles.card}>
       <div className={styles.head}>
-        <div className={styles.row1}>
+        <div className={styles.top}>
           <div className={styles.child}>{inicial}</div>
-          <div className={styles.ttls}>
-            <div className={styles.eye}>{hijo?.nombre} · {hijo?.edad} años</div>
-            <div className={styles.ttl}>{plan.habilidad_nombre || plan.habilidad}</div>
-            <div className={styles.week}>
-              Semana {actual} de {total}
-              {authorName && <span className={styles.author}> · {authorName}</span>}
-            </div>
+          <div className={styles.childMeta}>
+            <div className={styles.nm}>{hijo?.nombre}</div>
+            <div className={styles.age}>{hijo?.edad ? `${hijo.edad} años` : ''}</div>
           </div>
-          {onEliminar && mine && (
-            <button className={styles.del} onClick={() => onEliminar(plan.id)} aria-label="Eliminar plan">✕</button>
-          )}
         </div>
-        <div className={styles.progRow}>
-          {Array.from({ length: total }).map((_, i) => (
-            <span key={i} className={`${styles.seg} ${i + 1 < actual ? styles.done : i + 1 === actual ? styles.now : ''}`} />
+
+        <div className={styles.ttl}>{plan.habilidad_nombre}</div>
+
+        <div className={styles.thread}>
+          {resumen && (
+            <div className={styles.roll}>
+              <span className={styles.l}>
+                {resumen.desde === resumen.hasta
+                  ? `Ciclo ${resumen.desde}`
+                  : `Ciclos ${resumen.desde}–${resumen.hasta}`}
+              </span>
+              <span className={styles.bar} />
+              <span className={styles.r}>{resumen.semanas} sem</span>
+            </div>
+          )}
+
+          {lineasPrevias.map((c) => (
+            <CycleLine key={c.numero} ciclo={c} />
           ))}
+
+          <CycleLine
+            ciclo={{
+              numero: cicloActual,
+              total_semanas: totalSem,
+              semana_actual: semActual,
+              estado: 'activo',
+            }}
+            esCicloUnico={cicloActual === 1}
+          />
         </div>
       </div>
-      {(plan.episodios_detonantes || []).length > 0 && (
-        <div className={styles.origRow}>
-          <span className={styles.origLbl}>Nace de</span>
-          {plan.episodios_detonantes.slice(0, 3).map((e) => (
-            <span key={e.id} className={`${styles.ep} ${styles[pillClassFor(e.categoria)]}`}>
-              <span style={{ fontSize: 11, lineHeight: 1 }}>{e.emoji || '·'}</span>
-              {e.titulo}
-            </span>
-          ))}
-        </div>
-      )}
-      <button className={styles.cta} onClick={onAbrir}>
-        Ver tu semana {actual}
-        <span className={styles.arr}>→</span>
+
+      <button type="button" className={styles.cta} onClick={onAbrir}>
+        Ver tu semana {semActual}
+        <span className={styles.arr} aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+        </span>
       </button>
     </article>
+  );
+}
+
+function CycleLine({ ciclo, esCicloUnico = false }) {
+  const total = ciclo.total_semanas || 4;
+  let cls = styles.done;
+  let label = `Ciclo ${ciclo.numero}`;
+  let right = `${ciclo.semanas_completadas || 0}/${total}`;
+
+  if (ciclo.estado === 'activo') {
+    cls = styles.now;
+    label = esCicloUnico ? 'En curso' : `Ciclo ${ciclo.numero}`;
+    right = `Sem ${ciclo.semana_actual}/${total}`;
+  } else if (ciclo.estado === 'abandonado') {
+    cls = styles.aban;
+  }
+
+  return (
+    <div className={`${styles.cycleLine} ${cls}`}>
+      <span className={styles.l}>{label}</span>
+      <div className={styles.dots}>
+        {Array.from({ length: total }).map((_, i) => {
+          const idx = i + 1;
+          let dotCls = '';
+          if (ciclo.estado === 'activo') {
+            if (idx < ciclo.semana_actual) dotCls = styles.dDone;
+            else if (idx === ciclo.semana_actual) dotCls = styles.dNow;
+          } else {
+            if (idx <= (ciclo.semanas_completadas || 0)) dotCls = styles.dDone;
+          }
+          return <span key={i} className={`${styles.d} ${dotCls}`} />;
+        })}
+      </div>
+      <span className={styles.r}>{right}</span>
+    </div>
   );
 }

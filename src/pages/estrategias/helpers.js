@@ -170,3 +170,54 @@ export function debeMostrarSugerencia(sugerencia, descartes, totalEpisodios = 0)
   if (totalEpisodios - epCountAtReject >= 5) return true;
   return false;
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Cronología de ciclos de una habilidad (P1 Lista — rediseño con ciclos)
+// El shim aplana un plan por ciclo; estos helpers reconstruyen la
+// secuencia de ciclos de una misma habilidad para el mismo hijo.
+// ─────────────────────────────────────────────────────────────────────
+
+// Fecha de cierre/creación de un plan, para ordenar la cronología.
+function fechaCierreDe(p) {
+  return new Date(
+    p.completado_at || p.created_at || 0,
+  ).getTime();
+}
+
+export function ciclosAnterioresDe(todosLosPlanes, planActivo) {
+  if (!planActivo) return [];
+  const previos = todosLosPlanes
+    .filter(
+      (p) =>
+        p.hijo_id === planActivo.hijo_id &&
+        p.habilidad === planActivo.habilidad &&
+        p.id !== planActivo.id &&
+        estadoPlan(p) !== 'activo',
+    )
+    .sort((a, b) => fechaCierreDe(a) - fechaCierreDe(b));
+
+  return previos.map((p, i) => {
+    const estado = estadoPlan(p);
+    const total = p.total_semanas || 4;
+    const completadas =
+      estado === 'completado' ? total : Math.max(0, (p.semana_actual || 1) - 1);
+    return {
+      numero: i + 1,
+      total_semanas: total,
+      semanas_completadas: completadas,
+      estado,
+    };
+  });
+}
+
+export function cicloNumeroDe(todosLosPlanes, plan) {
+  if (!plan) return 1;
+  const previos = todosLosPlanes.filter(
+    (p) =>
+      p.hijo_id === plan.hijo_id &&
+      p.habilidad === plan.habilidad &&
+      p.id !== plan.id &&
+      fechaCierreDe(p) < fechaCierreDe(plan),
+  );
+  return previos.length + 1;
+}

@@ -10,7 +10,7 @@ import EstrategiaActivaCard from './components/EstrategiaActivaCard';
 import SugerenciaIACard from './components/SugerenciaIACard';
 import SelectorHabilidades from './components/SelectorHabilidades';
 import EmptyPuerta1 from './components/EmptyPuerta1';
-import DrawerPasados from './components/DrawerPasados';
+import EstrategiaPasadaCard from './components/EstrategiaPasadaCard';
 import LoadingDignificado from './components/LoadingDignificado';
 import {
   buildSugerenciaFromInterpretacion,
@@ -18,6 +18,8 @@ import {
   estadoPlan,
   MAX_PLANES_ACTIVOS_FREE,
   HABILIDADES_CATALOGO,
+  ciclosAnterioresDe,
+  cicloNumeroDe,
 } from './helpers';
 import { getAuthorDisplay } from '../../utils/authorDisplay';
 import styles from './EstrategiasPage.module.css';
@@ -326,6 +328,7 @@ export default function EstrategiasPage() {
                 key={plan.id}
                 plan={plan}
                 hijo={hijo}
+                ciclosAnteriores={ciclosAnterioresDe(planes, plan)}
                 onAbrir={() => navigate(`/estrategias/${plan.id}`)}
                 onEliminar={setConfirmDeleteId}
                 authorName={getAuthorDisplay(plan.userId, profilesByUserId, user?.id)}
@@ -364,7 +367,27 @@ export default function EstrategiasPage() {
         </section>
 
         {planesPasados.length > 0 && (
-          <DrawerPasados planes={planesPasados} onEliminar={setConfirmDeleteId} />
+          <section className={styles.section}>
+            <h2 className={styles.sectionLbl}>Lo que ya trabajaste</h2>
+            <div className={styles.pasadosStack}>
+              {planesPasados
+                .slice()
+                .sort(
+                  (a, b) =>
+                    new Date(b.completado_at || 0) -
+                    new Date(a.completado_at || 0),
+                )
+                .map((p) => (
+                  <EstrategiaPasadaCard
+                    key={p.id}
+                    plan={p}
+                    hijo={hijo}
+                    cicloNumero={cicloNumeroDe(planes, p)}
+                    onAbrir={() => navigate(`/estrategias/${p.id}`)}
+                  />
+                ))}
+            </div>
+          </section>
         )}
       </div>
 

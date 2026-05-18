@@ -1,0 +1,57 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card-medium, 0 3px 10px rgba(42, 26, 14, 0.04));
+  padding: 13px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  width: 100%; text-align: left; cursor: pointer;
+  font-family: var(--font-family);
+  color: var(--color-text);
+}
+.card:active { transform: scale(0.99); }
+
+.topR { display: flex; align-items: center; gap: 10px; }
+
+.av {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  display: grid; place-items: center;
+  font-family: var(--font-heading);
+  font-weight: 700; font-size: 13px;
+  flex-shrink: 0;
+}
+
+.core { flex: 1; min-width: 0; }
+
+.eyeState {
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.card.completado .eyeState { color: var(--color-tag-green); }
+.card.abandonado .eyeState { color: var(--color-text-light); }
+
+.nm {
+  font-family: var(--font-heading);
+  font-size: 15px; font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--color-text);
+  margin-top: 3px;
+}
+
+.chev { color: var(--color-text-light); display: grid; place-items: center; flex-shrink: 0; }
+.chev svg { width: 14px; height: 14px; }
+
+.dots { display: flex; gap: 4px; }
+.d {
+  flex: 1; height: 4px;
+  border-radius: 999px;
+  background: rgba(42, 26, 14, 0.07);
+}
+.card.completado .dDone { background: var(--color-accent-green); opacity: 0.55; }
+.card.abandonado .dDone { background: var(--color-text-light); opacity: 0.6; }
