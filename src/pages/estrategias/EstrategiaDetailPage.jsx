@@ -203,6 +203,7 @@ export default function EstrategiaDetailPage() {
       <HeaderMocha
         titulo={plan.habilidad_nombre || plan.habilidad}
         onBack={() => navigate('/estrategias')}
+        cicloNumero={plan.numero_ciclo_actual}
         progreso={(() => {
           const dur = plan.total_semanas || 4;
           if (estado === 'completado') {

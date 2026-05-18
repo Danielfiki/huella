@@ -2,9 +2,14 @@
 import React from 'react';
 import styles from './HeaderMocha.module.css';
 
-export default function HeaderMocha({ titulo, onBack, stats, clinical, progreso, episodiosOrigen }) {
+export default function HeaderMocha({ titulo, onBack, stats, clinical, progreso, episodiosOrigen, cicloNumero }) {
   return (
     <header className={styles.top}>
+      {cicloNumero > 1 && (
+        <div className={styles.cicloEyebrow}>
+          Ciclo {cicloNumero} · Adaptado a lo que aprendiste
+        </div>
+      )}
       <div className={styles.row}>
         {onBack && (
           <button className={styles.iconBtn} onClick={onBack} aria-label="Atrás">
