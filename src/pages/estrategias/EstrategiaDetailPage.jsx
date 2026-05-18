@@ -26,7 +26,6 @@ export default function EstrategiaDetailPage() {
   const [avanzando, setAvanzando] = useState(false);
   const [avanzarErr, setAvanzarErr] = useState('');
   const [tareaKey, setTareaKey] = useState(0);
-  const [toggleErr, setToggleErr] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [eliminarErr, setEliminarErr] = useState('');
@@ -48,20 +47,6 @@ export default function EstrategiaDetailPage() {
     const ck = checkins.find((c) => c.semana_numero === s.numero);
     return { ...s, reflexion: ck?.reflexion || '' };
   });
-
-  // Episodios detonantes para el header
-  const episodiosDetonantes = useMemo(() => {
-    if (plan.episodios_detonantes?.length) return plan.episodios_detonantes;
-    const ids = plan.episodios_detonantes_ids || [];
-    return ids
-      .map((eid) => (state.episodios || []).find((e) => e.id === eid))
-      .filter(Boolean)
-      .map((e) => ({
-        id: e.id,
-        titulo: e.descripcionLibre?.slice(0, 40) || e.tipo || 'Momento',
-        emoji: '·',
-      }));
-  }, [plan, state.episodios]);
 
   const episodiosDurante = useMemo(() => {
     if (!plan.fecha_inicio) return null;
@@ -138,10 +123,10 @@ export default function EstrategiaDetailPage() {
       .eq('id', cicloActivo.id)
       .eq('estado', 'activo');
     if (dbErr) {
+      // Rollback optimista: el check vuelve a su estado anterior, lo
+      // que da feedback visual implícito de que el guardado falló.
       dispatch({ type: 'UPDATE_ESTRATEGIA', payload: { id: plan.id, plan: plan.plan } });
       setTareaKey((k) => k + 1);
-      setToggleErr('No se pudo guardar el cambio. Inténtalo de nuevo.');
-      setTimeout(() => setToggleErr(''), 4000);
     }
   };
 

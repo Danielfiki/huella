@@ -28,9 +28,8 @@ export default function EstrategiasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
-  const { state, deleteEstrategia, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId } = useHuella();
+  const { state, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId } = useHuella();
   const { user } = useAuth();
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [casoLibreEstado, setCasoLibreEstado] = useState('idle');
   const [casoLibreError, setCasoLibreError] = useState(null);
   const generandoCasoLibreRef = useRef(false);
@@ -271,11 +270,6 @@ export default function EstrategiasPage() {
     }
   };
 
-  const handleEliminar = async (id) => {
-    await deleteEstrategia(id);
-    setConfirmDeleteId(null);
-  };
-
   if (casoLibreEstado === 'generando') {
     return (
       <div className={styles.page}>
@@ -330,7 +324,6 @@ export default function EstrategiasPage() {
                 hijo={hijo}
                 ciclosAnteriores={ciclosAnterioresDe(planes, plan)}
                 onAbrir={() => navigate(`/estrategias/${plan.id}`)}
-                onEliminar={setConfirmDeleteId}
                 authorName={getAuthorDisplay(plan.userId, profilesByUserId, user?.id)}
               />
             ))}
@@ -390,19 +383,6 @@ export default function EstrategiasPage() {
           </section>
         )}
       </div>
-
-      {confirmDeleteId && (
-        <div className={styles.modalOverlay} onClick={() => setConfirmDeleteId(null)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <p className={styles.modalTtl}>¿Eliminar este plan?</p>
-            <p className={styles.modalSub}>Esta acción no se puede deshacer.</p>
-            <div className={styles.modalBtns}>
-              <button className={styles.modalCancel} onClick={() => setConfirmDeleteId(null)}>Cancelar</button>
-              <button className={styles.modalDanger} onClick={() => handleEliminar(confirmDeleteId)}>Eliminar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
