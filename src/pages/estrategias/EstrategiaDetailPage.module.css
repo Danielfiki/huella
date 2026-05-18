@@ -47,3 +47,105 @@
   flex-direction: column;
   gap: 10px;
 }
+
+.dangerZone {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.eliminarLink {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.eliminarLink:hover {
+  color: var(--color-ink);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.modalCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 320px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+}
+
+.modalTtl {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.modalSub {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.modalErr {
+  font-size: 13px;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.modalBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.modalCancel {
+  flex: 1;
+  padding: 12px;
+  font: inherit;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.modalDanger {
+  flex: 1;
+  padding: 12px;
+  font: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-danger);
+  color: #fff;
+  cursor: pointer;
+}
+
+.modalCancel:disabled,
+.modalDanger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

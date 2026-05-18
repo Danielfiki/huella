@@ -17,7 +17,7 @@ import styles from './EstrategiaDetailPage.module.css';
 export default function EstrategiaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, dispatch, addHito, reloadEstrategias } = useHuella();
+  const { state, dispatch, addHito, reloadEstrategias, deleteEstrategia } = useHuella();
   const { user } = useAuth();
   const plan = (state.estrategias || []).find((p) => p.id === id);
   const hijo = state.hijo;
@@ -27,6 +27,9 @@ export default function EstrategiaDetailPage() {
   const [avanzarErr, setAvanzarErr] = useState('');
   const [tareaKey, setTareaKey] = useState(0);
   const [toggleErr, setToggleErr] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [eliminarErr, setEliminarErr] = useState('');
 
   const estado = useMemo(() => plan && estadoPlan(plan), [plan]);
 
@@ -203,6 +206,19 @@ export default function EstrategiaDetailPage() {
     }
   };
 
+  const handleEliminarPlan = async () => {
+    if (eliminando) return;
+    setEliminando(true);
+    setEliminarErr('');
+    try {
+      await deleteEstrategia(plan.id);
+      navigate('/estrategias');
+    } catch {
+      setEliminando(false);
+      setEliminarErr('No se pudo eliminar el plan. Verifica tu conexión e intenta de nuevo.');
+    }
+  };
+
   return (
     <div className={styles.page}>
       <HeaderMocha
@@ -281,7 +297,46 @@ export default function EstrategiaDetailPage() {
             })}
           </div>
         </section>
+
+        <div className={styles.dangerZone}>
+          <button
+            type="button"
+            className={styles.eliminarLink}
+            onClick={() => setConfirmDelete(true)}
+          >
+            Eliminar este plan
+          </button>
+        </div>
       </div>
+
+      {confirmDelete && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !eliminando && setConfirmDelete(false)}
+        >
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.modalTtl}>¿Eliminar este plan?</p>
+            <p className={styles.modalSub}>Esta acción no se puede deshacer.</p>
+            {eliminarErr && <p className={styles.modalErr}>{eliminarErr}</p>}
+            <div className={styles.modalBtns}>
+              <button
+                className={styles.modalCancel}
+                onClick={() => setConfirmDelete(false)}
+                disabled={eliminando}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.modalDanger}
+                onClick={handleEliminarPlan}
+                disabled={eliminando}
+              >
+                {eliminando ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
