@@ -1421,3 +1421,66 @@ Estado: listo para arrancar Fase 5 (5 pantallas nuevas).
 ## VEREDICTO
 
 **BLOQUES 1, 2 (+HOTFIX) Y 3 COMPLETOS — CERRADOS.** Próxima sesión arranca con Bloque 4.
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 18 mayo 2026 — FASE 5 ESTRATEGIAS COMPLETADA (P3 + P1 + P2)
+# ═══════════════════════════════════════════════════════════════
+
+## CERRADO ESTA SESIÓN
+
+**Fase 5 P3 Cierre — completado de punta a punta**
+- Bloque 5: BannerCompletado conectado a P3 (CTA primaria "Ver cierre completo" → `/estrategias/:id/cierre/:numero_ciclo_actual`; "Ver tu hito" pasa a ghost; "Releer reflexiones" eliminado).
+- Fix de contraste: `.cicloEyebrow` de HeaderMocha pasa de `--color-accent-green` a `--color-celebration-start` (verde no contrastaba sobre mocha).
+- Commit `9c3d48a`.
+
+**Fase 5 P1 Lista — rediseño completo con Concepto C "Hilo de ciclos"**
+- `EstrategiaActivaCard` sobrescrito: tarjeta con hilo de ciclos donde cada ciclo es una fila de dots-semana. Ciclo 1 solo muestra "En curso · Sem N/total". Ciclo 2+ muestra ciclos anteriores arriba en verde desaturado. Con 4+ ciclos los antiguos se colapsan en línea-resumen "Ciclos D-H · X sem".
+- `EstrategiaPasadaCard` (nuevo): tarjeta compacta clickeable para completados/abandonados con eyebrow COMPLETADO (verde) o ABANDONADO (muted) + fecha + sufijo "· Ciclo N" cuando N>1.
+- Sección "Lo que ya trabajaste" reemplaza `DrawerPasados`.
+- `helpers.js`: `ciclosAnterioresDe` y `cicloNumeroDe` (agrupan por `p.habilidad` nombre visible).
+- BUGS PREEXISTENTES RESUELTOS: planes completados ya no aparecen en "Lo que estás trabajando"; click en plan pasado abre detalle; indicador "Ciclo N" visible en tarjetas pasadas.
+- Commit `73997b6`.
+
+**Fase 5 P2 Detalle — rediseño completo con Concepto C "Mapa + acordeón"**
+- `MapaCiclo` (nuevo): tarjeta con dots-semana del ciclo actual, reusa lenguaje visual de P1 Lista.
+- `StatsPlan` (nuevo): 3 cards 1-1-1 (semanas cerradas, momentos reales vía `episodiosDurante`, reflexiones). Vive desde día 1.
+- `SemanaActiva` rediseñada: cabezal tangerine, tareas, check-in, CTA. Conserva "Generar tareas" cuando `sinTareas`. `onToggleTarea` callback (no muta props).
+- `SemanaPasada` (rediseñada): chip colapsado con tick verde, expande tareas + reflexión guardada.
+- `SemanaFutura` (rediseñada): chip dashed con título visible y estado "Próxima" o "Bloq.".
+- PRESERVADO EXACTO: `onAvanzar` (URL real `/estrategias/:id/cierre/:numeroCicloCerrado`, `supabase.update` sobre `estrategia_ciclos`, `addHito`, `reloadEstrategias`), `onToggleTarea` (dispatch `UPDATE_ESTRATEGIA` optimista + supabase + rollback), useMemo `episodiosDetonantes`, merge `semanasConReflexion` desde `plan.checkins`.
+- 3 fixes post-bundle: `BannerCompletado` gateado a `estado === 'completado'`; `SemanaActiva` recupera `onGenerarTareas/generandoTareas/avanzando/errMsg`; `StatsPlan` recibe `episodiosDurante`.
+- Commit `c4b79f5`.
+
+## ESTADO DE ESTRATEGIAS
+
+Fase 5 cerrada en sus 3 pantallas principales (P3, P1, P2). Verificado visualmente en producción.
+
+## DEUDAS ACUMULADAS ESTA SESIÓN (todas para Fase 6)
+
+1. No hay acceso a "Eliminar plan" en ningún lado. El modal de `confirmDeleteId`/`handleEliminar` en `EstrategiasPage` quedó inalcanzable tras quitar el botón X del nuevo `EstrategiaActivaCard`. `EstrategiaDetailPage` tampoco lo expone.
+2. `DrawerPasados.jsx` y `.module.css` quedan huérfanos en el repo, sin imports.
+3. `onEliminar`/`authorName`/`canModify` y enrichment `episodios_detonantes` quedan como wiring muerto en `EstrategiasPage`.
+4. Modal de confirmación de cierre eliminado en `SemanaActiva` (decisión intencional del bundle: P3 Cierre cubre la transición no destructiva). Registrado por si se quiere recuperar.
+5. `toggleErr` (error específico de fallo al marcar tarea) no se renderiza en el cuerpo nuevo del detalle. Queda solo en consola con rollback optimista. El rollback da feedback visual implícito.
+6. "Nace de" (chips de episodios detonantes) eliminado del detalle por decisión de diseño. El useMemo de `episodiosDetonantes` queda computado pero sin render — código muerto.
+7. `onGenerarTareas`/`generandoTareas`/`avanzando`/`tareaKey` en `EstrategiaDetailPage`: parcialmente vivos, conviene auditar para limpiar muertos puros.
+8. `#C19E8C` hardcodeado en el gradient del avatar en `EstrategiaActivaCard.module.css` (no hay token equivalente; `--color-primary-light` es tangerine).
+9. `ciclosAnterioresDe`/`cicloNumeroDe` agrupan por `p.habilidad` (nombre visible). Para planes de "caso libre" con label inferido por IA podría fallar el hilado.
+
+## PENDIENTES FASE 5 (no urgentes)
+
+- P4 Modal Ciclo 2 (nice-to-have: el eyebrow "Ciclo N · Adaptado" + el contexto de P3 ya cubren el "darle a conocer que es ciclo nuevo").
+- P6 Panel descanso (nice-to-have: "Trabajar libre" volviendo al listado es funcional).
+- P5 PDF clínico (pospuesto, alta percepción de valor para upgrade Pro).
+
+## PARA MAÑANA — Daniel pidió cerrar acá. Pregunta abierta de qué viene
+
+Opciones presentadas:
+- **A)** Limpieza Fase 6 de Estrategias (recomendación: chico, predecible, deja el módulo sano)
+- **B)** Notificaciones push reales (cierra el flujo P3: recupera el copy original "te avisamos cuando esté listo")
+- **C)** Polish: mover "consejo de hoy" de Perfil a la campana del header de Home con notificación visual
+- **D)** Otra cosa
+
+Próxima sesión arranca con la decisión de Daniel sobre A/B/C/D.
