@@ -21,14 +21,17 @@ function elegirFrase() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+const plural = (n, singular, plural) => `${n} ${n === 1 ? singular : plural}`;
+
 function copyReflejo({ semanas, episodiosDurante, habilidad, diasDesdeUltimo }) {
+  const enSemanas = `En ${semanas === 1 ? 'esta' : 'estas'} ${plural(semanas, 'semana', 'semanas')}`;
   if (episodiosDurante > 0 && diasDesdeUltimo !== null && diasDesdeUltimo !== undefined) {
-    return `En estas ${semanas} semanas registraste ${episodiosDurante} episodios de ${habilidad}. El último fue hace ${diasDesdeUltimo} días.`;
+    return `${enSemanas} registraste ${plural(episodiosDurante, 'episodio', 'episodios')} de ${habilidad}. El último fue hace ${plural(diasDesdeUltimo, 'día', 'días')}.`;
   }
   if (episodiosDurante > 0) {
-    return `En estas ${semanas} semanas registraste ${episodiosDurante} episodios de ${habilidad}.`;
+    return `${enSemanas} registraste ${plural(episodiosDurante, 'episodio', 'episodios')} de ${habilidad}.`;
   }
-  return `En estas ${semanas} semanas trabajaste ${habilidad}.`;
+  return `${enSemanas} trabajaste ${habilidad}.`;
 }
 
 export default function ModalPuenteCiclo({
@@ -173,7 +176,7 @@ export default function ModalPuenteCiclo({
                 {hijoNombre || 'Tu hijo'}{edadHijo ? ` · ${edadHijo} años` : ''}
               </p>
               <h2 id={headingId} className={styles.heading}>
-                Empezó tu Ciclo 2
+                Comienza tu Ciclo 2
               </h2>
             </div>
           </section>

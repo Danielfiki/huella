@@ -220,12 +220,17 @@ export default function EstrategiaDetailPage() {
     }
   };
 
-  // P4: confirmar y posponer son funcionalmente idénticos — solo
-  // registran p4_visto_at vía el wrapper del contexto (que refresca el
-  // detail) y cierran el modal. La diferencia es solo el botón usado.
-  const cerrarP4 = async () => {
+  // P4: ambos registran p4_visto_at, pero el destino difiere.
+  // Confirmar ("Vamos al Ciclo 2"): se queda en el detail (Ciclo 2 sem 1).
+  const cerrarP4Confirmar = async () => {
     await marcarP4Visto(plan.id);
     setModalP4Abierto(false);
+  };
+  // Posponer ("Lo veo después", X, ESC, swipe): vuelve a P1 Lista.
+  const cerrarP4Posponer = async () => {
+    await marcarP4Visto(plan.id);
+    setModalP4Abierto(false);
+    navigate('/estrategias');
   };
 
   // Datos del Ciclo 1 (ya cerrado) para el reflejo del modal. Se derivan
@@ -380,8 +385,8 @@ export default function EstrategiaDetailPage() {
           diasDesdeUltimo={diasDesdeUltimoCiclo1}
           edadHijo={hijo?.edad}
           hijoNombre={hijo?.nombre}
-          onConfirmar={cerrarP4}
-          onPosponer={cerrarP4}
+          onConfirmar={cerrarP4Confirmar}
+          onPosponer={cerrarP4Posponer}
         />
       )}
     </div>
