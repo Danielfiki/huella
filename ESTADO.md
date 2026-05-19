@@ -1525,6 +1525,9 @@ Nada de esto está verificado en producción. Daniel debe probar en huella-theta
 - `AUDITORIA_ESTRATEGIAS.md` referencia `#D94040` en DrawerPasados (ya eliminado) — doc desactualizada, limpiar referencias muertas en docs si se quiere.
 - Copy `ModalPuenteCiclo.jsx` (B·3 puente, segundo párrafo): dice "que ya trabajaron" — debe pasar a segunda persona singular ("que ya hiciste" o "que vienes trabajando") para mantener el tono íntimo y el tuteo neutro de Huella.
 - Copy `ModalPuenteCiclo.jsx`: el nombre de la habilidad aparece dos veces en el modal (B·1 reflejo y B·3 puente). En un modal corto debe mencionarse una sola vez para evitar redundancia.
+- README del bundle `handoff_puerta1/` está desactualizado: menciona "multi-plan render" como deuda diferida (`planActivo = planes.find(...)`), pero en el código real ya está resuelto (`planesActivos = planes.filter(...)` + `.map`). Si el bundle se reusa como referencia futura, conviene actualizar el README o anotarlo en la propia carpeta.
+- Mensaje del commit `11bb662` menciona "reposicionamiento dinámico arriba/debajo según haya hallazgo o no", que **no se aplicó** (se respetó el colapsable existente por decisión de "mínimo impacto"). El commit ya está pusheado, no se hace amend — queda registrado acá para evitar confusión al leer la historia git.
+- `onCerrarSugerencia` no se renombró a `onDescartarSugerencia` (decisión de mínimo impacto); se mapea al prop `onDescartar` de `PuertaUnoHallazgo`. Funcionalmente OK, cosmético pendiente.
 
 Deuda 6 previa ("Nace de" / useMemo `episodiosDetonantes`): **resuelta** esta sesión (Item 3).
 
@@ -1705,32 +1708,70 @@ Pusheado a main, build verde.
   "El último fue hoy." (no "hace 0 días").
 - Casos 1 día / N días siguen correctos.
 
+# ═══════════════════════════════════════════════════════════════
+# Sesión 19 mayo 2026 — Puerta 1 Concepto C "Mosaico de evidencia"
+# ═══════════════════════════════════════════════════════════════
+
+## CERRADO ESTA SESIÓN — Verificado en producción el 19 mayo 2026
+
+Puerta 1 rediseñada con el bundle de Claude Design (`handoff_puerta1/`, versionado en el repo). Verificada en producción por Daniel.
+
+**3 estados funcionando**:
+1. **Hallazgo** (`PuertaUnoHallazgo`): cuando hay sugerencia IA visible. Head con gradiente `celebration-start → bg`, dot mocha→primary con "h", stamp "N momentos · X días", título + bajada de la narrativa, mosaico de tiles (emoji + barra de intensidad + día corto), meta "Intensidad media X.X/5", CTA tinta sólida "Trabajemos esto", acciones "No por ahora" y "¿Prefieres elegir tú? →".
+2. **Empty observacional** (`PuertaUnoEmpty`): cuando no hay sugerencia. Tono apagado, dot `surface-alt`, copy "Huella está mirando. Todavía no se asoma un patrón claro" + meta con conteo y link a Puerta 2.
+3. **Loader** (`PuertaUnoLoading`): cuando `loadingPatrones === true`. Pulse cuadrado 38×38 mocha→primary, título + sub, barra indeterminada, badge "En segundo plano", link a Puerta 2.
+
+**Label dinámico**: el header del colapsable ahora dice **"LO QUE HUELLA VE EN [NOMBRE]"** (uppercase del CSS `text-transform`) en lugar del genérico "LO QUE MÁS SE REPITE EN TUS REGISTROS". Fallback "tu hijo" si no hay nombre. Patch: `EstrategiasPage.jsx` cambia `<span className={styles.sectionLblText}>` con interpolación `Lo que Huella ve en {hijo?.nombre || 'tu hijo'}`.
+
+**Componentes nuevos** en `src/components/estrategias/puerta1/`: `PuertaUnoHallazgo.{jsx,module.css}`, `PuertaUnoEmpty.{jsx,module.css}`, `PuertaUnoLoading.{jsx,module.css}`.
+
+**Archivos eliminados** (`git rm`): `src/pages/estrategias/components/SugerenciaIACard.{jsx,module.css}` y `EmptyPuerta1.{jsx,module.css}`.
+
+**helpers.js**: `buildSugerenciaFromInterpretacion` ahora hace `slice(0, 5)` (antes 3) y agrega `created_at: e.created_at` al map de detonantes para que el `Tile` calcule día corto y el stamp calcule span de días. Comentario `// Adaptador IA → SugerenciaIACard` actualizado a `PuertaUnoHallazgo`. Mismo update cosmético en `anthropic.js:727`.
+
+**EstrategiasPage.jsx — 4 ediciones acotadas**:
+1. Imports (quita `SugerenciaIACard`/`EmptyPuerta1`, agrega los 3 nuevos desde `../../components/estrategias/puerta1/`).
+2. Handler nuevo `onIrPuerta2` (scroll suave a `#puerta-2` con `scrollIntoView({behavior:'smooth'})`).
+3. `id="puerta-2"` en la `<section>` que envuelve `<SelectorHabilidades>`.
+4. Reemplazo del render dentro del colapsable existente: `loadingPatrones ? <PuertaUnoLoading /> : sugerenciaVisible ? <PuertaUnoHallazgo sugerencia={sugerenciaFiltrada} … /> : <PuertaUnoEmpty totalEpisodios={episodios.length} onIrPuerta2={…} />`.
+
+**Preservado (no se tocó)**: el colapsable mismo (`button`, `handleToggle`, `expanded`, `setExpanded`), badge "1 nueva", `sugerenciaRef`/`hijoIdRef` con persistencia por fingerprint en sessionStorage, los 3 `useEffect` de auto-expand, `sugerenciaFiltrada` (filtro 90d), `esPostRechazo`, `planesActivos.map` (multi-plan), `MAX_PLANES_ACTIVOS_FREE`, `casoLibre` y sus pantallas, props `onCasoLibre` + `habilidadesEnPlanActivo` de `<SelectorHabilidades>` (Puerta 2 intacta), `EstrategiaActivaCard`, `EstrategiaPasadaCard`, `HeaderMocha`, `Card.jsx`, `LoadingDignificado`, `frases.js`, tokens en `index.css`, `HuellaContext.jsx`, bottom nav.
+
+**Verificaciones del bundle (las 3 pasaron)**:
+1. Multi-plan: `state.estrategias` acepta N planes con `estadoPlan === 'activo'`; `crearEstrategiaConCiclo` no cierra el anterior; `planesActivos = filter` + `.map` ya muestra todos. La "deuda multi-plan render" del README ya estaba resuelta en el código (deuda registrada en Fase 6).
+2. `.sectionLblText` ya existía en `EstrategiasPage.module.css:13`. El patch CSS NO se aplicó.
+3. Greps post-edit: cero referencias residuales de código vivo a los 4 archivos eliminados. Únicos hits: 2 comentarios históricos del bundle en los componentes nuevos (intencionales).
+
+**Commits**:
+- `11bb662` — feat(estrategias): rediseño de Puerta 1 — Concepto C "Mosaico de evidencia" (23 files, 1877 insertions, 91 deletions).
+- `ec5ebe3` — fix(estrategias): label Puerta 1 ahora dice 'LO QUE HUELLA VE EN [nombre]' en lugar del genérico (1 file, 1+/1-).
+
+## DEUDAS DE ESTA SESIÓN (registradas en DEUDAS QUE QUEDAN PARA FASE 6)
+
+- README del bundle `handoff_puerta1/` desactualizado (multi-plan render ya resuelto).
+- Mensaje del commit `11bb662` describe "reposicionamiento dinámico arriba/debajo" que no se aplicó (se respetó el colapsable existente). Commit ya pusheado, no se hace amend.
+- `onCerrarSugerencia` no se renombró a `onDescartarSugerencia` (mínimo impacto); se mapea al prop `onDescartar` de `PuertaUnoHallazgo`.
+
+## PENDIENTES OPERACIONALES / NO URGENTES (detectados esta sesión)
+
+- **Bug en registrar episodio**: el mensaje de error de la API se muestra en inglés crudo ("Your credit balance is too low…"). Requiere `try/catch` elegante en la llamada al API para mostrar un mensaje digno en español al usuario, no el texto crudo de Anthropic.
+- **Bug del micrófono** en el textarea del registro: corta el mensaje al hablar. Pendiente de reproducir con ejemplo concreto antes de tocar.
+- **Idea polish**: mover "consejo de hoy" desde la burbuja flotante de Perfil/Cuenta a la campana del header de Home, con puntito de notificación. (Idea ya estaba registrada como deuda preexistente; se deja explícita acá como recordatorio operacional.)
+
 ═══════════════════════════════════════════
-PRÓXIMA SESIÓN — POTENCIAR PUERTA 1
+PRÓXIMA SESIÓN
 ═══════════════════════════════════════════
 
-Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3 implementados y verificados en producción; P4 verificado end-to-end en producción el 19 mayo 2026).
+Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3 verificados; P4 verificado end-to-end el 19 mayo 2026); **Puerta 1 Concepto C verificada el 19 mayo 2026**. La P1 Lista de Estrategias queda completa para los flujos actuales.
 
-Próximo bloque: rediseño de Puerta 1 ("LO QUE MÁS SE REPITE EN TUS REGISTROS") en P1 Lista de Estrategias.
+Daniel define la próxima prioridad entre:
+- **P6 Panel descanso** (último pendiente nice-to-have de Fase 5).
+- **Monetización** — definición de muros y puntos de upgrade ANTES de tocar Registro con Claude Design.
+- **Deudas visuales Fase 6** — doble nomenclatura de tokens (aliases vs base), `Card.jsx` con radius/padding/shadow hardcodeados, `#C19E8C` y `#fff` literales, 4 tratamientos de sombra coexistiendo.
+- **Bugs operacionales** detectados esta sesión — error de API en inglés en el registro, mic que corta el texto.
+- **Registro con Claude Design** (depende de definir monetización antes).
+- Otra cosa que Daniel decida.
 
-Decisiones de producto ya tomadas (no redecidas):
-1. Renombrar: "LO QUE MÁS SE REPITE EN TUS REGISTROS" → "LO QUE HUELLA VE EN {nombre del hijo}"
-2. Reposicionar dinámicamente: con sugerencia activa sube encima del plan activo; sin sugerencia queda recogido debajo
-3. Tratamiento de "hallazgo" con jerarquía visual fuerte cuando hay sugerencia
-4. Estado vacío motivacional + link sutil a Puerta 2 (selector manual)
-5. Estados a contemplar: con sugerencia / sin sugerencia / generando
-
-Flujo previsto:
-1. Daniel pegará brief a Claude Design para 3 conceptos visuales (brief ya armado en chat con Claude)
-2. Auditoría visual obligatoria contra Home, Historial, P1-P4 antes de proponer
-3. Daniel elige concepto → pulido + handoff bundle → revisión de Claude → implementación en Claude Code
-
-Después de Puerta 1:
-- P6 Panel descanso (último pendiente de Fase 5)
-- Monetización (definición de muros y puntos de upgrade ANTES de Registro)
-- Registro con Claude Design
-- Deudas visuales Fase 6 (tokens unificados, Card.jsx, hardcodes)
-
-Deuda menor pendiente de verificación natural: en ModalPuenteCiclo, el caso "El último fue hoy" (diasDesdeUltimo === 0) está implementado pero no se ha visto aún en producción porque requiere un episodio con fecha de hoy en un plan en Ciclo 2.
-
+Deudas menores pendientes de verificación natural:
+- ModalPuenteCiclo: caso "El último fue hoy" (`diasDesdeUltimo === 0`) implementado pero no visto aún en prod (requiere episodio con fecha de hoy en un plan en Ciclo 2).
 ═══════════════════════════════════════════
