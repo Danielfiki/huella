@@ -1528,6 +1528,9 @@ Nada de esto está verificado en producción. Daniel debe probar en huella-theta
 - README del bundle `handoff_puerta1/` está desactualizado: menciona "multi-plan render" como deuda diferida (`planActivo = planes.find(...)`), pero en el código real ya está resuelto (`planesActivos = planes.filter(...)` + `.map`). Si el bundle se reusa como referencia futura, conviene actualizar el README o anotarlo en la propia carpeta.
 - Mensaje del commit `11bb662` menciona "reposicionamiento dinámico arriba/debajo según haya hallazgo o no", que **no se aplicó** (se respetó el colapsable existente por decisión de "mínimo impacto"). El commit ya está pusheado, no se hace amend — queda registrado acá para evitar confusión al leer la historia git.
 - `onCerrarSugerencia` no se renombró a `onDescartarSugerencia` (decisión de mínimo impacto); se mapea al prop `onDescartar` de `PuertaUnoHallazgo`. Funcionalmente OK, cosmético pendiente.
+- **Tiempo percibido del cierre de ciclo (P3) se siente largo**. Posibles mejoras: paralelizar las 4 llamadas en cadena, progreso más granular paso a paso, o ajustar el copy "menos de un minuto" a algo más realista tipo "1-2 minutos" para que la expectativa coincida con la realidad.
+- **Bug del micrófono** en el textarea del registro: corta el mensaje al hablar. Pendiente de reproducir con ejemplo concreto antes de tocar.
+- **Empty state de Puerta 1 (`PuertaUnoEmpty`) se siente visualmente plano**. Falta calidez: una plantita decorativa, color de acento o algún elemento orgánico que lo alinee con el lenguaje cálido del resto de Huella (BannerCompletado tiene plantita 🌿, Home tiene gradientes naranjas, etc.). El empty actual cumple funcionalmente pero pierde la voz visual del producto.
 
 Deuda 6 previa ("Nace de" / useMemo `episodiosDetonantes`): **resuelta** esta sesión (Item 3).
 
@@ -1716,6 +1719,8 @@ Pusheado a main, build verde.
 
 Puerta 1 rediseñada con el bundle de Claude Design (`handoff_puerta1/`, versionado en el repo). Verificada en producción por Daniel.
 
+**Decisión adaptada respecto al brief original**: se respetó el colapsable existente (con badge "1 nueva", filtro 90 días, `esPostRechazo`, `casoLibre` y multi-plan render), y solo se reemplazó la **apariencia interna** del bloque. El "reposicionamiento dinámico arriba/abajo del plan activo" que proponía el brief original del bundle **NO se aplicó** — habría implicado eliminar la UX colapsable que ya estaba en producción. Daniel autorizó esta adaptación como "mínimo impacto".
+
 **3 estados funcionando**:
 1. **Hallazgo** (`PuertaUnoHallazgo`): cuando hay sugerencia IA visible. Head con gradiente `celebration-start → bg`, dot mocha→primary con "h", stamp "N momentos · X días", título + bajada de la narrativa, mosaico de tiles (emoji + barra de intensidad + día corto), meta "Intensidad media X.X/5", CTA tinta sólida "Trabajemos esto", acciones "No por ahora" y "¿Prefieres elegir tú? →".
 2. **Empty observacional** (`PuertaUnoEmpty`): cuando no hay sugerencia. Tono apagado, dot `surface-alt`, copy "Huella está mirando. Todavía no se asoma un patrón claro" + meta con conteo y link a Puerta 2.
@@ -1752,11 +1757,21 @@ Puerta 1 rediseñada con el bundle de Claude Design (`handoff_puerta1/`, version
 - Mensaje del commit `11bb662` describe "reposicionamiento dinámico arriba/debajo" que no se aplicó (se respetó el colapsable existente). Commit ya pusheado, no se hace amend.
 - `onCerrarSugerencia` no se renombró a `onDescartarSugerencia` (mínimo impacto); se mapea al prop `onDescartar` de `PuertaUnoHallazgo`.
 
-## PENDIENTES OPERACIONALES / NO URGENTES (detectados esta sesión)
+## ⚠️ DEUDAS CRÍTICAS PARA PRÓXIMA SESIÓN (PRIORIDAD ALTA)
 
-- **Bug en registrar episodio**: el mensaje de error de la API se muestra en inglés crudo ("Your credit balance is too low…"). Requiere `try/catch` elegante en la llamada al API para mostrar un mensaje digno en español al usuario, no el texto crudo de Anthropic.
-- **Bug del micrófono** en el textarea del registro: corta el mensaje al hablar. Pendiente de reproducir con ejemplo concreto antes de tocar.
-- **Idea polish**: mover "consejo de hoy" desde la burbuja flotante de Perfil/Cuenta a la campana del header de Home, con puntito de notificación. (Idea ya estaba registrada como deuda preexistente; se deja explícita acá como recordatorio operacional.)
+Detectadas esta sesión probando en producción. Afectan UX real de usuarios beta — no son nice-to-have.
+
+- **Manejo de error del API en pantalla**. Cuando una llamada a Claude falla (saldo, timeout, red), la app muestra el mensaje crudo en inglés ("Your credit balance is too low…") o se queda pegada sin feedback. Confirmado en **dos lugares**:
+  1. **Pantalla de registro de episodios**: la "orientación de Huella" muestra texto en inglés cuando el API falla.
+  2. **P3 Cierre**: loader infinito sin timeout ni fallback cuando la generación demora demasiado.
+
+  Necesita `try/catch` elegante con mensaje en español + estado de error con opción "Reintentar". Sin esto el papá ve texto en inglés o cree que la app se rompió.
+
+- **Loader de P3 Cierre sin salida**. Si la generación tarda mucho o falla, el usuario queda atrapado en el loader y la única forma de salir es navegar manualmente a Inicio. Los datos sí se guardan correctamente en el backend (verificado: el plan quedó marcado "PLAN COMPLETADO" tras refresh manual), pero **el usuario nunca se entera** — no hay feedback de éxito, ni timeout, ni botón de salida. Falsa percepción de fracaso sobre algo que funcionó.
+
+## IDEAS DE POLISH
+
+- Mover "consejo de hoy" desde la burbuja flotante en Perfil/Cuenta a la campana del header de Home, con puntito de notificación. (Idea ya estaba registrada como deuda preexistente; se deja explícita acá como recordatorio.)
 
 ═══════════════════════════════════════════
 PRÓXIMA SESIÓN
@@ -1764,11 +1779,13 @@ PRÓXIMA SESIÓN
 
 Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3 verificados; P4 verificado end-to-end el 19 mayo 2026); **Puerta 1 Concepto C verificada el 19 mayo 2026**. La P1 Lista de Estrategias queda completa para los flujos actuales.
 
-Daniel define la próxima prioridad entre:
+**Prioridad recomendada — bloque de manejo de errores del API**. Las dos deudas críticas detectadas esta sesión (error en inglés en registro + loader P3 sin salida) afectan UX real de usuarios beta. Hacer un solo bloque de trabajo que cubra: `try/catch` elegante en `src/services/anthropic.js`, mensajes en español, estado de error con "Reintentar", y timeout/fallback para el loader de P3 Cierre.
+
+Después, Daniel define entre el resto:
 - **P6 Panel descanso** (último pendiente nice-to-have de Fase 5).
 - **Monetización** — definición de muros y puntos de upgrade ANTES de tocar Registro con Claude Design.
-- **Deudas visuales Fase 6** — doble nomenclatura de tokens (aliases vs base), `Card.jsx` con radius/padding/shadow hardcodeados, `#C19E8C` y `#fff` literales, 4 tratamientos de sombra coexistiendo.
-- **Bugs operacionales** detectados esta sesión — error de API en inglés en el registro, mic que corta el texto.
+- **Deudas visuales Fase 6** — doble nomenclatura de tokens (aliases vs base), `Card.jsx` con radius/padding/shadow hardcodeados, `#C19E8C` y `#fff` literales, 4 tratamientos de sombra coexistiendo. Incluye polish visual del empty de Puerta 1 (le falta calidez/plantita).
+- **Tiempo percibido del cierre de ciclo P3** — paralelizar llamadas o ajustar copy de expectativa.
 - **Registro con Claude Design** (depende de definir monetización antes).
 - Otra cosa que Daniel decida.
 
