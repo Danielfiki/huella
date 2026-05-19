@@ -1523,6 +1523,8 @@ Nada de esto está verificado en producción. Daniel debe probar en huella-theta
 - Deuda 8 previa: `#C19E8C` hardcodeado en gradient del avatar de `EstrategiaActivaCard.module.css` (sin token equivalente).
 - Deuda 9 previa: `ciclosAnterioresDe`/`cicloNumeroDe` agrupan por `p.habilidad` (nombre visible); riesgo en planes "caso libre" con label inferido por IA.
 - `AUDITORIA_ESTRATEGIAS.md` referencia `#D94040` en DrawerPasados (ya eliminado) — doc desactualizada, limpiar referencias muertas en docs si se quiere.
+- Copy `ModalPuenteCiclo.jsx` (B·3 puente, segundo párrafo): dice "que ya trabajaron" — debe pasar a segunda persona singular ("que ya hiciste" o "que vienes trabajando") para mantener el tono íntimo y el tuteo neutro de Huella.
+- Copy `ModalPuenteCiclo.jsx`: el nombre de la habilidad aparece dos veces en el modal (B·1 reflejo y B·3 puente). En un modal corto debe mencionarse una sola vez para evitar redundancia.
 
 Deuda 6 previa ("Nace de" / useMemo `episodiosDetonantes`): **resuelta** esta sesión (Item 3).
 
@@ -1663,7 +1665,11 @@ Ciclo 2, diferenciar Lo veo después"). Pusheado a main.
 Archivos modificados: `ModalPuenteCiclo.jsx`,
 `EstrategiaDetailPage.jsx`. Build verde.
 
-## Falta verificación en producción por Daniel (post-redeploy Vercel)
+## Verificado en producción el 19 mayo 2026
+
+P4 funciona end-to-end en producción: gatillo, render, CTA "Vamos al
+Ciclo 2", CTA "Lo veo después" y escritura de `p4_visto_at`. Confirmado
+por Daniel:
 
 1. "1 episodio" / "1 día" / "esta 1 semana" en singular cuando
    corresponde; plurales en N>1.
@@ -1673,9 +1679,9 @@ Archivos modificados: `ModalPuenteCiclo.jsx`,
 5. "Vamos al Ciclo 2" se queda en el detail (sin cambio).
 6. El modal sigue apareciendo solo una vez por plan.
 
-Recordatorio vigente: la columna `p4_visto_at` debe estar creada en
-Supabase (migración `supabase/migrations/p4_visto_at.sql`) para que
-todo el flujo P4 funcione.
+Aclaración: la migración `supabase/migrations/p4_visto_at.sql` ya
+estaba aplicada en Supabase. Nunca fue un bloqueante real — el ESTADO.md
+anterior que la marcaba como pendiente estaba desactualizado.
 
 # ═══════════════════════════════════════════════════════════════
 # Sesión 18 mayo 2026 (tarde) — P4 mini-fix "hace 0 días"
@@ -1703,7 +1709,7 @@ Pusheado a main, build verde.
 PRÓXIMA SESIÓN — POTENCIAR PUERTA 1
 ═══════════════════════════════════════════
 
-Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3, P4 implementados y verificados en producción).
+Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3 implementados y verificados en producción; P4 verificado end-to-end en producción el 19 mayo 2026).
 
 Próximo bloque: rediseño de Puerta 1 ("LO QUE MÁS SE REPITE EN TUS REGISTROS") en P1 Lista de Estrategias.
 
