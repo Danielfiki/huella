@@ -100,7 +100,7 @@ export function md(t) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Adaptador IA → SugerenciaIACard
+// Adaptador IA → PuertaUnoHallazgo
 //
 // Fuente: detectarPatronesEstructurado() en src/services/anthropic.js
 // Contrato esperado del detector:
@@ -116,7 +116,7 @@ export function buildSugerenciaFromInterpretacion(interpretacion, episodios) {
   if (!hab) return null;
 
   const detonantes = (patron.episodios_ids || [])
-    .slice(0, 3)
+    .slice(0, 5)
     .map((id) => episodios.find((e) => e.id === id))
     .filter(Boolean)
     .map((e) => ({
@@ -126,6 +126,7 @@ export function buildSugerenciaFromInterpretacion(interpretacion, episodios) {
       fecha_label: relativoCorto(e.fecha),
       intensidad: e.intensidad || 3,
       categoria: e.categoria || 'rutina',
+      created_at: e.created_at,
     }));
 
   if (detonantes.length === 0) return null;

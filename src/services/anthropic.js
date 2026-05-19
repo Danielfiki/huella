@@ -724,7 +724,7 @@ El array semanas es la fuente de verdad: duracion_semanas debe ser igual a seman
 }
 
 // ════════════════════════════════════════════════════════════════════
-// detectarPatronesEstructurado — alimenta SugerenciaIACard
+// detectarPatronesEstructurado — alimenta PuertaUnoHallazgo
 // Devuelve { patrones: [{ tipo, descripcion, bajada, episodios_ids, confianza }] }
 // ════════════════════════════════════════════════════════════════════
 

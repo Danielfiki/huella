@@ -7,9 +7,10 @@ import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync';
 import { supabase } from '../../lib/supabase';
 import HeaderMocha from './components/HeaderMocha';
 import EstrategiaActivaCard from './components/EstrategiaActivaCard';
-import SugerenciaIACard from './components/SugerenciaIACard';
+import PuertaUnoHallazgo from '../../components/estrategias/puerta1/PuertaUnoHallazgo';
+import PuertaUnoEmpty from '../../components/estrategias/puerta1/PuertaUnoEmpty';
+import PuertaUnoLoading from '../../components/estrategias/puerta1/PuertaUnoLoading';
 import SelectorHabilidades from './components/SelectorHabilidades';
-import EmptyPuerta1 from './components/EmptyPuerta1';
 import EstrategiaPasadaCard from './components/EstrategiaPasadaCard';
 import LoadingDignificado from './components/LoadingDignificado';
 import {
@@ -214,6 +215,13 @@ export default function EstrategiasPage() {
     navigate(`/estrategias/nuevo?habilidad=${hab.id}`);
   };
 
+  // Link sutil en Puerta 1 → lleva el foco a Puerta 2 (sección hermana).
+  // Scroll suave a la sección con id="puerta-2". No navega ni abre nada.
+  const onIrPuerta2 = () => {
+    const el = document.getElementById('puerta-2');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleCasoLibre = async (texto) => {
     if (generandoCasoLibreRef.current) return;
     if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) {
@@ -341,21 +349,25 @@ export default function EstrategiasPage() {
             </button>
             {expanded && (
               loadingPatrones ? (
-                <div className={styles.loadingPuerta1}>Analizando tus registros…</div>
+                <PuertaUnoLoading onIrPuerta2={onIrPuerta2} />
               ) : sugerenciaVisible ? (
-                <SugerenciaIACard
+                <PuertaUnoHallazgo
                   sugerencia={sugerenciaFiltrada}
                   onAceptar={onAceptarSugerencia}
-                  onCerrar={onCerrarSugerencia}
+                  onDescartar={onCerrarSugerencia}
+                  onIrPuerta2={onIrPuerta2}
                 />
               ) : (
-                <EmptyPuerta1 totalEpisodios={episodios.length} postRechazo={esPostRechazo} />
+                <PuertaUnoEmpty
+                  totalEpisodios={episodios.length}
+                  onIrPuerta2={onIrPuerta2}
+                />
               )
             )}
           </section>
         )}
 
-        <section className={styles.section}>
+        <section id="puerta-2" className={styles.section}>
           <SelectorHabilidades onElegir={onElegirHabilidad} onCasoLibre={handleCasoLibre} habilidadesEnPlanActivo={habilidadesEnPlanActivo} />
         </section>
 

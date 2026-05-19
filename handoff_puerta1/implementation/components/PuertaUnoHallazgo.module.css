@@ -1,0 +1,204 @@
+/* PuertaUnoHallazgo.module.css
+   Estado "con sugerencia" · Concepto C "Mosaico de evidencia".
+   Tokens base — no introduce aliases nuevos.
+   Patrones reutilizados:
+     - gradiente celebration-start → bg en head (mismo lenguaje que EstrategiaActivaCard.head)
+     - dot mocha→primary (voz de Huella)
+     - CTA tinta sólida --color-text
+   Variante visual nueva exclusiva del bloque Puerta 1:
+     - mosaico de tiles (emoji + barra de intensidad + día). NO se exporta a otros componentes. */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: var(--shadow-md, 0 8px 22px rgba(42, 26, 14, 0.08));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  background: linear-gradient(180deg, var(--color-celebration-start) 0%, var(--color-bg) 100%);
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent-mocha), var(--color-primary));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(229, 110, 38, 0.10);
+}
+
+.lab {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.lab b {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.stamp {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+}
+
+.ttl {
+  font-family: var(--font-heading);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.baj {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ── Mosaico ──────────────────────────────────────────── */
+.mosaic {
+  padding: 14px 18px 12px;
+  display: grid;
+  /* auto-fit: 1..5 tiles, todos del mismo ancho, máximo 5 por fila */
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.ep {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 10px);
+  padding: 9px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.emo {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.ibar {
+  width: 100%;
+  height: 3px;
+  background: var(--color-surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ibar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: 999px;
+}
+
+.dy {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Meta (intensidad media) ──────────────────────────── */
+.meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  padding: 0 18px 14px;
+}
+.meta strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* ── CTA primario ─────────────────────────────────────── */
+.ctaWrap {
+  padding: 0 14px 12px;
+}
+
+.cta {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--color-text);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md, 16px);
+  font-family: var(--font-family);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.cta .arr {
+  margin-left: auto;
+  display: inline-flex;
+}
+.cta svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── Acciones secundarias ─────────────────────────────── */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px 14px;
+}
+
+.no,
+.p2 {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
