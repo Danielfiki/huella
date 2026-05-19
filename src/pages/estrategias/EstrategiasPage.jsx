@@ -341,7 +341,7 @@ export default function EstrategiasPage() {
         {planesActivos.length < MAX_PLANES_ACTIVOS_FREE && (
           <section className={styles.section}>
             <button className={styles.sectionHeader} onClick={handleToggle} aria-expanded={expanded}>
-              <span className={styles.sectionLblText}>Lo que más se repite en tus registros</span>
+              <span className={styles.sectionLblText}>Lo que Huella ve en {hijo?.nombre || 'tu hijo'}</span>
               {esNueva && sugerenciaVisible && (
                 <span className={styles.badgeNueva}>1 nueva</span>
               )}
