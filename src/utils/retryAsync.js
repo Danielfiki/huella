@@ -2,7 +2,7 @@
 // planes con IA). Solo reintenta si el predicado lo permite. Backoff
 // fijo creciente: el intento 2 espera 1s, el 3 espera 2s.
 
-const BACKOFF_MS = [0, 1000, 2000]; // espera ANTES del intento i (1-indexado)
+const BACKOFF_MS = [0, 1000, 3000]; // espera ANTES del intento i (1-indexado, exponencial suave)
 
 export async function retryAsync(fn, { maxAttempts = 3, esReintentable = () => false } = {}) {
   let ultimoError;
@@ -23,15 +23,22 @@ export async function retryAsync(fn, { maxAttempts = 3, esReintentable = () => f
 // Códigos semánticos que adjunta llamarAPI (post-fix de manejo de
 // errores). Si el Error trae `code`, esa es la fuente de verdad y
 // la heurística por mensaje queda como fallback.
+//
+// Política: blindar la generación de plan contra blips transitorios.
+// Reintentamos cualquier code que pueda ser un blip — incluso cuota
+// Anthropic transitoria o 4xx genérico. Un retry barato no perjudica
+// y cubre clasificaciones imperfectas del backend (p. ej. un 403
+// momentáneo que se resuelve solo). Solo el rate limit propio
+// (`limite_diario`) NO se reintenta — eso no cambia hasta mañana.
 const CODES_NO_REINTENTABLES = new Set([
-  'limite_diario',          // rate limit propio (20/día)
-  'servicio_no_disponible', // cuota Anthropic / billing / auth (no se arregla reintentando)
-  'error_servicio',         // 4xx genérico (probable problema en el request)
+  'limite_diario',          // rate limit propio (20/día) — no se arregla reintentando
 ])
 const CODES_REINTENTABLES = new Set([
-  'servicio_saturado',      // 429/529 upstream
+  'servicio_saturado',      // 429/529 upstream (sobrecarga Anthropic)
   'servicio_inaccesible',   // 5xx, timeout, abort
-  'red',                    // red caída en cliente
+  'servicio_no_disponible', // cuota/billing/401/403 (puede ser blip transitorio)
+  'error_servicio',         // 4xx genérico (intentamos por las dudas)
+  'red',                    // red caída en cliente / TypeError de fetch
 ])
 
 // Heurística ajustada a cómo lanza errores src/services/anthropic.js

@@ -1,0 +1,33 @@
+fix(retry): ampliar codes reintentables + backoff exponencial suave
+
+Refinamiento del manejo de errores IA. La pantalla "Algo falló" salia
+ante blips transitorios al crear plan nuevo en produccion. Causa:
+codes como servicio_no_disponible (cuota Anthropic transitoria) y
+error_servicio (4xx generico) no se reintentaban, asi que un solo
+fallo levantaba el error al usuario.
+
+Politica nueva: blindar generacion de plan contra blips. Reintentamos
+cualquier code que pueda ser transitorio. Solo limite_diario (rate
+limit propio de Huella, 20/dia) sigue NO reintentable.
+
+Cambios en src/utils/retryAsync.js:
+- CODES_NO_REINTENTABLES: ahora solo limite_diario.
+- CODES_REINTENTABLES: agrega servicio_no_disponible y
+  error_servicio; mantiene servicio_saturado, servicio_inaccesible,
+  red.
+- BACKOFF_MS: [0,1000,2000] -> [0,1000,3000]. Intento 3 espera 3s
+  (mas margen al upstream para recuperarse). Total extra ~4s.
+
+Cero cambios en src/services/anthropic.js ni en los call sites
+(EstrategiaNuevaPage, EstrategiasPage, EstrategiaCierrePage). Las 3
+funciones de generacion de plan (generarEstrategia,
+generarEstrategiaDesdeContexto, generarCicloN) ya estaban envueltas
+con retryAsync default (maxAttempts=3).
+
+Criterio de exito: si el API falla 1 o 2 veces seguidas, el usuario
+no ve nada raro. Solo si fallan los 3 intentos consecutivos aparece
+la pantalla de error.
+
+Build: vite build verde.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
