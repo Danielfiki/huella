@@ -1773,22 +1773,104 @@ Detectadas esta sesión probando en producción. Afectan UX real de usuarios bet
 
 - Mover "consejo de hoy" desde la burbuja flotante en Perfil/Cuenta a la campana del header de Home, con puntito de notificación. (Idea ya estaba registrada como deuda preexistente; se deja explícita acá como recordatorio.)
 
+# ═══════════════════════════════════════════════════════════════
+# CIERRE DE SESIÓN — 20 mayo 2026
+# Bloque de manejo de errores del API + auditoría Logros +
+# ajustes pre-Design al sistema de Logros + Home
+# ═══════════════════════════════════════════════════════════════
+
+## VERIFICADO EN PRODUCCIÓN HOY
+
+Daniel confirmó visualmente todo en producción esta sesión.
+
+### 1. Bloque de manejo de errores del API (3 commits)
+
+Las dos deudas críticas del 19 mayo (mensaje de Anthropic en inglés en el Registro + loader infinito en P3 Cierre) quedaron resueltas con manejo elegante de fallos y blindaje contra blips transitorios.
+
+- **Commit `31655d1`** — `fix(errores-ia): manejo elegante de fallos del API + escape hatch en P3`:
+  - `api/anthropic.js` deja de retransmitir `err.error?.message` upstream (inglés). Categoriza por status code y devuelve `{ error: <español>, code }` semántico: `servicio_no_disponible` / `servicio_saturado` / `servicio_inaccesible` / `error_servicio` / `limite_diario`. Detecta cuota Anthropic por keywords en el mensaje upstream (`credit`, `balance`, `billing`, `suspended`).
+  - `try/catch` del fetch upstream para fallos de red Vercel↔Anthropic.
+  - Log crudo a `console.error` en backend (no se filtra al cliente).
+  - `llamarAPI` (cliente) usa `AbortController` con timeout 75s. Ningún fetch queda colgado para siempre. Lanza Error con `code` y `status` adjuntos.
+  - `esErrorIAReintentable` prioriza `err.code` sobre la heurística por mensaje.
+  - `EstrategiaCierrePage`: botón "Volver a Estrategias" siempre visible bajo el loader (en `cargando` y `creando_ciclo`). El cierre del ciclo ya está persistido al llegar a P3, así que salir es seguro.
+  - **Bug latente corregido de paso**: `RegistroPage` ya no persiste el mensaje de error como si fuera la orientación del episodio. Estados separados (`respuestaIA` vs `errorOrientacion`) + Card en español con icono 📡 + botón Reintentar que reutiliza args via `reintentoRef`. Limpieza opcional de orientaciones antiguas en español:
+    ```sql
+    UPDATE public.episodios
+    SET orientacion_ia = NULL
+    WHERE orientacion_ia ILIKE 'No se pudo obtener orientación:%';
+    ```
+
+- **Commit `0e330c5`** — `fix(retry): ampliar codes reintentables + backoff exponencial suave`:
+  - Refinamiento tras ver pantalla "Algo falló" al crear plan nuevo por blips transitorios.
+  - `CODES_NO_REINTENTABLES`: solo `limite_diario` (rate limit propio).
+  - `CODES_REINTENTABLES`: agrega `servicio_no_disponible` y `error_servicio` (antes blacklisted) a los ya existentes `servicio_saturado` / `servicio_inaccesible` / `red`.
+  - `BACKOFF_MS`: `[0, 1000, 2000]` → `[0, 1000, 3000]`. Total ~4s extra antes del último intento.
+  - Las 3 funciones de generación de plan (`generarEstrategia`, `generarEstrategiaDesdeContexto`, `generarCicloN`) ya estaban envueltas con `retryAsync` default (`maxAttempts=3`). Solo se afinó el predicado.
+  - Criterio: si el API falla 1 o 2 veces seguidas, el usuario no ve nada raro. Solo si fallan los 3 intentos consecutivos aparece la pantalla de error.
+
+- **Commit `143ca00`** — `chore: limpiar .commit-msg.tmp accidentalmente comiteado + gitignorearlo`:
+  - Housekeeping: `.commit-msg.tmp` se metió en el commit `0e330c5` por `git add -A`. Se borra del repo y se gitignorea para no repetir.
+
+### 2. Auditoría del sistema de Logros (sin commit)
+
+Reporte completo del módulo Logros antes de cualquier rediseño. Sin código modificado. Hallazgos por categoría:
+- 13 archivos identificados que tocan Logros (pantalla + datos + entradas externas).
+- 4 temas críticos detectados: (a) tensión ADN — "Resistente" y "Semana activa" premiaban volumen de episodios difíciles, (b) lógica desfasada con Fase 4-5 — badges de plan usaban `semanaActual >= 4` hardcoded que ignora ciclos 2+ de 2-6 semanas, (c) inconsistencia con sistema de diseño — ~40 hex hardcoded, (d) bucket Storage `momentos` no documentado en `schema.sql`.
+- Total de hallazgos enumerados con severidad: alta / media / baja.
+
+### 3. Bloque pre-Design al sistema de Logros + Home (commit `e708a37`)
+
+Seis ajustes quirúrgicos antes del rediseño con Claude Design. Alcance estrictamente limitado a lo pedido; sin refactor adicional.
+
+**Commit `e708a37`** — `feat: ajustes pre-design al sistema de Logros + Home`:
+
+1. **Eliminado badge "Resistente"** (15 episodios en 7 días, Nivel 2) — premiaba volumen de episodios difíciles como logro. Total: 34 → 33 medallas. `totalBadges` es dinámico, el header se recalcula solo.
+2. **Copy de niveles bloqueados suavizado** — "Nivel bloqueado" / "Pendiente" → **"Por descubrir"** en header del nivel y label bajo cada medalla. Submensaje dinámico: "Te faltan N medallas del nivel anterior para desbloquearlo" (con manejo singular/plural). Eliminado el `/10` hardcoded del JSX. Cableado: `NivelSection` recibe `desbloqueadosPrevios`.
+3. **Streak freeze en `calcularRacha`** (HijoPage) — Firma cambia de `number` a `{ streak, usedFreeze }`. Permite 1 gap de 1 día por racha; gap de 2 días seguidos rompe. Indicador visual: chip pequeño **"🌿 Día de gracia"** bajo la frase de racha, visible solo cuando `usedFreeze === true`. Tooltip al tocar: "Saltaste un día — la racha sigue". Cero datos nuevos en Supabase: se calcula al vuelo.
+4. **Avances consolidados entre HijoPage y HitosPage** — HijoPage > "Avances positivos": `slice(0, 5)` → `slice(0, 3)` + link "Ver todos en Álbum →" que navega a `/hitos?tab=album`. HitosPage: lee `searchParams.get('tab') === 'album'` al inicializar el `useState` del tab. Handler de `?highlight=` existente intacto.
+5. **Form interno + bloque "Enmarca" eliminados de HitosPage** — Borrados todos los estados (`mostrando`, `categoria`, `descripcion`, `loadingGuardar`, `errorGuardar`, `celebracion`, `loadingCelebracion`, `hitoReciente`, `subiendoFoto`, `errorFoto`, `fotoUrl`, `fotoInputRef`) + `handleGuardar` + `handleSubirFoto` + JSX del form + JSX celebración IA + JSX bloque Enmarca. Imports `celebrarHito` / `CitaLoader` / `renderMarkdown` / `Sparkles` / `X` eliminados (sin uso). Botón "+ Registrar" del header de Logros: `onClick → navigate('/nuevo')`. `CATEGORIAS` y `compressImage` locales se quedan (las usa `HitoCard`). Bloque Enmarca **reubicado** en `NuevoPage` vista `'guardado'`: sub-card visible solo si no se subió foto en el form principal. Reutiliza la lógica `compressImage → supabase.storage.upload → updateHitoFoto`. Tras subir: preview + mensaje éxito + botón "Listo" que cierra el bloque sin tocar los botones de salida existentes.
+6. **`capture="environment"` eliminado** de los 3 inputs file de hitos/avances (NuevoPage form principal, sub-card Enmarca nueva, HitoCard del Álbum). Ahora el OS muestra selector nativo con cámara + galería.
+7. **Consejo diario movido al header del Home** — `<ConsejoBubble />` eliminado del PerfilPage. Campana del Hero convertida en `<button>` clickable cuando hay consejo disponible. Puntito de notificación visible si hay consejo no visto. Props nuevas en Hero: `bellActive`, `bellHasNew`, `onBellClick`. Hook `useConsejoDiario` con cache por día (`huella_consejo_v7_<user.id>_<today>`) + tracking de visto (`huella_consejo_visto_<user.id>_<today>`). Visibilidad heredada: `>=2 episodios || >=1 hito`. `ConsejoDelDiaModal` reutiliza el CSS de `consejoBubble.module.css` (overlay + modal + header + body). Mismo lenguaje visual.
+
+### 4. Ajuste de "+ Registrar" desde Logros (commit `afe5c56`)
+
+**Commit `afe5c56`** — `feat: boton Registrar de Logros entra directo al form de avance`:
+- HitosPage: el `onClick` del botón "+ Registrar" del header pasa `state: { vistaInicial: 'hito' }` al `navigate('/nuevo', ...)`.
+- NuevoPage: `useLocation` + lee `location.state?.vistaInicial === 'hito'` al montar para inicializar el `useState` de vista directo en `'hito'`, saltándose la vista `'elegir'`.
+- Sin state pasado → comportamiento default sigue siendo `'elegir'`. El acceso desde la nav inferior no cambia.
+
+## DEUDAS ANOTADAS ESTA SESIÓN
+
+- **`src/components/ui/ConsejoBubble.jsx`** queda sin callers en el repo tras el cambio 6. No se borró por respetar el alcance pedido. Pendiente eliminación en futura pasada de limpieza.
+- **Clases CSS huérfanas en `HitosPage.module.css`**: `.formCard`, `.catBtn`, `.textarea`, `.celebracionCard`, `.enmarcarCard`, `.enmarcarBtn`, `.enmarcarEmoji`, `.enmarcarTitulo`, `.enmarcarSub`, `.enmarcarLinkBtn`, `.enmarcarFotoWrap`, `.enmarcarFoto`, `.enmarcarExito`, `.enmarcarError`, `.enmarcarCerrar` y otras del form/celebración. Sin uso desde el JSX. Pendiente limpieza.
+- **Sistemas paralelos de badges**: `HijoPage.calcularLogrosRecientes` (12 badges in-file) y `HitosPage.NIVELES` (33 badges tras esta sesión) son listas independientes con definiciones duplicadas/divergentes. Deuda preexistente, no tocada esta sesión.
+- **Backend `llamarAPI` (`anthropic.js`)** — `await response.json()` puede lanzar `SyntaxError` si el backend responde body no-JSON (502 HTML de proxy). El retry lo trata como NO reintentable (falso negativo conocido). No rompe nada en la práctica.
+
+## DEUDAS PREVIAS QUE QUEDAN ABIERTAS (sin cambios)
+
+- **P6 Panel descanso** (último nice-to-have de Fase 5 Estrategias).
+- **Monetización** — definición de muros y puntos de upgrade antes de tocar Registro con Claude Design.
+- **Deudas visuales Fase 6** — doble nomenclatura de tokens (aliases vs base), `Card.jsx` con radius/padding/shadow hardcodeados, `#C19E8C` y `#fff` literales, 4 tratamientos de sombra coexistiendo. Incluye polish visual del empty de Puerta 1 (le falta calidez/plantita).
+- **Tiempo percibido del cierre de ciclo P3** — paralelizar llamadas o ajustar copy de expectativa.
+- **Notificaciones push reales** — para recuperar el copy "te avisamos cuando esté listo" en el loader (hoy interim: "Quédate por acá mientras tanto").
+- **ModalPuenteCiclo "El último fue hoy"** — implementado pero no visto aún en prod (requiere episodio con fecha de hoy en un plan en Ciclo 2).
+- **Bug del micrófono** en el textarea del registro: corta el mensaje al hablar. Pendiente reproducir con ejemplo concreto.
+
 ═══════════════════════════════════════════
 PRÓXIMA SESIÓN
 ═══════════════════════════════════════════
 
-Estado actual: Fase 5 cerrada en su totalidad para Estrategias (P1, P2, P3 verificados; P4 verificado end-to-end el 19 mayo 2026); **Puerta 1 Concepto C verificada el 19 mayo 2026**. La P1 Lista de Estrategias queda completa para los flujos actuales.
+Estado actual: bloque pre-Design de Logros + Home cerrado y verificado en producción el 20 mayo 2026. Sistema de Logros queda en estado "listo para rediseño con Claude Design".
 
-**Prioridad recomendada — bloque de manejo de errores del API**. Las dos deudas críticas detectadas esta sesión (error en inglés en registro + loader P3 sin salida) afectan UX real de usuarios beta. Hacer un solo bloque de trabajo que cubra: `try/catch` elegante en `src/services/anthropic.js`, mensajes en español, estado de error con "Reintentar", y timeout/fallback para el loader de P3 Cierre.
-
-Después, Daniel define entre el resto:
+Daniel decide entre las opciones abiertas:
+- **Rediseño de Logros + Home con Claude Design** (el camino natural ahora que los ajustes quirúrgicos están aplicados).
+- **Monetización** — definición de muros antes de tocar Registro con Claude Design.
 - **P6 Panel descanso** (último pendiente nice-to-have de Fase 5).
-- **Monetización** — definición de muros y puntos de upgrade ANTES de tocar Registro con Claude Design.
-- **Deudas visuales Fase 6** — doble nomenclatura de tokens (aliases vs base), `Card.jsx` con radius/padding/shadow hardcodeados, `#C19E8C` y `#fff` literales, 4 tratamientos de sombra coexistiendo. Incluye polish visual del empty de Puerta 1 (le falta calidez/plantita).
+- **Deudas visuales Fase 6** — tokens duplicados, `Card.jsx` hardcoded, polish empty Puerta 1.
+- **Limpieza de deudas técnicas registradas hoy** — borrar `ConsejoBubble.jsx`, limpiar clases CSS huérfanas de `HitosPage.module.css`, considerar unificación de los 2 sistemas paralelos de badges.
 - **Tiempo percibido del cierre de ciclo P3** — paralelizar llamadas o ajustar copy de expectativa.
 - **Registro con Claude Design** (depende de definir monetización antes).
 - Otra cosa que Daniel decida.
 
-Deudas menores pendientes de verificación natural:
-- ModalPuenteCiclo: caso "El último fue hoy" (`diasDesdeUltimo === 0`) implementado pero no visto aún en prod (requiere episodio con fecha de hoy en un plan en Ciclo 2).
 ═══════════════════════════════════════════
