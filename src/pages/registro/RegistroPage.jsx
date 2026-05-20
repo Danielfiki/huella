@@ -428,6 +428,7 @@ export default function RegistroPage() {
   // post-save
   const [respuestaIA, setRespuestaIA] = useState('')
   const [loadingIA, setLoadingIA] = useState(false)
+  const [errorOrientacion, setErrorOrientacion] = useState(false)
   const [accionIA, setAccionIA] = useState('')
   const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
@@ -436,6 +437,9 @@ export default function RegistroPage() {
   const [reflexion, setReflexion] = useState('')
   const [guardandoReflexion, setGuardandoReflexion] = useState(false)
   const [reflexionGuardada, setReflexionGuardada] = useState(false)
+  // Guardamos los args de la última llamada IA para poder reintentar sin
+  // depender de los inputs del form (que el papá podría haber cambiado).
+  const reintentoRef = useRef(null)
 
   const pageRef = useRef(null)
   const isFirstVistaRender = useRef(true)
@@ -497,25 +501,49 @@ export default function RegistroPage() {
       const episodioGuardado = await addEpisodio(episodio)
       setVista('guardado')
       setEpisodioId(episodioGuardado?.id ?? null)
-      setLoadingIA(true)
+      // Acción inmediata se dispara en paralelo, sin bloquear la orientación.
       setLoadingAccion(true)
       setAccionIA('')
-      const [texto] = await Promise.all([
-        analizarEpisodio({ hijo: state.hijo, episodio, historialReciente: state.episodios.filter((e) => e.id !== episodio.id), bloqueRutina })
-          .catch((e) => 'No se pudo obtener orientación: ' + e.message),
-        generarAccionInmediata({ hijo: state.hijo, episodio })
-          .then((a) => { setAccionIA(a); setLoadingAccion(false) })
-          .catch(() => { setLoadingAccion(false) }),
-      ])
-      setRespuestaIA(texto)
-      setLoadingIA(false)
-      if (episodioGuardado?.id) {
-        updateEpisodio({ id: episodioGuardado.id, orientacionIA: texto })
-      }
+      generarAccionInmediata({ hijo: state.hijo, episodio })
+        .then((a) => { setAccionIA(a); setLoadingAccion(false) })
+        .catch(() => { setLoadingAccion(false) })
+      // Orientación completa: lanzada via wrapper para que Reintentar
+      // pueda reutilizar los mismos args.
+      const historial = state.episodios.filter((e) => e.id !== episodio.id)
+      reintentoRef.current = { episodio, historial, bloqueRutina, episodioId: episodioGuardado?.id }
+      await solicitarOrientacion()
     } catch (e) {
       setErrorGuardar('No se pudo guardar: ' + e.message)
     } finally {
       setLoadingGuardar(false)
+    }
+  }
+
+  async function solicitarOrientacion() {
+    const args = reintentoRef.current
+    if (!args) return
+    setLoadingIA(true)
+    setErrorOrientacion(false)
+    try {
+      const texto = await analizarEpisodio({
+        hijo: state.hijo,
+        episodio: args.episodio,
+        historialReciente: args.historial,
+        bloqueRutina: args.bloqueRutina,
+      })
+      setRespuestaIA(texto)
+      if (args.episodioId) {
+        // Solo persistimos cuando la orientación fue exitosa — nunca
+        // se guarda un mensaje de error como si fuera la orientación.
+        updateEpisodio({ id: args.episodioId, orientacionIA: texto })
+      }
+    } catch {
+      // El mensaje específico va a consola via console.error de
+      // anthropic.js; al usuario le mostramos un estado uniforme.
+      setRespuestaIA('')
+      setErrorOrientacion(true)
+    } finally {
+      setLoadingIA(false)
     }
   }
 
@@ -562,12 +590,33 @@ export default function RegistroPage() {
               )}
             </div>
           )}
-          <RespuestaIA
-            texto={respuestaIA}
-            loading={loadingIA}
-            mensajeCarga="Analizando lo que pasó con tu hijo..."
-            categoria="regulacion"
-          />
+          {errorOrientacion ? (
+            <Card className={styles.errorOrientacionCard}>
+              <p className={styles.errorOrientacionIcon}>📡</p>
+              <h4 className={styles.errorOrientacionTitulo}>
+                No pudimos obtener tu orientación esta vez.
+              </h4>
+              <p className={styles.errorOrientacionTexto}>
+                Tu episodio quedó guardado. Hubo un problema temporal con el servicio de Huella.
+                Puedes intentar de nuevo en un momento.
+              </p>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={solicitarOrientacion}
+                loading={loadingIA}
+              >
+                Reintentar
+              </Button>
+            </Card>
+          ) : (
+            <RespuestaIA
+              texto={respuestaIA}
+              loading={loadingIA}
+              mensajeCarga="Analizando lo que pasó con tu hijo..."
+              categoria="regulacion"
+            />
+          )}
           <p className={styles.registroMantram}>Cada registro es una conversación contigo mismo sobre cómo quieres criar.</p>
 
           <div className={styles.reflexionSection}>

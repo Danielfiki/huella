@@ -1,5 +1,11 @@
 import { supabase } from '../lib/supabase.js'
 
+// Timeout duro para cualquier llamada al backend de IA. Sin esto el
+// fetch puede quedar colgado indefinidamente y los loaders de la UI
+// nunca salen (caso reproducido en P3 Cierre). 75s absorbe el caso
+// normal de generación de plan y mata cualquier cuelgue real.
+const TIMEOUT_MS = 75000
+
 async function llamarAPI(prompt, max_tokens) {
   const headers = { 'content-type': 'application/json' }
 
@@ -10,24 +16,52 @@ async function llamarAPI(prompt, max_tokens) {
     }
   }
 
-  const response = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ prompt, max_tokens }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
-  if (response.status === 429) {
-    const err = await response.json()
-    throw new Error(err.error || 'Límite diario de consultas alcanzado. Vuelve mañana.')
+  let response
+  try {
+    response = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ prompt, max_tokens }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err?.name === 'AbortError') {
+      const e = new Error('La consulta está tardando demasiado. Intenta en unos minutos.')
+      e.code = 'servicio_inaccesible'
+      e.status = 0
+      throw e
+    }
+    // TypeError de fetch: offline / DNS / red caída.
+    const e = new Error('No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.')
+    e.code = 'red'
+    e.status = 0
+    throw e
+  }
+  clearTimeout(timeoutId)
+
+  let body = null
+  try {
+    body = await response.json()
+  } catch {
+    // Body no-JSON o vacío (p. ej. 502 con HTML de proxy).
   }
 
   if (!response.ok) {
-    const err = await response.json()
-    throw new Error(err.error || 'Error al conectar con la IA')
+    // El backend ya devuelve { error: <español>, code: <semántico> }.
+    // Adjuntamos code y status al Error para que retryAsync y los
+    // callers ramifiquen sin parsear strings.
+    const msg = body?.error || 'Algo no funcionó al conectar con la IA. Inténtalo de nuevo.'
+    const e = new Error(msg)
+    e.code = body?.code || 'error_servicio'
+    e.status = response.status
+    throw e
   }
 
-  const data = await response.json()
-  const text = data.text ?? ''
+  const text = body?.text ?? ''
   return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
 }
 

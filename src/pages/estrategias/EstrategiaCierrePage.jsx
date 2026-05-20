@@ -235,14 +235,17 @@ export default function EstrategiaCierrePage() {
 
   if (estado === 'cargando' || estado === 'inicial') {
     return (
-      <LoadingDignificado
-        titulo="Estamos cerrando tu ciclo."
-        sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
-        pasos={PASOS_LOADING_CIERRE}
-        pasoActual={0}
-        habilidadId={plan.habilidad_id}
-        hijoEdad={hijo?.edad}
-      />
+      <>
+        <LoadingDignificado
+          titulo="Estamos cerrando tu ciclo."
+          sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
+          pasos={PASOS_LOADING_CIERRE}
+          pasoActual={0}
+          habilidadId={plan.habilidad_id}
+          hijoEdad={hijo?.edad}
+        />
+        <EscapeHatch navigate={navigate} />
+      </>
     )
   }
 
@@ -260,14 +263,17 @@ export default function EstrategiaCierrePage() {
 
   if (estado === 'creando_ciclo') {
     return (
-      <LoadingDignificado
-        titulo="Estamos armando tu próximo ciclo."
-        sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
-        pasos={PASOS_LOADING_CICLO_NUEVO}
-        pasoActual={0}
-        habilidadId={plan?.habilidad_id || plan?.habilidad}
-        hijoEdad={hijo?.edad}
-      />
+      <>
+        <LoadingDignificado
+          titulo="Estamos armando tu próximo ciclo."
+          sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
+          pasos={PASOS_LOADING_CICLO_NUEVO}
+          pasoActual={0}
+          habilidadId={plan?.habilidad_id || plan?.habilidad}
+          hijoEdad={hijo?.edad}
+        />
+        <EscapeHatch navigate={navigate} />
+      </>
     )
   }
 
@@ -299,5 +305,31 @@ export default function EstrategiaCierrePage() {
       onIniciarNuevoCiclo={handleIniciarNuevoCiclo}
       onTrabajarLibre={handleTrabajarLibre}
     />
+  )
+}
+
+// Salida visible bajo cualquier loader de P3. El cierre del ciclo ya
+// quedó persistido en estrategia_ciclos antes de llegar acá, así que
+// salir es seguro: el papá vuelve a la lista, ve su plan en "Lo que
+// ya trabajaste", y puede volver al detalle cuando quiera.
+function EscapeHatch({ navigate }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+      <button
+        type="button"
+        onClick={() => navigate('/estrategias')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'var(--color-text-muted)',
+          fontSize: 13,
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          padding: '8px 12px',
+        }}
+      >
+        Volver a Estrategias
+      </button>
+    </div>
   )
 }

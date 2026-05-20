@@ -9,6 +9,30 @@
   animation: vistaSlideUp 400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 .error { font-size: 13px; color: var(--color-danger); text-align: center; padding: 4px 0; }
+
+/* Estado de error de la orientación IA (post-guardado). El episodio
+   ya está persistido; el bloque comunica el problema temporal y
+   ofrece reintentar sin perder la orientación. */
+.errorOrientacionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+}
+.errorOrientacionIcon { font-size: 28px; margin-bottom: 4px; }
+.errorOrientacionTitulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.errorOrientacionTexto {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
 .titulo { font-size: 22px; font-weight: 700; }
 .label { font-size: 14px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 10px; }
 

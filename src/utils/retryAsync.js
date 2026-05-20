@@ -20,15 +20,36 @@ export async function retryAsync(fn, { maxAttempts = 3, esReintentable = () => f
   throw ultimoError;
 }
 
+// Códigos semánticos que adjunta llamarAPI (post-fix de manejo de
+// errores). Si el Error trae `code`, esa es la fuente de verdad y
+// la heurística por mensaje queda como fallback.
+const CODES_NO_REINTENTABLES = new Set([
+  'limite_diario',          // rate limit propio (20/día)
+  'servicio_no_disponible', // cuota Anthropic / billing / auth (no se arregla reintentando)
+  'error_servicio',         // 4xx genérico (probable problema en el request)
+])
+const CODES_REINTENTABLES = new Set([
+  'servicio_saturado',      // 429/529 upstream
+  'servicio_inaccesible',   // 5xx, timeout, abort
+  'red',                    // red caída en cliente
+])
+
 // Heurística ajustada a cómo lanza errores src/services/anthropic.js
 // (función llamarAPI):
+//  - Errores con `code` semántico → decide por code (camino preferido).
 //  - fetch caído (red/offline/DNS) → TypeError.
-//  - !response.ok sin body útil (5xx/infra) → Error('Error al conectar con la IA').
-//  - 429 → Error('Límite diario… Vuelve mañana.') — NO reintentable (cuota).
-//  - El status real NO viaja en el Error (limitación conocida del backend),
-//    por eso el match es por mensaje.
+//  - 5xx/infra sin body útil → Error con status y mensaje en español.
+//  - 429 propio (límite diario) → code='limite_diario', NO reintentable.
+//  - JSON malformado de la IA → Error('parse'), NO reintentable.
 export function esErrorIAReintentable(err) {
   if (!err) return false;
+
+  // Camino preferido: code semántico.
+  if (err.code) {
+    if (CODES_NO_REINTENTABLES.has(err.code)) return false;
+    if (CODES_REINTENTABLES.has(err.code)) return true;
+  }
+
   const msg = String(err.message || err).toLowerCase();
 
   // Blacklist (tiene prioridad): cuota, auth, validación, JSON malformado.

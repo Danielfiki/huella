@@ -215,7 +215,11 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key no configurada en el servidor' })
+    console.error('[anthropic] ANTHROPIC_API_KEY no configurada')
+    return res.status(503).json({
+      error: 'No pudimos conectar con el servicio. Intenta de nuevo en unos minutos.',
+      code: 'servicio_inaccesible',
+    })
   }
 
   const token = req.headers.authorization?.replace('Bearer ', '')
@@ -223,32 +227,88 @@ export default async function handler(req, res) {
   if (!permitido) {
     return res.status(429).json({
       error: `Alcanzaste el límite de ${DAILY_LIMIT} consultas diarias. Vuelve mañana.`,
+      code: 'limite_diario',
     })
   }
 
   const { prompt, max_tokens = 700 } = req.body
   if (!prompt) {
-    return res.status(400).json({ error: 'Falta el campo prompt' })
+    return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
+  let response
+  try {
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+  } catch (err) {
+    // Falla de red / DNS / timeout TCP entre Vercel y Anthropic.
+    console.error('[anthropic] upstream fetch threw:', err?.message)
+    return res.status(503).json({
+      error: 'No pudimos conectar con el servicio. Inténtalo en unos minutos.',
+      code: 'servicio_inaccesible',
+    })
+  }
 
   if (!response.ok) {
-    const err = await response.json()
-    return res.status(response.status).json({ error: err.error?.message || 'Error de la API' })
+    let upstreamMessage = ''
+    try {
+      const err = await response.json()
+      upstreamMessage = err?.error?.message || ''
+    } catch {
+      // Body no-JSON (p. ej. 502 con HTML de Vercel/Cloudflare).
+    }
+    // Log para depurar en Vercel logs — nunca se devuelve al cliente.
+    console.error('[anthropic] upstream error', {
+      status: response.status,
+      message: upstreamMessage,
+    })
+
+    const lowered = upstreamMessage.toLowerCase()
+    const esProblemaDeCuota =
+      response.status === 401 ||
+      response.status === 403 ||
+      lowered.includes('credit') ||
+      lowered.includes('balance') ||
+      lowered.includes('billing') ||
+      lowered.includes('suspended')
+
+    if (esProblemaDeCuota) {
+      return res.status(503).json({
+        error: 'Estamos teniendo un problema temporal con el servicio. Inténtalo en unos minutos.',
+        code: 'servicio_no_disponible',
+      })
+    }
+
+    if (response.status === 429 || response.status === 529) {
+      return res.status(429).json({
+        error: 'El servicio está con mucha demanda en este momento. Intenta en unos minutos.',
+        code: 'servicio_saturado',
+      })
+    }
+
+    if (response.status >= 500) {
+      return res.status(response.status).json({
+        error: 'El servicio está temporalmente fuera. Intenta de nuevo en unos minutos.',
+        code: 'servicio_inaccesible',
+      })
+    }
+
+    return res.status(response.status).json({
+      error: 'Algo no funcionó al conectar con la IA. Inténtalo de nuevo.',
+      code: 'error_servicio',
+    })
   }
 
   const data = await response.json()
