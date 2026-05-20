@@ -2067,3 +2067,7 @@ Por medalla (badge): `id`, `emoji`, `titulo`, `desc`, `frase`, `check`, `fechaLo
 ## HASH DEL COMMIT
 
 `048bfea` — `feat(logros): rediseño visual completo Bloque 3 · Concepto Constelación`. Pusheado a main, Vercel deploya automáticamente.
+
+## FIX POST-VERIFICACIÓN (commit `271a9d7`)
+
+Daniel detectó en producción que el contador `X/Y` seguía mostrándose en el header de los niveles bloqueados, lo que revelaba medallas técnicamente desbloqueadas dentro de un nivel marcado como "Por descubrir" — inconsistente con el resto del render y rompía la metáfora. Fix quirúrgico: el span `.nivelPct` ahora se renderiza solo cuando `!nivelBloqueado`. Para niveles bloqueados, el copy "POR DESCUBRIR" en el subtítulo + el mensaje "Llega a este nivel completando X medallas más" abajo ya cumplen su función. 1 archivo, +5/-3.
