@@ -13,23 +13,47 @@ function toDateStr(fecha) {
 }
 
 function calcularRacha(episodios, hitos) {
+  // Permite 1 "día de gracia" por racha: un gap de 1 día no rompe la
+  // racha. Un gap de 2 días seguidos sí la rompe. Una vez gastado el
+  // freeze (sea porque hoy no hay actividad pero ayer sí, sea porque
+  // saltamos un gap interno), cualquier gap adicional la rompe.
   const set = new Set([
     ...episodios.map((e) => toDateStr(e.fecha)),
     ...hitos.map((h) => toDateStr(h.fecha)),
   ])
-  if (set.size === 0) return 0
+  if (set.size === 0) return { streak: 0, usedFreeze: false }
+
   const cursor = new Date()
   cursor.setHours(0, 0, 0, 0)
+
+  let freezeUsed = false
   if (!set.has(toDateStr(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
-    if (!set.has(toDateStr(cursor))) return 0
+    if (!set.has(toDateStr(cursor))) return { streak: 0, usedFreeze: false }
+    // Hoy no tiene actividad pero ayer sí: el freeze ya está gastado.
+    freezeUsed = true
   }
+
   let streak = 0
-  while (set.has(toDateStr(cursor))) {
-    streak++
-    cursor.setDate(cursor.getDate() - 1)
+  while (true) {
+    if (set.has(toDateStr(cursor))) {
+      streak++
+      cursor.setDate(cursor.getDate() - 1)
+    } else if (!freezeUsed) {
+      // Mirar 1 día más atrás para ver si la cadena continúa.
+      const peek = new Date(cursor)
+      peek.setDate(cursor.getDate() - 1)
+      if (set.has(toDateStr(peek))) {
+        freezeUsed = true
+        cursor.setDate(cursor.getDate() - 1) // saltamos el gap (no cuenta en streak)
+      } else {
+        break
+      }
+    } else {
+      break
+    }
   }
-  return streak
+  return { streak, usedFreeze: freezeUsed }
 }
 
 function frasePorRacha(racha, nombre) {
@@ -251,10 +275,10 @@ export default function HijoPage() {
   }
 
   // ── Modo stats ────────────────────────────────────────────────────────────
-  const racha        = calcularRacha(episodios, hitos)
+  const { streak: racha, usedFreeze } = calcularRacha(episodios, hitos)
   const evolucion    = calcularEvolucion(episodios)
   const logros       = calcularLogrosRecientes({ episodios, hitos, estrategias })
-  const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5)
+  const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 3)
   const nombreMesActual = MESES[new Date().getMonth()]
 
   return (
@@ -305,6 +329,14 @@ export default function HijoPage() {
           <span className={styles.rachaFlama}>🔥</span>
         </div>
         <p className={styles.rachaFrase}>{frasePorRacha(racha, hijo.nombre)}</p>
+        {usedFreeze && (
+          <span
+            className={styles.rachaFreeze}
+            title="Saltaste un día — la racha sigue"
+          >
+            🌿 Día de gracia
+          </span>
+        )}
       </div>
 
       {/* ── Evolución ── */}
@@ -369,6 +401,13 @@ export default function HijoPage() {
               </div>
             ))}
           </Card>
+          <button
+            type="button"
+            className={styles.verTodosBtn}
+            onClick={() => navigate('/hitos?tab=album')}
+          >
+            Ver todos en Álbum →
+          </button>
         </div>
       )}
 

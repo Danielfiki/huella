@@ -106,3 +106,63 @@
   font-family: var(--font-family); background: none; border: none; cursor: pointer;
 }
 .verHitosBtn:hover { text-decoration: underline; }
+
+/* Bloque "Enmarca este momento" — invitación opcional a agregar foto
+   al hito recién creado cuando no se subió foto en el form principal.
+   Reubicado desde HitosPage. */
+.enmarcarCard {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  width: 100%; max-width: 320px;
+  padding: 20px 18px;
+  border-radius: var(--radius-lg, 16px);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
+  border: 1.5px solid var(--color-primary-light);
+  text-align: center;
+  animation: enmarcarFadeUp 0.4s ease both;
+}
+@keyframes enmarcarFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.enmarcarEmoji { font-size: 32px; line-height: 1; }
+.enmarcarTitulo {
+  font-size: 15px; font-weight: 800;
+  color: var(--color-text); margin: 0;
+}
+.enmarcarSub {
+  font-size: 13px; color: var(--color-text-muted);
+  line-height: 1.5; margin: 0; max-width: 260px;
+}
+.enmarcarError { font-size: 12px; color: var(--color-danger); margin: 0; }
+.enmarcarBtn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary); color: #fff;
+  font-size: 13px; font-weight: 700;
+  font-family: var(--font-family); cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.enmarcarBtn:disabled { opacity: 0.6; cursor: default; }
+.enmarcarBtn:not(:disabled):hover { transform: translateY(-1px); }
+.enmarcarFotoWrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px; width: 100%;
+}
+.enmarcarFoto {
+  width: 100%; max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+.enmarcarExito {
+  font-size: 13px; color: var(--color-text-muted);
+  margin: 0; line-height: 1.5;
+}
+.enmarcarLinkBtn {
+  font-size: 13px; font-weight: 700;
+  color: var(--color-primary);
+  font-family: var(--font-family);
+  background: none; border: none; cursor: pointer;
+}

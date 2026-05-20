@@ -34,7 +34,16 @@ function formatHumanDate(d) {
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day} ${month}`
 }
 
-export function Hero({ userName, childName, childAvatarUrl, date, onProfileClick }) {
+export function Hero({
+  userName,
+  childName,
+  childAvatarUrl,
+  date,
+  onProfileClick,
+  onBellClick,
+  bellActive = false,
+  bellHasNew = false,
+}) {
   const { title, sub } = getGreeting(date, userName, childName)
   const initial = childName ? childName.charAt(0).toUpperCase() : 'H'
 
@@ -50,9 +59,21 @@ export function Hero({ userName, childName, childAvatarUrl, date, onProfileClick
           <div className={styles.dateLabel}>{formatHumanDate(date)}</div>
           <div className={styles.wordmark}>huella</div>
         </div>
-        <div className={styles.bell} aria-hidden="true">
-          <Bell size={20} />
-        </div>
+        {bellActive ? (
+          <button
+            type="button"
+            className={`${styles.bell} ${styles.bellActive}`}
+            onClick={onBellClick}
+            aria-label={bellHasNew ? 'Tienes un consejo nuevo' : 'Tu consejo del día'}
+          >
+            <Bell size={20} />
+            {bellHasNew && <span className={styles.bellDot} aria-hidden="true" />}
+          </button>
+        ) : (
+          <div className={styles.bell} aria-hidden="true">
+            <Bell size={20} />
+          </div>
+        )}
       </div>
       <h1 className={styles.greet}>{title}</h1>
       <p className={styles.greetSub}>{sub}</p>

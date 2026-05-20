@@ -39,7 +39,7 @@ const CATEGORIAS = [
 
 export default function NuevoPage() {
   const navigate = useNavigate()
-  const { addHito, updateHitoFoto } = useHuella()
+  const { state, addHito, updateHitoFoto } = useHuella()
   const { user } = useAuth()
   const [vista, setVista] = useState('elegir')
 
@@ -50,6 +50,15 @@ export default function NuevoPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const fotoInputRef = useRef(null)
+
+  // Estados del bloque "Enmarca este momento" (vista 'guardado' sin foto).
+  // El bloque solo se muestra si el papá no subió foto en el form principal.
+  const [hitoGuardadoId, setHitoGuardadoId] = useState(null)
+  const [hitoGuardadoSinFoto, setHitoGuardadoSinFoto] = useState(false)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [errorFotoEnmarca, setErrorFotoEnmarca] = useState('')
+  const [fotoEnmarcaUrl, setFotoEnmarcaUrl] = useState(null)
+  const enmarcaInputRef = useRef(null)
 
   function handleFotoChange(e) {
     const file = e.target.files?.[0]
@@ -78,6 +87,7 @@ export default function NuevoPage() {
         fecha: new Date().toISOString(),
       }
       const inserted = await addHito(hito)
+      const huboFotoEnSubmit = Boolean(fotoFile)
       if (fotoFile && inserted?.id && user) {
         try {
           const blob = await compressImage(fotoFile)
@@ -91,11 +101,42 @@ export default function NuevoPage() {
           }
         } catch { /* foto is non-fatal */ }
       }
+      // El bloque "Enmarca este momento" en la vista 'guardado' solo
+      // se muestra si el papá NO subió foto en el form principal.
+      setHitoGuardadoId(inserted?.id ?? null)
+      setHitoGuardadoSinFoto(!huboFotoEnSubmit && Boolean(inserted?.id))
+      setFotoEnmarcaUrl(null)
+      setErrorFotoEnmarca('')
       setVista('guardado')
     } catch (e) {
       setError('No se pudo guardar: ' + e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSubirFotoEnmarca(e) {
+    const file = e.target.files?.[0]
+    if (!file || !hitoGuardadoId || !user) return
+    setSubiendoFoto(true)
+    setErrorFotoEnmarca('')
+    try {
+      const blob = await compressImage(file)
+      const path = `${user.id}/${hitoGuardadoId}.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from('momentos')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+      if (uploadError) throw new Error(uploadError.message)
+      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
+      const url = `${data.publicUrl}?t=${Date.now()}`
+      await updateHitoFoto(hitoGuardadoId, url)
+      setFotoEnmarcaUrl(url)
+    } catch (err) {
+      console.error('Error subiendo foto desde Enmarca:', err)
+      setErrorFotoEnmarca('No se pudo subir la foto. Intenta de nuevo.')
+    } finally {
+      setSubiendoFoto(false)
+      if (enmarcaInputRef.current) enmarcaInputRef.current.value = ''
     }
   }
 
@@ -134,6 +175,7 @@ export default function NuevoPage() {
 
   // ── GUARDADO ─────────────────────────────────────────────────────────────
   if (vista === 'guardado') {
+    const nombreHijo = state?.hijo?.nombre || 'tu hijo/a'
     return (
       <div className={styles.page}>
         <div className={styles.guardadoWrap}>
@@ -142,6 +184,57 @@ export default function NuevoPage() {
           <p className={styles.guardadoSub}>
             Cada logro pequeño cuenta. Lo tienes guardado en tu historial de avances.
           </p>
+
+          {/* Bloque "Enmarca este momento": solo si NO se subió foto
+              en el form principal. Permite agregar una foto al hito
+              recién creado sin volver a registrar. */}
+          {hitoGuardadoSinFoto && (
+            <div className={styles.enmarcarCard}>
+              <input
+                ref={enmarcaInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleSubirFotoEnmarca}
+              />
+              {fotoEnmarcaUrl ? (
+                <div className={styles.enmarcarFotoWrap}>
+                  <img src={fotoEnmarcaUrl} alt="Momento" className={styles.enmarcarFoto} />
+                  <p className={styles.enmarcarExito}>
+                    📸 ¡Momento guardado en el álbum de {nombreHijo}!
+                  </p>
+                  <button
+                    className={styles.enmarcarLinkBtn}
+                    type="button"
+                    onClick={() => setHitoGuardadoSinFoto(false)}
+                  >
+                    Listo
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className={styles.enmarcarEmoji}>📸</span>
+                  <p className={styles.enmarcarTitulo}>Enmarca este momento</p>
+                  <p className={styles.enmarcarSub}>
+                    Agrega una foto de este avance. Quedará en el álbum de crecimiento de {nombreHijo}.
+                  </p>
+                  {errorFotoEnmarca && (
+                    <p className={styles.enmarcarError}>{errorFotoEnmarca}</p>
+                  )}
+                  <button
+                    className={styles.enmarcarBtn}
+                    type="button"
+                    onClick={() => enmarcaInputRef.current?.click()}
+                    disabled={subiendoFoto}
+                  >
+                    <Camera size={16} />
+                    {subiendoFoto ? 'Subiendo...' : 'Agregar foto'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           <Button variant="primary" fullWidth onClick={() => navigate('/panel')}>
             Volver al inicio
           </Button>
@@ -216,7 +309,6 @@ export default function NuevoPage() {
           ref={fotoInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           style={{ display: 'none' }}
           onChange={handleFotoChange}
         />

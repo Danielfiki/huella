@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Plus, Sparkles, Lock, Camera, X } from 'lucide-react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Plus, Lock, Camera } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
-import { celebrarHito } from '../../services/anthropic'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
-import CitaLoader from '../../components/ui/CitaLoader'
-import { renderMarkdown } from '../../utils/renderMarkdown'
 import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import { canModify } from '../../utils/authorDisplay'
 import styles from './HitosPage.module.css'
@@ -327,16 +324,6 @@ const NIVELES = [
         },
       },
       {
-        id: 'quince_en_semana',
-        emoji: '📈',
-        titulo: 'Resistente',
-        desc: '15 episodios en 7 días',
-        frase: 'Lo viviste, lo registraste, seguiste adelante. Eso es resiliencia.',
-        color: '#ef4444',
-        check: ({ episodios }) => tieneVentana(episodios, 15, 7) !== null,
-        fechaLogro: ({ episodios }) => tieneVentana(episodios, 15, 7),
-      },
-      {
         id: 'cinco_tipos',
         emoji: '🧩',
         titulo: 'Diversidad',
@@ -535,18 +522,17 @@ function BadgeCard({ badge, desbloqueado, fechaLogro, nivelBloqueado, esNuevo })
           )}
         </>
       ) : (
-        <p className={styles.badgeBloqueadoLabel}>
-          {nivelBloqueado ? 'Nivel bloqueado' : 'Pendiente'}
-        </p>
+        <p className={styles.badgeBloqueadoLabel}>Por descubrir</p>
       )}
     </div>
   )
 }
 
-function NivelSection({ nivel, data, bloqueado, umbralPrevio, badgesNuevos }) {
+function NivelSection({ nivel, data, bloqueado, umbralPrevio, desbloqueadosPrevios, badgesNuevos }) {
   const desbloqueados = nivel.badges.filter((b) => b.check(data)).length
   const total = nivel.badges.length
   const pct = Math.round((desbloqueados / total) * 100)
+  const faltan = Math.max(0, (umbralPrevio ?? 0) - (desbloqueadosPrevios ?? 0))
 
   return (
     <div className={`${styles.nivelSection} ${bloqueado ? styles.nivelBloqueado : ''}`}>
@@ -554,11 +540,13 @@ function NivelSection({ nivel, data, bloqueado, umbralPrevio, badgesNuevos }) {
         <div className={styles.nivelTituloWrap}>
           {bloqueado && <Lock size={13} className={styles.nivelLockIcon} />}
           <span className={styles.nivelTitulo}>Nivel {nivel.nivel}</span>
-          <span className={styles.nivelSubtitulo}>· {nivel.subtitulo}</span>
+          <span className={styles.nivelSubtitulo}>· {bloqueado ? 'Por descubrir' : nivel.subtitulo}</span>
         </div>
         {bloqueado ? (
           <span className={styles.nivelLockMsg}>
-            Completa {umbralPrevio}/{10} del nivel anterior
+            {faltan === 1
+              ? 'Te falta 1 medalla del nivel anterior para desbloquearlo'
+              : `Te faltan ${faltan} medallas del nivel anterior para desbloquearlo`}
           </span>
         ) : (
           <span className={styles.nivelCounter}>
@@ -657,7 +645,6 @@ function HitoCard({ hito, user, updateHitoFoto }) {
         ref={fotoInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={handleUpload}
       />
@@ -668,11 +655,16 @@ function HitoCard({ hito, user, updateHitoFoto }) {
 // ── Página ────────────────────────────────────────────────────────────────
 
 export default function HitosPage() {
-  const { state, addHito, updateHitoFoto, getCheckinsHechos } = useHuella()
+  const { state, updateHitoFoto, getCheckinsHechos } = useHuella()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const highlight = searchParams.get('highlight')
-  const [pestaña, setPestaña] = useState('medallas')
+  // Permite entrar directo al Álbum vía /hitos?tab=album (lo usa el
+  // link "Ver todos en Álbum" desde el Perfil del hijo).
+  const [pestaña, setPestaña] = useState(
+    searchParams.get('tab') === 'album' ? 'album' : 'medallas'
+  )
   const [checkinsCount, setCheckinsCount] = useState(0)
 
   useEffect(() => {
@@ -686,19 +678,6 @@ export default function HitosPage() {
     }, 350)
     return () => clearTimeout(timer)
   }, [highlight])
-  const [mostrando, setMostrando] = useState(false)
-  const [categoria, setCategoria] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [loadingGuardar, setLoadingGuardar] = useState(false)
-  const [errorGuardar, setErrorGuardar] = useState('')
-  const [celebracion, setCelebracion] = useState('')
-  const [loadingCelebracion, setLoadingCelebracion] = useState(false)
-
-  const [hitoReciente, setHitoReciente] = useState(null) // { id, descripcion, categoria }
-  const [subiendoFoto, setSubiendoFoto] = useState(false)
-  const [errorFoto, setErrorFoto] = useState('')
-  const [fotoUrl, setFotoUrl] = useState(null)
-  const fotoInputRef = useRef(null)
 
   const { episodios, hitos, estrategias } = state
   const dataBadge = { episodios, hitos, estrategias, checkinsCount }
@@ -738,7 +717,12 @@ export default function HitosPage() {
     if (i === 0) return { ...nivel, bloqueado: false }
     const previo = NIVELES[i - 1]
     const desbloqueadosPrevios = previo.badges.filter((b) => b.check(dataBadge)).length
-    return { ...nivel, bloqueado: desbloqueadosPrevios < previo.umbral, umbralPrevio: previo.umbral }
+    return {
+      ...nivel,
+      bloqueado: desbloqueadosPrevios < previo.umbral,
+      umbralPrevio: previo.umbral,
+      desbloqueadosPrevios,
+    }
   })
 
   // Always show up to (last unlocked + 1) level, minimum 2
@@ -748,64 +732,6 @@ export default function HitosPage() {
   const totalDesbloqueados = desbloqueadosActuales.size
   const totalBadges = NIVELES.reduce((s, n) => s + n.badges.length, 0)
 
-  async function handleGuardar() {
-    if (!categoria) return
-    setLoadingGuardar(true)
-    setErrorGuardar('')
-    const hito = {
-      id: Date.now().toString(),
-      categoria,
-      descripcion,
-      fecha: new Date().toISOString(),
-    }
-    try {
-      const inserted = await addHito(hito)
-      setCategoria('')
-      setDescripcion('')
-      setMostrando(false)
-      setHitoReciente({ id: inserted?.id, descripcion: hito.descripcion, categoria: hito.categoria })
-      setFotoUrl(null)
-      setErrorFoto('')
-      setLoadingCelebracion(true)
-      try {
-        const texto = await celebrarHito({ hijo: state.hijo, hito })
-        setCelebracion(texto)
-      } catch { /* celebración es bonus */ } finally {
-        setLoadingCelebracion(false)
-      }
-    } catch (e) {
-      setErrorGuardar('No se pudo guardar: ' + e.message)
-    } finally {
-      setLoadingGuardar(false)
-    }
-  }
-
-  async function handleSubirFoto(e) {
-    const file = e.target.files?.[0]
-    if (!file || !hitoReciente?.id || !user) return
-    setSubiendoFoto(true)
-    setErrorFoto('')
-    try {
-      const blob = await compressImage(file)
-      const path = `${user.id}/${hitoReciente.id}.jpg`
-      const { error: uploadError } = await supabase.storage.from('momentos').upload(path, blob, {
-        contentType: 'image/jpeg',
-        upsert: true,
-      })
-      if (uploadError) throw new Error(uploadError.message)
-      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
-      const url = `${data.publicUrl}?t=${Date.now()}`
-      await updateHitoFoto(hitoReciente.id, url)
-      setFotoUrl(url)
-    } catch (err) {
-      console.error('Error subiendo foto:', err)
-      setErrorFoto('No se pudo subir la foto. Intenta de nuevo.')
-    } finally {
-      setSubiendoFoto(false)
-      if (fotoInputRef.current) fotoInputRef.current.value = ''
-    }
-  }
-
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -813,7 +739,7 @@ export default function HitosPage() {
           <h2 className={styles.titulo}>Logros<TooltipAyuda texto="Aquí celebramos tu constancia. Cada episodio registrado es un paso hacia entender mejor a tu hijo/a." /></h2>
           <p className={styles.totalBadges}>{totalDesbloqueados} de {totalBadges} medallas</p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => { setMostrando(!mostrando); setPestaña('medallas') }}>
+        <Button variant="primary" size="sm" onClick={() => navigate('/nuevo')}>
           <Plus size={16} /> Registrar
         </Button>
       </div>
@@ -834,98 +760,6 @@ export default function HitosPage() {
         </button>
       </div>
 
-      {/* ── Formulario (siempre visible cuando está abierto) ── */}
-      {mostrando && (
-        <Card className={styles.formCard}>
-          <p className={styles.label}>¿Qué logró?</p>
-          <div className={styles.categoriasGrid}>
-            {CATEGORIAS.map((c) => (
-              <button
-                key={c.id}
-                className={`${styles.catBtn} ${categoria === c.id ? styles.catSelected : ''}`}
-                onClick={() => setCategoria(c.id)}
-              >
-                <span>{c.emoji}</span>
-                <span>{c.label}</span>
-              </button>
-            ))}
-          </div>
-          <textarea
-            className={styles.textarea}
-            placeholder="Describe el momento con detalle..."
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={3}
-          />
-          <Button variant="primary" fullWidth onClick={handleGuardar} disabled={!categoria} loading={loadingGuardar}>
-            Guardar hito
-          </Button>
-          {errorGuardar && <p className={styles.error}>{errorGuardar}</p>}
-        </Card>
-      )}
-
-      {/* ── Celebración IA ── */}
-      {(loadingCelebracion || celebracion) && (
-        <Card className={styles.celebracionCard}>
-          <div className={styles.celebracionHeader}>
-            <Sparkles size={15} color="var(--color-primary-dark)" />
-            <span>Huella</span>
-          </div>
-          {loadingCelebracion ? (
-            <CitaLoader categoria="regulacion" compact />
-          ) : (
-            <div className={styles.celebracionTexto}>{renderMarkdown(celebracion)}</div>
-          )}
-        </Card>
-      )}
-
-      {/* ── Enmarca este momento ── */}
-      {hitoReciente && (
-        <div className={styles.enmarcarCard}>
-          <input
-            ref={fotoInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: 'none' }}
-            onChange={handleSubirFoto}
-          />
-          <button
-            className={styles.enmarcarCerrar}
-            onClick={() => setHitoReciente(null)}
-            aria-label="Cerrar"
-          >
-            <X size={16} />
-          </button>
-          {fotoUrl ? (
-            <div className={styles.enmarcarFotoWrap}>
-              <img src={fotoUrl} alt="Momento" className={styles.enmarcarFoto} />
-              <p className={styles.enmarcarExito}>📸 ¡Momento guardado en el álbum de {state.hijo?.nombre || 'tu hijo/a'}!</p>
-              <button className={styles.enmarcarLinkBtn} onClick={() => setHitoReciente(null)}>
-                Listo
-              </button>
-            </div>
-          ) : (
-            <>
-              <span className={styles.enmarcarEmoji}>📸</span>
-              <p className={styles.enmarcarTitulo}>Enmarca este momento</p>
-              <p className={styles.enmarcarSub}>
-                Agrega una foto de este avance. Quedará en el álbum de crecimiento de {state.hijo?.nombre || 'tu hijo/a'}.
-              </p>
-              {errorFoto && <p className={styles.enmarcarError}>{errorFoto}</p>}
-              <button
-                className={styles.enmarcarBtn}
-                onClick={() => fotoInputRef.current?.click()}
-                disabled={subiendoFoto}
-              >
-                <Camera size={16} />
-                {subiendoFoto ? 'Subiendo...' : 'Agregar foto'}
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
       {/* ── Tab: Medallas ── */}
       {pestaña === 'medallas' && (
         <>
@@ -936,6 +770,7 @@ export default function HitosPage() {
               data={dataBadge}
               bloqueado={nivel.bloqueado}
               umbralPrevio={nivel.umbralPrevio}
+              desbloqueadosPrevios={nivel.desbloqueadosPrevios}
               badgesNuevos={badgesNuevos}
             />
           ))}

@@ -65,8 +65,33 @@
   border: none;
   cursor: default;
   opacity: 0.6;
+  padding: 0;
 }
 .bell svg { width: 20px; height: 20px; }
+
+/* Cuando hay consejo del día disponible, la campana pasa a ser un
+   botón activo: opacidad llena y cursor pointer. */
+.bellActive {
+  opacity: 1;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.22);
+  transition: transform 0.15s, background 0.15s;
+}
+.bellActive:active { transform: scale(0.94); }
+.bellActive:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* Puntito de notificación: visible solo si hay consejo nuevo no visto. */
+.bellDot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-accent-mocha);
+  pointer-events: none;
+}
 .greet {
   font-family: var(--font-heading);
   font-size: 28px;

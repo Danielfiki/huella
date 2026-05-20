@@ -8,6 +8,8 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import BienvenidaModal from '../../components/ui/BienvenidaModal'
+import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
+import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { Hero } from '../../components/panel/Hero'
 import { CTAPrimary } from '../../components/panel/CTAPrimary'
 import { CTAAskHuella } from '../../components/panel/CTAAskHuella'
@@ -214,6 +216,15 @@ export default function PanelPage() {
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
+  // Consejo del día: live en la campana del Hero. Visible solo si hay
+  // datos suficientes. Puntito de notificación mientras no se vea.
+  const consejo = useConsejoDiario({ user, hijo, episodios, hitos, estrategias })
+  const [consejoAbierto, setConsejoAbierto] = useState(false)
+  function abrirConsejo() {
+    setConsejoAbierto(true)
+    consejo.marcarVisto()
+  }
+
   const estrategiaActiva = useMemo(
     () => (estrategias || []).find(e => e.semanaActual <= 4 && !e.completado_at),
     [estrategias]
@@ -359,7 +370,18 @@ export default function PanelPage() {
         childAvatarUrl={hijo?.avatarUrl ?? null}
         date={new Date()}
         onProfileClick={() => navigate('/perfil')}
+        bellActive={consejo.visible}
+        bellHasNew={consejo.tieneConsejoNuevo}
+        onBellClick={abrirConsejo}
       />
+
+      {consejoAbierto && (
+        <ConsejoDelDiaModal
+          frase={consejo.frase}
+          loading={consejo.loading}
+          onClose={() => setConsejoAbierto(false)}
+        />
+      )}
 
       <main className={panelStyles.body}>
 
