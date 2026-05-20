@@ -1857,6 +1857,43 @@ Seis ajustes quirúrgicos antes del rediseño con Claude Design. Alcance estrict
 - **ModalPuenteCiclo "El último fue hoy"** — implementado pero no visto aún en prod (requiere episodio con fecha de hoy en un plan en Ciclo 2).
 - **Bug del micrófono** en el textarea del registro: corta el mensaje al hablar. Pendiente reproducir con ejemplo concreto.
 
+## Bloque 3 — Pasada por Claude Design (próximo)
+
+### Pantallas en orden de prioridad
+1. Logros (HitosPage.jsx) — el más complejo, con cambios frescos.
+2. Perfil del hijo (HijoPage.jsx) — racha con día de gracia, link a Álbum.
+3. Registros / Nuevo avance (NuevoPage.jsx) — vistas elegir, hito y guardado; sub-card Enmarca recién reubicada.
+4. Banner "¿Por dónde empezar?" (GuiaPrimerosPasos.jsx) — nunca pasó por Design.
+5. Onboarding de 4 slides (Onboarding.jsx) — nunca pasó por Design.
+6. Perfil / Cuenta (PerfilPage.jsx) — limpieza final tras eliminar ConsejoBubble.
+
+### Restricciones estrictas para Claude Design (no negociables)
+- Solo aplicar los deltas visuales listados. No agregar componentes ni funcionalidades nuevas.
+- No alterar estructura, copy ni flujo de la pantalla.
+- No proponer mejoras "de paso". Observaciones van como notas separadas en el bundle, no implementadas.
+- Coherencia visual obligatoria con Home e Historial (referentes ya refinados): tokens, headers, cards, CTAs, tipografías, spacing.
+
+### Deudas visuales transversales a resolver en cualquier pantalla tocada
+- Unificar nomenclatura de tokens: eliminar aliases (--color-cream, --color-ink, --color-tangerine, --color-mocha) → usar nomenclatura base única.
+- Card.jsx con border-radius: 16px y sombras hardcoded → migrar a variables CSS.
+- #fff hardcoded en BannerCompletado, HistorialPage, PanelPage → reemplazar por variables.
+- CSS muerto en PanelPage.module.css (.greeting, .presencia, .consejo) → eliminar.
+- 4 tratamientos distintos de sombra para card → unificar en una sola regla.
+- Bug del header apilado (Layout global + HeaderMocha) si aparece.
+
+### Flujo por pantalla (no saltarse pasos)
+1. Auditoría de coherencia visual contra Home + Historial.
+2. Claude Design propone 3 conceptos distintos.
+3. Daniel elige uno.
+4. Mockup detallado.
+5. Handoff bundle con código.
+6. Claude (chat) revisa el bundle antes del handoff a Claude Code — detecta inconsistencias.
+7. Claude Code implementa.
+8. Daniel verifica en producción.
+
+### Punto de arranque
+Partir por Logros en la próxima sesión.
+
 ═══════════════════════════════════════════
 PRÓXIMA SESIÓN
 ═══════════════════════════════════════════
