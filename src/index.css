@@ -161,6 +161,32 @@
 
   /* ═══ Estrategias · Sombra dignificada ═══ */
   --shadow-soft: 0 6px 18px -8px rgba(67, 47, 32, 0.18);
+
+  /* ── Mocha / Strawberry extendidos · base de las gamas del álbum ── */
+  --color-mocha-light:       #C19E8C;
+  --color-strawberry-light:  #F09D95;
+  --color-strawberry-dark:   #B84A40;
+
+  /* ── Medallas (Logros) ─────────────────────────────────────── */
+  --color-medalla-estrella:        var(--color-primary);
+  --color-medalla-estrella-bg:     rgba(229, 110, 38, 0.13);
+  --color-medalla-estrella-border: rgba(229, 110, 38, 0.42);
+
+  --color-medalla-celebracion:        var(--color-strawberry);
+  --color-medalla-celebracion-bg:     rgba(232, 117, 106, 0.14);
+  --color-medalla-celebracion-border: rgba(232, 117, 106, 0.42);
+
+  --color-medalla-calma:        #6E8030;
+  --color-medalla-calma-bg:     rgba(143, 168, 64, 0.16);
+  --color-medalla-calma-border: rgba(143, 168, 64, 0.46);
+
+  --color-medalla-constancia:        #8A6A56;
+  --color-medalla-constancia-bg:     rgba(138, 106, 86, 0.14);
+  --color-medalla-constancia-border: rgba(138, 106, 86, 0.42);
+
+  --color-medalla-base:        #BFA88A;
+  --color-medalla-base-bg:     rgba(191, 168, 138, 0.22);
+  --color-medalla-base-border: rgba(191, 168, 138, 0.48);
 }
 
 /* ── Modo oscuro ── */

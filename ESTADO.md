@@ -1911,3 +1911,157 @@ Daniel decide entre las opciones abiertas:
 - Otra cosa que Daniel decida.
 
 ═══════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 20 mayo 2026 (tarde) — BLOQUE 3 · Rediseño visual Logros
+# Concepto "Constelación" · pasada completa de Claude Design
+# ═══════════════════════════════════════════════════════════════
+
+## QUÉ SE HIZO (pendiente verificación en prod por Daniel)
+
+Rediseño visual completo de la pantalla Logros bajo el Concepto Constelación. Scope cerrado a 3 archivos: `src/index.css`, `src/pages/hitos/HitosPage.jsx`, `src/pages/hitos/HitosPage.module.css`. Sin tocar Card/Button compartidos, sin tocar schema, sin agregar funcionalidad nueva.
+
+### Decisiones de fondo
+
+**Sistema de medallas — Opción 1 elegida (mantener las 33 actuales con patch visual).** El bundle original proponía 33 medallas nuevas con IDs/nombres distintos (`pausa-dificil`, `berrinche`, `vinculo`, etc.) pero NO entregaba criterios `check()` para esas medallas nuevas, ni el código actual tiene contadores para esa lógica cualitativa. Se conservó el sistema actual de 33 medallas (3 niveles: 14 / 9 / 10) con su lógica `check`/`fechaLogro`/`desc`/`frase`/`emoji` intacta. Solo se sustituyó el campo `color` hex (28 hex Tailwind ajenos a la paleta) por `tono` semántico (5 tonos del Mocha Mix) y se agregó `heroica: true` a las 7 medallas más fuertes (planes completados, multihabilidades, leyenda).
+
+**Álbum — categoría real como label + tono derivado.** Cada hito muestra el badge con la categoría real legible (Autorregulación / Empatía / Disculpa / Frustración / Social / Otro) en lugar de inventar un campo `tipo` que no existe en el modelo. El tono visual del placeholder se deriva de la categoría según naturaleza emocional: pistachio = regulación, strawberry = conexión, mocha = momentos difíciles, tangerine = alegría compartida, cream = otro/fallback. Cero cambios al schema de Supabase.
+
+**Click en álbum — sin ruta nueva.** El bundle proponía `navigate('/momento/:id')`, ruta inexistente. Se mantiene `window.open(foto_url, '_blank')` cuando el hito tiene foto, y se dispara el input file de upload cuando NO tiene (manteniendo la capacidad de agregar foto a hitos viejos que se conservaba en el `HitoCard` viejo). Check `canModify` antes del upload. Cero rutas nuevas en el router.
+
+### Mapeo final de las 33 medallas → tono semántico
+
+| Nivel | id | tono | heroica |
+|---|---|---|---|
+| 1 | primer_registro | base | |
+| 1 | cinco_registros | base | |
+| 1 | diez_registros | base | |
+| 1 | primer_hito | celebracion | |
+| 1 | cinco_hitos | celebracion | |
+| 1 | primera_estrategia | constancia | |
+| 1 | plan_completo | estrella | ✓ |
+| 1 | mes_activo | constancia | |
+| 1 | semana_activa | constancia | |
+| 1 | tres_estrategias | estrella | ✓ |
+| 1 | ciclo_completo | calma | |
+| 1 | reflexivo | calma | |
+| 1 | constante_7 | constancia | |
+| 1 | comprometido_plan | constancia | |
+| 2 | veinticinco_registros | base | |
+| 2 | cincuenta_registros | base | |
+| 2 | dos_meses | constancia | |
+| 2 | diez_hitos | celebracion | |
+| 2 | cinco_estrategias | estrella | ✓ |
+| 2 | dos_planes | estrella | ✓ |
+| 2 | cinco_tipos | calma | |
+| 2 | catorce_dias | constancia | |
+| 2 | tres_meses | constancia | |
+| 3 | cien_registros | base | |
+| 3 | veinte_hitos | celebracion | |
+| 3 | cinco_planes | estrella | ✓ |
+| 3 | cuatro_meses | constancia | |
+| 3 | ciento_cincuenta | base | |
+| 3 | seis_meses | constancia | |
+| 3 | siete_tipos | calma | |
+| 3 | diez_estrategias | estrella | ✓ |
+| 3 | veinticinco_hitos | celebracion | |
+| 3 | leyenda | estrella | ✓ |
+
+Conteo: 7 estrella + 7 celebracion + 4 calma + 9 constancia + 6 base = 33 ✓
+
+### Mapeo categoria → label + tono (álbum)
+
+| categoria (DB) | label visible | tono visual | gradient |
+|---|---|---|---|
+| autorregulacion | Autorregulación | pistachio | accent-light → medalla-calma |
+| empatia | Empatía | strawberry | strawberry-light → strawberry-dark |
+| disculpa | Disculpa | strawberry | strawberry-light → strawberry-dark |
+| frustration (typo en código, en inglés) | Frustración | mocha | mocha-light → accent-mocha |
+| frustracion (fallback defensivo en español) | Frustración | mocha | mocha-light → accent-mocha |
+| social | Social | tangerine | primary-light → primary-dark |
+| otro | Otro | cream | celebration-end → medalla-base |
+
+### Tokens nuevos agregados a `:root` de `src/index.css`
+
+3 colores extendidos:
+- `--color-mocha-light: #C19E8C`
+- `--color-strawberry-light: #F09D95`
+- `--color-strawberry-dark: #B84A40`
+
+15 tokens de medallas (5 tonos × 3 variantes color/bg/border):
+- `--color-medalla-estrella` y `-bg`, `-border`
+- `--color-medalla-celebracion` y `-bg`, `-border`
+- `--color-medalla-calma` y `-bg`, `-border`
+- `--color-medalla-constancia` y `-bg`, `-border`
+- `--color-medalla-base` y `-bg`, `-border`
+
+Sin overrides de dark mode en este patch (los tonos elegidos viven en el espectro cálido y funcionan en ambos modos del paleta Mocha Mix). Si Daniel ve algo extraño en dark, queda para una pasada futura agregar overrides.
+
+### Cambios estructurales en HitosPage.jsx
+
+- Hero mocha sólido reemplaza al header plano antiguo: gradient radial + textura de puntos con máscara diagonal, h1 Fraunces 28px, botón "+" redondo 38×38 en blanco con icono primary, lede con copy "La huella que [nombre] va dejando…", stats grid 2-col (Medallas X/33 + Nivel actual + nombre del nivel).
+- Tabs migran de "segmented control" a border-bottom estilo HijoPage (gap 20px, color primary cuando activa, contador `tabCt` chip).
+- Niveles ahora se muestran TODOS (no solo hasta el siguiente bloqueado): los bloqueados muestran "Llega a este nivel completando X medallas más del nivel N-1".
+- Disco semántico de medalla (56×56) reemplaza al emoji-wrap antiguo. Las heroicas (tono `estrella`) llevan ★ pequeño abajo-derecha como sello. Las bloqueadas usan dasheado.
+- Glow animado en la medalla nueva (2.4s ease-out 1x forwards) más punto pulsante en esquina.
+- Álbum unificado: una sola grid 2-col donde la primera tarjeta es panorámica (2:1) y las demás 1:1. Foto si existe, gradient + glifo según tono si no. Badge de categoría arriba-izquierda. Fecha "DD mmm" Fraunces abajo-izquierda.
+- HitoCard antiguo eliminado del render. La capacidad de upload se mantiene desde el placeholder del item (click sin foto → input file).
+
+### CSS huérfano eliminado completamente
+
+`HitosPage.module.css` perdió ~150 líneas de clases muertas que ESTADO.md tenía anotado como deuda:
+- `.formCard`, `.label`
+- `.categoriasGrid`, `.catBtn`, `.catSelected`
+- `.textarea`, `.textarea:focus`
+- `.celebracionCard`, `.celebracionHeader`, `.celebracionTexto`, `.celebracionSkeleton`, `.skeletonLine`, `@keyframes shimmer`
+- `.enmarcarCard`, `.enmarcarCerrar`, `.enmarcarEmoji`, `.enmarcarTitulo`, `.enmarcarSub`, `.enmarcarError`, `.enmarcarBtn`, `.enmarcarFotoWrap`, `.enmarcarFoto`, `.enmarcarExito`, `.enmarcarLinkBtn`, `@keyframes fadeUp`
+- `.hitoCard`, `.hitoHeader`, `.hitoEmoji`, `.hitoCategoria`, `.hitoFecha`, `.hitoDesc`, `.hitoFotoImg`, `.hitoCameraBtn`, `.hitoFotoError`, `.hitosList`
+- `.albumVacio`, `.albumVacioEmoji`, `.albumVacioTitulo`, `.albumVacioSub`
+- `.seccionTitulo`
+- `.albumGrid` viejo, `.albumItem` viejo, `.albumImg`, `.albumLabel`
+- `.badgesGrid`, `.badgeCard`, `.badgeUnlocked`, `.badgeLocked`, `.badgeNuevo`, `@keyframes pulseNuevo`, `.nuevoPill`, `.badgeEmojiWrap`, `.badgeEmoji`, `.badgeTitulo`, `.badgeDesc`, `.badgeFrase`, `.badgeFecha`, `.badgeBloqueadoLabel`
+- `.nivelSection` viejo, `.nivelBloqueado`, `.nivelHeader`, `.nivelTituloWrap`, `.nivelLockIcon`, `.nivelTitulo` viejo, `.nivelSubtitulo`, `.nivelCounter`, `.nivelLockMsg`, `.nivelProgressBar`, `.nivelProgressFill`
+- `.titulo`, `.totalBadges`, `.tabs` viejo, `.tab` viejo, `.tabActive`
+- `.error`, `.header`
+
+## ARCHIVOS MODIFICADOS
+
+- `src/index.css` — +29 líneas (3 colores extendidos + 15 tokens de medallas + comentarios)
+- `src/pages/hitos/HitosPage.jsx` — reescritura completa: 827 LOC → ~620 LOC. Mismo array NIVELES con mismos campos (sustituye `color` por `tono`, agrega `heroica`); helpers de fecha + medalla preservados; render reescrito (Hero + tabs + grilla 3-col de discos + álbum unificado); helpers nuevos (`getSubmensaje`, `formatDiaCorto`, `MedalIcon`, `handleAlbumClick`, `handleAlbumUpload`); maps de categoría (`categoriaLabel`, `tonoAlbumPorCategoria`).
+- `src/pages/hitos/HitosPage.module.css` — reescritura completa: 427 LOC → 309 LOC. Bloques nuevos (Hero, tabs border-bottom, nivel card, discos por tono, medalla heroica con ★, animación glow + pulse dot, álbum grid con tonos y badges, empty state). 30+ clases huérfanas eliminadas.
+
+## CAMPOS PRESERVADOS DEL ARRAY NIVELES
+
+Por nivel: `nivel`, `subtitulo`, `umbral`, `badges`.
+
+Por medalla (badge): `id`, `emoji`, `titulo`, `desc`, `frase`, `check`, `fechaLogro`. Se agregaron: `tono`, `heroica` (opcional). Se eliminó: `color` (hex Tailwind ajeno).
+
+`emoji`, `desc`, `frase` se conservan en el modelo aunque el render actual del Hero/grilla solo muestre `titulo` y la medalla bloqueada como "Por descubrir". Quedan disponibles para mostrar en un modal de detalle de medalla en una futura pasada (el `id` también se preserva en el DOM via `id={m.id}` para que `?highlight=plan_completo` siga haciendo scroll).
+
+## DEUDAS DETECTADAS (no resueltas, fuera de alcance)
+
+- **typo histórico `frustration` en lugar de `frustracion`** en el id de la categoría: vive en `NuevoPage.jsx`, `HitosPage.jsx`, `HistorialPage.jsx`, `HijoPage.jsx`, `RegistroPage.jsx`, `services/anthropic.js` y en datos persistidos de Supabase. Migrar requiere un UPDATE en DB + cambio de todos los call sites. Mientras tanto, `categoriaLabel` y `tonoAlbumPorCategoria` aceptan ambos ids para no romper nada.
+- **MedalIcon no aprovecha el campo `emoji`** que cada medalla tiene en el array. Decidí usar SVGs por tono para coherencia visual del disco; los emojis quedan sin renderizar pero preservados en el modelo. Si Daniel quiere recuperarlos en una pasada futura (ej. emoji pequeño junto al título), están listos.
+- **3 deudas previas Fase 6 siguen en pie**: `Card.jsx` con border-radius/padding/shadow hardcoded, `Button.module.css` con 16px hardcoded en `.primary`, `#fff` literal en BannerCompletado/HistorialPage/PanelPage.
+- **Sistemas paralelos de badges**: `HijoPage.calcularLogrosRecientes` (12 in-file) y `HitosPage.NIVELES` (33) siguen desincronizados. No tocado esta pasada.
+- **Falta `--font-heading` explícito en cifras grandes de HijoPage** (`.rachaNumero`, `.evolucionCifra`): caen a Plus Jakarta por no estar dentro de `<h*>`. Deuda transversal anotada en la auditoría previa.
+
+## NPM RUN BUILD
+
+✓ Compila sin errores. 2039 modules transformed en 2.27s. Solo warning preexistente de chunk size del PDF.
+
+## PRÓXIMOS PASOS
+
+1. **Verificación visual en producción por Daniel** después del redeploy de Vercel. Casos a probar:
+   - Hero mocha con stats + lede en cuenta nueva (sin medallas) y en cuenta con medallas.
+   - Tabs Medallas/Álbum con border-bottom + contador por tab.
+   - Discos semánticos: distinguir visualmente las 5 paletas (estrella/celebracion/calma/constancia/base) y las heroicas con ★.
+   - Medalla nueva con glow + punto pulsante (entrar a Logros justo después de desbloquear algo).
+   - Niveles bloqueados con copy "Llega a este nivel completando X medallas más".
+   - Álbum: tarjeta panorámica primera + grid 1:1 resto, badge de categoría correcto por hito, gradient correcto según tono.
+   - Click sobre foto: abre en pestaña nueva (window.open).
+   - Click sobre placeholder sin foto: dispara selector de imagen y sube → updateHitoFoto.
+   - Empty state del álbum con icono + copy en español.
+2. Si verificación pasa, pasar a la siguiente pantalla del Bloque 3 (Perfil del hijo · HijoPage) según el orden de prioridad definido el 20 mayo.
+
+## HASH DEL COMMIT
