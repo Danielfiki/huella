@@ -739,7 +739,11 @@ export default function HitosPage() {
           <h2 className={styles.titulo}>Logros<TooltipAyuda texto="Aquí celebramos tu constancia. Cada episodio registrado es un paso hacia entender mejor a tu hijo/a." /></h2>
           <p className={styles.totalBadges}>{totalDesbloqueados} de {totalBadges} medallas</p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => navigate('/nuevo')}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => navigate('/nuevo', { state: { vistaInicial: 'hito' } })}
+        >
           <Plus size={16} /> Registrar
         </Button>
       </div>

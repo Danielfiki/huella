@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Camera, X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
@@ -39,9 +39,15 @@ const CATEGORIAS = [
 
 export default function NuevoPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { state, addHito, updateHitoFoto } = useHuella()
   const { user } = useAuth()
-  const [vista, setVista] = useState('elegir')
+  // Permite saltar la vista 'elegir' cuando el caller ya sabe qué
+  // quiere registrar. Hoy lo usa el botón "+ Registrar" del header de
+  // Logros, que entra directo al form de avance.
+  const [vista, setVista] = useState(
+    location.state?.vistaInicial === 'hito' ? 'hito' : 'elegir'
+  )
 
   const [descripcion, setDescripcion] = useState('')
   const [categoria, setCategoria] = useState('')
