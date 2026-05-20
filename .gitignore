@@ -5,3 +5,7 @@ dist
 
 .vercel
 supabase/.temp/
+
+# Mensajes de commit temporales (PowerShell/bash mueren con unicode en
+# here-docs, asi que escribimos a archivo y pasamos con `git commit -F`).
+.commit-msg.tmp
