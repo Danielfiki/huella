@@ -2065,3 +2065,5 @@ Por medalla (badge): `id`, `emoji`, `titulo`, `desc`, `frase`, `check`, `fechaLo
 2. Si verificación pasa, pasar a la siguiente pantalla del Bloque 3 (Perfil del hijo · HijoPage) según el orden de prioridad definido el 20 mayo.
 
 ## HASH DEL COMMIT
+
+`048bfea` — `feat(logros): rediseño visual completo Bloque 3 · Concepto Constelación`. Pusheado a main, Vercel deploya automáticamente.
