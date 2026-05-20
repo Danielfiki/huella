@@ -831,9 +831,11 @@ export default function HitosPage() {
                       {getSubmensaje(nivel, desbloqueadasCt, nivelBloqueado)}
                     </span>
                   </div>
-                  <span className={s.nivelPct}>
-                    {desbloqueadasCt}<small>/{nivel.badges.length}</small>
-                  </span>
+                  {!nivelBloqueado && (
+                    <span className={s.nivelPct}>
+                      {desbloqueadasCt}<small>/{nivel.badges.length}</small>
+                    </span>
+                  )}
                 </div>
 
                 {!nivelBloqueado && (
