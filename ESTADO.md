@@ -2101,3 +2101,53 @@ Un padre nuevo veía discos de 5 colores con glifos distintos (★/♥/gota/cír
 **Cero hex hardcoded** en el módulo del modal. Los 5 discos de la lista reutilizan los mismos tokens `--color-medalla-{tono}-bg/-border` que el `MedallaDetalleModal` y la grilla principal. El disco mini-mini del sello reusa los tokens de tono estrella + `--color-primary` + `--color-surface`.
 
 Build verde, 2 modules nuevos (2043 vs 2041 previos).
+
+# ═══════════════════════════════════════════════════════════════
+# CIERRE DE SESIÓN · 20 de mayo (tarde)
+# ═══════════════════════════════════════════════════════════════
+
+## BLOQUE 3 · LOGROS — CERRADO Y VERIFICADO EN PRODUCCIÓN
+
+Estado final: la pantalla Logros (`HitosPage`) quedó completamente rediseñada y verificada por Daniel en huella-theta.vercel.app. Cuatro pasadas en orden cronológico:
+
+1. **Commit `048bfea`** — Rediseño visual completo (Hero mocha emocional, 33 medallas preservadas con tono semántico, paleta jerárquica de 5 tonos Mocha Mix, tabs border-bottom, álbum con categorías reales como label + tono derivado).
+2. **Commit `271a9d7`** — Fix: ocultar contador `X/Y` en niveles bloqueados para preservar metáfora "Por descubrir".
+3. **Commit `afb844c`** — Modal de detalle de medalla (al tocar una desbloqueada, abre card con título + desc + frase + fecha de desbloqueo).
+4. **Commit `2bc8914`** — Modal-leyenda de tonos accesible desde el "?" del Hero (resolvió también un bug visual del `TooltipAyuda` viejo que se encimaba sobre el lede).
+
+Total: 4 archivos en scope cerrado (`HitosPage.jsx`, `HitosPage.module.css`, `index.css`, `ESTADO.md`) + 2 componentes nuevos (`MedallaDetalleModal`, `LeyendaMedallasModal`). Cero impacto fuera del scope. Cero hex hardcoded en los módulos nuevos.
+
+## DECISIONES DE PRODUCTO TOMADAS EN ESTA SESIÓN
+
+1. **NO reducir las 7 medallas heroicas (con sello ★) a 4.** Revisión post-implementación confirmó que las 7 actuales son todas hitos legítimos (planes completados, multihabilidades, leyenda). El sello ★ es pequeño y elegante, no satura visualmente al 21% de presencia. Reducir empobrecería el reconocimiento al usuario sin ganar nada visual concreto.
+2. **Mantener las 33 medallas actuales con su lógica `check`/`fechaLogro` intacta** (Opción 1 elegida frente al catálogo aspiracional del bundle de Claude Design, que proponía 33 medallas conceptualmente nuevas sin criterios derivables).
+3. **Reusar patrones de modal por copia, no por abstracción.** Cuando lleguen 4+ modales con el mismo patrón (hoy son 3: `MedallaDetalleModal`, `LeyendaMedallasModal`, `ModalPuenteCiclo`), extraer `ModalShell` genérico.
+
+## APRENDIZAJES DE PROCESO
+
+1. **Claude Design tiende a escalar el alcance silenciosamente.** En esta sesión reescribió las 33 medallas con IDs y criterios distintos cuando el brief era solo visual. Captura preventiva: Claude Code lo detectó en pre-flight y consultó antes de implementar.
+2. **Auditoría pre-Code es no negociable.** Sin ella, este bug habría llegado a producción.
+3. **Los prompts a Claude Code requieren blindaje completo:** idioma + scope + restricciones + reglas de comunicación + verificación post-implementación + commit + push + actualizar `ESTADO.md`. Acortar mediante suposiciones de contexto deja huecos.
+
+## DEUDAS DETECTADAS QUE QUEDAN ABIERTAS
+
+(Ninguna creada en esta sesión, solo confirmadas:)
+- **Typo histórico `frustration` (inglés) en categoría de hitos.** Vive en 6+ archivos y en datos persistidos de Supabase. Migrar requiere UPDATE en DB + cambio de call sites.
+- **`Card.jsx`** con `border-radius`/`padding`/`box-shadow` hardcoded (Fase 6).
+- **`Button.module.css`** con `border-radius: 16px` hardcoded (Fase 6).
+- **`#fff` literal** en `BannerCompletado`, `HistorialHeader`, `HijoPage` (×5), `HistorialPage`. Deuda transversal Fase 6.
+- **2 sistemas paralelos de badges desincronizados:** `HijoPage.calcularLogrosRecientes` (12 in-file) y `HitosPage.NIVELES` (33).
+- **`--font-heading` falta explícito** en cifras grandes de `HijoPage` (`.rachaNumero`, `.evolucionCifra`). Caen a Plus Jakarta Sans cuando deberían ser Fraunces.
+- **Cuando se agregue el cuarto modal con el mismo patrón** → extraer `ModalShell` genérico.
+
+## PRÓXIMA SESIÓN — ARRANCAR POR HijoPage (Perfil del hijo)
+
+Es el siguiente módulo del Bloque 3 según el orden de prioridad definido el 20 de mayo (mañana). Pendientes ya identificados para HijoPage:
+
+1. **Pasada visual por Claude Design** para alinear con el referente que acabamos de cerrar en Logros (Hero emocional, paleta Mocha Mix con jerarquía, tipografía Fraunces explícita en cifras).
+2. **Streak con día de gracia** (chip "🌿 Día de gracia") ya implementado en código, falta verificación visual y posiblemente pulir el lugar donde aparece.
+3. **Link al Álbum** desde la sección de Avances recientes.
+4. **Cerrar la deuda de `--font-heading`** explícito en `.rachaNumero` y `.evolucionCifra`.
+5. **Decidir si unificar el sistema de 12 badges in-file de HijoPage con el de 33 de HitosPage** (deuda arquitectural a discutir antes de tocar).
+
+**Metodología confirmada para el próximo módulo:** auditoría visual pre-Design → 3 conceptos Design → elección → mockup detallado → handoff bundle → revisión del bundle antes de Code → implementación Claude Code → verificación en producción.
