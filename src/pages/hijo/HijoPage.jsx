@@ -403,23 +403,15 @@ export default function HijoPage() {
           className={[s.rachaShelf, sinHistorial && s.empty].filter(Boolean).join(' ')}
           aria-labelledby="shelf-lbl"
         >
-          <div className={s.shelfTopRow}>
-            <span id="shelf-lbl" className={s.shelfLbl}>
-              {sinHistorial ? (
-                'Sin racha aún'
-              ) : (
-                <><span className={s.fire}>🔥</span> Racha activa</>
-              )}
-            </span>
-            <span className={s.shelfSince}>
-              {sinHistorial || !rachaInicio
-                ? '·'
-                : `desde el ${new Date(rachaInicio).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`}
-            </span>
-          </div>
-
           <div className={s.shelfBody}>
             <div className={s.shelfMain}>
+              <span id="shelf-lbl" className={s.shelfLbl}>
+                {sinHistorial ? (
+                  'Sin racha aún'
+                ) : (
+                  <><span className={s.fire}>🔥</span> Racha activa</>
+                )}
+              </span>
               <div className={s.shelfNumLine}>
                 <span className={s.shelfNum}>
                   {diasRacha}<small>{sinHistorial ? 'días' : 'días seguidos'}</small>
@@ -427,6 +419,11 @@ export default function HijoPage() {
               </div>
             </div>
             <div className={s.shelfMeta}>
+              <span className={s.shelfSince}>
+                {sinHistorial || !rachaInicio
+                  ? '·'
+                  : `desde el ${new Date(rachaInicio).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`}
+              </span>
               <p className={s.shelfFrase}>{frase}</p>
               {rachaUsoFreeze && !sinHistorial && (
                 <span className={s.graceChip}>

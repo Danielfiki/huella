@@ -103,15 +103,18 @@
   padding: 18px 22px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 .shelfBody {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 18px;
 }
 .shelfMain {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .shelfMeta {
   flex: 1;
@@ -120,11 +123,6 @@
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
-}
-.shelfTopRow {
-  display: flex; align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
 }
 .shelfLbl {
   font-size: 10px; font-weight: 700;
