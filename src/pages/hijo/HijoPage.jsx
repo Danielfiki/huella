@@ -1,9 +1,12 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUp, ArrowDown, Minus, Settings, ArrowLeft } from 'lucide-react'
+import {
+  Settings, ArrowLeft, ArrowRight,
+  TrendingUp, TrendingDown, Minus,
+} from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
-import styles from './HijoPage.module.css'
+import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -30,7 +33,6 @@ function calcularRacha(episodios, hitos) {
   if (!set.has(toDateStr(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
     if (!set.has(toDateStr(cursor))) return { streak: 0, usedFreeze: false }
-    // Hoy no tiene actividad pero ayer sí: el freeze ya está gastado.
     freezeUsed = true
   }
 
@@ -40,12 +42,11 @@ function calcularRacha(episodios, hitos) {
       streak++
       cursor.setDate(cursor.getDate() - 1)
     } else if (!freezeUsed) {
-      // Mirar 1 día más atrás para ver si la cadena continúa.
       const peek = new Date(cursor)
       peek.setDate(cursor.getDate() - 1)
       if (set.has(toDateStr(peek))) {
         freezeUsed = true
-        cursor.setDate(cursor.getDate() - 1) // saltamos el gap (no cuenta en streak)
+        cursor.setDate(cursor.getDate() - 1)
       } else {
         break
       }
@@ -137,18 +138,36 @@ function displayToIso(display) {
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 const HITO_EMOJIS = { autorregulacion: '🌱', empatia: '💛', disculpa: '🤝', frustration: '💪', social: '👫', otro: '⭐' }
 
+// Mapeo de título de badge → tono semántico (paleta de Logros).
+// Se aplica solo a la presentación; la lógica de calcularLogrosRecientes
+// queda intacta. La unificación con NIVELES de HitosPage es trabajo
+// futuro registrado como deuda.
+const TONO_POR_TITULO = {
+  'Primer paso':    'base',
+  'Observador':     'base',
+  'Analista':       'base',
+  'Primer avance':  'celebracion',
+  'Coleccionista': 'celebracion',
+  'Estratega':      'constancia',
+  '4 semanas':      'estrella',
+  'Un mes':         'constancia',
+  'Semana activa':  'constancia',
+  'Multihabilidad': 'estrella',
+  'Experto':        'base',
+  'Mentor':         'celebracion',
+}
+
 // ── Componente ────────────────────────────────────────────────────────────
 
 export default function HijoPage() {
   const { state, setHijo } = useHuella()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { hijo, episodios, hitos, estrategias } = state
 
   const esNuevo = searchParams.get('nuevo') === 'true'
 
   // Estados del formulario de creación (siempre declarados — regla de hooks)
-  const [seccion, setSeccion]             = useState('perfil')
   const [nombre, setNombre]               = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
   const [fechaDisplay, setFechaDisplay]   = useState('')
@@ -189,27 +208,27 @@ export default function HijoPage() {
   // ── Modo creación ─────────────────────────────────────────────────────────
   if (esNuevo) {
     return (
-      <div className={styles.page}>
-        <div className={styles.formHeader}>
+      <div className={s.page}>
+        <div className={s.formHeader}>
           <button
             type="button"
-            className={styles.backBtn}
+            className={s.backBtn}
             onClick={() => navigate(-1)}
             aria-label="Volver"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className={styles.formTitulo}>Nuevo hijo/a</h2>
+          <h2 className={s.formTitulo}>Nuevo hijo/a</h2>
         </div>
 
         <Card>
-          <form onSubmit={handleCrear} className={styles.form}>
-            <div className={styles.campo}>
-              <label className={styles.campoLabel}>
-                Nombre <span className={styles.required}>*</span>
+          <form onSubmit={handleCrear} className={s.form}>
+            <div className={s.campo}>
+              <label className={s.campoLabel}>
+                Nombre <span className={s.required}>*</span>
               </label>
               <input
-                className={styles.input}
+                className={s.input}
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Nombre del niño/a"
@@ -217,10 +236,10 @@ export default function HijoPage() {
               />
             </div>
 
-            <div className={styles.campo}>
-              <label className={styles.campoLabel}>Fecha de nacimiento</label>
+            <div className={s.campo}>
+              <label className={s.campoLabel}>Fecha de nacimiento</label>
               <input
-                className={styles.input}
+                className={s.input}
                 value={fechaDisplay}
                 onChange={handleFechaChange}
                 placeholder="DD/MM/AAAA"
@@ -228,14 +247,14 @@ export default function HijoPage() {
               />
             </div>
 
-            <div className={styles.campo}>
-              <label className={styles.campoLabel}>Género</label>
-              <div className={styles.generoRow}>
+            <div className={s.campo}>
+              <label className={s.campoLabel}>Género</label>
+              <div className={s.generoRow}>
                 {[['m', 'Niño'], ['f', 'Niña'], ['nb', 'Otro']].map(([val, label]) => (
                   <button
                     key={val}
                     type="button"
-                    className={`${styles.generoBtn} ${genero === val ? styles.generoBtnActivo : ''}`}
+                    className={`${s.generoBtn} ${genero === val ? s.generoBtnActivo : ''}`}
                     onClick={() => setGenero((g) => g === val ? '' : val)}
                   >
                     {label}
@@ -244,11 +263,11 @@ export default function HijoPage() {
               </div>
             </div>
 
-            {errorCrear && <p className={styles.formError}>{errorCrear}</p>}
+            {errorCrear && <p className={s.formError}>{errorCrear}</p>}
 
             <button
               type="submit"
-              className={styles.guardarBtn}
+              className={s.guardarBtn}
               disabled={!nombre.trim() || loadingCrear}
             >
               {loadingCrear ? 'Guardando…' : 'Crear hijo/a'}
@@ -262,11 +281,11 @@ export default function HijoPage() {
   // ── Modo vista vacía ──────────────────────────────────────────────────────
   if (!hijo) {
     return (
-      <div className={styles.page}>
-        <div className={styles.vacio}>
+      <div className={s.page}>
+        <div className={s.vacio}>
           <span style={{ fontSize: 48 }}>👶</span>
           <p>Configura el perfil de tu hijo/a para ver esta página.</p>
-          <button className={styles.editarBtn} onClick={() => navigate('/perfil')}>
+          <button className={s.editarBtn} onClick={() => navigate('/perfil')}>
             Ir al perfil →
           </button>
         </div>
@@ -274,179 +293,259 @@ export default function HijoPage() {
     )
   }
 
-  // ── Modo stats ────────────────────────────────────────────────────────────
-  const { streak: racha, usedFreeze } = calcularRacha(episodios, hitos)
-  const evolucion    = calcularEvolucion(episodios)
-  const logros       = calcularLogrosRecientes({ episodios, hitos, estrategias })
+  // ── Modo stats (Refugio) ──────────────────────────────────────────────────
+  const { streak: diasRacha, usedFreeze: rachaUsoFreeze } = calcularRacha(episodios, hitos)
+  const evolBase = calcularEvolucion(episodios)
+  const logrosBase = calcularLogrosRecientes({ episodios, hitos, estrategias })
   const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 3)
-  const nombreMesActual = MESES[new Date().getMonth()]
+
+  // Derivar shape esperado por el JSX (sin tocar selectores).
+  const mesActualIdx = new Date().getMonth()
+  const mesAnteriorIdx = mesActualIdx === 0 ? 11 : mesActualIdx - 1
+  const evolucion = {
+    actual: evolBase.este,
+    anterior: evolBase.anterior > 0 ? evolBase.anterior : null,
+    mesActualLabel: MESES[mesActualIdx],
+    mesAnteriorLabel: MESES[mesAnteriorIdx],
+    interpretacion: evolBase.diff < 0
+      ? '📉 Menos episodios que el mes pasado. Algo está funcionando.'
+      : (evolBase.diff > 0 && evolBase.anterior > 0
+          ? 'Sigue registrando para identificar qué está pasando.'
+          : ''),
+  }
+
+  // rachaInicio derivado: hoy - (diasRacha - 1).
+  const rachaInicio = (() => {
+    if (diasRacha === 0) return null
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    d.setDate(d.getDate() - (diasRacha - 1))
+    return d.toISOString()
+  })()
+
+  // calcularRacha no expone la fecha del freeze. Queda null y el chip
+  // omite la parte "· {fecha}" cuando no hay dato.
+  const rachaUltimoFreezeDate = null
+
+  const logrosRecientes = logrosBase.map((b) => ({
+    id: b.titulo,
+    emoji: b.emoji,
+    nombre: b.titulo,
+    fecha: b.fecha,
+    tono: TONO_POR_TITULO[b.titulo] || 'base',
+  }))
+
+  const avancesPositivos = ultimosHitos.map((h) => ({
+    id: h.id,
+    emoji: HITO_EMOJIS[h.categoria] || '⭐',
+    descripcion: h.descripcion,
+    fecha: h.fecha,
+  }))
+
+  const sinHistorial = diasRacha === 0
+  const frase = frasePorRacha(diasRacha, hijo.nombre)
+
+  // trendInfo inline (usa los iconos lucide ya importados).
+  const trend = (() => {
+    const a = evolucion.actual, p = evolucion.anterior
+    if (p == null || p === 0) return { cls: s.flat, label: '±0%', Icon: Minus }
+    const pct = Math.round(((a - p) / p) * 100)
+    if (pct < 0) return { cls: s.down, label: `${Math.abs(pct)}%`, Icon: TrendingDown }
+    if (pct > 0) return { cls: s.up,   label: `${pct}%`,           Icon: TrendingUp }
+    return { cls: s.flat, label: '±0%', Icon: Minus }
+  })()
+
+  const chipToneCls = {
+    estrella:    s.cEstrella,
+    celebracion: s.cCelebracion,
+    calma:       s.cCalma,
+    constancia:  s.cConstancia,
+    base:        s.cBase,
+  }
+
+  const tabActiva = searchParams.get('tab') ?? 'perfil'
 
   return (
-    <div className={styles.page}>
+    <div className={s.page}>
+      <div className={s.heroBlock}>
+        <header className={s.hero}>
+          <div className={s.heroTop}>
+            <div className={s.heroAvatar} aria-hidden="true">
+              {hijo.avatarUrl
+                ? <img src={hijo.avatarUrl} alt={hijo.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                : (hijo.nombre?.[0]?.toUpperCase() ?? '·')
+              }
+            </div>
+            <div className={s.heroWho}>
+              <h1 className={s.heroName}>{hijo.nombre}</h1>
+              {hijo.edad != null && (
+                <div className={s.heroAge}>
+                  {hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}
+                </div>
+              )}
+            </div>
+            <button
+              className={s.heroIconBtn}
+              onClick={() => navigate('/perfil')}
+              aria-label="Ajustes de perfil"
+            >
+              <Settings size={18} />
+            </button>
+          </div>
 
-      {/* ── Hero ── */}
-      <div className={styles.hero}>
-        <button className={styles.editarIconBtn} onClick={() => navigate('/perfil')} title="Editar perfil">
-          <Settings size={16} />
-        </button>
-        <div className={styles.avatarWrap}>
-          {hijo.avatarUrl
-            ? <img src={hijo.avatarUrl} alt={hijo.nombre} className={styles.avatar} />
-            : <div className={styles.avatarPlaceholder}>{hijo.nombre?.[0]?.toUpperCase() || '?'}</div>
-          }
-        </div>
-        <h1 className={styles.nombre}>{hijo.nombre}</h1>
-        {hijo.edad != null && (
-          <p className={styles.edad}>{hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}</p>
-        )}
+          <p className={s.heroLede}>
+            {sinHistorial
+              ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
+              : `La huella que ${hijo.nombre} va dejando, día tras día.`}
+          </p>
+        </header>
+
+        <section
+          className={[s.rachaShelf, sinHistorial && s.empty].filter(Boolean).join(' ')}
+          aria-labelledby="shelf-lbl"
+        >
+          <div className={s.shelfTopRow}>
+            <span id="shelf-lbl" className={s.shelfLbl}>
+              {sinHistorial ? (
+                'Sin racha aún'
+              ) : (
+                <><span className={s.fire}>🔥</span> Racha activa</>
+              )}
+            </span>
+            <span className={s.shelfSince}>
+              {sinHistorial || !rachaInicio
+                ? '·'
+                : `desde el ${new Date(rachaInicio).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`}
+            </span>
+          </div>
+
+          <div className={s.shelfNumLine}>
+            <span className={s.shelfNum}>
+              {diasRacha}<small>{sinHistorial ? 'días' : 'días seguidos'}</small>
+            </span>
+          </div>
+
+          <p className={s.shelfFrase}>{frase}</p>
+
+          {rachaUsoFreeze && !sinHistorial && (
+            <span className={s.graceChip}>
+              🌿 Día de gracia usado
+              {rachaUltimoFreezeDate
+                ? ` · ${new Date(rachaUltimoFreezeDate).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`
+                : ''}
+            </span>
+          )}
+        </section>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className={styles.tabs}>
+      <div className={s.tabs} role="tablist">
         <button
-          className={`${styles.tab} ${seccion === 'perfil' ? styles.tabActivo : ''}`}
-          onClick={() => setSeccion('perfil')}
+          role="tab"
+          className={[s.tab, tabActiva === 'perfil' && s.on].filter(Boolean).join(' ')}
+          onClick={() => setSearchParams({})}
         >
           Perfil
         </button>
         <button
-          className={`${styles.tab} ${seccion === 'rutina' ? styles.tabActivo : ''}`}
-          onClick={() => setSeccion('rutina')}
+          role="tab"
+          className={[s.tab, tabActiva === 'rutina' && s.on].filter(Boolean).join(' ')}
+          onClick={() => setSearchParams({ tab: 'rutina' })}
         >
           Rutina diaria
         </button>
       </div>
 
-      {seccion === 'rutina' && <RutinaDiaria />}
-
-      {seccion === 'perfil' && <>
-
-      {/* ── Racha ── */}
-      <div className={styles.rachaCard}>
-        <div className={styles.rachaTop}>
-          <span className={styles.rachaNumero}>{racha}</span>
-          <span className={styles.rachaDias}>{racha === 1 ? 'día' : 'días'} seguidos</span>
-          <span className={styles.rachaFlama}>🔥</span>
-        </div>
-        <p className={styles.rachaFrase}>{frasePorRacha(racha, hijo.nombre)}</p>
-        {usedFreeze && (
-          <span
-            className={styles.rachaFreeze}
-            title="Saltaste un día — la racha sigue"
-          >
-            🌿 Día de gracia
-          </span>
-        )}
-      </div>
-
-      {/* ── Evolución ── */}
-      <Card>
-        <p className={styles.seccionLabel}>Episodios en {nombreMesActual}</p>
-        <div className={styles.evolucionRow}>
-          <div className={styles.evolucionNum}>
-            <span className={styles.evolucionCifra}>{evolucion.este}</span>
-            <span className={styles.evolucionSub}>este mes</span>
-          </div>
-          <div className={styles.evolucionSep} />
-          <div className={styles.evolucionNum}>
-            <span className={styles.evolucionCifra} style={{ color: 'var(--color-text-muted)' }}>{evolucion.anterior}</span>
-            <span className={styles.evolucionSub}>mes anterior</span>
-          </div>
-          <div className={styles.evolucionTendencia}>
-            {evolucion.diff === 0 || evolucion.anterior === 0 ? (
-              <><Minus size={18} color="var(--color-text-muted)" /><span className={styles.evolucionPct} style={{ color: 'var(--color-text-muted)' }}>sin cambio</span></>
-            ) : evolucion.diff < 0 ? (
-              <><ArrowDown size={18} color="var(--color-success)" /><span className={styles.evolucionPct} style={{ color: 'var(--color-success)' }}>{evolucion.pct != null ? `${evolucion.pct}% menos` : 'bajó'}</span></>
-            ) : (
-              <><ArrowUp size={18} color="var(--color-danger)" /><span className={styles.evolucionPct} style={{ color: 'var(--color-danger)' }}>{evolucion.pct != null ? `${evolucion.pct}% más` : 'subió'}</span></>
-            )}
-          </div>
-        </div>
-        {evolucion.diff < 0 && (
-          <p className={styles.evolucionMsg}>📉 Menos episodios que el mes pasado. Algo está funcionando.</p>
-        )}
-        {evolucion.diff > 0 && evolucion.anterior > 0 && (
-          <p className={styles.evolucionMsg}>Sigue registrando para identificar qué está pasando.</p>
-        )}
-      </Card>
-
-      {/* ── Logros recientes ── */}
-      {logros.length > 0 && (
-        <div>
-          <p className={styles.seccionTitulo}>Logros recientes</p>
-          <div className={styles.logrosRow}>
-            {logros.map((b, i) => (
-              <div key={i} className={styles.logroChip}>
-                <span className={styles.logroEmoji}>{b.emoji}</span>
-                <span className={styles.logroTitulo}>{b.titulo}</span>
-                <span className={styles.logroFecha}>{new Date(b.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Línea de tiempo de hitos ── */}
-      {ultimosHitos.length > 0 && (
-        <div>
-          <p className={styles.seccionTitulo}>Avances positivos</p>
-          <Card className={styles.timelineCard}>
-            {ultimosHitos.map((h, i) => (
-              <div key={h.id} className={`${styles.timelineItem} ${i === ultimosHitos.length - 1 ? styles.timelineLast : ''}`}>
-                <span className={styles.timelineEmoji}>{HITO_EMOJIS[h.categoria] || '⭐'}</span>
-                <div className={styles.timelineTexto}>
-                  <p className={styles.timelineDesc}>{h.descripcion}</p>
-                  <p className={styles.timelineFecha}>{new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}</p>
-                </div>
-              </div>
-            ))}
-          </Card>
-          <button
-            type="button"
-            className={styles.verTodosBtn}
-            onClick={() => navigate('/hitos?tab=album')}
-          >
-            Ver todos en Álbum →
-          </button>
-        </div>
-      )}
-
-      {hitos.length === 0 && (
-        <Card className={styles.hitoVacioCard}>
-          <p>Aún no hay avances registrados. Cuando notes algo positivo en {hijo.nombre}, regístralo en Logros.</p>
-        </Card>
-      )}
-
-      {/* ── Álbum de momentos ── */}
-      {(() => {
-        const momentos = [...hitos]
-          .filter((h) => h.foto_url)
-          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-        if (momentos.length === 0) return null
-        return (
-          <div>
-            <p className={styles.seccionTitulo}>Álbum de crecimiento</p>
-            <div className={styles.albumGrid}>
-              {momentos.map((h) => (
-                <div key={h.id} className={styles.albumItem}>
-                  <img src={h.foto_url} alt={h.descripcion} className={styles.albumImg} />
-                  <div className={styles.albumMeta}>
-                    <span className={styles.albumFecha}>
-                      {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
-                    </span>
-                    {h.descripcion && (
-                      <span className={styles.albumDesc}>{h.descripcion}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+      {tabActiva === 'perfil' && (
+        <div className={s.body}>
+          <article className={s.card}>
+            <div className={s.cardHd}>
+              <h2 className={s.cardTtl}>Episodios en {evolucion.mesActualLabel}</h2>
+              <span className={[s.evolTrend, trend.cls].join(' ')}>
+                <trend.Icon size={14} /> {trend.label}
+              </span>
             </div>
-          </div>
-        )
-      })()}
+            <div className={s.evolNums}>
+              <span className={s.evolNow}>
+                {evolucion.actual}<small>episodios</small>
+              </span>
+              <span className={s.evolPrev}>
+                {evolucion.anterior == null
+                  ? 'aún sin historial previo'
+                  : <>vs. <b>{evolucion.anterior}</b> en {evolucion.mesAnteriorLabel}</>}
+              </span>
+            </div>
+            {evolucion.interpretacion && (
+              <p className={s.evolInterp}>{evolucion.interpretacion}</p>
+            )}
+          </article>
 
-      </>}
+          <article className={s.card}>
+            <div className={s.cardHd}>
+              <h2 className={s.cardTtl}>Logros recientes</h2>
+              <span className={s.cardSub}>
+                {logrosRecientes.length === 0 ? 'Por desbloquear' : `${logrosRecientes.length} últimos`}
+              </span>
+            </div>
+            {logrosRecientes.length > 0 && (
+              <div className={s.logroChips}>
+                {logrosRecientes.map((logro) => (
+                  <div
+                    key={logro.id}
+                    className={[s.logroChip, chipToneCls[logro.tono] ?? s.cBase].join(' ')}
+                  >
+                    <span className={s.emo} aria-hidden="true">{logro.emoji ?? '●'}</span>
+                    <span className={s.tx}>
+                      <span className={s.cnm}>{logro.nombre}</span>
+                      <span className={s.cdt}>
+                        {new Date(logro.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
 
+          <article className={s.card}>
+            <div className={s.cardHd}>
+              <h2 className={s.cardTtl}>Avances positivos</h2>
+              <span className={s.cardSub}>
+                {avancesPositivos.length === 0 ? 'Aún sin hitos' : 'Últimos 3'}
+              </span>
+            </div>
+
+            {avancesPositivos.length === 0 ? (
+              <p className={s.evolInterp}>
+                El primer hito de {hijo.nombre} aparecerá aquí en cuanto lo guardes.
+              </p>
+            ) : (
+              <>
+                <ol className={s.timeline}>
+                  {avancesPositivos.map((h) => (
+                    <li key={h.id} className={s.timelineRow}>
+                      <span className={s.timelineDot} aria-hidden="true">{h.emoji ?? '·'}</span>
+                      <div>
+                        <p className={s.timelineDesc}>{h.descripcion}</p>
+                        <span className={s.timelineDt}>
+                          {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <button
+                  className={s.verAlbum}
+                  onClick={() => navigate('/hitos?tab=album')}
+                >
+                  Ver todos en Álbum <ArrowRight size={14} />
+                </button>
+              </>
+            )}
+          </article>
+        </div>
+      )}
+
+      {tabActiva === 'rutina' && <RutinaDiaria />}
     </div>
   )
 }
