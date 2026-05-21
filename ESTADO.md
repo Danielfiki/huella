@@ -2085,3 +2085,19 @@ Esto recupera información que el render anterior de Logros mostraba inline en c
 **Cero hex hardcoded** en el módulo del modal. Los 5 tonos del disco reutilizan los tokens `--color-medalla-{estrella|celebracion|calma|constancia|base}{-bg|-border}` ya existentes en `index.css`. El sello ★ reusa `--color-primary` + `--color-surface`. El overlay usa rgba alineado con el `--color-text` (42, 26, 14).
 
 Build verde, 2 modules nuevos (2041 vs 2039 previos).
+
+## MODAL-LEYENDA DE TONOS DE MEDALLA (commit `2bc8914`)
+
+Un padre nuevo veía discos de 5 colores con glifos distintos (★/♥/gota/círculo/punto) sin contexto. La metáfora "Constelación" pedía un decodificador accesible. Solución: botón `?` chiquito (22×22, blanco sobre rgba) al lado del título "Logros" del Hero que abre un modal-leyenda explicando los 5 tonos + el sello ★ de las heroicas.
+
+**Bug visual resuelto a la vez:** el `<TooltipAyuda>` antiguo del Hero (heredado del rediseño) tenía un problema: al abrirse, su contenido se encimaba sobre el lede del Hero ("La huella que [nombre] va dejando…") quedando ilegible. El nuevo botón `?` con modal reemplaza al tooltip allí — el bug desaparece porque el modal vive en su propio overlay sobre todo lo demás.
+
+**Componente nuevo:** `src/components/medallas/LeyendaMedallasModal.jsx` + `.module.css`. Reusa por copia (no abstrae) los patrones de `MedallaDetalleModal`: overlay con backdrop-filter blur, card 360px max-width, role="dialog" + aria-labelledby, focus inicial en X, focus trap, ESC cierra, click overlay cierra, animaciones in/out 200ms / 150ms con state `closing`. Contenido: título "Cómo se leen tus medallas" + párrafo intro + lista de 5 filas (disco 44×44 + nombre Fraunces + descripción Plus Jakarta) + separador + pie con disco mini 28×28 mostrando el sello ★ como ejemplo + texto explicativo.
+
+**Trigger en Hero:** se ELIMINÓ el `<TooltipAyuda>` y el import del componente desde `HitosPage.jsx` (el archivo `TooltipAyuda.jsx` y su CSS quedaron INTACTOS en el repo porque `NuevoPage.jsx:154` sigue usándolo). En su lugar va un `<button className={s.heroHelpBtn}>` que abre el modal vía `useState leyendaAbierta`.
+
+**Selector nuevo en HitosPage.module.css:** `.heroHelpBtn` (única regla agregada al archivo) — 22×22 round, `rgba(255,255,255,0.18)` base, `rgba(255,255,255,0.28)` hover/focus, contenido `?` en Plus Jakarta 12px 700 blanco, `outline 2px solid #fff` en focus-visible.
+
+**Cero hex hardcoded** en el módulo del modal. Los 5 discos de la lista reutilizan los mismos tokens `--color-medalla-{tono}-bg/-border` que el `MedallaDetalleModal` y la grilla principal. El disco mini-mini del sello reusa los tokens de tono estrella + `--color-primary` + `--color-surface`.
+
+Build verde, 2 modules nuevos (2043 vs 2041 previos).
