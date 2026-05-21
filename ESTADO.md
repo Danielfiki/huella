@@ -2071,3 +2071,17 @@ Por medalla (badge): `id`, `emoji`, `titulo`, `desc`, `frase`, `check`, `fechaLo
 ## FIX POST-VERIFICACIÓN (commit `271a9d7`)
 
 Daniel detectó en producción que el contador `X/Y` seguía mostrándose en el header de los niveles bloqueados, lo que revelaba medallas técnicamente desbloqueadas dentro de un nivel marcado como "Por descubrir" — inconsistente con el resto del render y rompía la metáfora. Fix quirúrgico: el span `.nivelPct` ahora se renderiza solo cuando `!nivelBloqueado`. Para niveles bloqueados, el copy "POR DESCUBRIR" en el subtítulo + el mensaje "Llega a este nivel completando X medallas más" abajo ya cumplen su función. 1 archivo, +5/-3.
+
+## MODAL DE DETALLE DE MEDALLA (commit `afb844c`)
+
+Tocar una medalla DESBLOQUEADA ahora abre un modal centrado con: disco grande (96×96) heredando el tono semántico de la medalla (con ★ sello si es heroica), título Fraunces 22px, descripción del criterio, separador sutil, frase inspiradora Fraunces italic entrecomillada con guillemes, y fecha de desbloqueo cuando `fechaLogro(dataBadge)` retorna valor. Las medallas BLOQUEADAS no son interactivas (sin cursor pointer, sin onClick, sin tabIndex) — la metáfora "Por descubrir" se preserva intacta.
+
+Esto recupera información que el render anterior de Logros mostraba inline en cada card (desc, frase, fechaLogro) y que en el rediseño "Constelación" quedó preservada en el modelo pero sin renderizar. El modal es la solución natural: info rica al pedirla, pantalla limpia por defecto.
+
+**Componente nuevo y reusable:** `src/components/medallas/MedallaDetalleModal.jsx` + `.module.css`. Sin librerías externas. Patrón coherente con `ModalPuenteCiclo` del repo (overlay + role="dialog" + aria-labelledby + focus inicial al cerrar + focus trap + ESC cierra + restaurar foco al elemento previo). Animaciones: fade-in overlay + slide-up card 200ms ease-out al abrir; fade-out + slide-down 150ms al cerrar.
+
+**Integración en HitosPage:** `useState medallaAbierta`. Las medallas abiertas reciben `tabIndex={0}`, `role="button"`, `aria-label`, `cursor: pointer` (inline) y handler `onClick + onKeyDown` (Enter/Space). Al clickear, la medalla recibe foco con `e.currentTarget.focus()` antes del setState, para que al cerrar el modal pueda restaurar el foco vía `previaFocusRef`.
+
+**Cero hex hardcoded** en el módulo del modal. Los 5 tonos del disco reutilizan los tokens `--color-medalla-{estrella|celebracion|calma|constancia|base}{-bg|-border}` ya existentes en `index.css`. El sello ★ reusa `--color-primary` + `--color-surface`. El overlay usa rgba alineado con el `--color-text` (42, 26, 14).
+
+Build verde, 2 modules nuevos (2041 vs 2039 previos).
