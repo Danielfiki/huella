@@ -5,6 +5,7 @@ import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import TooltipAyuda from '../../components/ui/TooltipAyuda'
+import MedallaDetalleModal from '../../components/medallas/MedallaDetalleModal'
 import { canModify } from '../../utils/authorDisplay'
 import s from './HitosPage.module.css'
 
@@ -621,6 +622,7 @@ export default function HitosPage() {
   const [checkinsCount, setCheckinsCount] = useState(0)
   const [subiendoHitoId, setSubiendoHitoId] = useState(null)
   const [errorUpload, setErrorUpload] = useState('')
+  const [medallaAbierta, setMedallaAbierta] = useState(null)
   const uploadInputRef = useRef(null)
   const targetHitoIdRef = useRef(null)
 
@@ -865,6 +867,17 @@ export default function HitosPage() {
                           ]
                             .filter(Boolean)
                             .join(' ')}
+                          tabIndex={abierta ? 0 : undefined}
+                          role={abierta ? 'button' : undefined}
+                          aria-label={abierta ? `Ver detalle de ${m.titulo}` : undefined}
+                          style={abierta ? { cursor: 'pointer' } : undefined}
+                          onClick={abierta ? (e) => { e.currentTarget.focus(); setMedallaAbierta(m) } : undefined}
+                          onKeyDown={abierta ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setMedallaAbierta(m)
+                            }
+                          } : undefined}
                         >
                           <div className={s.disc}>
                             <MedalIcon tono={m.tono} abierta={abierta} />
@@ -889,6 +902,14 @@ export default function HitosPage() {
             )
           })}
         </div>
+      )}
+
+      {medallaAbierta && (
+        <MedallaDetalleModal
+          medalla={medallaAbierta}
+          dataBadge={dataBadge}
+          onClose={() => setMedallaAbierta(null)}
+        />
       )}
 
       {tabActiva === 'album' && (
