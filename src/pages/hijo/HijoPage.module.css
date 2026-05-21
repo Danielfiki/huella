@@ -103,7 +103,23 @@
   padding: 18px 22px 20px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+.shelfBody {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.shelfMain {
+  flex-shrink: 0;
+}
+.shelfMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  align-items: flex-start;
 }
 .shelfTopRow {
   display: flex; align-items: baseline;

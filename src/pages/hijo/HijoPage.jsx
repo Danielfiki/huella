@@ -418,22 +418,26 @@ export default function HijoPage() {
             </span>
           </div>
 
-          <div className={s.shelfNumLine}>
-            <span className={s.shelfNum}>
-              {diasRacha}<small>{sinHistorial ? 'días' : 'días seguidos'}</small>
-            </span>
+          <div className={s.shelfBody}>
+            <div className={s.shelfMain}>
+              <div className={s.shelfNumLine}>
+                <span className={s.shelfNum}>
+                  {diasRacha}<small>{sinHistorial ? 'días' : 'días seguidos'}</small>
+                </span>
+              </div>
+            </div>
+            <div className={s.shelfMeta}>
+              <p className={s.shelfFrase}>{frase}</p>
+              {rachaUsoFreeze && !sinHistorial && (
+                <span className={s.graceChip}>
+                  🌿 Día de gracia usado
+                  {rachaUltimoFreezeDate
+                    ? ` · ${new Date(rachaUltimoFreezeDate).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`
+                    : ''}
+                </span>
+              )}
+            </div>
           </div>
-
-          <p className={s.shelfFrase}>{frase}</p>
-
-          {rachaUsoFreeze && !sinHistorial && (
-            <span className={s.graceChip}>
-              🌿 Día de gracia usado
-              {rachaUltimoFreezeDate
-                ? ` · ${new Date(rachaUltimoFreezeDate).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`
-                : ''}
-            </span>
-          )}
         </section>
       </div>
 
