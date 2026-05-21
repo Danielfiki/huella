@@ -4,8 +4,8 @@ import { Plus, Image as ImageIcon } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import MedallaDetalleModal from '../../components/medallas/MedallaDetalleModal'
+import LeyendaMedallasModal from '../../components/medallas/LeyendaMedallasModal'
 import { canModify } from '../../utils/authorDisplay'
 import s from './HitosPage.module.css'
 
@@ -623,6 +623,7 @@ export default function HitosPage() {
   const [subiendoHitoId, setSubiendoHitoId] = useState(null)
   const [errorUpload, setErrorUpload] = useState('')
   const [medallaAbierta, setMedallaAbierta] = useState(null)
+  const [leyendaAbierta, setLeyendaAbierta] = useState(false)
   const uploadInputRef = useRef(null)
   const targetHitoIdRef = useRef(null)
 
@@ -754,7 +755,14 @@ export default function HitosPage() {
         <div className={s.heroTop}>
           <h1 className={s.heroTitle}>
             Logros
-            <TooltipAyuda texto="Aquí celebramos tu constancia. Cada episodio registrado es un paso hacia entender mejor a tu hijo/a." />
+            <button
+              type="button"
+              className={s.heroHelpBtn}
+              onClick={() => setLeyendaAbierta(true)}
+              aria-label="Cómo se leen tus medallas"
+            >
+              ?
+            </button>
           </h1>
           <button
             className={s.heroIconBtn}
@@ -910,6 +918,10 @@ export default function HitosPage() {
           dataBadge={dataBadge}
           onClose={() => setMedallaAbierta(null)}
         />
+      )}
+
+      {leyendaAbierta && (
+        <LeyendaMedallasModal onClose={() => setLeyendaAbierta(false)} />
       )}
 
       {tabActiva === 'album' && (
