@@ -383,6 +383,11 @@ export default function HijoPage() {
                   {hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}
                 </div>
               )}
+              <p className={s.heroLede}>
+                {sinHistorial
+                  ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
+                  : `La huella que ${hijo.nombre} va dejando, día tras día.`}
+              </p>
             </div>
             <button
               className={s.heroIconBtn}
@@ -392,12 +397,6 @@ export default function HijoPage() {
               <Settings size={18} />
             </button>
           </div>
-
-          <p className={s.heroLede}>
-            {sinHistorial
-              ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
-              : `La huella que ${hijo.nombre} va dejando, día tras día.`}
-          </p>
         </header>
 
         <section
@@ -493,7 +492,7 @@ export default function HijoPage() {
                     key={logro.id}
                     className={[s.logroChip, chipToneCls[logro.tono] ?? s.cBase].join(' ')}
                   >
-                    <span className={s.emo} aria-hidden="true">{logro.emoji ?? '●'}</span>
+                    <span className={s.emo} aria-hidden="true" />
                     <span className={s.tx}>
                       <span className={s.cnm}>{logro.nombre}</span>
                       <span className={s.cdt}>
