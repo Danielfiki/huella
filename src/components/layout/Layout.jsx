@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
-import Onboarding from '../onboarding/Onboarding'
+import Onboarding from '../../pages/onboarding/Onboarding'
+import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services/onboardingPersistor'
 import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
 import CitaLoader from '../ui/CitaLoader'
@@ -55,7 +56,14 @@ function SkeletonLoader() {
 
 export default function Layout() {
   const { state, dataLoading } = useHuella()
-  const [showOnboarding, setShowOnboarding] = useState(!localStorage.getItem('onboarding_done'))
+  // Onboarding visible solo si el usuario no lo completó (localStorage,
+  // persiste para siempre en el dispositivo) Y tampoco lo saltó en esta
+  // sesión (sessionStorage, vuelve a aparecer al cerrar el tab).
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (localStorage.getItem('onboarding_done')) return false
+    if (sessionStorage.getItem('huella.onboarding.dismissed')) return false
+    return true
+  })
   const location = useLocation()
 
   const prevIndexRef = useRef(null)
@@ -71,7 +79,25 @@ export default function Layout() {
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {showOnboarding && <Onboarding onDone={() => { setShowOnboarding(false); localStorage.setItem('onboarding_done', '1') }} />}
+      {showOnboarding && (
+        <Onboarding
+          onComplete={async (perfil) => {
+            try {
+              await persistirPerfilOnboarding(perfil)
+            } catch (err) {
+              // No bloqueamos al usuario: mejor un perfil incompleto que
+              // un usuario atascado. El Home maneja perfiles parciales.
+              console.error('[Layout] persistirPerfilOnboarding falló:', err)
+            }
+            localStorage.setItem('onboarding_done', '1')
+            setShowOnboarding(false)
+          }}
+          onSkip={() => {
+            marcarOnboardingVisto()
+            setShowOnboarding(false)
+          }}
+        />
+      )}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <span className={styles.logo}>huella</span>

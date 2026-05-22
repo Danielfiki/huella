@@ -1,0 +1,220 @@
+/* OnboardingBottomSlide.module.css
+   Plantilla de slide para 1, 2, 3 y 5 · concepto Susurro.
+   Atmósfera arriba, contenido anclado abajo.
+
+   Tokens base usados (de colors_and_type.css):
+     --color-bg, --color-primary, --color-primary-dark, --color-primary-bg,
+     --color-primary-border, --color-primary-light, --color-text,
+     --color-text-muted, --color-text-light, --color-accent-mocha,
+     --color-accent-green, --color-surface, --color-border,
+     --color-shadow-primary-sm, --font-family, --font-heading, --radius-*
+
+   Las paletas (gradientes) NO viven en tokens — son específicas del onboarding
+   y se declaran aquí. NO agregar al index.css global. */
+
+.slide {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Paletas por slide ─────────────────────────────────────────── */
+.slide[data-palette="noche"]      { background: linear-gradient(160deg, #2A1B3F 0%, #4A2438 55%, #6B2A35 100%); color: #fff; }
+.slide[data-palette="amanecer"]   { background: linear-gradient(168deg, #C45A18 0%, #E8956D 50%, #FEE4D0 100%); color: #2A1A0E; }
+.slide[data-palette="encuentro"]  { background: linear-gradient(160deg, #1F4438 0%, #2E6B5C 50%, #4A9B8C 100%); color: #fff; }
+.slide[data-palette="afirmacion"] { background: linear-gradient(175deg, #A84B28 0%, #E56E26 50%, #EE9452 100%); color: #fff; }
+
+/* ── Partículas — overlay estático ─────────────────────────────── */
+/* Diez puntos puestos con radial-gradient. Sin parallax: gana en performance
+   y se ve mejor que partículas animadas en un onboarding breve. */
+.particles {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image:
+    radial-gradient(2px 2px at 10% 10%,  rgba(255,255,255,0.78), transparent 60%),
+    radial-gradient(1.5px 1.5px at 28% 18%, rgba(255,255,255,0.48), transparent 60%),
+    radial-gradient(2px 2px at 64% 8%,   rgba(255,255,255,0.66), transparent 60%),
+    radial-gradient(1.5px 1.5px at 84% 24%, rgba(255,255,255,0.58), transparent 60%),
+    radial-gradient(1.2px 1.2px at 18% 38%, rgba(255,255,255,0.42), transparent 60%),
+    radial-gradient(2px 2px at 56% 36%,  rgba(255,255,255,0.52), transparent 60%),
+    radial-gradient(1.2px 1.2px at 74% 50%, rgba(255,255,255,0.46), transparent 60%),
+    radial-gradient(2.5px 2.5px at 12% 64%, rgba(255,255,255,0.58), transparent 60%),
+    radial-gradient(1.2px 1.2px at 42% 58%, rgba(255,255,255,0.42), transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 70%, rgba(255,255,255,0.50), transparent 60%);
+}
+.slide[data-palette="amanecer"] .particles {
+  background-image:
+    radial-gradient(2px 2px at 10% 10%,  rgba(168,75,40,0.48), transparent 60%),
+    radial-gradient(1.5px 1.5px at 28% 18%, rgba(168,75,40,0.30), transparent 60%),
+    radial-gradient(2px 2px at 64% 8%,   rgba(255,255,255,0.56), transparent 60%),
+    radial-gradient(1.5px 1.5px at 84% 24%, rgba(255,255,255,0.48), transparent 60%),
+    radial-gradient(1.2px 1.2px at 18% 38%, rgba(168,75,40,0.30), transparent 60%),
+    radial-gradient(2px 2px at 56% 36%,  rgba(255,255,255,0.52), transparent 60%),
+    radial-gradient(1.2px 1.2px at 74% 50%, rgba(168,75,40,0.24), transparent 60%),
+    radial-gradient(2.5px 2.5px at 12% 64%, rgba(255,255,255,0.54), transparent 60%),
+    radial-gradient(1.2px 1.2px at 42% 58%, rgba(168,75,40,0.28), transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 70%, rgba(255,255,255,0.46), transparent 60%);
+}
+
+/* ── Topbar (dots + skip) ──────────────────────────────────────── */
+.topbar {
+  position: relative; z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: max(env(safe-area-inset-top, 0px), 16px) 24px 0;
+}
+
+.dots { display: flex; gap: 6px; align-items: center; }
+.dot {
+  display: block;
+  width: 18px; height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.20);
+  transition: width 240ms ease, background-color 240ms ease;
+}
+.dotDone { background: rgba(255, 255, 255, 0.56); }
+.dotOn   { background: #fff; width: 28px; }
+.dotsDark .dot     { background: rgba(74, 42, 24, 0.18); }
+.dotsDark .dotDone { background: rgba(74, 42, 24, 0.42); }
+.dotsDark .dotOn   { background: #4A2A18; }
+
+.topSkip {
+  font-family: var(--font-family);
+  font-size: 13px; font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  background: none; border: none;
+  padding: 8px 4px;
+  cursor: pointer;
+  letter-spacing: 0;
+}
+.slide[data-palette="amanecer"] .topSkip { color: rgba(74, 42, 24, 0.62); }
+.topSkipPlaceholder { width: 50px; height: 1px; }
+
+/* ── Contenido (Susurro: atmósfera arriba, contenido abajo) ────── */
+.content {
+  position: relative; z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px max(env(safe-area-inset-bottom, 0px), 32px);
+  min-height: 0;
+}
+
+.top {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding-top: 32px;
+  min-height: 0;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 20px;
+}
+
+/* ── Glyph (emoji nativo) ──────────────────────────────────────── */
+.glyph {
+  font-size: clamp(48px, 13vw, 64px);
+  line-height: 1;
+  opacity: 0.92;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.28));
+}
+.slide[data-palette="amanecer"] .glyph {
+  filter: drop-shadow(0 8px 24px rgba(168, 75, 40, 0.24));
+}
+
+/* ── Badge ─────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-family: var(--font-family);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slide[data-palette="amanecer"] .badge {
+  background: rgba(255, 255, 255, 0.36);
+  color: #4A2A18;
+  border-color: rgba(168, 75, 40, 0.18);
+}
+
+/* ── Tipografía interna ────────────────────────────────────────── */
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+  text-wrap: balance;
+  font-size: clamp(26px, 7.5vw, 34px);
+  margin: 0;
+}
+.body {
+  font-size: clamp(14px, 4vw, 16px);
+  line-height: 1.55;
+  opacity: 0.92;
+  text-wrap: pretty;
+  max-width: 32ch;
+  margin: 0;
+}
+.sub {
+  font-size: clamp(13px, 3.6vw, 15px);
+  line-height: 1.5;
+  font-style: italic;
+  opacity: 0.78;
+  text-wrap: pretty;
+  margin: 0;
+}
+.slide[data-palette="amanecer"] .body,
+.slide[data-palette="amanecer"] .sub { color: #4A2A18; opacity: 0.78; }
+
+/* ── CTA primario ──────────────────────────────────────────────── */
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border-radius: 16px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  background: #fff;
+  color: var(--color-primary-dark);
+  border: none;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.20);
+  margin-top: 4px;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.cta:active { transform: scale(0.97); }
+.cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot { transition: none; }
+  .cta { transition: none; }
+}

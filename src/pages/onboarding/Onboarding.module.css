@@ -1,0 +1,40 @@
+/* Onboarding.module.css
+   Shell del onboarding — full-bleed, track horizontal con 5 slides. */
+
+.shell {
+  position: fixed;
+  inset: 0;
+  /* z-index muy alto: el onboarding tiene que tapar todo el chrome del
+     Layout (header mocha, main, bottom nav z-index:200) y cualquier
+     modal abierto en background (BienvenidaModal 500, MedallaDetalleModal
+     1000, etc.). Es el contexto visual más alto de la app. */
+  z-index: 9999;
+  background: var(--color-bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  transition: transform 280ms ease-out;
+  will-change: transform;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track { transition: none; }
+}

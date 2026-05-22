@@ -816,3 +816,127 @@ ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.le
     return { patrones: [] }
   }
 }
+
+// ── Onboarding · primer encuentro ─────────────────────────────────────────
+// Se usa en el slide 3 del Onboarding Susurro, donde el padre/madre escribe
+// algo que vivió y la IA le devuelve una respuesta cálida y validante.
+//
+// Diferencias con el resto del archivo (intencionales):
+//
+//   1. NO usa `llamarAPI()` porque ese helper crea su propio AbortController
+//      con timeout interno de 75s — incompatible con el timeout de 8s y
+//      el AbortController que el `OnboardingComposer` ya configuró. Acá
+//      hacemos fetch directo respetando el `signal` del caller.
+//
+//   2. NO usa `marcoEdad()` — en este punto del onboarding aún no hay datos
+//      del hijo (el formulario llega en el slide 4). Solo tenemos el texto
+//      crudo del padre/madre.
+//
+//   3. Cualquier fallo (HTTP, parse, payload sin `comprension`) propaga
+//      excepción. Eso es lo que necesita el caller para caer al
+//      FALLBACK_RESPONSE de `frases-onboarding.js` y mostrarle al usuario
+//      una respuesta indistinguible — su primer encuentro nunca debe ver
+//      un mensaje de error técnico.
+const PROMPT_PRIMER_ENCUENTRO = `Eres Huella, una compañera de crianza basada en evidencia científica del desarrollo infantil. Un padre o madre acaba de escribirte por primera vez y te contó algo que vivió con su hijo o hija. No tienes ningún dato previo sobre el niño, ni edad, ni historial — solo este relato.
+
+Tu única tarea es responder con un objeto JSON con exactamente esta forma:
+
+{"comprension": "...", "cita": "...", "autor": "...", "marco": "..."}
+
+Sin texto antes ni después del JSON. Sin bloques de código markdown. Sin etiquetas. Solo el objeto JSON crudo.
+
+Contenido de cada campo:
+
+1. "comprension": un párrafo de 60 a 120 palabras. Validas lo que el padre/madre describe en tono cálido, en presente. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices la conducta. NO des consejos prácticos en este momento — solo nombras lo que está pasando y por qué tiene sentido humanamente. Termina dejando al padre/madre acompañado/a, no instruido/a.
+
+2. "cita": una cita real, completa y atribuida a un autor reconocido del marco que decidas aplicar. Una sola oración. Sin comillas dobles internas (porque va dentro de JSON). Debe encajar con lo que el padre/madre escribió.
+
+3. "autor": nombre del autor de la cita. Ejemplos válidos: "Daniel Siegel", "Janet Lansbury", "Stuart Shanker", "Bruce Perry", "Ross Greene", "Laura Markham", "Becky Kennedy", "Gabor Maté", "Bessel van der Kolk", "Tina Payne Bryson", "Magda Gerber", "Harvey Karp", "Adele Faber".
+
+4. "marco": el marco aplicado, en minúsculas, breve, de 1 a 4 palabras. Ejemplos: "ventana de tolerancia", "presencia", "corregulación", "apego seguro", "regulación emocional", "habilidad rezagada", "co-regulación", "reparación".
+
+Reglas de tono y lenguaje:
+
+- Español neutro/chileno con tuteo. Usa "tú" siempre, nunca "vos". Decir "puedes" no "podés", "tienes" no "tenés", "fíjate" no "fijate", "haz" no "hacé".
+- Cálido, en presente, sin tecnicismos clínicos.
+- Habla en primera persona de Huella si encaja ("te leo", "te entiendo", "estoy contigo").
+- Nunca uses términos diagnósticos hacia el niño (no decir "ansiedad clínica", "TDAH", "trastorno", "patológico").
+- Nunca pongas en duda lo que el padre/madre cuenta.
+- Esto es contacto, no acción — no sermonees, no listes pasos, no resuelvas el problema.`
+
+/**
+ * Llamada de "primer encuentro" del Onboarding Susurro (slide 3).
+ * Toma el texto crudo que escribió el padre/madre y devuelve una respuesta
+ * cálida y validante en formato JSON estructurado.
+ *
+ * @param {string} texto                    Texto del padre/madre. Trim antes de pasar.
+ * @param {Object} [opts]
+ * @param {AbortSignal} [opts.signal]       Para cancelar el fetch (el Composer
+ *                                          ya configura un timeout de 8s).
+ * @returns {Promise<{
+ *   comprension: string,   // párrafo cálido · 60-120 palabras
+ *   cita: string,          // cita real, 1 oración, sin comillas internas
+ *   autor: string,         // ej. "Daniel Siegel"
+ *   marco: string,         // marco en minúsculas · ej. "ventana de tolerancia"
+ * }>}
+ *
+ * Tira si:
+ *   - El fetch falla por red, abort o status != 2xx.
+ *   - El body no es JSON parseable.
+ *   - El payload no incluye `comprension`.
+ *
+ * El caller (OnboardingComposer) atrapa cualquier throw y cae al
+ * FALLBACK_RESPONSE de `frases-onboarding.js` con la misma UI.
+ */
+export async function requestPrimerEncuentro(texto, { signal } = {}) {
+  const prompt = `${PROMPT_PRIMER_ENCUENTRO}
+
+Texto del padre/madre:
+
+"${texto}"`
+
+  const headers = { 'content-type': 'application/json' }
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+  }
+
+  // Fetch directo (sin pasar por llamarAPI) para honrar el `signal` del caller
+  // en vez del timeout interno de 75s que llamarAPI configura.
+  const response = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ prompt, max_tokens: 320 }),
+    signal,
+  })
+
+  if (!response.ok) {
+    const err = new Error(`HTTP ${response.status}`)
+    err.status = response.status
+    throw err
+  }
+
+  const body = await response.json()
+  const raw = (body?.text ?? '')
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim()
+
+  // Tolerante a texto antes/después del objeto: extrae el primer bloque
+  // que parezca JSON. Si tampoco hay match, JSON.parse va a tirar.
+  const match = raw.match(/\{[\s\S]*\}/)
+  const parsed = JSON.parse(match ? match[0] : raw)
+
+  if (!parsed || typeof parsed !== 'object' || !parsed.comprension) {
+    throw new Error('payload-incompleto')
+  }
+
+  return {
+    comprension: String(parsed.comprension || ''),
+    cita:        String(parsed.cita        || ''),
+    autor:       String(parsed.autor       || ''),
+    marco:       String(parsed.marco       || ''),
+  }
+}
