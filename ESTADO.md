@@ -2151,3 +2151,48 @@ Es el siguiente módulo del Bloque 3 según el orden de prioridad definido el 20
 5. **Decidir si unificar el sistema de 12 badges in-file de HijoPage con el de 33 de HitosPage** (deuda arquitectural a discutir antes de tocar).
 
 **Metodología confirmada para el próximo módulo:** auditoría visual pre-Design → 3 conceptos Design → elección → mockup detallado → handoff bundle → revisión del bundle antes de Code → implementación Claude Code → verificación en producción.
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 21 mayo 2026 — HijoPage Concepto B · Refugio
+# ═══════════════════════════════════════════════════════════════
+
+## Sesión 21-mayo-2026 · HijoPage Concepto B · Refugio
+
+### Cerrado en producción
+Rediseño completo de HijoPage (Perfil del hijo) bajo lenguaje "Refugio". 4 commits:
+- 17942b9 — Rediseño visual HijoPage · Concepto B Refugio
+- 848c62b — Ajuste visual HijoPage · Hero rebalanceado + chip sin emoji
+- 0ed33a0 — Ajuste visual HijoPage · Shelf de racha en 2 columnas
+- 4e89c0a — Ajuste visual HijoPage · Shelf alineado en 2-col real
+
+Decisiones de producto incorporadas:
+- Badges del perfil: solución temporal in-file (mapeo TONO_POR_TITULO de 12 entradas en HijoPage.jsx). La unificación real con NIVELES de HitosPage queda como deuda registrada.
+- Álbum de fotos: eliminado de HijoPage. Vive solo en Logros (tab Álbum). HijoPage queda como "perfil ligero" con link "Ver todos en Álbum →".
+- Alcance del rediseño: visual + reordenamiento, sin tocar lógica de selectores.
+
+Adaptaciones del bundle al codebase real:
+- Helpers inline (formatEdad y formatFechaCorta como expresiones); frasePorRacha local en HijoPage.jsx.
+- Iconos lucide-react directo (Settings, ArrowRight, TrendingUp, TrendingDown, Minus). El import '../components/icons' del bundle se eliminó.
+- Firma del componente: useHuella() + helpers locales, sin props.
+- Sombras: --shadow-racha y --shadow-card-soft (tokens existentes).
+- Soporte de hijo.avatarUrl restaurado (regresión detectada y corregida).
+- Modo creación (?nuevo=true) intacto.
+
+Iteraciones post-deploy (3 rondas de ajuste visual):
+- Hero: avatar 68→80px, frase movida dentro de la columna .heroWho.
+- Chip de logros: emoji eliminado, coherencia con HitosPage.
+- Shelf de racha: 2-col completa. Eliminado .shelfTopRow. "Desde el X" + frase + chip comparten alineación vertical izquierda en la columna derecha.
+
+### Pendiente urgente (retomar primero mañana)
+Bug abrir app en celular. Daniel reportó que no puede abrir la app desde su celular. No diagnosticado. Sospecha inicial: caché del PWA con bundle viejo. Investigar exactamente qué pasa (pantalla blanca, error específico, no carga, etc.).
+
+### Deuda registrada (no bloqueante)
+- TONO_POR_TITULO in-file: mapeo de 12 entradas en HijoPage.jsx. La unificación real con NIVELES de HitosPage (33 entradas) requiere exponer `tono` desde calcularLogrosRecientes — paso de selector aparte.
+- rachaUltimoFreezeDate: calcularRacha no expone la fecha del último freeze. El chip "Día de gracia" omite "· {fecha}" cuando es null.
+- evolucion.anterior heurística: mes anterior con 0 episodios pero con registros en meses más antiguos sigue mostrando "sin historial previo".
+- 7 notas fuera de alcance del bundle original de Claude Design preservadas (avatar real con foto opcional, animación shelf, frase tras racha rota, catálogo emojis, tab Rutina diaria, eliminación álbum local, form nuevo hijo/a).
+
+### Próximos pasos (orden sugerido)
+1. Diagnosticar bug del celular (bloquea uso real).
+2. Continuar Bloque 3: la siguiente pantalla del bloque. Logros y HijoPage ya cerrados. Quedan: Onboarding (2 componentes: Onboarding de 4 slides al instalar la app + banner inline GuiaPrimerosPasos del Home), Perfil del padre, Sección de Registros.
+3. Eventualmente: deudas visuales Fase 6 (tokens duplicados, Card.jsx hardcoded, sombras inconsistentes, #fff hardcoded en BannerCompletado/HistorialPage/PanelPage, CSS muerto en PanelPage.module.css).
