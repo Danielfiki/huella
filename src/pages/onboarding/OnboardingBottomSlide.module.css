@@ -105,7 +105,10 @@
 }
 
 .top {
-  flex: 1;
+  /* Atmósfera arriba: glyph + badge. Fijo al 35% del .content (antes era
+     flex:1, que se inflaba cuando el copy del bottom era corto y dejaba
+     espacio muerto entre el badge y el título). */
+  flex: 0 0 35%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -115,11 +118,19 @@
 }
 
 .bottom {
+  /* Contenido abajo: título + body + sub + CTA (o children en slide 3).
+     Toma el 65% restante del .content. */
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding-top: 20px;
 }
+
+/* Último child del .bottom (CTA en slides 1/2/5, composer en slide 3)
+   se ancla al fondo con margin-top: auto para honrar el concepto
+   Susurro: contenido pegado al pulgar, no flotando en el medio. */
+.bottom > :last-child { margin-top: auto; }
 
 /* ── Glyph (emoji nativo) ──────────────────────────────────────── */
 .glyph {
@@ -203,7 +214,8 @@
   color: var(--color-primary-dark);
   border: none;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.20);
-  margin-top: 4px;
+  /* margin-top viene de `.bottom > :last-child` arriba — auto para anclar
+     el CTA al fondo del .bottom (= pegado al pulgar). */
   cursor: pointer;
   transition: transform 120ms ease, opacity 120ms ease;
 }
