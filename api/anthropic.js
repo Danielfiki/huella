@@ -231,7 +231,7 @@ export default async function handler(req, res) {
     })
   }
 
-  const { prompt, max_tokens = 700 } = req.body
+  const { prompt, max_tokens = 700, system } = req.body
   if (!prompt) {
     return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
@@ -248,7 +248,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens,
-        system: SYSTEM_PROMPT,
+        // Si el caller manda su propio `system` en el body, lo usa.
+        // Si no, cae al SYSTEM_PROMPT clínico default de Huella.
+        // Esto permite que el Onboarding Susurro pase un system propio
+        // (JSON estructurado) sin pisar al resto del flujo.
+        system: system || SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
       }),
     })

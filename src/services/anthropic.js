@@ -889,9 +889,12 @@ Reglas de tono y lenguaje:
  * FALLBACK_RESPONSE de `frases-onboarding.js` con la misma UI.
  */
 export async function requestPrimerEncuentro(texto, { signal } = {}) {
-  const prompt = `${PROMPT_PRIMER_ENCUENTRO}
-
-Texto del padre/madre:
+  // PROMPT_PRIMER_ENCUENTRO viaja como `system` (no como user message) para
+  // que pise al SYSTEM_PROMPT clínico default del backend. Sin esto, el
+  // modelo respondía con el formato Huella ("Qué está pasando / Marco
+  // aplicado: ...") en vez del JSON que el onboarding necesita, y todo
+  // caía al FALLBACK_RESPONSE.
+  const prompt = `Texto del padre/madre:
 
 "${texto}"`
 
@@ -908,7 +911,11 @@ Texto del padre/madre:
   const response = await fetch('/api/anthropic', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ prompt, max_tokens: 320 }),
+    body: JSON.stringify({
+      prompt,
+      max_tokens: 320,
+      system: PROMPT_PRIMER_ENCUENTRO,
+    }),
     signal,
   })
 
