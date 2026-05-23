@@ -908,14 +908,29 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
 
   // Fetch directo (sin pasar por llamarAPI) para honrar el `signal` del caller
   // en vez del timeout interno de 75s que llamarAPI configura.
+  const requestBody = {
+    prompt,
+    max_tokens: 320,
+    system: PROMPT_PRIMER_ENCUENTRO,
+  }
+
+  // [INSTRUMENTACIÓN TEMPORAL · remover tras diagnóstico del fallback persistente]
+  // Confirma en runtime que `system` viaja con contenido y que `prompt` quedó
+  // solo con el texto del padre/madre. NO dumpeamos el system completo (~3.4KB)
+  // para no contaminar la consola.
+  console.log('[requestPrimerEncuentro] body que se va a enviar:', {
+    system_present: typeof requestBody.system === 'string',
+    system_length:  requestBody.system?.length ?? 0,
+    system_head:    requestBody.system?.slice(0, 60),
+    prompt_length:  requestBody.prompt?.length ?? 0,
+    prompt_head:    requestBody.prompt?.slice(0, 60),
+    max_tokens:     requestBody.max_tokens,
+  })
+
   const response = await fetch('/api/anthropic', {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      prompt,
-      max_tokens: 320,
-      system: PROMPT_PRIMER_ENCUENTRO,
-    }),
+    body: JSON.stringify(requestBody),
     signal,
   })
 

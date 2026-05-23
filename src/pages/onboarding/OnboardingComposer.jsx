@@ -70,6 +70,8 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
       setResponse(resp);
       setState('response');
     } catch (err) {
+      // [INSTRUMENTACIÓN TEMPORAL · remover tras diagnóstico del fallback persistente]
+      console.error('[OnboardingComposer] requestPrimerEncuentro tiró:', err)
       // sin conexión / timeout / 5xx / parse — siempre fallback silencioso.
       setResponse(FALLBACK_RESPONSE);
       setState('fallback');
