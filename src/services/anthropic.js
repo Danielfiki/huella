@@ -847,7 +847,7 @@ Sin texto antes ni después del JSON. Sin bloques de código markdown. Sin etiqu
 
 Contenido de cada campo:
 
-1. "comprension": un párrafo de 60 a 120 palabras. Validas lo que el padre/madre describe en tono cálido, en presente. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices la conducta. NO des consejos prácticos en este momento — solo nombras lo que está pasando y por qué tiene sentido humanamente. Termina dejando al padre/madre acompañado/a, no instruido/a.
+1. "comprension": un párrafo de 40 a 60 palabras. Validas lo que el padre/madre describe en tono cálido, en presente. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices la conducta. NO des consejos prácticos en este momento — solo nombras lo que está pasando y por qué tiene sentido humanamente. Termina dejando al padre/madre acompañado/a, no instruido/a.
 
 2. "cita": una cita real, completa y atribuida a un autor reconocido del marco que decidas aplicar. Una sola oración. Sin comillas dobles internas (porque va dentro de JSON). Debe encajar con lo que el padre/madre escribió.
 
