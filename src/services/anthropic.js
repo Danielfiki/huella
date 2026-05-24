@@ -847,7 +847,15 @@ Sin texto antes ni después del JSON. Sin bloques de código markdown. Sin etiqu
 
 Contenido de cada campo:
 
-1. "comprension": un párrafo de 40 a 60 palabras. Validas lo que el padre/madre describe en tono cálido, en presente. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices la conducta. NO des consejos prácticos en este momento — solo nombras lo que está pasando y por qué tiene sentido humanamente. Termina dejando al padre/madre acompañado/a, no instruido/a.
+1. "comprension": un texto de 40 a 50 palabras con esta estructura exacta, en tres partes separadas por punto y aparte:
+
+   PARTE 1 — Anclaje empático muy breve, una sola frase corta. Empieza con "Te leo." y agrega máximo una frase nombrando lo que el padre/madre describe sin diagnosticar. Ejemplo de tono: "Te leo. Lo que cuentas tiene mucho sentido a esta edad."
+
+   PARTE 2 — Análisis científico breve (2 frases máximo) que explique en lenguaje humano qué está pasando en el desarrollo del niño desde el marco que aplicas (desarrollo cerebral, ventana de tolerancia, apego, regulación, lo que corresponda al relato). Sin jerga clínica. Ejemplo: "A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío."
+
+   PARTE 3 — Cierra siempre con esta frase exacta, sin modificarla: "En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso."
+
+Regla dura del largo: 40 a 50 palabras totales. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices. NO des consejos prácticos en este punto.
 
 2. "cita": una cita real, completa y atribuida a un autor reconocido del marco que decidas aplicar. Una sola oración. Sin comillas dobles internas (porque va dentro de JSON). Debe encajar con lo que el padre/madre escribió.
 
@@ -874,7 +882,7 @@ Reglas de tono y lenguaje:
  * @param {AbortSignal} [opts.signal]       Para cancelar el fetch (el Composer
  *                                          ya configura un timeout de 8s).
  * @returns {Promise<{
- *   comprension: string,   // párrafo cálido · 60-120 palabras
+ *   comprension: string,   // 40-50 palabras · 3 partes (anclaje + análisis breve + cierre fijo)
  *   cita: string,          // cita real, 1 oración, sin comillas internas
  *   autor: string,         // ej. "Daniel Siegel"
  *   marco: string,         // marco en minúsculas · ej. "ventana de tolerancia"

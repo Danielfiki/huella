@@ -40,8 +40,8 @@ export const FRASES_ONBOARDING = [
  */
 export const FALLBACK_RESPONSE = {
   comprension:
-    'Lo que cuentas merece ser escuchado. Lo que viviste con tu hijo/a hoy no te define como padre o madre — define una noche difícil entre muchas. Estamos en esto contigo, desde el primer momento.',
-  cita: 'Los hijos no necesitan padres perfectos. Necesitan padres presentes.',
-  autor: 'Janet Lansbury',
-  marco: 'presencia',
+    'Te leo. A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío.\n\nEn Huella vas a entender por qué pasa cada episodio, y qué hacer con eso.',
+  cita: 'Los berrinches son el resultado de una inmadurez cerebral, no de una mala crianza.',
+  autor: 'Daniel Siegel',
+  marco: 'desarrollo cerebral',
 };

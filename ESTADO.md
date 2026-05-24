@@ -2196,3 +2196,407 @@ Bug abrir app en celular. Daniel reportó que no puede abrir la app desde su cel
 1. Diagnosticar bug del celular (bloquea uso real).
 2. Continuar Bloque 3: la siguiente pantalla del bloque. Logros y HijoPage ya cerrados. Quedan: Onboarding (2 componentes: Onboarding de 4 slides al instalar la app + banner inline GuiaPrimerosPasos del Home), Perfil del padre, Sección de Registros.
 3. Eventualmente: deudas visuales Fase 6 (tokens duplicados, Card.jsx hardcoded, sombras inconsistentes, #fff hardcoded en BannerCompletado/HistorialPage/PanelPage, CSS muerto en PanelPage.module.css).
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 22 mayo 2026 — Nuevo Onboarding Susurro
+# ═══════════════════════════════════════════════════════════════
+
+## Cerrado y desplegado hoy
+
+Reemplazo completo del onboarding por el concepto Susurro de Claude Design.
+Commit `af486b4` pusheado a `main`, Vercel desplegó automáticamente. 32 archivos
+cambiados, +5105 / -563.
+
+**Implementado:**
+
+- 5 slides nuevos en `src/pages/onboarding/`:
+  1. Gancho — paleta noche (mocha morado), 🌙
+  2. Promesa — paleta amanecer (terracota crema), 📖
+  3. Experiencia con IA — paleta encuentro (verde profundo), 💬 + composer
+  4. Setup — header mocha + formulario sobre crema
+  5. Afirmación — paleta afirmacion (tangerine), ✨ con badge personalizado
+- 9 archivos nuevos en `src/pages/onboarding/` (4 JSX + 4 CSS modules + `frases-onboarding.js`).
+- `src/services/onboardingPersistor.js` — mapea perfil camelCase al schema real:
+  - `perfil.nombrePadre`/`contextoInicial`/`intenciones` → `perfiles.{nombre, contexto_inicial, intenciones}`
+  - `perfil.nombreHijo`/`nacimiento`/`sexo`/`fotoBlob` → `hijos.{nombre, fecha_nacimiento, genero, avatar_url}`
+  - Reusa bucket `avatares` (ya usado por PerfilPage) con path `${user.id}/${hijo.id}.jpg`. NO se creó bucket nuevo.
+  - Reusa RPC `upsert_family_child` (maneja `user_id` y `family_id` del modo pareja internamente).
+  - Helper `marcarOnboardingVisto()` con sessionStorage clave `huella.onboarding.dismissed` para distinguir skip de completar.
+- `requestPrimerEncuentro(texto, { signal })` agregada al final de `src/services/anthropic.js` (+~120 líneas, ninguna línea existente tocada):
+  - Modelo `claude-sonnet-4-5`, `max_tokens: 320`.
+  - Fetch directo respetando el `signal` externo del Composer (NO usa `llamarAPI` por incompatibilidad de timeouts: 75s interno vs 8s del onboarding).
+  - System prompt con lista acotada de autores (Siegel, Lansbury, Shanker, Perry, Greene, Markham, Becky Kennedy, Maté, van der Kolk, Bryson, Gerber, Karp, Faber) y de marcos (ventana de tolerancia, presencia, corregulación, apego seguro, etc.). Anti-voseo y anti-diagnóstico explícitos.
+  - Retorna `{ comprension, cita, autor, marco }` o tira para que el Composer caiga al `FALLBACK_RESPONSE` de Janet Lansbury.
+- `src/components/layout/Layout.jsx` actualizado en 3 puntos:
+  - Import del nuevo Onboarding + del persistor.
+  - State combinado: `localStorage.onboarding_done` (completado, persiste para siempre) + `sessionStorage.huella.onboarding.dismissed` (skip, vuelve a aparecer en sesión nueva).
+  - Handler `onComplete` con `try/catch` alrededor del persistor que NO bloquea al usuario si falla (loguea y sigue al Home). `onSkip` solo marca la sesión.
+- Onboarding viejo eliminado: `src/components/onboarding/Onboarding.{jsx,module.css}` + carpeta `src/components/onboarding/`. Grep de referencias residuales dio 0 hits antes de borrar.
+- Fix de QA local: `z-index: 9999` agregado a `.shell` en `Onboarding.module.css`. Sin él el header mocha, el main y el bottom nav se dibujaban encima del overlay (los z-indexes del Layout van hasta 200, modales 1000; el onboarding usa 9999 como contexto visual más alto).
+
+**Schema verificado en producción antes de implementar (RPC `information_schema.columns`):**
+- `perfiles`: `user_id`, `nombre`, `created_at`, `plan`, `contexto_inicial`, `intenciones` (text[])
+- `hijos`: `id`, `user_id`, `nombre`, `edad`, `created_at`, `avatar_url`, `family_id`, `fecha_nacimiento`, `genero`
+- Migración `ALTER TABLE perfiles ADD COLUMN contexto_inicial text` + `intenciones text[] DEFAULT '{}'` ya estaba aplicada en prod desde antes.
+
+## Verificación en producción (celular)
+
+Daniel verificó después del deploy de Vercel:
+
+- ✅ Los 5 slides aparecen y navegan bien con swipe y CTA.
+- ✅ La API del slide 3 responde, o cae al fallback con elegancia si falla.
+- ✅ Persistencia en `perfiles` y `hijos` funciona.
+- ✅ El overlay tapa todo correctamente con el z-index nuevo.
+
+**Pero la entrega de Claude Design quedó PLANA visualmente.** La estructura,
+copy y paleta están bien, pero falta toda la capa de motion que diferencia
+un onboarding "correcto" de uno "memorable":
+
+- Sin entrada cinematográfica del primer slide (aparece sin animación de presentación).
+- Sin escritura progresiva en el textarea del slide 3 (placeholder estático en vez de autoescribirse).
+- Sin reveal letra por letra de la cita en la respuesta del slide 3.
+- Sin hover/focus con vida (chips, CTAs y campos del form se sienten estáticos).
+- Sin parallax leve en las partículas (hoy son `background-image` estático).
+- Sin spring en la transición entre slides (ease-out 280ms es funcional pero no juguetón).
+
+El "wow" del concepto Susurro no se logra. Funciona, pero no produce la
+sensación de "alguien pensó esto con cariño" que pide un primer encuentro.
+
+## Deuda crítica para próxima sesión
+
+**Iteración de polish de motion sobre el onboarding ya construido.**
+
+Reglas duras:
+
+- NO rehacer estructura, copy ni paleta. Solo agregar la capa de animación e interacción.
+- NO tocar el persistor, ni `requestPrimerEncuentro`, ni `Layout.jsx`. La lógica funcional está cerrada.
+- Respetar `prefers-reduced-motion` en todo lo nuevo. No degradar performance en gama media de celular.
+
+El brief de Design para esta iteración debe incluir **explícito** (no asumir
+que se entrega solo):
+
+1. **Entrada cinematográfica del primer slide** — fade + scale + delay secuencial de glyph → badge → título → body → sub.
+2. **Escritura progresiva del placeholder del textarea en slide 3** — mientras está vacío, autoescribir un ejemplo y borrarlo en loop suave para invitar a escribir.
+3. **Reveal letra por letra de la cita en la respuesta del slide 3** — typewriter de la blockquote (no del párrafo completo de `comprension`).
+4. **Hover/focus con vida** en chips, CTAs y campos del form: escala 1.02, glow sutil, transición spring.
+5. **Parallax leve en las partículas** — pasar de `background-image` estático a nodos animados con `transform: translateZ()` o RAF loop, mínimo costo de render.
+6. **Transición entre slides con spring** en vez de `transition: transform 280ms ease-out`. Considerar `cubic-bezier(0.34, 1.56, 0.64, 1)` o equivalente con bounce sutil.
+
+## Aprendizaje del proyecto
+
+**Motion y feel deben ir explícitos en cada brief de UI desde ahora.**
+
+No asumir que Claude Design los entrega solos. Aunque el concepto "Susurro"
+implícitamente sugería sensibilidad y cariño, la entrega quedó estructural
+sin la capa que produce esa sensibilidad. La estructura sin motion no
+transmite el tono — el tono vive en cómo se mueven las cosas.
+
+A partir de ahora, todo brief de Design para UI debe incluir una sección
+**"Motion y feel"** con expectativas concretas: animaciones de entrada,
+microinteracciones, transiciones entre estados, parallax si aplica,
+comportamiento de hover/focus. Si Design no lo cubre en su entrega,
+Claude (chat) lo señala antes del handoff a Code en vez de dejarlo pasar.
+
+## Próximos pasos
+
+1. **Polish de motion del Onboarding** — la deuda crítica de arriba.
+2. Continuar Bloque 3 con las pantallas pendientes (Perfil del padre, Sección de Registros).
+3. Deudas previas siguen abiertas (P6 Panel descanso, deudas visuales Fase 6, bug abrir app en celular pendiente de diagnóstico, etc.).
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 23 mayo 2026 — Fixes críticos del Onboarding Susurro
+# ═══════════════════════════════════════════════════════════════
+
+## Lo que se cerró hoy
+
+### Ajuste de proporción vertical del Onboarding (commit `5d0560f`)
+
+`OnboardingBottomSlide.module.css`: `.top` pasa de `flex: 1` (que tomaba todo
+el espacio sobrante y se inflaba sin control con copy corto) a `flex: 0 0 35%`.
+`.bottom` ocupa el 65% restante explícito. Regla nueva
+`.bottom > :last-child { margin-top: auto }` ancla al fondo tanto al CTA
+en slides 1/2/5 como al composer en slide 3, manteniendo el concepto Susurro
+de "contenido pegado al pulgar, no flotando". Elimina el espacio muerto que
+se veía cuando el copy del bottom era corto.
+
+### Fix crítico del slide 3 — fallback persistente de Janet Lansbury (commit `df74028`)
+
+**Causa raíz**: el backend `api/anthropic.js` imponía un `SYSTEM_PROMPT`
+clínico fijo (~160 líneas, el del flujo principal de Huella con secciones
+"Qué está pasando / Qué hacer ahora / Marco aplicado: X — Y") que pisaba al
+`PROMPT_PRIMER_ENCUENTRO` del onboarding (que viajaba como user message
+pidiendo JSON estructurado). El modelo respondía con texto plano formato
+Huella clínico; `JSON.parse` del cliente fallaba consistentemente; todo caía
+al `FALLBACK_RESPONSE` de Janet Lansbury. 100% reproducible.
+
+**Fix**:
+- `api/anthropic.js`: acepta `system` opcional en el body. Si viene → lo usa.
+  Si no → cae al `SYSTEM_PROMPT` clínico default. Cero impacto en el resto de
+  funciones (`generarAccionInmediata`, `analizarEpisodio`,
+  `interpretarPatrones`, `detectarPatronesEstructurado`, `analizarCierreCiclo`,
+  `generarCicloN`, etc.) — ninguna manda `system`, todas siguen igual.
+- `src/services/anthropic.js`: `requestPrimerEncuentro` pasa
+  `PROMPT_PRIMER_ENCUENTRO` como `system` en el body, no embebido en el
+  `prompt` del user. El user message queda solo con `"Texto del padre/madre:
+  \"${texto}\""`.
+
+### Segundo bug del slide 3 — timeout 8s insuficiente (commit `49085b1`)
+
+Tras desplegar el fix anterior, el slide 3 seguía cayendo al fallback.
+Diagnóstico vía instrumentación temporal (`console.log` del body enviado +
+`console.error` del catch del Composer): el `system` viajaba correcto
+(`system_present: true, length: 2256`), pero el modelo tardaba más de 8s con
+el system prompt nuevo y el `AbortController` cortaba antes.
+
+**Fix**:
+- `OnboardingComposer.jsx`: `API_TIMEOUT_MS` de 8000 a **15000ms** con
+  comentario explicando el por qué.
+- Barra de progreso visual nueva: sube de 0 a 90% en 14s con curva
+  `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out fuerte, rápido al inicio, lento
+  al final). NO llega a 100% durante el loading. Al recibir respuesta o
+  fallback, completa de 90 a 100 en 200ms. Da sensación de avance, evita la
+  espera ansiosa en silencio que se siente eterna.
+- `OnboardingComposer.module.css`: tokens locales `.progressTrack` (3px alto,
+  `rgba(255,255,255,0.18)` translúcido) + `.progressFill`
+  (`var(--color-accent-green)`, coherente con el quote del slide 3) +
+  `.progressFillLoading` / `.progressFillComplete` para alternar curvas.
+  Override en `prefers-reduced-motion: reduce` (la barra salta sin transición).
+- Implementación: doble `requestAnimationFrame` al entrar a `loading` para
+  forzar que el browser pinte `width:0` antes de transicionar a 90 (sin esto
+  React colapsa los dos `setProgress` en un solo render y la transición CSS
+  no se dispara).
+- Instrumentación temporal removida (el `console.log` del body en el cliente),
+  pero el `console.error` del catch del Composer queda permanente: cero costo
+  runtime y da visibilidad para diagnósticos futuros sin afectar UX.
+
+### Acortar comprensión del slide 3 a 40-60 palabras (commit `a1e868e`)
+
+`PROMPT_PRIMER_ENCUENTRO` en `src/services/anthropic.js`: el rango del campo
+`comprension` baja de "60 a 120 palabras" a **"40 a 60 palabras"**. En el
+primer encuentro, una comprensión densa satura; una breve invita a querer
+más. La estructura "te leo + análisis + cita + autor + marco" se mantiene
+intacta — solo se acorta el cuerpo.
+
+## Verificación en producción
+
+QA del slide 3 confirmado funcionando tras los fixes: la IA respondió con
+análisis real (marco **Ross Greene — habilidad rezagada**) al texto del padre
+"mi hijo me gritó en el supermercado porque no le compré un dulce". El bug
+del fallback persistente queda cerrado.
+
+## Deuda abierta para próxima sesión
+
+1. **Observaciones nuevas del slide 3** que Daniel recibió en el celular
+   esta sesión. NO alcanzamos a revisarlas. Retomar pidiendo a Daniel las
+   capturas o el detalle.
+
+2. **Slide 2 (libro, "No estás adivinando")** — Daniel reportó que el copy
+   se siente muy lleno de info. Propuesta de acortarlo. Cambio chico
+   pendiente.
+
+3. **Slide 4 (formulario "Cuéntanos un poco de ti")** — Daniel reportó que se
+   ve como formulario plano. Pidió motion guiado: campos que aparezcan uno a
+   uno con fade-in a medida que se completan + círculo de progreso
+   llenándose. Esperar al martes 26 cuando se reactive Claude Design para
+   incluir en Fase 3 motion.
+
+4. **Fase 3 motion completa del Onboarding con Claude Design** — brief de
+   motion ya armado en la sesión del 22 mayo. Esperando que se reactive el
+   límite semanal de Design el martes 26.
+
+5. **Bug serio del flujo principal — "Orientación de Huella" del detalle de
+   episodio**: la voz siempre va en presente aunque el episodio sea pasado;
+   siempre devuelve el mismo consejo (agáchate a su altura + mano en hombro
+   o espalda); siempre marca Janet Lansbury — presencia regulatoria. Requiere
+   auditoría del `SYSTEM_PROMPT` clínico y de la función `marcoEdad` en
+   `src/services/anthropic.js`. Sesión dedicada a esto.
+
+## Aprendizajes registrados
+
+- **Antes de aprobar diff, exigir siempre el diff crudo, no el resumen.**
+  Un resumen describe la intención; el diff crudo describe el cambio real.
+  En esta sesión Daniel pidió 2 veces el diff crudo después de que yo
+  presentara solo el resumen — vale como regla permanente.
+
+- **Antes de instrumentar código para diagnosticar, verificar primero caché
+  del navegador y deploy de Vercel.** La sesión del 22 mayo se nos pasó
+  saltarse esto y costó tiempo. La verificación de "caché + deploy" es
+  baratísima (2 minutos) y resuelve el 80% de los casos.
+
+- **Las funciones serverless de Vercel pueden imponer un `system` base que
+  pisa al `prompt` del cliente.** Si el backend impone un system fijo, los
+  flujos nuevos no pueden personalizarlo a menos que el backend lo permita
+  explícitamente (pattern `system: system || SYSTEM_PROMPT`). Antes de
+  agregar un flujo IA nuevo con un prompt distinto al clínico, verificar
+  primero si el backend acepta override.
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# Sesión 24 mayo 2026 — Onboarding: slide 3 acortado + slide 4 conversacional
+# ═══════════════════════════════════════════════════════════════
+
+## Qué se cerró hoy
+
+Dos problemas serios detectados en celular: el bloque de análisis del slide 3
+era demasiado denso y el slide 4 era un formulario plano de 6 campos visibles
+a la vez (fricción altísima). Resueltos en un commit.
+
+### ProgressBar extraído a componente reutilizable
+
+Archivos nuevos: `src/components/ui/ProgressBar.{jsx,module.css}`. API mínima:
+`value` (0–100), `phase` (`loading` / `complete` / `determinate`), `tone`
+(`onDark` / `onLight`), `color` (CSS var opcional, default `--color-tangerine`),
+`label`, `className`. Track translúcido blanco en tone `onDark`, `--color-border`
+en tone `onLight`. Tres curvas de transición: loading 14s ease-out, complete
+200ms, determinate 280ms. Honra `prefers-reduced-motion`.
+
+`OnboardingComposer` reemplazó su barra hardcodeada por el componente
+(tone `onDark`, color `--color-accent-green` para coherencia con el quote y
+marco verdes del slide 3). Las clases `.progressTrack`/`.progressFill`/
+`.progressFillLoading`/`.progressFillComplete` quedaron borradas del módulo.
+
+### Slide 3 · copy del análisis acortado a 40–50 palabras con estructura fija
+
+- `PROMPT_PRIMER_ENCUENTRO` en `src/services/anthropic.js`: campo `comprension`
+  pasó de párrafo libre 40–60 palabras a 40–50 palabras con 3 partes obligatorias:
+  1. anclaje empático ("Te leo." + máximo una frase),
+  2. análisis científico breve (1–2 frases desde el marco aplicado),
+  3. cierre fijo, exacto: **"En Huella vas a entender por qué pasa cada episodio,
+     y qué hacer con eso."**
+- `FALLBACK_RESPONSE` en `src/pages/onboarding/frases-onboarding.js`: copy
+  cambiado al ejemplo exacto que pidió Daniel (corteza prefrontal en
+  construcción, grito = desregulación no desafío). Cita pasó a Daniel Siegel
+  ("Los berrinches son el resultado de una inmadurez cerebral, no de una mala
+  crianza."), marco "desarrollo cerebral". Antes era Janet Lansbury con cita
+  de "padres presentes".
+- `OnboardingComposer.jsx` renderiza ahora el `comprension` partido por
+  `\n{2,}` en múltiples `<p>` para respetar la separación entre partes
+  (antes colapsaba a un solo párrafo).
+
+### Slide 4 · convertido a flujo conversacional progresivo
+
+Reescritura completa de `OnboardingFormSlide.{jsx,module.css}`. 6 sub-pantallas
+en orden, una visible a la vez, centradas vertical y horizontalmente, con
+fade entre pasos:
+
+1. "¿Cómo te llamas?" → input text (autoFocus, autoComplete given-name)
+2. "Un gusto, {nombrePadre}. ¿Y cómo se llama tu hijo o hija?" → input text
+3. "¿Cuándo nació {nombreHijo}?" → `<input type="date">` único (en vez de los
+   3 inputs DD/MM/AAAA separados). Parsea `YYYY-MM-DD` a `{dia, mes, anio}`
+   strings con padding al mutar el perfil, así `onboardingPersistor.js` sigue
+   funcionando sin tocar nada.
+4. "¿{nombreHijo} es niño, niña u otro?" → 3 chips grandes seleccionables
+5. "¿Quieres agregar una foto de {nombreHijo}?" → botón "Agregar foto" +
+   botón visible "Saltar este paso" (avanza al siguiente paso, distinto del
+   "Saltar" global que cancela el onboarding completo)
+6. "¿Qué te trae a Huella?" → 5 chips multi-select. **Eliminada la opción
+   "Las rabietas del día a día"** (se pisaba con "Entender berrinches" y
+   "Sueño y rutinas")
+
+**Navegación**:
+- ProgressBar tangerine arriba (tone `onLight`, determinate, sube por pasos).
+- Botón "Atrás" (flecha) arriba a la izquierda, deshabilitado/invisible en
+  el paso 0. La barra retrocede al volver.
+- "Saltar" global a la derecha (cancela todo el onboarding, sin cambios).
+- "Continuar" abajo, ancho completo, activo solo cuando la respuesta del
+  paso es válida. En el último paso ejecuta `onContinue()` (avanza al slide 5).
+
+**Transiciones**:
+- Cambio de paso: `opacity` + `translateY(-6px)` 200ms ease-out (fade-out)
+  seguido de fade-in al mismo timing del nuevo step. El componente conmuta
+  vía `phase = 'in' | 'out'` con setTimeout sincronizado a la duración CSS.
+- `key={step}` en el wrapper para forzar remount limpio del input y el
+  autoFocus.
+
+**Validación por paso**:
+- 0/1: nombre con `.trim().length > 0`
+- 2: los 3 campos de nacimiento presentes
+- 3: sexo definido
+- 4: siempre válido (foto opcional)
+- 5: al menos 1 intención
+
+**Shape de `perfil` preservado intacto** (EMPTY_PERFIL en `Onboarding.jsx`).
+`onboardingPersistor.js` NO se tocó. Verificado: el `<input type="date">`
+siempre devuelve `YYYY-MM-DD`, el split garantiza padding cero coherente con
+lo que `pad2()` del persistor espera.
+
+### Build verde
+
+`npm run build` pasa limpio. 2053 modules transformed. Solo warnings
+preexistentes de chunk size del PDF.
+
+## Archivos
+
+**Creados:**
+- `src/components/ui/ProgressBar.jsx`
+- `src/components/ui/ProgressBar.module.css`
+
+**Modificados:**
+- `src/services/anthropic.js` — PROMPT_PRIMER_ENCUENTRO con estructura de 3 partes + cierre fijo + 40–50 palabras
+- `src/pages/onboarding/frases-onboarding.js` — FALLBACK_RESPONSE al copy ejemplo de Daniel
+- `src/pages/onboarding/OnboardingComposer.jsx` — usa ProgressBar; renderiza comprension partido por `\n{2,}`
+- `src/pages/onboarding/OnboardingComposer.module.css` — eliminadas clases `.progressTrack`/`.progressFill*`
+- `src/pages/onboarding/OnboardingFormSlide.jsx` — reescritura completa a 6 pasos conversacionales
+- `src/pages/onboarding/OnboardingFormSlide.module.css` — reescritura completa (chips grandes, fade entre pasos, ctaBar)
+- `ESTADO.md` — esta bitácora + las 238 líneas pendientes de la sesión 23 mayo
+
+## ⚠️ Falta verificación en producción por Daniel
+
+Después del deploy de Vercel, abrir el onboarding y revisar:
+
+**Slide 3:**
+1. La respuesta IA dura 40–50 palabras con estructura "anclaje + análisis breve + cierre fijo".
+2. Cierra siempre con "En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso."
+3. Si la IA falla, el fallback dice "Te leo. A esta edad, la corteza prefrontal…" con cita de Siegel y marco "DESARROLLO CEREBRAL".
+4. La barra de carga sigue funcionando igual (verde, 14s).
+
+**Slide 4:**
+1. Aparece una pregunta a la vez, centrada, con fade entre pasos.
+2. Saludo "Un gusto, {nombre}." en la pregunta del hijo.
+3. Date picker abre el selector nativo del OS al tocar.
+4. Sexo: 3 chips grandes seleccionables.
+5. Foto: opción visible "Saltar este paso".
+6. Intenciones: 5 chips (no aparece "Las rabietas del día a día").
+7. Barra tangerine arriba, sube con cada paso.
+8. Botón Atrás funciona y la barra retrocede.
+9. "Saltar" arriba a la derecha cancela todo el onboarding.
+10. En el último paso, "Continuar" lleva al slide 5 (afirmación).
+11. Datos persisten igual: nombre del padre/madre, hijo, fecha, sexo, foto e intenciones quedan en `perfiles` y `hijos`.
+
+## Decisiones tomadas sin consultar (por restricción del prompt)
+
+- **El copy del análisis del slide 3 sigue generándose por IA**, no se hardcodeó
+  fijo. El copy ejemplo de Daniel se aplicó al FALLBACK, y el prompt se ajustó
+  para que la IA produzca SIEMPRE la misma estructura (anclaje + análisis breve
+  + cierre fijo exacto) en 40–50 palabras. Razón: la promesa del slide 3
+  ("Cuéntale a Huella algo que te haya pasado") quedaría rota si la respuesta
+  fuera siempre genérica e ignorara el input.
+- **Color del fill del ProgressBar en slide 3 se mantuvo `--color-accent-green`**
+  (no se cambió a tangerine). Razón: solo el slide 4 pedía tangerine; el slide 3
+  ya tenía coherencia visual con el quote y marco verdes. El componente acepta
+  `color` por prop, sin sesgo a uno u otro.
+- **El persistor NO se tocó** y el shape de `perfil` quedó idéntico. La
+  conversión del date picker al shape `{dia, mes, anio}` se hace en
+  `OnboardingFormSlide.jsx` al mutar el perfil, no en el persistor.
+
+## Deudas anotadas
+
+- El JSDoc de `requestPrimerEncuentro` decía "60-120 palabras" en `comprension`
+  cuando el prompt anterior pedía 40–60. Estaba desincronizado desde antes;
+  hoy lo dejé alineado con "40-50 palabras · 3 partes". Anotado por si se
+  vuelve a desincronizar.
+- El bug serio de **Orientación de Huella en el detalle de episodio** (voz
+  siempre en presente, siempre mismo consejo, siempre Janet Lansbury) sigue
+  abierto. No se tocó esta sesión.
+- Las **observaciones nuevas del slide 3** que viste en celular y no
+  alcanzamos a revisar quedan abiertas para la próxima.
+- **Slide 2 ("No estás adivinando")** — copy aún por acortar (cambio chico
+  pendiente).
+- **Motion Fase 3 del Onboarding con Claude Design** — el martes 26 mayo
+  vuelve el límite. Brief ya armado en sesión 22 mayo.
+
+---
+
+*Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
+argentino en código, comentarios, copy ni JSDoc.*

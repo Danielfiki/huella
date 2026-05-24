@@ -1,6 +1,7 @@
 /* OnboardingFormSlide.module.css
-   Slide 4 · entrada al producto.
-   Cabecera mocha alta + formulario sobre crema. */
+   Slide 4 · entrada al producto, en modo conversacional.
+   Una pregunta visible por paso, centrada vertical/horizontalmente, con fade.
+   Barra superior tangerine + Atrás + Saltar. CTA abajo. */
 
 .slide {
   position: relative;
@@ -13,142 +14,146 @@
   color: var(--color-text);
 }
 
-/* ── Header mocha alto ─────────────────────────────────────────── */
-.moBand {
-  background: var(--color-accent-mocha);
-  color: #fff;
-  padding:
-    max(env(safe-area-inset-top, 0px), 18px)
-    24px
-    28px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ── Barra superior ──────────────────────────────────────────────── */
+.topband {
   flex-shrink: 0;
+  padding:
+    max(env(safe-area-inset-top, 0px), 14px)
+    18px
+    14px;
+  background: var(--color-bg);
 }
 
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
-  padding-bottom: 6px;
 }
 
-.dots { display: flex; gap: 6px; align-items: center; }
-.dot {
-  display: block;
-  width: 18px; height: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  transition: width 240ms ease, background-color 240ms ease;
-}
-.dotDone { background: rgba(255, 255, 255, 0.55); }
-.dotOn   { background: #fff; width: 28px; }
-
-.topSkip {
-  font-family: var(--font-family);
-  font-size: 13px; font-weight: 600;
-  color: rgba(255, 255, 255, 0.82);
-  background: none; border: none;
-  padding: 8px 4px;
-  cursor: pointer;
-}
-
-.badge {
+.backBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 13px;
-  border-radius: 999px;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+.backBtn:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+.backBtn:active { transform: scale(0.94); }
+.backBtn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.progress {
+  flex: 1;
+}
+
+.topSkip {
+  flex-shrink: 0;
   font-family: var(--font-family);
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  width: max-content;
-  max-width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.topSkip:hover { color: var(--color-text); }
+
+/* ── Cuerpo conversacional ──────────────────────────────────────── */
+.form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding:
+    8px 24px
+    max(env(safe-area-inset-bottom, 0px), 22px);
+  overflow: hidden;
+}
+
+.stepWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  will-change: opacity, transform;
+}
+.stepIn {
+  opacity: 1;
+  transform: translateY(0);
+}
+.stepOut {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.eyebrow {
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-tangerine);
 }
 
 .title {
   font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.025em;
-  line-height: 1.04;
-  font-size: clamp(24px, 6.8vw, 30px);
-  color: #fff;
+  line-height: 1.12;
+  font-size: clamp(24px, 6.4vw, 30px);
+  color: var(--color-text);
   margin: 0;
+  text-wrap: balance;
 }
 
-.sub {
+.hint {
   font-family: var(--font-family);
-  font-size: 13px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.82);
-  font-style: italic;
-  margin: 0;
-}
-
-/* ── Formulario ────────────────────────────────────────────────── */
-.form {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding:
-    20px 22px
-    max(env(safe-area-inset-bottom, 0px), 24px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border: none;
-  padding: 0;
-  margin: 0;
-}
-
-.groupLbl {
-  font-family: var(--font-family);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  margin: 0 0 2px;
-  padding: 0;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.fieldLabel {
-  font-family: var(--font-family);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--color-text-muted);
+  margin: 0;
+  text-wrap: balance;
 }
 
+.fieldWrap {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────── */
 .input {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 14px 16px;
   font-family: var(--font-family);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-text);
-  min-height: 48px;
+  min-height: 52px;
   outline: none;
   width: 100%;
+  text-align: center;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 .input::placeholder {
@@ -159,48 +164,53 @@
   box-shadow: 0 0 0 3px var(--color-primary-tint);
 }
 
-.dateRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr;
-  gap: 8px;
-}
-.dateInput {
-  text-align: center;
+.inputDate {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 17px;
+  font-size: 18px;
   letter-spacing: -0.01em;
 }
 
-/* ── Chips ─────────────────────────────────────────────────────── */
-.chiprow {
+/* ── Chips grandes (para sexo e intenciones) ────────────────────── */
+.bigChiprow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  justify-content: center;
 }
 
-.chip {
+.bigChip {
   font-family: var(--font-family);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 9px 14px;
+  padding: 14px 22px;
   border-radius: 999px;
   background: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
-  min-height: 38px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease;
+  min-height: 50px;
 }
-.chip:active { transform: scale(0.97); }
-.chipOn {
+.bigChip:active { transform: scale(0.97); }
+.bigChip:hover {
+  border-color: var(--color-primary-border);
+}
+.bigChipOn {
   background: var(--color-primary-bg);
   color: var(--color-primary-dark);
   border-color: var(--color-primary-border);
   font-weight: 700;
 }
 
-/* ── Foto opcional ─────────────────────────────────────────────── */
+/* ── Foto opcional ──────────────────────────────────────────────── */
+.photoStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
 .fileHidden {
   display: none;
 }
@@ -209,38 +219,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  border-radius: 12px;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 22px;
+  border-radius: 16px;
   background: var(--color-surface);
   border: 1px dashed var(--color-border);
   font-family: var(--font-family);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0 14px;
-  transition: border-color 160ms ease, color 160ms ease;
+  transition: border-color 160ms ease, color 160ms ease, transform 120ms ease;
+  min-width: 200px;
 }
-.photoBtn:active { transform: scale(0.98); }
 .photoBtn:hover {
   border-color: var(--color-primary-border);
   color: var(--color-primary-dark);
 }
+.photoBtn:active { transform: scale(0.98); }
 
 .photoChip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  border-radius: 12px;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 18px;
+  border-radius: 14px;
   background: var(--color-primary-bg);
   border: 1px solid var(--color-primary-border);
   font-family: var(--font-family);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-primary-dark);
-  padding: 0 14px;
   cursor: pointer;
 }
 
@@ -248,29 +259,42 @@
 .photoIconCheck {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 16px;
-  width: 16px;
+  font-size: 18px;
+  width: 18px;
   text-align: center;
   display: inline-block;
 }
 .photoIconCheck { color: var(--color-accent-green); }
 
-/* ── Microcopy ─────────────────────────────────────────────────── */
-.microcopy {
+.skipStep {
   font-family: var(--font-family);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--color-text-muted);
-  font-style: italic;
-  margin: 4px 0 0;
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--color-border);
+  transition: color 160ms ease;
+}
+.skipStep:hover { color: var(--color-text); }
+
+/* ── CTA inferior ───────────────────────────────────────────────── */
+.ctaBar {
+  flex-shrink: 0;
+  padding-top: 18px;
 }
 
-/* ── CTA primario ──────────────────────────────────────────────── */
 .cta {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 52px;
+  width: 100%;
+  height: 54px;
   border-radius: 16px;
   font-family: var(--font-family);
   font-size: 15px;
@@ -280,21 +304,23 @@
   color: #fff;
   border: none;
   box-shadow: var(--shadow-primary-sm);
-  margin-top: 8px;
   cursor: pointer;
   transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
 }
 .cta:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
   box-shadow: var(--shadow-primary-md);
 }
 .cta:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dot, .cta, .chip, .photoBtn, .input { transition: none; }
+  .stepWrap { transition: none; }
+  .backBtn, .cta, .bigChip, .photoBtn, .input, .topSkip, .skipStep {
+    transition: none;
+  }
 }

@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './OnboardingComposer.module.css';
 import { FRASES_ONBOARDING, FALLBACK_RESPONSE } from './frases-onboarding';
+import ProgressBar from '../../components/ui/ProgressBar';
 
 // El helper Anthropic vive en src/services/anthropic.js — contrato esperado en
 // el README del bundle, sección "API · primer encuentro".
@@ -138,7 +139,12 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
     return (
       <div className={styles.wrap}>
         <article className={styles.respCard} aria-live="polite">
-          <p className={styles.respPara}>{response.comprension}</p>
+          {String(response.comprension)
+            .split(/\n{2,}/)
+            .filter(Boolean)
+            .map((parrafo, i) => (
+              <p key={i} className={styles.respPara}>{parrafo}</p>
+            ))}
           {response.cita && (
             <blockquote className={styles.quote}>
               "{response.cita}"
@@ -175,16 +181,13 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
           <p key={phraseIndex} className={styles.phrase}>
             "{FRASES_ONBOARDING[phraseIndex]}"
           </p>
-          <div className={styles.progressTrack} aria-hidden="true">
-            <div
-              className={`${styles.progressFill} ${
-                progressPhase === 'complete'
-                  ? styles.progressFillComplete
-                  : styles.progressFillLoading
-              }`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={progress}
+            phase={progressPhase === 'complete' ? 'complete' : 'loading'}
+            tone="onDark"
+            color="var(--color-accent-green)"
+            className={styles.progressSpace}
+          />
         </div>
         <button
           type="button"

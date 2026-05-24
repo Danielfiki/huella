@@ -81,26 +81,9 @@
   to   { opacity: 0.92; transform: translateY(0); }
 }
 
-/* ── Barra de progreso · solo visible en estado loading ────────── */
-.progressTrack {
-  width: 100%;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  overflow: hidden;
+/* ── Spacing del ProgressBar dentro del loadFrame ──────────────── */
+.progressSpace {
   margin-top: 6px;
-}
-.progressFill {
-  height: 100%;
-  width: 0%;
-  background: var(--color-accent-green);
-  border-radius: 999px;
-}
-.progressFillLoading {
-  transition: width 14000ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.progressFillComplete {
-  transition: width 200ms ease-out;
 }
 
 /* ── Response card · fade-up al revelar ────────────────────────── */
@@ -217,6 +200,4 @@
   .phrase { animation: none; opacity: 0.92; transform: none; }
   .cta { transition: none; }
   .composer { transition: none; }
-  .progressFillLoading,
-  .progressFillComplete { transition: none; }
 }
