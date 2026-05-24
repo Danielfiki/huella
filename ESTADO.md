@@ -2840,5 +2840,72 @@ de promocionar la feature de invitaciones.
 
 ---
 
+# ═══════════════════════════════════════════════════════════════
+# Sesión 24 mayo 2026 (cont.) — Fix CTA del slide 5 sin feedback
+# ═══════════════════════════════════════════════════════════════
+
+## Bug detectado por Daniel en producción
+
+En el slide 5 ("Tu hijo tiene suerte de tenerte aquí ✨"), el CTA "Empezar
+ahora →" no daba feedback al primer click. Daniel hacía 2-3 clicks hasta que
+finalmente avanzaba al Panel. Cada click extra disparaba `onComplete` en
+paralelo, lo que en el caso del persistor (sube foto a Storage + upsert
+perfil + upsert hijo via RPC) podía dejar guardados duplicados en cola.
+
+## Fix aplicado
+
+**`src/pages/onboarding/Onboarding.jsx`** — state `submitting` + ref anti
+doble-click. `finish` ahora es async:
+
+- `submittingRef.current = true` antes del primer `await` (sincrónico, evita
+  que dos clicks muy rápidos entren antes de que React batchee el setState).
+- `setSubmitting(true)` para que el slide 5 reciba la prop.
+- `await onComplete(perfil)`.
+- En éxito: el Layout flipea `showOnboarding` a false → el componente se
+  desmonta → no hay que resetear el state.
+- En catch (defensivo, hoy `onComplete` del Layout atrapa internamente):
+  restaura `submittingRef` y `setSubmitting(false)` para que el usuario
+  pueda reintentar.
+- Pasa `ctaSubmitting={submitting}` al `<OnboardingBottomSlide />` del slide 5.
+
+**`src/pages/onboarding/OnboardingBottomSlide.jsx`** — nueva prop opcional
+`ctaSubmitting` (default `false`). Cuando `true`:
+
+- Botón con `disabled` + `aria-disabled` + `aria-busy` (ARIA correcto para
+  estado de envío).
+- Render condicional del label: `<span className={styles.ctaSpin} /> Guardando…`
+  en vez del `ctaLabel`.
+- Clase extra `.ctaSubmitting` para ajustar opacidad/cursor.
+
+Como la prop tiene default `false`, los slides 1 y 2 (que también usan
+`OnboardingBottomSlide`) no cambian comportamiento. Slide 3 tampoco — usa el
+componente solo para el header/título y el composer renderiza su propio CTA.
+
+**`src/pages/onboarding/OnboardingBottomSlide.module.css`** — agregadas:
+
+- `.ctaSubmitting` (opacity 0.85, cursor wait, gap 10px para el spinner).
+- `.ctaSpin` (dot circular 8px pulsante con `--color-primary-dark`, animación
+  ease-in-out 1s infinita opacity+scale; más suave que un ring rotando).
+- `@keyframes onboardingCtaPulse`.
+- Override de `prefers-reduced-motion` para el spinner (sin animación,
+  opacity fija).
+
+Sin tokens nuevos. Sin tocar Layout, persistor, ni los slides 1-4.
+
+## ⚠️ Verificación pendiente por Daniel (pestaña limpia tras deploy)
+
+1. Llegar al slide 5 del onboarding (avanzar por los 4 anteriores).
+2. Click "Empezar ahora →" → el botón cambia INMEDIATAMENTE a "Guardando…"
+   con dot pulsante a la izquierda, opacidad reducida, cursor wait.
+3. Clicks adicionales durante "Guardando…" deben ignorarse (no disparar
+   guardados duplicados).
+4. Cuando la persistencia termina, el onboarding se cierra y aparece el
+   Panel. No hay parpadeo del botón volviendo a "Empezar ahora →" antes de
+   desaparecer.
+5. Si la persistencia falla, el botón vuelve a estar disponible para
+   reintentar (caso defensivo, no es el camino feliz).
+
+---
+
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
 argentino en código, comentarios, copy ni JSDoc.*

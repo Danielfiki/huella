@@ -37,6 +37,13 @@ const EMPTY_PERFIL = {
 export default function Onboarding({ onComplete, onSkip }) {
   const [index, setIndex] = useState(0);
   const [perfil, setPerfil] = useState(EMPTY_PERFIL);
+  // Bloqueo del CTA del slide 5 mientras `onComplete` corre (sube foto +
+  // upsert perfil + upsert hijo). Sin esto, el primer click se sentía sin
+  // feedback y el usuario hacía 2-3 clicks que disparaban guardados en
+  // paralelo. El ref captura el estado sincrónicamente — sin él, dos clicks
+  // muy rápidos podrían entrar antes de que React batchee el setState.
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const goNext = useCallback(() => {
     setIndex(i => Math.min(i + 1, SLIDE_COUNT - 1));
@@ -46,7 +53,25 @@ export default function Onboarding({ onComplete, onSkip }) {
     setIndex(i => Math.max(i - 1, 0));
   }, []);
 
-  const finish = useCallback(() => onComplete(perfil), [onComplete, perfil]);
+  const finish = useCallback(async () => {
+    if (submittingRef.current) return; // anti doble-click
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      await onComplete(perfil);
+      // El Layout flipea `showOnboarding` a false y desmonta este componente.
+      // No reseteamos `submitting` — el desmonte limpia el state naturalmente
+      // y deja el botón en "Guardando…" mientras la persistencia + transición
+      // ocurren, sin parpadeo a "Empezar ahora →".
+    } catch (err) {
+      // Defensivo: hoy `onComplete` del Layout atrapa internamente y nunca
+      // tira, pero si en el futuro propaga errores dejamos al usuario
+      // reintentar en vez de quedar atrapado en "Guardando…".
+      console.error('[Onboarding] onComplete tiró:', err);
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  }, [onComplete, perfil]);
 
   // patchPerfil({ nombrePadre: 'Camila' }) → merge superficial
   const patchPerfil = useCallback((patch) => {
@@ -174,6 +199,7 @@ export default function Onboarding({ onComplete, onSkip }) {
             body="El solo hecho de que estés buscando entender mejor a tu hijo/a ya dice todo de ti como padre o madre."
             sub="Empieza registrando tu primer episodio. El primer paso es el más importante."
             ctaLabel="Empezar ahora →"
+            ctaSubmitting={submitting}
             slideIndex={4}
             totalSlides={SLIDE_COUNT}
             showTopSkip={false}

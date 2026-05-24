@@ -26,6 +26,10 @@ import styles from './OnboardingBottomSlide.module.css';
  *   sub           string (opcional · italic)
  *   ctaLabel      string (opcional · si no viene, se asume children renderea el CTA propio)
  *   ctaDisabled   bool   (default false)
+ *   ctaSubmitting bool   (default false) · cuando true, el CTA queda disabled,
+ *                                          muestra spinner + "Guardando…" y
+ *                                          ignora clicks. Usado por el slide 5
+ *                                          mientras el persistor corre.
  *   onContinue    () => void
  *   slideIndex    number (0-indexed)
  *   totalSlides   number
@@ -43,6 +47,7 @@ export default function OnboardingBottomSlide({
   sub,
   ctaLabel,
   ctaDisabled = false,
+  ctaSubmitting = false,
   onContinue,
   slideIndex,
   totalSlides,
@@ -87,12 +92,18 @@ export default function OnboardingBottomSlide({
           {ctaLabel && (
             <button
               type="button"
-              className={styles.cta}
+              className={`${styles.cta} ${ctaSubmitting ? styles.ctaSubmitting : ''}`}
               onClick={onContinue}
-              disabled={ctaDisabled}
-              aria-disabled={ctaDisabled || undefined}
+              disabled={ctaDisabled || ctaSubmitting}
+              aria-disabled={ctaDisabled || ctaSubmitting || undefined}
+              aria-busy={ctaSubmitting || undefined}
             >
-              {ctaLabel}
+              {ctaSubmitting ? (
+                <>
+                  <span className={styles.ctaSpin} aria-hidden="true" />
+                  Guardando…
+                </>
+              ) : ctaLabel}
             </button>
           )}
         </div>

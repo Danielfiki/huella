@@ -226,7 +226,33 @@
   transform: none;
 }
 
+/* Estado de envío del CTA final (slide 5). Mantenemos contraste alto del
+   texto para que "Guardando…" se lea bien sobre el fondo blanco del botón. */
+.ctaSubmitting {
+  opacity: 0.85;
+  cursor: wait;
+  gap: 10px;
+}
+.ctaSubmitting:active { transform: none; }
+
+/* Spinner sutil: dot circular pulsante (no rota — más suave que un ring
+   girando en un botón pequeño). Usa el primary-dark del texto del CTA. */
+.ctaSpin {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary-dark);
+  display: inline-block;
+  animation: onboardingCtaPulse 1s ease-in-out infinite;
+}
+
+@keyframes onboardingCtaPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.1);  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dot { transition: none; }
   .cta { transition: none; }
+  .ctaSpin { animation: none; opacity: 0.7; }
 }
