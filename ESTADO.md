@@ -2598,5 +2598,96 @@ Después del deploy de Vercel, abrir el onboarding y revisar:
 
 ---
 
+# ═══════════════════════════════════════════════════════════════
+# Sesión 24 mayo 2026 (cont.) — Hotfix Onboarding · autoFocus rompía slides 1-3
+# ═══════════════════════════════════════════════════════════════
+
+## Bug detectado por Daniel en producción tras el commit anterior
+
+Pestaña limpia (sin caché) → el onboarding arrancaba directo en el slide 4
+("¿Cómo te llamas?"). Los slides 1 (luna), 2 (libro) y 3 (composer IA) no se
+veían, aunque `Onboarding.jsx` no estaba modificado y `useState(0)` seguía
+inicializando `index` en 0.
+
+## Causa raíz
+
+`Onboarding.jsx` monta los 5 slides SIMULTÁNEAMENTE en un track horizontal
+de 500% de ancho, con `transform: translateX(-${index * 100}%)`. Cada slide
+está físicamente posicionado lado a lado; solo se ve el que coincide con el
+viewport del shell (que tiene `overflow: hidden`).
+
+En el commit anterior, mi reescritura del slide 4 agregó `autoFocus` a los
+3 inputs de los pasos 0, 1 y 2 del flujo progresivo. Al montarse el
+componente, el `<input autoFocus>` del paso 0 recibía foco automáticamente
+**aunque el slide 4 estuviera fuera del viewport** (a 300% del shell por el
+translateX). El browser detectaba que el input enfocado no era visible y
+disparaba `scrollIntoView` programático. `.shell` con `overflow: hidden`
+oculta scrollbars visuales pero no impide que el browser setee `scrollLeft`
+internamente. El shell scrolleaba en silencio y dejaba al slide 4 en
+pantalla. El `index` del state seguía en 0 — era scroll del DOM, no avance
+lógico.
+
+Confirmación: el slide visible era exactamente "¿Cómo te llamas?" (step 0
+del slide 4), donde estaba el primer `autoFocus`. Si la causa hubiera sido
+otra (state inicial, condición de render), la pantalla habría sido otra.
+
+## Fix aplicado (commit pendiente de hash)
+
+Patrón ya probado en el slide 3 (`<OnboardingComposer active={index === 2} />`):
+
+- **`src/pages/onboarding/Onboarding.jsx`** — 1 línea: agregada prop
+  `active={index === 3}` al `<OnboardingFormSlide />` (líneas 155-164).
+- **`src/pages/onboarding/OnboardingFormSlide.jsx`**:
+  - Accept de prop `active` en el destructure.
+  - `useRef stepFieldRef` que se asigna al input del paso actual (steps 0,
+    1, 2 — los pasos con `<input>`; los pasos 3, 4, 5 son chips/foto y no
+    necesitan focus).
+  - `useEffect` que solo llama `stepFieldRef.current.focus({ preventScroll: true })`
+    cuando `active === true` && `phase === 'in'` && cambia el step. Si el
+    slide está fuera del viewport (active=false), no se enfoca nada, y por
+    tanto el browser no dispara `scrollIntoView`.
+  - Eliminados los 3 `autoFocus` declarativos de los inputs.
+- Sin cambios en el resto del flujo del slide 4. Sin tocar slides 1, 2, 3, 5
+  ni el persistor.
+
+Build verde tras el fix.
+
+## Aprendizaje (anotar permanentemente)
+
+**`autoFocus` en componentes que viven dentro de un track horizontal con
+`overflow: hidden` dispara `scrollIntoView` automático del browser que rompe
+el flujo. El track del DOM scrollea internamente aunque no haya scrollbars
+visibles, y deja al input fuera de vista en pantalla, salteando los slides
+anteriores.**
+
+Patrón correcto:
+- El shell (`Onboarding.jsx`) pasa una prop `active={index === N}` a cada
+  slide que monta inputs autofocableables.
+- El slide aplica el focus manualmente vía `useEffect` que verifica
+  `active === true` antes de hacer `ref.current.focus({ preventScroll: true })`.
+- Nunca usar `autoFocus` declarativo en JSX dentro de carrusels, tabs,
+  modales pre-montados, paneles colapsables ni cualquier estructura donde
+  el componente esté en el DOM pero no en el viewport.
+
+Esto aplica también a futuros slides/pantallas que se monten antes de ser
+visibles. El patrón `active` ya estaba documentado en el código del slide 3
+(la prop `active` del `OnboardingComposer`) — el error fue no replicarlo al
+slide 4.
+
+## ⚠️ Verificación pendiente por Daniel tras el deploy de Vercel
+
+Pestaña limpia (sin caché):
+
+1. El onboarding arranca en el slide 1 con la luna.
+2. Avanzando con CTA o swipe, aparecen slides 2 (libro), 3 (composer IA),
+   4 (formulario) y 5 (afirmación) en orden.
+3. Al llegar al slide 4, el input de "¿Cómo te llamas?" recibe foco
+   automáticamente al entrar (sin que el usuario lo toque).
+4. El resto del flujo del slide 4 (6 sub-pantallas, fade entre pasos,
+   ProgressBar tangerine, Atrás) funciona igual que en la verificación
+   anterior — no se tocó nada de eso.
+
+---
+
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
 argentino en código, comentarios, copy ni JSDoc.*

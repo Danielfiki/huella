@@ -35,6 +35,11 @@ const TOTAL_STEPS = 6;
 
 /**
  * Props
+ *   active       bool   · true cuando este slide está en el viewport del shell.
+ *                          Sin esto, montar el componente con autoFocus en sus
+ *                          inputs dispara scrollIntoView del browser y rompe
+ *                          el track horizontal del Onboarding (los slides
+ *                          previos quedan invisibles aunque estén montados).
  *   perfil       objeto · forma definida en Onboarding.jsx EMPTY_PERFIL
  *   setPerfil    (patch) => void · merge superficial
  *   slideIndex   number (3)
@@ -43,6 +48,7 @@ const TOTAL_STEPS = 6;
  *   onContinue   () => void · avanza al slide 5 (afirmación)
  */
 export default function OnboardingFormSlide({
+  active,
   perfil,
   setPerfil,
   onTopSkip,
@@ -53,6 +59,11 @@ export default function OnboardingFormSlide({
   const [phase, setPhase] = useState('in');
   const pendingStepRef = useRef(null);
   const fileRef = useRef(null);
+  // Ref para el input/control del paso actual. Lo enfocamos manualmente
+  // (no con autoFocus) y solo cuando el slide está activo en el shell —
+  // si no, el browser hace scrollIntoView al input oculto fuera del
+  // viewport del track horizontal y rompe el flujo de slides previos.
+  const stepFieldRef = useRef(null);
 
   // ─── Validación por paso ────────────────────────────────────────
   const isStepValid = (() => {
@@ -89,6 +100,21 @@ export default function OnboardingFormSlide({
     }, STEP_FADE_MS);
     return () => clearTimeout(id);
   }, [phase]);
+
+  // Focus condicional: solo cuando el slide está activo en el shell y el
+  // paso terminó el fade-in. preventScroll evita que algún ancestor con
+  // overflow oculto intente scrollear al recibir foco.
+  useEffect(() => {
+    if (!active) return;
+    if (phase !== 'in') return;
+    const el = stepFieldRef.current;
+    if (!el || typeof el.focus !== 'function') return;
+    try {
+      el.focus({ preventScroll: true });
+    } catch {
+      el.focus();
+    }
+  }, [active, phase, step]);
 
   const goNext = useCallback(() => {
     if (!isStepValid) return;
@@ -147,6 +173,7 @@ export default function OnboardingFormSlide({
       content: (
         <input
           key="step-0"
+          ref={stepFieldRef}
           type="text"
           className={styles.input}
           placeholder="Tu nombre"
@@ -154,7 +181,6 @@ export default function OnboardingFormSlide({
           onChange={(e) => setPerfil({ nombrePadre: e.target.value })}
           autoComplete="given-name"
           maxLength={60}
-          autoFocus
           aria-label="Tu nombre"
         />
       ),
@@ -168,13 +194,13 @@ export default function OnboardingFormSlide({
       content: (
         <input
           key="step-1"
+          ref={stepFieldRef}
           type="text"
           className={styles.input}
           placeholder="Su nombre"
           value={perfil.nombreHijo}
           onChange={(e) => setPerfil({ nombreHijo: e.target.value })}
           maxLength={60}
-          autoFocus
           aria-label="Nombre de tu hijo o hija"
         />
       ),
@@ -188,12 +214,12 @@ export default function OnboardingFormSlide({
       content: (
         <input
           key="step-2"
+          ref={stepFieldRef}
           type="date"
           className={`${styles.input} ${styles.inputDate}`}
           value={fechaValor}
           onChange={(e) => onFechaChange(e.target.value)}
           max={new Date().toISOString().slice(0, 10)}
-          autoFocus
           aria-label="Fecha de nacimiento"
         />
       ),

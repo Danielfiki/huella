@@ -154,6 +154,7 @@ export default function Onboarding({ onComplete, onSkip }) {
         {/* ── Slide 4 · Sistema (formulario) ──────────────────── */}
         <div className={styles.slide} aria-hidden={index !== 3}>
           <OnboardingFormSlide
+            active={index === 3}
             perfil={perfil}
             setPerfil={patchPerfil}
             slideIndex={3}
