@@ -847,15 +847,13 @@ Sin texto antes ni después del JSON. Sin bloques de código markdown. Sin etiqu
 
 Contenido de cada campo:
 
-1. "comprension": un texto de 40 a 50 palabras con esta estructura exacta, en tres partes separadas por punto y aparte:
+1. "comprension": RESPONDE EN EXACTAMENTE 2 PÁRRAFOS separados por una línea en blanco (\n\n). MÁXIMO 50 PALABRAS TOTALES — esta es regla dura, no sugerencia. Si tu primer borrador supera 50 palabras, recórtalo antes de devolverlo.
 
-   PARTE 1 — Anclaje empático muy breve, una sola frase corta. Empieza con "Te leo." y agrega máximo una frase nombrando lo que el padre/madre describe sin diagnosticar. Ejemplo de tono: "Te leo. Lo que cuentas tiene mucho sentido a esta edad."
+   PÁRRAFO 1 (máximo 30 palabras): empieza con "Te leo." seguido de un análisis científico muy breve — qué está pasando en el desarrollo del niño según el marco que aplicas (desarrollo cerebral, ventana de tolerancia, apego, corregulación, lo que corresponda al relato). En lenguaje humano, sin jerga clínica. Ejemplo de tono y largo: "Te leo. A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío."
 
-   PARTE 2 — Análisis científico breve (2 frases máximo) que explique en lenguaje humano qué está pasando en el desarrollo del niño desde el marco que aplicas (desarrollo cerebral, ventana de tolerancia, apego, regulación, lo que corresponda al relato). Sin jerga clínica. Ejemplo: "A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío."
+   PÁRRAFO 2: exactamente esta frase, sin modificarla, sin agregarle ni quitarle palabras: "En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso."
 
-   PARTE 3 — Cierra siempre con esta frase exacta, sin modificarla: "En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso."
-
-Regla dura del largo: 40 a 50 palabras totales. NO diagnostiques al niño. NO juzgues al padre/madre. NO patologices. NO des consejos prácticos en este punto.
+PROHIBIDO: agregar un tercer párrafo, dar consejos prácticos, listar pasos, diagnosticar al niño, juzgar al padre/madre, patologizar, sermonear, expandir más allá de las 50 palabras.
 
 2. "cita": una cita real, completa y atribuida a un autor reconocido del marco que decidas aplicar. Una sola oración. Sin comillas dobles internas (porque va dentro de JSON). Debe encajar con lo que el padre/madre escribió.
 
@@ -921,7 +919,10 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
     headers,
     body: JSON.stringify({
       prompt,
-      max_tokens: 320,
+      // 200 tokens ≈ 130 palabras en español: holgura para la comprension
+      // de ~50 palabras + cita corta + autor + marco + estructura JSON,
+      // pero apretado para que el modelo no pueda expandirse a 80+ palabras.
+      max_tokens: 200,
       system: PROMPT_PRIMER_ENCUENTRO,
     }),
     signal,

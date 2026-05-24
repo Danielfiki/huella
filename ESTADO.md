@@ -2689,5 +2689,156 @@ Pestaña limpia (sin caché):
 
 ---
 
+# ═══════════════════════════════════════════════════════════════
+# Sesión 24 mayo 2026 (cont.) — 2 fixes onboarding + investigación parejas
+# ═══════════════════════════════════════════════════════════════
+
+## Cerrado en este commit (pendiente verificación de Daniel en prod)
+
+### Fix 1 — Slide 3: forzar comprension ≤50 palabras
+
+Daniel verificó que la IA seguía devolviendo análisis de ~80 palabras pese a
+las instrucciones del prompt anterior. El modelo ignora "máximo 50 palabras"
+cuando se le da margen de tokens.
+
+Doble refuerzo aplicado en `src/services/anthropic.js`:
+
+1. **`max_tokens` bajado de 320 → 200.** 200 tokens ≈ 130 palabras en español;
+   alcanza para comprension de ~50 palabras + cita corta + autor + marco +
+   estructura JSON, pero APRIETA el techo para que el modelo no pueda
+   expandirse a 80+ palabras aunque quiera.
+2. **`PROMPT_PRIMER_ENCUENTRO` reescrito con instrucciones imperativas:**
+   "RESPONDE EN EXACTAMENTE 2 PÁRRAFOS", "MÁXIMO 50 PALABRAS TOTALES — esta
+   es regla dura", "Si tu primer borrador supera 50 palabras, recórtalo antes
+   de devolverlo". Párrafo 1 acotado a 30 palabras con "Te leo." +
+   análisis científico breve. Párrafo 2 obligatorio textual: la frase fija
+   de cierre. Bloque "PROHIBIDO" explícito (tercer párrafo, consejos
+   prácticos, listas, diagnósticos, sermones, expansión más allá de 50).
+
+El fallback (`FALLBACK_RESPONSE.comprension` en `frases-onboarding.js`) ya
+está en ~45 palabras desde la sesión anterior — no requiere cambio.
+
+### Fix 2 — Slide 4: preview circular de foto
+
+Antes: al subir foto, mostraba el nombre del archivo truncado ("IMG_2847.jpg
+· cambiar"). Daniel lo reportó como "feo y poco premium".
+
+Cambios en `OnboardingFormSlide.jsx` + `.module.css`:
+
+- Nuevo `useState fotoPreviewUrl` + `useEffect` que crea/revoca un
+  `URL.createObjectURL(perfil.fotoBlob)` cada vez que el blob cambia.
+  Revoke en cleanup para no filtrar memoria. NO sube nada — el upload real
+  sigue ocurriendo en `onboardingPersistor` al cerrar el onboarding.
+- Render del paso 4 reemplazado:
+  - **Antes de subir**: botón punteado "+ Agregar foto" (sin cambios).
+  - **Después de subir**: avatar circular 120×120 con la imagen (`object-fit:
+    cover`, border tangerine 3px, sombra suave). Clickeable para cambiar.
+    Debajo, link "Cambiar foto" sutil subrayado.
+  - "Saltar este paso" sigue visible siempre.
+- Función `truncateName` eliminada (sin callers tras el cambio).
+- 0 tokens nuevos en `index.css`. Borde y sombra reusan
+  `--color-primary-border` / `--color-primary` / `--shadow-card-soft`.
+
+### Archivos tocados
+
+- `src/services/anthropic.js` — PROMPT_PRIMER_ENCUENTRO reforzado + max_tokens 320→200
+- `src/pages/onboarding/OnboardingFormSlide.jsx` — preview circular + useEffect URL.createObjectURL
+- `src/pages/onboarding/OnboardingFormSlide.module.css` — `.photoPreviewBtn`, `.photoPreviewImg`, `.photoChangeBtn`; eliminada `.photoChip` y `.photoIconCheck`
+- `ESTADO.md` — esta bitácora + reporte de parejas (abajo)
+
+Build verde.
+
+## ⚠️ Verificación pendiente por Daniel (pestaña limpia tras deploy)
+
+- **Slide 3**: análisis ≤50 palabras siempre. El texto se ve en 2 párrafos
+  (el segundo es la frase fija "En Huella vas a entender por qué pasa cada
+  episodio, y qué hacer con eso."). Probar con varios inputs distintos.
+- **Slide 4 · paso de foto**: al subir, aparece avatar circular en vez del
+  nombre de archivo. Botón "Cambiar foto" debajo. "Saltar este paso" abajo.
+  Click sobre el avatar también permite cambiar.
+
+---
+
+## Reporte de investigación · Modo Parejas en el Onboarding (NO IMPLEMENTADO)
+
+### Cómo funciona hoy el flujo invitación → onboarding (escenario problemático)
+
+El sistema de invitaciones existe y funciona técnicamente (`/invitar?token`,
+`accept_partner_invitation`, `FamilyContext`, `partner_invitations`, RPC
+`get_partner_info`). Pero el **onboarding no tiene awareness de modo pareja**
+— se le muestra completo a cualquier usuario nuevo en su primer dispositivo,
+porque `Layout.jsx` solo decide vía `localStorage.onboarding_done` (líneas
+62-66). No consulta `FamilyContext`.
+
+**Flow A · Pareja acepta invitación primero, luego entra a la app**
+(es el camino natural si vienen desde el email):
+
+1. Pareja recibe email, clickea link → `/invitar?token=xxx` (ruta pública)
+2. No tiene sesión → redirige a `/login?redirect=/invitar?token=xxx`
+3. Hace signup, vuelve a `/invitar?token=xxx`
+4. Click "Aceptar" → `accept_partner_invitation(token)` → Caso A (sin hijos
+   propios) → join exitoso → `navigate('/panel')`
+5. `Layout.jsx` monta `<Onboarding />` porque no hay `onboarding_done` en
+   localStorage del nuevo dispositivo
+6. Pareja ve los 5 slides completos, incluyendo el slide 4 con TODOS los
+   pasos del hijo (nombre, fecha, sexo, foto)
+7. Al hacer submit, `onboardingPersistor` llama `upsert_family_child` con
+   `p_hijo_id: null` → **crea un SEGUNDO hijo en la familia** (duplicado del
+   hijo del owner)
+8. Resultado: dos hijos con datos iguales en la misma familia. Bug silencioso.
+
+**Flow B · Pareja se registra antes de aceptar** ya tiene protección
+backend (`accept_partner_invitation` rechaza con Caso B/C), pero el Flow A
+es el problemático y no tiene defensa hoy.
+
+### Propuesta de implementación (para sesión dedicada)
+
+**Modificación mínima** — 4 archivos:
+
+1. **`src/components/layout/Layout.jsx`** — importa `useFamily()` + `useHuella()`.
+   Si `family?.role === 'member'` y `state.hijo` existe (los datos del owner
+   ya se cargaron vía RLS), pasa prop `modoPareja={true}` al `<Onboarding />`.
+
+2. **`src/pages/onboarding/Onboarding.jsx`** — acepta `modoPareja` y la pasa
+   a `<OnboardingFormSlide />`. Opcionalmente adapta copy del slide 1 ("Te
+   sumas a la familia de {nombreHijo}") y slide 5 ("Bienvenido/a, ahora
+   estás conectado/a con {nombrePadreOwner}"). Slides 2 y 3 quedan iguales
+   (ciencia + composer IA son universales).
+
+3. **`src/pages/onboarding/OnboardingFormSlide.jsx`** — si `modoPareja`,
+   `STEPS` se construye con solo 2 pasos: nombre padre + intenciones. Skip
+   automático de nombre hijo / fecha / sexo / foto. Ajusta `TOTAL_STEPS = 2`
+   y la barra de progreso se reescala sola. Validaciones de los pasos
+   eliminados pasan a no-op.
+
+4. **`src/services/onboardingPersistor.js`** — `persistirPerfilOnboarding`
+   chequea si hay `nombreHijo` antes de llamar `upsert_family_child`. Si no
+   viene (modo pareja), solo upsertea `perfiles` (nombre + intenciones +
+   contexto_inicial) y no crea hijo.
+
+**Tiempo estimado:** 30-45 minutos + QA en pareja real (2 cuentas).
+
+**Riesgos a considerar:**
+- Si la pareja acepta la invitación pero el `useFamily()` aún no terminó
+  de cargar cuando se monta el Layout, podría flashear el onboarding
+  completo antes de detectar el modo pareja. Mitigación: esperar a que
+  `familyLoading === false` antes de decidir mostrar el onboarding.
+- Si por algún motivo `accept_partner_invitation` falla pero el usuario ya
+  está logueado, debería ver el onboarding normal (no el reducido). El
+  check de `family.role === 'member'` lo cubre.
+- Edge case: pareja que aceptó pero hizo skip del onboarding en sesión
+  anterior. `sessionStorage.huella.onboarding.dismissed` lo silencia hasta
+  cerrar tab. Después del cierre, vuelve. Funciona igual con o sin la
+  propuesta.
+
+### Decisión sugerida
+
+Esta es **deuda real y bloqueante para el modo pareja en producción**, pero
+fuera del alcance de hoy (Daniel pidió no implementar). Agendarla como
+sesión propia con QA en 2 cuentas reales (owner + pareja invitada), antes
+de promocionar la feature de invitaciones.
+
+---
+
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
 argentino en código, comentarios, copy ni JSDoc.*

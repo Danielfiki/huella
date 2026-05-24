@@ -165,6 +165,22 @@ export default function OnboardingFormSlide({
   const nombrePadreLimpio = perfil.nombrePadre.trim();
   const nombreHijoLimpio = perfil.nombreHijo.trim();
 
+  // Preview de la foto del hijo. Generamos un object URL local del File
+  // (sin subir nada — el upload real lo hace el persistor al cerrar el
+  // onboarding) para mostrar avatar circular en vez del nombre del archivo.
+  // Revocamos el URL anterior cada vez que cambia el blob o al desmontar
+  // para no filtrar memoria.
+  const [fotoPreviewUrl, setFotoPreviewUrl] = useState(null);
+  useEffect(() => {
+    if (!perfil.fotoBlob) {
+      setFotoPreviewUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(perfil.fotoBlob);
+    setFotoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [perfil.fotoBlob]);
+
   const STEPS = [
     {
       eyebrow: 'Sobre ti',
@@ -271,15 +287,28 @@ export default function OnboardingFormSlide({
               setPerfil({ fotoBlob: e.target.files?.[0] || null })
             }
           />
-          {perfil.fotoBlob ? (
-            <button
-              type="button"
-              className={styles.photoChip}
-              onClick={() => fileRef.current?.click()}
-            >
-              <span className={styles.photoIconCheck} aria-hidden="true">✓</span>
-              {truncateName(perfil.fotoBlob.name)} · cambiar
-            </button>
+          {fotoPreviewUrl ? (
+            <>
+              <button
+                type="button"
+                className={styles.photoPreviewBtn}
+                onClick={() => fileRef.current?.click()}
+                aria-label="Cambiar foto"
+              >
+                <img
+                  src={fotoPreviewUrl}
+                  alt=""
+                  className={styles.photoPreviewImg}
+                />
+              </button>
+              <button
+                type="button"
+                className={styles.photoChangeBtn}
+                onClick={() => fileRef.current?.click()}
+              >
+                Cambiar foto
+              </button>
+            </>
           ) : (
             <button
               type="button"
@@ -393,8 +422,3 @@ export default function OnboardingFormSlide({
   );
 }
 
-function truncateName(name) {
-  if (!name) return '';
-  if (name.length <= 18) return name;
-  return name.slice(0, 12) + '…' + name.slice(-4);
-}

@@ -239,24 +239,53 @@
 }
 .photoBtn:active { transform: scale(0.98); }
 
-.photoChip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 0 18px;
-  border-radius: 14px;
-  background: var(--color-primary-bg);
-  border: 1px solid var(--color-primary-border);
+.photoPreviewBtn {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  padding: 0;
+  border: 3px solid var(--color-primary-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--shadow-card-soft);
+  transition: transform 120ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.photoPreviewBtn:hover {
+  border-color: var(--color-primary);
+}
+.photoPreviewBtn:active {
+  transform: scale(0.97);
+}
+
+.photoPreviewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+.photoChangeBtn {
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-primary-dark);
+  background: none;
+  border: none;
+  padding: 6px 10px;
   cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--color-primary-border);
+  transition: color 160ms ease;
+}
+.photoChangeBtn:hover {
+  color: var(--color-primary);
 }
 
-.photoIconPlus,
-.photoIconCheck {
+.photoIconPlus {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 18px;
@@ -264,7 +293,6 @@
   text-align: center;
   display: inline-block;
 }
-.photoIconCheck { color: var(--color-accent-green); }
 
 .skipStep {
   font-family: var(--font-family);
@@ -320,7 +348,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stepWrap { transition: none; }
-  .backBtn, .cta, .bigChip, .photoBtn, .input, .topSkip, .skipStep {
+  .backBtn, .cta, .bigChip, .photoBtn, .photoPreviewBtn, .photoChangeBtn,
+  .input, .topSkip, .skipStep {
     transition: none;
   }
 }
