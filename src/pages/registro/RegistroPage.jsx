@@ -245,7 +245,12 @@ function computarFecha(cuandoPaso, fechaCustom) {
     case 'hora_antes': d.setHours(d.getHours() - 1); return d.toISOString()
     case 'manana':     d.setHours(9, 0, 0, 0);       return d.toISOString()
     case 'tarde':      d.setHours(15, 0, 0, 0);      return d.toISOString()
-    case 'ayer':       d.setDate(d.getDate() - 1); d.setHours(18, 0, 0, 0); return d.toISOString()
+    // 'ayer' debe garantizar que bucketTiempo() lo clasifique como 'pasado' (>24h).
+    // Restamos 1 día Y 1 hora al momento actual → siempre 25h atrás como mínimo.
+    // Antes mapeaba a "día anterior 18:00", que para registros hechos en la
+    // tarde caía en bucket 'dia' (≤24h) y la voz salía como "Hoy, con calma…"
+    // en vez de "La próxima vez…".
+    case 'ayer':       d.setDate(d.getDate() - 1); d.setHours(d.getHours() - 1); return d.toISOString()
     case 'custom':     return fechaCustom ? new Date(fechaCustom).toISOString() : d.toISOString()
     default:           return d.toISOString()
   }

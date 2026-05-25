@@ -723,7 +723,11 @@ Sin texto antes ni después. Sin cercas de código markdown. El texto va complet
   const generada_en = new Date(ahora).toISOString()
 
   try {
-    const raw   = await llamarAPI(prompt, 350)
+    // max_tokens 600: 40-70 palabras útiles ≈ 100 tokens, + envoltura JSON
+    // y escapes ≈ 30 tokens, + margen para que el modelo no se quede sin
+    // espacio antes de cerrar la oración (raíz del bug del episodio
+    // "Oposición / no coopera" que terminó en "...voz suave:" truncado).
+    const raw   = await llamarAPI(prompt, 600)
     const texto = extraerTextoAccion(raw)
 
     if (!texto) {
@@ -770,6 +774,18 @@ Sin texto antes ni después. Sin cercas de código markdown. El texto va complet
 //
 // Retorna: string limpia con el texto, o null si nada se pudo recuperar.
 function extraerTextoAccion(raw) {
+  // pareceTruncado — defensa contra respuestas que se cortaron a mitad.
+  // Si el último caracter del texto NO es un cierre natural (punto,
+  // exclamación, interrogación, puntos suspensivos, comilla de cierre,
+  // paréntesis/corchete cerrado), asumimos truncamiento y descartamos.
+  // Esto fixea el caso del episodio "Oposición / no coopera" que persistió
+  // con "...voz suave:" como cierre — el modelo se quedó sin tokens.
+  const pareceTruncado = (texto) => {
+    if (!texto) return true
+    const cierre = texto.trim().slice(-1)
+    return !/[.!?…"”»')\]]/.test(cierre)
+  }
+
   if (typeof raw !== 'string') return null
   let s = raw
 
@@ -782,9 +798,11 @@ function extraerTextoAccion(raw) {
 
   // 3. Si no parece objeto JSON, podría ser texto plano que el modelo devolvió
   //    sin envolver. Lo aceptamos solo si NO contiene el patrón `{"texto"` —
-  //    eso siempre es señal de JSON mal terminado, no de texto válido.
+  //    eso siempre es señal de JSON mal terminado, no de texto válido — y
+  //    si no parece truncado a la mitad.
   if (!s.startsWith('{') || !s.endsWith('}')) {
     if (s.includes('{"texto"') || s.includes('{ "texto"')) return null
+    if (pareceTruncado(s)) return null
     return s.length > 0 ? s : null
   }
 
@@ -805,7 +823,7 @@ function extraerTextoAccion(raw) {
     return null
   }
   const r1 = intentoParse(sLimpia)
-  if (r1 && !r1.includes('{"texto"')) return r1
+  if (r1 && !r1.includes('{"texto"') && !pareceTruncado(r1)) return r1
 
   // 6. Intento 2: normalizar comillas tipográficas estructurales y reintentar.
   //    Esta es la causa más frecuente del bug 2 — el modelo a veces escribe
@@ -814,7 +832,7 @@ function extraerTextoAccion(raw) {
     .replace(/[“”]/g, '"')   // " " → "
     .replace(/[‘’]/g, "'")   // ' ' → '
   const r2 = intentoParse(sNorm)
-  if (r2 && !r2.includes('{"texto"')) return r2
+  if (r2 && !r2.includes('{"texto"') && !pareceTruncado(r2)) return r2
 
   // 7. Intento 3: regex defensiva. Captura el valor de "texto" aunque el
   //    resto del JSON esté roto.
@@ -825,7 +843,7 @@ function extraerTextoAccion(raw) {
       .replace(/\\n/g, ' ')
       .replace(/\\\\/g, '\\')
       .trim()
-    if (candidato.length > 0 && !candidato.includes('{"texto"')) {
+    if (candidato.length > 0 && !candidato.includes('{"texto"') && !pareceTruncado(candidato)) {
       return candidato
     }
   }

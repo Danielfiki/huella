@@ -267,7 +267,7 @@
 }
 .textarea:focus { border-color: var(--color-primary); }
 
-.tagsGrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.tagsGrid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 
 .tag {
   padding: 6px 14px;

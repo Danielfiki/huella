@@ -3188,6 +3188,39 @@ No hubo archivos nuevos. No se tocó EpisodioCard, AccionRapida,
 colaRegeneracion ni HuellaContext — toda la lógica de UI de Historial y
 del context sigue igual.
 
+### Tercer turno 25 mayo — 3 detalles finales tras nueva verificación
+
+Daniel verificó el hotfix anterior en producción y reportó 3 detalles
+extra:
+
+- **Acción Rápida cortada a mitad** (caso "Oposición / no coopera"
+  terminó en `…voz suave:`). Raíz: `max_tokens=350` insuficiente —
+  el modelo se quedó sin espacio antes de cerrar la oración.
+  **Fix:** subido a `max_tokens=600` en `generarAccionInmediata` (40-70
+  palabras útiles ≈ 100 tokens + envoltura JSON ≈ 30 tokens + margen).
+  Además, defensa nueva `pareceTruncado(texto)` dentro de
+  `extraerTextoAccion`: descarta candidatos cuyo último caracter no sea
+  cierre natural (`. ! ? … " ' ) ]`). Se aplica a los 3 intentos
+  (parse directo, parse normalizado, regex fallback) y al caso de
+  texto plano sin envoltura JSON.
+
+- **Chip "Ayer" caía en bucket `dia` en vez de `pasado`.** Raíz: el
+  mapeo de `'ayer'` en `computarFecha` era "día anterior 18:00", que
+  para registros hechos en la tarde estaba a menos de 24h. **Fix:**
+  cambiado a `d.setDate(d.getDate() - 1); d.setHours(d.getHours() - 1)`
+  — siempre 25h atrás del momento actual, garantiza bucket `pasado`.
+  Otros chips (`hora_antes`, `manana`, `tarde`, `custom`) no se
+  tocaron.
+
+- **Chips de "¿Cuándo pasó?" alineados a la izquierda se veían
+  desordenados.** **Fix:** `justify-content: center` agregado a la
+  regla `.tagsGrid` en `RegistroPage.module.css`. Una sola línea, un
+  solo archivo. Aplica a ambos modos porque ambos usan la misma clase.
+
+Archivos: `src/services/anthropic.js` (max_tokens + pareceTruncado),
+`src/pages/registro/RegistroPage.jsx` (case 'ayer'),
+`src/pages/registro/RegistroPage.module.css` (justify-content).
+
 ---
 
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
