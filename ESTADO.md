@@ -3221,6 +3221,70 @@ Archivos: `src/services/anthropic.js` (max_tokens + pareceTruncado),
 `src/pages/registro/RegistroPage.jsx` (case 'ayer'),
 `src/pages/registro/RegistroPage.module.css` (justify-content).
 
+## Cierre del día 25 mayo + pendientes para mañana 26 mayo
+
+### Resultado del día
+
+Acción Rápida v1.2 → **100% funcionando en producción** tras 3 deploys
+consecutivos del día. Tres turnos de trabajo cerrados:
+
+1. **Rediseño completo** — autor pre-elegido en código, voz adaptada
+   al tiempo, persistencia en BD, cola de regeneración lazy,
+   anti-repetición por hijo, migración SQL.
+2. **3 bugs del primer turno** — selector "¿Cuándo pasó?" obligatorio
+   en ambos modos, parsing JSON crudo endurecido con
+   `extraerTextoAccion`, diagnóstico del placeholder (resultó ser
+   comportamiento esperado, no bug).
+3. **3 detalles finales** — `max_tokens` 350 → 600 + defensa
+   `pareceTruncado`, mapeo del chip "Ayer" para garantizar bucket
+   `pasado`, chips centrados con `justify-content: center`.
+
+**Bloqueante #1 del lanzamiento beta del viernes 29: CERRADO.**
+
+### Pendiente para primera hora de mañana 26 mayo — Bug Wolfelt fuera de duelo
+
+**Evidencia visual:** episodio "Miedo / angustia, intensidad 3/5" del
+hijo Pascualito (5 años) recibió Acción Rápida firmada por "**Alan
+Wolfelt · Duelo infantil**". El contenido del consejo es coherente y
+útil para el miedo nocturno, pero la firma del autor es incorrecta —
+Wolfelt solo debería invocarse para episodios de duelo real.
+
+**Raíz probable:** la heurística `inferirDimensionCentral` en
+`src/services/anthropic.js` detectó alguna palabra-clave de
+`KEYWORDS_DUELO` (probablemente `'se fue'`, `'extraña'`, `'echa de
+menos'` o similar) en el contexto del episodio, sin que el contexto
+fuera realmente de duelo.
+
+Posibles causas más finas:
+
+- El contexto del episodio mencionó algo tangencial (ej. "se despertó
+  porque la abuela se fue de visita") que detonó duelo cuando no era
+  duelo.
+- `KEYWORDS_DUELO` está demasiado laxo y captura falsos positivos.
+- La heurística no valida que la palabra-clave aparezca en un contexto
+  efectivamente de pérdida (intensidad emocional acorde, ausencia
+  reciente, etc.).
+
+**Plan para mañana (20-30 min estimados):**
+
+1. Daniel reporta el texto exacto del contexto/descripción del
+   episodio del miedo de hoy.
+2. Diagnosticamos qué palabra-clave lo detonó.
+3. Endurecemos `KEYWORDS_DUELO`: sacar términos ambiguos, o agregar
+   validación adicional (ej. requerir 2 keywords coincidentes, o
+   requerir intensidad emocional acorde, o cruzar con `episodio.tipo`).
+4. Push y verificación rápida en producción.
+5. Solo después arrancamos **modo parejas**.
+
+### Cronograma semanal (sin cambios)
+
+- **Martes 26:** arreglar Wolfelt (primera hora) → modo parejas →
+  recibir Fase 5 de Claude Design.
+- **Miércoles 27:** bugs Estrategias.
+- **Jueves 28:** slide 2 onboarding + "Lo que ya trabajaste" + QA
+  end-to-end.
+- **Viernes 29:** soft launch beta a 20-30 personas.
+
 ---
 
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
