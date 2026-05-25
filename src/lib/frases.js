@@ -213,7 +213,7 @@ export const FRASES_LOADING = {
     ],
     rutinas: [
       { texto: 'Las rutinas predecibles reducen la ansiedad y liberan energía mental para aprender y crecer.', autor: 'T. Berry Brazelton' },
-      { texto: 'El sueño insuficiente produce síntomas indistinguibles del TDAH. El sueño es la primera intervención.', autor: 'Marc Weissbluth' },
+      { texto: 'Los despertares nocturnos son fisiología normal de la infancia. La regulación viene del acompañamiento presente, no del entrenamiento.', autor: 'Carlos González' },
       { texto: 'Un hogar predecible no es un hogar aburrido: es un hogar donde el niño puede relajarse y aprender.', autor: 'Stuart Shanker' },
       { texto: 'Los horarios consistentes no son rigidez: son el andamiaje que permite la libertad.', autor: 'Harvey Karp' },
     ],

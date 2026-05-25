@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useReducer, useEffect, useState, useMemo } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
+import { generarAccionInmediata } from '../services/anthropic'
+import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
 
 const HuellaContext = createContext(null)
 
@@ -172,10 +174,24 @@ function dbHijoToApp(row) {
     avatarUrl:       row.avatar_url ?? null,
     fechaNacimiento: row.fecha_nacimiento ?? null,
     genero:          row.genero ?? null,
+    ultimoAutorIa:   row.ultimo_autor_ia ?? null,
   }
 }
 
 function dbEpisodioToApp(row) {
+  // accionRapida queda agrupada en un sub-objeto para que la UI la consuma
+  // como una unidad. Si la columna texto está vacía, devolvemos null para
+  // que la EpisodioCard pueda chequear `data?.texto` sin condicionales raros.
+  const accionRapida = row.accion_rapida_texto
+    ? {
+        texto:      row.accion_rapida_texto,
+        autor:      row.accion_rapida_autor       ?? null,
+        dimension:  row.accion_rapida_dimension   ?? null,
+        bucket:     row.accion_rapida_bucket      ?? null,
+        generadaEn: row.accion_rapida_generada_en ?? null,
+      }
+    : null
+
   return {
     id:               row.id,
     userId:           row.user_id,
@@ -190,6 +206,7 @@ function dbEpisodioToApp(row) {
     descripcionLibre: row.descripcion_libre ?? null,
     reflexion:        row.reflexion         ?? null,
     fotoUrl:          row.foto_url          ?? null,
+    accionRapida,
   }
 }
 
@@ -489,6 +506,24 @@ export function HuellaProvider({ children }) {
     return returnedId
   }
 
+  // Actualiza `hijos.ultimo_autor_ia` después de generar/regenerar una
+  // Acción Rápida. Lo usa el flujo de Acción Rápida v1.2 para evitar repetir
+  // el mismo autor en episodios consecutivos del mismo hijo.
+  async function actualizarUltimoAutorIa(hijoId, autor) {
+    if (!user || !supabase || !hijoId || !autor) return
+    dispatch({ type: 'UPDATE_HIJO', payload: { id: hijoId, ultimoAutorIa: autor } })
+    const { error } = await supabase
+      .from('hijos')
+      .update({ ultimo_autor_ia: autor })
+      .eq('id', hijoId)
+    if (error) {
+      console.error('[actualizarUltimoAutorIa] fallo:', error)
+      // No revertimos el dispatch: queremos que el cliente quede con el autor
+      // nuevo aunque la BD haya fallado, para que la próxima generación no
+      // repita el mismo autor en la misma sesión.
+    }
+  }
+
   // ── Episodios ─────────────────────────────────────────────────────────────
 
   async function addEpisodio(episodio) {
@@ -547,6 +582,19 @@ export function HuellaProvider({ children }) {
     if (partial.orientacionIA !== undefined) dbFields.orientacion_ia = partial.orientacionIA
     if (partial.reflexion     !== undefined) dbFields.reflexion      = partial.reflexion
     if (partial.fotoUrl       !== undefined) dbFields.foto_url       = partial.fotoUrl
+    // Acción Rápida v1.2 — el caller puede pasar un objeto `accionRapida`
+    // con forma { texto, autor, dimension, bucket, generadaEn } y se expande
+    // a las 5 columnas nuevas. Si pasa `accionRapida: null`, se ponen todas
+    // a null (caso uso: invalidación manual).
+    if (partial.accionRapida !== undefined) {
+      const ar = partial.accionRapida || {}
+      dbFields.accion_rapida_texto       = ar.texto      ?? null
+      dbFields.accion_rapida_autor       = ar.autor      ?? null
+      dbFields.accion_rapida_dimension   = ar.dimension  ?? null
+      dbFields.accion_rapida_bucket      = ar.bucket     ?? null
+      dbFields.accion_rapida_generada_en = ar.generadaEn ?? null
+    }
+    if (Object.keys(dbFields).length === 0) return
     await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
   }
 
@@ -881,6 +929,40 @@ export function HuellaProvider({ children }) {
     if (error) throw new Error(error.message)
   }
 
+  // Acción Rápida v1.2 — inyectamos el regenerador en la cola para que las
+  // EpisodioCards puedan pedir regeneración sin acoplar la cola al context.
+  // Usamos refs porque updateEpisodio y actualizarUltimoAutorIa se recrean
+  // en cada render del provider, y el useEffect de seteo debe correr una
+  // sola vez (sino la cola pierde referencia a la función registrada).
+  const updateEpisodioRef       = useRef(updateEpisodio)
+  const actualizarUltimoAutorRef = useRef(actualizarUltimoAutorIa)
+  useEffect(() => {
+    updateEpisodioRef.current       = updateEpisodio
+    actualizarUltimoAutorRef.current = actualizarUltimoAutorIa
+  })
+
+  useEffect(() => {
+    colaRegeneracion.setRegenerador(async (episodio, hijo) => {
+      const ultimoAutorUsado = hijo?.ultimoAutorIa ?? null
+      const resultado = await generarAccionInmediata({
+        hijo,
+        episodio,
+        ultimoAutorUsado,
+        ahora: new Date(),
+      })
+      // Persistimos en el episodio (5 columnas accion_rapida_*).
+      await updateEpisodioRef.current({
+        id:           episodio.id,
+        accionRapida: resultado,
+      })
+      // Actualizamos último autor del hijo (anti-repetición).
+      if (hijo?.id && resultado?.autor) {
+        await actualizarUltimoAutorRef.current(hijo.id, resultado.autor)
+      }
+      return resultado
+    })
+  }, [])
+
   return (
     <HuellaContext.Provider value={{
       state,
@@ -893,6 +975,7 @@ export function HuellaProvider({ children }) {
       addEpisodio,
       updateEpisodio,
       deleteEpisodio,
+      actualizarUltimoAutorIa,
       addHito,
       deleteHito,
       updateHitoFoto,

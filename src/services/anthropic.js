@@ -70,12 +70,442 @@ PANTALLAS Y TECNOLOGÍA: Jonathan Haidt ("The Anxious Generation", 2024): smartp
 ANSIEDAD INFANTIL Y PARENTAL: Tamar Chansky ("Freeing Your Child from Anxiety"): externalizar la ansiedad, darle nombre, no evitar sino acompañar la exposición gradual. Lynn Lyons ("Anxious Kids, Anxious Parents"): la acomodación parental — hacer lo que el hijo ansioso pide para que se calme — refuerza el circuito de la ansiedad; los padres deben modelar tolerancia a la incertidumbre. Rachel Busman (TCC para niños): la terapia cognitivo-conductual es el tratamiento con mayor evidencia para la ansiedad infantil. Dan Peters: alta capacidad intelectual y ansiedad van frecuentemente juntos — el niño brillante que se paraliza ante el error.
 TDAH Y NEURODIVERSIDAD: Russell Barkley ("Taking Charge of ADHD"): el TDAH es un trastorno del desarrollo de la autorregulación, no de la atención — el déficit real es en la memoria de trabajo, la inhibición y el manejo del tiempo. Edward Hallowell ("Driven to Distraction"): el TDAH como motor de creatividad y pasión cuando se canaliza bien — el diagnóstico como liberación, no como condena. Thomas Brown (funciones ejecutivas): el TDAH afecta el sistema de gestión del cerebro — no es falta de voluntad sino de activación neurológica. Temple Grandin ("The Autistic Brain"): el autismo como diferencia de procesamiento, no como déficit — el pensamiento visual como fortaleza real.
 LÍMITES Y OBEDIENCIA: Henry Cloud y John Townsend ("Boundaries with Kids"): los límites enseñan que las acciones tienen consecuencias reales — sin límites el niño no desarrolla carácter. Nancy Samalin: el enojo parental es normal y manejable — lo que importa es cómo se expresa, no si existe. Alfie Kohn ("Unconditional Parenting"): los premios y castigos crean obediencia externa pero no carácter interno — el objetivo es la autonomía moral.
-SUEÑO: Marc Weissbluth ("Healthy Sleep Habits, Happy Child"): el sueño insuficiente produce síntomas idénticos al TDAH — el sueño es la primera intervención en casi cualquier problema conductual. Harvey Karp ("Happiest Baby on the Block"): las 5 S para calmar bebés — el cuarto trimestre requiere replicar condiciones intrauterinas. Richard Ferber (método Ferber): entrenamiento de sueño progresivo con intervalos crecientes de espera. William Sears ("The Baby Sleep Book"): crianza con apego y colecho seguro como alternativa al entrenamiento de sueño.
+SUEÑO: Harvey Karp ("Happiest Baby on the Block"): las 5 S para calmar bebés — el cuarto trimestre requiere replicar condiciones intrauterinas. Carlos González ("Dormir sin lágrimas"): los despertares nocturnos son fisiología normal de la infancia temprana; el acompañamiento presente, no el entrenamiento conductual, es la intervención coherente con el desarrollo. T. Berry Brazelton (touchpoints del sueño): cada salto evolutivo desorganiza el sueño transitoriamente; el sueño consolidado se logra con tiempo y consistencia afectiva, no con extinción del llanto.
 ALIMENTACIÓN: Ellyn Satter (división de responsabilidad): el padre decide qué, cuándo y dónde; el hijo decide cuánto y si come — respetar esta división elimina el 90% de las batallas de alimentación. Carlos González ("Mi niño no me come"): el niño que "no come" generalmente come lo que necesita — la batalla la crea el adulto con la presión y la ansiedad. Katja Rowell (alimentación responsiva): el trauma de alimentación — forzar, presionar, restringir — tiene consecuencias a largo plazo en la relación del niño con la comida.
-HERMANOS Y DINÁMICA FAMILIAR: Adele Faber ("Siblings Without Rivalry"): los hermanos no necesitan ser tratados igual, necesitan ser tratados según sus necesidades individuales — comparar destruye el vínculo fraternal. Kevin Leman ("The Birth Order Book"): el orden de nacimiento moldea la personalidad — primogénitos, hijos del medio, menores y hijos únicos tienen patrones predecibles. Stephen Bank y Michael Kahn: el vínculo entre hermanos es el más largo de la vida — más que el de padres e hijos.
+HERMANOS Y DINÁMICA FAMILIAR: Adele Faber ("Siblings Without Rivalry"): los hermanos no necesitan ser tratados igual, necesitan ser tratados según sus necesidades individuales — comparar destruye el vínculo fraternal. Stephen Bank y Michael Kahn: el vínculo entre hermanos es el más largo de la vida — más que el de padres e hijos; los celos y las disputas son la materia prima con la que cada hermano descubre dónde termina él y empieza el otro, no patología familiar a eliminar.
 TRAUMA INTERGENERACIONAL: Mark Wolynn ("It Didn't Start With You"): el trauma no resuelto de abuelos y bisabuelos se transmite epigenéticamente y en patrones de crianza inconscientes. Resmaa Menakem ("My Grandmother's Hands"): el trauma vive en el cuerpo y se transmite generacionalmente, especialmente en comunidades marginadas. Dan Siegel y Mary Hartzell ("Parenting from the Inside Out"): el padre/madre que entiende su propia historia de apego puede cambiar conscientemente el patrón que transmite.
 CRIANZA CONSCIENTE Y BIENESTAR PARENTAL: Shefali Tsabary ("The Conscious Parent"): el hijo es el maestro del padre — los conflictos con los hijos revelan heridas no resueltas del propio padre/madre. Jon Kabat-Zinn ("Everyday Blessings"): el mindfulness parental no es perfección sino presencia — la calidad de la atención importa más que la cantidad de tiempo. Laura Markham ("Peaceful Parent, Happy Kids"): la regulación emocional del padre es condición previa — no puedes dar lo que no tienes. Becky Kennedy ("Good Inside"): todos los niños son buenos por dentro — el comportamiento problemático es una señal de necesidad no satisfecha, no de maldad.
-CRIANZA EN CONTEXTO CULTURAL: Pamela Druckerman ("Bringing Up Bébé"): la crianza francesa — la pausa antes de responder al llanto del bebé, la autoridad tranquila, las comidas como ritual social — produce niños con mayor tolerancia a la frustración. Christine Gross-Loh ("Parenting Without Borders"): en Japón los niños de 6 años van solos al metro — la hiperprotección occidental es culturalmente específica, no universal. Sara Harkness y Charles Super: las etnoteorías parentales — cada cultura tiene teorías implícitas sobre qué es un buen niño y cómo criarlo, y todas producen adultos funcionales.`
+CRIANZA EN CONTEXTO CULTURAL: Christine Gross-Loh ("Parenting Without Borders"): en Japón los niños de 6 años van solos al metro — la hiperprotección occidental es culturalmente específica, no universal; las prácticas que en una cultura parecen negligencia en otra son desarrollo sano de autonomía. Sara Harkness y Charles Super: las etnoteorías parentales — cada cultura tiene teorías implícitas sobre qué es un buen niño y cómo criarlo, y todas producen adultos funcionales; conocer la propia etnoteoría libera al padre/madre de juzgarse desde un único molde universal.
+DUELO Y PÉRDIDA EN LA INFANCIA: Alan Wolfelt ("Healing Your Grieving Heart for Kids", "Companioning the Grieving Child"): el duelo infantil no avanza en línea recta sino en oleadas que vuelven con cada recordatorio; el niño no necesita que se le "solucione" la pérdida sino que se le acompañe sin apurar el proceso; nombrar simple ("echas de menos a la abuela, ¿cierto?") valida sin invadir; los rituales concretos — encender una vela, mirar fotos, hablar del que se fue — son anclas más efectivas que cualquier explicación; aplicación: acompañar la oleada cuando aparece, sin agenda de cierre.
+AUTISMO Y NEURODIVERSIDAD RESPETUOSA: Barry Prizant ("Uniquely Human: A Different Way of Seeing Autism", modelo SCERTS): el autismo no es un déficit a corregir sino una forma distinta de procesar el mundo; las conductas etiquetadas como "problemáticas" son frecuentemente estrategias de regulación frente a un ambiente que no calza con el sistema sensorial del niño; el lenguaje de "respeto a la persona" reemplaza al de "intervención sobre el síntoma"; lo que parece colapso en un supermercado es acumulación sensorial previa, no episodio aislado; aplicación: anticipar, dar pausas y respetar el procesamiento del niño no es sobreproteger, es ajustar el ambiente.
+ALTA SENSIBILIDAD (PAS): Elaine Aron ("The Highly Sensitive Child"): el 15-20% de los niños tiene un sistema nervioso más reactivo a estímulos, emociones y críticas — no es debilidad ni exageración sino un rasgo neurobiológico real; las observaciones menores se sienten amplificadas; la fortaleza paralela es la profundidad de procesamiento, la empatía y la creatividad; el ambiente que les pide "no ser tan sensibles" daña; el ambiente que valida y enseña a confiar en lo que sienten libera el potencial; aplicación: nombrar la sensibilidad como rasgo, no como problema, y enseñar a navegarla.`
+
+// ──────────────────────────────────────────────────────────────────────
+// MAPA_DIMENSIONES — qué autor atiende cada dimensión central del episodio.
+//
+// La dimensión la infiere `inferirDimensionCentral` (heurística determinística
+// en cliente, basada en palabras-clave del contexto + emoción + edad). Después
+// `seleccionarAutor` lee este mapa y elige autor respetando: (1) compatibilidad
+// con la edad, (2) anti-repetición vs `ultimo_autor_ia` del hijo, (3) los 3
+// autores específicos (Wolfelt, Prizant, Aron) solo si la dimensión los pide,
+// (4) Haidt solo si la dimensión es 'pantallas' y la edad ≥ 10.
+// ──────────────────────────────────────────────────────────────────────
+export const MAPA_DIMENSIONES = {
+  duelo:                    { primario: 'Alan Wolfelt',     lente: 'Duelo infantil' },
+  neurodiversidad:          { primario: 'Barry Prizant',    lente: 'Neurodiversidad respetuosa' },
+  alta_sensibilidad:        { primario: 'Elaine Aron',      lente: 'Alta sensibilidad' },
+  desregulacion:            { primario: 'Daniel Siegel',    secundario: 'Bruce Perry',         lente: 'Desarrollo cerebral' },
+  habilidad_rezagada:       { primario: 'Ross Greene',                                          lente: 'Habilidad rezagada' },
+  autorregulacion_adulto:   { primario: 'Stuart Shanker',   secundario: 'Gabor Maté',          lente: 'Self-Reg' },
+  validacion_emocional:     { primario: 'Faber & Mazlish',  secundario: 'John Gottman',        lente: 'Validación emocional' },
+  ritmo_presencia:          { primario: 'Janet Lansbury',   secundario: 'Magda Gerber',        lente: 'Presencia respetuosa' },
+  trauma:                   { primario: 'Bruce Perry',      secundario: 'Bessel van der Kolk', lente: 'Trauma somático' },
+  conflicto_interno_adulto: { primario: 'Shefali Tsabary',  secundario: 'Gabor Maté',          lente: 'Crianza consciente' },
+  sueno_rutinas:            { primario: 'Carlos González',                                      lente: 'Sueño con presencia' },
+  apego_conexion:           { primario: 'John Bowlby',      secundario: 'Gordon Neufeld', terciario: 'Gabor Maté', lente: 'Apego' },
+  juego_autonomia:          { primario: 'Janet Lansbury',   secundario: 'Magda Gerber',        lente: 'Juego libre' },
+  disciplina_sin_castigo:   { primario: 'Laura Markham',    secundario: 'Jane Nelsen',         lente: 'Disciplina sin castigo' },
+  comunicacion_adolescente: { primario: 'Lisa Damour',      secundario: 'Daniel Siegel', terciario: 'Laurence Steinberg', lente: 'Adolescencia' },
+  pantallas:                { primario: 'Jonathan Haidt',   secundario: 'Jean Twenge',         lente: 'Pantallas y salud mental' },
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// AUTORES — pool de articulaciones por autor.
+//
+// Cada autor tiene una `lente` corta (1-3 palabras, para la firma "— Autor ·
+// Lente" al pie de la Acción Rápida) y un pool de articulaciones: frases
+// cortas en lenguaje chileno conversacional que parafrasean el enfoque del
+// autor sin citar literal. `seleccionarArticulacion` rota dentro del pool
+// para evitar repetición textual.
+//
+// Pool ≥5 para los 10 autores más frecuentes (según el brief) + los 3 nuevos.
+// Pool ≥3 para el resto del MAPA. Si el modelo decide invocar un autor que
+// no está aquí (no debería, porque autor llega pre-elegido en el prompt),
+// `seleccionarArticulacion` devuelve null y la 3ra parte de la acción se
+// construye solo con la lente.
+// ──────────────────────────────────────────────────────────────────────
+export const AUTORES = {
+  'Daniel Siegel': {
+    lente: 'Desarrollo cerebral',
+    pool_articulaciones: [
+      'el cerebro emocional ganó la pelea contra la parte racional — la corteza prefrontal aún está en construcción',
+      'a esta edad, pegar (o gritar, o tirarse al piso) es lenguaje, no maldad',
+      'conectar primero, redirigir después — no al revés',
+      'el cerebro se integra a través del vínculo, no a través de la consecuencia',
+      'narrar lo ocurrido en calma, después del episodio, construye la integración que el momento no permitió',
+    ],
+  },
+  'Bruce Perry': {
+    lente: 'Regulación primero',
+    pool_articulaciones: [
+      'regular el cuerpo primero, conversar después — el orden importa, no es opcional',
+      'un cerebro en alarma no puede aprender; primero hay que bajarle el ritmo',
+      'lo que parece desafío puede ser huella de estrés que no se descargó',
+      'el ritmo, el movimiento y la presencia son intervención antes que cualquier palabra',
+      'la pregunta correcta es "¿qué le pasó?", no "¿qué le pasa?"',
+    ],
+  },
+  'Ross Greene': {
+    lente: 'Habilidad rezagada',
+    pool_articulaciones: [
+      'los niños se portan bien cuando pueden — si no pueden, lo que falta es una habilidad, no voluntad',
+      'esto no es flojera ni falta de motivación, es una habilidad que todavía no aparece',
+      'el plan B —resolver con él, no por él— es lo que enseña, no la consecuencia',
+      'antes de pedirle que siga, preguntarle qué se le hizo difícil',
+      'la consecuencia durante la desregulación no enseña, solo asusta',
+    ],
+  },
+  'Stuart Shanker': {
+    lente: 'Self-Reg',
+    pool_articulaciones: [
+      'esto no es mal comportamiento, es estrés acumulado pidiendo salida',
+      'la pregunta no es "por qué se porta mal", sino "qué le está sobrecargando"',
+      'bajar el estrés en un dominio libera energía para los otros',
+      'el descontrol no se inhibe con voluntad, se descarga ayudándolo a regularse',
+      'cinco fuentes de estrés se suman: cuerpo, emoción, cognición, social, prosocial',
+    ],
+  },
+  'Gabor Maté': {
+    lente: 'Mirar el contexto',
+    pool_articulaciones: [
+      'el niño con más sensibilidad responde más fuerte al ambiente — no es maldad, es cableado',
+      'la pregunta es "¿qué le ha pasado?", no "¿qué le pasa?"',
+      'tu propia regulación es la primera intervención disponible',
+      'el conflicto con el hijo activa heridas tuyas — verlas no es perderlo, es ganarlo',
+      'los síntomas hablan de un contexto, no de un defecto del niño',
+    ],
+  },
+  'Faber & Mazlish': {
+    lente: 'Validación emocional',
+    pool_articulaciones: [
+      'validar antes de resolver — sin excepción',
+      'nombrar lo que está sintiendo, antes de cualquier consejo o corrección',
+      'describir lo que ves, en vez de juzgar lo que el niño es',
+      'las etiquetas —tímido, difícil, torpe— se convierten en identidad; evitarlas es regalo',
+      'darle palabras para la próxima vez no le da permiso, le da herramientas',
+    ],
+  },
+  'Janet Lansbury': {
+    lente: 'Presencia respetuosa',
+    pool_articulaciones: [
+      'el berrinche no se interrumpe, se acompaña',
+      'tu presencia segura sin rescatar enseña que las emociones se manejan',
+      'no resolver, no distraer, no negociar — estar',
+      'el juego del niño es trabajo serio; no se interrumpe sin necesidad',
+      'un "no" desde la calma vale más que cien gritos',
+    ],
+  },
+  'Alan Wolfelt': {
+    lente: 'Duelo infantil',
+    pool_articulaciones: [
+      'el duelo no avanza en línea, vuelve en oleadas con cada recordatorio',
+      'no hace falta solucionar la pérdida, hace falta acompañarla',
+      'nombrar simple ("echas de menos a la abuela, ¿cierto?") es más útil que una explicación elaborada',
+      'los rituales concretos anclan el duelo mejor que las palabras grandes',
+      'el cierre no es la meta — la convivencia con la ausencia, sí',
+    ],
+  },
+  'Barry Prizant': {
+    lente: 'Neurodiversidad respetuosa',
+    pool_articulaciones: [
+      'lo que parece colapso fue acumulación sensorial que venía de antes',
+      'para ese sistema, el supermercado es ruido, luz y gente todo al mismo tiempo',
+      'la conducta es estrategia de regulación, no problema a corregir',
+      'anticipar y dar pausas no es sobreproteger, es ajustar el ambiente',
+      'respetar cómo procesa el mundo es la intervención',
+    ],
+  },
+  'Elaine Aron': {
+    lente: 'Alta sensibilidad',
+    pool_articulaciones: [
+      'una observación pequeña puede sentirse como un golpe grande — no es exageración',
+      'su sistema está cableado para reaccionar más; eso no es debilidad',
+      'enseñarle a confiar en lo que siente es lo que necesita, no a minimizarlo',
+      'la profundidad de procesamiento es fortaleza paralela a la reactividad',
+      'nombrar la sensibilidad como rasgo, no como problema, abre el camino',
+    ],
+  },
+  'John Gottman': {
+    lente: 'Coaching emocional',
+    pool_articulaciones: [
+      'nombrar la emoción antes que cualquier otra intervención',
+      'la filosofía implícita del adulto sobre las emociones define el clima del hogar',
+      'coaching emocional construye salud mental; desestimar la erosiona',
+    ],
+  },
+  'Magda Gerber': {
+    lente: 'Observar antes',
+    pool_articulaciones: [
+      'observar antes de intervenir — siempre',
+      'hablarle desde el primer día con respeto, como si comprendiera',
+      'darle tiempo y espacio para que resuelva sus frustraciones menores',
+    ],
+  },
+  'Bessel van der Kolk': {
+    lente: 'El cuerpo recuerda',
+    pool_articulaciones: [
+      'el cuerpo guarda lo que el lenguaje no alcanza',
+      'cuando ninguna intervención conductual funciona, pensar en trauma somático',
+      'movimiento, ritmo y co-regulación son intervención antes que las palabras',
+    ],
+  },
+  'Shefali Tsabary': {
+    lente: 'Crianza consciente',
+    pool_articulaciones: [
+      'antes de corregir al hijo, preguntarse qué activa esto en uno mismo',
+      'el hijo no es proyecto de mejora — es un ser separado con su propio camino',
+      'el conflicto con el hijo es invitación al crecimiento del propio padre/madre',
+    ],
+  },
+  'Carlos González': {
+    lente: 'Sueño con presencia',
+    pool_articulaciones: [
+      'los despertares nocturnos son fisiología normal de la infancia, no patología',
+      'retirar la presión es la primera intervención, no agregarla',
+      'el niño que "no come" generalmente come lo que necesita — la batalla la crea el adulto',
+    ],
+  },
+  'John Bowlby': {
+    lente: 'Apego seguro',
+    pool_articulaciones: [
+      'toda conducta del bebé es comunicación, nunca manipulación',
+      'la sensibilidad consistente del cuidador construye el apego seguro',
+      'la base segura habilita la exploración, no la frena',
+    ],
+  },
+  'Gordon Neufeld': {
+    lente: 'Vínculo adulto',
+    pool_articulaciones: [
+      'el vínculo con adultos significativos es el andamiaje del desarrollo',
+      'la orientación a pares antes que a adultos es lo que conviene prevenir',
+      'fortalecer y proteger el vínculo, no aislar al niño de sus pares',
+    ],
+  },
+  'Laura Markham': {
+    lente: 'Padre regulado',
+    pool_articulaciones: [
+      'tu regulación es condición previa de cualquier intervención eficaz',
+      'no puedes dar lo que no tienes — primero el oxígeno propio',
+      'la conexión emocional diaria es la base que hace posible toda disciplina',
+    ],
+  },
+  'Jane Nelsen': {
+    lente: 'Firmeza amable',
+    pool_articulaciones: [
+      'firmeza y amabilidad simultáneas no son contradictorias, son la combinación que funciona',
+      'preguntar qué está aprendiendo el niño, no qué está sufriendo',
+      'las consecuencias naturales enseñan más que las artificiales',
+    ],
+  },
+  'Lisa Damour': {
+    lente: 'Adolescencia',
+    pool_articulaciones: [
+      'validar sin catastrofizar es la intervención central',
+      'distinguir ansiedad funcional (útil) de ansiedad disfuncional (limita)',
+      'la adolescencia tiene transiciones predecibles que no son patología',
+    ],
+  },
+  'Laurence Steinberg': {
+    lente: 'Cerebro adolescente',
+    pool_articulaciones: [
+      'cambiar el ambiente reduce el riesgo más que razonar con el adolescente',
+      'la presencia de pares amplifica la toma de riesgos — es neurobiología, no rebeldía',
+      'el período 12-25 es plasticidad cerebral enorme, en ambas direcciones',
+    ],
+  },
+  'Jonathan Haidt': {
+    lente: 'Pantallas y salud mental',
+    pool_articulaciones: [
+      'tratar el uso de pantallas como variable estructural del entorno, no como conducta a controlar',
+      'la solución es colectiva — coordinación familiar y comunitaria, no batalla individual',
+      'el smartphone antes de los 16 tiene evidencia documentada de daño a salud mental',
+    ],
+  },
+  'Jean Twenge': {
+    lente: 'Generación conectada',
+    pool_articulaciones: [
+      'el tiempo de socialización presencial sustituido por pantalla es el cambio estructural',
+      'la generación más conectada es también la más solitaria que tenemos medida',
+      'preguntarse qué reemplazó la pantalla en la vida del niño, no solo cuánto consume',
+    ],
+  },
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// HELPERS NUEVOS para "Acción Rápida" v1.2
+//
+// Todas funciones puras, determinísticas, sin llamadas a IA. Se ejecutan
+// en cliente antes de armar el prompt de `generarAccionInmediata`, así el
+// autor y la articulación llegan pre-elegidos al modelo (en vez de que el
+// modelo invente — lo que producía el sesgo a Lansbury).
+// ──────────────────────────────────────────────────────────────────────
+
+// Mapea la diferencia entre `fechaEpisodio` y `ahora` a uno de los 4 buckets
+// de tiempo del brief. Drive la voz del prompt: presente activo / reflexiva
+// cercana / aprendizaje del día / aprendizaje para futuro.
+export function bucketTiempo(fechaEpisodio, ahora = new Date()) {
+  const ms = Math.max(0, new Date(ahora).getTime() - new Date(fechaEpisodio).getTime())
+  const horas = ms / 3600000
+  if (horas < 1)  return 'inmediato'
+  if (horas < 6)  return 'reciente'
+  if (horas < 24) return 'dia'
+  return 'pasado'
+}
+
+// Conjuntos de palabras-clave por dimensión específica. Se evalúan en orden
+// (la primera dimensión específica que matchea gana). Si nada matchea, se
+// cae a heurística por emoción / tipo / edad / default.
+const KEYWORDS_DUELO = [
+  'muri', 'fallec', 'funeral', 'cementerio', 'duelo', 'pérdida', 'perdida',
+  'abuela enferm', 'abuelo enferm', 'separaci', 'divorci', 'echa de menos',
+  'echar de menos', 'extraña a', 'extrana a', 'se fue',
+]
+const KEYWORDS_NEURODIVERSIDAD = [
+  'autis', 'tea ', 'tdah', 'asperger', 'neurodiver', 'sensorial', 'sensor',
+  'colapso sensorial', 'meltdown', 'shutdown', 'estimulaci', 'sobreestimul',
+  'procesamiento', 'perfil sensorial',
+]
+const KEYWORDS_ALTA_SENSIBILIDAD = [
+  'altamente sensible', 'muy sensible', 'pas ', 'reactivo a est', 'abrumad',
+  'desbord', 'crítica menor', 'critica menor', 'le afecta todo',
+]
+const KEYWORDS_PANTALLAS = [
+  'pantalla', 'tablet', 'celular', 'smartphone', 'youtube', 'tiktok',
+  'instagram', 'redes sociales', 'videojuego', 'fortnite', 'roblox',
+]
+const KEYWORDS_ESTADO_ADULTO = [
+  'cansad', 'agotad', 'al límite', 'al limite', 'no puedo más', 'no puedo mas',
+  'culpa', 'me siento mal', 'me frustr', 'me supera', 'no doy más', 'no doy mas',
+]
+const KEYWORDS_TRAUMA = [
+  'pesadilla', 'asustad', 'evento', 'accidente', 'violencia', 'gritó alguien',
+  'grito alguien', 'lo asustó', 'lo asusto', 'lo asustaron',
+]
+
+// Detecta si alguno de los términos aparece como substring en el texto.
+// Acentos y mayúsculas se normalizan para no perder matches por tipeo.
+function matchKeywords(texto, lista) {
+  if (!texto) return false
+  const norm = texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+  return lista.some((k) => {
+    const kNorm = k.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    return norm.includes(kNorm)
+  })
+}
+
+// Infiere la dimensión central del episodio. Heurística determinística en
+// cliente. Se evalúan las dimensiones específicas primero (las que más
+// importa no perder cuando aparecen). Si nada calza, fallback a
+// 'desregulacion' que es la dimensión más frecuente y cubre el caso default.
+function inferirDimensionCentral({ episodio, hijo }) {
+  const edad = parseInt(hijo?.edad, 10) || 4
+  const textoCrudo = [
+    episodio?.contexto || '',
+    episodio?.descripcionLibre || '',
+    episodio?.emocion || '',
+    (episodio?.gatillantes || []).join(' '),
+    episodio?.estadoPadre || '',
+  ].join(' ')
+
+  // 1. Dimensiones específicas — se chequean primero porque cuando aparecen,
+  //    no queremos perderlas a manos de una dimensión más genérica.
+  if (matchKeywords(textoCrudo, KEYWORDS_DUELO) && edad >= 3)            return 'duelo'
+  if (matchKeywords(textoCrudo, KEYWORDS_NEURODIVERSIDAD))               return 'neurodiversidad'
+  if (matchKeywords(textoCrudo, KEYWORDS_ALTA_SENSIBILIDAD))             return 'alta_sensibilidad'
+  if (matchKeywords(textoCrudo, KEYWORDS_PANTALLAS) && edad >= 10)       return 'pantallas'
+
+  // 2. Estado del adulto crítico — el brief dice que en ese caso prioriza al
+  //    adulto antes que al niño. Mapea a autorregulacion_adulto (Shanker/Maté).
+  if (matchKeywords(textoCrudo, KEYWORDS_ESTADO_ADULTO))                 return 'autorregulacion_adulto'
+
+  // 3. Trauma: solo si hay marcadores claros + alta intensidad.
+  if (matchKeywords(textoCrudo, KEYWORDS_TRAUMA) && (episodio?.intensidad ?? 0) >= 4) return 'trauma'
+
+  // 4. Por tipo de episodio.
+  const tipo = (episodio?.tipo || '').toLowerCase()
+  if (tipo === 'sueño' || tipo === 'sueno')                              return 'sueno_rutinas'
+  if (tipo === 'miedo')                                                   return 'desregulacion'
+  if (tipo === 'social' || tipo === 'desconexion')                       return 'apego_conexion'
+
+  // 5. Por emoción declarada.
+  const emocion = (episodio?.emocion || '').toLowerCase()
+  if (/frustr|rabieta no resuelta/.test(emocion))                        return 'habilidad_rezagada'
+  if (/triste|pena/.test(emocion))                                       return 'ritmo_presencia'
+  if (/vergüenza|verguenza/.test(emocion))                               return 'validacion_emocional'
+
+  // 6. Por edad — adolescentes default a comunicación.
+  if (edad >= 12)                                                         return 'comunicacion_adolescente'
+
+  // 7. Default: desregulación (la más frecuente).
+  return 'desregulacion'
+}
+
+// Mapas de edad mínima para autores que tienen restricción etaria estricta.
+// Si la edad del hijo es menor, se descarta al autor de la pool y se cae al
+// siguiente del MAPA_DIMENSIONES (o al fallback Siegel).
+const EDAD_MINIMA_AUTOR = {
+  'Alan Wolfelt':       3,
+  'Lisa Damour':        12,
+  'Laurence Steinberg': 12,
+  'Jonathan Haidt':     10,
+  'Jean Twenge':        10,
+}
+
+// Elige autor para esta dimensión + edad, respetando anti-repetición vs el
+// último autor que se usó para este hijo. Si tras filtrar queda lista vacía,
+// fallback a 'Daniel Siegel' (presente en el banco, sin restricción etaria,
+// dimensión 'desregulacion').
+function seleccionarAutor({ dimension, edad, ultimoAutorUsado }) {
+  const mapeo = MAPA_DIMENSIONES[dimension] || MAPA_DIMENSIONES.desregulacion
+  const candidatosCrudos = [mapeo.primario, mapeo.secundario, mapeo.terciario].filter(Boolean)
+
+  const edadNum = parseInt(edad, 10) || 4
+  const compatibles = candidatosCrudos.filter((autor) => {
+    const minimo = EDAD_MINIMA_AUTOR[autor]
+    return minimo == null || edadNum >= minimo
+  })
+
+  if (compatibles.length === 0) return 'Daniel Siegel'
+
+  // Anti-repetición: si hay más de un candidato compatible, descartamos al
+  // último autor usado. Si solo hay uno y es justo el último, lo dejamos
+  // pasar igual (no podemos forzar variedad cuando no hay alternativa).
+  if (compatibles.length > 1 && ultimoAutorUsado) {
+    const sinRepetir = compatibles.filter((a) => a !== ultimoAutorUsado)
+    if (sinRepetir.length > 0) return sinRepetir[0]
+  }
+
+  return compatibles[0]
+}
+
+// Devuelve una articulación al azar del pool del autor. Si el autor no está
+// en AUTORES (no debería pasar si autor viene de seleccionarAutor → MAPA),
+// devolvemos null y la 3ra parte de la acción se construye solo con la lente.
+function seleccionarArticulacion(autor) {
+  const data = AUTORES[autor]
+  if (!data || !Array.isArray(data.pool_articulaciones) || data.pool_articulaciones.length === 0) {
+    return null
+  }
+  const idx = Math.floor(Math.random() * data.pool_articulaciones.length)
+  return data.pool_articulaciones[idx]
+}
+
+// Devuelve solo el bloque INSTRUCCIÓN DE CALIBRACIÓN por edad, sin la prosa
+// larga de autores que sí incluye marcoEdad(). Es lo que necesita el prompt
+// de Acción Rápida: la calibración por etapa y nada más, porque el autor y
+// la articulación ya llegan pre-elegidos en el prompt como variables.
+function calibracionEdadCompacta(edad) {
+  const n = parseInt(edad, 10)
+  if (isNaN(n)) return calibracionEdadCompacta(4)
+
+  if (n <= 2) return 'CALIBRACIÓN (0-2 años): co-regulación y vínculo, exclusivamente. Sin técnicas cognitivas, sin consecuencias, sin razonamiento verbal. La intervención es presencia física segura, tono calmado, contacto piel con piel y ritmo sostenido.'
+  if (n <= 5) return 'CALIBRACIÓN (2-6 años): co-regulación primero, sin excepción. Conexión antes que corrección — el cerebro límbico domina y no procesa instrucciones sin conexión previa. Lenguaje concreto, sensorial, breve. El estado regulatorio del adulto es la variable más importante.'
+  if (n <= 11) return 'CALIBRACIÓN (6-12 años): identificar la habilidad rezagada detrás de la conducta, no la motivación. Intervenciones eficaces en calma, no en el pico de activación. Evaluar sueño como variable de primer orden. El contexto social — pares y adultos significativos — pesa segundo después de la regulación.'
+  return 'CALIBRACIÓN (12-18 años): respetar la autonomía como necesidad legítima de desarrollo, no como concesión ni permisividad. Evitar el control coercitivo, la humillación y la comparación. Intervenir solo en calma, nunca en el pico del conflicto. Mantener el vínculo por encima de ganar cualquier discusión.'
+}
 
 function marcoEdad(edad) {
   const n = parseInt(edad, 10)
@@ -140,15 +570,12 @@ Henry Cloud y John Townsend ("Boundaries", "Boundaries with Kids"): los límites
 Diana Baumrind (investigación en estilos parentales, "Child Care Practices Anteceding Three Patterns of Preschool Behavior"): el estilo parental autoritativo — alta calidez emocional combinada con alta exigencia y estructura clara, explicación de razones y autonomía guiada — produce consistentemente los mejores outcomes en salud mental, rendimiento académico y competencia social en investigación longitudinal de más de 30 años; ni el permisivo (alta calidez, baja exigencia) ni el autoritario (baja calidez, alta exigencia) se acercan a estos resultados; aplicación: el objetivo es combinar calidez genuina con exigencia clara — no elegir entre los dos.
 Dan Siegel y Mary Hartzell ("Parenting from the Inside Out"): el padre/madre que ha procesado narrativamente su propia historia de apego puede cambiar activamente el patrón que transmite a su hijo; la coherencia narrativa de la historia personal del adulto predice el estilo de apego del hijo con más fuerza que los eventos traumáticos en sí; la plasticidad del apego es real — no estamos determinados por nuestra historia si la hemos integrado con sentido; aplicación: el padre/madre que "entiende de dónde viene" puede criar distinto de como fue criado.
 Ellyn Satter ("Child of Mine", "How to Get Your Kid to Eat"): la división de responsabilidades en alimentación — el padre/madre decide qué ofrecer, cuándo y dónde; el hijo decide cuánto come y si come — es la única estrategia con evidencia robusta para criar comensales competentes; violar esta división mediante presión, vigilancia, distracción o recompensas produce exactamente los problemas de alimentación que pretende resolver; la autorregulación del hambre y la saciedad es innata y debe preservarse activamente; aplicación: retirar toda presión y vigilancia en la alimentación.
-Marc Weissbluth ("Healthy Sleep Habits, Happy Child"): el sueño insuficiente crónico en la infancia produce síntomas clínicamente indistinguibles del TDAH, la ansiedad y los trastornos del estado de ánimo — irritabilidad, inatención, hiperactividad, labilidad emocional; la intervención en higiene del sueño es frecuentemente la primera y más eficaz intervención conductual disponible antes de cualquier otra; los horarios de sueño consistentes son herramientas de salud mental, no solo de salud física; aplicación: evaluar cantidad y calidad del sueño como primera variable clínica.
 Jean Piaget ("The Psychology of the Child", teoría del desarrollo cognitivo): los niños de 6-12 años están en la etapa de operaciones concretas — pueden razonar lógicamente sobre objetos y eventos concretos pero no aún sobre abstracciones puras; el aprendizaje ocurre mediante interacción activa con el entorno — manipular, experimentar, construir; el niño construye su comprensión desde adentro, no la recibe pasivamente; las instrucciones abstractas sin anclaje concreto no producen comprensión real; aplicación: anclar toda instrucción y consecuencia en lo concreto, observable y tangible.
 Lev Vygotsky ("Mind in Society", zona de desarrollo próximo): la zona de desarrollo próximo (ZDP) es el espacio entre lo que el niño puede hacer solo y lo que puede hacer con ayuda competente; el aprendizaje óptimo ocurre en la ZDP — ni demasiado fácil ni demasiado difícil; el andamiaje adulto debe retirarse gradualmente a medida que el niño adquiere competencia; el lenguaje y la interacción social son el motor del desarrollo cognitivo, no solo el resultado; aplicación: identificar la ZDP del niño para calibrar el nivel de exigencia y apoyo.
 Stanley Turecki ("The Difficult Child"): el temperamento difícil — alta intensidad emocional, baja adaptabilidad, reactividad elevada, irregularidad biológica, umbral sensorial bajo — es una característica neurológica real, no resultado de mala crianza; los padres de niños con temperamento difícil necesitan estrategias específicas calibradas al temperamento, no las mismas recomendaciones generales; entender el temperamento del hijo reduce la culpa del padre/madre y aumenta dramáticamente la eficacia de las intervenciones; aplicación: mapear el temperamento del niño antes de diseñar cualquier estrategia.
 Jerome Kagan (investigación sobre temperamento e inhibición conductual): la inhibición conductual — timidez, reactividad al estrés, cautela extrema — tiene base neurológica en la reactividad de la amígdala y es parcialmente hereditaria; el temperamento es estable pero no determinista — el ambiente puede modular significativamente su expresión; los niños con alta reactividad necesitan exposición gradual y apoyo consistente, no exposición abrupta ni sobreprotección; aplicación: diferenciar entre temperamento y patología evitando tanto la patologización como la sobreprotección.
 Brené Brown ("Daring Greatly", "The Gifts of Imperfection"): la vergüenza — "soy malo, soy un fracaso" — es diferente de la culpa — "hice algo malo" — y produce resultados opuestos en el desarrollo; la vergüenza crónica destruye la autoestima, aumenta la conducta problemática y bloquea el aprendizaje; la cultura de la perfección y el perfeccionismo parental dañan el desarrollo; criar en la suficiencia — "eres suficiente tal como eres" — y modelar la vulnerabilidad como fortaleza son los antídotos reales; aplicación: diferenciar corrección de la conducta (culpa funcional) de ataque a la identidad (vergüenza disfuncional).
 Temple Grandin ("Thinking in Pictures", "The Autistic Brain"): el pensamiento visual y los estilos de procesamiento atípicos son diferencias, no defectos; muchos niños que no encajan en los moldes educativos estándar tienen fortalezas cognitivas específicas que el sistema no sabe detectar ni valorar; el ambiente que maximiza las fortalezas produce mejores resultados que el que solo intenta corregir los déficits; la neurodiversidad requiere respuestas individualizadas, no tratamientos uniformes; aplicación: identificar cómo piensa y aprende este niño específico antes de diseñar intervenciones.
-Richard Ferber ("Solve Your Child's Sleep Problems"): los problemas de sueño en la infancia son frecuentes, tratables y tienen consecuencias conductuales y cognitivas significativas si se cronifican; el sueño independiente es una habilidad enseñable mediante métodos graduales con evidencia de seguridad; el sueño del niño afecta directamente el sueño, el estado de ánimo y la capacidad regulatoria del padre/madre; aplicación: tratar el sueño del niño como prioridad terapéutica familiar, no solo individual.
-William Sears ("The Baby Book", attachment parenting): el contacto físico frecuente, la respuesta sensible y el vínculo cercano construyen apego seguro y sincronía biológica; la respuesta sensible no crea dependencia excesiva sino seguridad que posteriormente permite la autonomía genuina; contextualizar estas prácticas en la cultura, los recursos y las necesidades específicas de cada familia; aplicación: el contacto físico y la respuesta sensible siguen siendo herramientas de regulación válidas en la infancia media.
 Bessel van der Kolk (trauma en 6-12): el trauma vive en el cuerpo y las intervenciones puramente cognitivas o conductuales no alcanzan cuando hay trauma somático activo; el movimiento físico, las artes expresivas, el teatro, los deportes de contacto y la música son vías de procesamiento del estrés traumático que la terapia verbal no puede reemplazar; los niños traumatizados frecuentemente no pueden acceder al lenguaje para describir su experiencia — el cuerpo habla primero; aplicación: cuando el niño no puede hablar de lo que le pasa, buscar vías expresivas no verbales.
 Stephen Porges (seguridad neurofisiológica en el entorno 6-12): el sistema nervioso del niño evalúa constantemente la seguridad del entorno mediante señales no verbales del adulto — tono de voz, postura, expresión facial — antes de cualquier contenido verbal; la neurorecepción precede a la percepción consciente; un hogar y un aula neurofisiológicamente seguros son condición de posibilidad del aprendizaje, la conducta prosocial y el acceso a las funciones ejecutivas; aplicación: diseñar la seguridad del ambiente antes de intervenir sobre la conducta.
 Mark Wolynn (patrones intergeneracionales en 6-12): los síntomas y conductas que no tienen explicación en la historia del niño frecuentemente tienen raíz en traumas no resueltos de generaciones anteriores transmitidos en patrones relacionales; identificar estos patrones en la familia de origen del padre/madre puede cambiar la respuesta al niño más que cualquier técnica; aplicación: cuando los patrones del niño no responden a ninguna intervención, explorar la historia familiar de los cuidadores.
@@ -168,21 +595,59 @@ Kenneth Ginsburg ("Building Resilience in Children and Teens", "A Parent's Guide
 Michael Bradley ("Yes, Your Teen Is Crazy!", "When Things Get Crazy with Your Teen"): la testosterona durante la poda sináptica adolescente masculina produce impulsividad, búsqueda activa de riesgo, agresividad y déficit de planificación a consecuencias con base hormonal y neurológica documentada; los padres que entienden la base neurobiológica responden con estructura y conexión en lugar de solo consecuencias; los chicos necesitan adultos que les ofrezcan riesgo positivo — deportes, responsabilidades reales, desafíos físicos — para canalizar la energía; aplicación: ofrecer canales de riesgo positivo antes de intentar eliminar el riesgo negativo.
 Anthony Wolf ("Get Out of My Life, but First Could You Drive Me and Cheryl to the Mall?"): el adolescente necesita psicológicamente "matar" a sus padres — desidealizar, cuestionar sistemáticamente, rechazar la autoridad con la que se ha identificado — para construir su propia identidad diferenciada; esta devaluación de los padres es un proceso de desarrollo sano y necesario, no patología relacional; los padres que entienden esto pueden tolerar la oposición sin tomársela como ataque personal y sin abandonar el vínculo; aplicación: interpretar la oposición adolescente como señal de desarrollo sano, no como fracaso de crianza.
 Carl Pickhardt ("Surviving Your Child's Adolescence", "The Connected Father"): la identidad adolescente se construye por oposición y diferenciación activa — el adolescente necesita distinguirse de sus padres para saber quién es; el conflicto con los padres es parte estructural del proceso de individuación, no el problema a eliminar; los padres que mantienen el vínculo mientras toleran la oposición facilitan la individuación sana; la separación psicológica saludable requiere que haya algo sólido de qué separarse; aplicación: mantener el vínculo y los límites simultáneamente, sin colapsar ninguno.
-Robert Epstein ("Teen 2.0: Saving Our Children and Families from the Torment of Adolescence"): la adolescencia turbulenta no es universal — es una construcción cultural moderna que resulta de infantilizar a los jóvenes durante más tiempo del necesario; en culturas y épocas históricas que otorgan responsabilidades reales y autonomía genuina a los adolescentes, los problemas conductuales típicos de la adolescencia occidental no existen en la misma medida; privar a los jóvenes de responsabilidades reales crea la tormenta que después diagnosticamos como rasgo inherente de la etapa; aplicación: identificar qué responsabilidades reales puede asumir el adolescente en el hogar y en la comunidad.
 Erik Erikson ("Identity: Youth and Crisis", etapas del desarrollo psicosocial): la tarea central de la adolescencia es la resolución de la crisis identidad vs confusión de roles — el adolescente necesita explorar, experimentar y eventualmente comprometerse con una identidad cohesiva; la moratoria psicosocial — tiempo y espacio para experimentar sin consecuencias definitivas — es necesaria para la resolución sana; los adultos que no toleran la exploración identitaria (incluyendo valores, sexualidad, creencias) bloquean el desarrollo normal; aplicación: tolerar la exploración de identidad como proceso necesario, no como amenaza a controlar.
 Resmaa Menakem ("My Grandmother's Hands: Racialized Trauma and the Pathway to Mending Our Hearts and Bodies"): el trauma racial y cultural se transmite somáticamente de generación en generación — vive en el sistema nervioso y en el cuerpo antes de llegar al lenguaje; la regulación del sistema nervioso es el primer paso para interrumpir la transmisión intergeneracional del trauma; los adolescentes de comunidades con trauma histórico acumulado necesitan intervenciones que incluyan la dimensión somática, cultural y comunitaria, no solo psicológica individual; aplicación: considerar el contexto cultural e histórico como parte del cuadro clínico.
 Bessel van der Kolk (trauma en adolescentes): los adolescentes con trauma somático activo no responden a consecuencias, razonamientos ni intervenciones cognitivas aisladas; el cuerpo, el movimiento, las artes expresivas, el teatro, los deportes y la regulación del sistema nervioso autónomo son parte central del trabajo terapéutico; el trauma complejo en adolescentes frecuentemente se presenta como conducta oposicionista, impulsividad extrema o disociación que es mal interpretada como rebeldía o patología de carácter; aplicación: cuando ninguna intervención conductual funciona, pensar en trauma somático no resuelto.
 Stephen Porges (teoría polivagal en adolescentes): el sistema nervioso del adolescente sigue evaluando la seguridad del entorno mediante señales no verbales antes que verbales; la calma corporal del adulto, su tono de voz y su postura abierta regulan al adolescente y abren la posibilidad de conversación antes que cualquier argumento racional; la confrontación con tono elevado activa el sistema de defensa y hace imposible el acceso a la corteza prefrontal; aplicación: regular el propio cuerpo antes de iniciar cualquier conversación difícil con el adolescente.
 Shefali Tsabary ("The Conscious Parent", "The Awakened Family"): el padre/madre que ha trabajado y procesado su propia adolescencia — sus heridas de identidad, sus vergüenzas no resueltas, sus duelos de individuación — puede acompañar la individuación del hijo sin confundirla con una amenaza personal; el conflicto con el adolescente frecuentemente es un espejo de los conflictos no resueltos del padre/madre en su propia adolescencia; el trabajo interior del adulto es el trabajo de crianza más importante en esta etapa; aplicación: antes de intervenir en el conflicto con el adolescente, preguntarse qué activa este comportamiento en la propia historia del adulto.
 Jon Kabat-Zinn ("Everyday Blessings"): la presencia mindful del adulto — sin agenda de cambio, sin juicio, con curiosidad genuina por el mundo interior del adolescente — es la condición de posibilidad de cualquier conversación difícil y de cualquier influencia real; la práctica de no reaccionar automáticamente ante la conducta adolescente es una habilidad que el padre/madre puede cultivar deliberadamente; aplicación: la calidad de la escucha es más importante que el contenido de lo que el adulto dice.
-Pamela Druckerman ("Bringing Up Bébé"): la crianza francesa — tolerancia a la frustración temprana, estructura de comidas, autonomía graduada desde pequeños, adultos con vida propia — produce niños con mayor capacidad de espera, mejor regulación y menos ansiedad adolescente; el enfoque que centra toda la vida familiar en las necesidades del hijo no produce mejor desarrollo sino mayor ansiedad en el hijo y mayor agotamiento en el adulto; el adolescente necesita ver que los adultos tienen una vida propia e intereses más allá de él; aplicación: el padre/madre que tiene vida propia modela la autonomía que el adolescente necesita desarrollar.
 Christine Gross-Loh ("Parenting Without Borders"): las prácticas de crianza varían enormemente entre culturas — lo que en una cultura occidental parece abandono o negligencia, en otra es desarrollo sano de autonomía; la hipervigilancia occidental del riesgo es una anomalía histórica y cultural, no un estándar universal de buen cuidado; los adolescentes de culturas con mayor autonomía física, responsabilidades domésticas reales y menos supervisión adulta muestran mayor competencia y menor ansiedad; aplicación: cuestionar qué prácticas de "protección" son en realidad obstáculos al desarrollo de la autonomía.
 INSTRUCCIÓN DE CALIBRACIÓN (12-18): Respetar la autonomía como necesidad legítima de desarrollo, no como concesión ni como permisividad. Evitar el control coercitivo, la humillación y la comparación — erosionan el vínculo sin producir cambio. Buscar siempre el problema subyacente antes de intervenir sobre la conducta visible. Intervenir únicamente en calma, nunca en el pico del conflicto. Mantener el vínculo por encima de ganar cualquier discusión. Tratar el uso de pantallas como variable estructural del entorno que requiere respuesta colectiva. El estado regulatorio del propio adulto es la variable más importante — nombrarlo siempre.
 ${TEMAS_CONTEMPORANEOS}`
 }
 
-export async function generarAccionInmediata({ hijo, episodio }) {
-  const marco = marcoEdad(hijo?.edad)
+// ──────────────────────────────────────────────────────────────────────
+// generarAccionInmediata — corazón del rediseño "Acción Rápida" v1.2.
+//
+// Diferencias clave con la versión anterior:
+//   • El AUTOR llega pre-elegido en código (seleccionarAutor) y se pasa
+//     como variable al prompt. Antes el modelo lo improvisaba desde la
+//     prosa de marcoEdad() y sesgaba 100% a Lansbury.
+//   • La voz del output se adapta al BUCKET de tiempo entre la creación
+//     del episodio y `ahora`. Sin esto, todo decía "Ahora mismo…" aunque
+//     el episodio fuera de hace 3 días.
+//   • Output JSON estructurado para persistir metadata (autor, dimensión,
+//     bucket) en la BD. El caller pone la firma "— Autor · Lente" aparte
+//     en la UI, no la pide el prompt.
+//   • Anti-repetición: el caller pasa `ultimoAutorUsado` (de hijos.ultimo_autor_ia).
+//
+// Inputs:
+//   • hijo:               { id, nombre, edad, genero }
+//   • episodio:           { tipo, intensidad, emocion, contexto, gatillantes,
+//                           descripcionLibre, estadoPadre, fecha }
+//   • ultimoAutorUsado:   string | null (autor de la última Acción Rápida
+//                          del MISMO hijo; null si es la primera)
+//   • ahora:              Date (default: new Date()) — driver del bucket
+//
+// Output: Promise<{
+//   texto:        string,  // 40-70 palabras, 3 partes integradas, sin firma
+//   autor:        string,  // el que eligió seleccionarAutor (no el modelo)
+//   dimension:    string,  // la que eligió inferirDimensionCentral
+//   bucket:       string,  // 'inmediato' | 'reciente' | 'dia' | 'pasado'
+//   generada_en:  string   // ISO timestamp
+// }>
+// ──────────────────────────────────────────────────────────────────────
+export async function generarAccionInmediata({ hijo, episodio, ultimoAutorUsado = null, ahora = new Date() }) {
+  // 1. Pre-cálculo determinístico en cliente — autor y articulación llegan
+  //    al prompt como variables ya elegidas.
+  const fechaEpisodio = episodio?.fecha || episodio?.created_at || ahora
+  const bucket        = bucketTiempo(fechaEpisodio, ahora)
+  const dimension     = inferirDimensionCentral({ episodio, hijo })
+  const autor         = seleccionarAutor({ dimension, edad: hijo?.edad, ultimoAutorUsado })
+  const articulacion  = seleccionarArticulacion(autor) // puede ser null
+  const lente         = AUTORES[autor]?.lente || MAPA_DIMENSIONES[dimension]?.lente || ''
+  const calibracion   = calibracionEdadCompacta(hijo?.edad)
+
   const { genero, pronombre, articulo } = (() => {
     if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
     if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
@@ -190,14 +655,117 @@ export async function generarAccionInmediata({ hijo, episodio }) {
     return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
   })()
 
-  const prompt = `${marco}
+  // 2. Voz del prompt según el bucket. Cada bucket tiene una apertura modelo
+  //    distinta para que la primera frase no se repita entre versiones del
+  //    mismo episodio reabierto en distintos momentos.
+  const VOZ_POR_BUCKET = {
+    inmediato: 'Acaba de pasar — voz en presente activo. Apertura tipo "Esto está caliente todavía." o "Esto está pasando ahora y eso es agotador." La acción es física, concreta, ejecutable en los próximos 2 minutos. Verbos en imperativo presente: acércate, baja, respira, ofrece.',
+    reciente:  'Pasó hace algunas horas — voz reflexiva cercana. Apertura tipo "Lo que probablemente necesitaba era…" o "Ya pasó, pero quedó dando vueltas." La acción es un gesto de reparación o de nombrar lo vivido. Verbos: pudiste, podrías, conviene.',
+    dia:       'Pasó hoy más temprano — voz de aprendizaje del día. Apertura tipo "Mirando lo que pasó hoy…" o "Hoy, con calma, se ve más claro que…" La acción es interpretación + un gesto suave para hoy mismo. Sin urgencia.',
+    pasado:    'Pasó hace más de un día — voz de aprendizaje para futuro. Apertura tipo "La próxima vez que algo así pase…" o "Esto ya quedó atrás, lo que sirve mirar hoy es…" La acción es preparación / aprendizaje, no intervención sobre algo en curso.',
+  }
+  const vozBucket = VOZ_POR_BUCKET[bucket] || VOZ_POR_BUCKET.inmediato
 
-Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
-Acaba de tener: ${episodio.tipo} (intensidad ${episodio.intensidad}/5).${episodio.emocion ? `\nEmoción del ${genero}: ${episodio.emocion}` : ''}${episodio.contexto ? `\nContexto: ${episodio.contexto}` : ''}${episodio.gatillantes?.length ? `\nGatillantes: ${episodio.gatillantes.join(', ')}` : ''}${episodio.descripcionLibre ? `\nRelato del padre/madre: ${episodio.descripcionLibre}` : ''}
+  // 3. Datos del episodio compactados (solo lo que existe).
+  const datosEpisodio = [
+    `Tipo: ${episodio?.tipo || 's/d'}`,
+    `Intensidad: ${episodio?.intensidad ?? 's/d'}/5`,
+    episodio?.emocion          ? `Emoción del ${genero}: ${episodio.emocion}`                      : null,
+    episodio?.contexto         ? `Contexto: ${episodio.contexto}`                                  : null,
+    episodio?.gatillantes?.length ? `Gatillantes: ${episodio.gatillantes.join(', ')}`              : null,
+    episodio?.descripcionLibre ? `Relato del padre/madre: ${episodio.descripcionLibre}`            : null,
+    episodio?.estadoPadre      ? `Estado del padre/madre: ${episodio.estadoPadre}`                 : null,
+  ].filter(Boolean).join('\n- ')
 
-Escribe UNA sola acción concreta que el padre/madre puede hacer AHORA MISMO en los próximos 2 minutos. Máximo 3 líneas. Sin listas, sin títulos, sin markdown. Lenguaje simple y cálido, calibrado estrictamente para la edad indicada según el marco científico anterior. Empieza con "Ahora mismo:" y describe el gesto o acción física específica, incluyendo palabras exactas si aplica. Que sea algo que cualquier padre/madre pueda hacer en casa ahora, sin preparación. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
+  // 4. Prompt nuevo. Todo pre-elegido (autor, lente, articulación, bucket).
+  //    El modelo solo escribe el texto que integra las 3 partes — NO inventa
+  //    autor, NO firma con autor, NO agrega "— Autor · Lente" al final.
+  const prompt = `${calibracion}
 
-  return llamarAPI(prompt, 350)
+HIJO/A
+Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}.
+Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+
+EPISODIO
+- ${datosEpisodio}
+
+TIEMPO TRANSCURRIDO
+Bucket: ${bucket}. ${vozBucket}
+
+LENTE TEÓRICA YA ELEGIDA POR EL SISTEMA (no la cambies, no la inventes, no nombres al autor)
+- Enfoque: ${lente}
+${articulacion ? `- Ángulo a integrar en la frase final: "${articulacion}"` : ''}
+
+TAREA
+Escribe la Acción Rápida en español neutro/chileno con tuteo. Estructura de 3 partes integradas en prosa fluida (no listas, no saltos de línea):
+1. Anclaje emocional — 1 frase corta calibrada al bucket de tiempo (ver Voz arriba).
+2. Acción o reflexión concreta — 2 a 3 frases. Para bucket inmediato: gesto físico/verbal específico ejecutable ahora. Para reciente: gesto de reparación. Para día: nombrar lo vivido + gesto suave para hoy. Para pasado: aprendizaje para la próxima vez.
+3. Anclaje teórico — 1 frase que integre el "Ángulo a integrar" cuando exista, o que articule el enfoque de la lente. Sin nombrar al autor, sin firma. El cliente pone la firma "— Autor · Lente" aparte.
+
+REGLAS DURAS
+- Largo total entre 40 y 70 palabras. Cuenta antes de devolver.
+- Cero markdown: nada de #, *, _, listas con guion ni numeración.
+- Cero "Ahora mismo:" literal como apertura.
+- Cero diagnóstico clínico del hijo/a ni del adulto.
+- Cero invención de contexto que no está en EPISODIO.
+- Tuteo CHILENO: tú, tienes, puedes, decides. NUNCA voseo argentino (tenés, podés, hacés, fijate).
+- Si el bucket es "pasado", está PROHIBIDO usar verbos en presente activo ("acércate ahora", "respira").
+
+FORMATO DE RESPUESTA
+Devuelve SOLO un JSON válido con esta forma exacta:
+{"texto":"..."}
+Sin texto antes ni después. Sin cercas de código markdown. El texto va completo en una sola string (sin saltos de línea internos).`
+
+  // 5. Llamada IA y parsing defensivo. Si el modelo devuelve algo no-JSON,
+  //    o JSON sin `texto`, caemos a un texto fallback construido en cliente
+  //    con la lente + articulación que ya elegimos. Eso evita que la card
+  //    quede vacía y mantiene la persistencia en BD útil.
+  const generada_en = new Date(ahora).toISOString()
+
+  try {
+    const raw    = await llamarAPI(prompt, 350)
+    const parsed = extraerJSON(raw)
+    const texto  = typeof parsed === 'object' && typeof parsed.texto === 'string' && parsed.texto.trim().length > 0
+      ? parsed.texto.trim()
+      : (typeof raw === 'string' ? raw.trim() : '')
+
+    if (!texto) {
+      return {
+        texto: construirFallback({ bucket, lente, articulacion }),
+        autor,
+        dimension,
+        bucket,
+        generada_en,
+      }
+    }
+
+    return { texto, autor, dimension, bucket, generada_en }
+  } catch (err) {
+    console.error('[generarAccionInmediata] fallo, usando fallback:', err)
+    return {
+      texto: construirFallback({ bucket, lente, articulacion }),
+      autor,
+      dimension,
+      bucket,
+      generada_en,
+    }
+  }
+}
+
+// Texto de fallback cuando la llamada a IA falla o no devuelve JSON parseable.
+// Combina la lente y articulación que ya elegimos en cliente, calibrado al
+// bucket. No es tan personalizado como la respuesta del modelo, pero mantiene
+// el formato de 3 partes y la firma queda coherente con autor/dimension/bucket.
+function construirFallback({ bucket, lente, articulacion }) {
+  const aperturas = {
+    inmediato: 'Esto está pasando ahora y eso pesa.',
+    reciente:  'Ya pasó, pero quedó dando vueltas.',
+    dia:       'Mirando lo que pasó hoy con calma.',
+    pasado:    'Esto ya quedó atrás, lo que sirve mirar hoy es esto.',
+  }
+  const apertura = aperturas[bucket] || aperturas.inmediato
+  const cierre = articulacion || (lente ? `Lo importante acá es ${lente.toLowerCase()}.` : 'Acompañar es la intervención.')
+  return `${apertura} Por ahora, quédate cerca, regula tu propio cuerpo primero y desde ahí responde. ${cierre.charAt(0).toUpperCase()}${cierre.slice(1)}.`
 }
 
 export async function analizarEpisodio({ hijo, episodio, historialReciente = [], bloqueRutina = null }) {

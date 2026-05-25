@@ -2907,5 +2907,185 @@ Sin tokens nuevos. Sin tocar Layout, persistor, ni los slides 1-4.
 
 ---
 
+# ═══════════════════════════════════════════════════════════════
+# Sesión 25 mayo 2026 — Rediseño "Acción Rápida" v1.2 (BRIEF_ACCION_RAPIDA.md)
+# ═══════════════════════════════════════════════════════════════
+
+## Lo que se cerró en esta sesión
+
+Implementación completa del brief v1.2 del rediseño de Acción Rápida en
+detalle de episodio (archivo `BRIEF_ACCION_RAPIDA.md` en la raíz).
+
+Resuelve el bug serio que estaba abierto en "Deudas anotadas" de la sesión
+anterior: la Acción Rápida del detalle de episodio decía siempre lo mismo
+(agáchate + mano), citaba siempre a Lansbury, hablaba siempre en presente
+aunque el episodio fuera de hace días.
+
+### Lo que cambió de raíz
+
+1. **El autor ya no lo improvisa el modelo.** Se elige en código
+   (`seleccionarAutor` en `anthropic.js`) según la dimensión central del
+   episodio (mapeo `MAPA_DIMENSIONES`, 16 dimensiones) y se pasa como
+   variable al prompt junto con su "lente teórica" pre-elegida. Eso
+   eliminó el sesgo a Lansbury y permite trackear el autor real usado
+   en `episodios.accion_rapida_autor`.
+
+2. **La voz se adapta al tiempo transcurrido.** Cuatro buckets:
+   `inmediato` (<1h), `reciente` (1-6h), `dia` (6-24h), `pasado` (>24h).
+   Cada uno tiene su propia voz definida en el prompt. La función
+   `bucketTiempo(fechaEpisodio, ahora)` los calcula determinísticamente.
+
+3. **Se persiste en BD.** 5 columnas nuevas en `episodios`:
+   `accion_rapida_texto/_autor/_dimension/_bucket/_generada_en`.
+   Migración 003 corrida por Daniel en Supabase.
+
+4. **Se regenera al abrir la EpisodioCard del Historial si el bucket
+   cambió.** Cola FIFO en background (`src/utils/colaRegeneracionAccionRapida.js`),
+   techo 10 regeneraciones por sesión, prioridad a más recientes,
+   delay 800ms entre llamadas. Si una card no entra al techo, se
+   regenera cuando el padre la abre individualmente con `forzado=true`.
+
+5. **Anti-repetición de autor por hijo.** Columna nueva
+   `hijos.ultimo_autor_ia` se actualiza tras cada generación. La
+   selección de autor lo descarta cuando hay >1 candidato disponible.
+
+### Limpieza del banco de autores (precondición del brief)
+
+Eliminados 6 autores incompatibles con el ADN de Huella:
+- **Richard Ferber** (extinción del llanto)
+- **Marc Weissbluth** (crying it out)
+- **William Sears** (attachment parenting con afirmaciones desmentidas por AAP)
+- **Kevin Leman** (orden de nacimiento desacreditado)
+- **Pamela Druckerman** (periodista sin credencial clínica)
+- **Robert Epstein** (niega el cerebro adolescente)
+
+8 ediciones en `src/services/anthropic.js`: reescritura de 3 bloques de
+`TEMAS_CONTEMPORANEOS` (SUEÑO, HERMANOS, CRIANZA CULTURAL) + eliminación
+de 5 entradas propias en `marcoEdad()` (ramas 6-12 y 12-18). Sin agujeros
+gramaticales.
+
+Sumados 3 autores nuevos con dimensiones propias:
+- **Alan Wolfelt** → duelo y pérdida en la infancia
+- **Barry Prizant** → autismo y neurodiversidad respetuosa
+- **Elaine Aron** → alta sensibilidad (PAS)
+
+Conservado con uso acotado: **Jonathan Haidt** solo se invoca cuando la
+dimensión central es 'pantallas' y edad ≥ 10 (filtro duro en
+`seleccionarAutor`).
+
+### Archivos tocados
+
+- `BRIEF_ACCION_RAPIDA.md` — nuevo, raíz del proyecto.
+- `supabase/migrations/003_accion_rapida.sql` — nuevo, ejecutado en Supabase.
+- `supabase/schema.sql` — espejado.
+- `src/services/anthropic.js` — limpieza de 8 líneas, 3 secciones nuevas
+  en `TEMAS_CONTEMPORANEOS`, constantes nuevas `MAPA_DIMENSIONES` y
+  `AUTORES` (esta última con pool de articulaciones por autor, ≥5 para
+  los 13 top y ≥3 para los demás del mapa), 5 funciones helper nuevas
+  (`bucketTiempo`, `inferirDimensionCentral`, `seleccionarAutor`,
+  `seleccionarArticulacion`, `calibracionEdadCompacta`), y reescritura
+  completa de `generarAccionInmediata` con firma nueva
+  `({ hijo, episodio, ultimoAutorUsado, ahora })` que devuelve objeto
+  estructurado `{ texto, autor, dimension, bucket, generada_en }`. La
+  función `marcoEdad()` original sigue intacta (la usan otras funciones).
+- `src/utils/colaRegeneracionAccionRapida.js` — nuevo, cola FIFO en memoria.
+- `src/components/historial/AccionRapida.jsx` + `.module.css` — nuevos.
+  Componente visible siempre, con firma "— Autor · Lente" al pie y
+  placeholder italicizado durante regeneración sin data persistida.
+- `src/context/HuellaContext.jsx` — `dbHijoToApp` agrega `ultimoAutorIa`,
+  `dbEpisodioToApp` agrupa `accionRapida` en sub-objeto, `updateEpisodio`
+  acepta el campo nuevo, función `actualizarUltimoAutorIa` agregada,
+  `useEffect` inyecta el regenerador en la cola con `useRef` para
+  mantener referencias siempre frescas.
+- `src/pages/registro/RegistroPage.jsx` — caller actualizado para usar
+  la firma nueva, persistir el resultado y actualizar `ultimo_autor_ia`
+  del hijo. Render usa `<AccionRapida />`.
+- `src/components/historial/EpisodioCard.jsx` — wiring de la cola: detecta
+  cambio de bucket en mount, encola regen, se suscribe al resultado y
+  reemplaza la versión local cuando termina. Render de `<AccionRapida />`
+  visible siempre (no detrás de botón).
+- `src/pages/historial/HistorialPage.jsx` — `accionRapida` normalizado
+  en `episodiosNorm` y `null` en `hitosNorm`.
+- `CheckinPage.jsx` e `InformePDF.jsx` — verificados, NO se tocaron. No
+  consumen Acción Rápida (solo `orientacion_ia` larga, intacta).
+
+### Decisiones técnicas que tomó Code
+
+- **Persistencia en columnas nuevas de `episodios`** (no tabla aparte):
+  relación 1-a-1, RLS ya cubierta por `family_data`, no necesitamos
+  historial de versiones (solo última).
+- **Lente teórico parafraseado, no cita literal del autor**: los 7
+  ejemplos del brief muestran "— Autor · Lente" sin cita; el pool de 5+
+  por autor es de **articulaciones** del enfoque, no citas. Esto evita
+  el problema de citas alucinadas y queda fluido como muestran los
+  ejemplos.
+- **Regeneración lazy con cola y techo 10/sesión**: protege costo de API
+  cuando el padre abre un historial con muchos episodios viejos.
+- **Heurística determinística de dimensión** (`inferirDimensionCentral`):
+  palabras-clave + emoción + tipo + edad. Sin pre-llamada IA. Si vemos
+  malos casos en producción, podemos pasar a IA, pero hoy no hace falta.
+
+### Costo de API estimado
+
+Si Daniel revisa un historial de 100 episodios y todos cambiaron de
+bucket simultáneamente, ~10 llamadas Sonnet (~$0.05) por el techo. Sin
+techo serían 100 (~$0.50). El techo está calibrado para mantenerse en
+costo despreciable.
+
+## ⚠️ Verificación pendiente por Daniel (pestaña limpia tras deploy)
+
+1. Registrar un episodio nuevo → la "Acción rápida" muestra texto
+   estructurado en 3 partes (anclaje + acción + cierre teórico) con
+   firma "— Autor · Lente" al pie. No empieza con "Ahora mismo:".
+2. Registrar otro episodio del mismo hijo en la misma sesión → la
+   Acción Rápida cita un autor DISTINTO al anterior.
+3. Abrir el Historial → cada EpisodioCard muestra la Acción Rápida
+   visible directamente (no detrás de botón). El botón "Ver orientación"
+   sigue desplegando la Orientación de Huella larga, como antes.
+4. Esperar unas horas y reabrir el Historial → las cards de episodios
+   recientes (≤10 según el techo) deberían mostrar el indicador
+   "Actualizando…" en el header y reemplazar el texto cuando termine
+   la regeneración en background.
+5. Cero menciones a Ferber, Weissbluth, Sears, Leman, Druckerman o
+   Epstein en ninguna respuesta de IA (cualquier flow).
+6. Episodios viejos creados antes de esta migración (sin
+   `accion_rapida_texto` en BD) deberían mostrar el placeholder
+   "Preparando una orientación calibrada al tiempo transcurrido…" y
+   completarse cuando la cola los procesa.
+
+## Notas
+
+- Daniel ya corrió la migración 003 en Supabase y confirmó "Success.
+  No rows returned".
+- Tres regex en `inferirDimensionCentral` usan caracteres combinantes
+  Unicode literales para normalizar acentos. Es JS válido pero menos
+  portable; si causa raros encoding bugs en producción, reemplazar por
+  `̀-ͯ`.
+- `CheckinPage` e `InformePDF` no se tocaron — solo leen
+  `orientacion_ia`, no la Acción Rápida.
+
+## Addendum — Hallazgo fuera del scope original del plan
+
+La verificación final con grep en todo `src/` detectó una mención más de
+los 6 autores eliminados que el brief no había mapeado:
+
+- **`src/lib/frases.js:216`** — banco de frases motivadoras que se
+  renderizan en `LoadingDignificado.jsx` y `ModalPuenteCiclo.jsx`
+  (flujo de estrategias). Tenía una frase atribuida a Marc Weissbluth
+  en la categoría `rutinas`.
+
+Reemplazada por una frase de Carlos González sobre sueño y regulación,
+coherente con el ADN de Huella y la misma temática:
+
+> "Los despertares nocturnos son fisiología normal de la infancia. La
+> regulación viene del acompañamiento presente, no del entrenamiento."
+
+Confirmé que ningún otro archivo de `src/` tiene menciones de los 6
+autores eliminados. Los únicos lugares donde aparecen los nombres son
+documentación (`ESTADO.md`, `BRIEF_ACCION_RAPIDA.md`, `REPORTE_ROUND4.md`),
+donde figuran como **eliminados**, no como referentes activos.
+
+---
+
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo
 argentino en código, comentarios, copy ni JSDoc.*

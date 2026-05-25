@@ -1,10 +1,14 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useHuella } from '../../context/HuellaContext'
 import IntensidadDots from './IntensidadDots'
 import OrientacionIA from './OrientacionIA'
+import AccionRapida from './AccionRapida'
 import { pillClassFor, emoTileClass } from './helpers'
 import { canModify } from '../../utils/authorDisplay'
+import { bucketTiempo } from '../../services/anthropic'
+import colaRegeneracion from '../../utils/colaRegeneracionAccionRapida'
 import styles from './EpisodioCard.module.css'
 
 function formatHora(fecha) {
@@ -20,8 +24,43 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   const [guardado, setGuardado] = useState(false)
   const timerRef = useRef(null)
 
+  // ── Acción Rápida v1.2 ────────────────────────────────────────────────
+  // Estado local hidratado con la versión persistida del episodio. Si el
+  // bucket de tiempo cambió desde la última generación, se encola regen
+  // (lazy en background con techo 10/sesión) y se actualiza cuando termina.
+  const [accionRapidaActual, setAccionRapidaActual] = useState(episodio.accionRapida ?? null)
+  const [regenerando, setRegenerando]               = useState(false)
+
   const { user } = useAuth()
+  const { state: huellaState } = useHuella()
   const mine = canModify(episodio.userId, user?.id)
+
+  useEffect(() => {
+    if (episodio._source === 'hito') return
+    if (!episodio.id || !episodio.fecha) return
+
+    const bucketActual     = bucketTiempo(episodio.fecha)
+    const bucketPersistido = accionRapidaActual?.bucket ?? null
+
+    // Si ya tenemos una versión con el bucket actual, no regeneramos.
+    if (bucketPersistido !== null && bucketPersistido === bucketActual) return
+
+    // Suscribirse al resultado ANTES de encolar para no perder notificación.
+    const unsubscribe = colaRegeneracion.subscribe(episodio.id, (resultado) => {
+      if (resultado?.ok && resultado.accion) {
+        setAccionRapidaActual(resultado.accion)
+      }
+      setRegenerando(false)
+    })
+
+    const encolado = colaRegeneracion.enqueue(episodio, huellaState.hijo)
+    if (encolado) {
+      setRegenerando(true)
+    }
+
+    return unsubscribe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodio.id, episodio.fecha])
 
   const tipoClass = emoTileClass(episodio.tipo)
   const hasIA = !!episodio.orientacionIA
@@ -170,6 +209,10 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
           </button>
         )}
       </div>
+
+      {!isHito && (accionRapidaActual || regenerando) && (
+        <AccionRapida data={accionRapidaActual} regenerando={regenerando} />
+      )}
 
       {hasIA && iaOpen && (
         <OrientacionIA orientacion={episodio.orientacionIA} onClose={() => setIaOpen(false)} />

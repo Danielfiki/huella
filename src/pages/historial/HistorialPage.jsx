@@ -84,6 +84,7 @@ export default function HistorialPage() {
         reflexion: ep.reflexion ?? null,
         fotoUrl: ep.fotoUrl ?? null,
         userId: ep.userId ?? null,
+        accionRapida: ep.accionRapida ?? null,
         _source: 'episodio',
       })),
     [episodios]
@@ -109,6 +110,7 @@ export default function HistorialPage() {
           reflexion: null,
           fotoUrl: h.foto_url ?? null,
           userId: h.user_id ?? null,
+          accionRapida: null,
           _source: 'hito',
         }
       }),

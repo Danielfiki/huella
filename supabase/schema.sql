@@ -74,6 +74,15 @@ alter table public.episodios  add column if not exists emocion           text;
 alter table public.episodios  add column if not exists descripcion_libre text;
 alter table public.episodios  add column if not exists reflexion          text;
 alter table public.episodios  add column if not exists foto_url           text;
+-- Acción Rápida v1.2 (migración 003): persistencia estructurada del output
+-- de generarAccionInmediata + bucket de tiempo para invalidación selectiva.
+alter table public.episodios  add column if not exists accion_rapida_texto       text;
+alter table public.episodios  add column if not exists accion_rapida_autor       text;
+alter table public.episodios  add column if not exists accion_rapida_dimension   text;
+alter table public.episodios  add column if not exists accion_rapida_bucket      text;
+alter table public.episodios  add column if not exists accion_rapida_generada_en timestamptz;
+-- Acción Rápida v1.2: último autor usado por hijo, para anti-repetición.
+alter table public.hijos      add column if not exists ultimo_autor_ia    text;
 alter table public.estrategias add column if not exists tareas           jsonb default '{}'::jsonb;
 alter table public.estrategias add column if not exists checkins         jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url          text;

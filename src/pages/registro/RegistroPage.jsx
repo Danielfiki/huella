@@ -7,6 +7,7 @@ import { analizarEpisodio, generarAccionInmediata } from '../../services/anthrop
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
+import AccionRapida from '../../components/historial/AccionRapida'
 import { renderMarkdown } from '../../utils/renderMarkdown'
 import styles from './RegistroPage.module.css'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
@@ -403,7 +404,7 @@ function TipoSelector({ tipo, setTipo, tipoOtroTexto, setTipoOtroTexto, bigEmoji
 }
 
 export default function RegistroPage() {
-  const { state, addEpisodio, updateEpisodio, isPro } = useHuella()
+  const { state, addEpisodio, updateEpisodio, actualizarUltimoAutorIa, isPro } = useHuella()
   const navigate = useNavigate()
 
   const [vista, setVista] = useState('elegir')
@@ -501,11 +502,33 @@ export default function RegistroPage() {
       const episodioGuardado = await addEpisodio(episodio)
       setVista('guardado')
       setEpisodioId(episodioGuardado?.id ?? null)
-      // Acción inmediata se dispara en paralelo, sin bloquear la orientación.
+      // Acción Rápida v1.2 — se dispara en paralelo a la orientación larga.
+      // Resultado es objeto estructurado { texto, autor, dimension, bucket,
+      // generada_en } que persistimos en columnas accion_rapida_* del
+      // episodio recién creado, y además actualiza hijos.ultimo_autor_ia
+      // para anti-repetición en el próximo episodio del mismo hijo.
       setLoadingAccion(true)
-      setAccionIA('')
-      generarAccionInmediata({ hijo: state.hijo, episodio })
-        .then((a) => { setAccionIA(a); setLoadingAccion(false) })
+      setAccionIA(null)
+      generarAccionInmediata({
+        hijo:             state.hijo,
+        episodio,
+        ultimoAutorUsado: state.hijo?.ultimoAutorIa ?? null,
+        ahora:            new Date(),
+      })
+        .then(async (resultado) => {
+          setAccionIA(resultado)
+          setLoadingAccion(false)
+          if (episodioGuardado?.id) {
+            try {
+              await updateEpisodio({ id: episodioGuardado.id, accionRapida: resultado })
+              if (state.hijo?.id && resultado?.autor) {
+                await actualizarUltimoAutorIa(state.hijo.id, resultado.autor)
+              }
+            } catch (persistErr) {
+              console.error('[RegistroPage] falló persistir Acción Rápida:', persistErr)
+            }
+          }
+        })
         .catch(() => { setLoadingAccion(false) })
       // Orientación completa: lanzada via wrapper para que Reintentar
       // pueda reutilizar los mismos args.
@@ -575,20 +598,20 @@ export default function RegistroPage() {
             </p>
           </Card>
           {(loadingAccion || accionIA) && (
-            <div className={styles.accionCard}>
-              <div className={styles.accionHeader}>
-                <span className={styles.accionEmoji}>⚡</span>
-                <span className={styles.accionLabel}>Acción inmediata</span>
-              </div>
-              {loadingAccion ? (
+            loadingAccion ? (
+              <div className={styles.accionCard}>
+                <div className={styles.accionHeader}>
+                  <span className={styles.accionEmoji}>⚡</span>
+                  <span className={styles.accionLabel}>Acción rápida</span>
+                </div>
                 <div className={styles.accionSkeleton}>
                   <div className={styles.accionSkLine} style={{ width: '90%' }} />
                   <div className={styles.accionSkLine} style={{ width: '75%' }} />
                 </div>
-              ) : (
-                <div className={styles.accionTexto}>{renderMarkdown(accionIA)}</div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <AccionRapida data={accionIA} />
+            )
           )}
           {errorOrientacion ? (
             <Card className={styles.errorOrientacionCard}>
