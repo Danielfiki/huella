@@ -418,7 +418,11 @@ export default function RegistroPage() {
 
   // detailed-only fields
   const [emocionSeleccionada, setEmocionSeleccionada] = useState('')
-  const [cuandoPaso, setCuandoPaso] = useState('ahora')
+  // null hasta que el padre elija un chip. El botón Guardar queda
+  // deshabilitado mientras esto sea falsy en ambos modos (rápido y
+  // detallado). Esto fixea el bug de la Acción Rápida hablando en
+  // presente para episodios que el padre nunca marcó como "ahora".
+  const [cuandoPaso, setCuandoPaso] = useState(null)
   const [fechaCustom, setFechaCustom] = useState('')
   const [contexto, setContexto] = useState('')
   const [gatillantesSeleccionados, setGatillantesSeleccionados] = useState([])
@@ -487,7 +491,10 @@ export default function RegistroPage() {
       contexto:    contexto,
       gatillantes: modo === 'detallado' ? gatillantesSeleccionados : [],
       estadoPadre,
-      fecha: modo === 'detallado' ? computarFecha(cuandoPaso, fechaCustom) : new Date().toISOString(),
+      // computarFecha se usa en ambos modos: en detallado mapea el chip
+      // a un timestamp histórico, en rápido también (ahora el modo rápido
+      // tiene la misma pregunta "¿Cuándo pasó?" — D2 del fix del Bug 1).
+      fecha: computarFecha(cuandoPaso, fechaCustom),
       emocion:          modo === 'detallado' ? (emocionSeleccionada || null) : null,
       descripcionLibre: tipo === 'otro' && tipoOtroTexto.trim()
         ? tipoOtroTexto.trim() + (descripcionLibre.trim() ? '. ' + descripcionLibre.trim() : '')
@@ -759,12 +766,34 @@ export default function RegistroPage() {
           </div>
         </Card>
 
+        <Card>
+          <p className={styles.label}>¿Cuándo pasó?</p>
+          <div className={styles.tagsGrid}>
+            {CUANDO_OPCIONES.map((op) => (
+              <button
+                key={op.id}
+                className={`${styles.tag} ${cuandoPaso === op.id ? styles.tagSelected : ''}`}
+                onClick={() => handleCuando(op.id)}
+              >
+                {op.label}
+              </button>
+            ))}
+          </div>
+          {cuandoPaso === 'custom' && (
+            <FechaHoraPicker
+              value={fechaCustom}
+              onChange={setFechaCustom}
+              max={nowLocal()}
+            />
+          )}
+        </Card>
+
         <Button
           variant="primary"
           size="lg"
           fullWidth
           onClick={() => handleGuardar('rapido')}
-          disabled={!tipo || !intensidad}
+          disabled={!tipo || !intensidad || !cuandoPaso}
           loading={loadingGuardar}
         >
           Guardar
@@ -903,7 +932,7 @@ export default function RegistroPage() {
         size="lg"
         fullWidth
         onClick={() => handleGuardar('detallado')}
-        disabled={!tipo || !intensidad}
+        disabled={!tipo || !intensidad || !cuandoPaso}
         loading={loadingGuardar}
       >
         Guardar y obtener orientación

@@ -3085,6 +3085,109 @@ autores eliminados. Los únicos lugares donde aparecen los nombres son
 documentación (`ESTADO.md`, `BRIEF_ACCION_RAPIDA.md`, `REPORTE_ROUND4.md`),
 donde figuran como **eliminados**, no como referentes activos.
 
+## Hotfix segundo turno 25 mayo — 3 bugs reportados por Daniel en producción
+
+Tras el primer deploy, Daniel verificó visualmente y reportó 3 bugs.
+Los 3 se cerraron en el mismo turno con un commit consolidado.
+
+### Bug 1 — Acción Rápida hablaba en presente para episodios pasados
+
+**Raíz:** el chip "¿Cuándo pasó?" del modo detallado tenía `useState('ahora')`
+como default, y el modo rápido directamente no tenía la pregunta —
+`episodio.fecha` se setteaba con `new Date().toISOString()` hardcodeado.
+En ambos casos `bucketTiempo` recibía un timestamp ≈ ahora y devolvía
+`'inmediato'`, lo que hacía que la voz del prompt fuera presente activo
+aunque el episodio fuera de hace días.
+
+**Fix (`src/pages/registro/RegistroPage.jsx`):**
+
+- Default de `cuandoPaso` cambió a `null` (el padre debe elegir antes
+  de poder guardar).
+- Botón Guardar deshabilitado en ambos modos hasta que `cuandoPaso`
+  tenga valor (`disabled={!tipo || !intensidad || !cuandoPaso}`).
+- `<Card>` nueva "¿Cuándo pasó?" agregada al modo rápido con los mismos
+  6 chips de `CUANDO_OPCIONES` (Ahora, Hace ~1 hora, Esta mañana, Esta
+  tarde, Ayer, Otro momento…) + `<FechaHoraPicker>` condicional para
+  `'custom'`. Idéntica en estructura a la del modo detallado.
+- `episodio.fecha` ahora siempre se calcula con
+  `computarFecha(cuandoPaso, fechaCustom)`. Eliminado el condicional
+  `modo === 'detallado' ? … : new Date().toISOString()` que era la raíz
+  del bug en modo rápido.
+
+Decisiones técnicas: no extraer `CUANDO_OPCIONES` ni `computarFecha` a
+módulo compartido (ambos modos viven en el mismo archivo, cero
+duplicación). El estado de `cuandoPaso` se conserva al cambiar entre
+modos — UX coherente, no bug.
+
+### Bug 2 — JSON crudo `{"texto":"…"}` se persistió en BD
+
+**Raíz:** `extraerJSON` (parser compartido) tenía catch silencioso: si
+`JSON.parse` fallaba, devolvía la string `raw` original. En
+`generarAccionInmediata`, el ternario que decidía qué hacer con el
+resultado caía a `raw.trim()` cuando `parsed` no era objeto, guardando
+la string literal `{"texto":"…"}` con llaves en `accion_rapida_texto`.
+Causa probable del parse fail: comillas tipográficas `" "` que el
+modelo escribió en vez de comillas rectas.
+
+**Fix (`src/services/anthropic.js`):**
+
+- Helper nuevo `extraerTextoAccion(raw)` específico para Acción Rápida
+  con 3 niveles de defensa: (1) `JSON.parse` directo después de strip
+  de BOM y cercas markdown, (2) reintento con comillas tipográficas
+  normalizadas a rectas, (3) regex fallback
+  `"texto"\s*:\s*"((?:[^"\\]|\\.)*)"` que captura el value aunque el
+  resto del JSON esté roto. **Defensa última en cada nivel:** descarta
+  cualquier candidato que aún contenga `{"texto"` como substring
+  (significa auto-inclusión del JSON crudo). Retorna `null` si nada
+  funcionó → caller usa `construirFallback`.
+- `generarAccionInmediata` reemplazó el bloque `extraerJSON + ternario
+  laxo` por `extraerTextoAccion`. Sin lógica de "usar raw si parse
+  falla".
+- `extraerJSON` general intacta (la usan otros flujos: estrategias,
+  tareas, ciclos, patrones). No se tocó para evitar regresiones.
+
+**Limpieza de BD:** Daniel corrió en Supabase Dashboard el bloque SQL
+de diagnóstico + UPDATE. Confirmado: 1 fila corrupta (episodio del
+sábado 23 mayo, dimensión duelo, autor Wolfelt) con las 5 columnas
+`accion_rapida_*` ahora en `null`. La próxima vez que abra el Historial,
+la cola la regenera con el parser nuevo.
+
+### Bug 3 — Placeholder "Preparando…" no se ve
+
+**Diagnóstico:** comportamiento esperado, **no es bug**, no requiere
+fix de código.
+
+La lógica de render del placeholder requiere `accionRapidaActual ===
+null` Y `regenerando === true` simultáneamente. Eso solo ocurre cuando:
+
+- El episodio nunca tuvo `accion_rapida_*` persistido (no era el caso
+  con los episodios que Daniel probó — todos ya tenían texto desde la
+  creación post-v1.2).
+- O fue limpiado a `null` (recién pasó con el episodio del sábado tras
+  la limpieza del Bug 2).
+
+Cuando hay texto previo y solo cambia el bucket, se muestra el texto
+viejo + chip "Actualizando…" en el header, **no** el placeholder. Eso
+es intencional: evitar pantalla en blanco mientras la cola regenera.
+
+**Acción pendiente de verificación de Daniel:** después de este deploy,
+al abrir el Historial debería ver el placeholder "Preparando una
+orientación…" en la card del episodio del sábado 23 mayo (Wolfelt,
+duelo) durante ~3-5 segundos mientras la cola lo regenera. Si **no** lo
+ve ahí, hay un bug real que diagnosticar.
+
+### Archivos tocados en este hotfix
+
+- `src/services/anthropic.js` — `extraerTextoAccion` + reescritura del
+  catch de `generarAccionInmediata`.
+- `src/pages/registro/RegistroPage.jsx` — default `null` + Card nueva
+  en modo rápido + `computarFecha` sin condicional.
+- `ESTADO.md` — esta sección de cierre.
+
+No hubo archivos nuevos. No se tocó EpisodioCard, AccionRapida,
+colaRegeneracion ni HuellaContext — toda la lógica de UI de Historial y
+del context sigue igual.
+
 ---
 
 *Recordatorio permanente: español neutro/chileno con tuteo. NUNCA voseo

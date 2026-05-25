@@ -723,11 +723,8 @@ Sin texto antes ni después. Sin cercas de código markdown. El texto va complet
   const generada_en = new Date(ahora).toISOString()
 
   try {
-    const raw    = await llamarAPI(prompt, 350)
-    const parsed = extraerJSON(raw)
-    const texto  = typeof parsed === 'object' && typeof parsed.texto === 'string' && parsed.texto.trim().length > 0
-      ? parsed.texto.trim()
-      : (typeof raw === 'string' ? raw.trim() : '')
+    const raw   = await llamarAPI(prompt, 350)
+    const texto = extraerTextoAccion(raw)
 
     if (!texto) {
       return {
@@ -750,6 +747,91 @@ Sin texto antes ni después. Sin cercas de código markdown. El texto va complet
       generada_en,
     }
   }
+}
+
+// extraerTextoAccion — parser robusto específico para el output de
+// generarAccionInmediata. No se usa con `extraerJSON` (compartido por otros
+// flujos) porque queremos defensas extra para este caso particular sin
+// introducir regresiones en estrategias/tareas.
+//
+// Bug 2 (sábado 23 mayo): el modelo devolvió un JSON con comillas tipográficas
+// (" ") y JSON.parse falló. El parser anterior cayó al `raw.trim()` y guardó
+// la string literal `{"texto":"Esto ya quedó atrás..."}` con llaves en la BD.
+//
+// Esta función:
+//   1. Strip de BOM y cercas markdown.
+//   2. Intenta JSON.parse sobre el shape limpio.
+//   3. Si falla, normaliza comillas tipográficas estructurales y reintenta.
+//   4. Si vuelve a fallar, extrae el valor de "texto" con regex defensiva.
+//   5. Defensa última: descarta cualquier resultado que aún contenga
+//      `{"texto"` como substring (significa que algo en el camino metió
+//      el JSON crudo dentro del texto extraído — el caller debe usar
+//      construirFallback en su lugar).
+//
+// Retorna: string limpia con el texto, o null si nada se pudo recuperar.
+function extraerTextoAccion(raw) {
+  if (typeof raw !== 'string') return null
+  let s = raw
+
+  // 1. BOM al inicio (algunos backends lo agregan).
+  if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1)
+
+  // 2. Cercas markdown al inicio/final, con o sin "json" después de los backticks.
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+  if (!s) return null
+
+  // 3. Si no parece objeto JSON, podría ser texto plano que el modelo devolvió
+  //    sin envolver. Lo aceptamos solo si NO contiene el patrón `{"texto"` —
+  //    eso siempre es señal de JSON mal terminado, no de texto válido.
+  if (!s.startsWith('{') || !s.endsWith('}')) {
+    if (s.includes('{"texto"') || s.includes('{ "texto"')) return null
+    return s.length > 0 ? s : null
+  }
+
+  // 4. Saltos de línea dentro de strings rompen JSON.parse. Los reemplazamos
+  //    por espacio antes de cada intento.
+  const sLimpia = s.replace(/[\r\n]+/g, ' ')
+
+  // 5. Intento 1: parse directo.
+  const intentoParse = (input) => {
+    try {
+      const obj = JSON.parse(input)
+      if (obj && typeof obj.texto === 'string' && obj.texto.trim().length > 0) {
+        return obj.texto.trim()
+      }
+    } catch {
+      // sigue al siguiente intento
+    }
+    return null
+  }
+  const r1 = intentoParse(sLimpia)
+  if (r1 && !r1.includes('{"texto"')) return r1
+
+  // 6. Intento 2: normalizar comillas tipográficas estructurales y reintentar.
+  //    Esta es la causa más frecuente del bug 2 — el modelo a veces escribe
+  //    "texto" con curly quotes que rompen el parser.
+  const sNorm = sLimpia
+    .replace(/[“”]/g, '"')   // " " → "
+    .replace(/[‘’]/g, "'")   // ' ' → '
+  const r2 = intentoParse(sNorm)
+  if (r2 && !r2.includes('{"texto"')) return r2
+
+  // 7. Intento 3: regex defensiva. Captura el valor de "texto" aunque el
+  //    resto del JSON esté roto.
+  const m = sLimpia.match(/"texto"\s*:\s*"((?:[^"\\]|\\.)*)"/)
+  if (m && m[1]) {
+    const candidato = m[1]
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, ' ')
+      .replace(/\\\\/g, '\\')
+      .trim()
+    if (candidato.length > 0 && !candidato.includes('{"texto"')) {
+      return candidato
+    }
+  }
+
+  // 8. Nada funcionó — el caller debe usar construirFallback.
+  return null
 }
 
 // Texto de fallback cuando la llamada a IA falla o no devuelve JSON parseable.
