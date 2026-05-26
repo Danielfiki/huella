@@ -355,10 +355,37 @@ export function bucketTiempo(fechaEpisodio, ahora = new Date()) {
 // Conjuntos de palabras-clave por dimensión específica. Se evalúan en orden
 // (la primera dimensión específica que matchea gana). Si nada matchea, se
 // cae a heurística por emoción / tipo / edad / default.
-const KEYWORDS_DUELO = [
-  'muri', 'fallec', 'funeral', 'cementerio', 'duelo', 'pérdida', 'perdida',
-  'abuela enferm', 'abuelo enferm', 'separaci', 'divorci', 'echa de menos',
-  'echar de menos', 'extraña a', 'extrana a', 'se fue',
+// Duelo se evalúa en dos niveles para evitar falsos positivos. Antes la lista
+// estaba unificada y términos laxos como 'se fue', 'perdida' o 'separaci'
+// disparaban dimensión=duelo en episodios de miedo nocturno donde aparecían
+// frases cotidianas tipo "mamá se fue de la pieza" — eso terminaba firmando
+// la Acción Rápida con Alan Wolfelt y contaminando el texto con vocabulario
+// de duelo (caso reportado 25 mayo 2026 con Pascualito).
+//
+// INEQUIVOCAS: términos que por sí solos garantizan duelo real.
+// AMBIGUAS:    términos que aparecen en duelo pero también en contextos
+//              cotidianos. Quedan declaradas para uso futuro (ej. requerir
+//              confirmación cruzada con otra señal). Hoy NO detonan duelo
+//              por sí solas — si solo matchea acá, la heurística cae al
+//              siguiente paso (tipo, emoción, edad).
+const KEYWORDS_DUELO_INEQUIVOCAS = [
+  'muri', 'murio', 'falleci', 'fallecio', 'fallecimiento',
+  'funeral', 'cementerio', 'velorio', 'velatorio',
+  'duelo', 'lapida', 'tumba', 'entierro', 'sepultura',
+  'cremacion', 'urna',
+  'sin vida', 'ya no esta', 'ya no está', 'ya no vive',
+]
+const KEYWORDS_DUELO_AMBIGUAS = [
+  'se fue', 'perdida', 'perdimos',
+  'separaci', 'divorci',
+  'extraña a', 'echa de menos',
+  'me dejo', 'nos dejo',
+  // Heredadas del banco viejo. Quedan acá para que la red de confirmación
+  // cruzada futura las cubra. Enfermedad de un cuidador puede preceder duelo
+  // pero no lo garantiza. "echar de menos" en infinitivo aparece tanto en
+  // duelo real como en ausencias temporales (papá de viaje, primer día sin
+  // mamá, etc.).
+  'abuela enferm', 'abuelo enferm', 'echar de menos',
 ]
 const KEYWORDS_NEURODIVERSIDAD = [
   'autis', 'tea ', 'tdah', 'asperger', 'neurodiver', 'sensorial', 'sensor',
@@ -412,7 +439,12 @@ function inferirDimensionCentral({ episodio, hijo }) {
 
   // 1. Dimensiones específicas — se chequean primero porque cuando aparecen,
   //    no queremos perderlas a manos de una dimensión más genérica.
-  if (matchKeywords(textoCrudo, KEYWORDS_DUELO) && edad >= 3)            return 'duelo'
+  //    Duelo solo se detona con keywords INEQUIVOCAS (muri/funeral/cementerio/
+  //    velorio/tumba/etc.). Las ambiguas ('se fue', 'perdida', 'separaci',
+  //    'divorci') ya no detonan duelo por sí solas — caen a la siguiente
+  //    heurística (tipo de episodio, emoción, edad). KEYWORDS_DUELO_AMBIGUAS
+  //    queda declarada arriba para uso futuro con confirmación cruzada.
+  if (matchKeywords(textoCrudo, KEYWORDS_DUELO_INEQUIVOCAS) && edad >= 3) return 'duelo'
   if (matchKeywords(textoCrudo, KEYWORDS_NEURODIVERSIDAD))               return 'neurodiversidad'
   if (matchKeywords(textoCrudo, KEYWORDS_ALTA_SENSIBILIDAD))             return 'alta_sensibilidad'
   if (matchKeywords(textoCrudo, KEYWORDS_PANTALLAS) && edad >= 10)       return 'pantallas'
@@ -692,7 +724,7 @@ EPISODIO
 TIEMPO TRANSCURRIDO
 Bucket: ${bucket}. ${vozBucket}
 
-LENTE TEÓRICA YA ELEGIDA POR EL SISTEMA (no la cambies, no la inventes, no nombres al autor)
+LENTE TEÓRICA YA ELEGIDA POR EL SISTEMA (no la cambies, no la inventes, no nombres al autor, no nombres la dimensión clínica)
 - Enfoque: ${lente}
 ${articulacion ? `- Ángulo a integrar en la frase final: "${articulacion}"` : ''}
 
@@ -708,6 +740,7 @@ REGLAS DURAS
 - Cero "Ahora mismo:" literal como apertura.
 - Cero diagnóstico clínico del hijo/a ni del adulto.
 - Cero invención de contexto que no está en EPISODIO.
+- NUNCA nombres en el cuerpo la dimensión, el autor, la lente, ni jerga clínica. Palabras como "duelo", "muerte", "pérdida", "autorregulación", "corregulación", "desregulación", "apego", "vínculo seguro", "ventana de tolerancia", "trauma", "neurodivergencia", "alta sensibilidad", "habilidad rezagada" son metadata del sistema y NO van en el texto. La firma "— Autor · Lente" se imprime aparte fuera de tu output. Escribe en lenguaje cotidiano de papá/mamá, no de manual clínico.
 - Tuteo CHILENO: tú, tienes, puedes, decides. NUNCA voseo argentino (tenés, podés, hacés, fijate).
 - Si el bucket es "pasado", está PROHIBIDO usar verbos en presente activo ("acércate ahora", "respira").
 
