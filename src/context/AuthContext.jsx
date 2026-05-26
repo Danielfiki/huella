@@ -42,10 +42,15 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
-  async function signInWithGoogle() {
+  // `nextPath` opcional permite que el flujo OAuth respete el ?redirect=
+  // de la URL de origen (típicamente /invitar?token=xxx para parejas
+  // invitadas). Si no se pasa, conserva el comportamiento anterior
+  // (`/panel`). Acepta paths absolutos relativos al origen.
+  async function signInWithGoogle(nextPath = '/panel') {
+    const seguro = typeof nextPath === 'string' && nextPath.startsWith('/') ? nextPath : '/panel'
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/panel` },
+      options: { redirectTo: `${window.location.origin}${seguro}` },
     })
     if (error) throw error
   }

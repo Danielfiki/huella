@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './AuthPage.module.css'
 
@@ -16,6 +16,12 @@ function GoogleIcon() {
 
 export default function SignupPage() {
   const { signUp, signInWithGoogle } = useAuth()
+  // El query param ?redirect=... viaja desde InvitarPage cuando una pareja
+  // invitada llega al signup. Necesita preservarse a través del email-
+  // confirm y del OAuth de Google para que el partner aterrice de vuelta
+  // en /invitar?token=xxx tras autenticarse.
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/panel'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -28,7 +34,7 @@ export default function SignupPage() {
     setError('')
     setLoadingGoogle(true)
     try {
-      await signInWithGoogle()
+      await signInWithGoogle(redirectTo)
       // browser will redirect — component unmounts on success
     } catch {
       setError('No se pudo conectar con Google. Intenta de nuevo.')
@@ -88,7 +94,7 @@ export default function SignupPage() {
             Haz clic en el enlace del correo para activar tu cuenta. Luego vuelve aquí e inicia sesión normalmente.
           </p>
           <Link
-            to="/login"
+            to={`/login?redirect=${encodeURIComponent(redirectTo)}`}
             className={styles.btnPrimary}
             style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >

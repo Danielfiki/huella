@@ -29,7 +29,9 @@ export default function LoginPage() {
     setError('')
     setLoadingGoogle(true)
     try {
-      await signInWithGoogle()
+      // Preservamos el ?redirect= a través del OAuth para que parejas
+      // invitadas vuelvan a /invitar?token=xxx tras autenticarse.
+      await signInWithGoogle(redirectTo)
       // browser will redirect — component unmounts on success
     } catch {
       setError('No se pudo conectar con Google. Intenta de nuevo.')
@@ -109,7 +111,7 @@ export default function LoginPage() {
 
         <p className={styles.footer}>
           ¿No tienes cuenta?{' '}
-          <Link to="/signup" className={styles.link}>Crear cuenta</Link>
+          <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`} className={styles.link}>Crear cuenta</Link>
         </p>
       </div>
     </div>
