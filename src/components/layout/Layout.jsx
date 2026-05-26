@@ -5,6 +5,7 @@ import Onboarding from '../../pages/onboarding/Onboarding'
 import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services/onboardingPersistor'
 import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
+import { useFamily } from '../../context/FamilyContext'
 import CitaLoader from '../ui/CitaLoader'
 import styles from './Layout.module.css'
 
@@ -56,6 +57,7 @@ function SkeletonLoader() {
 
 export default function Layout() {
   const { state, dataLoading } = useHuella()
+  const { family, familyLoading } = useFamily()
   // Onboarding visible solo si el usuario no lo completó (localStorage,
   // persiste para siempre en el dispositivo) Y tampoco lo saltó en esta
   // sesión (sessionStorage, vuelve a aparecer al cerrar el tab).
@@ -64,6 +66,19 @@ export default function Layout() {
     if (sessionStorage.getItem('huella.onboarding.dismissed')) return false
     return true
   })
+
+  // Defensa contra el bug de modo parejas. Si el usuario es partner de una
+  // familia existente, no debe ver el onboarding de creación de hijo nuevo.
+  // FamilyContext puede tardar en cargar; cuando termina y resulta ser
+  // partner, cerramos el state. El render además se gatea con familyLoading
+  // para evitar que el onboarding aparezca brevemente antes de que sepamos
+  // el rol del usuario.
+  useEffect(() => {
+    if (family?.role && family.role !== 'owner') {
+      setShowOnboarding(false)
+    }
+  }, [family?.role])
+
   const location = useLocation()
 
   const prevIndexRef = useRef(null)
@@ -79,7 +94,7 @@ export default function Layout() {
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {showOnboarding && (
+      {!familyLoading && showOnboarding && (!family || family.role === 'owner') && (
         <Onboarding
           onComplete={async (perfil) => {
             try {
