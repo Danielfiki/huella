@@ -425,6 +425,56 @@ end;
 $$;
 grant execute on function public.get_invitation_by_token(text) to anon, authenticated;
 
+-- Leer la invitación pendiente del usuario autenticado (sin necesitar token)
+-- Defensa contra el bug de duplicado en modo parejas (Falla 3, mayo 2026):
+-- onboardingPersistor consulta esta RPC antes de crear hijo nuevo. Si hay
+-- invitación pendiente para el email del usuario, aborta el flujo y redirige
+-- a /invitar?token=xxx. Es SECURITY DEFINER porque la policy invitations_own
+-- restringe lectura al inviter_id, no al invitee.
+create or replace function public.get_my_pending_invitation()
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_email          text;
+  v_inv            public.partner_invitations%rowtype;
+  v_inviter_email  text;
+begin
+  select email into v_email
+  from auth.users
+  where id = auth.uid();
+
+  if v_email is null then
+    return jsonb_build_object('hasInvitation', false);
+  end if;
+
+  select * into v_inv
+  from public.partner_invitations
+  where lower(invitee_email) = lower(v_email)
+    and status     = 'pending'
+    and expires_at > now()
+  order by created_at desc
+  limit 1;
+
+  if not found then
+    return jsonb_build_object('hasInvitation', false);
+  end if;
+
+  select email into v_inviter_email
+  from auth.users
+  where id = v_inv.inviter_id;
+
+  return jsonb_build_object(
+    'hasInvitation', true,
+    'token',         v_inv.token,
+    'inviterEmail',  v_inviter_email,
+    'expiresAt',     v_inv.expires_at
+  );
+end;
+$$;
+grant execute on function public.get_my_pending_invitation() to authenticated;
+
 -- Aceptar invitación (operación atómica)
 -- Lógica de 3 casos para resolver duplicación de hijos:
 --   Caso A: invitada sin hijos propios → join directo

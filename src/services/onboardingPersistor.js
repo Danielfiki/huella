@@ -107,7 +107,9 @@ async function subirAvatarHijo(userId, hijoId, file) {
  *   - El RPC `upsert_family_child` falla o no devuelve un id.
  *
  * @param {Object} perfil   Forma definida en src/pages/onboarding/Onboarding.jsx EMPTY_PERFIL.
- * @returns {Promise<{ userId: string, hijoId: string, avatarUrl: string | null }>}
+ * @returns {Promise<{ userId: string, hijoId: string | null, avatarUrl: string | null, redirectedToInvitation?: boolean }>}
+ *   Cuando hay invitación pendiente, hijoId queda null y redirectedToInvitation:true.
+ *   El service ya disparó window.location.assign('/invitar?token=xxx') en ese caso.
  */
 export async function persistirPerfilOnboarding(perfil) {
   if (!supabase) {
@@ -123,6 +125,36 @@ export async function persistirPerfilOnboarding(perfil) {
     throw new Error('No hay un usuario autenticado.')
   }
   const user = authData.user
+
+  // Defensa final contra duplicado en modo parejas. Si llegamos hasta acá
+  // con una invitación pendiente activa, las fallas 1 y 2 no funcionaron —
+  // no creamos hijo nuevo. Redirigimos al flujo de aceptación con un hard
+  // navigate (window.location.assign) para que /invitar monte limpio sin
+  // arrastrar el state del onboarding actual.
+  //
+  // Defensivo: si la RPC no existe todavía en producción (migración 004
+  // pendiente) o falla por cualquier razón, tratamos como "no hay
+  // invitación" y seguimos el flujo normal — el código nuevo se puede
+  // deployar antes que el SQL sin romper a usuarios solos.
+  try {
+    const { data: invData, error: invErr } = await supabase.rpc('get_my_pending_invitation')
+    if (!invErr && invData?.hasInvitation && invData.token) {
+      if (typeof window !== 'undefined') {
+        window.location.assign(`/invitar?token=${encodeURIComponent(invData.token)}`)
+      }
+      return {
+        userId: user.id,
+        hijoId: null,
+        avatarUrl: null,
+        redirectedToInvitation: true,
+      }
+    }
+  } catch (rpcErr) {
+    console.warn(
+      '[onboardingPersistor] get_my_pending_invitation falló (¿migración 004 pendiente?). Continúo flujo normal:',
+      rpcErr
+    )
+  }
 
   // Normalizaciones defensivas.
   const nombrePadre = (perfil.nombrePadre || '').trim()
