@@ -42,6 +42,19 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
+  // Envía el correo de reset a `email`. Supabase usa su propio sistema de
+  // email para esto (NO Resend) — el correo es independiente del bug de
+  // /api/invite. El `redirectTo` apunta a la ruta pública /reset-password
+  // del mismo origin; al hacer click en el link del email, Supabase llega
+  // a esa URL con una sesión temporal de tipo 'recovery' ya seteada en
+  // localStorage, lista para que el usuario actualice su password.
+  async function resetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw error
+  }
+
   // `nextPath` opcional permite que el flujo OAuth respete el ?redirect=
   // de la URL de origen (típicamente /invitar?token=xxx para parejas
   // invitadas). Si no se pasa, conserva el comportamiento anterior
@@ -56,7 +69,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, signInWithGoogle, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )

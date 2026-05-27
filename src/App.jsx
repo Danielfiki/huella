@@ -8,6 +8,7 @@ import { supabaseConfigured } from './lib/supabase'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/auth/LoginPage'
 import SignupPage from './pages/auth/SignupPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import PanelPage from './pages/panel/PanelPage'
 import RegistroPage from './pages/registro/RegistroPage'
 import NuevoPage from './pages/nuevo/NuevoPage'
@@ -141,9 +142,10 @@ export default function App() {
           <BrowserRouter>
             <PageTracker />
             <Routes>
-              <Route path="/login"    element={<LoginPage />} />
-              <Route path="/signup"   element={<SignupPage />} />
-              <Route path="/terminos" element={<TerminosPage />} />
+              <Route path="/login"          element={<LoginPage />} />
+              <Route path="/signup"         element={<SignupPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/terminos"       element={<TerminosPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
               <Route

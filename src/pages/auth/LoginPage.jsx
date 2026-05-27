@@ -110,6 +110,10 @@ export default function LoginPage() {
         </form>
 
         <p className={styles.footer}>
+          <Link to="/reset-password" className={styles.link}>¿Olvidaste tu contraseña?</Link>
+        </p>
+
+        <p className={styles.footer}>
           ¿No tienes cuenta?{' '}
           <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`} className={styles.link}>Crear cuenta</Link>
         </p>
