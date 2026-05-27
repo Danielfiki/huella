@@ -144,7 +144,31 @@ export default function ResetPasswordPage() {
       <div className={styles.page}>
         <div className={styles.card}>
           <div className={styles.logo}>huella</div>
-          <div style={{ fontSize: '52px', margin: '8px 0 20px' }}>📬</div>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--color-surface-alt)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+          }}>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--color-primary)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <polyline points="3 7 12 13 21 7" />
+            </svg>
+          </div>
           <h1 className={styles.title}>Te enviamos un correo</h1>
           <p className={styles.subtitle}>Lo mandamos a</p>
           <p style={{
@@ -181,8 +205,31 @@ export default function ResetPasswordPage() {
       <div className={styles.page}>
         <div className={styles.card}>
           <div className={styles.logo}>huella</div>
-          <div style={{ fontSize: '52px', margin: '8px 0 20px' }}>✅</div>
-          <h1 className={styles.title}>Listo</h1>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--color-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+          }}>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="5 12 10 17 19 8" />
+            </svg>
+          </div>
+          <h1 className={styles.title}>Contraseña actualizada</h1>
           <p className={styles.subtitle} style={{ marginBottom: '28px' }}>
             Ya puedes iniciar sesión con tu nueva contraseña.
           </p>
@@ -203,7 +250,31 @@ export default function ResetPasswordPage() {
       <div className={styles.page}>
         <div className={styles.card}>
           <div className={styles.logo}>huella</div>
-          <div style={{ fontSize: '52px', margin: '8px 0 20px' }}>⏰</div>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--color-surface-alt)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+          }}>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--color-text-muted)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="17 9 12 12 9 10" />
+            </svg>
+          </div>
           <h1 className={styles.title}>Link inválido o expirado</h1>
           <p className={styles.subtitle} style={{ marginBottom: '28px' }}>
             Este link ya no es válido. Solicita uno nuevo desde la pantalla de inicio de sesión.
