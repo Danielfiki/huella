@@ -19,7 +19,7 @@ Estimación total: 12-16 semanas calendario.
 
 ### Bloque 1 — Cierre de bloqueantes técnicos
 
-**Sesión A — Dominio + Resend**
+**[HECHA] Sesión A — Dominio + Resend**
 - Comprar huella.app
 - Conectar a Vercel
 - Configurar Resend con dominio propio (SPF + DKIM)
@@ -126,3 +126,11 @@ Pre-trabajo (cuentas Apple/Google, política de privacidad, screenshots, descrip
 - 7 hijos fantasma limpiados de BD
 - Diagnóstico bug Resend (espera compra dominio)
 - Postergación del lanzamiento. Sin fecha fija. Foco en calidad.
+
+### Viernes 29 mayo 2026 — Sesión A cerrada
+- Dominio propio comprado y conectado: huella.lat (registrado en Vercel, HTTPS automático).
+- Resend configurado con dominio propio huella.lat: verificado con SPF + DKIM vía auto-configure de Vercel.
+- API key de Resend creada (Sending access). Variables en Vercel Production: RESEND_API_KEY y RESEND_FROM_EMAIL = "Huella <hola@huella.lat>".
+- Correo de invitación a la pareja probado con dos cuentas reales: Delivered en Resend y recibido en bandeja. Modo Pareja desbloqueado en producción.
+- Fix del rebote al dominio viejo: en Supabase (Authentication > URL Configuration) se cambió Site URL de huella-theta.vercel.app a huella.lat y se agregaron redirect URLs huella.lat/** y www.huella.lat/**. Verificado: la app ya se queda en huella.lat.
+- Deuda menor opcional (no bloqueante): el front en FamilyContext.jsx confía en res.ok en vez de leer el campo "sent" del JSON de /api/invite. Conviene endurecerlo en una próxima pasada.
