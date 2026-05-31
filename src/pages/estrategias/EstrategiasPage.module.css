@@ -2,15 +2,7 @@
 .page { display: flex; flex-direction: column; min-height: 100vh; background: var(--color-bg); }
 .body { display: flex; flex-direction: column; gap: 24px; padding: 20px 16px 80px; }
 .section { display: flex; flex-direction: column; gap: 10px; }
-.sectionLbl {
-  font-family: var(--font-heading); font-weight: 600; font-size: 13px;
-  letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted);
-  display: flex; align-items: center; gap: 8px;
-}
 .dotDot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-tangerine); }
 .loadingPuerta1 { font-size: 13px; color: var(--color-muted); padding: 20px 0; text-align: center; }
-.sectionHeader { display: flex; align-items: center; gap: 8px; width: 100%; background: transparent; border: none; cursor: pointer; padding: 0; font: inherit; }
-.sectionLblText { font-family: var(--font-heading); font-weight: 600; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted); flex: 1; text-align: left; }
-.sectionChev { font-size: 11px; color: var(--color-muted); }
 .badgeNueva { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--color-tangerine); color: #fff; border-radius: 100px; padding: 2px 7px; }
 .pasadosStack { display: flex; flex-direction: column; gap: 10px; }

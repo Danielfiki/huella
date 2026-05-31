@@ -1,0 +1,52 @@
+/* Sección colapsable — cuadro de encabezado reutilizable.
+   Conserva el gap:10px interno que tenían las .section de EstrategiasPage,
+   para no alterar el espaciado header ↔ contenido. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 15px;
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+/* Etiqueta — misma tipografía que los headers previos (Fraunces 600 13px
+   uppercase 0.04em). El color lo hereda del header (par de pill). */
+.label {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+.chevron svg {
+  width: 16px;
+  height: 16px;
+}
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Pares de pill — solo tokens de paleta, cero hardcodeo. */
+.tangerine { background: var(--color-pill-tangerine-bg); color: var(--color-pill-tangerine-text); }
+.lavender  { background: var(--color-pill-lavender-bg);  color: var(--color-pill-lavender-text); }
+.gold      { background: var(--color-pill-gold-bg);      color: var(--color-pill-gold-text); }
+.green     { background: var(--color-pill-green-bg);     color: var(--color-pill-green-text); }

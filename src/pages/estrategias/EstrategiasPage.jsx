@@ -12,6 +12,7 @@ import PuertaUnoEmpty from '../../components/estrategias/puerta1/PuertaUnoEmpty'
 import PuertaUnoLoading from '../../components/estrategias/puerta1/PuertaUnoLoading';
 import SelectorHabilidades from './components/SelectorHabilidades';
 import EstrategiaPasadaCard from './components/EstrategiaPasadaCard';
+import SeccionColapsable from './components/SeccionColapsable';
 import LoadingDignificado from './components/LoadingDignificado';
 import {
   buildSugerenciasFromInterpretacion,
@@ -43,6 +44,7 @@ export default function EstrategiasPage() {
   const [loadingPatrones, setLoadingPatrones] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [nuevasCount, setNuevasCount] = useState(0);
+  const [puerta2Abierta, setPuerta2Abierta] = useState(false);
   const sugerenciasRef = useRef([]);
   const hijoIdRef = useRef(null);
 
@@ -220,6 +222,7 @@ export default function EstrategiasPage() {
   // Link sutil en Puerta 1 → lleva el foco a Puerta 2 (sección hermana).
   // Scroll suave a la sección con id="puerta-2". No navega ni abre nada.
   const onIrPuerta2 = () => {
+    setPuerta2Abierta(true); // auto-abre el cuadro dorado además de hacer scroll
     const el = document.getElementById('puerta-2');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -325,8 +328,7 @@ export default function EstrategiasPage() {
 
       <div className={styles.body}>
         {planesActivosEnriquecidos.length > 0 && (
-          <section className={styles.section}>
-            <div className={styles.sectionLbl}>Lo que estás trabajando</div>
+          <SeccionColapsable titulo="Lo que estás trabajando" variant="tangerine" defaultOpen>
             {planesActivosEnriquecidos.map((plan) => (
               <EstrategiaActivaCard
                 key={plan.id}
@@ -337,48 +339,52 @@ export default function EstrategiasPage() {
                 authorName={getAuthorDisplay(plan.userId, profilesByUserId, user?.id)}
               />
             ))}
-          </section>
+          </SeccionColapsable>
         )}
 
         {planesActivos.length < MAX_PLANES_ACTIVOS_FREE && (
-          <section className={styles.section}>
-            <button className={styles.sectionHeader} onClick={handleToggle} aria-expanded={expanded}>
-              <span className={styles.sectionLblText}>Lo que Huella ve en {hijo?.nombre || 'tu hijo'}</span>
-              {nuevasCount > 0 && (
-                <span className={styles.badgeNueva}>{nuevasCount} {nuevasCount === 1 ? 'nueva' : 'nuevas'}</span>
-              )}
-              <span className={styles.sectionChev}>{expanded ? '▲' : '▼'}</span>
-            </button>
-            {expanded && (
-              loadingPatrones ? (
-                <PuertaUnoLoading onIrPuerta2={onIrPuerta2} />
-              ) : sugerenciasVisibles.length > 0 ? (
-                sugerenciasVisibles.map((sug) => (
-                  <PuertaUnoHallazgo
-                    key={sug.fingerprint}
-                    sugerencia={sug}
-                    onAceptar={() => onAceptarSugerencia(sug)}
-                    onDescartar={() => onCerrarSugerencia(sug)}
-                    onIrPuerta2={onIrPuerta2}
-                  />
-                ))
-              ) : (
-                <PuertaUnoEmpty
-                  totalEpisodios={episodios.length}
+          <SeccionColapsable
+            titulo={`Lo que Huella ve en ${hijo?.nombre || 'tu hijo'}`}
+            variant="lavender"
+            open={expanded}
+            onToggle={handleToggle}
+            headerExtra={nuevasCount > 0 ? (
+              <span className={styles.badgeNueva}>{nuevasCount} {nuevasCount === 1 ? 'nueva' : 'nuevas'}</span>
+            ) : null}
+          >
+            {loadingPatrones ? (
+              <PuertaUnoLoading onIrPuerta2={onIrPuerta2} />
+            ) : sugerenciasVisibles.length > 0 ? (
+              sugerenciasVisibles.map((sug) => (
+                <PuertaUnoHallazgo
+                  key={sug.fingerprint}
+                  sugerencia={sug}
+                  onAceptar={() => onAceptarSugerencia(sug)}
+                  onDescartar={() => onCerrarSugerencia(sug)}
                   onIrPuerta2={onIrPuerta2}
                 />
-              )
+              ))
+            ) : (
+              <PuertaUnoEmpty
+                totalEpisodios={episodios.length}
+                onIrPuerta2={onIrPuerta2}
+              />
             )}
-          </section>
+          </SeccionColapsable>
         )}
 
-        <section id="puerta-2" className={styles.section}>
+        <SeccionColapsable
+          id="puerta-2"
+          titulo="¿Quieres trabajar algo más?"
+          variant="gold"
+          open={puerta2Abierta}
+          onToggle={() => setPuerta2Abierta((v) => !v)}
+        >
           <SelectorHabilidades onElegir={onElegirHabilidad} onCasoLibre={handleCasoLibre} habilidadesEnPlanActivo={habilidadesEnPlanActivo} />
-        </section>
+        </SeccionColapsable>
 
         {planesPasados.length > 0 && (
-          <section className={styles.section}>
-            <h2 className={styles.sectionLbl}>Lo que ya trabajaste</h2>
+          <SeccionColapsable titulo="Lo que ya trabajaste" variant="green">
             <div className={styles.pasadosStack}>
               {planesPasados
                 .slice()
@@ -397,7 +403,7 @@ export default function EstrategiasPage() {
                   />
                 ))}
             </div>
-          </section>
+          </SeccionColapsable>
         )}
       </div>
     </div>
