@@ -37,6 +37,7 @@ export default function EstrategiaCierrePage() {
   const { state, reloadEstrategias } = useHuella()
   const { user } = useAuth()
   const generadoRef = useRef(false)
+  const creandoRef = useRef(false)
 
   const plan = useMemo(
     () => (state.estrategias || []).find((p) => p.id === id),
@@ -62,6 +63,7 @@ export default function EstrategiaCierrePage() {
 
   const [estado, setEstado] = useState('inicial')
   const [analisis, setAnalisis] = useState(null)
+  const [procesando, setProcesando] = useState(false)
 
   const yaGenerado = Boolean(ciclo?.cierre_analisis?.que_cambio)
 
@@ -156,6 +158,12 @@ export default function EstrategiaCierrePage() {
 
   const handleIniciarNuevoCiclo = async () => {
     if (!plan || !ciclo || !hijo) return
+    // Candado de idempotencia: el ref bloquea el doble-tap sincrónico
+    // (el estado es async y se colaría antes del re-render). Evita
+    // intentar crear dos veces el mismo ciclo.
+    if (creandoRef.current) return
+    creandoRef.current = true
+    setProcesando(true)
     setEstado('creando_ciclo')
     try {
       console.log('[P3 Cierre] iniciando creación de ciclo N+1')
@@ -210,6 +218,8 @@ export default function EstrategiaCierrePage() {
       navigate(`/estrategias/${id}`, { replace: true })
     } catch (err) {
       console.error('handleIniciarNuevoCiclo failed:', err)
+      creandoRef.current = false
+      setProcesando(false)
       setEstado('error_ciclo')
     }
   }
@@ -304,6 +314,7 @@ export default function EstrategiaCierrePage() {
       cicloNumero={ciclo.numero_ciclo}
       onIniciarNuevoCiclo={handleIniciarNuevoCiclo}
       onTrabajarLibre={handleTrabajarLibre}
+      procesando={procesando}
     />
   )
 }

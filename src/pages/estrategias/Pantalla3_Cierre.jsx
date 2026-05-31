@@ -29,6 +29,7 @@ export default function Pantalla3_Cierre({
   cicloNumero = 1,
   onIniciarNuevoCiclo,
   onTrabajarLibre,
+  procesando = false,
 }) {
   const navigate = useNavigate();
 
@@ -127,6 +128,7 @@ export default function Pantalla3_Cierre({
               type="button"
               className={`${styles.cta} ${styles.primary}`}
               onClick={iniciarNuevoCiclo}
+              disabled={procesando}
             >
               <span className={styles.ctaLabelRow}>
                 <span className={styles.ctaLabel}>Iniciar nuevo ciclo</span>
