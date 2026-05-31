@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: sábado 31 mayo 2026 — Sesión B del PLAN.md cerrada.*
+*Última actualización: sábado 31 mayo 2026 — Sesión C (prevenciones de raíz) cerrada y verificada en producción.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -167,12 +167,34 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
+## Cerrado HOY (sábado 31 mayo 2026) — Sesión C (prevenciones de raíz) cerrada
+
+> Nota: esta sesión se reorientó a robustez de raíz (no a la "Bugs Estrategias parte 2" que figuraba en PLAN.md). Esos ítems quedan pendientes — ver Próximo paso.
+
+**Ambas prevenciones de raíz en producción, verificadas.**
+
+**Fix #2 — Idempotencia "Iniciar nuevo ciclo" → EN PRODUCCIÓN (commit `e1826b7`)**
+- Causa: `handleIniciarNuevoCiclo` (EstrategiaCierrePage.jsx) no tenía candado; un doble-tap o reentrada podía insertar ciclos duplicados.
+- Dos capas:
+  - **BD:** índice único `estrategia_ciclos_unq_numero` sobre `(estrategia_id, numero_ciclo)` — duplicado imposible a nivel base.
+  - **Cliente:** `useRef creandoRef` bloquea el doble-tap sincrónico + estado `procesando` deshabilita el botón. `Pantalla3_Cierre` recibe la prop `procesando`.
+- El `catch` ya mostraba mensaje prolijo ("No pudimos crear el nuevo ciclo. Intenta de nuevo."), sin error técnico crudo.
+
+**Fix #1 — Atomicidad al crear plan → EN PRODUCCIÓN, verificado por las 2 vías (commit `9b39f03`)**
+- Causa: `crearEstrategiaConCiclo` (HuellaContext.jsx) hacía 2 inserts separados (estrategias + estrategia_ciclos) + cleanup best-effort; si el 2º fallaba podía quedar una estrategia huérfana sin ciclos (se renderiza como plan fantasma "activo").
+- Fix: RPC `public.crear_estrategia_con_ciclo` (transacción atómica, todo o nada) + refactor del cliente a **una sola** `supabase.rpc(...)`. La RPC deriva `duracion_semanas` del plan y setea `user_id` con `auth.uid()`.
+- **QA real en producción:** crear plan funciona atómico por las **2 vías** (Acción "Cuéntame tu caso" libre + selector de habilidades).
+
+**Cambios de BD versionados:** `supabase/migrations/005_idempotencia_y_atomicidad.sql` (índice único + función RPC). Ya aplicados manualmente en prod vía SQL Editor; el archivo deja el registro en el repo (idempotente).
+
+---
+
 ## Próximo paso
 
-**Sesión C del `PLAN.md` — Bugs Estrategias parte 2:**
-- "Semana 1 de 4" tras cierre de último ciclo
-- Chips de habilidades activas sin opacidad
-- Skill chips selector
-- Regresión Round 6
+**Pendientes arrastrados (la Sesión C nominal de PLAN.md no se hizo; se reorientó a robustez):**
+- **Bugs Estrategias parte 2:** "Semana 1 de 4" tras cierre de último ciclo · chips de habilidades activas sin opacidad · skill chips selector · regresión Round 6.
+- **Bug 3 "Puerta 2 con cuerpo vacío"** (de Sesión B): en pausa hasta tener síntoma reproducible.
 
-(Pendiente arrastrado de Sesión B: **Bug 3 "Puerta 2 con cuerpo vacío"**, en pausa hasta tener síntoma reproducible.)
+**Siguiente en PLAN.md — Sesión D: Logo + Auditoría tagline**
+- Reemplazar wordmark "huella" por logo real en header, login, signup, correos, favicon, ícono PWA.
+- Buscar el tagline viejo en todo el repo y reemplazar por "Conoce la huella única de tus hijos".
