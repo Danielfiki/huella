@@ -653,71 +653,38 @@ export function HuellaProvider({ children }) {
 
   // ── Estrategias ───────────────────────────────────────────────────────────
 
-  // Helper compartido de Fase 4 Bloque 2A — rediseño Estrategias con Ciclos.
-  // Crea una estrategia en el modelo nuevo: identidad en `estrategias` +
-  // ciclo 1 activo en `estrategia_ciclos`. Si el segundo INSERT falla,
-  // borra la fila huérfana de identidad. Retorna la row de identidad.
-  // No hace dispatch — el caller decide cómo refrescar el estado.
+  // Helper compartido — crea una estrategia (modelo de ciclos) de forma
+  // ATÓMICA vía la RPC public.crear_estrategia_con_ciclo: identidad en
+  // `estrategias` + ciclo 1 activo en `estrategia_ciclos`, en una sola
+  // transacción (todo o nada, sin huérfanas posibles). La RPC deriva
+  // duracion_semanas del plan y setea user_id con auth.uid(). Retorna la
+  // fila de estrategias. No hace dispatch — el caller refresca el estado.
   async function crearEstrategiaConCiclo(input) {
     if (!user || !supabase) throw new Error('Sesión inválida.')
 
+    // Parseo del plan ANTES de la llamada: si viene como string lo
+    // convertimos a objeto; si ya es objeto, tal cual. La RPC espera un
+    // objeto jsonb, nunca un string.
     const plan = (() => {
       if (input.plan == null) return null
       if (typeof input.plan !== 'string') return input.plan
       try { return JSON.parse(input.plan) } catch { return input.plan }
     })()
 
-    const duracion = Array.isArray(plan?.semanas)
-      ? plan.semanas.length
-      : 4
+    const { data, error } = await supabase.rpc('crear_estrategia_con_ciclo', {
+      p_hijo_id:                  input.hijo_id ?? null,
+      p_habilidad:                input.habilidad,
+      p_habilidad_grupo:          input.habilidad_grupo ?? null,
+      p_descripcion:              input.descripcion ?? null,
+      p_fecha_inicio:             input.fecha_inicio ?? null,
+      p_episodio_origen_id:       input.episodio_origen_id ?? null,
+      p_episodios_detonantes_ids: input.episodios_detonantes_ids ?? [],
+      p_plan:                     plan,
+    })
 
-    // 1. INSERT de identidad (las columnas legacy de plan/semana/etc.
-    //    quedan NULL — se borran en Fase 2b).
-    const fieldsIdentidad = {
-      user_id:                  user.id,
-      hijo_id:                  input.hijo_id ?? null,
-      habilidad:                input.habilidad,
-      descripcion:              input.descripcion ?? null,
-      fecha_inicio:             input.fecha_inicio ?? new Date().toISOString(),
-      episodio_origen_id:       input.episodio_origen_id ?? null,
-      episodios_detonantes_ids: input.episodios_detonantes_ids ?? [],
-    }
-    if (input.habilidad_grupo) fieldsIdentidad.habilidad_grupo = input.habilidad_grupo
+    if (error) throw new Error(error.message)
 
-    const { data: estrategiaRow, error: errIdent } = await supabase
-      .from('estrategias')
-      .insert(fieldsIdentidad)
-      .select()
-      .single()
-
-    if (errIdent) throw new Error(errIdent.message)
-
-    // 2. INSERT del ciclo 1 activo. Si falla, limpiamos la identidad
-    //    para no dejar una estrategia huérfana sin plan visible.
-    const { error: errCiclo } = await supabase
-      .from('estrategia_ciclos')
-      .insert({
-        estrategia_id:    estrategiaRow.id,
-        user_id:          user.id,
-        hijo_id:          input.hijo_id ?? null,
-        numero_ciclo:     1,
-        estado:           'activo',
-        plan:             plan,
-        semana_actual:    1,
-        duracion_semanas: duracion,
-        usar_memoria_ia:  false,
-      })
-
-    if (errCiclo) {
-      await supabase
-        .from('estrategias')
-        .delete()
-        .eq('id', estrategiaRow.id)
-        .eq('user_id', user.id)
-      throw new Error(errCiclo.message)
-    }
-
-    return estrategiaRow
+    return data
   }
 
   // Refresca solo el array de estrategias del hijo activo con el join
