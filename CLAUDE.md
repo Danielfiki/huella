@@ -50,6 +50,14 @@ Cuando implementes un diseño que viene de un handoff bundle de Claude Design:
 - Nunca declares un bug "resuelto" sin verificación previa de Daniel
 - Los pasos de Supabase SQL siempre se separan con queries listas para copy-paste
 
+## PROTOCOLO ANTI-DESASTRE
+
+Reglas duras. No negociables. Aplican a TODA sesión.
+
+1. **Investigar es libre; modificar no.** Leer código, rastrear flujos y diagnosticar no requiere permiso. Pero **MODIFICAR código requiere confirmación explícita de Daniel de que el comportamiento es un defecto real, no una feature intencional.** Ante la duda, se pregunta antes de tocar.
+2. **Síntoma en una frase antes de modificar.** Antes de cambiar nada, escribe el síntoma así: *"hoy se ve X / debería verse Y"*. Si no se puede formular esa frase, **NO es un bug accionable — se pausa** (no se toca el código).
+3. **Nada se commitea ni se pushea hasta que Daniel apruebe el QA visual.** Compilar (`npm run build`) y dejar el cambio listo está bien; `git commit` / `git push` solo después de que Daniel revise en la app y dé el OK.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual
