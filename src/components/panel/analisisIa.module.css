@@ -59,6 +59,13 @@
 .progressSpace {
   margin-top: 14px;
 }
+/* Barra más gruesa SOLO en el Home, para que se note. El selector .card
+   .progressSpace tiene mayor especificidad (0,2,0) que el .track (0,1,0) del
+   ProgressBar base y está scoped al card de análisis: no afecta al onboarding,
+   que usa otra instancia/clase. El fill es height:100%, así sigue al track. */
+.card .progressSpace {
+  height: 8px;
+}
 .sectionTitle {
   font-family: var(--font-heading);
   font-size: 13px;
