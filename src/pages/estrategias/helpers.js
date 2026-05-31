@@ -107,11 +107,24 @@ export function md(t) {
 //   { patrones: [{ tipo, descripcion, bajada, episodios_ids, confianza }] }
 //   donde tipo ∈ ids del catálogo (berrinches, sueno, limites, etc.)
 // ─────────────────────────────────────────────────────────────────────
-export function buildSugerenciaFromInterpretacion(interpretacion, episodios) {
-  if (!interpretacion || !Array.isArray(interpretacion.patrones) || interpretacion.patrones.length === 0) {
-    return null;
-  }
-  const patron = interpretacion.patrones[0];
+// Devuelve un ARREGLO de sugerencias — una por cada patrón detectado por
+// la IA. Antes tomaba solo patrones[0]; ahora itera todos y descarta los
+// que no matchean el catálogo o no tienen episodios detonantes válidos.
+export function buildSugerenciasFromInterpretacion(interpretacion, episodios) {
+  if (!interpretacion || !Array.isArray(interpretacion.patrones)) return [];
+  // Confianza para ordenar: si no es número, va al final (-Infinity).
+  const conf = (s) => (typeof s.confianza === 'number' ? s.confianza : -Infinity);
+  return interpretacion.patrones
+    .map((patron) => construirSugerencia(patron, episodios))
+    .filter(Boolean)
+    .sort((a, b) => conf(b) - conf(a))
+    .slice(0, 3);
+}
+
+// Construye UNA sugerencia a partir de un patrón. Retorna null si el
+// patrón no matchea el catálogo o no tiene episodios detonantes.
+function construirSugerencia(patron, episodios) {
+  if (!patron) return null;
   const hab = findHabilidad(patron.tipo);
   if (!hab) return null;
 
@@ -161,8 +174,11 @@ function relativoCorto(iso) {
 // ─────────────────────────────────────────────────────────────────────
 export function debeMostrarSugerencia(sugerencia, descartes, totalEpisodios = 0) {
   if (!sugerencia) return false;
-  if (!descartes.length) return true;
-  const ultimoRechazo = descartes.reduce((latest, d) =>
+  // Solo cuentan los descartes de ESTA habilidad. Así descartar una
+  // tarjeta ("No por ahora") no oculta las demás sugerencias.
+  const propios = (descartes || []).filter((d) => d.habilidad_id === sugerencia.habilidad_id);
+  if (!propios.length) return true;
+  const ultimoRechazo = propios.reduce((latest, d) =>
     !latest || new Date(d.descartada_at) > new Date(latest.descartada_at) ? d : latest, null);
   if (!ultimoRechazo) return true;
   const dias = (Date.now() - new Date(ultimoRechazo.descartada_at).getTime()) / 86400000;

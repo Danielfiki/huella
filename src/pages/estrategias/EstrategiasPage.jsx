@@ -14,7 +14,7 @@ import SelectorHabilidades from './components/SelectorHabilidades';
 import EstrategiaPasadaCard from './components/EstrategiaPasadaCard';
 import LoadingDignificado from './components/LoadingDignificado';
 import {
-  buildSugerenciaFromInterpretacion,
+  buildSugerenciasFromInterpretacion,
   debeMostrarSugerencia,
   estadoPlan,
   MAX_PLANES_ACTIVOS_FREE,
@@ -38,12 +38,12 @@ export default function EstrategiasPage() {
   const planes = state.estrategias || [];
   const episodios = state.episodios || [];
 
-  const [sugerencia, setSugerencia] = useState(null);
+  const [sugerencias, setSugerencias] = useState([]);
   const [descartes, setDescartes] = useState([]);
   const [loadingPatrones, setLoadingPatrones] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [esNueva, setEsNueva] = useState(false);
-  const sugerenciaRef = useRef(null);
+  const [nuevasCount, setNuevasCount] = useState(0);
+  const sugerenciasRef = useRef([]);
   const hijoIdRef = useRef(null);
 
   const planesActivos = useMemo(
@@ -91,13 +91,12 @@ export default function EstrategiasPage() {
   }, [hijo?.id]);
 
   useEffect(() => {
-    if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) { setSugerencia(null); return; }
-    if (!hijo?.id || episodios.length < 3) { setSugerencia(null); return; }
+    if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) { setSugerencias([]); return; }
+    if (!hijo?.id || episodios.length < 3) { setSugerencias([]); return; }
 
     // Si venimos del Panel con análisis ya hecho, usarlo directamente
     if (sugerenciaPrecocida) {
-      const sug = buildSugerenciaFromInterpretacion(sugerenciaPrecocida, episodios);
-      setSugerencia(sug);
+      setSugerencias(buildSugerenciasFromInterpretacion(sugerenciaPrecocida, episodios));
       return;
     }
 
@@ -107,11 +106,10 @@ export default function EstrategiasPage() {
       try {
         const interp = await detectarPatronesEstructurado({ hijo_id: hijo.id, hijo_edad: hijo.edad, episodios });
         if (cancel) return;
-        const sug = buildSugerenciaFromInterpretacion(interp, episodios);
-        setSugerencia(sug);
+        setSugerencias(buildSugerenciasFromInterpretacion(interp, episodios));
       } catch (e) {
         console.error('detectarPatronesEstructurado falló', e);
-        setSugerencia(null);
+        setSugerencias([]);
       } finally {
         if (!cancel) setLoadingPatrones(false);
       }
@@ -135,80 +133,84 @@ export default function EstrategiasPage() {
     );
   }, [planes, hijo]);
 
-  // Cambio 3: filtrar sugerencia si su habilidad está excluida
-  const sugerenciaFiltrada = useMemo(() => {
-    if (!sugerencia) return null;
-    if (habilidadesExcluidas.has(sugerencia.habilidad_nombre)) return null;
-    return sugerencia;
-  }, [sugerencia, habilidadesExcluidas]);
+  // Cambio 3 + Bug 1: lista de sugerencias visibles. Se filtra cada una
+  // por (a) habilidad no excluida y (b) lógica de descarte 7d/5ep POR
+  // habilidad (debeMostrarSugerencia ya filtra los descartes por
+  // habilidad_id). Así cada tarjeta vive y muere de forma independiente.
+  const sugerenciasVisibles = useMemo(() => {
+    return sugerencias
+      .filter((s) => !habilidadesExcluidas.has(s.habilidad_nombre))
+      .filter((s) => debeMostrarSugerencia(s, descartes, episodios.length));
+  }, [sugerencias, habilidadesExcluidas, descartes, episodios.length]);
 
-  // Cambio 2: nueva lógica 7d / 5ep (usando sugerenciaFiltrada)
-  const sugerenciaVisible = debeMostrarSugerencia(sugerenciaFiltrada, descartes, episodios.length);
+  // Clave estable de fingerprints para deps de efectos (evita loops por
+  // identidad de arreglo nuevo en cada render).
+  const fingerprintsVisibles = useMemo(
+    () => sugerenciasVisibles.map((s) => s.fingerprint).join('|'),
+    [sugerenciasVisibles]
+  );
 
-  // sin sugerencia pero con datos suficientes: post-rechazo, filtro 90d o IA sin patrón
-  const esPostRechazo = !sugerenciaVisible && episodios.length >= 5 && !loadingPatrones;
-
-  // Cambio 5: auto-expand si sugerencia es nueva (no vista en esta sesión)
+  // Cambio 5: auto-expand si hay alguna sugerencia nueva (no vista en
+  // esta sesión). nuevasCount alimenta el badge "N nueva(s)".
   useEffect(() => {
-    if (!sugerenciaVisible || !sugerenciaFiltrada) return;
+    if (sugerenciasVisibles.length === 0) { setNuevasCount(0); return; }
     const key = `huella_sug_${hijo?.id}`;
     const vistas = JSON.parse(sessionStorage.getItem(key) || '[]');
-    if (!vistas.includes(sugerenciaFiltrada.fingerprint)) {
+    const nuevas = sugerenciasVisibles.filter((s) => !vistas.includes(s.fingerprint));
+    if (nuevas.length > 0) {
       setExpanded(true);
-      setEsNueva(true);
+      setNuevasCount(nuevas.length);
     } else {
-      setExpanded(false);
-      setEsNueva(false);
+      setNuevasCount(0);
     }
-  }, [sugerenciaVisible, sugerenciaFiltrada?.fingerprint, hijo?.id]);
+  }, [fingerprintsVisibles, hijo?.id]);
 
-  // Cambio 5: marcar como vista al desmontar (si ya se expandió alguna vez)
+  // Cambio 5: marcar todas las visibles como vistas al desmontar.
   useEffect(() => {
     return () => {
-      if (!sugerenciaRef.current || !hijoIdRef.current) return;
+      if (!sugerenciasRef.current.length || !hijoIdRef.current) return;
       const key = `huella_sug_${hijoIdRef.current}`;
       const vistas = JSON.parse(sessionStorage.getItem(key) || '[]');
-      if (!vistas.includes(sugerenciaRef.current)) {
-        sessionStorage.setItem(key, JSON.stringify([...vistas, sugerenciaRef.current]));
-      }
+      const merged = Array.from(new Set([...vistas, ...sugerenciasRef.current]));
+      sessionStorage.setItem(key, JSON.stringify(merged));
     };
   }, []);
 
   // Mantener refs actualizados para el cleanup del unmount
   useEffect(() => {
-    sugerenciaRef.current = sugerenciaFiltrada?.fingerprint ?? null;
+    sugerenciasRef.current = sugerenciasVisibles.map((s) => s.fingerprint);
     hijoIdRef.current = hijo?.id ?? null;
-  }, [sugerenciaFiltrada?.fingerprint, hijo?.id]);
+  }, [fingerprintsVisibles, hijo?.id]);
 
   const handleToggle = () => {
-    if (!expanded && sugerenciaFiltrada) {
-      // Al expandir manualmente, marcar como vista
+    if (!expanded && sugerenciasVisibles.length > 0) {
+      // Al expandir manualmente, marcar todas como vistas
       const key = `huella_sug_${hijo?.id}`;
       const vistas = JSON.parse(sessionStorage.getItem(key) || '[]');
-      if (!vistas.includes(sugerenciaFiltrada.fingerprint)) {
-        sessionStorage.setItem(key, JSON.stringify([...vistas, sugerenciaFiltrada.fingerprint]));
-      }
-      setEsNueva(false);
+      const merged = Array.from(new Set([...vistas, ...sugerenciasVisibles.map((s) => s.fingerprint)]));
+      sessionStorage.setItem(key, JSON.stringify(merged));
+      setNuevasCount(0);
     }
     setExpanded((v) => !v);
   };
 
-  const onAceptarSugerencia = () => {
-    const ids = sugerenciaFiltrada.episodios_detonantes.map((e) => e.id).join(',');
-    navigate(`/estrategias/nuevo?habilidad=${sugerenciaFiltrada.habilidad_id}&episodios=${ids}`);
+  const onAceptarSugerencia = (sug) => {
+    const ids = sug.episodios_detonantes.map((e) => e.id).join(',');
+    navigate(`/estrategias/nuevo?habilidad=${sug.habilidad_id}&episodios=${ids}`);
   };
-  const onCerrarSugerencia = async () => {
-    if (!sugerenciaFiltrada) return;
-    // Cambio 2: incluir episodios_count_al_rechazar
+  // "No por ahora" descarta SOLO esa tarjeta. Al insertar el descarte,
+  // debeMostrarSugerencia la saca de sugerenciasVisibles y la card
+  // desaparece sola; las demás siguen visibles.
+  const onCerrarSugerencia = async (sug) => {
+    if (!sug) return;
     const reg = {
       hijo_id: hijo.id,
-      fingerprint: sugerenciaFiltrada.fingerprint,
-      habilidad_id: sugerenciaFiltrada.habilidad_id,
+      fingerprint: sug.fingerprint,
+      habilidad_id: sug.habilidad_id,
       descartada_at: new Date().toISOString(),
       episodios_count_al_rechazar: episodios.length,
     };
     setDescartes((d) => [...d, reg]);
-    setSugerencia(null);
     await supabase.from('estrategia_sugerencias_descartadas').insert(reg);
   };
   const onElegirHabilidad = (hab) => {
@@ -342,21 +344,24 @@ export default function EstrategiasPage() {
           <section className={styles.section}>
             <button className={styles.sectionHeader} onClick={handleToggle} aria-expanded={expanded}>
               <span className={styles.sectionLblText}>Lo que Huella ve en {hijo?.nombre || 'tu hijo'}</span>
-              {esNueva && sugerenciaVisible && (
-                <span className={styles.badgeNueva}>1 nueva</span>
+              {nuevasCount > 0 && (
+                <span className={styles.badgeNueva}>{nuevasCount} {nuevasCount === 1 ? 'nueva' : 'nuevas'}</span>
               )}
               <span className={styles.sectionChev}>{expanded ? '▲' : '▼'}</span>
             </button>
             {expanded && (
               loadingPatrones ? (
                 <PuertaUnoLoading onIrPuerta2={onIrPuerta2} />
-              ) : sugerenciaVisible ? (
-                <PuertaUnoHallazgo
-                  sugerencia={sugerenciaFiltrada}
-                  onAceptar={onAceptarSugerencia}
-                  onDescartar={onCerrarSugerencia}
-                  onIrPuerta2={onIrPuerta2}
-                />
+              ) : sugerenciasVisibles.length > 0 ? (
+                sugerenciasVisibles.map((sug) => (
+                  <PuertaUnoHallazgo
+                    key={sug.fingerprint}
+                    sugerencia={sug}
+                    onAceptar={() => onAceptarSugerencia(sug)}
+                    onDescartar={() => onCerrarSugerencia(sug)}
+                    onIrPuerta2={onIrPuerta2}
+                  />
+                ))
               ) : (
                 <PuertaUnoEmpty
                   totalEpisodios={episodios.length}
