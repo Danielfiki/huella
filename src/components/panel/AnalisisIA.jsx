@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import CitaLoader from '../ui/CitaLoader'
+import ProgressBar from '../ui/ProgressBar'
 import styles from './analisisIa.module.css'
 
 const SECTION_TITLES = new Set([
@@ -39,7 +40,51 @@ function renderAnalysisText(text) {
 }
 
 export function AnalisisIA({ loading, texto, onAnalizar, onAccept, onDismiss }) {
-  if (loading) {
+  // Barra de "avance percibido" durante la espera (reusa el ProgressBar del
+  // onboarding). NO refleja progreso real: sube hasta ~90% con ease-out a lo
+  // largo de ~60s — el análisis del Home puede tardar hasta ~75s — y se clava
+  // ahí; las citas cubren la espera larga. Al terminar con éxito completa a
+  // 100% y recién ahí se hace swap al texto. Si falla, no llega a 100%.
+  const [progress, setProgress] = useState(0)
+  const [completing, setCompleting] = useState(false)
+  const fueLoading = useRef(false)
+
+  // Subida 0 → ~90% mientras carga (animación temporizada con ease-out).
+  useEffect(() => {
+    if (!loading) return undefined
+    setCompleting(false)
+    setProgress(0)
+    const DURACION_MS = 60000
+    const TOPE = 90
+    const inicio = Date.now()
+    const id = setInterval(() => {
+      const t = Math.min(1, (Date.now() - inicio) / DURACION_MS)
+      const eased = 1 - Math.pow(1 - t, 3) // ease-out: rápido al inicio, lento al final
+      setProgress(Math.round(eased * TOPE))
+      if (t >= 1) clearInterval(id)
+    }, 250)
+    return () => clearInterval(id)
+  }, [loading])
+
+  // Al pasar de loading → no-loading: si fue ÉXITO, completa a 100% y mantiene
+  // la vista de espera ~350ms antes del swap al texto. Si fue error, no toca
+  // la barra (queda clavada y se reemplaza por el card de error de siempre).
+  useEffect(() => {
+    const venia = fueLoading.current
+    fueLoading.current = loading
+    if (venia && !loading) {
+      const exito = texto && !texto.startsWith('Error')
+      if (exito) {
+        setProgress(100)
+        setCompleting(true)
+        const id = setTimeout(() => setCompleting(false), 350)
+        return () => clearTimeout(id)
+      }
+    }
+    return undefined
+  }, [loading, texto])
+
+  if (loading || completing) {
     return (
       <article className={styles.card}>
         <header className={styles.head}>
@@ -50,6 +95,14 @@ export function AnalisisIA({ loading, texto, onAnalizar, onAccept, onDismiss }) 
           </div>
         </header>
         <CitaLoader categoria="patrones" compact />
+        <ProgressBar
+          value={progress}
+          phase={completing ? 'complete' : 'determinate'}
+          tone="onLight"
+          color="var(--color-accent-green)"
+          label="Analizando patrones"
+          className={styles.progressSpace}
+        />
       </article>
     )
   }

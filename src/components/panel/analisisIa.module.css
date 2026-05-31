@@ -55,6 +55,10 @@
 .body {
   margin-bottom: 12px;
 }
+/* Espaciado del ProgressBar bajo el CitaLoader en la vista de espera */
+.progressSpace {
+  margin-top: 14px;
+}
 .sectionTitle {
   font-family: var(--font-heading);
   font-size: 13px;
