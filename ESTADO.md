@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: sábado 31 mayo 2026 — Sesión C (prevenciones de raíz) cerrada y verificada en producción.*
+*Última actualización: martes 2 junio 2026 — Prompt caching Fase 1 en producción; auditorías de monetización y reset de contraseña; logo a diseñador humano.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -187,10 +187,31 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
+## Cerrado HOY (martes 2 junio 2026)
+
+**Prompt caching Fase 1 → EN PRODUCCIÓN, verificada (commits `c89f104`, `29c11d3`, `91cc788`)**
+- Se cachea el `SYSTEM_PROMPT` (~6.200 tokens, idéntico en todas las llamadas) con `cache_control: ephemeral` en `api/anthropic.js` — el `system` pasó de string a array de un bloque. Sin header beta (GA), sin tocar el cliente ni el comportamiento.
+- **Verificado en logs de Vercel:** primera llamada `cache_creation_input_tokens: 6844`; siguientes `cache_read_input_tokens: 6844`. **Costo de IA por llamada pesada recortado ~⅓.**
+- Log temporal de `usage` agregado para verificar y luego removido (commit `29c11d3`).
+- Tabla completa de costo de IA por tipo de llamada versionada en `COSTOS_IA.md` (commit `91cc788`).
+
+**Auditorías de la sesión (sin construir nada nuevo):**
+- **Recuperación de contraseña:** ya estaba completa en prod (commits `fc36f41` + `692445b`). Pendiente "LoginPage sin ¿Olvidaste tu contraseña?" marcado RESUELTO.
+- **Monetización:** auditado el andamiaje Free/Pro/Admin existente — tiers (`isPro`/`isAdmin` leen `perfiles.plan`), precio $5.990 CLP/mes hardcodeado, gating real (cap 15 episodios free, `MAX_PLANES_ACTIVOS_FREE=3`), página `/cuenta` + `UpgradeModal`. **Falta toda la pasarela de pago real** (no hay Stripe/MercadoPago/etc.; el botón de upgrade no conecta con nada). No se construye aún.
+
+**Logo:** se descartó la vía IA. Va a diseñador humano; brief ya entregado.
+
+---
+
 ## Próximo paso
 
-**"Bugs Estrategias parte 2" + "Puerta 2 con cuerpo vacío" → DESCARTADOS (1 jun 2026).** Revisados en prod, sin defecto real; descartados por falta de síntoma. (Cubría: "Semana 1 de 4" tras cierre de último ciclo, chips de habilidades activas sin opacidad —ya resuelto en Round 6—, skill chips selector, regresión Round 6, y Puerta 2 con cuerpo vacío.)
+**Definido para próxima sesión: apartado de pricing descubrible.**
+- Hoy el upgrade a Pro **solo aparece al topar un límite** (ej. 15 episodios → `UpgradeModal`). Falta acceso proactivo y permanente desde Perfil/Cuenta para que el usuario pueda ver y elegir el plan cuando quiera, no solo cuando choca con una pared.
 
-**Siguiente en PLAN.md — Sesión D: Logo + Auditoría tagline**
-- Reemplazar wordmark "huella" por logo real en header, login, signup, correos, favicon, ícono PWA.
-- Buscar el tagline viejo en todo el repo y reemplazar por "Conoce la huella única de tus hijos".
+**En recámara (optimización de costo, no urgente):**
+- **Fase 2 del caching:** cachear también el `marcoEdad()` (~5.300 tokens, 4 variantes por edad) como 2º breakpoint del `system` — recorta otro ~⅓. Requiere refactor del contrato cliente↔backend. Detalle en `COSTOS_IA.md`.
+- **Evaluar Haiku** (`claude-haiku-4-5`) para tareas simples (celebrar hito, reflexión check-in, consejo diario) en vez de Sonnet para todo.
+
+**Pendientes de fondo (sin fecha):**
+- **"Bugs Estrategias parte 2" + "Puerta 2 con cuerpo vacío" → DESCARTADOS (1 jun 2026).** Revisados en prod, sin defecto real; descartados por falta de síntoma.
+- **Sesión D del PLAN.md — Logo + Auditoría tagline:** reemplazar wordmark "huella" por el logo real (cuando llegue del diseñador) en header, login, signup, correos, favicon, ícono PWA; y buscar/reemplazar el tagline viejo por "Conoce la huella única de tus hijos".
