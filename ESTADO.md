@@ -80,11 +80,9 @@
 - **Sin esto, modo parejas no funciona en el mundo real** para parejas que no saben copiar links.
 - **Próximo paso:** diagnóstico de `/api/invite`, revisar logs de Vercel en runtime + dashboard de Resend (entregas, bounces, rejected).
 
-#### B. Bug: LoginPage no tiene opción "¿Olvidaste tu contraseña?" — prioridad ALTA
+#### B. ~~Bug: LoginPage no tiene opción "¿Olvidaste tu contraseña?"~~ — RESUELTO ✅
 
-- **Síntoma:** en `/login` solo aparece "¿No tienes cuenta? Crear cuenta". Una pareja invitada que no recuerda su password queda bloqueada definitivamente.
-- **Fix esperado:** agregar link "¿Olvidaste tu contraseña?" debajo del botón "Ingresar", que dispare `supabase.auth.resetPasswordForEmail(email, { redirectTo: ... })`.
-- **Pre-lanzamiento obligatorio.**
+- **Resuelto en producción** (commits `fc36f41` + `692445b`, QA OK 27 mayo). Auditoría de raíz el 1 jun confirmó el flujo completo de punta a punta: link en `LoginPage` → `resetPassword` (`AuthContext`) con `resetPasswordForEmail` → página doble-modo `ResetPasswordPage` (solicitar/enviado/actualizar/éxito/link inválido) en ruta pública `/reset-password`. Ya no es pendiente ni bloqueante de beta.
 
 #### C. Limpieza BD: hijo fantasma "Pascu" — prioridad BAJA
 
