@@ -2,9 +2,10 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
+import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 
 const FREE_FEATURES = [
-  { ok: true,  text: 'Hasta 15 episodios' },
+  { ok: true,  text: `Hasta ${MAX_EPISODIOS_FREE} episodios` },
   { ok: true,  text: '1 hijo' },
   { ok: true,  text: 'Orientación IA básica post-episodio' },
   { ok: true,  text: 'Historial últimos 7 días' },

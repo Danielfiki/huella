@@ -3,6 +3,7 @@
 // + utilidades varias
 
 export const MAX_PLANES_ACTIVOS_FREE = 3;
+export const MAX_EPISODIOS_FREE = 15;
 
 export const HABILIDADES_CATALOGO = {
   emocional: {

@@ -7,7 +7,7 @@ const FEATURES = [
   'Seguimiento post-episodio (check-in)',
 ]
 
-export default function UpgradeModal({ onClose }) {
+export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
   return (
     <div
       style={{
@@ -28,10 +28,10 @@ export default function UpgradeModal({ onClose }) {
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <p style={{ fontSize: '36px', margin: '0 0 8px' }}>✨</p>
           <h2 style={{ margin: '0 0 6px', fontSize: '22px', fontWeight: 800, color: '#3a2e28' }}>
-            Huella Pro
+            {tituloCustom || 'Huella Pro'}
           </h2>
           <p style={{ margin: 0, fontSize: '14px', color: '#8a7a70', lineHeight: 1.5 }}>
-            Todo lo que necesitas para acompañar el desarrollo emocional de tu hijo/a con profundidad.
+            {mensajeCustom || 'Todo lo que necesitas para acompañar el desarrollo emocional de tu hijo/a con profundidad.'}
           </p>
         </div>
 

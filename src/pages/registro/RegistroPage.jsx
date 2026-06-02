@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
+import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
@@ -463,7 +464,7 @@ export default function RegistroPage() {
   }, [vista])
 
   function trySetVista(v) {
-    if (state.episodios.length >= 15 && !isPro()) { setShowUpgrade(true); return }
+    if (state.episodios.length >= MAX_EPISODIOS_FREE && !isPro()) { setShowUpgrade(true); return }
     setVista(v)
   }
 
@@ -733,7 +734,28 @@ export default function RegistroPage() {
           <h3 className={styles.modoTitulo}>Registro detallado</h3>
           <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
         </button>
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+
+        {!isPro() && (() => {
+          const restantes = MAX_EPISODIOS_FREE - state.episodios.length
+          if (restantes < 1 || restantes > 3) return null
+          return (
+            <p className={styles.avisoLimite}>
+              {restantes === 1
+                ? 'Te queda 1 registro en tu plan gratuito.'
+                : `Te quedan ${restantes} registros en tu plan gratuito.`}{' '}
+              <button type="button" className={styles.avisoLink} onClick={() => navigate('/cuenta')}>
+                Conocer Pro
+              </button>
+            </p>
+          )
+        })()}
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom={`Registraste ${MAX_EPISODIOS_FREE} episodios`}
+          mensajeCustom="Eso es dedicación de verdad. Con Huella Pro sigues registrando sin límite y desbloqueas el análisis completo de patrones."
+        />
+      )}
       </div>
     )
   }

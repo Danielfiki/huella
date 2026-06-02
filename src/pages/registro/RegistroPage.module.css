@@ -748,3 +748,26 @@
   transition: color 0.15s;
 }
 .emocionLimpiarBtn:hover { color: var(--color-danger); }
+
+/* ── Aviso de cercanía al límite free ── */
+.avisoLimite {
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.avisoLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.avisoLink:hover { color: var(--color-primary-dark); }
