@@ -252,7 +252,17 @@ export default async function handler(req, res) {
         // Si no, cae al SYSTEM_PROMPT clínico default de Huella.
         // Esto permite que el Onboarding Susurro pase un system propio
         // (JSON estructurado) sin pisar al resto del flujo.
-        system: system || SYSTEM_PROMPT,
+        // El system va como array de bloques con cache_control ephemeral:
+        // el SYSTEM_PROMPT es byte-idéntico en todas las llamadas, así que
+        // tras la primera se lee del cache (~0.1x) en vez de re-facturarse
+        // completo. Cache compartido a nivel de cuenta, 5 min de TTL.
+        system: [
+          {
+            type: 'text',
+            text: system || SYSTEM_PROMPT,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -316,5 +326,6 @@ export default async function handler(req, res) {
   }
 
   const data = await response.json()
+  console.log('[anthropic] usage', data.usage) // TEMPORAL: verificar cache, quitar tras confirmar
   return res.status(200).json({ text: data.content[0].text })
 }
