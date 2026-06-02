@@ -31,11 +31,8 @@ Estimación total: 12-16 semanas calendario.
 - Multi-plan solo muestra el primero
 - Plan completado en sección incorrecta
 
-**Sesión C — Bugs Estrategias parte 2**
-- "Semana 1 de 4" tras cierre de último ciclo
-- Chips de habilidades activas sin opacidad
-- Skill chips selector
-- Regresión Round 6
+**Sesión C — Bugs Estrategias parte 2 → DESCARTADA (1 jun 2026)**
+Revisados en prod, sin defecto real; descartados por falta de síntoma.
 
 **Sesión D — Logo + Auditoría tagline**
 - Reemplazar wordmark "huella" por logo real en header, login, signup, correos, favicon, ícono PWA

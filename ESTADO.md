@@ -189,9 +189,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ## Próximo paso
 
-**Pendientes arrastrados (la Sesión C nominal de PLAN.md no se hizo; se reorientó a robustez):**
-- **Bugs Estrategias parte 2:** "Semana 1 de 4" tras cierre de último ciclo · chips de habilidades activas sin opacidad · skill chips selector · regresión Round 6.
-- **Bug 3 "Puerta 2 con cuerpo vacío"** (de Sesión B): en pausa hasta tener síntoma reproducible.
+**"Bugs Estrategias parte 2" + "Puerta 2 con cuerpo vacío" → DESCARTADOS (1 jun 2026).** Revisados en prod, sin defecto real; descartados por falta de síntoma. (Cubría: "Semana 1 de 4" tras cierre de último ciclo, chips de habilidades activas sin opacidad —ya resuelto en Round 6—, skill chips selector, regresión Round 6, y Puerta 2 con cuerpo vacío.)
 
 **Siguiente en PLAN.md — Sesión D: Logo + Auditoría tagline**
 - Reemplazar wordmark "huella" por logo real en header, login, signup, correos, favicon, ícono PWA.
