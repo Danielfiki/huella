@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus, UserCircle } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus, UserCircle, Sparkles, ArrowRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdad } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
@@ -301,6 +301,35 @@ export default function PerfilPage() {
         </form>
       </Card>
 
+      {/* ── Huella Pro ───────────────────────────────── */}
+      <Card className={styles.proCard}>
+        <div className={styles.proHeader}>
+          <div className={styles.proTitleWrap}>
+            <Sparkles size={18} color={isPro() ? 'var(--color-success)' : 'var(--color-primary)'} />
+            <h3 className={styles.proTitle}>Huella Pro</h3>
+          </div>
+          <span className={`${styles.proChip} ${isPro() ? styles.proChipActive : styles.proChipFree}`}>
+            {isAdmin() ? 'Admin' : isPro() ? 'Activo' : 'Plan Gratuito'}
+          </span>
+        </div>
+
+        {isPro() ? (
+          <Link to="/cuenta" className={styles.proManageLink}>
+            Gestionar plan
+          </Link>
+        ) : (
+          <>
+            <p className={styles.proBenefit}>
+              Desbloquea episodios ilimitados, todos los planes de estrategia y el acompañamiento completo de Huella.
+            </p>
+            <Link to="/cuenta" className={styles.proCta}>
+              Conocer Pro
+              <ArrowRight size={16} />
+            </Link>
+          </>
+        )}
+      </Card>
+
       {/* ── Hijo ─────────────────────────────────────── */}
       <Card>
         <div className={styles.sectionHeader}>
@@ -575,28 +604,6 @@ export default function PerfilPage() {
           <Mail size={14} color="var(--color-text-muted)" />
           <span className={styles.emailText}>{user?.email}</span>
         </div>
-        <Link
-          to="/cuenta"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginTop: '12px', padding: '10px 12px',
-            background: isPro() ? '#edf7f2' : '#fdf6f0',
-            borderRadius: '10px', textDecoration: 'none',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '15px' }}>{isPro() ? '✨' : '🔓'}</span>
-            <span style={{ fontSize: '14px', color: '#3a2e28', fontWeight: 600 }}>
-              Mi plan
-            </span>
-          </div>
-          <span style={{
-            fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '12px',
-            background: isPro() ? '#4a9e6f' : '#c96f45', color: '#fff',
-          }}>
-            {isAdmin() ? 'Admin' : isPro() ? 'Pro' : 'Gratuito'}
-          </span>
-        </Link>
       </Card>
 
       <button className={styles.signOutLink} onClick={handleSignOut} disabled={loadingSignOut}>
