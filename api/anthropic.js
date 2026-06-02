@@ -326,6 +326,5 @@ export default async function handler(req, res) {
   }
 
   const data = await response.json()
-  console.log('[anthropic] usage', data.usage) // TEMPORAL: verificar cache, quitar tras confirmar
   return res.status(200).json({ text: data.content[0].text })
 }
