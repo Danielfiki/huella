@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: martes 2 junio 2026 — Prompt caching Fase 1 en producción; auditorías de monetización y reset de contraseña; logo a diseñador humano.*
+*Última actualización: miércoles 3 junio 2026 — Pricing más humano en producción (acceso descubrible + muro como invitación); estrategia de precio premium y contenido base de /cuenta definidos.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -203,10 +203,26 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
+## Cerrado HOY (miércoles 3 junio 2026)
+
+**Pricing más humano de punta a punta → EN PRODUCCIÓN**
+- **Acceso descubrible a Pro (commit `46967d9`):** tarjeta "Huella Pro" en el Perfil (posición 4, tras "Tú"), con 3 estados (free/pro/admin) y migrada a tokens. Linkea a `/cuenta`.
+- **Muro de 15 episodios → invitación (commit `ede5fb9`):** constante única `MAX_EPISODIOS_FREE` (en `helpers.js`, reemplaza el `15` suelto del gate y el texto de `/cuenta`); aviso previo suave en "¿Cómo registrar?" cuando quedan 1-3 registros ("Te quedan N registros…" + "Conocer Pro"); el `UpgradeModal` acepta `tituloCustom`/`mensajeCustom` y en el muro muestra "Registraste 15 episodios" + copy que felicita. El modal voluntario de `/cuenta` sigue genérico. La pasarela de pago NO se tocó (sigue pendiente).
+
+**Estrategia de precio definida (números aún por afinar):**
+- **Posicionamiento PREMIUM** calibrado a Chile (no volumen). Rango orientativo **$8.990–$11.990 CLP/mes** + **plan anual con descuento**. Número exacto y estructura mensual/anual: **pendiente de afinar**. (Reemplazaría al $5.990 actual.)
+
+**Contenido base de `/cuenta` definido (copy aún por pulir):**
+- **4 beneficios destilados** que reemplazan las ~16 features actuales: (1) entender el *porqué*, (2) saber *qué hacer*, (3) historial serio + PDF, (4) en familia.
+- **Promesa central PROVISIONAL:** *"Entiende por qué tu hijo actúa así y acompáñalo mejor"* — funcional, pero **pendiente de pulir** a algo que conmueva (orfebrería de copy/marca, igual que el logo).
+
+---
+
 ## Próximo paso
 
-**Definido para próxima sesión: apartado de pricing descubrible.**
-- Hoy el upgrade a Pro **solo aparece al topar un límite** (ej. 15 episodios → `UpgradeModal`). Falta acceso proactivo y permanente desde Perfil/Cuenta para que el usuario pueda ver y elegir el plan cuando quiera, no solo cuando choca con una pared.
+**Pricing — diseñar/rediseñar la página `/cuenta` (vitrina premium):**
+- Armar la vitrina con el **contenido base** (4 beneficios + promesa central) y el **precio nuevo**, **quitando los emoji**. Va junto con **fijar el número final** (mensual/anual).
+- La **pasarela de pago real** sigue como la **tarea grande aparte** (los botones del `UpgradeModal` aún no cobran; no hay Stripe/MercadoPago/etc.).
 
 **En recámara (optimización de costo, no urgente):**
 - **Fase 2 del caching:** cachear también el `marcoEdad()` (~5.300 tokens, 4 variantes por edad) como 2º breakpoint del `system` — recorta otro ~⅓. Requiere refactor del contrato cliente↔backend. Detalle en `COSTOS_IA.md`.
