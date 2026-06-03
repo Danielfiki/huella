@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: jueves 4 junio 2026 — Vitrina premium de /cuenta en producción y pricing definitivo (CLP 9.990/mes · CLP 99.900/año). Pendiente grande: pasarela de pago real.*
+*Última actualización: jueves 4 junio 2026 — Vitrina premium de /cuenta + pricing definitivo (CLP 9.990/mes · CLP 99.900/año) + primer gate de monetización (2do hijo) en producción. Pendiente grande: pasarela de pago real.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -230,7 +230,14 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 - Acordeón "+ Ver todo lo que incluye Pro" con los 16 ítems completos.
 - Migrada a tokens (**cero hex hardcodeado**), **sin emoji**.
 
-**`UpgradeModal`:** precio actualizado a **CLP 9.990** y emoji ✨ eliminado. Layout y resto del copy sin tocar (el rediseño visual del modal queda para Design).
+**`UpgradeModal`:** precio actualizado a **CLP 9.990** y emoji ✨ eliminado. Botón principal cambiado a **"Activar Huella Pro"** (antes "Probar 7 días gratis") — **decisión aplicada: sin trial de 7 días por ahora**. Layout y resto del copy sin tocar (el rediseño visual del modal queda para Design).
+
+**Ajuste de copy en la vitrina:** beneficio 2 → **"Ten claro qué hacer, incluso en plena crisis"**.
+
+**Gate del 2do hijo → EN PRODUCCIÓN (commit `d2f4a4c`) — primer gate de la fase de monetización.**
+- Free limitado a 1 hijo; Pro/Admin, ilimitados. Al intentar agregar un 2do hijo (botón "Agregar otro hijo/a" del Perfil + "+" del selector del Panel), abre el `UpgradeModal` con invitación **"Cada hijo tiene su huella"** en vez de agregarlo en silencio. Admin pasa sin bloqueo (`isPro()` incluye admin).
+
+**Cálculo de monetización (referencia):** 3 escenarios de conversión (5 / 10 / 15%). Base ~**CLP 50M/año** a 10% de conversión con 1.000 usuarios.
 
 ---
 
@@ -238,7 +245,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 **Principio rector:** lo inmediato y de crisis es **gratis**; lo profundo, lo que escala y lo que se comparte es **Pro**.
 
-> Documentación de la decisión. **Los gates todavía NO están implementados** — ver "Gates a implementar" abajo. Auditoría que motivó esto: hoy solo existen 2 topes reales (15 episodios con invitación; PDF oculto sin invitación); casi todas las features "Pro" de la vitrina ya las tiene el free, y los límites de "1 hijo" e "historial 7 días" son promesas fantasma no implementadas.
+> Documentación de la decisión. **El primer gate (2do hijo) ya está implementado (commit `d2f4a4c`); faltan los demás** — ver "Gates a implementar" abajo. Auditoría que motivó esto: solo existían 2 topes reales (15 episodios con invitación; PDF oculto sin invitación); casi todas las features "Pro" de la vitrina ya las tiene el free, y los límites de "1 hijo" e "historial 7 días" eran promesas fantasma no implementadas (1 hijo ya quedó implementado).
 
 **FREE (lo inmediato / el aha que engancha):**
 - Registrar hasta 15 episodios.
@@ -256,27 +263,42 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 - Informe PDF para especialista (hoy se oculta en silencio → **agregar invitación**).
 - Modo familia: **el que inicia paga** para conectar; la pareja invitada accede **sin pagar**.
 
-**Gates a implementar (fase futura, ANTES de Stripe):** 2do hijo · análisis de patrones · crear estrategia · búsqueda · modo familia · invitación en el PDF. **Cada tope debe invitar a Pro al chocarlo** (no bloquear en silencio).
+**Gates a implementar (fase futura, ANTES de Stripe):** ✅ ~~2do hijo~~ (HECHO, commit `d2f4a4c`) · análisis de patrones · crear estrategia · búsqueda · modo familia · invitación en el PDF · alinear vitrina (quitar promesa fantasma "historial 7 días"). **Cada tope debe invitar a Pro al chocarlo** (no bloquear en silencio).
 
 ---
 
 ## Próximo paso
 
-**Pendientes nuevos (de esta sesión):**
-1. **Pasarela de pago real (Stripe)** — el botón "Activar Huella Pro" y el `UpgradeModal` **NO cobran aún**. Tarea grande aparte.
-2. **Decisión free trial 7 días:** el modal ofrece "Probar 7 días gratis" pero la vitrina vende directo. Definir si hay trial (afecta conversión e ingresos).
-3. **Login estratégico:** hoy se fuerza login en la puerta; mover el gate a "registrar primer episodio" para dejar explorar antes. Tarea de onboarding + rutas.
-4. **Botón de respiración para el cuidador** antes de registrar (co-regulación, base Siegel/Shanker).
-5. **Reevaluar onboarding modal "Así funciona Huella"** (3 pasos) que aparece al login.
-6. **Reevaluar banner "Activa recordatorios para no perder el hilo".**
-7. **Verificar implementación real del "check-in emocional":** el copy promete seguimiento al día siguiente; confirmar que la funcionalidad existe y calza.
-8. **Rediseño del `UpgradeModal` a Design** (layout "pegado abajo").
-9. **Decisión de formato de precio:** "$9.990" (natural en Chile) vs "CLP 9.990".
+### Fase monetización — gates restantes (ANTES de Stripe)
+- **Gate análisis de patrones:** el free ve un **teaser** que invita.
+- **Gate crear estrategias de 4 semanas:** el free ve **preview**; crear es Pro.
+- **Gate búsqueda en registros.**
+- **Gate modo familia:** el que inicia paga para conectar; la pareja invitada accede **sin pagar**.
+- **Agregar invitación a Pro en el export PDF** (hoy se oculta en silencio).
+- **Alinear la vitrina:** quitar la promesa fantasma "historial 7 días".
+- *(Cada tope debe **invitar** a Pro al chocarlo, no bloquear en silencio.)*
+- *(✅ Gate 2do hijo — HECHO esta sesión, commit `d2f4a4c`.)*
 
-**En recámara (optimización de costo, no urgente):**
+### Monetización — después de los gates
+- **Pasarela de pago real (Stripe).** El botón "Activar Huella Pro" y el `UpgradeModal` **NO cobran aún**. Tarea grande aparte.
+- **Evaluar reverse trial largo (14-30 días, NO 7)** cuando llegue Stripe. *(El trial de 7 días quedó descartado esta sesión.)*
+
+### UX / Producto (notas de esta sesión)
+- **Login estratégico:** mover el gate de login de la puerta a "registrar primer episodio" (dejar explorar antes). Tarea de onboarding + rutas. Incluye fix: el login redirige a `huella.lat` **incluso desde `localhost`** → ajustar config de Supabase para respetar `localhost` en dev.
+- **Botón de respiración para el cuidador** antes de registrar (co-regulación; base Siegel/Shanker).
+- **Reevaluar onboarding modal "Así funciona Huella"** (3 pasos) que aparece al iniciar sesión.
+- **Reevaluar banner "Activa recordatorios para no perder el hilo con tu hijo/a".**
+- **Verificar implementación real del "check-in emocional":** confirmar qué hace y que el copy de la vitrina calce.
+
+### Diseño (a Claude Design)
+- **Rediseño del `UpgradeModal`**, incluyendo **centrarlo bien en pantalla** (hoy sale pegado abajo).
+- **Pasar por Design la vitrina `/cuenta` y la sección de Registros.**
+- **Decisión de formato de precio:** "$9.990" (natural en Chile) vs "CLP 9.990".
+
+### En recámara (optimización de costo, no urgente)
 - **Fase 2 del caching:** cachear también el `marcoEdad()` (~5.300 tokens, 4 variantes por edad) como 2º breakpoint del `system` — recorta otro ~⅓. Requiere refactor del contrato cliente↔backend. Detalle en `COSTOS_IA.md`.
 - **Evaluar Haiku** (`claude-haiku-4-5`) para tareas simples (celebrar hito, reflexión check-in, consejo diario) en vez de Sonnet para todo.
 
-**Pendientes de fondo (sin fecha):**
+### Pendientes de fondo (sin fecha)
 - **"Bugs Estrategias parte 2" + "Puerta 2 con cuerpo vacío" → DESCARTADOS (1 jun 2026).** Revisados en prod, sin defecto real; descartados por falta de síntoma.
 - **Sesión D del PLAN.md — Logo + Auditoría tagline:** reemplazar wordmark "huella" por el logo real (cuando llegue del diseñador) en header, login, signup, correos, favicon, ícono PWA; y buscar/reemplazar el tagline viejo por "Conoce la huella única de tus hijos".
