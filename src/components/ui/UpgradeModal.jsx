@@ -26,7 +26,6 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <p style={{ fontSize: '36px', margin: '0 0 8px' }}>✨</p>
           <h2 style={{ margin: '0 0 6px', fontSize: '22px', fontWeight: 800, color: '#3a2e28' }}>
             {tituloCustom || 'Huella Pro'}
           </h2>
@@ -45,7 +44,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
         </ul>
 
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <span style={{ fontSize: '26px', fontWeight: 800, color: '#c96f45' }}>$5.990</span>
+          <span style={{ fontSize: '26px', fontWeight: 800, color: '#c96f45' }}>CLP 9.990</span>
           <span style={{ fontSize: '14px', color: '#8a7a70' }}> / mes</span>
         </div>
 

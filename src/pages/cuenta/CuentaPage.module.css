@@ -1,0 +1,202 @@
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.volver {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+.volver:hover { color: var(--color-text); }
+
+/* ── Hero ── */
+.hero {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.planChip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-lg);
+}
+.planChipFree {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+}
+.planChipPro {
+  background: var(--color-success-bg);
+  color: var(--color-tag-green);
+}
+
+.promesa {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.activoMsg {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.precioWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.precioMes {
+  display: flex;
+  align-items: baseline;
+}
+.precioMonto {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.precioPeriodo {
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+.precioAnual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.precioAnualMonto {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.ahorroBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-tag-green);
+  background: var(--color-leaf-bg);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+
+/* ── Beneficios ── */
+.beneficios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.beneficioCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow-card-soft);
+}
+.beneficioIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.beneficioTitulo {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px;
+}
+.beneficioDesc {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Acordeón ── */
+.acordeon {
+  display: flex;
+  flex-direction: column;
+}
+.acordeonTrigger {
+  align-self: center;
+  background: none;
+  border: none;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.acordeonTrigger:hover { color: var(--color-primary-dark); }
+.acordeonLista {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.acordeonItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+.acordeonCheck {
+  flex-shrink: 0;
+  color: var(--color-success);
+  margin-top: 2px;
+}
+
+/* ── CTA ── */
+.cta {
+  width: 100%;
+  padding: 15px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-cta);
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-cta-primary);
+  transition: background 0.15s;
+}
+.cta:hover { background: var(--color-primary-dark); }

@@ -1,170 +1,139 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
-import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
+import styles from './CuentaPage.module.css'
 
-const FREE_FEATURES = [
-  { ok: true,  text: `Hasta ${MAX_EPISODIOS_FREE} episodios` },
-  { ok: true,  text: '1 hijo' },
-  { ok: true,  text: 'Orientación IA básica post-episodio' },
-  { ok: true,  text: 'Historial últimos 7 días' },
-  { ok: false, text: 'Episodios ilimitados' },
-  { ok: false, text: 'Hijos ilimitados' },
-  { ok: false, text: 'Orientación IA personalizada por episodio' },
-  { ok: false, text: 'Acción inmediata IA' },
-  { ok: false, text: 'Consejo diario personalizado' },
-  { ok: false, text: 'Análisis de patrones con IA' },
-  { ok: false, text: 'Estrategias de 4 semanas con tareas concretas' },
-  { ok: false, text: 'Check-in emocional al día siguiente' },
-  { ok: false, text: 'Historial completo sin límite de tiempo' },
-  { ok: false, text: 'Búsqueda en todos tus registros' },
-  { ok: false, text: 'Informe PDF exportable' },
-  { ok: false, text: 'Rutina diaria con marcadores de riesgo' },
-  { ok: false, text: 'Notificaciones inteligentes' },
-  { ok: false, text: 'Álbum de avances con fotos' },
-  { ok: false, text: 'Medallas y logros (34 badges)' },
-  { ok: false, text: 'Modo familia — conecta con tu pareja' },
+// Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
+const BENEFICIOS = [
+  {
+    icon: Lightbulb,
+    titulo: 'Entiende el porqué',
+    desc: 'Orientación de IA por episodio y análisis de patrones que conectan el comportamiento de tu hijo en el tiempo.',
+  },
+  {
+    icon: Zap,
+    titulo: 'Ten claro qué hacer, incluso en plena crisis',
+    desc: 'Acción inmediata para los próximos minutos, consejo diario y estrategias de 4 semanas con tareas concretas.',
+  },
+  {
+    icon: Camera,
+    titulo: 'Registra cada avance',
+    desc: 'Informe PDF para tu especialista, álbum de fotos y 34 medallas de progreso parental.',
+  },
+  {
+    icon: Users,
+    titulo: 'Acompáñalo en familia, sin límites',
+    desc: 'Conecta con tu pareja, registra todos los episodios y suma a todos tus hijos sin restricción.',
+  },
 ]
 
-const PRO_FEATURES = [
-  { emoji: '♾️', text: 'Episodios ilimitados' },
-  { emoji: '👨‍👩‍👧‍👦', text: 'Hijos ilimitados' },
-  { emoji: '🧠', text: 'Orientación IA personalizada por episodio (calibrada a edad y perfil)' },
-  { emoji: '⚡', text: 'Acción inmediata IA — qué hacer en los próximos minutos' },
-  { emoji: '💡', text: 'Consejo diario personalizado basado en tus datos reales' },
-  { emoji: '📊', text: 'Análisis de patrones con IA — conexiones entre episodios en el tiempo' },
-  { emoji: '🎯', text: 'Estrategias de 4 semanas con tareas concretas por habilidad' },
-  { emoji: '🔄', text: 'Check-in emocional al día siguiente — seguimiento real de cada episodio' },
-  { emoji: '📂', text: 'Historial completo sin límite de tiempo' },
-  { emoji: '🔍', text: 'Búsqueda en todos tus registros' },
-  { emoji: '📄', text: 'Informe PDF exportable para psicólogo o especialista' },
-  { emoji: '🕐', text: 'Rutina diaria del hijo con marcadores de momentos de riesgo' },
-  { emoji: '🔔', text: 'Notificaciones inteligentes — recordatorios y check-ins automáticos' },
-  { emoji: '📸', text: 'Álbum de avances con fotos' },
-  { emoji: '🏅', text: 'Medallas y logros — 34 badges de progreso parental' },
-  { emoji: '👫', text: 'Modo familia — conecta con tu pareja' },
+// Lista completa que se despliega en el acordeón "Ver todo lo que incluye Pro".
+const TODO_PRO = [
+  'Episodios ilimitados',
+  'Hijos ilimitados',
+  'Orientación IA personalizada por episodio (calibrada a edad y perfil)',
+  'Acción inmediata IA — qué hacer en los próximos minutos',
+  'Consejo diario personalizado basado en tus datos reales',
+  'Análisis de patrones con IA — conexiones entre episodios en el tiempo',
+  'Estrategias de 4 semanas con tareas concretas por habilidad',
+  'Check-in emocional al día siguiente — seguimiento real de cada episodio',
+  'Historial completo sin límite de tiempo',
+  'Búsqueda en todos tus registros',
+  'Informe PDF exportable para psicólogo o especialista',
+  'Rutina diaria del hijo con marcadores de momentos de riesgo',
+  'Notificaciones inteligentes — recordatorios y check-ins automáticos',
+  'Álbum de avances con fotos',
+  'Medallas y logros — 34 badges de progreso parental',
+  'Modo familia — conecta con tu pareja',
 ]
 
 export default function CuentaPage() {
   const { isPro, isAdmin } = useHuella()
   const navigate = useNavigate()
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [verTodo, setVerTodo] = useState(false)
 
   const pro = isPro()
   const admin = isAdmin()
   const planLabel = admin ? 'Admin' : pro ? 'Pro' : 'Gratuito'
-  const planColor = pro ? '#4a9e6f' : '#8a7a70'
-  const planBg   = pro ? '#edf7f2' : '#f5f0eb'
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px 80px' }}>
-      <button
-        onClick={() => navigate(-1)}
-        style={{ background: 'none', border: 'none', color: '#8a7a70', fontSize: '14px', cursor: 'pointer', padding: '0 0 16px', display: 'flex', alignItems: 'center', gap: '4px' }}
-      >
-        ← Volver
+    <div className={styles.page}>
+      <button className={styles.volver} onClick={() => navigate(-1)}>
+        <ArrowLeft size={16} />
+        Volver
       </button>
 
-      <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#3a2e28', margin: '0 0 4px' }}>
-        Mi plan
-      </h2>
-      <p style={{ fontSize: '14px', color: '#8a7a70', margin: '0 0 24px' }}>
-        Gestiona tu suscripción a Huella.
-      </p>
-
-      {/* ── Badge de plan actual ── */}
-      <div style={{
-        background: planBg, borderRadius: '14px', padding: '16px 20px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '24px',
-      }}>
-        <div>
-          <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: planColor, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Plan actual
-          </p>
-          <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 800, color: '#3a2e28' }}>
-            Huella {planLabel}
-          </p>
-        </div>
-        <span style={{
-          background: planColor, color: '#fff', borderRadius: '20px',
-          padding: '5px 14px', fontSize: '13px', fontWeight: 700,
-        }}>
-          {planLabel}
+      {/* ── Hero ── */}
+      <section className={styles.hero}>
+        <span className={`${styles.planChip} ${pro ? styles.planChipPro : styles.planChipFree}`}>
+          Plan actual: Huella {planLabel}
         </span>
-      </div>
+        <h1 className={styles.promesa}>
+          Entiende por qué tu hijo actúa así y acompáñalo mejor
+        </h1>
 
-      {pro ? (
-        /* ── Vista Pro / Admin ── */
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
-          <p style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 700, color: '#3a2e28' }}>
-            ✅ Plan Pro activo
-          </p>
-          <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#8a7a70' }}>
+        {pro ? (
+          <p className={styles.activoMsg}>
             Tienes acceso completo a todas las funcionalidades de Huella.
           </p>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {PRO_FEATURES.map((f) => (
-              <li key={f.text} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '14px', color: '#3a2e28', lineHeight: 1.4 }}>
-                <span style={{ flexShrink: 0, fontSize: '16px', marginTop: '1px' }}>{f.emoji}</span>
-                {f.text}
+        ) : (
+          <div className={styles.precioWrap}>
+            <div className={styles.precioMes}>
+              <span className={styles.precioMonto}>CLP 9.990</span>
+              <span className={styles.precioPeriodo}> /mes</span>
+            </div>
+            <div className={styles.precioAnual}>
+              <span className={styles.precioAnualMonto}>CLP 99.900 /año</span>
+              <span className={styles.ahorroBadge}>20% de ahorro</span>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Cuatro beneficios principales ── */}
+      <section className={styles.beneficios}>
+        {BENEFICIOS.map(({ icon: Icon, titulo, desc }) => (
+          <div key={titulo} className={styles.beneficioCard}>
+            <div className={styles.beneficioIcon}>
+              <Icon size={20} />
+            </div>
+            <div>
+              <h2 className={styles.beneficioTitulo}>{titulo}</h2>
+              <p className={styles.beneficioDesc}>{desc}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ── Acordeón: todo lo que incluye Pro ── */}
+      <div className={styles.acordeon}>
+        <button
+          className={styles.acordeonTrigger}
+          onClick={() => setVerTodo((v) => !v)}
+          aria-expanded={verTodo}
+        >
+          {verTodo ? '− Ver todo lo que incluye Pro' : '+ Ver todo lo que incluye Pro'}
+        </button>
+        {verTodo && (
+          <ul className={styles.acordeonLista}>
+            {TODO_PRO.map((item) => (
+              <li key={item} className={styles.acordeonItem}>
+                <Check size={16} className={styles.acordeonCheck} />
+                <span>{item}</span>
               </li>
             ))}
           </ul>
-        </div>
-      ) : (
-        /* ── Vista Free ── */
-        <>
-          {/* Tabla de comparación */}
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-            <p style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 700, color: '#3a2e28' }}>
-              ¿Qué incluye tu plan?
-            </p>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {FREE_FEATURES.map((f) => (
-                <li key={f.text} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: f.ok ? '#3a2e28' : '#b0a098' }}>
-                  <span style={{ flexShrink: 0, fontSize: '15px' }}>{f.ok ? '✓' : '✗'}</span>
-                  {f.text}
-                  {!f.ok && (
-                    <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#c96f45', background: '#fdf0e8', borderRadius: '10px', padding: '2px 8px', flexShrink: 0 }}>
-                      Pro
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+        )}
+      </div>
 
-          {/* CTA Pro */}
-          <div style={{
-            background: 'linear-gradient(135deg, #fdf0e8 0%, #fff5ef 100%)',
-            border: '1.5px solid #f0d8c8', borderRadius: '16px', padding: '20px',
-            textAlign: 'center',
-          }}>
-            <p style={{ margin: '0 0 4px', fontSize: '20px' }}>✨</p>
-            <p style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 800, color: '#3a2e28' }}>
-              Huella Pro
-            </p>
-            <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#8a7a70', lineHeight: 1.5 }}>
-              Desbloquea el acompañamiento completo para el desarrollo emocional de tu hijo/a.
-            </p>
-            <div style={{ marginBottom: '16px' }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: '#c96f45' }}>$5.990</span>
-              <span style={{ fontSize: '14px', color: '#8a7a70' }}> / mes</span>
-            </div>
-            <button
-              onClick={() => setShowUpgrade(true)}
-              style={{
-                width: '100%', padding: '14px', background: '#c96f45', color: '#fff',
-                border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Activar Pro — $5.990/mes
-            </button>
-          </div>
-        </>
+      {/* ── CTA — mantiene el handler de upgrade del botón original ── */}
+      {!pro && (
+        <button className={styles.cta} onClick={() => setShowUpgrade(true)}>
+          Activar Huella Pro
+        </button>
       )}
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
