@@ -56,7 +56,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
             cursor: 'pointer', marginBottom: '10px',
           }}
         >
-          Probar 7 días gratis
+          Activar Huella Pro
         </button>
         <button
           onClick={onClose}
