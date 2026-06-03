@@ -7,6 +7,7 @@ import { useFamily } from '../../context/FamilyContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import styles from './PerfilPage.module.css'
 
 function isoToDisplay(iso) {
@@ -52,6 +53,13 @@ export default function PerfilPage() {
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
   const padreInputRef = useRef(null)
+
+  // Gate 2do hijo: free está limitado a 1 hijo; Pro/Admin, ilimitados.
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  function handleAgregarHijo() {
+    if (!isPro() && state.hijos.length >= 1) { setShowUpgrade(true); return }
+    navigate('/hijo?nuevo=true')
+  }
 
   const [nombre, setNombre] = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
@@ -441,7 +449,7 @@ export default function PerfilPage() {
           <button
             type="button"
             className={styles.agregarHijoBtn}
-            onClick={() => navigate('/hijo?nuevo=true')}
+            onClick={handleAgregarHijo}
           >
             <Plus size={14} />
             Agregar otro hijo/a
@@ -644,6 +652,14 @@ export default function PerfilPage() {
           Términos y privacidad
         </Link>
       </p>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom="Cada hijo tiene su huella"
+          mensajeCustom="Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno."
+        />
+      )}
     </div>
   )
 }

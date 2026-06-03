@@ -9,6 +9,7 @@ import Button from '../../components/ui/Button'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import BienvenidaModal from '../../components/ui/BienvenidaModal'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { Hero } from '../../components/panel/Hero'
 import { CTAPrimary } from '../../components/panel/CTAPrimary'
@@ -206,10 +207,11 @@ function useNarrativaIntensidad(episodios) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, dispatch, setHijoActivo, profilesByUserId } = useHuella()
+  const { state, dispatch, setHijoActivo, profilesByUserId, isPro } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const analisisRef = useRef(null)
 
   const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
@@ -401,7 +403,11 @@ export default function PanelPage() {
             <button
               type="button"
               className={styles.selectorAddBtn}
-              onClick={() => navigate('/hijo?nuevo=true')}
+              onClick={() => {
+                // Gate 2do hijo: free limitado a 1; Pro/Admin, ilimitados.
+                if (!isPro() && hijos.length >= 1) { setShowUpgrade(true); return }
+                navigate('/hijo?nuevo=true')
+              }}
               aria-label="Agregar hijo"
             >
               <Plus size={14} />
@@ -475,6 +481,13 @@ export default function PanelPage() {
         )}
       </main>
 
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom="Cada hijo tiene su huella"
+          mensajeCustom="Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno."
+        />
+      )}
     </div>
   )
 }
