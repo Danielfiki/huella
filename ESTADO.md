@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: jueves 4 junio 2026 — Vitrina premium de /cuenta + pricing definitivo (CLP 9.990/mes · CLP 99.900/año) + primer gate de monetización (2do hijo) en producción. Pendiente grande: pasarela de pago real.*
+*Última actualización: miércoles 3 junio 2026 — Vitrina premium de /cuenta + pricing definitivo (CLP 9.990/mes · CLP 99.900/año) + primer gate de monetización (2do hijo) en producción. Pendiente grande: pasarela de pago real.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -218,7 +218,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (jueves 4 junio 2026)
+## Cerrado HOY (miércoles 3 junio 2026)
 
 **Vitrina premium de Huella Pro + pricing definitivo → EN PRODUCCIÓN (commit `b6ae281`)**
 
@@ -241,7 +241,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Segmentación Free vs Pro — DECISIÓN CERRADA (4 junio 2026)
+## Segmentación Free vs Pro — DECISIÓN CERRADA (3 junio 2026)
 
 **Principio rector:** lo inmediato y de crisis es **gratis**; lo profundo, lo que escala y lo que se comparte es **Pro**.
 
