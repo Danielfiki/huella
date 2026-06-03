@@ -25,7 +25,7 @@
 
 ---
 
-## Cerrado hoy (martes 26 mayo 2026)
+## Sesión 26 mayo 2026 — fix Wolfelt + modo parejas
 
 ### 1. Bug Wolfelt — autor incorrecto en Acción Rápida — RESUELTO EN PRODUCCIÓN
 
@@ -119,7 +119,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (miércoles 27 mayo 2026)
+## Sesión 27 mayo 2026 — reset contraseña + templates de correo
 
 - Fix "Olvidaste tu contraseña" completo en producción (commit `fc36f41`) + QA real exitoso end-to-end con dos cuentas.
 - 6 templates de correo de Supabase rediseñados en español con identidad Huella (Reset, Invite, Confirm Sign Up, Magic Link, Change Email, Reauthentication).
@@ -131,7 +131,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (viernes 29 mayo 2026) — Sesión A del PLAN.md cerrada
+## Sesión 29 mayo 2026 — dominio huella.lat + Resend (Sesión A)
 
 - **Dominio propio:** comprado y conectado `huella.lat` (registrado en Vercel, HTTPS automático). El dominio final fue `huella.lat`, no `huella.app`.
 - **Resend con dominio propio:** verificado con SPF + DKIM vía auto-configure de Vercel.
@@ -142,7 +142,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (sábado 31 mayo 2026) — Sesión B del PLAN.md cerrada
+## Sesión 31 mayo 2026 — bugs Estrategias (Sesión B)
 
 **Bug 1 — "Multi-plan solo muestra el primero" → RESUELTO EN PRODUCCIÓN (commit `7c2a67a`)**
 - Diagnóstico: `buildSugerenciaFromInterpretacion` (helpers.js) tomaba solo `interpretacion.patrones[0]`, descartando el resto de patrones detectados por la IA.
@@ -165,7 +165,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (sábado 31 mayo 2026) — Sesión C (prevenciones de raíz) cerrada
+## Sesión 31 mayo 2026 — prevenciones de raíz (Sesión C)
 
 > Nota: esta sesión se reorientó a robustez de raíz (no a la "Bugs Estrategias parte 2" que figuraba en PLAN.md). Esos ítems quedan pendientes — ver Próximo paso.
 
@@ -187,7 +187,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (martes 2 junio 2026)
+## Sesión 2 junio 2026 — prompt caching + auditorías
 
 **Prompt caching Fase 1 → EN PRODUCCIÓN, verificada (commits `c89f104`, `29c11d3`, `91cc788`)**
 - Se cachea el `SYSTEM_PROMPT` (~6.200 tokens, idéntico en todas las llamadas) con `cache_control: ephemeral` en `api/anthropic.js` — el `system` pasó de string a array de un bloque. Sin header beta (GA), sin tocar el cliente ni el comportamiento.
