@@ -203,7 +203,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (miércoles 3 junio 2026)
+## Sesión anterior — acceso Pro descubrible + muro de 15 (3 junio 2026)
 
 **Pricing más humano de punta a punta → EN PRODUCCIÓN**
 - **Acceso descubrible a Pro (commit `46967d9`):** tarjeta "Huella Pro" en el Perfil (posición 4, tras "Tú"), con 3 estados (free/pro/admin) y migrada a tokens. Linkea a `/cuenta`.
@@ -218,7 +218,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (miércoles 3 junio 2026)
+## Cerrado HOY (miércoles 3 junio 2026) — vitrina premium + monetización
 
 **Vitrina premium de Huella Pro + pricing definitivo → EN PRODUCCIÓN (commit `b6ae281`)**
 
