@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: miércoles 3 junio 2026 — Pricing más humano en producción (acceso descubrible + muro como invitación); estrategia de precio premium y contenido base de /cuenta definidos.*
+*Última actualización: jueves 4 junio 2026 — Vitrina premium de /cuenta en producción y pricing definitivo (CLP 9.990/mes · CLP 99.900/año). Pendiente grande: pasarela de pago real.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -218,11 +218,34 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
+## Cerrado HOY (jueves 4 junio 2026)
+
+**Vitrina premium de Huella Pro + pricing definitivo → EN PRODUCCIÓN (commit `b6ae281`)**
+
+**Pricing Huella Pro definido:** **CLP 9.990/mes** + **CLP 99.900/año** (20% de ahorro anual). Basado en estudio de mercado (Calm USD 16.99, Headspace USD 12.99; Chile con alta resistencia a pago). Reemplaza al $5.990 anterior.
+
+**Vitrina premium `/cuenta` (`CuentaPage.jsx` + `CuentaPage.module.css` nuevo):**
+- Hero con promesa central + precio (mes/año con badge de ahorro).
+- 4 beneficios destilados (reemplazan las ~16 features): entender el porqué / qué hacer en crisis / registrar cada avance / en familia.
+- Acordeón "+ Ver todo lo que incluye Pro" con los 16 ítems completos.
+- Migrada a tokens (**cero hex hardcodeado**), **sin emoji**.
+
+**`UpgradeModal`:** precio actualizado a **CLP 9.990** y emoji ✨ eliminado. Layout y resto del copy sin tocar (el rediseño visual del modal queda para Design).
+
+---
+
 ## Próximo paso
 
-**Pricing — diseñar/rediseñar la página `/cuenta` (vitrina premium):**
-- Armar la vitrina con el **contenido base** (4 beneficios + promesa central) y el **precio nuevo**, **quitando los emoji**. Va junto con **fijar el número final** (mensual/anual).
-- La **pasarela de pago real** sigue como la **tarea grande aparte** (los botones del `UpgradeModal` aún no cobran; no hay Stripe/MercadoPago/etc.).
+**Pendientes nuevos (de esta sesión):**
+1. **Pasarela de pago real (Stripe)** — el botón "Activar Huella Pro" y el `UpgradeModal` **NO cobran aún**. Tarea grande aparte.
+2. **Decisión free trial 7 días:** el modal ofrece "Probar 7 días gratis" pero la vitrina vende directo. Definir si hay trial (afecta conversión e ingresos).
+3. **Login estratégico:** hoy se fuerza login en la puerta; mover el gate a "registrar primer episodio" para dejar explorar antes. Tarea de onboarding + rutas.
+4. **Botón de respiración para el cuidador** antes de registrar (co-regulación, base Siegel/Shanker).
+5. **Reevaluar onboarding modal "Así funciona Huella"** (3 pasos) que aparece al login.
+6. **Reevaluar banner "Activa recordatorios para no perder el hilo".**
+7. **Verificar implementación real del "check-in emocional":** el copy promete seguimiento al día siguiente; confirmar que la funcionalidad existe y calza.
+8. **Rediseño del `UpgradeModal` a Design** (layout "pegado abajo").
+9. **Decisión de formato de precio:** "$9.990" (natural en Chile) vs "CLP 9.990".
 
 **En recámara (optimización de costo, no urgente):**
 - **Fase 2 del caching:** cachear también el `marcoEdad()` (~5.300 tokens, 4 variantes por edad) como 2º breakpoint del `system` — recorta otro ~⅓. Requiere refactor del contrato cliente↔backend. Detalle en `COSTOS_IA.md`.
