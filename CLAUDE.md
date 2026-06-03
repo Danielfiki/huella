@@ -63,3 +63,7 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual
 - Al final de cada sesión: actualiza `ESTADO.md` con lo completado y lo pendiente
 - Después de cada cambio funcionando: `git add -A && git commit -m "..." && git push` para deploy a Vercel
+
+### Convención de `ESTADO.md` — bloque "Cerrado HOY"
+
+Al cerrar una sesión en `ESTADO.md`, el bloque "Cerrado HOY" de la sesión anterior debe renombrarse a `## Sesión [fecha] — [resumen corto]`. En todo el archivo solo debe existir UN "Cerrado HOY": el de la sesión actual. Verificar con grep que no queden "Cerrado HOY" obsoletos antes de commitear.
