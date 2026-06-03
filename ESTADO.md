@@ -234,6 +234,32 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
+## Segmentación Free vs Pro — DECISIÓN CERRADA (4 junio 2026)
+
+**Principio rector:** lo inmediato y de crisis es **gratis**; lo profundo, lo que escala y lo que se comparte es **Pro**.
+
+> Documentación de la decisión. **Los gates todavía NO están implementados** — ver "Gates a implementar" abajo. Auditoría que motivó esto: hoy solo existen 2 topes reales (15 episodios con invitación; PDF oculto sin invitación); casi todas las features "Pro" de la vitrina ya las tiene el free, y los límites de "1 hijo" e "historial 7 días" son promesas fantasma no implementadas.
+
+**FREE (lo inmediato / el aha que engancha):**
+- Registrar hasta 15 episodios.
+- 1 hijo.
+- Orientación IA inmediata por episodio.
+- Su historial **completo** (NO se corta a 7 días — quitar esa promesa fantasma de la vitrina).
+- Álbum de fotos + badges.
+
+**PRO (lo profundo / lo que escala / lo que se comparte):**
+- Episodios ilimitados.
+- Hijos ilimitados.
+- Análisis de patrones en el tiempo (el free ve un **teaser** que invita).
+- Estrategias de 4 semanas (el free ve **preview**; crear es Pro).
+- Búsqueda en todos los registros.
+- Informe PDF para especialista (hoy se oculta en silencio → **agregar invitación**).
+- Modo familia: **el que inicia paga** para conectar; la pareja invitada accede **sin pagar**.
+
+**Gates a implementar (fase futura, ANTES de Stripe):** 2do hijo · análisis de patrones · crear estrategia · búsqueda · modo familia · invitación en el PDF. **Cada tope debe invitar a Pro al chocarlo** (no bloquear en silencio).
+
+---
+
 ## Próximo paso
 
 **Pendientes nuevos (de esta sesión):**
