@@ -5,6 +5,7 @@ import { generarEstrategia } from '../../services/anthropic';
 import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
+import UpgradeModal from '../../components/ui/UpgradeModal';
 import HeaderMocha from './components/HeaderMocha';
 import LoadingDignificado from './components/LoadingDignificado';
 import { HABILIDADES_CATALOGO, CONTEXTOS_HABILIDAD, MAX_PLANES_ACTIVOS_FREE, estadoPlan } from './helpers';
@@ -20,7 +21,7 @@ const PASOS_LOADING = [
 export default function EstrategiaNuevaPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { state, crearEstrategiaConCiclo, reloadEstrategias } = useHuella();
+  const { state, crearEstrategiaConCiclo, reloadEstrategias, isPro } = useHuella();
   const hijo = state.hijo;
 
   const habilidadId = params.get('habilidad');
@@ -42,12 +43,20 @@ export default function EstrategiaNuevaPage() {
   const [pasoActual, setPasoActual] = useState(0);
   const [error, setError] = useState(null);
   const [showCapModal, setShowCapModal] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [planesActivosCap, setPlanesActivosCap] = useState([]);
   const [abandonandoId, setAbandonandoId] = useState(null);
   const [capError, setCapError] = useState('');
   const generando = useRef(false);
 
   const iniciarCreacion = () => {
+    // Gate Pro: crear un plan es Pro. El free vio todo el preview, pero acá —
+    // justo antes del llamarAPI caro (4000 tokens) — se corta y se ofrece Pro.
+    // No se llama a la IA. Pro/Admin siguen al cap de foco de abajo.
+    if (!isPro()) {
+      setShowUpgrade(true);
+      return;
+    }
     const activos = (state.estrategias || []).filter(
       (p) => p.hijo_id === hijo?.id && estadoPlan(p) === 'activo'
     );
@@ -222,6 +231,14 @@ export default function EstrategiaNuevaPage() {
 
         <Button className={styles.cta} onClick={iniciarCreacion}>Empecemos juntos</Button>
       </div>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom="Un plan para trabajar lo que importa"
+          mensajeCustom="Con Huella Pro creas planes de 4 semanas con tareas concretas para acompañar cada habilidad de tu hijo."
+        />
+      )}
 
       {showCapModal && (
         <div className={styles.modalOverlay} onClick={() => setShowCapModal(false)}>

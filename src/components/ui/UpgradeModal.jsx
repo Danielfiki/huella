@@ -1,7 +1,7 @@
 import React from 'react'
 
 const FEATURES = [
-  'Estrategias personalizadas ilimitadas',
+  'Estrategias de 4 semanas con tareas concretas',
   'Exportar informes PDF del historial',
   'Registro ilimitado de episodios',
   'Seguimiento post-episodio (check-in)',

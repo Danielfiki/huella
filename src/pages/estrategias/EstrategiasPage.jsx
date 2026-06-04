@@ -14,6 +14,7 @@ import SelectorHabilidades from './components/SelectorHabilidades';
 import EstrategiaPasadaCard from './components/EstrategiaPasadaCard';
 import SeccionColapsable from './components/SeccionColapsable';
 import LoadingDignificado from './components/LoadingDignificado';
+import UpgradeModal from '../../components/ui/UpgradeModal';
 import {
   buildSugerenciasFromInterpretacion,
   debeMostrarSugerencia,
@@ -30,10 +31,11 @@ export default function EstrategiasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
-  const { state, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId } = useHuella();
+  const { state, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId, isPro } = useHuella();
   const { user } = useAuth();
   const [casoLibreEstado, setCasoLibreEstado] = useState('idle');
   const [casoLibreError, setCasoLibreError] = useState(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const generandoCasoLibreRef = useRef(false);
   const hijo = state.hijo;
   const planes = state.estrategias || [];
@@ -229,6 +231,12 @@ export default function EstrategiasPage() {
 
   const handleCasoLibre = async (texto) => {
     if (generandoCasoLibreRef.current) return;
+    // Gate Pro: crear un plan (caso libre) es Pro. Se corta antes del
+    // llamarAPI caro (4000 tokens); no se llama a la IA. Pro/Admin siguen.
+    if (!isPro()) {
+      setShowUpgrade(true);
+      return;
+    }
     if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) {
       setCasoLibreError(`Tienes ${MAX_PLANES_ACTIVOS_FREE} planes activos. Completa o cierra uno antes de crear otro.`);
       setCasoLibreEstado('error');
@@ -406,6 +414,14 @@ export default function EstrategiasPage() {
           </SeccionColapsable>
         )}
       </div>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom="Un plan para trabajar lo que importa"
+          mensajeCustom="Con Huella Pro creas planes de 4 semanas con tareas concretas para acompañar cada habilidad de tu hijo."
+        />
+      )}
     </div>
   );
 }
