@@ -1,4 +1,5 @@
 import React from 'react'
+import { Lock } from 'lucide-react'
 import { statColorFor } from './helpers'
 import styles from './HistorialHeader.module.css'
 
@@ -10,6 +11,7 @@ export default function HistorialHeader({
   onSearch,
   onExportPDF,
   hasNewExport = false,
+  exportBloqueado = false,
 }) {
   const statColor = statColorFor(promedio)
   return (
@@ -47,7 +49,9 @@ export default function HistorialHeader({
               <path d="M9 13h6" />
               <path d="M9 17h4" />
             </svg>
-            {hasNewExport && <span className={styles.pdfDot} />}
+            {exportBloqueado
+              ? <span className={styles.pdfLock}><Lock /></span>
+              : hasNewExport && <span className={styles.pdfDot} />}
           </button>
         )}
       </div>

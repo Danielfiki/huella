@@ -9,6 +9,7 @@ import DaySeparator from '../../components/historial/DaySeparator'
 import EpisodioCard from '../../components/historial/EpisodioCard'
 import { groupEpisodios } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
+import UpgradeModal from '../../components/ui/UpgradeModal'
 import styles from './HistorialPage.module.css'
 
 const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
@@ -61,6 +62,7 @@ export default function HistorialPage() {
   const [busqueda, setBusqueda] = useState('')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
   const [pdfActivado, setPdfActivado] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     getCheckinsHechos().then(setCheckinsHechos)
@@ -172,7 +174,8 @@ export default function HistorialPage() {
   )
 
   const totalRegistros = episodios.length + hitos.length
-  const proConEpisodios = isPro() && episodios.length > 0
+  const esPro = isPro()
+  const hayEpisodios = episodios.length > 0
 
   function handleDelete(id, source) {
     return source === 'hito' ? deleteHito(id) : deleteEpisodio(id)
@@ -199,8 +202,13 @@ export default function HistorialPage() {
         rango={rango}
         onBack={() => navigate(-1)}
         onSearch={() => { setShowSearch((s) => !s); setBusqueda('') }}
-        onExportPDF={proConEpisodios ? () => setPdfActivado(true) : undefined}
-        hasNewExport={proConEpisodios && !pdfActivado}
+        onExportPDF={
+          hayEpisodios
+            ? (esPro ? () => setPdfActivado(true) : () => setShowUpgrade(true))
+            : undefined
+        }
+        hasNewExport={esPro && hayEpisodios && !pdfActivado}
+        exportBloqueado={!esPro && hayEpisodios}
       />
       <FiltroChips
         active={filtro}
@@ -273,6 +281,14 @@ export default function HistorialPage() {
           </React.Fragment>
         ))}
       </div>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          tituloCustom="Comparte la huella de tu hijo"
+          mensajeCustom="Con Huella Pro exportas un informe en PDF con el historial y los patrones de tu hijo, listo para su psicólogo o pediatra."
+        />
+      )}
     </div>
   )
 }
