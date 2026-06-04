@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: miércoles 3 junio 2026 — Vitrina premium de /cuenta + pricing definitivo (CLP 9.990/mes · CLP 99.900/año) + primer gate de monetización (2do hijo) en producción. Pendiente grande: pasarela de pago real.*
+*Última actualización: jueves 4 junio 2026 — 4 gates de monetización en producción (2do hijo, análisis de patrones, crear estrategias, export PDF) + fix de centrado del UpgradeModal + limpieza de promesas fantasma en la vitrina. Búsqueda decidida como FREE. Modo familia diferido a la fase Stripe. Pendiente grande: pasarela de pago real (Stripe).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -218,7 +218,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (miércoles 3 junio 2026) — vitrina premium + monetización
+## Sesión 3 junio 2026 — vitrina premium + pricing + gate 2do hijo
 
 **Vitrina premium de Huella Pro + pricing definitivo → EN PRODUCCIÓN (commit `b6ae281`)**
 
@@ -241,7 +241,26 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Segmentación Free vs Pro — DECISIÓN CERRADA (3 junio 2026)
+## Cerrado HOY (jueves 4 junio 2026) — 4 gates de monetización + fix modal + limpieza vitrina
+
+**Todo commiteado y en producción (auto-deploy Vercel).** Se implementaron 4 gates de monetización, se arregló el posicionamiento del `UpgradeModal`, se enganchó Puerta 1 para el free y se limpiaron promesas fantasma de la vitrina.
+
+**Gates de monetización (4) → EN PRODUCCIÓN:**
+- **2do hijo** (venía de la sesión anterior, commit `d2f4a4c`): free = 1 hijo; al agregar otro → `UpgradeModal` ("Cada hijo tiene su huella").
+- **Análisis de patrones (commit `90949e8`):** el free ve un teaser **real** — solo la sección "Lo que está mejorando" (modo `teaser` nuevo en `interpretarPatrones`, max_tokens reducido) + las otras 3 secciones bloqueadas con candado y CTA a Pro. **Gate real:** el contenido Pro NO se genera ni viaja al cliente free (no es ocultamiento por CSS). Pro/Admin: análisis completo igual que antes.
+- **Crear estrategias (commit `e02f7c9`):** el free ve TODO el preview (11 habilidades, Puerta 1, Puerta 2, pantalla de confirmación), pero al crear (`iniciarCreacion` en `EstrategiaNuevaPage.jsx` + `handleCasoLibre` en `EstrategiasPage.jsx`) → `UpgradeModal`, **antes** del `llamarAPI` caro (ahorra ~4000 tokens). Cap de 3 activas intacto para Pro/Admin (va después del gate).
+- **Export PDF (commit `6cd4fd5`):** de "oculto en silencio" a invitación. El free ve el botón con **candado**; al tocar → `UpgradeModal`. `PDFSection` no se monta para el free (cero llamadas a Anthropic). Puntito "nuevo" queda solo para Pro. Sin episodios: botón oculto (Pro y free).
+
+**Otros cambios → EN PRODUCCIÓN:**
+- **Fix UpgradeModal centrado (commit `71cb70b`):** portal a `document.body` + `alignItems: center` + 4 esquinas redondeadas + `maxHeight 90dvh` + `overflowY auto`. Arregla el posicionamiento en los 4 gates (antes salía pegado abajo, capturado por el `transform` de `.pageWrap` tras la animación de página). Resuelve la deuda de Design "centrar el modal".
+- **Puerta 1 visible para el free con 3 activas (commit `0d2a308`):** "Lo que Huella ve" (`EstrategiasPage`) ahora se muestra al free aunque tenga 3 estrategias activas (engancha hacia Pro; al aceptar una sugerencia cae en el gate de crear). Para Pro/Admin se mantiene la ocultación con 3 activas (cap de foco).
+- **Limpieza de vitrina `/cuenta` (commit `3010d7f`):** quitadas 2 promesas fantasma del array `TODO_PRO` — "Historial completo sin límite de tiempo" y "Búsqueda en todos tus registros" (el free ya tiene ambas).
+
+**Patrón común de los gates:** todos reusan `isPro()` + `UpgradeModal` con `tituloCustom`/`mensajeCustom`. En `PanelPage` el modal se generalizó con un estado `upgradeCopy` para servir a varios gates con copy distinto sin pisarse.
+
+---
+
+## Segmentación Free vs Pro — DECISIÓN CERRADA (3 junio 2026, actualizada 4 junio)
 
 **Principio rector:** lo inmediato y de crisis es **gratis**; lo profundo, lo que escala y lo que se comparte es **Pro**.
 
@@ -251,37 +270,46 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 - Registrar hasta 15 episodios.
 - 1 hijo.
 - Orientación IA inmediata por episodio.
-- Su historial **completo** (NO se corta a 7 días — quitar esa promesa fantasma de la vitrina).
+- Su historial **completo** (NO se corta a 7 días — promesa fantasma ya quitada de la vitrina).
+- **Búsqueda en sus registros** (movida de Pro a Free — ver nota abajo).
 - Álbum de fotos + badges.
 
 **PRO (lo profundo / lo que escala / lo que se comparte):**
 - Episodios ilimitados.
 - Hijos ilimitados.
-- Análisis de patrones en el tiempo (el free ve un **teaser** que invita).
-- Estrategias de 4 semanas (el free ve **preview**; crear es Pro).
-- Búsqueda en todos los registros.
-- Informe PDF para especialista (hoy se oculta en silencio → **agregar invitación**).
-- Modo familia: **el que inicia paga** para conectar; la pareja invitada accede **sin pagar**.
+- Análisis de patrones en el tiempo (el free ve un **teaser** que invita). ✅ HECHO
+- Estrategias de 4 semanas (el free ve **preview**; crear es Pro). ✅ HECHO
+- Informe PDF para especialista (free ve botón con candado → invitación). ✅ HECHO
+- Modo familia: **el que inicia paga** para conectar; la pareja invitada accede **sin pagar**. ⏸️ DIFERIDO a Stripe.
 
-**Gates a implementar (fase futura, ANTES de Stripe):** ✅ ~~2do hijo~~ (HECHO, commit `d2f4a4c`) · análisis de patrones · crear estrategia · búsqueda · modo familia · invitación en el PDF · alinear vitrina (quitar promesa fantasma "historial 7 días"). **Cada tope debe invitar a Pro al chocarlo** (no bloquear en silencio).
+**Cambio de segmentación (4 junio): BÚSQUEDA pasa de Pro a FREE.** Razones: (1) es 100% local en el cliente, sin costo de API; (2) el free con ≤15 registros no la necesita (no convierte); (3) es utilidad básica sobre los datos propios — gatearla se siente mezquino, igual que el historial. Su valor real emerge solo con el volumen que tiene Pro. Por eso también se quitó de la vitrina `TODO_PRO`.
+
+**Gates implementados (4 de los previstos):** ✅ 2do hijo (`d2f4a4c`) · ✅ análisis de patrones (`90949e8`) · ✅ crear estrategia (`e02f7c9`) · ✅ export PDF (`6cd4fd5`). **Búsqueda:** ya no se gatea (queda Free). **Modo familia:** diferido a Stripe (ver abajo). **Cada tope invita a Pro al chocarlo** (no bloquea en silencio).
+
+**Modo familia — NO implementado, DIFERIDO a la fase Stripe (decisión 4 junio):**
+- *Razón 1:* sin pago real (Stripe) nadie es Pro de verdad; gatear "solo Pro invita" hoy rompería el modo pareja para todos sin monetizar nada.
+- *Razón 2:* hacer solo "el que inicia paga" sin herencia de plan deja a la pareja invitada (free) chocando con los gates sobre el mismo hijo (incoherente).
+- *Diseño pendiente (va junto con Stripe):* gate "iniciador paga" (choke point: `handleInvite` en `PerfilPage.jsx:199`) **+** herencia de plan efectivo de familia — RPC `security definer` que extienda `get_partner_info` con el plan (el join a `perfiles` ya existe), redefinir `isPro()` para considerar `plan propio || plan de familia`, y resolver el downgrade al desconectar y el loophole de reventa. Hoy el plan es **estrictamente por usuario** (`perfiles.plan`), no hay noción de plan a nivel de familia.
 
 ---
 
 ## Próximo paso
 
-### Fase monetización — gates restantes (ANTES de Stripe)
-- **Gate análisis de patrones:** el free ve un **teaser** que invita.
-- **Gate crear estrategias de 4 semanas:** el free ve **preview**; crear es Pro.
-- **Gate búsqueda en registros.**
-- **Gate modo familia:** el que inicia paga para conectar; la pareja invitada accede **sin pagar**.
-- **Agregar invitación a Pro en el export PDF** (hoy se oculta en silencio).
-- **Alinear la vitrina:** quitar la promesa fantasma "historial 7 días".
-- *(Cada tope debe **invitar** a Pro al chocarlo, no bloquear en silencio.)*
-- *(✅ Gate 2do hijo — HECHO esta sesión, commit `d2f4a4c`.)*
+### Fase monetización — gates ✅ COMPLETADOS (4 junio)
+- ✅ Gate 2do hijo (`d2f4a4c`) · ✅ análisis de patrones (`90949e8`) · ✅ crear estrategias (`e02f7c9`) · ✅ export PDF (`6cd4fd5`).
+- ✅ Vitrina alineada: promesas fantasma "historial 7 días" y "búsqueda" quitadas de `TODO_PRO` (`3010d7f`).
+- **Búsqueda:** decidida como FREE (no se gatea).
+- **Modo familia:** diferido a la fase Stripe (ver sección Segmentación para el diseño completo).
 
-### Monetización — después de los gates
-- **Pasarela de pago real (Stripe).** El botón "Activar Huella Pro" y el `UpgradeModal` **NO cobran aún**. Tarea grande aparte.
-- **Evaluar reverse trial largo (14-30 días, NO 7)** cuando llegue Stripe. *(El trial de 7 días quedó descartado esta sesión.)*
+### Monetización — LO GRANDE que sigue
+- **Pasarela de pago real (Stripe).** Los 4 gates muestran la invitación, pero el botón "Activar Huella Pro" y el `UpgradeModal` **NO cobran aún**. Tarea grande, **va antes del modo familia**.
+- **Modo familia (junto con Stripe):** gate "iniciador paga" + herencia de plan efectivo de familia (RPC `security definer` + redefinir `isPro()` + downgrade al desconectar + cerrar loophole de reventa). Detalle en la sección Segmentación.
+- **Evaluar reverse trial largo (14-30 días, NO 7)** cuando llegue Stripe. *(El trial de 7 días quedó descartado.)*
+
+### Producto / UX (notas nuevas de esta sesión)
+- **Barra de progreso / tiempo estimado** en la pantalla "Creando tu plan" (estrategias) — dar feedback de avance durante la espera.
+- **Idea rediseño Historial:** mostrar los últimos 3 sucesos + un cuadro desplegable con el resto (cuidar que el historial completo siga fácil de revisar — es free).
+- **Auditar las 16 líneas completas del array `TODO_PRO`** (`CuentaPage.jsx`) contra la segmentación real cuando la vitrina pase por Design (ya se quitaron 2; revisar el resto).
 
 ### UX / Producto (notas de esta sesión)
 - **Login estratégico:** mover el gate de login de la puerta a "registrar primer episodio" (dejar explorar antes). Tarea de onboarding + rutas. Incluye fix: el login redirige a `huella.lat` **incluso desde `localhost`** → ajustar config de Supabase para respetar `localhost` en dev.
@@ -291,9 +319,10 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 - **Verificar implementación real del "check-in emocional":** confirmar qué hace y que el copy de la vitrina calce.
 
 ### Diseño (a Claude Design)
-- **Rediseño del `UpgradeModal`**, incluyendo **centrarlo bien en pantalla** (hoy sale pegado abajo).
+- **Rediseño estético del `UpgradeModal`** (colores/tipografía/layout premium). El **centrado ya quedó resuelto** esta sesión (commit `71cb70b`); falta solo el rediseño visual.
 - **Pasar por Design la vitrina `/cuenta` y la sección de Registros.**
 - **Decisión de formato de precio:** "$9.990" (natural en Chile) vs "CLP 9.990".
+- **Deuda de tokens:** `HistorialHeader.module.css` usa `#FFD89C` hardcodeado en el candado del PDF (`.pdfLock`, espejo del `.pdfDot` existente) — migrar a token en la pasada de Design.
 
 ### En recámara (optimización de costo, no urgente)
 - **Fase 2 del caching:** cachear también el `marcoEdad()` (~5.300 tokens, 4 variantes por edad) como 2º breakpoint del `system` — recorta otro ~⅓. Requiere refactor del contrato cliente↔backend. Detalle en `COSTOS_IA.md`.
