@@ -95,7 +95,10 @@ export default function EstrategiasPage() {
   }, [hijo?.id]);
 
   useEffect(() => {
-    if (planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) { setSugerencias([]); return; }
+    // El cap de foco (no sugerir lo que no se puede crear hasta cerrar una)
+    // aplica solo a Pro/Admin. El free ve sugerencias siempre: al aceptar una
+    // cae en el gate de Pro de iniciarCreacion (no las crea sin Pro).
+    if (isPro() && planesActivos.length >= MAX_PLANES_ACTIVOS_FREE) { setSugerencias([]); return; }
     if (!hijo?.id || episodios.length < 3) { setSugerencias([]); return; }
 
     // Si venimos del Panel con análisis ya hecho, usarlo directamente
@@ -350,7 +353,7 @@ export default function EstrategiasPage() {
           </SeccionColapsable>
         )}
 
-        {planesActivos.length < MAX_PLANES_ACTIVOS_FREE && (
+        {(!isPro() || planesActivos.length < MAX_PLANES_ACTIVOS_FREE) && (
           <SeccionColapsable
             titulo={`Lo que Huella ve en ${hijo?.nombre || 'tu hijo'}`}
             variant="lavender"
