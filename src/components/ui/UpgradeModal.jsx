@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 
 const FEATURES = [
   'Estrategias de 4 semanas con tareas concretas',
@@ -8,20 +9,24 @@ const FEATURES = [
 ]
 
 export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
-  return (
+  // Portal a document.body: el modal vive fuera de .pageWrap (que queda con
+  // transform tras la animación de página y captura el position:fixed). Así
+  // el overlay se ancla al viewport y queda centrado, sin importar el scroll.
+  return createPortal(
     <div
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        zIndex: 1000, padding: '0 0 env(safe-area-inset-bottom)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, padding: 'max(16px, env(safe-area-inset-bottom)) 16px',
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: '#fff', borderRadius: '20px 20px 0 0',
+          background: '#fff', borderRadius: '20px',
           padding: '28px 24px 32px', width: '100%', maxWidth: '480px',
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
+          maxHeight: '90dvh', overflowY: 'auto',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -69,6 +74,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
           Ahora no
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
