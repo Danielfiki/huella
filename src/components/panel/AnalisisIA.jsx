@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Lock } from 'lucide-react'
 import CitaLoader from '../ui/CitaLoader'
 import ProgressBar from '../ui/ProgressBar'
 import styles from './analisisIa.module.css'
+
+// Secciones que el plan free ve bloqueadas. Su contenido NO se genera ni viaja
+// al cliente free (el gate es real); acá solo se listan los nombres como teaser.
+const SECCIONES_BLOQUEADAS = ['Lo que merece atención', 'Posibles causas', 'Próximos pasos']
 
 const SECTION_TITLES = new Set([
   'Lo que está mejorando',
@@ -39,7 +44,7 @@ function renderAnalysisText(text) {
   }).filter(Boolean)
 }
 
-export function AnalisisIA({ loading, texto, onAnalizar, onAccept, onDismiss }) {
+export function AnalisisIA({ loading, texto, bloqueado, onAnalizar, onUpgrade, onAccept, onDismiss }) {
   // Barra de "avance percibido" durante la espera (reusa el ProgressBar del
   // onboarding). NO refleja progreso real: sube hasta ~90% con ease-out a lo
   // largo de ~60s — el análisis del Home puede tardar hasta ~75s — y se clava
@@ -147,8 +152,23 @@ export function AnalisisIA({ loading, texto, onAnalizar, onAccept, onDismiss }) 
       </header>
       <h3 className={styles.title}>{isError ? 'No se pudo analizar' : titleText}</h3>
       {bodyText && <div className={styles.body}>{renderAnalysisText(bodyText)}</div>}
+
+      {bloqueado && !isError && (
+        <div className={styles.locked}>
+          {SECCIONES_BLOQUEADAS.map((s) => (
+            <div key={s} className={styles.lockedRow}>
+              <Lock size={14} className={styles.lockIcon} />
+              <span>{s}</span>
+            </div>
+          ))}
+          <button className={`${styles.btn} ${styles.primary} ${styles.unlockBtn}`} onClick={onUpgrade}>
+            Ver el cuadro completo con Pro
+          </button>
+        </div>
+      )}
+
       <div className={styles.actions}>
-        {!isError && (
+        {!isError && !bloqueado && (
           <button className={`${styles.btn} ${styles.primary}`} onClick={onAccept}>
             Ver estrategias
           </button>

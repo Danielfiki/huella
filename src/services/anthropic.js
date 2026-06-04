@@ -954,7 +954,11 @@ Esta orientación se basa en evidencia del desarrollo infantil y no constituye u
   return llamarAPI(prompt, 1400)
 }
 
-export async function interpretarPatrones({ hijo, episodios }) {
+// teaser=true (plan free): genera SOLO la sección "Lo que está mejorando" con
+// un tope de tokens reducido. El resto del análisis (atención, causas, pasos)
+// es contenido Pro y NO debe generarse ni viajar al cliente free — el gate es
+// real, no un ocultamiento por CSS.
+export async function interpretarPatrones({ hijo, episodios, teaser = false }) {
   if (episodios.length < 3) {
     return 'Registra al menos 3 episodios para que pueda identificar patrones en el comportamiento de tu hijo.'
   }
@@ -970,6 +974,28 @@ export async function interpretarPatrones({ hijo, episodios }) {
   const resumen = episodios.slice(0, 20).map(e =>
     `${new Date(e.fecha).toLocaleDateString('es-CL')}: ${e.tipo} (intensidad ${e.intensidad}/5, gatillantes: ${e.gatillantes?.join(', ') || 'ninguno'})`
   ).join('\n')
+
+  if (teaser) {
+    const promptTeaser = `${marco}
+
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+
+Historial de episodios (más recientes primero):
+${resumen}
+
+Analiza estos patrones desde el marco científico de la edad indicada y responde ÚNICAMENTE con la sección "Lo que está mejorando". No incluyas ninguna otra sección.
+
+FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown en la respuesta. Escribe el título de la sección en su propia línea con mayúscula inicial, sin negritas ni símbolos. Separa párrafos con una línea en blanco.
+
+FORMATO DE TÍTULO: escribe el título EXACTAMENTE así, en una línea aparte, sin dos puntos al final y sin variarlo, porque el sistema detecta ese string exacto para aplicar formato visual:
+
+Lo que está mejorando
+[2 a 3 oraciones con una observación positiva basada en los datos, interpretada a la luz del desarrollo esperado para la edad]
+
+No agregues secciones de atención, causas ni próximos pasos. No agregues disclaimer. Cuida la gramática y la sintaxis con precisión. Usa oraciones cortas y claras. Nunca dejes frases incompletas.`
+
+    return llamarAPI(promptTeaser, 400)
+  }
 
   const prompt = `${marco}
 

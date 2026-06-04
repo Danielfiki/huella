@@ -212,6 +212,7 @@ export default function PanelPage() {
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [upgradeCopy, setUpgradeCopy] = useState(null)
   const analisisRef = useRef(null)
 
   const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
@@ -346,17 +347,34 @@ export default function PanelPage() {
     if (loadingAnalisis) return
     setLoadingAnalisis(true)
     try {
-      const [texto, interpretacion] = await Promise.all([
-        interpretarPatrones({ hijo, episodios }),
-        detectarPatronesEstructurado({ hijo_id: hijo?.id, hijo_edad: hijo?.edad, episodios }),
-      ])
-      setAnalisis(texto)
-      dispatch({ type: 'SET_SUGERENCIA_ESTRATEGIA', payload: interpretacion })
+      if (!isPro()) {
+        // Free: gate real. Solo la primera sección (teaser); el resto es Pro y
+        // ni siquiera se genera. detectarPatronesEstructurado alimenta
+        // estrategias (Pro), así que tampoco se llama para el free.
+        const texto = await interpretarPatrones({ hijo, episodios, teaser: true })
+        setAnalisis(texto)
+      } else {
+        const [texto, interpretacion] = await Promise.all([
+          interpretarPatrones({ hijo, episodios }),
+          detectarPatronesEstructurado({ hijo_id: hijo?.id, hijo_edad: hijo?.edad, episodios }),
+        ])
+        setAnalisis(texto)
+        dispatch({ type: 'SET_SUGERENCIA_ESTRATEGIA', payload: interpretacion })
+      }
     } catch (e) {
       setAnalisis('Error al conectar con la IA: ' + e.message)
     } finally {
       setLoadingAnalisis(false)
     }
+  }
+
+  // Abre el UpgradeModal con el copy del gate de análisis de patrones.
+  function abrirUpgradeAnalisis() {
+    setUpgradeCopy({
+      titulo: 'Huella ve el cuadro completo',
+      mensaje: 'Con Huella Pro desbloqueas qué merece atención en tu hijo, por qué ocurre y los próximos pasos concretos.',
+    })
+    setShowUpgrade(true)
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -405,7 +423,14 @@ export default function PanelPage() {
               className={styles.selectorAddBtn}
               onClick={() => {
                 // Gate 2do hijo: free limitado a 1; Pro/Admin, ilimitados.
-                if (!isPro() && hijos.length >= 1) { setShowUpgrade(true); return }
+                if (!isPro() && hijos.length >= 1) {
+                  setUpgradeCopy({
+                    titulo: 'Cada hijo tiene su huella',
+                    mensaje: 'Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno.',
+                  })
+                  setShowUpgrade(true)
+                  return
+                }
                 navigate('/hijo?nuevo=true')
               }}
               aria-label="Agregar hijo"
@@ -471,7 +496,9 @@ export default function PanelPage() {
                 <AnalisisIA
                   loading={loadingAnalisis}
                   texto={analisis}
+                  bloqueado={!isPro()}
                   onAnalizar={handleAnalizarPatrones}
+                  onUpgrade={abrirUpgradeAnalisis}
                   onAccept={() => navigate('/estrategias', { state: { sugerencia_precocida: state.sugerenciaEstrategia } })}
                   onDismiss={() => setAnalisis('')}
                 />
@@ -484,8 +511,8 @@ export default function PanelPage() {
       {showUpgrade && (
         <UpgradeModal
           onClose={() => setShowUpgrade(false)}
-          tituloCustom="Cada hijo tiene su huella"
-          mensajeCustom="Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno."
+          tituloCustom={upgradeCopy?.titulo}
+          mensajeCustom={upgradeCopy?.mensaje}
         />
       )}
     </div>
