@@ -39,8 +39,6 @@ const TODO_PRO = [
   'Análisis de patrones con IA — conexiones entre episodios en el tiempo',
   'Estrategias de 4 semanas con tareas concretas por habilidad',
   'Check-in emocional al día siguiente — seguimiento real de cada episodio',
-  'Historial completo sin límite de tiempo',
-  'Búsqueda en todos tus registros',
   'Informe PDF exportable para psicólogo o especialista',
   'Rutina diaria del hijo con marcadores de momentos de riesgo',
   'Notificaciones inteligentes — recordatorios y check-ins automáticos',
