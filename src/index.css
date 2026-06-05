@@ -75,6 +75,14 @@
   --color-pill-estado-bg: #F0C8A0;
   --color-pill-estado-text: #7A3A10;
 
+  /* ── Emociones (selector de registro) ── */
+  --color-emocion-miedo: #6C8EF5;     --color-emocion-miedo-bg: #EEF1FC;
+  --color-emocion-rabia: #D8693C;     --color-emocion-rabia-bg: #FBE7DC;
+  --color-emocion-tristeza: #5B8DB8;  --color-emocion-tristeza-bg: #E9F1F8;
+  --color-emocion-alegria: #D9A22B;   --color-emocion-alegria-bg: #FBF1D8;
+  --color-emocion-asco: #7E9A3E;      --color-emocion-asco-bg: #EEF3DC;
+  --color-emocion-confusion: #E0894A; --color-emocion-confusion-bg: #FCEBDB;
+
   /* ── Tags ── */
   --color-tag-green: #5A7A20;
   --color-tag-blue: #274A68;
@@ -233,6 +241,12 @@
     --color-pill-emocion-text: #D4B49C;
     --color-pill-estado-bg: #3A2808;
     --color-pill-estado-text: #D4A880;
+    --color-emocion-miedo: #93AAF8;     --color-emocion-miedo-bg: #232A40;
+    --color-emocion-rabia: #E8895F;     --color-emocion-rabia-bg: #3A271D;
+    --color-emocion-tristeza: #82AED2;  --color-emocion-tristeza-bg: #1F2C36;
+    --color-emocion-alegria: #E6BE5A;   --color-emocion-alegria-bg: #382F1A;
+    --color-emocion-asco: #A2BC5E;      --color-emocion-asco-bg: #28301A;
+    --color-emocion-confusion: #EAA268; --color-emocion-confusion-bg: #382819;
     --color-tag-green: #B0C870;
     --color-tag-blue: #7FB3D3;
     --color-text: #F5EDE3;
