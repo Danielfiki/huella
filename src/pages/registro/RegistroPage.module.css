@@ -580,10 +580,10 @@
   flex-direction: column;
   gap: 10px;
   padding: 18px 20px;
-  border-radius: var(--radius-lg, 16px);
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
-  border: 2px solid var(--color-amber);
-  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
   animation: accionFadeIn 0.5s ease both;
 }
 
@@ -605,7 +605,7 @@
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--color-amber-medium);
+  color: var(--color-primary-deep);
 }
 
 .accionTexto {
@@ -625,7 +625,7 @@
 .accionSkLine {
   height: 13px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #fde68a 25%, #fbbf24 50%, #fde68a 75%);
+  background: linear-gradient(90deg, var(--color-primary-bg) 25%, var(--color-primary) 50%, var(--color-primary-bg) 75%);
   background-size: 200% 100%;
   animation: accionShimmer 1.3s ease-in-out infinite;
 }

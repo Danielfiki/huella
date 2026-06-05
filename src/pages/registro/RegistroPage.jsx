@@ -770,7 +770,7 @@ export default function RegistroPage() {
         </div>
         <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-        <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} />
+        <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} placeholder="Cuéntame qué pasó, con tus palabras…" />
 
         <Card>
           <p className={styles.label}>Tipo de episodio</p>
@@ -843,7 +843,7 @@ export default function RegistroPage() {
       </div>
       <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
-      <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} />
+      <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} placeholder="Cuéntame qué pasó, con tus palabras…" />
 
       <Card>
         <p className={styles.label}>Tipo de episodio</p>
