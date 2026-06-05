@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: jueves 4 junio 2026 — 4 gates de monetización en producción (2do hijo, análisis de patrones, crear estrategias, export PDF) + fix de centrado del UpgradeModal + limpieza de promesas fantasma en la vitrina. Búsqueda decidida como FREE. Modo familia diferido a la fase Stripe. Pendiente grande: pasarela de pago real (Stripe).*
+*Última actualización: viernes 5 junio 2026 — Rediseño de Registrar, deltas 1-3 en producción (placeholder cálido en "¿Qué pasó?", skeleton tangerine de la Acción rápida, 6 colores de emoción tokenizados). Brief `BRIEF_REGISTRAR_DESIGN.md` + mockup en Claude Design ("Registrar · Handoff"). Pendiente grande sigue siendo la pasarela de pago real (Stripe). Próximo: Delta 4 (barra de carga del análisis IA) + polish estético de Registrar según handoff de Design.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -241,7 +241,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (jueves 4 junio 2026) — 4 gates de monetización + fix modal + limpieza vitrina
+## Sesión 4 junio 2026 — 4 gates de monetización + fix modal + limpieza vitrina
 
 **Todo commiteado y en producción (auto-deploy Vercel).** Se implementaron 4 gates de monetización, se arregló el posicionamiento del `UpgradeModal`, se enganchó Puerta 1 para el free y se limpiaron promesas fantasma de la vitrina.
 
@@ -257,6 +257,23 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 - **Limpieza de vitrina `/cuenta` (commit `3010d7f`):** quitadas 2 promesas fantasma del array `TODO_PRO` — "Historial completo sin límite de tiempo" y "Búsqueda en todos tus registros" (el free ya tiene ambas).
 
 **Patrón común de los gates:** todos reusan `isPro()` + `UpgradeModal` con `tituloCustom`/`mensajeCustom`. En `PanelPage` el modal se generalizó con un estado `upgradeCopy` para servir a varios gates con copy distinto sin pisarse.
+
+---
+
+## Cerrado HOY (viernes 5 junio 2026) — Rediseño de Registrar (deltas 1-3) + brief y mockup de Design
+
+**Todo commiteado y en producción (auto-deploy Vercel).** Primeros pasos del rediseño del flujo de Registrar: tres deltas visuales puntuales sobre el código real, más el brief y el mockup que guían la parte gruesa que viene.
+
+**Brief para Design (commit `2cf5571`):** se creó `BRIEF_REGISTRAR_DESIGN.md` en la raíz, con la estructura REAL del flujo de Registrar (las dos páginas `NuevoPage` + `RegistroPage`, todas las vistas, copy textual, tokens, estados) + la dirección estética. Decisión estructural fijada: **mantener las dos pantallas, NO unificar** (la idea de unificar quedó como nota "no implementar"). Con ese brief se generó el **mockup en Claude Design** (handoff "Registrar · Handoff").
+
+**Rediseño de Registrar — Parte 1 (commit `f5ee6b8`):**
+- **Delta 1 — placeholder cálido:** el campo principal "¿Qué pasó?" (`VoiceTextarea`) ya no sale vacío; muestra **"Cuéntame qué pasó, con tus palabras…"** en modo rápido Y detallado. Color del placeholder `--color-text-light` (ya existía en el CSS del componente). La prop `placeholder` ya existía; solo se pasó en ambos usos de `RegistroPage`.
+- **Delta 2 — Acción rápida sin salto de color:** el skeleton de carga (`.accionCard` / `.accionSkeleton` en `RegistroPage`) era **ámbar** mientras el resultado final (`AccionRapida`) es **tangerine**. Se replicaron los tokens tangerine del componente final en el skeleton (mismo fondo `--color-surface`, borde `--color-border`, `border-left` `--color-primary`, label `--color-primary-deep`). Shimmer migrado de hex hardcodeado a tokens (`--color-primary-bg` → `--color-primary`), visible en light y dark. No se tocó el componente `AccionRapida`.
+
+**Rediseño de Registrar — Parte 2 (commit `3aa61bd`):**
+- **Delta 3 — colores de emoción tokenizados:** los **12 hex hardcodeados** de `TAXONOMIA_EMOCIONES` (un par color + colorBg por cada una de las 6 emociones) salieron de `RegistroPage.jsx` y pasaron a tokens **`--color-emocion-*` / `-bg`** definidos en `index.css`, con override de modo oscuro. Los inline styles de los chips de emoción (borde, texto, fondo) ahora consumen `var()`. Cero hex de emoción en `RegistroPage.jsx`.
+
+**Nota de QA anotada:** los valores light de los tokens de emoción **no son idénticos** a los hex originales (se afinaron a la paleta), así que los chips de emoción se ven un poco distintos a antes en light, no solo "lo mismo tokenizado". Daniel debe revisarlos en la app (light + dark).
 
 ---
 
@@ -294,6 +311,18 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 ---
 
 ## Próximo paso
+
+### Rediseño de Registrar — continuación (lo primero de la próxima sesión)
+- **Delta 4 — barra de carga durante el análisis de IA** (pantalla de resultado del episodio): reusar el **patrón de barra de progreso que YA existe** en la app (el de "Lo que Huella ve" / generación de planes). El mismo patrón sirve para "Creando tu plan" (estrategias) y para el análisis de patrones.
+- **Polish estético general de las vistas de Registrar:** implementar sobre el código real con las specs del **handoff de Claude Design ("Registrar · Handoff")**. Es la parte gruesa. NO pegar el bundle; trabajar con el mockup como guía.
+- **Cuidados al implementar el polish:** conservar **TODAS** las opciones de chips del código real — el mockup muestra solo algunas: **faltan gatillantes y el estado "Triste"**. Verificar también que el badge ámbar **"orientación inmediata"** del registro rápido sea intencional.
+
+### Beta — documento y arranque
+- **Guardar el plan de beta como `PLAN_BETA.md`** en el repo. Documento ya armado: 1 mes de uso, arranque en 1-2 semanas, testers conocidos + referidos, feedback por grupo de WhatsApp + encuesta, 4 métricas, mensajes listos.
+- **Paso 1 del calendario:** auditoría pre-lanzamiento (prompt ya definido, **aún sin correr**).
+
+### Producto — idea nueva (decidida, falta implementar)
+- **Racha por interacción activa:** la racha debe contar por **cualquier** interacción activa con la app, no solo por registrar un episodio. Decidido; falta implementarlo.
 
 ### Fase monetización — gates ✅ COMPLETADOS (4 junio)
 - ✅ Gate 2do hijo (`d2f4a4c`) · ✅ análisis de patrones (`90949e8`) · ✅ crear estrategias (`e02f7c9`) · ✅ export PDF (`6cd4fd5`).
