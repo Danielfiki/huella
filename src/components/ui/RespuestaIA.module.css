@@ -26,6 +26,11 @@
   color: var(--color-text);
 }
 
+/* separa la barra de progreso del CitaLoader durante la espera */
+.progressSpace {
+  margin-bottom: 14px;
+}
+
 .titulo {
   font-size: 14px;
   font-weight: 700;

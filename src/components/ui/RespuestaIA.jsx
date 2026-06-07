@@ -2,16 +2,36 @@ import React from 'react'
 import styles from './RespuestaIA.module.css'
 import { Sparkles } from 'lucide-react'
 import CitaLoader from './CitaLoader'
+import ProgressBar from './ProgressBar'
+import useFakeProgress from '../../hooks/useFakeProgress'
 import { renderInline } from '../../utils/renderMarkdown'
 
+// La orientación del episodio es más corta que el análisis del Home (~60s):
+// estimamos ~28s. Es solo el ritmo de la barra de avance percibido; ajústalo aquí.
+const DURACION_ORIENTACION_MS = 28000
+
 export default function RespuestaIA({ texto, loading = false, mensajeCarga, compact = false, categoria = 'regulacion' }) {
-  if (loading) {
+  const exito = !!texto && !texto.startsWith('Error')
+  const { progress, completing, phase } = useFakeProgress({
+    loading,
+    success: exito,
+    duracionMs: DURACION_ORIENTACION_MS,
+  })
+
+  if (loading || completing) {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
           <Sparkles size={16} className={styles.sparklesSpin} />
           <span>{mensajeCarga || 'Analizando lo que pasó con tu hijo...'}</span>
         </div>
+        <ProgressBar
+          value={progress}
+          phase={phase}
+          tone="onLight"
+          label="Analizando lo que pasó"
+          className={styles.progressSpace}
+        />
         <CitaLoader categoria={categoria} />
       </div>
     )
