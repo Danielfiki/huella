@@ -4,34 +4,96 @@
 .labelOpcional { font-size: 11px; font-weight: 400; color: var(--color-text-light); }
 .error { font-size: 13px; color: var(--color-danger); text-align: center; }
 
-/* ── Elegir ── */
-.header { padding-bottom: 2px; }
+/* ── Refugio: suelo cálido reutilizable del flujo de Registrar ──
+   Wrapper full-bleed que cancela el padding 20px (8px abajo) de .main
+   del Layout para que el suelo cálido llegue de borde a borde, justo
+   bajo el header global mocha. Las demás vistas del flujo lo heredarán. */
+.flujoRefugio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: -20px -20px -8px;
+  padding: 24px 20px 28px;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: radial-gradient(135% 60% at 50% 0%, var(--color-primary-tint) 0%, var(--color-bg) 52%);
+}
 
-.opcionCard {
+/* ── Top flotante: título Fraunces centrado + disco de ayuda ── */
+.topRefugio {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 24px 20px;
-  border-radius: var(--radius-lg, 16px);
-  border: 2px solid var(--color-border);
-  border-left: 3px solid var(--color-accent-green);
+  justify-content: center;
+  min-height: 34px;
+  margin-bottom: 4px;
+}
+.tituloRefugio {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0 44px;
+}
+.ayudaDisco {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* neutraliza el margin-left del .wrap interno de TooltipAyuda para centrarlo en el disco */
+.ayudaDisco > span { margin-left: 0; }
+
+/* ── Choice cards (Refugio) ── */
+.choiceCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  border-radius: 22px;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
   text-align: left;
   cursor: pointer;
-  width: 100%;
-  transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+  transition: transform 0.12s, box-shadow 0.15s;
 }
-.opcionCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.opcionCard:active { transform: scale(0.93); }
+.choiceCard:active { transform: scale(0.97); }
 
-.opcionEpisodio:hover { border-color: var(--color-accent-blue); }
-.opcionAvance { border: 1px solid var(--color-border); border-left: 3px solid var(--color-accent-orange); background: var(--color-surface); }
-.opcionAvance:hover { border-color: var(--color-border); border-left-color: var(--color-accent-orange); }
+/* filo interior de 4px (inset box-shadow), conservando la sombra flotante */
+.choiceEpisodio { box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-accent-mocha); }
+.choiceAvance   { box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-primary); }
 
-.opcionEmoji { font-size: 46px; flex-shrink: 0; line-height: 1; }
-.opcionTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.opcionTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
-.opcionDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+.choiceIcono {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.choiceIconoEpisodio { background: var(--color-surface-alt); }
+.choiceIconoAvance   { background: var(--color-celebration-start); }
+
+.choiceTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.choiceTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
+.choiceDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+
+.choiceChevron { font-size: 22px; color: var(--color-text-light); line-height: 1; flex-shrink: 0; }
 
 /* ── Hito form ── */
 .vistaHeader { display: flex; align-items: center; }

@@ -149,31 +149,36 @@ export default function NuevoPage() {
   // ── ELEGIR ───────────────────────────────────────────────────────────────
   if (vista === 'elegir') {
     return (
-      <div className={styles.page}>
-        <div className={styles.header}>
-          <h2 className={styles.titulo}>¿Qué quieres registrar?<TooltipAyuda texto="Mientras más detalles aportes, más precisa será la orientación de Huella." /></h2>
+      <div className={styles.flujoRefugio}>
+        <div className={styles.topRefugio}>
+          <h2 className={styles.tituloRefugio}>¿Qué quieres registrar?</h2>
+          <span className={styles.ayudaDisco}>
+            <TooltipAyuda texto="Mientras más detalles aportes, más precisa será la orientación de Huella." />
+          </span>
         </div>
 
         <button
-          className={`${styles.opcionCard} ${styles.opcionEpisodio}`}
+          className={`${styles.choiceCard} ${styles.choiceEpisodio}`}
           onClick={() => navigate('/registro')}
         >
-          <span className={styles.opcionEmoji}>🌊</span>
-          <div className={styles.opcionTexto}>
-            <p className={styles.opcionTitulo}>Un episodio difícil</p>
-            <p className={styles.opcionDesc}>Rabieta, llanto, agresividad u otro momento complicado</p>
+          <span className={`${styles.choiceIcono} ${styles.choiceIconoEpisodio}`}>🌊</span>
+          <div className={styles.choiceTexto}>
+            <p className={styles.choiceTitulo}>Un episodio difícil</p>
+            <p className={styles.choiceDesc}>Rabieta, llanto, agresividad u otro momento complicado</p>
           </div>
+          <span className={styles.choiceChevron}>›</span>
         </button>
 
         <button
-          className={`${styles.opcionCard} ${styles.opcionAvance}`}
+          className={`${styles.choiceCard} ${styles.choiceAvance}`}
           onClick={() => setVista('hito')}
         >
-          <span className={styles.opcionEmoji}>⭐</span>
-          <div className={styles.opcionTexto}>
-            <p className={styles.opcionTitulo}>Un avance</p>
-            <p className={styles.opcionDesc}>Se calmó solo, pidió disculpas, toleró un "no" u otro logro</p>
+          <span className={`${styles.choiceIcono} ${styles.choiceIconoAvance}`}>⭐</span>
+          <div className={styles.choiceTexto}>
+            <p className={styles.choiceTitulo}>Un avance</p>
+            <p className={styles.choiceDesc}>Se calmó solo, pidió disculpas, toleró un "no" u otro logro</p>
           </div>
+          <span className={styles.choiceChevron}>›</span>
         </button>
       </div>
     )
