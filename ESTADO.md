@@ -10,9 +10,9 @@
 
 ---
 
-## Cerrado HOY (domingo 7 junio 2026) — Delta 4 (barra de progreso) + rediseño de Registrar dirección "Refugio" (NuevoPage completo)
+## Cerrado HOY (domingo 7 junio 2026) — Delta 4 (barra de progreso) + rediseño "Refugio": NuevoPage completo + RegistroPage "elegir modo"
 
-**Todo commiteado y en producción (auto-deploy Vercel), salvo el QA visual pendiente del ajuste de casillas.**
+**Todo commiteado y en producción (auto-deploy Vercel). QA visual del avance y de "elegir modo" aprobado por Daniel.**
 
 ### Delta 4 — barra de progreso en el resultado del episodio (commit `53018c6`)
 - Se agregó una **barra de avance percibido** mientras la IA genera la orientación del episodio (`RespuestaIA`, estado loading): sube 0→90% con ease-out y cierra a 100% al llegar la respuesta, junto al `CitaLoader`. Reusa el componente `ProgressBar` existente, con sus colores por defecto.
@@ -21,21 +21,39 @@
 
 ### Rediseño de Registrar — dirección "Refugio" (en curso, vista por vista)
 - **Dirección elegida: C · Refugio** (híbrido cálido de "Aliento" + estructura sobria de "Diario"). Aprobada. Mockups completos de las 7 vistas en Claude Design.
-- **Decisión de layout (opción 1):** suelo cálido **full-bleed BAJO el header global mocha**. NO se toca `Layout`. Patrón: barra "huella" global arriba + suelo cálido de borde a borde debajo. Verificado que NuevoPage se renderiza dentro de `<Layout>` (header mocha 56px + bottom-nav).
-- **Átomos base creados en `.flujoRefugio` (clase reutilizable del flujo):** suelo cálido (`radial-gradient` de `--color-primary-tint` → `--color-bg`, full-bleed cancelando el padding 20px de `.main` con márgenes negativos) + top flotante (título Fraunces centrado + discos flotantes para back/controles, `--color-surface` + `--shadow-sm`).
+- **Decisión de layout (opción 1):** suelo cálido **full-bleed BAJO el header global mocha**. NO se toca `Layout`. Patrón: barra "huella" global arriba + suelo cálido de borde a borde debajo. Verificado que NuevoPage/RegistroPage se renderizan dentro de `<Layout>` (header mocha 56px + bottom-nav).
+- **Átomos base creados en `.flujoRefugio` (clase del flujo):** suelo cálido (`radial-gradient` de `--color-primary-tint` → `--color-bg`, full-bleed cancelando el padding 20px de `.main` con márgenes negativos) + top flotante (título Fraunces centrado + discos flotantes para back/controles, `--color-surface` + `--shadow-sm`).
 
 **Pushes hechos:**
 - **Push 1 (commit `90acd50`):** NuevoPage vista **"elegir"** en Refugio — suelo cálido + top flotante + 2 choice cards con filo de tono (episodio mocha / avance tangerine, vía `inset box-shadow`) + disco de ícono (episodio `--color-surface-alt` / avance `--color-celebration-start`) + chevron.
 - **Push 2 (commit `7992241`):** resto de NuevoPage — **formulario de avance** (top flotante con back en disco, campo de escritura protagonista con hairline-renglón, botón "Guardar avance" como **pill tangerine** vía `className` local sobre `Button` sin tocarlo) + **resultado de avance** (celebración elevada: estrella 60px sobre `--color-celebration-start`, `--shadow-md`; "Enmarca este momento" como superficie suave conservando su condición). Quitado el `TooltipAyuda` de la vista elegir (no aportaba).
-- **Ajuste (commit `1e42414`):** las **categorías del avance** pasaron de "fichas desnudas" (se veían pobres/descuidadas) a **"casilla sobria"** — grilla 2 columnas, fondo `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`. **PENDIENTE QA visual de Daniel.**
+- **Casilla sobria del avance (commit `1e42414`):** las **categorías del avance** pasaron de "fichas desnudas" (se veían pobres/descuidadas) a **"casilla sobria"** — grilla 2 columnas, fondo `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`. **APROBADA por Daniel (QA visual hecho).**
+- **Contraste de casillas inactivas (commit `461f591`):** el texto de las casillas de categoría **inactivas** pasó de `--color-text-muted` a `--color-text` (más presencia). Cambio **local** a `.catChip`, no toca el token global. Aprobado y verificado. *NOTA:* ese commit **arrastró también `ESTADO.md`** (se usó `git add -A`); el contenido es correcto, el mensaje no lo menciona, y se **decidió dejarlo así** (no reescribir historia en `main`).
+- **Push 3A — RegistroPage "elegir modo" en Refugio (commits `cbb2c92` + `f625cc0`):** suelo cálido full-bleed + top flotante; las 2 `modoCard` convertidas en **choice cards** (disco de ícono 52px + filo de tono vía `inset box-shadow`: rápido **mocha** / detallado **tangerine** + chevron). **Badges movidos a PIE** de cada card (bajo la descripción). Conserva todo el copy, badges, navegación y lógica de Pro/límite (`MAX_EPISODIOS_FREE`, `isPro`, `UpgradeModal`, aviso de límite + "Conocer Pro"). **APROBADO por Daniel.**
 
-**DECISIÓN DE DISEÑO CLAVE:** las fichas de selección **NO van desnudas** (se ven descuidadas). Van como **CASILLA SOBRIA** (superficie + borde sutil). Si Daniel aprueba el avance, este tratamiento se **propaga a TODOS los selectores del flujo** (tipos, emociones, gatillantes, estado del adulto, intensidad).
+**DECISIÓN DE DISEÑO CLAVE:** las fichas de selección **NO van desnudas** (se ven descuidadas). Van como **CASILLA SOBRIA** (superficie `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`; **texto inactivo `--color-text`**). **Aprobado en el avance** → se **propaga a TODOS los selectores del flujo** (tipos, emociones, gatillantes, estado del adulto, intensidad).
+
+**Deuda técnica nueva — base Refugio DUPLICADA:** `.flujoRefugio` / `.topRefugio` / `.tituloRefugio` están copiadas en `NuevoPage.module.css` y `RegistroPage.module.css` (los CSS modules son scope por archivo). **Extraer a un CSS/módulo compartido** en una sola pasada cuando Refugio esté completo en todo el flujo.
+
+**Nota de tooling (PowerShell 5.1):** las **comillas dobles** en el mensaje de commit rompen `git commit -m` (también vía variable/here-string); usar **`git commit -F <archivo>`**. Y usar **`git add` selectivo** (archivo por archivo), **nunca `git add -A`** (ya coló `ESTADO.md` una vez por eso).
+
+---
+
+### Próximo paso (MAÑANA) — PUSH 3B: formulario RÁPIDO de RegistroPage en Refugio
+
+**Antes de tocar código, definir cómo caen los 3 selectores en CASILLA SOBRIA** (mismo tratamiento que las categorías del avance: superficie `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`; texto inactivo `--color-text`):
+- **Tipo de episodio:** 9 opciones (hoy `bigEmoji`, grilla 3).
+- **Intensidad:** escala 1-5 — **CUIDADO: no forzar a grilla de 2; conservar la lectura de escala.**
+- **"¿Cuándo pasó?":** 6 opciones (hoy pills).
+
+**Conservar en el rápido:** `VoiceTextarea` (campo principal "¿Qué pasó?", ya tiene voz), validaciones (`tipo` + `intensidad` + `cuandoPaso` obligatorios), `FechaHoraPicker` en "Otro momento…", `.tipoOtroInput` condicional (tipo "Otro"), botón `.cambiarModoBtn` a detallado, y el badge **"orientación inmediata"** (pendiente confirmar si es intencional).
 
 **Pendientes del rediseño (orden):**
-1. **QA del ajuste de casillas** en el avance (`/nuevo` → avance).
-2. **Push 3:** RegistroPage "elegir modo" + formulario **rápido** (con casillas sobrias).
-3. **Push 4:** RegistroPage formulario **detallado** (cuidar conservar TODOS los chips: 9 tipos, 6 emociones + específicas, 10 gatillantes, 7 estados, 5 intensidades).
-4. **Push 5:** RegistroPage **resultado** del episodio.
+1. ✅ **QA de casillas del avance — APROBADO.**
+2. ✅ **Push 3A — "elegir modo" — APROBADO** (`cbb2c92` + `f625cc0`).
+3. **Push 3B — formulario RÁPIDO** (ver definición arriba). ← siguiente.
+4. **Push 4 — formulario DETALLADO** (conservar TODOS los chips: 9 tipos, 6 emociones + específicas, 10 gatillantes, 7 estados, 5 intensidades).
+5. **Push 5 — resultado del episodio.**
 
 **REGLA NUEVA PENDIENTE DE VERIFICAR + APLICAR:** donde haya **campo de escritura libre, debe poder dictarse por voz** (como el "¿Qué pasó?" del episodio con `VoiceTextarea`). Campos sin voz hoy: avance ("Cuéntame qué pasó"), contexto del detallado ("¿Qué estaba pasando antes?"), extra del estado del adulto, reflexión del resultado. **Antes de aplicar:** verificar que `VoiceTextarea` se reusa sin romper y que varios micrófonos en una misma pantalla no se pisen. Una vez confirmado, **agregar la regla a `CLAUDE.md`**.
 
@@ -147,8 +165,8 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 ## Estado de git al cierre
 
 - Branch: `main`
-- HEAD: `e63cc6d` (Falla 3 del bug de modo parejas)
-- Working tree limpio salvo este archivo ESTADO.md (modificado, sin stagear). Daniel decide cuándo versionarlo.
+- HEAD: `f625cc0` (Push 3A — badge a pie de las choice cards de "elegir modo")
+- Working tree limpio (salvo este `ESTADO.md` mientras se edita el cierre; Daniel decide cuándo versionarlo).
 
 ---
 
@@ -345,10 +363,8 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ## Próximo paso
 
-### Rediseño de Registrar — continuación (lo primero de la próxima sesión)
-- **Delta 4 — barra de carga durante el análisis de IA** (pantalla de resultado del episodio): reusar el **patrón de barra de progreso que YA existe** en la app (el de "Lo que Huella ve" / generación de planes). El mismo patrón sirve para "Creando tu plan" (estrategias) y para el análisis de patrones.
-- **Polish estético general de las vistas de Registrar:** implementar sobre el código real con las specs del **handoff de Claude Design ("Registrar · Handoff")**. Es la parte gruesa. NO pegar el bundle; trabajar con el mockup como guía.
-- **Cuidados al implementar el polish:** conservar **TODAS** las opciones de chips del código real — el mockup muestra solo algunas: **faltan gatillantes y el estado "Triste"**. Verificar también que el badge ámbar **"orientación inmediata"** del registro rápido sea intencional.
+### Rediseño de Registrar — continuación
+- **Delta 4 y el polish de NuevoPage + "elegir modo" YA ESTÁN HECHOS** (ver bloque "Cerrado HOY" arriba). El detalle del **próximo paso real (Push 3B)** y los pendientes ordenados (Push 4, Push 5, regla de voz) viven en "Cerrado HOY → Próximo paso (MAÑANA)". Esta sección queda solo como puntero para no duplicar.
 
 ### Beta — documento y arranque
 - **Guardar el plan de beta como `PLAN_BETA.md`** en el repo. Documento ya armado: 1 mes de uso, arranque en 1-2 semanas, testers conocidos + referidos, feedback por grupo de WhatsApp + encuesta, 4 métricas, mensajes listos.
