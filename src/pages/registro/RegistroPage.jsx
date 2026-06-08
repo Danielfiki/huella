@@ -709,30 +709,34 @@ export default function RegistroPage() {
   if (vista === 'elegir') {
     const nombreHijo = state.hijo?.nombre || 'tu hijo/a'
     return (
-      <div ref={pageRef} className={styles.page}>
-        <div className={styles.elegirHeader}>
-          <h2 className={styles.titulo}>¿Cómo registrar?</h2>
+      <div ref={pageRef} className={styles.flujoRefugio}>
+        <div className={styles.elegirHeaderRefugio}>
+          <div className={styles.topRefugio}>
+            <h2 className={styles.tituloRefugio}>¿Cómo registrar?</h2>
+          </div>
           <p className={styles.elegirSub}>
             Más contexto = análisis más preciso para {nombreHijo}
           </p>
         </div>
 
-        <button className={styles.modoCard} onClick={() => trySetVista('rapido')}>
-          <div className={styles.modoCardTop}>
-            <span className={styles.modoIcono}>⚡</span>
+        <button className={`${styles.modoCard} ${styles.modoCardRapido}`} onClick={() => trySetVista('rapido')}>
+          <span className={`${styles.modoIcono} ${styles.modoIconoRapido}`}>⚡</span>
+          <div className={styles.modoTexto}>
             <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
+            <h3 className={styles.modoTitulo}>Registro rápido</h3>
+            <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
           </div>
-          <h3 className={styles.modoTitulo}>Registro rápido</h3>
-          <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
+          <span className={styles.modoChevron}>›</span>
         </button>
 
         <button className={`${styles.modoCard} ${styles.modoCardDestacado}`} onClick={() => trySetVista('detallado')}>
-          <div className={styles.modoCardTop}>
-            <span className={styles.modoIcono}>📊</span>
+          <span className={`${styles.modoIcono} ${styles.modoIconoDetallado}`}>📊</span>
+          <div className={styles.modoTexto}>
             <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
+            <h3 className={styles.modoTitulo}>Registro detallado</h3>
+            <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
           </div>
-          <h3 className={styles.modoTitulo}>Registro detallado</h3>
-          <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
+          <span className={styles.modoChevron}>›</span>
         </button>
 
         {!isPro() && (() => {

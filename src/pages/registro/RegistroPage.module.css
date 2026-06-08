@@ -36,48 +36,90 @@
 .titulo { font-size: 22px; font-weight: 700; }
 .label { font-size: 14px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 10px; }
 
-/* ── Pantalla elegir modo ─────────────────────────────── */
-
-.elegirHeader { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; }
-.elegirSub { font-size: 14px; color: var(--color-text-muted); }
-
-.modoCard {
+/* ── Refugio: suelo cálido reutilizable del flujo de Registrar ──
+   Wrapper full-bleed que cancela el padding 20px (8px abajo) de .main
+   del Layout para que el suelo cálido llegue de borde a borde, justo
+   bajo el header global mocha. (Espejo del de NuevoPage; CSS modules
+   son scope por archivo, por eso se replica acá.) */
+.flujoRefugio {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 20px;
-  border-radius: var(--radius-lg, 16px);
-  background: var(--color-surface);
-  border: 2px solid var(--color-border);
-  border-left: 3px solid var(--color-accent-indigo);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, transform 0.1s;
-}
-.modoCard:hover { border-color: var(--color-primary-light); }
-.modoCard:active { transform: scale(0.93); }
-
-.modoCardDestacado {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-  border-left: 3px solid var(--color-accent-green);
+  gap: 16px;
+  margin: -20px -20px -8px;
+  padding: 24px 20px 28px;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: radial-gradient(135% 60% at 50% 0%, var(--color-primary-tint) 0%, var(--color-bg) 52%);
 }
 
-.modoCardTop {
+/* ── Top flotante: título Fraunces centrado + discos flotantes ── */
+.topRefugio {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
+  justify-content: center;
+  min-height: 34px;
+}
+.tituloRefugio {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0 44px;
 }
 
-.modoIcono { font-size: 28px; line-height: 1; }
+/* ── Pantalla elegir modo (Refugio) ─────────────────────── */
+.elegirHeaderRefugio { display: flex; flex-direction: column; gap: 6px; }
+.elegirSub { font-size: 14px; color: var(--color-text-muted); text-align: center; line-height: 1.5; margin: 0; }
+
+/* choice cards (mismo patrón que la vista elegir de NuevoPage) */
+.modoCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  border-radius: 22px;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.15s;
+}
+.modoCard:active { transform: scale(0.97); }
+
+/* filo interior de 4px (inset box-shadow), conservando la sombra flotante */
+.modoCardRapido    { box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-accent-mocha); }
+.modoCardDestacado { box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-primary); }
+
+.modoIcono {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.modoIconoRapido    { background: var(--color-surface-alt); }
+.modoIconoDetallado { background: var(--color-celebration-start); }
+
+.modoTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
 
 .modoBadge {
+  align-self: flex-start;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
   white-space: nowrap;
+  margin-bottom: 2px;
 }
 .modoBadgeBasico {
   background: var(--color-surface-alt);
@@ -91,6 +133,8 @@
 
 .modoTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
 .modoDesc { font-size: 13px; color: var(--color-text-muted); line-height: 1.5; margin: 0; }
+
+.modoChevron { font-size: 22px; color: var(--color-text-light); line-height: 1; flex-shrink: 0; }
 
 /* ── Cabecera de vista (rápido / detallado) ───────────── */
 
