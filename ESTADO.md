@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: domingo 7 junio 2026 — Rediseño de Registrar dirección "Refugio" en curso (NuevoPage completo en Refugio: elegir + avance + resultado; categorías del avance como "casilla sobria"). Antes en esta tanda: Delta 4 (barra de progreso en el resultado del episodio vía hook `useFakeProgress`). Pendiente grande sigue siendo la pasarela de pago real (Stripe). Próximo: QA de las casillas del avance, luego propagar Refugio a RegistroPage (pushes 3-5).*
+*Última actualización: lunes 8 junio 2026 — Rediseño "Refugio" del flujo Registrar **COMPLETO** (NuevoPage + RegistroPage enteros). Hoy: RegistroPage rápido/detallado/resultado en Refugio + Orientación de Huella con jerarquía de secciones (fix de detección tolerante de títulos) + regla de voz aplicada a 3 campos de relato libre. Pendiente grande sigue siendo la pasarela de pago real (Stripe) → es el próximo paso de la sesión siguiente. Pendientes menores: QA de voz + documentar regla en CLAUDE.md.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,7 +10,7 @@
 
 ---
 
-## Cerrado HOY (domingo 7 junio 2026) — Delta 4 (barra de progreso) + rediseño "Refugio": NuevoPage completo + RegistroPage "elegir modo"
+## Sesión 7 junio 2026 — Delta 4 (barra de progreso) + rediseño "Refugio": NuevoPage completo + RegistroPage "elegir modo"
 
 **Todo commiteado y en producción (auto-deploy Vercel). QA visual del avance y de "elegir modo" aprobado por Daniel.**
 
@@ -39,25 +39,40 @@
 
 ---
 
-### Próximo paso (MAÑANA) — PUSH 3B: formulario RÁPIDO de RegistroPage en Refugio
+## Cerrado HOY (lunes 8 junio 2026) — RegistroPage completo en Refugio + regla de voz
 
-**Antes de tocar código, definir cómo caen los 3 selectores en CASILLA SOBRIA** (mismo tratamiento que las categorías del avance: superficie `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`; texto inactivo `--color-text`):
-- **Tipo de episodio:** 9 opciones (hoy `bigEmoji`, grilla 3).
-- **Intensidad:** escala 1-5 — **CUIDADO: no forzar a grilla de 2; conservar la lectura de escala.**
-- **"¿Cuándo pasó?":** 6 opciones (hoy pills).
+**Todo commiteado y en producción (auto-deploy Vercel). RegistroPage quedó ENTERO en Refugio: con esto el rediseño "Refugio" del flujo Registrar completo (NuevoPage + RegistroPage) está TERMINADO.**
 
-**Conservar en el rápido:** `VoiceTextarea` (campo principal "¿Qué pasó?", ya tiene voz), validaciones (`tipo` + `intensidad` + `cuandoPaso` obligatorios), `FechaHoraPicker` en "Otro momento…", `.tipoOtroInput` condicional (tipo "Otro"), botón `.cambiarModoBtn` a detallado, y el badge **"orientación inmediata"** (pendiente confirmar si es intencional).
+**Pushes de esta sesión:**
+- **Push 3B — formulario RÁPIDO en Refugio (commit `db30986`):** casillas sobrias en los 3 selectores (tipo emoji-arriba 3×3; intensidad como **escala horizontal de 5 — sin grilla de 2**; "¿cuándo?" a casilla 2-col). `VoiceTextarea` sin tocar. **APROBADO.**
+- **Push 4 — formulario DETALLADO en Refugio (commit `00c8811`):** todos los selectores a casilla sobria; tipo **unificado con el rápido** (`bigEmoji`). **EMOCIONES = Opción 1:** casilla sobria en la FORMA conservando el **color de cada categoría como acento** (la seleccionada se marca con su propio color, NO tangerine); 2 niveles intactos. Gatillantes (multi) y estado del adulto (toggle-off) conservados. **APROBADO.**
+- **Ajuste — títulos de sección del flujo Refugio (commit `6567f9b`):** `.label` a `--color-text` + 16px (más presencia), parejo en rápido/detallado/avance. **APROBADO.**
+- **Push 5A — resultado del episodio en Refugio, todo menos la orientación (commit `5ff36db`):** celebración elevada (✅ igual que el resultado del avance) + reflexión y "crear estrategia" como superficies suaves + "Volver al inicio" pill tangerine. **APROBADO.**
+- **Push 5B — "Orientación de Huella" con jerarquía de secciones del Home (commit `2ed7b2a`):** los títulos "Qué está pasando / Qué hacer ahora / Qué evitar" salen en **Fraunces tangerine** (jerarquía estilo Home), contenedor en superficie suave Refugio. Se **extrajo `SECTION_TITLES` a un módulo compartido nuevo `src/utils/seccionesIA.js`** (importado por `RespuestaIA` y `AnalisisIA`) — saldó la deuda de las dos listas desincronizadas.
+- **Fix — detección TOLERANTE de títulos (commit `39feb8d`):** la comparación era de igualdad exacta y el modelo agregaba **`:` al final**, por eso los títulos del episodio salían como párrafo plano. Nuevo `esTituloSeccion()` en `seccionesIA.js` ignora `:` final, mayúsculas/minúsculas y forma Unicode (NFC). Aplicado en `RespuestaIA` y en el Home (cambio **aditivo**: el Home se ve igual). **QA confirmado: los títulos ya salen con jerarquía.**
 
-**Pendientes del rediseño (orden):**
-1. ✅ **QA de casillas del avance — APROBADO.**
-2. ✅ **Push 3A — "elegir modo" — APROBADO** (`cbb2c92` + `f625cc0`).
-3. **Push 3B — formulario RÁPIDO** (ver definición arriba). ← siguiente.
-4. **Push 4 — formulario DETALLADO** (conservar TODOS los chips: 9 tipos, 6 emociones + específicas, 10 gatillantes, 7 estados, 5 intensidades).
-5. **Push 5 — resultado del episodio.**
+**REGLA DE VOZ (campos de escritura libre dictables):**
+- **Diagnóstico:** `VoiceTextarea` usa Web Speech API **push-to-talk**, estado **por instancia**, sin singleton. Varias instancias en una pantalla **NO se pisan** (cada una escribe en su propio campo vía `onVoiceResult`; el push-to-talk serializa el uso del único motor de voz del navegador).
+- **Implementado (commit `5fd42f3`):** `VoiceTextarea` en los **3 campos de relato libre** — avance "Cuéntame qué pasó", contexto del detallado "¿Qué estaba pasando antes?", y reflexión del resultado "¿Qué harías diferente?". Cada uno a su propio estado; la reflexión conserva el reset de "Guardar reflexión" al dictar/editar. **Sin tocar el componente global.**
+- **EXCLUIDOS (decisión):** "¿Quién estuvo presente?" (dato corto), tipo "Otro" y "algo más" del estado del adulto (cortos/opcionales; sumables después).
+- **Nota:** el avance **perdió el `autoFocus`** al pasar a `VoiceTextarea` (coherente con el episodio; se dejó así a propósito).
+- **PENDIENTE:** (a) **QA de Daniel** del push de voz — cruce de micrófonos en el detallado (2 mics: principal + contexto) y el anidado "caja-dentro-de-caja" en avance/reflexión (afinar si se ve recargado); (b) **documentar la regla en `CLAUDE.md`** una vez confirmado el QA.
 
-**REGLA NUEVA PENDIENTE DE VERIFICAR + APLICAR:** donde haya **campo de escritura libre, debe poder dictarse por voz** (como el "¿Qué pasó?" del episodio con `VoiceTextarea`). Campos sin voz hoy: avance ("Cuéntame qué pasó"), contexto del detallado ("¿Qué estaba pasando antes?"), extra del estado del adulto, reflexión del resultado. **Antes de aplicar:** verificar que `VoiceTextarea` se reusa sin romper y que varios micrófonos en una misma pantalla no se pisen. Una vez confirmado, **agregar la regla a `CLAUDE.md`**.
+**Deudas técnicas acumuladas (para una pasada de limpieza):**
+- **Base Refugio DUPLICADA** (`.flujoRefugio` / `.topRefugio` / `.tituloRefugio`) entre `NuevoPage.module.css` y `RegistroPage.module.css` (CSS modules scope por archivo) → **extraer a un módulo/CSS compartido**.
+- **CSS muerto de los pushes Refugio:** clases viejas sin uso — `.tipoBtn`/`.tipoEmoji`/`.tipoSelected`, `.intensidadGrid`/`.intensidadBtn`/`.intensidadEmoji`/`.intensidadSelected`, `.tagsGrid`/`.tag`/`.tagSelected`, `.vistaHeader`/`.backBtn`/`.titulo`, `.guardadoCard*`, `.escrituraTextarea` — **+ renombrar `.cuandoChip`** (reusado como casilla genérica en el detallado) a `.casillaChip`. Saldar junto con la extracción de la base.
+- **Tokens blanco-sobre-tangerine:** `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary` global usan `white`/`#fff` hardcodeado → migrar cuando exista el token.
 
-**Deudas de tokens anotadas (no en alcance aún):** `.enmarcarBtn` usa `#fff`; `.fotoRemoveBtn` usa `rgba(0,0,0,…)` + `color: white`; `Button.primary` global usa `color: white`. Migrar a token en una pasada de tokens (no hay token de blanco-sobre-tangerine hoy).
+---
+
+### Próximo paso — PRÓXIMA SESIÓN (con cabeza fresca): MONETIZACIÓN de Huella
+
+1. **Integrar Stripe** para el plan Pro — **CLP 9.990/mes + CLP 99.900/año** (pricing definitivo, commit `b6ae281`; **NO 5.990**). Al pagar, Stripe actualiza el campo `plan` en `perfiles` de `'free'` a `'pro'`.
+2. **Trial:** el de 7 días quedó **DESCARTADO**; el CTA es **"Activar Huella Pro"**. Pendiente: **evaluar un reverse trial largo (14-30 días), NO de 7**.
+3. **Página de configuración de cuenta** (ver plan actual + activar Pro).
+4. **Probar el modal de upgrade** con cuenta nueva sin plan admin.
+
+**Antes de la monetización, pendientes menores:** cerrar el **QA de voz** + **documentar la regla de voz en `CLAUDE.md`**; opcional, afinar el anidado de `VoiceTextarea` si se ve recargado. La **pasada de limpieza de CSS / extracción de la base Refugio** puede ir cuando se quiera.
 
 ---
 
@@ -165,7 +180,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 ## Estado de git al cierre
 
 - Branch: `main`
-- HEAD: `f625cc0` (Push 3A — badge a pie de las choice cards de "elegir modo")
+- HEAD: `5fd42f3` (dictado por voz en avance, contexto y reflexión)
 - Working tree limpio (salvo este `ESTADO.md` mientras se edita el cierre; Daniel decide cuándo versionarlo).
 
 ---
@@ -363,8 +378,8 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ## Próximo paso
 
-### Rediseño de Registrar — continuación
-- **Delta 4 y el polish de NuevoPage + "elegir modo" YA ESTÁN HECHOS** (ver bloque "Cerrado HOY" arriba). El detalle del **próximo paso real (Push 3B)** y los pendientes ordenados (Push 4, Push 5, regla de voz) viven en "Cerrado HOY → Próximo paso (MAÑANA)". Esta sección queda solo como puntero para no duplicar.
+### Rediseño de Registrar — ✅ COMPLETO (8 junio 2026)
+- **El rediseño "Refugio" del flujo Registrar entero está TERMINADO** (NuevoPage + RegistroPage, vistas elegir/avance/rápido/detallado/resultado/orientación). El detalle por push vive en el bloque "Cerrado HOY (8 junio)" arriba. Pendientes menores derivados: QA de voz + documentar la regla de voz en `CLAUDE.md`; y la pasada de limpieza de CSS muerto + extracción de la base Refugio duplicada (ver "Deudas técnicas" en el bloque de hoy).
 
 ### Beta — documento y arranque
 - **Guardar el plan de beta como `PLAN_BETA.md`** en el repo. Documento ya armado: 1 mes de uso, arranque en 1-2 semanas, testers conocidos + referidos, feedback por grupo de WhatsApp + encuesta, 4 métricas, mensajes listos.
