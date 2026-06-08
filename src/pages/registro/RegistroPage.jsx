@@ -722,9 +722,9 @@ export default function RegistroPage() {
         <button className={`${styles.modoCard} ${styles.modoCardRapido}`} onClick={() => trySetVista('rapido')}>
           <span className={`${styles.modoIcono} ${styles.modoIconoRapido}`}>⚡</span>
           <div className={styles.modoTexto}>
-            <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
             <h3 className={styles.modoTitulo}>Registro rápido</h3>
             <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
+            <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
           </div>
           <span className={styles.modoChevron}>›</span>
         </button>
@@ -732,9 +732,9 @@ export default function RegistroPage() {
         <button className={`${styles.modoCard} ${styles.modoCardDestacado}`} onClick={() => trySetVista('detallado')}>
           <span className={`${styles.modoIcono} ${styles.modoIconoDetallado}`}>📊</span>
           <div className={styles.modoTexto}>
-            <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
             <h3 className={styles.modoTitulo}>Registro detallado</h3>
             <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
+            <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
           </div>
           <span className={styles.modoChevron}>›</span>
         </button>
