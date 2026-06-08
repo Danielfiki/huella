@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Lock } from 'lucide-react'
 import CitaLoader from '../ui/CitaLoader'
 import ProgressBar from '../ui/ProgressBar'
-import { SECTION_TITLES } from '../../utils/seccionesIA'
+import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import styles from './analisisIa.module.css'
 
 // Secciones que el plan free ve bloqueadas. Su contenido NO se genera ni viaja
@@ -23,8 +23,8 @@ function renderAnalysisText(text) {
     const line = raw.trimEnd()
     if (!line.trim()) return null
 
-    if (SECTION_TITLES.has(line.trim())) {
-      return <p key={i} className={styles.sectionTitle}>{line.trim()}</p>
+    if (esTituloSeccion(line)) {
+      return <p key={i} className={styles.sectionTitle}>{tituloSeccionLimpio(line)}</p>
     }
 
     if (/^\*\*[^*]+\*\*$/.test(line.trim())) {

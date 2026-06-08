@@ -5,7 +5,7 @@ import CitaLoader from './CitaLoader'
 import ProgressBar from './ProgressBar'
 import useFakeProgress from '../../hooks/useFakeProgress'
 import { renderInline } from '../../utils/renderMarkdown'
-import { SECTION_TITLES } from '../../utils/seccionesIA'
+import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 
 // La orientación del episodio es más corta que el análisis del Home (~60s):
 // estimamos ~28s. Es solo el ritmo de la barra de avance percibido; ajústalo aquí.
@@ -44,9 +44,10 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
     return text.split('\n').map((line, i) => {
       const t = line.trim()
       // Título de sección (mismo set que el Home): "Qué está pasando", etc.
-      // Todas por igual, incluida la primera línea.
-      if (SECTION_TITLES.has(t)) {
-        return <h4 key={i} className={styles.seccionTitulo}>{t}</h4>
+      // Detección tolerante (ignora ":" final, mayúsculas, Unicode). Todas por
+      // igual, incluida la primera línea. Se muestra el título LIMPIO.
+      if (esTituloSeccion(line)) {
+        return <h4 key={i} className={styles.seccionTitulo}>{tituloSeccionLimpio(line)}</h4>
       }
       if (line.startsWith('Marco aplicado:')) {
         return <p key={i} className={styles.marco}>{line}</p>

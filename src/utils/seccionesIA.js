@@ -16,3 +16,28 @@ export const SECTION_TITLES = new Set([
   'Qué hacer ahora',
   'Qué evitar',
 ])
+
+// Normaliza una línea para comparar/mostrar como título: forma Unicode NFC,
+// trim, y quita uno o más ":" finales (con su espacio previo). Conserva la
+// capitalización original (el lowercase es solo para comparar, ver abajo).
+function limpiarTitulo(linea) {
+  return (linea || '').normalize('NFC').trim().replace(/:+$/, '').trim()
+}
+
+// Set de títulos normalizados a minúsculas, para comparación tolerante.
+const TITULOS_NORM = new Set(
+  [...SECTION_TITLES].map((s) => limpiarTitulo(s).toLowerCase())
+)
+
+// Detección TOLERANTE de título de sección: true si la línea, ignorando
+// espacios, ":" finales, mayúsculas/minúsculas y forma Unicode, coincide con
+// alguno de los SECTION_TITLES. Es la fuente de verdad de la detección.
+export function esTituloSeccion(linea) {
+  return TITULOS_NORM.has(limpiarTitulo(linea).toLowerCase())
+}
+
+// Devuelve el título "limpio" para mostrar (sin ":" final ni espacios sobrantes),
+// conservando la capitalización original. Usar cuando esTituloSeccion dio true.
+export function tituloSeccionLimpio(linea) {
+  return limpiarTitulo(linea)
+}
