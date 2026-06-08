@@ -2,21 +2,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Lock } from 'lucide-react'
 import CitaLoader from '../ui/CitaLoader'
 import ProgressBar from '../ui/ProgressBar'
+import { SECTION_TITLES } from '../../utils/seccionesIA'
 import styles from './analisisIa.module.css'
 
 // Secciones que el plan free ve bloqueadas. Su contenido NO se genera ni viaja
 // al cliente free (el gate es real); acá solo se listan los nombres como teaser.
 const SECCIONES_BLOQUEADAS = ['Lo que merece atención', 'Posibles causas', 'Próximos pasos']
-
-const SECTION_TITLES = new Set([
-  'Lo que está mejorando',
-  'Lo que merece atención',
-  'Posibles causas',
-  'Próximos pasos sugeridos',
-  'Qué está pasando',
-  'Qué hacer ahora',
-  'Qué evitar',
-])
 
 function renderInlineBold(line) {
   const parts = line.split(/\*\*([^*]+)\*\*/g)
