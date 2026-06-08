@@ -1,12 +1,45 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: viernes 5 junio 2026 — Rediseño de Registrar, deltas 1-3 en producción (placeholder cálido en "¿Qué pasó?", skeleton tangerine de la Acción rápida, 6 colores de emoción tokenizados). Brief `BRIEF_REGISTRAR_DESIGN.md` + mockup en Claude Design ("Registrar · Handoff"). Pendiente grande sigue siendo la pasarela de pago real (Stripe). Próximo: Delta 4 (barra de carga del análisis IA) + polish estético de Registrar según handoff de Design.*
+*Última actualización: domingo 7 junio 2026 — Rediseño de Registrar dirección "Refugio" en curso (NuevoPage completo en Refugio: elegir + avance + resultado; categorías del avance como "casilla sobria"). Antes en esta tanda: Delta 4 (barra de progreso en el resultado del episodio vía hook `useFakeProgress`). Pendiente grande sigue siendo la pasarela de pago real (Stripe). Próximo: QA de las casillas del avance, luego propagar Refugio a RegistroPage (pushes 3-5).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
 > git show HEAD~1:ESTADO.md > ESTADO.historico.md
 > ```
 > (Ajusta `HEAD~1` al commit donde aún vivía el archivo grande si ya se hicieron commits intermedios.)
+
+---
+
+## Cerrado HOY (domingo 7 junio 2026) — Delta 4 (barra de progreso) + rediseño de Registrar dirección "Refugio" (NuevoPage completo)
+
+**Todo commiteado y en producción (auto-deploy Vercel), salvo el QA visual pendiente del ajuste de casillas.**
+
+### Delta 4 — barra de progreso en el resultado del episodio (commit `53018c6`)
+- Se agregó una **barra de avance percibido** mientras la IA genera la orientación del episodio (`RespuestaIA`, estado loading): sube 0→90% con ease-out y cierra a 100% al llegar la respuesta, junto al `CitaLoader`. Reusa el componente `ProgressBar` existente, con sus colores por defecto.
+- **Hook nuevo `src/hooks/useFakeProgress.js`:** extrae la lógica de avance percibido (0→90% + cierre a 100% con `phase='complete'`). Duración calibrada a la orientación del episodio: `DURACION_ORIENTACION_MS = 28000` (más corta que los 60s del análisis del Home).
+- **`AnalisisIA` quedó intacto** (su lógica inline original, NO migró al hook): decisión de Daniel para no arriesgar un componente que ya funciona. La duplicación con `useFakeProgress` es **deuda menor anotada** — migra al hook cuando se toque esa zona del Home.
+
+### Rediseño de Registrar — dirección "Refugio" (en curso, vista por vista)
+- **Dirección elegida: C · Refugio** (híbrido cálido de "Aliento" + estructura sobria de "Diario"). Aprobada. Mockups completos de las 7 vistas en Claude Design.
+- **Decisión de layout (opción 1):** suelo cálido **full-bleed BAJO el header global mocha**. NO se toca `Layout`. Patrón: barra "huella" global arriba + suelo cálido de borde a borde debajo. Verificado que NuevoPage se renderiza dentro de `<Layout>` (header mocha 56px + bottom-nav).
+- **Átomos base creados en `.flujoRefugio` (clase reutilizable del flujo):** suelo cálido (`radial-gradient` de `--color-primary-tint` → `--color-bg`, full-bleed cancelando el padding 20px de `.main` con márgenes negativos) + top flotante (título Fraunces centrado + discos flotantes para back/controles, `--color-surface` + `--shadow-sm`).
+
+**Pushes hechos:**
+- **Push 1 (commit `90acd50`):** NuevoPage vista **"elegir"** en Refugio — suelo cálido + top flotante + 2 choice cards con filo de tono (episodio mocha / avance tangerine, vía `inset box-shadow`) + disco de ícono (episodio `--color-surface-alt` / avance `--color-celebration-start`) + chevron.
+- **Push 2 (commit `7992241`):** resto de NuevoPage — **formulario de avance** (top flotante con back en disco, campo de escritura protagonista con hairline-renglón, botón "Guardar avance" como **pill tangerine** vía `className` local sobre `Button` sin tocarlo) + **resultado de avance** (celebración elevada: estrella 60px sobre `--color-celebration-start`, `--shadow-md`; "Enmarca este momento" como superficie suave conservando su condición). Quitado el `TooltipAyuda` de la vista elegir (no aportaba).
+- **Ajuste (commit `1e42414`):** las **categorías del avance** pasaron de "fichas desnudas" (se veían pobres/descuidadas) a **"casilla sobria"** — grilla 2 columnas, fondo `--color-surface-alt` + borde `--color-border` + `--radius-md`; activa: borde `--color-primary` + bg `--color-primary-bg` + texto `--color-primary-dark`. **PENDIENTE QA visual de Daniel.**
+
+**DECISIÓN DE DISEÑO CLAVE:** las fichas de selección **NO van desnudas** (se ven descuidadas). Van como **CASILLA SOBRIA** (superficie + borde sutil). Si Daniel aprueba el avance, este tratamiento se **propaga a TODOS los selectores del flujo** (tipos, emociones, gatillantes, estado del adulto, intensidad).
+
+**Pendientes del rediseño (orden):**
+1. **QA del ajuste de casillas** en el avance (`/nuevo` → avance).
+2. **Push 3:** RegistroPage "elegir modo" + formulario **rápido** (con casillas sobrias).
+3. **Push 4:** RegistroPage formulario **detallado** (cuidar conservar TODOS los chips: 9 tipos, 6 emociones + específicas, 10 gatillantes, 7 estados, 5 intensidades).
+4. **Push 5:** RegistroPage **resultado** del episodio.
+
+**REGLA NUEVA PENDIENTE DE VERIFICAR + APLICAR:** donde haya **campo de escritura libre, debe poder dictarse por voz** (como el "¿Qué pasó?" del episodio con `VoiceTextarea`). Campos sin voz hoy: avance ("Cuéntame qué pasó"), contexto del detallado ("¿Qué estaba pasando antes?"), extra del estado del adulto, reflexión del resultado. **Antes de aplicar:** verificar que `VoiceTextarea` se reusa sin romper y que varios micrófonos en una misma pantalla no se pisen. Una vez confirmado, **agregar la regla a `CLAUDE.md`**.
+
+**Deudas de tokens anotadas (no en alcance aún):** `.enmarcarBtn` usa `#fff`; `.fotoRemoveBtn` usa `rgba(0,0,0,…)` + `color: white`; `Button.primary` global usa `color: white`. Migrar a token en una pasada de tokens (no hay token de blanco-sobre-tangerine hoy).
 
 ---
 
@@ -260,7 +293,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 
 ---
 
-## Cerrado HOY (viernes 5 junio 2026) — Rediseño de Registrar (deltas 1-3) + brief y mockup de Design
+## Sesión 5 junio 2026 — Rediseño de Registrar (deltas 1-3) + brief y mockup de Design
 
 **Todo commiteado y en producción (auto-deploy Vercel).** Primeros pasos del rediseño del flujo de Registrar: tres deltas visuales puntuales sobre el código real, más el brief y el mockup que guían la parte gruesa que viene.
 
