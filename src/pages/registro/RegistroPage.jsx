@@ -387,7 +387,7 @@ function TipoSelector({ tipo, setTipo, tipoOtroTexto, setTipoOtroTexto, bigEmoji
             key={t.id}
             className={[
               bigEmoji ? styles.tipoBtnBig : styles.tipoBtn,
-              tipo === t.id ? styles.tipoSelected : '',
+              tipo === t.id ? (bigEmoji ? styles.tipoBtnBigSelected : styles.tipoSelected) : '',
             ].join(' ')}
             onClick={() => setTipo(t.id)}
           >
@@ -767,27 +767,29 @@ export default function RegistroPage() {
   // ── VISTA: MODO RÁPIDO ────────────────────────────────────────────────────
   if (vista === 'rapido') {
     return (
-      <div ref={pageRef} className={styles.page}>
-        <div className={styles.vistaHeader}>
-          <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
-          <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
+      <div ref={pageRef} className={styles.flujoRefugio}>
+        <div className={styles.rapidoHeader}>
+          <div className={styles.topRefugio}>
+            <button className={styles.backDisco} onClick={() => setVista('elegir')} aria-label="Volver">←</button>
+            <h2 className={styles.tituloRefugio}>¿Qué pasó?</h2>
+          </div>
+          <span className={`${styles.modoBadge} ${styles.modoBadgeBasico} ${styles.modoBadgeCentrado}`}>orientación inmediata</span>
         </div>
-        <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
         <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} placeholder="Cuéntame qué pasó, con tus palabras…" />
 
-        <Card>
+        <div className={styles.refSeccion}>
           <p className={styles.label}>Tipo de episodio</p>
           <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} bigEmoji />
-        </Card>
+        </div>
 
-        <Card>
+        <div className={styles.refSeccion}>
           <p className={styles.label}>¿Qué tan intenso fue?</p>
           <div className={styles.intensidadGridBig}>
               {INTENSIDADES.map((op) => (
                 <button
                   key={op.valor}
-                  className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
+                  className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadBtnBigSelected : ''}`}
                   onClick={() => setIntensidad(op.valor)}
                 >
                   <span className={styles.intensidadEmojiBig}>{op.emoji}</span>
@@ -795,15 +797,15 @@ export default function RegistroPage() {
                 </button>
               ))}
           </div>
-        </Card>
+        </div>
 
-        <Card>
+        <div className={styles.refSeccion}>
           <p className={styles.label}>¿Cuándo pasó?</p>
-          <div className={styles.tagsGrid}>
+          <div className={styles.cuandoGrid}>
             {CUANDO_OPCIONES.map((op) => (
               <button
                 key={op.id}
-                className={`${styles.tag} ${cuandoPaso === op.id ? styles.tagSelected : ''}`}
+                className={`${styles.cuandoChip} ${cuandoPaso === op.id ? styles.cuandoChipActiva : ''}`}
                 onClick={() => handleCuando(op.id)}
               >
                 {op.label}
@@ -817,12 +819,13 @@ export default function RegistroPage() {
               max={nowLocal()}
             />
           )}
-        </Card>
+        </div>
 
         <Button
           variant="primary"
           size="lg"
           fullWidth
+          className={styles.guardarPill}
           onClick={() => handleGuardar('rapido')}
           disabled={!tipo || !intensidad || !cuandoPaso}
           loading={loadingGuardar}

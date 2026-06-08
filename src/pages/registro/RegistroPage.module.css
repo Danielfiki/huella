@@ -136,6 +136,66 @@
 
 .modoChevron { font-size: 22px; color: var(--color-text-light); line-height: 1; flex-shrink: 0; }
 
+/* ── Formulario rápido (Refugio) ───────────────────────── */
+
+/* disco de back flotante (arriba a la izquierda) */
+.backDisco {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.backDisco:hover { color: var(--color-text); }
+
+.rapidoHeader { display: flex; flex-direction: column; gap: 8px; }
+/* badge discreto centrado bajo el título (override del align-self del badge de las choice cards) */
+.modoBadgeCentrado { align-self: center; }
+
+/* cada selector va como sección limpia sobre el suelo cálido (sin Card) */
+.refSeccion { display: flex; flex-direction: column; }
+
+/* "¿Cuándo pasó?" como casilla sobria en grilla 2 columnas */
+.cuandoGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.cuandoChip {
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: var(--font-family);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.cuandoChip:hover { border-color: var(--color-primary-light); }
+.cuandoChipActiva {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+}
+
+/* botón pill tangerine (override local de Button.primary sin tocar el global;
+   doble clase para ganar especificidad sobre .primary) */
+.guardarPill.guardarPill {
+  border-radius: 999px;
+  font-family: var(--font-heading);
+}
+
 /* ── Cabecera de vista (rápido / detallado) ───────────── */
 
 .vistaHeader {
@@ -169,11 +229,19 @@
   padding: 14px 4px;
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .tipoBtnBig:hover { border-color: var(--color-primary-light); }
+.tipoBtnBig .tipoLabel { color: var(--color-text); }
+
+/* selección casilla sobria — SOLO modo rápido (path bigEmoji); el detallado sigue con .tipoSelected */
+.tipoBtnBigSelected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+.tipoBtnBigSelected .tipoLabel { color: var(--color-primary-dark); }
 
 .tipoEmojiBig { font-size: 34px; line-height: 1; }
 
@@ -244,11 +312,19 @@
   padding: 12px 2px;
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .intensidadBtnBig:hover { border-color: var(--color-primary-light); }
+.intensidadBtnBig .intensidadLabel { color: var(--color-text); }
+
+/* selección casilla sobria — SOLO modo rápido; el detallado sigue con .intensidadSelected */
+.intensidadBtnBigSelected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+.intensidadBtnBigSelected .intensidadLabel { color: var(--color-primary-dark); }
 
 .intensidadEmojiBig { font-size: 28px; line-height: 1; }
 
