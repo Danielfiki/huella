@@ -775,19 +775,21 @@
   gap: 7px;
 }
 
+/* casilla sobria en la FORMA; el color de categoría entra como ACENTO vía
+   inline styles (--color-emocion-*) cuando la categoría está abierta/elegida */
 .emocionCatBtn {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 13px;
-  border-radius: 999px;
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   background: var(--color-surface-alt);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   white-space: nowrap;
 }
 .emocionCatBtn:hover {
@@ -814,11 +816,11 @@
 }
 
 .emocionEspBtn {
-  padding: 6px 14px;
-  border-radius: 999px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
-  background: white;
+  background: var(--color-surface);
   border: 1.5px solid;
   cursor: pointer;
   transition: all 0.13s;

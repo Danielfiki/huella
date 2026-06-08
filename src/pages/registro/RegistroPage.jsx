@@ -843,48 +843,50 @@ export default function RegistroPage() {
 
   // ── VISTA: MODO DETALLADO ─────────────────────────────────────────────────
   return (
-    <div ref={pageRef} className={styles.page}>
-      <div className={styles.vistaHeader}>
-        <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
-        <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
+    <div ref={pageRef} className={styles.flujoRefugio}>
+      <div className={styles.rapidoHeader}>
+        <div className={styles.topRefugio}>
+          <button className={styles.backDisco} onClick={() => setVista('elegir')} aria-label="Volver">←</button>
+          <h2 className={styles.tituloRefugio}>¿Qué pasó?</h2>
+        </div>
+        <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto} ${styles.modoBadgeCentrado}`}>análisis completo 🎯</span>
       </div>
-      <h2 className={styles.titulo}>¿Qué pasó?</h2>
 
       <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} placeholder="Cuéntame qué pasó, con tus palabras…" />
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>Tipo de episodio</p>
-        <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} />
-      </Card>
+        <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} bigEmoji />
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>¿Qué emoción crees que estaba detrás de lo que pasó? <span className={styles.labelOpcional}>(opcional)</span></p>
         <EmocionSelector emocion={emocionSeleccionada} setEmocion={setEmocionSeleccionada} />
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>¿Qué tan intenso fue?</p>
-        <div className={styles.intensidadGrid}>
+        <div className={styles.intensidadGridBig}>
           {INTENSIDADES.map((op) => (
             <button
               key={op.valor}
-              className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadSelected : ''}`}
+              className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadBtnBigSelected : ''}`}
               onClick={() => setIntensidad(op.valor)}
             >
-              <span className={styles.intensidadEmoji}>{op.emoji}</span>
+              <span className={styles.intensidadEmojiBig}>{op.emoji}</span>
               <span className={styles.intensidadLabel}>{op.label}</span>
             </button>
           ))}
         </div>
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>¿Cuándo pasó?</p>
-        <div className={styles.tagsGrid}>
+        <div className={styles.cuandoGrid}>
           {CUANDO_OPCIONES.map((op) => (
             <button
               key={op.id}
-              className={`${styles.tag} ${cuandoPaso === op.id ? styles.tagSelected : ''}`}
+              className={`${styles.cuandoChip} ${cuandoPaso === op.id ? styles.cuandoChipActiva : ''}`}
               onClick={() => handleCuando(op.id)}
             >
               {op.label}
@@ -898,9 +900,9 @@ export default function RegistroPage() {
             max={nowLocal()}
           />
         )}
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>¿Qué estaba pasando antes?</p>
         <textarea
           className={styles.textarea}
@@ -909,30 +911,30 @@ export default function RegistroPage() {
           onChange={(e) => setContexto(e.target.value)}
           rows={3}
         />
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>Posibles gatillantes</p>
-        <div className={styles.tagsGrid}>
+        <div className={styles.cuandoGrid}>
           {GATILLANTES.map((g) => (
             <button
               key={g}
-              className={`${styles.tag} ${gatillantesSeleccionados.includes(g) ? styles.tagSelected : ''}`}
+              className={`${styles.cuandoChip} ${gatillantesSeleccionados.includes(g) ? styles.cuandoChipActiva : ''}`}
               onClick={() => toggleGatillante(g)}
             >
               {g}
             </button>
           ))}
         </div>
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.refSeccion}>
         <p className={styles.label}>¿Cómo estabas tú en ese momento?</p>
-        <div className={styles.tagsGrid} style={{ marginBottom: estadoPadrePicker ? 10 : 0 }}>
+        <div className={styles.cuandoGrid} style={{ marginBottom: estadoPadrePicker ? 10 : 0 }}>
           {ESTADOS_PADRE.map((op) => (
             <button
               key={op}
-              className={`${styles.tag} ${estadoPadrePicker === op ? styles.tagSelected : ''}`}
+              className={`${styles.cuandoChip} ${estadoPadrePicker === op ? styles.cuandoChipActiva : ''}`}
               onClick={() => setEstadoPadrePicker((prev) => prev === op ? '' : op)}
             >
               {op}
@@ -959,12 +961,13 @@ export default function RegistroPage() {
             rows={2}
           />
         )}
-      </Card>
+      </div>
 
       <Button
         variant="primary"
         size="lg"
         fullWidth
+        className={styles.guardarPill}
         onClick={() => handleGuardar('detallado')}
         disabled={!tipo || !intensidad || !cuandoPaso}
         loading={loadingGuardar}
