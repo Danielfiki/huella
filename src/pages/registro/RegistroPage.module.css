@@ -34,7 +34,7 @@
   margin: 0 0 8px 0;
 }
 .titulo { font-size: 22px; font-weight: 700; }
-.label { font-size: 14px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 10px; }
+.label { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 10px; }
 
 /* ── Refugio: suelo cálido reutilizable del flujo de Registrar ──
    Wrapper full-bleed que cancela el padding 20px (8px abajo) de .main
