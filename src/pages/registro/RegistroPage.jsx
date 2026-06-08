@@ -660,12 +660,11 @@ export default function RegistroPage() {
               ¿Cómo te sentiste tú? ¿Qué harías diferente?
               <span className={styles.reflexionOpcional}> — opcional</span>
             </p>
-            <textarea
-              className={styles.textarea}
-              placeholder="¿Qué harías diferente la próxima vez?"
+            <VoiceTextarea
               value={reflexion}
-              onChange={(e) => { setReflexion(e.target.value); setReflexionGuardada(false) }}
-              rows={3}
+              onChange={(v) => { setReflexion(v); setReflexionGuardada(false) }}
+              onVoiceResult={(updater) => { setReflexion(updater); setReflexionGuardada(false) }}
+              placeholder="¿Qué harías diferente la próxima vez?"
             />
             <div className={styles.reflexionFooter}>
               {reflexionGuardada
@@ -904,12 +903,11 @@ export default function RegistroPage() {
 
       <div className={styles.refSeccion}>
         <p className={styles.label}>¿Qué estaba pasando antes?</p>
-        <textarea
-          className={styles.textarea}
-          placeholder="Contexto breve del episodio..."
+        <VoiceTextarea
           value={contexto}
-          onChange={(e) => setContexto(e.target.value)}
-          rows={3}
+          onChange={setContexto}
+          onVoiceResult={setContexto}
+          placeholder="Contexto breve del episodio..."
         />
       </div>
 

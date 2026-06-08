@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import styles from './NuevoPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -265,13 +266,11 @@ export default function NuevoPage() {
 
       <div className={styles.escrituraCard}>
         <p className={styles.escrituraLabel}>Cuéntame qué pasó</p>
-        <textarea
-          className={styles.escrituraTextarea}
-          placeholder="Ej: Esta tarde se calmó solo sin que yo interviniera…"
+        <VoiceTextarea
           value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          rows={3}
-          autoFocus
+          onChange={setDescripcion}
+          onVoiceResult={setDescripcion}
+          placeholder="Ej: Esta tarde se calmó solo sin que yo interviniera…"
         />
       </div>
 
