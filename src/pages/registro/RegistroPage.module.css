@@ -596,28 +596,50 @@
 /* ── Confirmación guardado ──────────────────────────────── */
 
 .guardadoContainer { display: flex; flex-direction: column; gap: 14px; }
-.guardadoCard { text-align: center; }
-.guardadoIcon { font-size: 32px; margin-bottom: 8px; }
-.guardadoCard h3 { font-size: 18px; font-weight: 700; }
-.guardadoSub { font-size: 14px; color: var(--color-text-muted); margin-top: 4px; }
+
+/* celebración elevada (mismo molde que el resultado del avance de NuevoPage) */
+.celebracionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 32px 24px;
+  border-radius: 26px;
+  background: var(--color-celebration-start);
+  box-shadow: var(--shadow-md);
+}
+.celebracionIcono { font-size: 60px; line-height: 1; margin: 0; }
+.celebracionTitulo {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.celebracionSub {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+}
 
 .estrategiaBtn {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  background: var(--color-success-bg);
-  border: 1.5px solid var(--color-accent-green);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: none;
+  box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-accent-green);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: transform 0.12s, box-shadow 0.15s;
 }
-.estrategiaBtn:hover {
-  border-color: var(--color-success);
-  box-shadow: var(--shadow-sm);
-}
+.estrategiaBtn:active { transform: scale(0.98); }
 .estrategiaBtnEmoji { font-size: 26px; flex-shrink: 0; }
 .estrategiaBtnTexto {
   display: flex;
@@ -646,8 +668,8 @@
   gap: 12px;
   padding: 20px;
   border-radius: var(--radius-lg);
-  background: var(--color-celebration-start);
-  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .reflexionLabel {

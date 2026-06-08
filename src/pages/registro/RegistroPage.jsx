@@ -601,15 +601,15 @@ export default function RegistroPage() {
     const tipoObj = TIPOS.find((t) => t.id === tipo)
     const habilidadSugerida = TIPO_A_HABILIDAD[tipo] || ''
     return (
-      <div ref={pageRef} className={styles.page}>
+      <div ref={pageRef} className={styles.flujoRefugio}>
         <div className={styles.guardadoContainer}>
-          <Card className={styles.guardadoCard}>
-            <p className={styles.guardadoIcon}>✅</p>
-            <h3>Episodio registrado</h3>
-            <p className={styles.guardadoSub}>
+          <div className={styles.celebracionCard}>
+            <p className={styles.celebracionIcono}>✅</p>
+            <h3 className={styles.celebracionTitulo}>Episodio registrado</h3>
+            <p className={styles.celebracionSub}>
               {tipoObj?.emoji} {tipoObj?.label} — Intensidad {intensidad}/5
             </p>
-          </Card>
+          </div>
           {(loadingAccion || accionIA) && (
             loadingAccion ? (
               <div className={styles.accionCard}>
@@ -697,7 +697,7 @@ export default function RegistroPage() {
               <span className={styles.estrategiaBtnArrow}>→</span>
             </button>
           )}
-          <Button variant="secondary" fullWidth onClick={() => navigate('/panel')}>
+          <Button variant="primary" size="lg" fullWidth className={styles.guardarPill} onClick={() => navigate('/panel')}>
             Volver al inicio
           </Button>
         </div>
