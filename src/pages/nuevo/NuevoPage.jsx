@@ -6,7 +6,6 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
-import TooltipAyuda from '../../components/ui/TooltipAyuda'
 import styles from './NuevoPage.module.css'
 
 async function compressImage(file, maxSize = 1200) {
@@ -152,9 +151,6 @@ export default function NuevoPage() {
       <div className={styles.flujoRefugio}>
         <div className={styles.topRefugio}>
           <h2 className={styles.tituloRefugio}>¿Qué quieres registrar?</h2>
-          <span className={styles.ayudaDisco}>
-            <TooltipAyuda texto="Mientras más detalles aportes, más precisa será la orientación de Huella." />
-          </span>
         </div>
 
         <button
@@ -188,13 +184,15 @@ export default function NuevoPage() {
   if (vista === 'guardado') {
     const nombreHijo = state?.hijo?.nombre || 'tu hijo/a'
     return (
-      <div className={styles.page}>
-        <div className={styles.guardadoWrap}>
-          <p className={styles.guardadoEmoji}>⭐</p>
-          <h3 className={styles.guardadoTitulo}>¡Avance registrado!</h3>
-          <p className={styles.guardadoSub}>
-            Cada logro pequeño cuenta. Lo tienes guardado en tu historial de avances.
-          </p>
+      <div className={styles.flujoRefugio}>
+        <div className={styles.guardadoContainer}>
+          <div className={styles.celebracionCard}>
+            <p className={styles.celebracionEstrella}>⭐</p>
+            <h3 className={styles.celebracionTitulo}>¡Avance registrado!</h3>
+            <p className={styles.celebracionSub}>
+              Cada logro pequeño cuenta. Lo tienes guardado en tu historial de avances.
+            </p>
+          </div>
 
           {/* Bloque "Enmarca este momento": solo si NO se subió foto
               en el form principal. Permite agregar una foto al hito
@@ -246,7 +244,7 @@ export default function NuevoPage() {
             </div>
           )}
 
-          <Button variant="primary" fullWidth onClick={() => navigate('/panel')}>
+          <Button variant="primary" size="lg" fullWidth className={styles.guardarPill} onClick={() => navigate('/panel')}>
             Volver al inicio
           </Button>
           <button className={styles.verHitosBtn} onClick={() => navigate('/hitos')}>
@@ -259,33 +257,33 @@ export default function NuevoPage() {
 
   // ── FORMULARIO HITO ───────────────────────────────────────────────────────
   return (
-    <div className={styles.page}>
-      <div className={styles.vistaHeader}>
-        <button className={styles.backBtn} onClick={() => setVista('elegir')}>← Volver</button>
+    <div className={styles.flujoRefugio}>
+      <div className={styles.topRefugio}>
+        <button className={styles.backDisco} onClick={() => setVista('elegir')} aria-label="Volver">←</button>
+        <h2 className={styles.tituloRefugio}>¿Qué avanzó?</h2>
       </div>
-      <h2 className={styles.titulo}>¿Qué avanzó?</h2>
 
-      <Card>
-        <p className={styles.label}>Cuéntame qué pasó</p>
+      <div className={styles.escrituraCard}>
+        <p className={styles.escrituraLabel}>Cuéntame qué pasó</p>
         <textarea
-          className={styles.textarea}
+          className={styles.escrituraTextarea}
           placeholder="Ej: Esta tarde se calmó solo sin que yo interviniera…"
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
           rows={3}
           autoFocus
         />
-      </Card>
+      </div>
 
-      <Card>
+      <div className={styles.catSeccion}>
         <p className={styles.label}>
           Categoría <span className={styles.labelOpcional}>(opcional)</span>
         </p>
-        <div className={styles.categoriasGrid}>
+        <div className={styles.catChips}>
           {CATEGORIAS.map((c) => (
             <button
               key={c.id}
-              className={`${styles.catBtn} ${categoria === c.id ? styles.catSelected : ''}`}
+              className={`${styles.catChip} ${categoria === c.id ? styles.catChipActiva : ''}`}
               onClick={() => setCategoria((prev) => (prev === c.id ? '' : c.id))}
             >
               <span>{c.emoji}</span>
@@ -293,7 +291,7 @@ export default function NuevoPage() {
             </button>
           ))}
         </div>
-      </Card>
+      </div>
 
       <div className={styles.fotoSection}>
         <p className={styles.label}>
@@ -329,6 +327,7 @@ export default function NuevoPage() {
         variant="primary"
         size="lg"
         fullWidth
+        className={styles.guardarPill}
         onClick={handleGuardar}
         disabled={!descripcion.trim()}
         loading={loading}
