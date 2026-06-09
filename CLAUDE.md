@@ -41,6 +41,10 @@ Cuando implementes un diseño que viene de un handoff bundle de Claude Design:
 - El handoff es la fuente de verdad para ese cambio específico
 - Si el handoff referencia tokens nuevos, agrégalos a `src/index.css` correctamente (con override de dark mode)
 
+### Regla de voz (campos de relato)
+
+Todo campo de escritura libre de tipo **relato o narrativa** (donde el cuidador cuenta algo con sus palabras) debe usar el componente `VoiceTextarea` para permitir dictado por voz. Los campos de **dato corto** (nombres, palabras sueltas, ej. "¿Quién estuvo presente?") quedan como `input`/`textarea` plano. Varios `VoiceTextarea` pueden convivir en una misma pantalla sin conflicto: son independientes y el modelo push-to-talk serializa el uso. Hoy tienen voz: el relato del episodio (rápido y detallado), el avance, el contexto del detallado y la reflexión del resultado.
+
 ## Estilo de comunicación
 
 - Responde en español latinoamericano, conversacional
