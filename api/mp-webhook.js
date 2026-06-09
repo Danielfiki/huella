@@ -1,0 +1,137 @@
+import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
+
+// Webhook de Mercado Pago para Suscripciones (preapproval).
+// Cuando MP confirma que una suscripción quedó autorizada, activamos el plan
+// del usuario a 'pro' en la tabla perfiles. Usa el cliente service-role
+// (SUPABASE_SERVICE_ROLE_KEY) para escribir saltando RLS, igual que push-remind.
+//
+// PASO 2 de monetización: por ahora SOLO manejamos la activación.
+// PENDIENTE (anotado para después): manejar status 'cancelled' / 'paused'
+// para devolver el plan a 'free'.
+
+// Valida la firma del header x-signature contra MP_WEBHOOK_SECRET.
+// Formato del header: "ts=<timestamp>,v1=<hash>". El manifiesto que MP firma
+// es: "id:<data.id>;request-id:<x-request-id>;ts:<ts>;" con HMAC-SHA256.
+// Si el data.id es alfanumérico, MP lo espera en minúsculas.
+function validarFirma(req, secret) {
+  const signature = req.headers['x-signature']
+  const requestId = req.headers['x-request-id']
+  if (!signature) return { ok: false, motivo: 'falta header x-signature' }
+
+  // Parseo tolerante de "ts=...,v1=..." (orden y espacios variables).
+  let ts, v1
+  for (const parte of signature.split(',')) {
+    const [clave, valor] = parte.split('=').map((s) => s?.trim())
+    if (clave === 'ts') ts = valor
+    if (clave === 'v1') v1 = valor
+  }
+  if (!ts || !v1) return { ok: false, motivo: 'x-signature sin ts o v1' }
+
+  // El data.id del manifiesto viene del query param de la URL de notificación.
+  // Fallback al body por si MP solo lo manda ahí.
+  const dataIdRaw = req.query?.['data.id'] ?? req.body?.data?.id
+  if (!dataIdRaw) return { ok: false, motivo: 'sin data.id para el manifiesto' }
+  const dataId = String(dataIdRaw).toLowerCase()
+
+  let manifiesto = `id:${dataId};`
+  if (requestId) manifiesto += `request-id:${requestId};`
+  manifiesto += `ts:${ts};`
+
+  const esperado = crypto.createHmac('sha256', secret).update(manifiesto).digest('hex')
+
+  // Comparación a tiempo constante; si los largos difieren ya no calza.
+  const a = Buffer.from(esperado)
+  const b = Buffer.from(v1)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return { ok: false, motivo: 'firma no coincide' }
+  }
+  return { ok: true }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const secret = process.env.MP_WEBHOOK_SECRET
+  const accessToken = process.env.MP_ACCESS_TOKEN
+  if (!secret || !accessToken) {
+    console.error('mp-webhook: falta MP_WEBHOOK_SECRET o MP_ACCESS_TOKEN')
+    return res.status(500).json({ error: 'Webhook no configurado' })
+  }
+
+  // 1. Validar firma antes de tocar nada.
+  const firma = validarFirma(req, secret)
+  if (!firma.ok) {
+    console.error('mp-webhook: firma inválida —', firma.motivo)
+    return res.status(401).json({ error: 'Firma inválida' })
+  }
+
+  // 2. Leer el cuerpo de la notificación.
+  const { type, action, data } = req.body ?? {}
+  console.log('mp-webhook: notificación recibida', { type, action, dataId: data?.id })
+
+  // Solo nos interesan las notificaciones de suscripción. Cualquier otra
+  // (pagos, planes) la reconocemos con 200 para que MP no reintente.
+  if (type !== 'subscription_preapproval') {
+    console.log('mp-webhook: tipo ignorado por ahora —', type)
+    return res.status(200).json({ ok: true, ignorado: type })
+  }
+
+  const preapprovalId = data?.id
+  if (!preapprovalId) {
+    console.error('mp-webhook: notificación de suscripción sin data.id')
+    return res.status(200).json({ ok: true, sinId: true })
+  }
+
+  try {
+    // 3. Consultar el estado real de la suscripción en MP.
+    const resp = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    const sub = await resp.json().catch(() => ({}))
+
+    if (!resp.ok) {
+      console.error('mp-webhook: error consultando preapproval', preapprovalId, sub)
+      // 200 igual: que MP no reintente en loop por un problema de lectura puntual.
+      return res.status(200).json({ ok: true, consultaFallida: true })
+    }
+
+    const status = sub.status
+    const externalReference = sub.external_reference
+    console.log('mp-webhook: suscripción', { preapprovalId, status, externalReference })
+
+    // 4. Solo activamos cuando la suscripción quedó autorizada.
+    if (status !== 'authorized') {
+      console.log('mp-webhook: status no activable por ahora —', status)
+      return res.status(200).json({ ok: true, status })
+    }
+    if (!externalReference) {
+      console.error('mp-webhook: suscripción autorizada sin external_reference', preapprovalId)
+      return res.status(200).json({ ok: true, sinExternalReference: true })
+    }
+
+    // 5. Activar el plan a 'pro' (cliente service-role, salta RLS).
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+    const { error } = await supabase
+      .from('perfiles')
+      .update({ plan: 'pro' })
+      .eq('user_id', externalReference)
+
+    if (error) {
+      console.error('mp-webhook: error actualizando perfiles', externalReference, error)
+      // 200 para no entrar en loop; el log deja el rastro para diagnosticar.
+      return res.status(200).json({ ok: true, updateFallido: true })
+    }
+
+    console.log('mp-webhook: plan activado a pro para', externalReference)
+    return res.status(200).json({ ok: true, activado: true })
+  } catch (err) {
+    console.error('mp-webhook handler error:', err)
+    return res.status(200).json({ ok: true, error: true })
+  }
+}
