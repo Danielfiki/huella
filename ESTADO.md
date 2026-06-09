@@ -1,12 +1,56 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: lunes 8 junio 2026 — Rediseño "Refugio" del flujo Registrar **COMPLETO** (NuevoPage + RegistroPage enteros). Hoy: RegistroPage rápido/detallado/resultado en Refugio + Orientación de Huella con jerarquía de secciones (fix de detección tolerante de títulos) + regla de voz aplicada a 3 campos de relato libre. Pendiente grande sigue siendo la pasarela de pago real (Stripe) → es el próximo paso de la sesión siguiente. Pendientes menores: QA de voz + documentar regla en CLAUDE.md.*
+*Última actualización: martes 9 junio 2026 — Monetización: arrancó la pasarela de pago real con **Mercado Pago** (NO Stripe — no opera en Chile sin abrir una LLC en EE.UU.). **Paso 1 COMPLETO y validado en producción** (endpoint que crea la suscripción sin tarjeta + toggle mensual/anual en CuentaPage + botón que redirige al checkout alojado de MP). **Paso 2 desplegado, PENDIENTE de validación end-to-end** (webhook que valida la firma y activa `perfiles.plan='pro'`). Dónde retomar: validar el pago de prueba de punta a punta (ver bloque "Cerrado HOY"). Sesión anterior (8 junio): rediseño "Refugio" del flujo Registrar COMPLETO + regla de voz.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
 > git show HEAD~1:ESTADO.md > ESTADO.historico.md
 > ```
 > (Ajusta `HEAD~1` al commit donde aún vivía el archivo grande si ya se hicieron commits intermedios.)
+
+---
+
+## Cerrado HOY (martes 9 junio 2026) — Monetización: pasarela Mercado Pago (Paso 1 + Paso 2)
+
+**Arranca la pasarela de pago real con Mercado Pago.** Paso 1 completo y validado en producción; Paso 2 desplegado, pendiente de validación end-to-end.
+
+**Por qué Mercado Pago y no Stripe:** Stripe **NO opera en Chile** sin abrir una LLC en EE.UU. → se descarta. La pasarela es **Mercado Pago**, producto "Suscripciones con integración" (preapproval), con **checkout alojado por MP**: el usuario ingresa la tarjeta en la página de MP; nosotros no manejamos datos de tarjeta.
+
+**Setup de la cuenta MP (modo prueba):**
+- App **"Huella app"**, integración **Suscripciones**, User ID **734925237** (modo prueba).
+- Variables en Vercel: **`MP_ACCESS_TOKEN`** (token de prueba) y **`MP_WEBHOOK_SECRET`** (clave secreta del webhook, modo prueba).
+- Webhook configurado en el panel de MP (modo prueba): URL **`https://huella.lat/api/mp-webhook`**, evento **"Planes y suscripciones"**.
+- Comprador de prueba creado en MP: **"Comprador Huella"**, usuario **TESTUSER6504…** (Chile).
+
+**Precios (sin trial):** CLP **9.990/mes** y CLP **99.900/año**. El anual equivale a 10 meses (9.990 × 10) → 2 meses gratis; se muestra como **"2 meses gratis"**, NO como porcentaje.
+
+**PASO 1 — COMPLETO y validado en producción (commit `21a94ce`):**
+- `api/mp-crear-suscripcion.js` (nuevo): crea el `preapproval` **sin tarjeta** (suscripción sin plan asociado) y devuelve el `init_point`. Auth del usuario con anon key + Bearer (patrón `push-subscribe`); `external_reference = user.id`, `back_url = https://huella.lat/cuenta?suscripcion=ok`, `notification_url = https://huella.lat/api/mp-webhook`.
+- **Toggle mensual/anual en `CuentaPage`** (reemplaza los precios que eran solo texto): casilla seleccionable con tokens existentes (activa: borde `--color-primary` + fondo `--color-primary-bg`), default **mensual**, anual etiquetado **"2 meses gratis"**.
+- El botón **"Activar Huella Pro"** llama al endpoint con el ciclo elegido y redirige al `init_point` (página de pago de MP). Estado de carga + mensaje de error (`--color-danger-text`) si MP falla.
+- **El `UpgradeModal` quedó desconectado de `CuentaPage`** (el botón ahora va directo al pago). Sigue **activo e intacto en los otros gates** (2do hijo, análisis, estrategias, PDF).
+
+**PASO 2 — DESPLEGADO, PENDIENTE de validación end-to-end (commit `7bfe171`):**
+- `api/mp-webhook.js` (nuevo): valida la firma del header **`x-signature`** (HMAC-SHA256, formato `ts=...,v1=...`; manifiesto `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`, con `data.id` en minúsculas). Firma inválida → **401** + `console.error` con el motivo.
+- Ante una notificación **`subscription_preapproval`**: hace `GET /preapproval/{data.id}` con el access token para leer `status` y `external_reference`. Si **`status === 'authorized'`** → con cliente **service-role** (`SUPABASE_SERVICE_ROLE_KEY`, patrón `push-remind`): `UPDATE perfiles SET plan='pro' WHERE user_id = external_reference` (**columna `user_id` verificada** contra los usos reales en el código).
+- Responde **200** en todos los caminos procesados (para que MP no reintente en loop); cada paso logueado con `console.log`/`console.error` para QA legible en Vercel.
+- **NO maneja `cancelled`/`paused` todavía** (hay comentario `PENDIENTE` en el archivo para el downgrade futuro).
+
+**DÓNDE RETOMAR — validar el pago de prueba de punta a punta:**
+1. Pagar una suscripción de prueba desde `/cuenta`.
+2. **Camino correcto en la página de pago de MP:** elegir **"Ingresar con mi cuenta"** y loguearse con el **comprador de prueba** (TESTUSER6504…). **NO** usar la opción "sin cuenta de Mercado Pago" → no sirve para suscripciones y da rechazo **"por seguridad"**.
+3. Pagar con tarjeta de prueba **APRO**: Mastercard **5416 7526 0258 2580**, nombre **APRO**, documento tipo **"Otro"** **123456789**.
+4. Revisar los logs de Vercel del webhook (`notificación recibida → suscripción {status, externalReference} → plan activado a pro`).
+5. Verificar en Supabase que `perfiles.plan` quedó en **`'pro'`** para ese usuario.
+
+**SIGUIENTE — Paso 3 (tras validar el webhook):** refresco del plan al volver a `/cuenta?suscripcion=ok` (`reloadData` o polling) para que `isPro()` refleje el cambio **sin recargar** la página.
+
+**PENDIENTES anotados (post-validación):**
+- **Conectar el `UpgradeModal`** al flujo de pago (hoy el pago solo se dispara desde `CuentaPage`).
+- **Downgrade** `cancelled`/`paused` → `'free'` (ya hay comentario `PENDIENTE` en `mp-webhook.js`).
+- **Evaluar reverse trial largo (14-30 días)** — el de 7 días sigue descartado.
+- **Pasar a credenciales de producción de MP** cuando se cobre de verdad (hoy todo es modo prueba).
+- **Durante la beta:** dar Pro gratis marcando `perfiles.plan='pro'` por SQL (no cobrar a testers).
 
 ---
 
@@ -39,7 +83,7 @@
 
 ---
 
-## Cerrado HOY (lunes 8 junio 2026) — RegistroPage completo en Refugio + regla de voz
+## Sesión 8 junio 2026 — RegistroPage completo en Refugio + regla de voz
 
 **Todo commiteado y en producción (auto-deploy Vercel). RegistroPage quedó ENTERO en Refugio: con esto el rediseño "Refugio" del flujo Registrar completo (NuevoPage + RegistroPage) está TERMINADO.**
 
@@ -67,7 +111,9 @@
 
 ### Próximo paso — PRÓXIMA SESIÓN (con cabeza fresca): MONETIZACIÓN de Huella
 
-1. **Integrar Stripe** para el plan Pro — **CLP 9.990/mes + CLP 99.900/año** (pricing definitivo, commit `b6ae281`; **NO 5.990**). Al pagar, Stripe actualiza el campo `plan` en `perfiles` de `'free'` a `'pro'`.
+> **Superado el 9 junio 2026** — la monetización arrancó con **Mercado Pago** (NO Stripe: no opera en Chile sin abrir una LLC en EE.UU.). Ver el bloque **"Cerrado HOY (martes 9 junio 2026)"** arriba. Lo de abajo es el plan original con Stripe; se conserva como contexto histórico.
+
+1. ~~**Integrar Stripe**~~ → reemplazado por **Mercado Pago Suscripciones** (preapproval). Pricing en pie: **CLP 9.990/mes + CLP 99.900/año** (commit `b6ae281`; **NO 5.990**). Al confirmar el pago, el webhook actualiza `perfiles.plan` de `'free'` a `'pro'`.
 2. **Trial:** el de 7 días quedó **DESCARTADO**; el CTA es **"Activar Huella Pro"**. Pendiente: **evaluar un reverse trial largo (14-30 días), NO de 7**.
 3. **Página de configuración de cuenta** (ver plan actual + activar Pro).
 4. **Probar el modal de upgrade** con cuenta nueva sin plan admin.
@@ -379,7 +425,7 @@ Lanzamiento beta POSTERGADO sin fecha fija. Decisión tomada el 27 mayo 2026: pr
 ## Próximo paso
 
 ### Rediseño de Registrar — ✅ COMPLETO (8 junio 2026)
-- **El rediseño "Refugio" del flujo Registrar entero está TERMINADO** (NuevoPage + RegistroPage, vistas elegir/avance/rápido/detallado/resultado/orientación). El detalle por push vive en el bloque "Cerrado HOY (8 junio)" arriba. Pendientes menores derivados: QA de voz + documentar la regla de voz en `CLAUDE.md`; y la pasada de limpieza de CSS muerto + extracción de la base Refugio duplicada (ver "Deudas técnicas" en el bloque de hoy).
+- **El rediseño "Refugio" del flujo Registrar entero está TERMINADO** (NuevoPage + RegistroPage, vistas elegir/avance/rápido/detallado/resultado/orientación). El detalle por push vive en el bloque "Sesión 8 junio 2026" arriba. Pendientes menores derivados: QA de voz + documentar la regla de voz en `CLAUDE.md`; y la pasada de limpieza de CSS muerto + extracción de la base Refugio duplicada (ver "Deudas técnicas" en el bloque de hoy).
 
 ### Beta — documento y arranque
 - **Guardar el plan de beta como `PLAN_BETA.md`** en el repo. Documento ya armado: 1 mes de uso, arranque en 1-2 semanas, testers conocidos + referidos, feedback por grupo de WhatsApp + encuesta, 4 métricas, mensajes listos.
