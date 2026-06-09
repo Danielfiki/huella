@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
-import UpgradeModal from '../../components/ui/UpgradeModal'
+import { supabase } from '../../lib/supabase'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -50,12 +50,46 @@ const TODO_PRO = [
 export default function CuentaPage() {
   const { isPro, isAdmin } = useHuella()
   const navigate = useNavigate()
-  const [showUpgrade, setShowUpgrade] = useState(false)
   const [verTodo, setVerTodo] = useState(false)
+  const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
 
   const pro = isPro()
   const admin = isAdmin()
   const planLabel = admin ? 'Admin' : pro ? 'Pro' : 'Gratuito'
+
+  // Crea la suscripción en Mercado Pago para el ciclo elegido y redirige al
+  // checkout alojado (init_point). El usuario ingresa la tarjeta en la página
+  // de MP; nosotros no manejamos datos de tarjeta.
+  async function handleActivar() {
+    if (cargando) return
+    setCargando(true)
+    setError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/mp-crear-suscripcion', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ ciclo }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.init_point) {
+        console.error('No se pudo iniciar la suscripción:', data)
+        setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
+        setCargando(false)
+        return
+      }
+      window.location.href = data.init_point
+    } catch (err) {
+      console.error('handleActivar error:', err)
+      setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
+      setCargando(false)
+    }
+  }
 
   return (
     <div className={styles.page}>
@@ -78,15 +112,28 @@ export default function CuentaPage() {
             Tienes acceso completo a todas las funcionalidades de Huella.
           </p>
         ) : (
-          <div className={styles.precioWrap}>
-            <div className={styles.precioMes}>
-              <span className={styles.precioMonto}>CLP 9.990</span>
-              <span className={styles.precioPeriodo}> /mes</span>
-            </div>
-            <div className={styles.precioAnual}>
-              <span className={styles.precioAnualMonto}>CLP 99.900 /año</span>
-              <span className={styles.ahorroBadge}>20% de ahorro</span>
-            </div>
+          <div className={styles.cicloToggle} role="radiogroup" aria-label="Elige tu ciclo de pago">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={ciclo === 'mensual'}
+              className={`${styles.cicloOption} ${ciclo === 'mensual' ? styles.cicloOptionActive : ''}`}
+              onClick={() => setCiclo('mensual')}
+            >
+              <span className={styles.cicloMonto}>CLP 9.990</span>
+              <span className={styles.cicloPeriodo}>/mes</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={ciclo === 'anual'}
+              className={`${styles.cicloOption} ${ciclo === 'anual' ? styles.cicloOptionActive : ''}`}
+              onClick={() => setCiclo('anual')}
+            >
+              <span className={styles.cicloMonto}>CLP 99.900</span>
+              <span className={styles.cicloPeriodo}>/año</span>
+              <span className={styles.ahorroBadge}>2 meses gratis</span>
+            </button>
           </div>
         )}
       </section>
@@ -127,14 +174,15 @@ export default function CuentaPage() {
         )}
       </div>
 
-      {/* ── CTA — mantiene el handler de upgrade del botón original ── */}
+      {/* ── CTA — dispara la suscripción del ciclo elegido en Mercado Pago ── */}
       {!pro && (
-        <button className={styles.cta} onClick={() => setShowUpgrade(true)}>
-          Activar Huella Pro
-        </button>
+        <>
+          <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
+            {cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro'}
+          </button>
+          {error && <p className={styles.error}>{error}</p>}
+        </>
       )}
-
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   )
 }

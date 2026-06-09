@@ -105,6 +105,45 @@
   padding: 2px 8px;
 }
 
+/* Toggle de ciclo (mensual/anual) — casilla seleccionable con el mismo
+   lenguaje del resto del flujo: superficie sobria + borde, y estado activo
+   con borde primario y fondo --color-primary-bg. */
+.cicloToggle {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.cicloOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: border-color 0.15s, background 0.15s;
+}
+.cicloOption:hover { border-color: var(--color-primary); }
+.cicloOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+.cicloMonto {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.cicloPeriodo {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 /* ── Beneficios ── */
 .beneficios {
   display: flex;
@@ -200,3 +239,11 @@
   transition: background 0.15s;
 }
 .cta:hover { background: var(--color-primary-dark); }
+.cta:disabled { opacity: 0.6; cursor: default; }
+
+.error {
+  font-size: 14px;
+  color: var(--color-danger-text);
+  text-align: center;
+  margin: 0;
+}
