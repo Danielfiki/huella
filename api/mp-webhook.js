@@ -113,23 +113,30 @@ export default async function handler(req, res) {
     }
 
     // 5. Activar el plan a 'pro' (cliente service-role, salta RLS).
+    // Usamos UPSERT (no UPDATE) con el mismo onConflict: 'user_id' que ocupa
+    // savePadreNombre en HuellaContext: si el usuario ya tiene fila, le
+    // actualiza plan='pro'; si todavía no la tiene (pagó antes de guardar su
+    // nombre), la crea con plan='pro' y nombre null (el usuario lo completa
+    // después). Un UPDATE plano fallaba en silencio (0 filas) en ese caso.
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
-    const { error } = await supabase
+    const { data: filas, error } = await supabase
       .from('perfiles')
-      .update({ plan: 'pro' })
-      .eq('user_id', externalReference)
+      .upsert({ user_id: externalReference, plan: 'pro' }, { onConflict: 'user_id' })
+      .select()
 
     if (error) {
-      console.error('mp-webhook: error actualizando perfiles', externalReference, error)
+      console.error('mp-webhook: error activando plan en perfiles', externalReference, error)
       // 200 para no entrar en loop; el log deja el rastro para diagnosticar.
-      return res.status(200).json({ ok: true, updateFallido: true })
+      return res.status(200).json({ ok: true, upsertFallido: true })
     }
 
-    console.log('mp-webhook: plan activado a pro para', externalReference)
-    return res.status(200).json({ ok: true, activado: true })
+    // Cuántas filas tocó el upsert: ayuda al QA a leer los logs de Vercel.
+    const filasAfectadas = filas?.length ?? 0
+    console.log('mp-webhook: plan activado a pro para', externalReference, '— filas afectadas:', filasAfectadas)
+    return res.status(200).json({ ok: true, activado: true, filasAfectadas })
   } catch (err) {
     console.error('mp-webhook handler error:', err)
     return res.status(200).json({ ok: true, error: true })
