@@ -10,6 +10,22 @@
 
 ---
 
+## 🚨 REGLA CRÍTICA — LANZAMIENTO DE COBROS REALES
+
+**NO activar cobros reales (credenciales de PRODUCCIÓN de Mercado Pago) hasta cumplir LAS DOS condiciones:**
+
+1. **Red de seguridad del pago construida y probada (Paso 3 reforzado).** Al volver de pagar a `/cuenta?suscripcion=ok`, la app debe **consultar a MP el estado real de la suscripción** y activar `plan='pro'` si está `authorized`, como **respaldo del webhook**. Queda una **doble vía**: webhook (rápido) + verificación al volver (respaldo). Así **ningún pago aprobado queda sin Pro** aunque el webhook falle o no llegue.
+2. **Un primer pago REAL verificado de punta a punta** con credenciales de producción.
+
+**Estado actual SEGURO:** Vercel tiene credenciales de **PRUEBA** de MP → **nadie puede pagar dinero real hoy** (el botón "Activar Huella Pro" lleva al checkout sandbox). El cambio a credenciales de producción es el **ÚLTIMO paso**, solo tras cumplir las 2 condiciones de arriba.
+
+**Pendientes derivados de esta regla:**
+- **Paso 3 — red de seguridad (OBLIGATORIO antes de cobrar)** → próximo trabajo.
+- **Regenerar `SUPABASE_SERVICE_ROLE_KEY` + actualizarla en Vercel** (seguridad: pasó por el chat durante el QA).
+- **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor.
+
+---
+
 ## Cerrado HOY (martes 10 junio 2026) — Monetización: webhook Paso 2 VERIFICADO por API + fix de upsert
 
 **Verificamos la lógica del webhook end-to-end por API, sin tocar producción, y arreglamos un bug real de activación del plan.**
