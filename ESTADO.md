@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: martes 9 junio 2026 — Monetización: arrancó la pasarela de pago real con **Mercado Pago** (NO Stripe — no opera en Chile sin abrir una LLC en EE.UU.). **Paso 1 COMPLETO y validado en producción** (endpoint que crea la suscripción sin tarjeta + toggle mensual/anual en CuentaPage + botón que redirige al checkout alojado de MP). **Paso 2 desplegado, PENDIENTE de validación end-to-end** (webhook que valida la firma y activa `perfiles.plan='pro'`). Dónde retomar: validar el pago de prueba de punta a punta (ver bloque "Cerrado HOY"). Sesión anterior (8 junio): rediseño "Refugio" del flujo Registrar COMPLETO + regla de voz.*
+*Última actualización: martes 10 junio 2026 — Monetización: **Paso 2 (webhook) VERIFICADO por API** + **fix de upsert** (commit `ac81fb2`). Probamos la lógica de activación del plan de punta a punta por API (vendedor + comprador de prueba), sin tocar producción: `GET /preapproval` authorized → upsert a `perfiles` dejó `plan='pro'`. Se comprobó EN VIVO el bug del upsert (la fila no existía; el viejo `UPDATE` habría fallado en silencio). **Falta probar EN VIVO** (queda para el primer pago real al activar cobros): validación de firma `x-signature` + disparo HTTP automático de MP. **Pendiente de seguridad:** regenerar `SUPABASE_SERVICE_ROLE_KEY` (pasó por el chat en el QA). Sesiones previas: Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,7 +10,38 @@
 
 ---
 
-## Cerrado HOY (martes 9 junio 2026) — Monetización: pasarela Mercado Pago (Paso 1 + Paso 2)
+## Cerrado HOY (martes 10 junio 2026) — Monetización: webhook Paso 2 VERIFICADO por API + fix de upsert
+
+**Verificamos la lógica del webhook end-to-end por API, sin tocar producción, y arreglamos un bug real de activación del plan.**
+
+**FIX del webhook (commit `ac81fb2`):** `api/mp-webhook.js` ahora hace **UPSERT** (no `UPDATE`) sobre `perfiles` al activar el plan, con el mismo `onConflict: 'user_id'` que ocupa `savePadreNombre` en `HuellaContext`. **El bug:** si el usuario pagaba sin tener ficha previa en `perfiles` (todavía no había guardado su nombre, que es lo que crea la fila), el viejo `UPDATE` afectaba **0 filas y fallaba en silencio** → el pago entraba pero el plan **no se activaba**, sin error visible en los logs. **Ahora:** si la fila existe la actualiza a `plan='pro'`; si no existe la **crea** con `user_id` + `plan='pro'` (nombre `null`, el usuario lo completa después). Loguea cuántas filas afectó para que el QA sea legible en Vercel.
+
+**PASO 2 (webhook) — lógica de activación VERIFICADA por API:**
+- Autorizamos una suscripción de prueba **enteramente por API** (el checkout manual de sandbox no dejaba confirmar: borde de MP sin sesión). Para que MP dejara crear el preapproval, **comprador y vendedor tienen que ser ambos del mismo tipo**: con el token real como cobrador y un comprador de prueba daba `400 "Both payer and collector must be real or test users"`. Se resolvió creando un **vendedor de prueba** además del comprador de prueba (ambos test users).
+- Tokenizamos la tarjeta **APRO** y creamos el preapproval ya **`authorized`** (modelo "pago autorizado"). El `PUT` para pasar de `pending` a `authorized` lo rechaza el cobrador con `"only the payer can"`, así que se creó autorizado directo en el `POST`.
+- Replicamos la lógica exacta del webhook: `GET /preapproval/{id}` → `status='authorized'` → upsert a `perfiles`. Resultado: **`plan='pro'`** (1 fila afectada).
+
+**Se comprobó EN VIVO el bug del upsert:** el `SELECT` previo del usuario devolvió **`[]`** — la fila **NO existía**. Con el viejo `UPDATE` el plan **no se habría activado**; el **upsert nuevo creó la fila** con `plan='pro'`. **El fix funciona en la práctica.**
+
+**NO probado EN VIVO (queda para el primer pago real al activar cobros):**
+- La **validación de firma `x-signature`** del webhook (HMAC con `MP_WEBHOOK_SECRET`) — se saltó a propósito por el lío de secrets entre la app de prueba y la de producción.
+- El **disparo HTTP automático** de MP hacia `https://huella.lat/api/mp-webhook`.
+- (El código estándar de ambos ya está revisado; solo falta la prueba viva con un pago real.)
+
+**Usuarios/cuentas de prueba (guardar para futuras pruebas):**
+- Comprador de prueba MP: `test_user_3312252198273799442@testuser.com` (pass `lLR75knSxg`).
+- Vendedor de prueba MP: `test_user_8634531742674956960@testuser.com` (pass `bEGLwH69DU`).
+- Cuenta Huella de prueba: `user_id = b30d78d5-e094-4c9a-a500-4a6cd270906b` (quedó con `plan='pro'` por la prueba; si quieres dejarla limpia, hay que volverla a `free`/`null` por SQL).
+
+**⚠️ PENDIENTE DE SEGURIDAD:** la **`SUPABASE_SERVICE_ROLE_KEY` pasó por el chat** durante este QA (es la llave maestra de Supabase, saltea RLS). Conviene **regenerarla** en Supabase → Settings → API y, si se regenera, **actualizarla en Vercel** (sino el webhook deja de poder escribir `perfiles`).
+
+**DÓNDE RETOMAR:**
+- **Paso 3:** refresco del plan al volver a `/cuenta?suscripcion=ok` (`reloadData` o polling) para que `isPro()` refleje el cambio **sin recargar** la página.
+- Primer **pago real** (al pasar a credenciales de producción): ahí se prueban EN VIVO la firma `x-signature` y el disparo automático del webhook.
+
+---
+
+## Sesión martes 9 junio 2026 — Monetización: pasarela Mercado Pago (Paso 1 + Paso 2 desplegado)
 
 **Arranca la pasarela de pago real con Mercado Pago.** Paso 1 completo y validado en producción; Paso 2 desplegado, pendiente de validación end-to-end.
 
@@ -111,7 +142,7 @@
 
 ### Próximo paso — PRÓXIMA SESIÓN (con cabeza fresca): MONETIZACIÓN de Huella
 
-> **Superado el 9 junio 2026** — la monetización arrancó con **Mercado Pago** (NO Stripe: no opera en Chile sin abrir una LLC en EE.UU.). Ver el bloque **"Cerrado HOY (martes 9 junio 2026)"** arriba. Lo de abajo es el plan original con Stripe; se conserva como contexto histórico.
+> **Superado el 9 junio 2026** — la monetización arrancó con **Mercado Pago** (NO Stripe: no opera en Chile sin abrir una LLC en EE.UU.). Ver el bloque **"Sesión martes 9 junio 2026"** arriba. Lo de abajo es el plan original con Stripe; se conserva como contexto histórico.
 
 1. ~~**Integrar Stripe**~~ → reemplazado por **Mercado Pago Suscripciones** (preapproval). Pricing en pie: **CLP 9.990/mes + CLP 99.900/año** (commit `b6ae281`; **NO 5.990**). Al confirmar el pago, el webhook actualiza `perfiles.plan` de `'free'` a `'pro'`.
 2. **Trial:** el de 7 días quedó **DESCARTADO**; el CTA es **"Activar Huella Pro"**. Pendiente: **evaluar un reverse trial largo (14-30 días), NO de 7**.
