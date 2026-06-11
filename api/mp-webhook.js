@@ -2,13 +2,14 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 // Webhook de Mercado Pago para Suscripciones (preapproval).
-// Cuando MP confirma que una suscripción quedó autorizada, activamos el plan
-// del usuario a 'pro' en la tabla perfiles. Usa el cliente service-role
-// (SUPABASE_SERVICE_ROLE_KEY) para escribir saltando RLS, igual que push-remind.
-//
-// PASO 2 de monetización: por ahora SOLO manejamos la activación.
-// PENDIENTE (anotado para después): manejar status 'cancelled' / 'paused'
-// para devolver el plan a 'free'.
+// Maneja el ciclo de vida del plan según el status real de la suscripción:
+//   - authorized          → activa plan='pro'  (upsert: crea fila si no existe)
+//   - paused | cancelled  → baja plan='free'   (update solo si estaba en 'pro')
+//   - pending u otro       → no toca nada (solo loguea)
+// Usa el cliente service-role (SUPABASE_SERVICE_ROLE_KEY) para escribir saltando
+// RLS, igual que push-remind. Siempre consulta el status EN VIVO con
+// GET /preapproval/{id}, así actúa sobre el estado actual aunque los eventos de
+// MP lleguen desordenados.
 
 // Valida la firma del header x-signature contra MP_WEBHOOK_SECRET.
 // Formato del header: "ts=<timestamp>,v1=<hash>". El manifiesto que MP firma
@@ -102,26 +103,55 @@ export default async function handler(req, res) {
     const externalReference = sub.external_reference
     console.log('mp-webhook: suscripción', { preapprovalId, status, externalReference })
 
-    // 4. Solo activamos cuando la suscripción quedó autorizada.
-    if (status !== 'authorized') {
-      console.log('mp-webhook: status no activable por ahora —', status)
+    // 4. Decidir la rama según el status real. Solo 'authorized' activa;
+    //    'paused'/'cancelled' bajan el plan; el resto (pending, etc.) no toca.
+    const ACTIVAR = status === 'authorized'
+    const BAJAR = status === 'paused' || status === 'cancelled'
+
+    if (!ACTIVAR && !BAJAR) {
+      console.log('mp-webhook: status sin acción —', status)
       return res.status(200).json({ ok: true, status })
     }
     if (!externalReference) {
-      console.error('mp-webhook: suscripción autorizada sin external_reference', preapprovalId)
+      console.error('mp-webhook: suscripción sin external_reference', preapprovalId, '— status', status)
       return res.status(200).json({ ok: true, sinExternalReference: true })
     }
 
-    // 5. Activar el plan a 'pro' (cliente service-role, salta RLS).
-    // Usamos UPSERT (no UPDATE) con el mismo onConflict: 'user_id' que ocupa
-    // savePadreNombre en HuellaContext: si el usuario ya tiene fila, le
-    // actualiza plan='pro'; si todavía no la tiene (pagó antes de guardar su
-    // nombre), la crea con plan='pro' y nombre null (el usuario lo completa
-    // después). Un UPDATE plano fallaba en silencio (0 filas) en ese caso.
+    // Cliente service-role (salta RLS) para activar o bajar el plan.
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
+
+    // 5a. DOWNGRADE: 'paused'/'cancelled' → 'free'. Usamos UPDATE (no upsert):
+    // si no existe fila, no hay Pro que bajar (free es la ausencia de Pro). El
+    // filtro plan='pro' protege a admin y deja intactos a free/null; 0 filas
+    // afectadas es resultado VÁLIDO (no había Pro que bajar, o era admin/free).
+    if (BAJAR) {
+      const { data: filas, error } = await supabase
+        .from('perfiles')
+        .update({ plan: 'free' })
+        .eq('user_id', externalReference)
+        .eq('plan', 'pro')
+        .select()
+
+      if (error) {
+        console.error('mp-webhook: error bajando plan en perfiles', externalReference, error)
+        // 200 para no entrar en loop; el log deja el rastro para diagnosticar.
+        return res.status(200).json({ ok: true, downgradeFallido: true })
+      }
+
+      const filasAfectadas = filas?.length ?? 0
+      console.log('mp-webhook: plan bajado a free para', externalReference, '— status', status, '— filas afectadas:', filasAfectadas)
+      return res.status(200).json({ ok: true, bajado: true, status, filasAfectadas })
+    }
+
+    // 5b. ACTIVAR el plan a 'pro'. Usamos UPSERT (no UPDATE) con el mismo
+    // onConflict: 'user_id' que ocupa savePadreNombre en HuellaContext: si el
+    // usuario ya tiene fila, le actualiza plan='pro'; si todavía no la tiene
+    // (pagó antes de guardar su nombre), la crea con plan='pro' y nombre null
+    // (el usuario lo completa después). Un UPDATE plano fallaba en silencio
+    // (0 filas) en ese caso.
     const { data: filas, error } = await supabase
       .from('perfiles')
       .upsert({ user_id: externalReference, plan: 'pro' }, { onConflict: 'user_id' })
