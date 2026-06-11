@@ -21,13 +21,15 @@
 
 **Pendientes derivados de esta regla:**
 - **Regenerar `SUPABASE_SERVICE_ROLE_KEY` + actualizarla en Vercel** (seguridad: pasó por el chat durante el QA).
-- **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor.
-- **Downgrade a `free` en el webhook** cuando la suscripción quede `cancelled` / `paused` (hoy el webhook solo maneja la activación) → pendiente.
-- **Conectar el `UpgradeModal` al flujo de pago** (que el modal de upsell lleve al checkout) → pendiente.
+- **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor. Incluye **cancelar el preapproval de prueba** que sigue `authorized` en MP.
+
+**Ya resueltos hoy (11 junio):**
+- ✅ **Downgrade a `free` en el webhook** por `cancelled` / `paused` (commit `e660c00`) — lógica validada en la base real.
+- ✅ **`UpgradeModal` conectado al flujo de pago** (commit `f68a8bc`) — QA aprobado en producción.
 
 ---
 
-## Cerrado HOY (jueves 11 junio 2026) — Monetización: Paso 3 red de seguridad del pago VERIFICADO en producción
+## Cerrado HOY (jueves 11 junio 2026) — Monetización: Paso 3 red de seguridad + UpgradeModal al pago + downgrade automático
 
 **Construimos, desplegamos y verificamos en producción la red de seguridad del pago: el respaldo del webhook que activa el plan al volver del checkout. Condición #1 de la REGLA CRÍTICA: CUMPLIDA.**
 
@@ -47,10 +49,30 @@
 
 **VERIFICADO EN PRODUCCIÓN (huella.lat):** "Confirmando tu suscripción…" aparece, el aviso "Estamos confirmando tu pago, puede tardar unos minutos." **queda visible y persiste**, y la URL queda limpia en `/cuenta`. Probado el camino **"aún no confirmado"** (el normal hoy, con credenciales de prueba). El camino **"confirmado"** (que activa el plan de verdad) se prueba EN VIVO con el primer pago real.
 
+---
+
+### UpgradeModal conectado al pago directo (commit `f68a8bc`)
+
+**El modal de upsell ahora inicia el pago desde adentro, en vez de solo cerrar.**
+- **Toggle mensual/anual** coherente con CuentaPage (CLP 9.990/mes, CLP 99.900/año + badge "2 meses gratis").
+- **CTA "Activar Huella Pro"** → inicia el checkout vía el **helper compartido `src/services/pago.js`** (`iniciarSuscripcion(ciclo)`: `getSession` → `POST /api/mp-crear-suscripcion` → `init_point`, sin redirect adentro). Estado "Redirigiéndote al pago…" y error suave que **no cierra** el modal. CuentaPage también pasó a usar el helper (refactor sin cambio de comportamiento → una sola fuente de verdad del pago).
+- **Enlace discreto "Ver todo lo que incluye Pro"** → `/cuenta` (y cierra el modal). **"Ahora no"** cierra.
+- **QA aprobado en producción** abriendo el modal desde **Historial** y **Estrategias**.
+- **Hallazgos corregidos:** (1) el CTA viejo **solo hacía `onClose`** — no llevaba a ningún lado ni iniciaba pago; (2) el modal entero estaba en **estilos inline con hex hardcodeados** → migrado a **`UpgradeModal.module.css` con tokens** (scrim con `--color-scrim`), cumpliendo el sistema de diseño; (3) la **bajada por defecto** tenía el tagline viejo → ahora **"Conoce la huella única de tus hijos"**.
+
+### Downgrade automático en `mp-webhook.js` (commit `e660c00`)
+
+**El webhook ahora maneja el ciclo de vida completo, no solo la activación.**
+- `authorized` → activa `plan='pro'` (sin cambios). `paused` | `cancelled` → **UPDATE a `'free'` con filtro `and plan='pro'`** (protege admin y deja intactos free/null; 0 filas afectadas es resultado válido). `pending` u otro → **no-op** (solo loguea). Respuesta **siempre 200** (patrón actual, para que MP no reintente en loop).
+- Usa UPDATE (no upsert) a propósito: si no existe fila, no hay Pro que bajar. El cliente service-role se crea una sola vez y lo comparten ambas ramas. Logs: status recibido, rama tomada, filas afectadas.
+- **Lógica validada en la base real** (SQL Editor de Supabase, sobre la cuenta de prueba `b30d78d5`): SELECT inicial `pro` → UPDATE con filtro **1 fila afectada** → SELECT final `free`. **Idempotencia comprobada:** una corrida repetida del UPDATE devolvió **0 filas** ("Success. No rows returned"). La cuenta `b30d78d5` quedó en `free`.
+- **Pendiente de ver EN VIVO:** el **disparo automático del webhook** por MP (con validación de firma `x-signature`) cuando una suscripción real se cancela/pausa → amarrado al primer pago real.
+
 **REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
 
 **DÓNDE RETOMAR:**
-- Resolver los pendientes de la REGLA CRÍTICA (regenerar `SUPABASE_SERVICE_ROLE_KEY`, limpiar cuentas de prueba, downgrade `cancelled`/`paused` en el webhook, conectar `UpgradeModal` al pago).
+- Resolver los pendientes de la REGLA CRÍTICA que quedan: **regenerar `SUPABASE_SERVICE_ROLE_KEY`** + actualizarla en Vercel, y **limpiar cuentas de prueba**.
+- **Pendiente de MP (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva).
 - Cuando esté todo listo: pasar a credenciales de producción y hacer el **primer pago real** (condición #2).
 
 ---
