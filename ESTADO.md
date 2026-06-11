@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: martes 10 junio 2026 — Monetización: **Paso 2 (webhook) VERIFICADO por API** + **fix de upsert** (commit `ac81fb2`). Probamos la lógica de activación del plan de punta a punta por API (vendedor + comprador de prueba), sin tocar producción: `GET /preapproval` authorized → upsert a `perfiles` dejó `plan='pro'`. Se comprobó EN VIVO el bug del upsert (la fila no existía; el viejo `UPDATE` habría fallado en silencio). **Falta probar EN VIVO** (queda para el primer pago real al activar cobros): validación de firma `x-signature` + disparo HTTP automático de MP. **Pendiente de seguridad:** regenerar `SUPABASE_SERVICE_ROLE_KEY` (pasó por el chat en el QA). Sesiones previas: Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
+*Última actualización: jueves 11 junio 2026 — Monetización: **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -14,19 +14,48 @@
 
 **NO activar cobros reales (credenciales de PRODUCCIÓN de Mercado Pago) hasta cumplir LAS DOS condiciones:**
 
-1. **Red de seguridad del pago construida y probada (Paso 3 reforzado).** Al volver de pagar a `/cuenta?suscripcion=ok`, la app debe **consultar a MP el estado real de la suscripción** y activar `plan='pro'` si está `authorized`, como **respaldo del webhook**. Queda una **doble vía**: webhook (rápido) + verificación al volver (respaldo). Así **ningún pago aprobado queda sin Pro** aunque el webhook falle o no llegue.
-2. **Un primer pago REAL verificado de punta a punta** con credenciales de producción.
+1. ✅ **CUMPLIDA — Red de seguridad del pago construida y verificada (Paso 3).** Al volver de pagar a `/cuenta?suscripcion=ok`, la app **consulta a MP el estado real de la suscripción** (`GET /preapproval/search` por `external_reference` + `status=authorized`) y activa `plan='pro'` por backend si está `authorized`, como **respaldo del webhook**. Queda la **doble vía**: webhook (rápido) + verificación al volver (respaldo). Así **ningún pago aprobado queda sin Pro** aunque el webhook falle o no llegue. **Verificada en producción** en su camino "aún no confirmado" (commits `e3233d0` + `56fca1e`). Falta probar EN VIVO el camino "confirmado" (llega con el primer pago real).
+2. ⬜ **Un primer pago REAL verificado de punta a punta** con credenciales de producción. Ahí también se prueban EN VIVO: la firma `x-signature` del webhook, el disparo HTTP automático de MP, y el camino "confirmado" de la red de seguridad.
 
 **Estado actual SEGURO:** Vercel tiene credenciales de **PRUEBA** de MP → **nadie puede pagar dinero real hoy** (el botón "Activar Huella Pro" lleva al checkout sandbox). El cambio a credenciales de producción es el **ÚLTIMO paso**, solo tras cumplir las 2 condiciones de arriba.
 
 **Pendientes derivados de esta regla:**
-- **Paso 3 — red de seguridad (OBLIGATORIO antes de cobrar)** → próximo trabajo.
 - **Regenerar `SUPABASE_SERVICE_ROLE_KEY` + actualizarla en Vercel** (seguridad: pasó por el chat durante el QA).
 - **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor.
+- **Downgrade a `free` en el webhook** cuando la suscripción quede `cancelled` / `paused` (hoy el webhook solo maneja la activación) → pendiente.
+- **Conectar el `UpgradeModal` al flujo de pago** (que el modal de upsell lleve al checkout) → pendiente.
 
 ---
 
-## Cerrado HOY (martes 10 junio 2026) — Monetización: webhook Paso 2 VERIFICADO por API + fix de upsert
+## Cerrado HOY (jueves 11 junio 2026) — Monetización: Paso 3 red de seguridad del pago VERIFICADO en producción
+
+**Construimos, desplegamos y verificamos en producción la red de seguridad del pago: el respaldo del webhook que activa el plan al volver del checkout. Condición #1 de la REGLA CRÍTICA: CUMPLIDA.**
+
+**Endpoint nuevo `api/mp-verificar-suscripcion.js` (commit `e3233d0`):**
+- **Auth por token de Supabase** (mismo patrón que `mp-crear-suscripcion`): anon key + Bearer del header → `getUser()`. El `user.id` sale del **token verificado, nunca del body** → nadie puede activar el plan de otro.
+- **Consulta a MP:** `GET /preapproval/search?external_reference=<user.id>&status=authorized`. `external_reference = user.id` se mandó al crear el preapproval, así que es el puente para encontrar la suscripción del usuario.
+- **Chequeo defensivo:** no confía solo en el filtro de MP; confirma que en `results` haya una suscripción con `status='authorized'` **y** `external_reference === user.id` antes de activar.
+- **Activación idempotente:** mismo **upsert service-role** del webhook (`onConflict: 'user_id'`, `plan='pro'`). Si el webhook ya activó el plan, el upsert deja `plan='pro'` igual, sin efecto raro.
+- **Logs para auditar en Vercel:** entrada (`userId`), resultado de la consulta (`total`, `autorizada`) y filas afectadas al activar.
+- Devuelve `{ pro: true }` / `{ pro: false }`, o status de error (`401`/`502`/`500`) sin activar si MP falla.
+
+**Frontend `CuentaPage.jsx` (commits `e3233d0` + fix `56fca1e`):**
+- Al volver a `/cuenta?suscripcion=ok`, un `useEffect` verifica **hasta 3 veces con delays 0 / 2s / 4s**. En cuanto una respuesta trae `pro: true` → corta los reintentos, llama **`reloadData()`** → `isPro()` pasa a `true` y la UI muestra "Pro activo" **sin recargar**.
+- Si tras los 3 intentos no confirma → **aviso suave** "Estamos confirmando tu pago, puede tardar unos minutos." (sin error duro; confiamos en que el webhook complete).
+- **Robustez:** el efecto corre **una sola vez al montar** (deps `[]`); `reloadData` va por **ref** y el param se lee de `window.location` para que un re-render del provider durante los ~6s **no re-dispare ni aborte** la verificación. Guard `yaVerificado` (ref) contra doble disparo.
+- **BUG encontrado y arreglado en QA (fix `56fca1e`):** la limpieza de URL con `navigate('/cuenta', {replace:true})` **reseteaba el estado de `CuentaPage` y se comía el `avisoPago`** recién seteado (aparecía "Confirmando…" pero el aviso final nunca se veía). Solución: limpiar con **`window.history.replaceState(null, '', '/cuenta')`**, que **no pasa por el router ni re-monta** el componente, así el aviso sobrevive. De paso se quitó `useSearchParams` (el param se lee de `window.location`).
+
+**VERIFICADO EN PRODUCCIÓN (huella.lat):** "Confirmando tu suscripción…" aparece, el aviso "Estamos confirmando tu pago, puede tardar unos minutos." **queda visible y persiste**, y la URL queda limpia en `/cuenta`. Probado el camino **"aún no confirmado"** (el normal hoy, con credenciales de prueba). El camino **"confirmado"** (que activa el plan de verdad) se prueba EN VIVO con el primer pago real.
+
+**REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
+
+**DÓNDE RETOMAR:**
+- Resolver los pendientes de la REGLA CRÍTICA (regenerar `SUPABASE_SERVICE_ROLE_KEY`, limpiar cuentas de prueba, downgrade `cancelled`/`paused` en el webhook, conectar `UpgradeModal` al pago).
+- Cuando esté todo listo: pasar a credenciales de producción y hacer el **primer pago real** (condición #2).
+
+---
+
+## Sesión martes 10 junio 2026 — Monetización: webhook Paso 2 VERIFICADO por API + fix de upsert
 
 **Verificamos la lógica del webhook end-to-end por API, sin tocar producción, y arreglamos un bug real de activación del plan.**
 
