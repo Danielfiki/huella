@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
@@ -48,16 +48,94 @@ const TODO_PRO = [
 ]
 
 export default function CuentaPage() {
-  const { isPro, isAdmin } = useHuella()
+  const { isPro, isAdmin, reloadData } = useHuella()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [verTodo, setVerTodo] = useState(false)
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
+  // Microestado de la verificación al volver del checkout (?suscripcion=ok).
+  const [verificando, setVerificando] = useState(false)
+  const [avisoPago, setAvisoPago] = useState('')
 
   const pro = isPro()
   const admin = isAdmin()
   const planLabel = admin ? 'Admin' : pro ? 'Pro' : 'Gratuito'
+
+  // ── Red de seguridad del pago (Paso 3) — RESPALDO del webhook ──
+  // Al volver del checkout a /cuenta?suscripcion=ok, consultamos a MP el estado
+  // real de la suscripción hasta 3 veces (inmediato, +2s, +4s). En cuanto una
+  // respuesta traiga una suscripción authorized del usuario, activamos el plan
+  // por backend, refrescamos isPro() con reloadData() y cortamos los reintentos.
+  // Si tras los 3 intentos sigue sin confirmar, NO mostramos error duro:
+  // confiamos en que el webhook complete.
+  //
+  // Robustez: navigate y reloadData van por ref (no como dependencias) para que
+  // un re-render del provider durante los ~6s de reintentos NO re-dispare ni
+  // aborte la verificación en curso. El efecto corre UNA sola vez al montar
+  // (deps []); el cleanup solo cancela al desmontar (salir de la página).
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate
+  const reloadDataRef = useRef(reloadData)
+  reloadDataRef.current = reloadData
+
+  const yaVerificado = useRef(false)
+  useEffect(() => {
+    if (searchParams.get('suscripcion') !== 'ok') return
+    if (yaVerificado.current) return
+    yaVerificado.current = true
+
+    let cancelado = false
+    const DELAYS = [0, 2000, 4000]
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+    async function verificar() {
+      setVerificando(true)
+      setAvisoPago('')
+      let confirmado = false
+
+      for (let intento = 0; intento < DELAYS.length && !cancelado; intento++) {
+        if (DELAYS[intento] > 0) await sleep(DELAYS[intento])
+        if (cancelado) break
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          const res = await fetch('/api/mp-verificar-suscripcion', {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              authorization: `Bearer ${session?.access_token}`,
+            },
+          })
+          const data = await res.json().catch(() => ({}))
+          if (res.ok && data.pro) {
+            confirmado = true
+            break
+          }
+        } catch (err) {
+          console.error('Verificación de suscripción falló (intento ' + intento + '):', err)
+        }
+      }
+
+      if (cancelado) return
+
+      if (confirmado) {
+        reloadDataRef.current()      // refresca state.plan → isPro() pasa a true sin recargar
+      } else {
+        setAvisoPago('Estamos confirmando tu pago, puede tardar unos minutos.')
+      }
+      setVerificando(false)
+
+      // Limpiamos el query param para que un refresh no re-dispare la verificación.
+      navigateRef.current('/cuenta', { replace: true })
+    }
+
+    verificar()
+    return () => { cancelado = true }
+    // Corre una sola vez al montar a propósito: navigate/reloadData van por ref
+    // (arriba) para no re-disparar ni abortar la verificación en curso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Crea la suscripción en Mercado Pago para el ciclo elegido y redirige al
   // checkout alojado (init_point). El usuario ingresa la tarjeta en la página
@@ -106,6 +184,13 @@ export default function CuentaPage() {
         <h1 className={styles.promesa}>
           Entiende por qué tu hijo actúa así y acompáñalo mejor
         </h1>
+
+        {verificando && (
+          <p className={styles.activoMsg}>Confirmando tu suscripción…</p>
+        )}
+        {avisoPago && (
+          <p className={styles.activoMsg}>{avisoPago}</p>
+        )}
 
         {pro ? (
           <p className={styles.activoMsg}>
