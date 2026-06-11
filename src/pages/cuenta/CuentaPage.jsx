@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
+import { iniciarSuscripcion } from '../../services/pago'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -145,25 +146,10 @@ export default function CuentaPage() {
     setCargando(true)
     setError('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/mp-crear-suscripcion', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ ciclo }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.init_point) {
-        console.error('No se pudo iniciar la suscripción:', data)
-        setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
-        setCargando(false)
-        return
-      }
-      window.location.href = data.init_point
+      const initPoint = await iniciarSuscripcion(ciclo)
+      window.location.href = initPoint
     } catch (err) {
-      console.error('handleActivar error:', err)
+      console.error('handleActivar error:', err, err?.detail)
       setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
       setCargando(false)
     }
