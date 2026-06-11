@@ -20,12 +20,13 @@
 **Estado actual SEGURO:** Vercel tiene credenciales de **PRUEBA** de MP → **nadie puede pagar dinero real hoy** (el botón "Activar Huella Pro" lleva al checkout sandbox). El cambio a credenciales de producción es el **ÚLTIMO paso**, solo tras cumplir las 2 condiciones de arriba.
 
 **Pendientes derivados de esta regla:**
-- **Regenerar `SUPABASE_SERVICE_ROLE_KEY` + actualizarla en Vercel** (seguridad: pasó por el chat durante el QA).
+- **Seguridad de llaves Supabase (EN CURSO):** la migración a llaves nuevas ya está hecha y verificada (capas 1 y 2). Falta **apagar las legacy** (auditoría previa) y **reemplazar la `sb_secret` expuesta en el chat** → ver "DÓNDE RETOMAR" pasos (a)(b)(c).
 - **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor. Incluye **cancelar el preapproval de prueba** que sigue `authorized` en MP.
 
 **Ya resueltos hoy (11 junio):**
 - ✅ **Downgrade a `free` en el webhook** por `cancelled` / `paused` (commit `e660c00`) — lógica validada en la base real.
 - ✅ **`UpgradeModal` conectado al flujo de pago** (commit `f68a8bc`) — QA aprobado en producción.
+- ✅ **Migración a llaves nuevas de Supabase** (`sb_publishable` / `sb_secret`) en Vercel — capas 1 y 2 verificadas; legacy aún activas a propósito.
 
 ---
 
@@ -68,11 +69,22 @@
 - **Lógica validada en la base real** (SQL Editor de Supabase, sobre la cuenta de prueba `b30d78d5`): SELECT inicial `pro` → UPDATE con filtro **1 fila afectada** → SELECT final `free`. **Idempotencia comprobada:** una corrida repetida del UPDATE devolvió **0 filas** ("Success. No rows returned"). La cuenta `b30d78d5` quedó en `free`.
 - **Pendiente de ver EN VIVO:** el **disparo automático del webhook** por MP (con validación de firma `x-signature`) cuando una suscripción real se cancela/pausa → amarrado al primer pago real.
 
+### Migración a las llaves nuevas de Supabase (sistema `sb_publishable` / `sb_secret`)
+
+**Empezamos a migrar del sistema legacy de llaves (anon / service_role JWT) al nuevo (`sb_publishable_…` / `sb_secret_…`).**
+- **Vercel actualizado:** `VITE_SUPABASE_ANON_KEY` → `sb_publishable`, `SUPABASE_SERVICE_ROLE_KEY` → `sb_secret`. **Redeploy hecho.**
+- **Capa 1 verificada:** la app funciona OK en producción con datos cargando (la `sb_publishable` sirve para el cliente del frontend).
+- **Capa 2 verificada:** la `sb_secret` funciona como **service-role** — un `curl` a `/rest/v1/perfiles` devolvió filas **saltando RLS**, que es justo lo que necesita el webhook para escribir `perfiles`.
+- **Las llaves legacy siguen ACTIVAS a propósito** — no se apagan hasta hacer la auditoría (ver pendientes).
+
 **REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
 
-**DÓNDE RETOMAR:**
-- Resolver los pendientes de la REGLA CRÍTICA que quedan: **regenerar `SUPABASE_SERVICE_ROLE_KEY`** + actualizarla en Vercel, y **limpiar cuentas de prueba**.
-- **Pendiente de MP (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva).
+**DÓNDE RETOMAR (próxima sesión, en este orden):**
+- **(a) AUDITORÍA antes del apagón:** revisar si las **Edge Functions de Supabase** (y cualquier otro código del repo) usan las llaves **legacy** o el **env auto-inyectado** de Supabase. Reportar el impacto concreto de apagar las legacy antes de tocarlas.
+- **(b) Apagar las llaves legacy** en Supabase (tab *"Legacy anon, service_role API keys"*) → esto **mata la llave service-role expuesta**. Re-verificar app + endpoints después del apagón.
+- **(c) Reemplazar la `sb_secret` actual** (quedó **expuesta en un pantallazo en el chat**). Con el sistema nuevo es simple: *"+ New secret key"* en Supabase → actualizar `SUPABASE_SERVICE_ROLE_KEY` en Vercel → redeploy → verificar (mismo `curl` a `/rest/v1/perfiles`) → **borrar la `sb_secret` filtrada**.
+- **(d) LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta**, siguiente feature.
+- **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva).
 - Cuando esté todo listo: pasar a credenciales de producción y hacer el **primer pago real** (condición #2).
 
 ---
