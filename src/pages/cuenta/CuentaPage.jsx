@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
@@ -50,7 +50,6 @@ const TODO_PRO = [
 export default function CuentaPage() {
   const { isPro, isAdmin, reloadData } = useHuella()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const [verTodo, setVerTodo] = useState(false)
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
@@ -71,18 +70,17 @@ export default function CuentaPage() {
   // Si tras los 3 intentos sigue sin confirmar, NO mostramos error duro:
   // confiamos en que el webhook complete.
   //
-  // Robustez: navigate y reloadData van por ref (no como dependencias) para que
-  // un re-render del provider durante los ~6s de reintentos NO re-dispare ni
-  // aborte la verificación en curso. El efecto corre UNA sola vez al montar
-  // (deps []); el cleanup solo cancela al desmontar (salir de la página).
-  const navigateRef = useRef(navigate)
-  navigateRef.current = navigate
+  // Robustez: reloadData va por ref (no como dependencia) para que un re-render
+  // del provider durante los ~6s de reintentos NO re-dispare ni aborte la
+  // verificación en curso. El efecto corre UNA sola vez al montar (deps []); el
+  // cleanup solo cancela al desmontar (salir de la página). El param se lee de
+  // window.location al montar para no depender del router en este efecto.
   const reloadDataRef = useRef(reloadData)
   reloadDataRef.current = reloadData
 
   const yaVerificado = useRef(false)
   useEffect(() => {
-    if (searchParams.get('suscripcion') !== 'ok') return
+    if (new URLSearchParams(window.location.search).get('suscripcion') !== 'ok') return
     if (yaVerificado.current) return
     yaVerificado.current = true
 
@@ -126,8 +124,10 @@ export default function CuentaPage() {
       }
       setVerificando(false)
 
-      // Limpiamos el query param para que un refresh no re-dispare la verificación.
-      navigateRef.current('/cuenta', { replace: true })
+      // Limpiamos el query param SIN pasar por el router: replaceState no
+      // re-monta ni resetea CuentaPage, así avisoPago recién seteado sobrevive.
+      // Un refresh ya no re-dispara la verificación (no queda ?suscripcion=ok).
+      window.history.replaceState(null, '', '/cuenta')
     }
 
     verificar()
