@@ -44,6 +44,9 @@ export default function Onboarding({ onComplete, onSkip }) {
   // muy rápidos podrían entrar antes de que React batchee el setState.
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
+  // Aviso de error si el guardado del slide 5 falla. Deja al usuario
+  // reintentar tocando de nuevo "Empezar ahora" en vez de quedar atascado.
+  const [saveError, setSaveError] = useState(false);
 
   const goNext = useCallback(() => {
     setIndex(i => Math.min(i + 1, SLIDE_COUNT - 1));
@@ -57,6 +60,7 @@ export default function Onboarding({ onComplete, onSkip }) {
     if (submittingRef.current) return; // anti doble-click
     submittingRef.current = true;
     setSubmitting(true);
+    setSaveError(false); // limpiamos un aviso previo al reintentar
     try {
       await onComplete(perfil);
       // El Layout flipea `showOnboarding` a false y desmonta este componente.
@@ -64,12 +68,13 @@ export default function Onboarding({ onComplete, onSkip }) {
       // y deja el botón en "Guardando…" mientras la persistencia + transición
       // ocurren, sin parpadeo a "Empezar ahora →".
     } catch (err) {
-      // Defensivo: hoy `onComplete` del Layout atrapa internamente y nunca
-      // tira, pero si en el futuro propaga errores dejamos al usuario
-      // reintentar en vez de quedar atrapado en "Guardando…".
+      // Si el guardado falla, `onComplete` re-lanza: dejamos al usuario
+      // reintentar (el botón vuelve de "Guardando…" a "Empezar ahora →") y
+      // mostramos un aviso, en vez de cerrar el onboarding sin guardar nada.
       console.error('[Onboarding] onComplete tiró:', err);
       submittingRef.current = false;
       setSubmitting(false);
+      setSaveError(true);
     }
   }, [onComplete, perfil]);
 
@@ -204,7 +209,16 @@ export default function Onboarding({ onComplete, onSkip }) {
             totalSlides={SLIDE_COUNT}
             showTopSkip={false}
             onContinue={finish}
-          />
+          >
+            {saveError && (
+              <p
+                role="alert"
+                style={{ color: 'var(--color-danger-text)', textAlign: 'center', marginTop: 12 }}
+              >
+                No pudimos guardar tus datos. Revisa tu conexión y vuelve a intentar.
+              </p>
+            )}
+          </OnboardingBottomSlide>
         </div>
       </div>
     </div>

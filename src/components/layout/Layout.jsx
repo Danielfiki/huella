@@ -105,9 +105,12 @@ export default function Layout() {
               // sin necesidad de un refresh manual.
               reloadData()
             } catch (err) {
-              // No bloqueamos al usuario: mejor un perfil incompleto que
-              // un usuario atascado. El Home maneja perfiles parciales.
+              // Si el guardado falla (red o RPC caída) NO marcamos
+              // onboarding_done ni cerramos: re-lanzamos para que el slide
+              // final avise y deje reintentar, en vez de dejar al usuario sin
+              // perfil ni hijo guardados y sin volver a ver el onboarding.
               console.error('[Layout] persistirPerfilOnboarding falló:', err)
+              throw err
             }
             localStorage.setItem('onboarding_done', '1')
             setShowOnboarding(false)
