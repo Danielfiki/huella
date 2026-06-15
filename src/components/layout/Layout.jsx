@@ -56,7 +56,7 @@ function SkeletonLoader() {
 }
 
 export default function Layout() {
-  const { state, dataLoading } = useHuella()
+  const { state, dataLoading, reloadData } = useHuella()
   const { family, familyLoading } = useFamily()
   // Onboarding visible solo si el usuario no lo completó (localStorage,
   // persiste para siempre en el dispositivo) Y tampoco lo saltó en esta
@@ -99,6 +99,11 @@ export default function Layout() {
           onComplete={async (perfil) => {
             try {
               await persistirPerfilOnboarding(perfil)
+              // El perfil y el hijo ya quedaron en la base, pero el contexto
+              // sigue con los datos viejos de antes del onboarding. Recargamos
+              // para que el Home muestre tu nombre y el del hijo recién creados
+              // sin necesidad de un refresh manual.
+              reloadData()
             } catch (err) {
               // No bloqueamos al usuario: mejor un perfil incompleto que
               // un usuario atascado. El Home maneja perfiles parciales.
