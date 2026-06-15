@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: lunes 15 junio 2026 — **Recuperación de contraseña CERRADA y verificada en producción.** Se conectó **Resend como servidor SMTP custom de Supabase Auth** (sender `hola@huella.lat`, nombre "Huella") y se verificó end-to-end el flujo de "¿Olvidaste tu contraseña?": el correo llega instantáneo desde `Huella <hola@huella.lat>` a la bandeja de entrada (no spam), el link abre la pantalla de clave nueva, el cambio de clave y el re-login funcionan. **El flujo ya existía en código; no se tocó código** (todo fue configuración en los dashboards de Resend y Supabase). **Bloqueante de beta resuelto.** Beneficio colateral: TODOS los correos de Supabase Auth (confirmación de cuenta, invitación de pareja, cambio de email) salen ahora por Resend desde el dominio verificado, sin el límite de 2 correos/hora del servicio por defecto. Antes (domingo 14 junio): Seguridad de llaves Supabase **COMPLETADA y cerrada**: legacy JWT APAGADAS + `sb_secret` expuesta ROTADA. Las DOS llaves que pasaron por el chat (service_role legacy del 10 jun y `sb_secret` del 11 jun) están MUERTAS; app y endpoints verificados OK post-cambios. Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
+*Última actualización: lunes 15 junio 2026 — **Recuperación de contraseña CERRADA y verificada en producción.** Se conectó **Resend como servidor SMTP custom de Supabase Auth** (sender `hola@huella.lat`, nombre "Huella") y se verificó end-to-end el flujo de "¿Olvidaste tu contraseña?": el correo llega instantáneo desde `Huella <hola@huella.lat>` a la bandeja de entrada (no spam), el link abre la pantalla de clave nueva, el cambio de clave y el re-login funcionan. **El flujo ya existía en código; no se tocó código** (todo fue configuración en los dashboards de Resend y Supabase). **Bloqueante de beta resuelto.** Beneficio colateral: TODOS los correos de Supabase Auth (confirmación de cuenta, invitación de pareja, cambio de email) salen ahora por Resend desde el dominio verificado, sin el límite de 2 correos/hora del servicio por defecto. **Álbum/fotos compartidas: INVESTIGADO y DESCARTADO como bug** (solo lectura, no se tocó código) — las 13 fotos se ven idénticas en ambas cuentas; era latencia normal de carga, no pérdida de datos ni problema de compartición. Antes (domingo 14 junio): Seguridad de llaves Supabase **COMPLETADA y cerrada**: legacy JWT APAGADAS + `sb_secret` expuesta ROTADA. Las DOS llaves que pasaron por el chat (service_role legacy del 10 jun y `sb_secret` del 11 jun) están MUERTAS; app y endpoints verificados OK post-cambios. Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -31,7 +31,7 @@
 
 ---
 
-## Cerrado HOY (lunes 15 junio 2026) — Recuperación de contraseña CERRADA y verificada en producción (Resend como SMTP de Supabase Auth)
+## Cerrado HOY (lunes 15 junio 2026) — Recuperación de contraseña CERRADA (Resend como SMTP de Supabase Auth) + álbum/fotos investigado y DESCARTADO como bug
 
 **Cerramos la recuperación de contraseña: conectamos Resend como servidor SMTP custom de Supabase Auth y verificamos el flujo completo en producción. El flujo ya existía en código — no se tocó código; el trabajo fue de configuración en los dashboards de Resend y Supabase.**
 
@@ -53,6 +53,26 @@
 **Bloqueante de beta resuelto.**
 
 **Beneficio colateral:** ahora TODOS los correos de Supabase Auth (confirmación de cuenta nueva, invitación de pareja, cambio de email) salen por **Resend desde el dominio verificado**, en vez del servicio por defecto de Supabase, que estaba **limitado a 2 correos por hora**.
+
+---
+
+### Álbum / fotos compartidas — INVESTIGADO y DESCARTADO como bug (solo lectura, no se tocó código)
+
+**Daniel reportó "fotos del álbum que se caían / aparecían vacías". Se investigó en solo lectura y quedó DESCARTADO como bug: es latencia normal de carga, no pérdida de datos ni problema de compartición entre cuentas.**
+
+**Cómo funciona el álbum (hallazgo):**
+- El "álbum" es la pestaña Álbum de la pantalla de Logros; las fotos son los **"hitos"** que tienen `foto_url`.
+- Las fotos viven en el bucket **público `momentos`** (URL pública vía `getPublicUrl`, **sin expiración**); en la base se guarda la **URL completa**.
+- Cada hito se asocia a **`user_id` (el adulto que lo creó) + `hijo_id`** (el hijo compartido).
+- La **RLS family-aware** (`get_family_user_ids`) permite que la pareja **se lea mutuamente** los hitos; el bucket de fotos es de lectura pública.
+
+**Verificado en producción:**
+- Las **13 fotos se ven idénticas en ambas cuentas** (adulto 1 y adulto 2).
+- Reproduciendo **login en frío** en el adulto 2, las fotos cargan con una **leve latencia de red**, pero **SIEMPRE aparecen**.
+
+**Conclusión:** **no** es pérdida de datos ni problema de compartición entre cuentas. Es **latencia normal de carga**.
+
+**Observación técnica (NO es tarea — solo nota por si reaparece):** al cargar, el álbum **filtra los hitos en el cliente** por `user_id IN [yo, pareja]`, y ese "pareja" depende de que `FamilyContext` haya resuelto `partner.id`; en cambio, los **hijos** se cargan **confiando solo en la RLS**. Si alguna vez aparece intermitencia **REAL y reproducible**, el endurecimiento sería **alinear el álbum con la carga de hijos**: confiar en la RLS y quitar el filtro manual de `partnerIds`.
 
 ---
 
@@ -137,7 +157,7 @@
 **DÓNDE RETOMAR (próxima sesión, en este orden):**
 - ✅ **Seguridad de llaves Supabase — CERRADA (14 junio):** auditoría + legacy apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Sesión domingo 14 junio 2026".)
 - ✅ **LoginPage "¿Olvidaste tu contraseña?"** — **RESUELTO y verificado en producción (15 junio):** Resend conectado como SMTP custom de Supabase Auth + flujo de reset verificado end-to-end. **Ya no es bloqueante de beta.** (Detalle en "Cerrado HOY".)
-- ⬜ **Investigar aparte (no urgente, NO causado por el apagón):** fotos faltantes en el álbum (cargadas antes de la ausencia; Storage **no usa** las llaves apagadas). Confirmar si es un bug viejo del álbum.
+- ✅ **Álbum / fotos faltantes — INVESTIGADO y DESCARTADO como bug (15 junio):** era **latencia normal de carga**, no pérdida de datos ni problema de compartición entre cuentas. Las 13 fotos se ven idénticas en ambas cuentas (adulto 1 y adulto 2). (Detalle en "Cerrado HOY".)
 - ⬜ **Condición #2 de la REGLA CRÍTICA:** primer **pago real** de punta a punta (al pasar a credenciales de producción de MP).
 - **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva); limpiar cuentas de prueba.
 
