@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: domingo 14 junio 2026 — Seguridad de llaves Supabase **COMPLETADA y cerrada**: legacy JWT APAGADAS + `sb_secret` expuesta ROTADA. Las DOS llaves que pasaron por el chat (service_role legacy del 10 jun y `sb_secret` del 11 jun) están MUERTAS; app y endpoints verificados OK post-cambios. Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
+*Última actualización: lunes 15 junio 2026 — **Recuperación de contraseña CERRADA y verificada en producción.** Se conectó **Resend como servidor SMTP custom de Supabase Auth** (sender `hola@huella.lat`, nombre "Huella") y se verificó end-to-end el flujo de "¿Olvidaste tu contraseña?": el correo llega instantáneo desde `Huella <hola@huella.lat>` a la bandeja de entrada (no spam), el link abre la pantalla de clave nueva, el cambio de clave y el re-login funcionan. **El flujo ya existía en código; no se tocó código** (todo fue configuración en los dashboards de Resend y Supabase). **Bloqueante de beta resuelto.** Beneficio colateral: TODOS los correos de Supabase Auth (confirmación de cuenta, invitación de pareja, cambio de email) salen ahora por Resend desde el dominio verificado, sin el límite de 2 correos/hora del servicio por defecto. Antes (domingo 14 junio): Seguridad de llaves Supabase **COMPLETADA y cerrada**: legacy JWT APAGADAS + `sb_secret` expuesta ROTADA. Las DOS llaves que pasaron por el chat (service_role legacy del 10 jun y `sb_secret` del 11 jun) están MUERTAS; app y endpoints verificados OK post-cambios. Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -22,7 +22,7 @@
 **Pendientes derivados de esta regla:**
 - **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor. Incluye **cancelar el preapproval de prueba** que sigue `authorized` en MP.
 
-> ✅ **Seguridad de llaves Supabase: CERRADA (14 junio).** Legacy JWT apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Cerrado HOY".)
+> ✅ **Seguridad de llaves Supabase: CERRADA (14 junio).** Legacy JWT apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Sesión domingo 14 junio 2026".)
 
 **Ya resueltos hoy (11 junio):**
 - ✅ **Downgrade a `free` en el webhook** por `cancelled` / `paused` (commit `e660c00`) — lógica validada en la base real.
@@ -31,7 +31,32 @@
 
 ---
 
-## Cerrado HOY (domingo 14 junio 2026) — Seguridad de llaves Supabase COMPLETADA (legacy apagadas + sb_secret rotada)
+## Cerrado HOY (lunes 15 junio 2026) — Recuperación de contraseña CERRADA y verificada en producción (Resend como SMTP de Supabase Auth)
+
+**Cerramos la recuperación de contraseña: conectamos Resend como servidor SMTP custom de Supabase Auth y verificamos el flujo completo en producción. El flujo ya existía en código — no se tocó código; el trabajo fue de configuración en los dashboards de Resend y Supabase.**
+
+**Resend conectado como SMTP custom de Supabase Auth:**
+- **Sender:** `hola@huella.lat`, nombre **"Huella"**.
+- **Servidor SMTP:** host `smtp.resend.com`, puerto **465**, usuario `resend`.
+- **API key dedicada "Supabase SMTP"** creada en Resend — permiso **Sending access**, **acotada al dominio `huella.lat`** (no es la misma key que usa `/api/invite`).
+
+**El flujo de "¿Olvidaste tu contraseña?" ya existía en código (no se tocó nada):**
+- `LoginPage` enlaza a `/reset-password`.
+- `AuthContext.resetPassword` dispara `resetPasswordForEmail` (con `redirectTo` a `/reset-password`).
+- `ResetPasswordPage` (ruta pública, doble modo) maneja el evento `PASSWORD_RECOVERY` y actualiza la clave con `updateUser`.
+
+**Verificación end-to-end en producción (ventana incógnito):**
+- El correo llega **instantáneo** desde `Huella <hola@huella.lat>` a la **bandeja de entrada** (no spam).
+- El enlace del correo **abre la pantalla de clave nueva**.
+- El **cambio de clave es exitoso** y el **inicio de sesión con la clave nueva funciona**.
+
+**Bloqueante de beta resuelto.**
+
+**Beneficio colateral:** ahora TODOS los correos de Supabase Auth (confirmación de cuenta nueva, invitación de pareja, cambio de email) salen por **Resend desde el dominio verificado**, en vez del servicio por defecto de Supabase, que estaba **limitado a 2 correos por hora**.
+
+---
+
+## Sesión domingo 14 junio 2026 — Seguridad de llaves Supabase COMPLETADA (legacy apagadas + sb_secret rotada)
 
 **Cerramos por completo la seguridad de llaves: auditoría → apagón de las legacy → rotación de la `sb_secret` expuesta, todo verificado en producción. Las DOS llaves que alguna vez pasaron por el chat quedaron MUERTAS.**
 
@@ -110,8 +135,8 @@
 **REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
 
 **DÓNDE RETOMAR (próxima sesión, en este orden):**
-- ✅ **Seguridad de llaves Supabase — CERRADA (14 junio):** auditoría + legacy apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Cerrado HOY".)
-- ⬜ **LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta** → **próximo frente sugerido**.
+- ✅ **Seguridad de llaves Supabase — CERRADA (14 junio):** auditoría + legacy apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Sesión domingo 14 junio 2026".)
+- ✅ **LoginPage "¿Olvidaste tu contraseña?"** — **RESUELTO y verificado en producción (15 junio):** Resend conectado como SMTP custom de Supabase Auth + flujo de reset verificado end-to-end. **Ya no es bloqueante de beta.** (Detalle en "Cerrado HOY".)
 - ⬜ **Investigar aparte (no urgente, NO causado por el apagón):** fotos faltantes en el álbum (cargadas antes de la ausencia; Storage **no usa** las llaves apagadas). Confirmar si es un bug viejo del álbum.
 - ⬜ **Condición #2 de la REGLA CRÍTICA:** primer **pago real** de punta a punta (al pasar a credenciales de producción de MP).
 - **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva); limpiar cuentas de prueba.
