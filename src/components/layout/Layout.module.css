@@ -27,10 +27,13 @@
 }
 
 .logo {
-  font-size: 22px;
-  font-weight: 800;
-  color: white !important;
-  letter-spacing: -1px;
+  /* El header siempre es mocha (en claro y oscuro), así que el logo debe ir
+     en un crema estable. Los tokens crema (--color-bg / --color-cream /
+     --color-nav) se vuelven oscuros en modo oscuro, por eso usamos
+     --color-on-mocha (crema fijo en ambos modos). El SVG lo hereda vía
+     currentColor. */
+  color: var(--color-on-mocha) !important;
+  display: block;
 }
 
 .profileBtn {

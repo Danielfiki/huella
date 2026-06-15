@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
 import Onboarding from '../../pages/onboarding/Onboarding'
+import Logo from '../ui/Logo'
 import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services/onboardingPersistor'
 import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
@@ -123,7 +124,7 @@ export default function Layout() {
       )}
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <span className={styles.logo}>huella</span>
+          <Logo className={styles.logo} height={32} />
           <NavLink to={state.hijo ? '/hijo' : '/perfil'} className={styles.profileBtn}>
             {state.hijo?.avatarUrl
               ? <img src={state.hijo.avatarUrl} alt="Avatar" className={styles.profileAvatar} />

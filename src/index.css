@@ -36,6 +36,9 @@
   --color-accent-light: #B0C870;
   --color-accent-green: #8FA840;
   --color-accent-mocha: #9B7B6A;
+  /* Crema estable para contenido SOBRE el header mocha (ej. el logo). NO
+     cambia entre claro/oscuro porque el header es mocha en ambos modos. */
+  --color-on-mocha: #FAF3EC;
   --color-accent-blue: #6C8EF5;
   --color-accent-indigo: #7C8BFD;
   --color-accent-orange: #E8956D;
@@ -219,6 +222,9 @@
     --color-danger-text: #F87A70;
     --color-accent-green: #8FA840;
     --color-accent-mocha: #9B7B6A;
+    /* Mismo crema que en claro: el header es mocha también en oscuro, así que
+       el logo no debe oscurecerse. */
+    --color-on-mocha: #FAF3EC;
     --color-accent-blue: #2A3E52;
     --color-accent-lavender: #3A3058;
     --color-accent-yellow: #4A4018;
