@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: jueves 11 junio 2026 — Monetización: **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
+*Última actualización: domingo 14 junio 2026 — Seguridad de llaves Supabase: **llaves legacy APAGADAS y verificadas en producción** (auditoría previa + apagón del botón "Disable JWT-based API keys" + post-check OK; la service_role legacy expuesta el 10 junio quedó MUERTA). Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -20,7 +20,7 @@
 **Estado actual SEGURO:** Vercel tiene credenciales de **PRUEBA** de MP → **nadie puede pagar dinero real hoy** (el botón "Activar Huella Pro" lleva al checkout sandbox). El cambio a credenciales de producción es el **ÚLTIMO paso**, solo tras cumplir las 2 condiciones de arriba.
 
 **Pendientes derivados de esta regla:**
-- **Seguridad de llaves Supabase (EN CURSO):** la migración a llaves nuevas ya está hecha y verificada (capas 1 y 2). Falta **apagar las legacy** (auditoría previa) y **reemplazar la `sb_secret` expuesta en el chat** → ver "DÓNDE RETOMAR" pasos (a)(b)(c).
+- **Seguridad de llaves Supabase (AVANZADA):** migración a llaves nuevas hecha y verificada (capas 1 y 2). Auditoría hecha y **legacy YA APAGADAS y verificadas** (14 junio). Falta solo el paso **(c): rotar la `sb_secret` NUEVA** que quedó expuesta en un pantallazo el 11 junio → ver "DÓNDE RETOMAR".
 - **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor. Incluye **cancelar el preapproval de prueba** que sigue `authorized` en MP.
 
 **Ya resueltos hoy (11 junio):**
@@ -30,7 +30,26 @@
 
 ---
 
-## Cerrado HOY (jueves 11 junio 2026) — Monetización: Paso 3 red de seguridad + UpgradeModal al pago + downgrade automático
+## Cerrado HOY (domingo 14 junio 2026) — Seguridad de llaves Supabase: legacy APAGADAS y verificadas
+
+**Cerramos el paso clave de seguridad de llaves: auditoría completa, apagón de las legacy y verificación post-apagón en producción. La service_role legacy que se filtró el 10 junio quedó MUERTA.**
+
+**Auditoría previa al apagón (solo lectura, ningún cambio de código):**
+- **Ningún código del repo depende de llaves legacy por valor.** Todo lee variables de entorno **por nombre** (`VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`); Vercel ya apunta esos nombres a las llaves nuevas.
+- **No hay Edge Functions de Supabase** (no existe `supabase/functions/`); bajo `supabase/` solo viven `schema.sql` y migraciones.
+- **Todos los endpoints `api/` leen del entorno, sin hardcodear llaves.** Service-role: `mp-webhook`, `push-remind`, y la activación de `mp-verificar-suscripcion`. Publishable/anon: `anthropic`, `mp-crear-suscripcion`, `push-subscribe`, y la auth de `mp-verificar-suscripcion`. `invite.js` no usa Supabase (usa Resend).
+- **Cero llaves hardcodeadas en todo el repo** (los "hits" de búsqueda fueron prosa de docs y un hash de `package-lock.json`, falsos positivos). El `.env` local ya está en el sistema nuevo (`sb_publishable`) y no tiene service-role.
+
+**Apagón ejecutado:**
+- **Llaves legacy de Supabase APAGADAS** con el botón **"Disable JWT-based API keys"**. La **service_role legacy expuesta el 10 junio quedó MUERTA**.
+
+**Verificado post-apagón (nada roto):**
+- App OK en producción: carga normal de datos (la `sb_publishable` del frontend sigue sirviendo).
+- `curl` service-role a `/rest/v1/perfiles` devolvió filas (la `sb_secret` nueva sigue saltando RLS, que es lo que necesita el webhook).
+
+---
+
+## Sesión jueves 11 junio 2026 — Monetización: Paso 3 red de seguridad + UpgradeModal al pago + downgrade automático
 
 **Construimos, desplegamos y verificamos en producción la red de seguridad del pago: el respaldo del webhook que activa el plan al volver del checkout. Condición #1 de la REGLA CRÍTICA: CUMPLIDA.**
 
@@ -80,11 +99,12 @@
 **REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
 
 **DÓNDE RETOMAR (próxima sesión, en este orden):**
-- **(a) AUDITORÍA antes del apagón:** revisar si las **Edge Functions de Supabase** (y cualquier otro código del repo) usan las llaves **legacy** o el **env auto-inyectado** de Supabase. Reportar el impacto concreto de apagar las legacy antes de tocarlas.
-- **(b) Apagar las llaves legacy** en Supabase (tab *"Legacy anon, service_role API keys"*) → esto **mata la llave service-role expuesta**. Re-verificar app + endpoints después del apagón.
-- **(c) Reemplazar la `sb_secret` actual** (quedó **expuesta en un pantallazo en el chat**). Con el sistema nuevo es simple: *"+ New secret key"* en Supabase → actualizar `SUPABASE_SERVICE_ROLE_KEY` en Vercel → redeploy → verificar (mismo `curl` a `/rest/v1/perfiles`) → **borrar la `sb_secret` filtrada**.
-- **(d) LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta**, siguiente feature.
-- **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva).
+- ✅ **(a) AUDITORÍA antes del apagón — HECHA (14 junio).** Sin Edge Functions; ningún código depende de legacy por valor; todos los endpoints leen del entorno sin hardcodear. (Detalle en el bloque "Cerrado HOY".)
+- ✅ **(b) Apagar las llaves legacy — HECHA y VERIFICADA (14 junio).** Botón "Disable JWT-based API keys" → service_role legacy expuesta el 10 junio MUERTA. App OK + `curl` service-role devolvió filas.
+- ⬜ **(c) Rotar la `sb_secret` NUEVA** que quedó **expuesta en un pantallazo el 11 junio** (el apagón de legacy **NO la rota** — es acción aparte). Pasos: *"+ New secret key"* en Supabase → actualizar `SUPABASE_SERVICE_ROLE_KEY` en Vercel → redeploy → verificar con el mismo `curl` a `/rest/v1/perfiles` → **borrar la `sb_secret` filtrada**.
+- ⬜ **LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta**, siguiente feature.
+- ⬜ **Investigar aparte (no urgente, NO causado por el apagón):** fotos faltantes en el álbum (cargadas antes de la ausencia; Storage **no usa** las llaves apagadas). Confirmar si es un bug viejo del álbum.
+- **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva); limpiar cuentas de prueba.
 - Cuando esté todo listo: pasar a credenciales de producción y hacer el **primer pago real** (condición #2).
 
 ---
