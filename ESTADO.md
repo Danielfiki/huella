@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: domingo 14 junio 2026 — Seguridad de llaves Supabase: **llaves legacy APAGADAS y verificadas en producción** (auditoría previa + apagón del botón "Disable JWT-based API keys" + post-check OK; la service_role legacy expuesta el 10 junio quedó MUERTA). Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
+*Última actualización: domingo 14 junio 2026 — Seguridad de llaves Supabase **COMPLETADA y cerrada**: legacy JWT APAGADAS + `sb_secret` expuesta ROTADA. Las DOS llaves que pasaron por el chat (service_role legacy del 10 jun y `sb_secret` del 11 jun) están MUERTAS; app y endpoints verificados OK post-cambios. Historial monetización (jueves 11 junio): **Paso 3 (red de seguridad del pago) CONSTRUIDO, DESPLEGADO y VERIFICADO en producción** (commits `e3233d0` + fix `56fca1e`). Al volver del checkout a `/cuenta?suscripcion=ok`, la app consulta a MP el estado real de la suscripción (`GET /preapproval/search` por `external_reference` + `status=authorized`) con reintentos 0/2s/4s y activa `plan='pro'` por backend (upsert service-role idempotente), como respaldo del webhook. **Condición #1 de la REGLA CRÍTICA: CUMPLIDA** (red de seguridad verificada en su camino "aún no confirmado"). Falta la **condición #2**: primer pago REAL de punta a punta. Sesiones previas: Paso 2 (webhook) verificado por API + fix de upsert (10 junio); Paso 1 validado en producción (9 junio); rediseño "Refugio" del flujo Registrar (8 junio).*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -20,8 +20,9 @@
 **Estado actual SEGURO:** Vercel tiene credenciales de **PRUEBA** de MP → **nadie puede pagar dinero real hoy** (el botón "Activar Huella Pro" lleva al checkout sandbox). El cambio a credenciales de producción es el **ÚLTIMO paso**, solo tras cumplir las 2 condiciones de arriba.
 
 **Pendientes derivados de esta regla:**
-- **Seguridad de llaves Supabase (AVANZADA):** migración a llaves nuevas hecha y verificada (capas 1 y 2). Auditoría hecha y **legacy YA APAGADAS y verificadas** (14 junio). Falta solo el paso **(c): rotar la `sb_secret` NUEVA** que quedó expuesta en un pantallazo el 11 junio → ver "DÓNDE RETOMAR".
 - **Limpiar usuarios/cuentas de prueba** (comprador, vendedor, `user_id b30d78d5-…`) → menor. Incluye **cancelar el preapproval de prueba** que sigue `authorized` en MP.
+
+> ✅ **Seguridad de llaves Supabase: CERRADA (14 junio).** Legacy JWT apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Cerrado HOY".)
 
 **Ya resueltos hoy (11 junio):**
 - ✅ **Downgrade a `free` en el webhook** por `cancelled` / `paused` (commit `e660c00`) — lógica validada en la base real.
@@ -30,9 +31,13 @@
 
 ---
 
-## Cerrado HOY (domingo 14 junio 2026) — Seguridad de llaves Supabase: legacy APAGADAS y verificadas
+## Cerrado HOY (domingo 14 junio 2026) — Seguridad de llaves Supabase COMPLETADA (legacy apagadas + sb_secret rotada)
 
-**Cerramos el paso clave de seguridad de llaves: auditoría completa, apagón de las legacy y verificación post-apagón en producción. La service_role legacy que se filtró el 10 junio quedó MUERTA.**
+**Cerramos por completo la seguridad de llaves: auditoría → apagón de las legacy → rotación de la `sb_secret` expuesta, todo verificado en producción. Las DOS llaves que alguna vez pasaron por el chat quedaron MUERTAS.**
+
+**RESUMEN DE SEGURIDAD DE LLAVES (CERRADO):**
+- **Legacy JWT apagadas** + **`sb_secret` rotada**. Las **dos llaves filtradas en el chat** — la **service_role legacy del 10 junio** y la **`sb_secret` del 11 junio** — están **MUERTAS**.
+- App y endpoints verificados **OK** después de cada cambio. Hoy solo existe **una** service-role válida: `service_role_2`.
 
 **Auditoría previa al apagón (solo lectura, ningún cambio de código):**
 - **Ningún código del repo depende de llaves legacy por valor.** Todo lee variables de entorno **por nombre** (`VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`); Vercel ya apunta esos nombres a las llaves nuevas.
@@ -46,6 +51,12 @@
 **Verificado post-apagón (nada roto):**
 - App OK en producción: carga normal de datos (la `sb_publishable` del frontend sigue sirviendo).
 - `curl` service-role a `/rest/v1/perfiles` devolvió filas (la `sb_secret` nueva sigue saltando RLS, que es lo que necesita el webhook).
+
+**Rotación de la `sb_secret` expuesta (pantallazo del 11 junio):**
+- Creada una **nueva `service_role_2`** en Supabase y cargada en Vercel (`SUPABASE_SERVICE_ROLE_KEY`) → **redeploy**.
+- **Verificada** con el `curl` service-role a `/rest/v1/perfiles` (devolvió filas → la nueva llave escribe saltando RLS).
+- **Borrada la `sb_secret` "default" filtrada.** Ahora **solo existe `service_role_2`**.
+- Nota: el apagón de legacy **no rotaba** esta `sb_secret` nueva — era acción aparte, por eso fue un paso propio.
 
 ---
 
@@ -99,13 +110,11 @@
 **REGLA CRÍTICA — estado:** **condición #1 CUMPLIDA** (red de seguridad construida y verificada). Falta **condición #2**: primer pago REAL de punta a punta (que también probará EN VIVO la firma `x-signature`, el disparo automático del webhook y el camino "confirmado" de la red de seguridad).
 
 **DÓNDE RETOMAR (próxima sesión, en este orden):**
-- ✅ **(a) AUDITORÍA antes del apagón — HECHA (14 junio).** Sin Edge Functions; ningún código depende de legacy por valor; todos los endpoints leen del entorno sin hardcodear. (Detalle en el bloque "Cerrado HOY".)
-- ✅ **(b) Apagar las llaves legacy — HECHA y VERIFICADA (14 junio).** Botón "Disable JWT-based API keys" → service_role legacy expuesta el 10 junio MUERTA. App OK + `curl` service-role devolvió filas.
-- ⬜ **(c) Rotar la `sb_secret` NUEVA** que quedó **expuesta en un pantallazo el 11 junio** (el apagón de legacy **NO la rota** — es acción aparte). Pasos: *"+ New secret key"* en Supabase → actualizar `SUPABASE_SERVICE_ROLE_KEY` en Vercel → redeploy → verificar con el mismo `curl` a `/rest/v1/perfiles` → **borrar la `sb_secret` filtrada**.
-- ⬜ **LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta**, siguiente feature.
+- ✅ **Seguridad de llaves Supabase — CERRADA (14 junio):** auditoría + legacy apagadas + `sb_secret` rotada. Las dos llaves filtradas en el chat están muertas. (Detalle en "Cerrado HOY".)
+- ⬜ **LoginPage "¿Olvidaste tu contraseña?"** — **bloqueante de beta** → **próximo frente sugerido**.
 - ⬜ **Investigar aparte (no urgente, NO causado por el apagón):** fotos faltantes en el álbum (cargadas antes de la ausencia; Storage **no usa** las llaves apagadas). Confirmar si es un bug viejo del álbum.
+- ⬜ **Condición #2 de la REGLA CRÍTICA:** primer **pago real** de punta a punta (al pasar a credenciales de producción de MP).
 - **Mantener (limpieza menor):** cancelar el **preapproval de prueba** que sigue `authorized` en MP (la cuenta Huella `b30d78d5` ya quedó en `free`, pero su suscripción de prueba en MP sigue viva); limpiar cuentas de prueba.
-- Cuando esté todo listo: pasar a credenciales de producción y hacer el **primer pago real** (condición #2).
 
 ---
 
