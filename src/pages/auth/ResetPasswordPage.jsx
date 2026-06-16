@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import Logo from '../../components/ui/Logo'
 import styles from './AuthPage.module.css'
 
 // ResetPasswordPage — ruta pública /reset-password (hermana de /login y
@@ -132,7 +133,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <p className={styles.subtitle} style={{ marginTop: 16 }}>Verificando link…</p>
         </div>
       </div>
@@ -143,7 +144,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <div style={{
             width: '64px',
             height: '64px',
@@ -204,7 +205,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <div style={{
             width: '64px',
             height: '64px',
@@ -249,7 +250,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <div style={{
             width: '64px',
             height: '64px',
@@ -295,7 +296,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <h1 className={styles.title}>Crea una contraseña nueva</h1>
           <p className={styles.subtitle}>Esta será tu contraseña a partir de ahora.</p>
 
@@ -341,7 +342,7 @@ export default function ResetPasswordPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>huella</div>
+        <Logo className={styles.logoMark} height={56} />
         <h1 className={styles.title}>¿Olvidaste tu contraseña?</h1>
         <p className={styles.subtitle}>Te enviamos un link para recuperarla.</p>
 

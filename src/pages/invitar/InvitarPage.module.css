@@ -22,12 +22,11 @@
 }
 
 .logo {
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 26px;
-  font-weight: 800;
+  /* Logo de marca (SVG) en terracota; el SVG hereda el color por currentColor.
+     Primera impresión de la pareja invitada: protagonista y centrado. */
+  display: block;
   color: var(--color-primary);
-  letter-spacing: -0.5px;
-  margin-bottom: 28px;
+  margin: 0 auto 28px;
 }
 
 .center {

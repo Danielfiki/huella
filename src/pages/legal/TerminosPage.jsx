@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import Logo from '../../components/ui/Logo'
 import styles from './TerminosPage.module.css'
 
 const CONTACTO = 'danielundurraga.r@gmail.com'
@@ -42,7 +43,7 @@ export default function TerminosPage() {
         {/* Header */}
         <div className={styles.header}>
           <Link to="/signup" className={styles.back}>← Volver</Link>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logo} height={36} />
           <h1 className={styles.pageTitle}>Términos y Privacidad</h1>
           <p className={styles.updated}>Última actualización: {FECHA}</p>
           <p className={styles.intro}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import Logo from '../../components/ui/Logo'
 import styles from './AuthPage.module.css'
 
 function GoogleIcon() {
@@ -70,7 +71,7 @@ export default function SignupPage() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <div className={styles.logo}>huella</div>
+          <Logo className={styles.logoMark} height={56} />
           <div style={{ fontSize: '52px', margin: '8px 0 20px' }}>📬</div>
           <h1 className={styles.title}>Revisa tu correo</h1>
           <p className={styles.subtitle}>
@@ -119,7 +120,7 @@ export default function SignupPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>huella</div>
+        <Logo className={styles.logoMark} height={56} />
         <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>Empieza a conocer mejor a tu hijo</p>
 

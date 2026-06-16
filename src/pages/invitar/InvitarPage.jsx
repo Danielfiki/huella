@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useFamily } from '../../context/FamilyContext'
 import { useHuella } from '../../context/HuellaContext'
+import Logo from '../../components/ui/Logo'
 import styles from './InvitarPage.module.css'
 
 export default function InvitarPage() {
@@ -84,7 +85,7 @@ export default function InvitarPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>huella</div>
+        <Logo className={styles.logo} height={52} />
 
         {status === 'loading' && (
           <div className={styles.center}>

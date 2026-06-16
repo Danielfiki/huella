@@ -28,10 +28,10 @@
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: 700;
+  /* Logo de marca (SVG) en terracota; el SVG hereda el color por currentColor.
+     Página legal: va discreto y alineado a la izquierda como el resto del header. */
+  display: block;
   color: var(--color-primary);
-  letter-spacing: -0.5px;
   margin-bottom: 12px;
 }
 
