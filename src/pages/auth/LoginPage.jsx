@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import Logo from '../../components/ui/Logo'
 import styles from './AuthPage.module.css'
 
 function GoogleIcon() {
@@ -58,7 +59,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>huella</div>
+        <Logo className={styles.logoMark} height={56} />
         <h1 className={styles.title}>Bienvenido de vuelta</h1>
         <p className={styles.subtitle}>Ingresa a tu cuenta para continuar</p>
 

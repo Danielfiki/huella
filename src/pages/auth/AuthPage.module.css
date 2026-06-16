@@ -24,6 +24,16 @@
   margin-bottom: 24px;
 }
 
+/* Logo de marca (SVG) para las pantallas públicas de fondo claro. Va en el
+   terracota primario (--color-primary), que el SVG hereda vía currentColor.
+   Centrado y protagonista. Es una clase aparte de `.logo` (texto) para no
+   afectar las pantallas que todavía usan el wordmark de texto. */
+.logoMark {
+  display: block;
+  margin: 0 auto 24px;
+  color: var(--color-primary);
+}
+
 .title {
   font-size: 22px;
   font-weight: 700;
