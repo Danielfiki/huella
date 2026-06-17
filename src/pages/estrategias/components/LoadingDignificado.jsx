@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { fraseCarga } from '../../../lib/frases';
+import Escarabajo from '../../../components/ui/Escarabajo';
 import styles from './LoadingDignificado.module.css';
 
 const INTERVALO_MS = 5500;
@@ -65,7 +66,7 @@ export default function LoadingDignificado({ titulo, sub, pasos, pasoActual, hab
 
   return (
     <div className={styles.card}>
-      <div className={styles.pulse}>h</div>
+      <div className={styles.pulse}><Escarabajo className={styles.pulseIcon} /></div>
       <div className={styles.ttl}>{titulo}</div>
       <p className={styles.sub}>{sub}</p>
       {frase && (

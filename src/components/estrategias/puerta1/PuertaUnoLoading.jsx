@@ -7,6 +7,7 @@
 // Path: src/components/estrategias/puerta1/PuertaUnoLoading.jsx
 
 import React from 'react';
+import Escarabajo from '../../ui/Escarabajo';
 import styles from './PuertaUnoLoading.module.css';
 
 /**
@@ -17,7 +18,7 @@ export default function PuertaUnoLoading({ onIrPuerta2 }) {
   return (
     <article className={styles.card} aria-busy="true" aria-live="polite">
       <div className={styles.topRow}>
-        <span className={styles.pulse} aria-hidden="true">h</span>
+        <span className={styles.pulse} aria-hidden="true"><Escarabajo className={styles.pulseIcon} /></span>
         <div className={styles.stack}>
           <h3 className={styles.ttl}>Huella está mirando tus últimos momentos.</h3>
           <p className={styles.sub}>Buscando un hilo común. Toma unos segundos.</p>

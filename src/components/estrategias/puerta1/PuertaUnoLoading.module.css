@@ -25,14 +25,19 @@
   border-radius: 12px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
   flex-shrink: 0;
   animation: puertaUnoLoadingPulse 1.4s ease-in-out infinite;
+}
+
+/* El escarabajo hereda el crema (color #fff) vía currentColor y late con .pulse.
+   78% del cuadro para que las patas no toquen el borde redondeado. */
+.pulseIcon {
+  width: 78%;
+  height: 78%;
 }
 
 @keyframes puertaUnoLoadingPulse {
