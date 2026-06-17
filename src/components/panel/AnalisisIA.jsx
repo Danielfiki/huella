@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Lock } from 'lucide-react'
 import CitaLoader from '../ui/CitaLoader'
+import Escarabajo from '../ui/Escarabajo'
 import ProgressBar from '../ui/ProgressBar'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import styles from './analisisIa.module.css'
@@ -84,7 +85,7 @@ export function AnalisisIA({ loading, texto, bloqueado, onAnalizar, onUpgrade, o
     return (
       <article className={styles.card}>
         <header className={styles.head}>
-          <div className={styles.logo}>h</div>
+          <div className={styles.logo}><Escarabajo className={styles.logoIcon} /></div>
           <div className={styles.name}>
             Huella
             <small>Análisis semanal</small>
@@ -107,7 +108,7 @@ export function AnalisisIA({ loading, texto, bloqueado, onAnalizar, onUpgrade, o
     return (
       <article className={styles.card}>
         <header className={styles.head}>
-          <div className={styles.logo}>h</div>
+          <div className={styles.logo}><Escarabajo className={styles.logoIcon} /></div>
           <div className={styles.name}>
             Huella
             <small>Análisis semanal</small>
@@ -134,7 +135,7 @@ export function AnalisisIA({ loading, texto, bloqueado, onAnalizar, onUpgrade, o
   return (
     <article className={styles.card}>
       <header className={styles.head}>
-        <div className={styles.logo}>h</div>
+        <div className={styles.logo}><Escarabajo className={styles.logoIcon} /></div>
         <div className={styles.name}>
           Huella
           <small>Análisis semanal</small>

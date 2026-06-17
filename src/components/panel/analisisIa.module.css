@@ -13,14 +13,19 @@
   height: 28px;
   border-radius: 9px;
   background: var(--color-accent-green);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-white);
-  font-size: 17px;
   line-height: 1;
   flex-shrink: 0;
+}
+
+/* El escarabajo hereda el crema (--color-white) de .logo vía currentColor.
+   ~60% del cuadrado para que respire dentro del fondo verde. */
+.logoIcon {
+  width: 60%;
+  height: 60%;
 }
 .name { font-size: 12px; font-weight: 700; color: var(--color-text); }
 .name small {
