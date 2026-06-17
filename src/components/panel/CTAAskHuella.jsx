@@ -1,5 +1,6 @@
 import React from 'react'
 import { ChevronRight, Loader } from 'lucide-react'
+import Escarabajo from '../ui/Escarabajo'
 import styles from './ctaAskHuella.module.css'
 
 export function CTAAskHuella({
@@ -13,7 +14,7 @@ export function CTAAskHuella({
       onClick={loading ? undefined : onClick}
       disabled={loading}
     >
-      <span className={styles.brand}>h</span>
+      <span className={styles.brand}><Escarabajo className={styles.brandIcon} /></span>
       <span className={styles.copy}>
         <span className={styles.eyebrow}>Pregúntale a Huella</span>
         <span className={styles.title}>

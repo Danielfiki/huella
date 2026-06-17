@@ -15,18 +15,23 @@
 .cta:active { border-color: var(--color-primary); }
 .cta.loading { opacity: 0.7; cursor: default; }
 .brand {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: var(--color-accent-green);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-white);
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 22px;
   line-height: 1;
   flex-shrink: 0;
+}
+
+/* El escarabajo hereda el crema (--color-white) de .brand vía currentColor.
+   ~90% del cuadrado, mismo patrón que la tarjeta de análisis. */
+.brandIcon {
+  width: 90%;
+  height: 90%;
 }
 .copy { flex: 1; min-width: 0; }
 .eyebrow {
