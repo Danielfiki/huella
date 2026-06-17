@@ -8,6 +8,7 @@
 // El switch entre estados vive en EstrategiasPage.jsx (ver patch).
 
 import React, { useMemo } from 'react';
+import Escarabajo from '../../ui/Escarabajo';
 import styles from './PuertaUnoHallazgo.module.css';
 
 /**
@@ -63,7 +64,7 @@ export default function PuertaUnoHallazgo({
     <article className={styles.card}>
       <div className={styles.head}>
         <div className={styles.topRow}>
-          <span className={styles.dot} aria-hidden="true">h</span>
+          <span className={styles.dot} aria-hidden="true"><Escarabajo className={styles.dotIcon} /></span>
           <span className={styles.lab}>
             <b>Huella ve un patrón</b>
           </span>

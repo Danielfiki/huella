@@ -1,5 +1,6 @@
 import React from 'react'
 import { AUTORES, MAPA_DIMENSIONES } from '../../services/anthropic'
+import Escarabajo from '../ui/Escarabajo'
 import styles from './AccionRapida.module.css'
 
 // AccionRapida — visible siempre en la EpisodioCard (no detrás de botón).
@@ -18,7 +19,7 @@ export default function AccionRapida({ data, regenerando = false }) {
   return (
     <div className={styles.panel}>
       <div className={styles.head}>
-        <span className={styles.h} aria-hidden="true">h</span>
+        <span className={styles.h} aria-hidden="true"><Escarabajo className={styles.hIcon} /></span>
         <span className={styles.lbl}>Acción rápida</span>
         {regenerando && (
           <span className={styles.regenerando} aria-live="polite">

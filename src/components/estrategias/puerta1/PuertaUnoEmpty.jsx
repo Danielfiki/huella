@@ -5,6 +5,7 @@
 // Path: src/components/estrategias/puerta1/PuertaUnoEmpty.jsx
 
 import React from 'react';
+import Escarabajo from '../../ui/Escarabajo';
 import styles from './PuertaUnoEmpty.module.css';
 
 /**
@@ -22,7 +23,7 @@ export default function PuertaUnoEmpty({ totalEpisodios = 0, onIrPuerta2 }) {
     <article className={styles.card}>
       <div className={styles.head}>
         <div className={styles.topRow}>
-          <span className={styles.dot} aria-hidden="true">h</span>
+          <span className={styles.dot} aria-hidden="true"><Escarabajo className={styles.dotIcon} /></span>
           <span className={styles.lab}>Huella · observando</span>
         </div>
         <h3 className={styles.ttl}>

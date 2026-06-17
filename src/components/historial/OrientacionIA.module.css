@@ -19,13 +19,14 @@
   border-radius: 7px;
   background: var(--color-accent-green);
   color: #fff;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 13px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
+
+/* El escarabajo hereda el color de la letra vía currentColor. 90% (cuadrado). */
+.hIcon { width: 90%; height: 90%; }
 .lbl {
   font-size: 10px;
   font-weight: 700;

@@ -8,6 +8,7 @@ import AccionRapida from './AccionRapida'
 import { pillClassFor, emoTileClass } from './helpers'
 import { canModify } from '../../utils/authorDisplay'
 import { bucketTiempo } from '../../services/anthropic'
+import Escarabajo from '../ui/Escarabajo'
 import colaRegeneracion from '../../utils/colaRegeneracionAccionRapida'
 import styles from './EpisodioCard.module.css'
 
@@ -154,7 +155,7 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
           ))}
           {hasIA && !iaOpen && (
             <button className={styles.iaInline} onClick={() => setIaOpen(true)} aria-expanded={false}>
-              <span className={styles.iaH} aria-hidden="true">h</span>
+              <span className={styles.iaH} aria-hidden="true"><Escarabajo className={styles.iaHIcon} /></span>
               Ver orientación
             </button>
           )}

@@ -39,14 +39,15 @@
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-accent-mocha), var(--color-primary));
   color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 0 0 4px rgba(229, 110, 38, 0.10);
 }
+
+/* El escarabajo hereda el color de la letra vía currentColor. 78% (círculo). */
+.dotIcon { width: 78%; height: 78%; }
 
 .lab {
   flex: 1;

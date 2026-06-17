@@ -1,4 +1,5 @@
 import React from 'react'
+import Escarabajo from '../ui/Escarabajo'
 import styles from './OrientacionIA.module.css'
 
 export default function OrientacionIA({ orientacion, onClose }) {
@@ -6,7 +7,7 @@ export default function OrientacionIA({ orientacion, onClose }) {
   return (
     <div className={styles.panel}>
       <div className={styles.head}>
-        <span className={styles.h} aria-hidden="true">h</span>
+        <span className={styles.h} aria-hidden="true"><Escarabajo className={styles.hIcon} /></span>
         <span className={styles.lbl}>Orientación de Huella</span>
         {onClose && (
           <button className={styles.close} onClick={onClose} aria-label="Cerrar orientación">
