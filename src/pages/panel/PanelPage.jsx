@@ -7,7 +7,6 @@ import { interpretarPatrones, detectarPatronesEstructurado } from '../../service
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
-import BienvenidaModal from '../../components/ui/BienvenidaModal'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
@@ -381,7 +380,6 @@ export default function PanelPage() {
 
   return (
     <div className={panelStyles.panel}>
-      <BienvenidaModal />
       <GuiaPrimerosPasos totalEpisodios={episodios.length} />
 
       <Hero
