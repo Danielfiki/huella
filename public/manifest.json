@@ -4,8 +4,8 @@
   "description": "Conoce y potencia a tu hijo",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FDFAF5",
-  "theme_color": "#8FA840",
+  "background_color": "#FAF3EC",
+  "theme_color": "#9B7B6A",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
