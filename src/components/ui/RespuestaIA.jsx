@@ -1,6 +1,6 @@
 import React from 'react'
 import styles from './RespuestaIA.module.css'
-import { Sparkles } from 'lucide-react'
+import Escarabajo from './Escarabajo'
 import CitaLoader from './CitaLoader'
 import ProgressBar from './ProgressBar'
 import useFakeProgress from '../../hooks/useFakeProgress'
@@ -23,7 +23,7 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <Sparkles size={16} className={styles.sparklesSpin} />
+          <Escarabajo className={styles.escarabajoLatido} />
           <span>{mensajeCarga || 'Analizando lo que pasó con tu hijo...'}</span>
         </div>
         <ProgressBar
@@ -67,7 +67,7 @@ export default function RespuestaIA({ texto, loading = false, mensajeCarga, comp
   return (
     <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
       <div className={styles.header}>
-        <Sparkles size={16} />
+        <Escarabajo className={styles.escarabajoMarca} />
         <span>Orientación de Huella</span>
       </div>
       <div className={styles.content}>{formatearTexto(texto)}</div>

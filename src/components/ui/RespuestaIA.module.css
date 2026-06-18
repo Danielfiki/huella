@@ -94,8 +94,22 @@
 .skeletonLine:nth-child(4) { animation-delay: 0.3s; }
 .skeletonLine:nth-child(5) { animation-delay: 0.4s; }
 
-.sparklesSpin {
-  animation: pulse 1.6s ease-in-out infinite;
+/* El escarabajo del loader "Analizando…" — mismo tamaño que tenía el Sparkles
+   (16px) y late (no gira), coherente con los loaders de "Creando tu plan".
+   Hereda el terracota (--color-primary del .header) vía currentColor. */
+.escarabajoLatido {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  animation: latido 1.6s ease-in-out infinite;
+}
+
+/* El escarabajo del header del resultado "Orientación de Huella" — estático
+   (sin latido), 16px, hereda el terracota (--color-primary) vía currentColor. */
+.escarabajoMarca {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 @keyframes shimmer {
@@ -103,7 +117,7 @@
   to { background-position: -200% 0; }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+@keyframes latido {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
 }
