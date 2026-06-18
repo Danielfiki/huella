@@ -16,7 +16,6 @@ const PASOS = [
   },
   {
     texto: 'Huella te muestra los patrones',
-    escarabajo: true, // círculo durazno + escarabajo, nunca lleva check
     completadoSi: () => false,
   },
 ]
@@ -27,11 +26,12 @@ export default function GuiaPrimerosPasos({ totalEpisodios }) {
   if (totalEpisodios >= 3) return null
 
   const completados = PASOS.filter((p) => p.completadoSi(totalEpisodios)).length
+  // Paso actual = el primer paso aún no completado. El escarabajo "vive" acá y
+  // se va moviendo al siguiente a medida que el usuario avanza.
+  const pasoActual = PASOS.findIndex((p) => !p.completadoSi(totalEpisodios))
 
   return (
     <div className={styles.card}>
-      <Escarabajo className={styles.escarabajoEsquina} />
-
       <h3 className={styles.titulo}>Tus primeros pasos</h3>
       <p className={styles.subtitulo}>{completados} de 3 completado</p>
 
@@ -47,18 +47,21 @@ export default function GuiaPrimerosPasos({ totalEpisodios }) {
       <ul className={styles.pasos}>
         {PASOS.map((paso, i) => {
           const done = paso.completadoSi(totalEpisodios)
+          const actual = i === pasoActual
           return (
             <li key={i} className={styles.paso}>
-              {paso.escarabajo ? (
+              {done ? (
+                <span className={styles.circuloDone} aria-hidden="true">✓</span>
+              ) : actual ? (
                 <span className={styles.circuloEscarabajo}>
                   <Escarabajo className={styles.circuloEscarabajoIcon} />
                 </span>
-              ) : done ? (
-                <span className={styles.circuloDone} aria-hidden="true">✓</span>
               ) : (
                 <span className={styles.circuloPend} aria-hidden="true" />
               )}
-              <span className={`${styles.pasoTexto} ${done ? styles.pasoTextoDone : ''}`}>
+              <span
+                className={`${styles.pasoTexto} ${done ? styles.pasoTextoDone : ''} ${actual ? styles.pasoTextoActual : ''}`}
+              >
                 {done ? paso.textoDone : paso.texto}
               </span>
             </li>
