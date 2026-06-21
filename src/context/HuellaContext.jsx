@@ -377,7 +377,7 @@ export function HuellaProvider({ children }) {
       // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
       const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('perfiles').select('nombre, plan').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre, plan, plan_beta_hasta').eq('user_id', userId).maybeSingle(),
       ])
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
@@ -433,6 +433,7 @@ export function HuellaProvider({ children }) {
           rutinas,
           padreNombre: perfilRes.data?.nombre ?? '',
           plan:        perfilRes.data?.plan   ?? null,
+          plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
         },
       })
     } catch (e) {
@@ -875,7 +876,10 @@ export function HuellaProvider({ children }) {
 
   // ── Perfil padre/madre ────────────────────────────────────────────────────
 
-  const isPro   = () => state.plan === 'pro' || state.plan === 'admin'
+  const isPro   = () =>
+    state.plan === 'pro' ||
+    state.plan === 'admin' ||
+    (!!state.plan_beta_hasta && new Date(state.plan_beta_hasta) > new Date())
   const isAdmin = () => state.plan === 'admin'
 
   // Lookup userId → { nombre } para mostrar quién registró cada entry.
