@@ -76,13 +76,15 @@
 
 - Formularios + términos + canal de feedback. Después: métricas/observabilidad.
 
-### Infraestructura de la beta — textos LISTOS, montaje pendiente
+### Infraestructura de la beta — formulario PUBLICADO + invitación lista
 
-- Las tres piezas de texto quedaron definidas (viven en el chat de estrategia, falta montarlas):
-  - **Formulario de inscripción** (7 preguntas: nombre; correo que debe coincidir con la cuenta; edad del hijo; más de un hijo; motivación; compromiso de ~3 semanas; consentimiento de términos).
-  - **Términos de la beta** (texto corto y humano; promete que no se vende ni se cobra sin avisar; linkea la privacidad).
-  - **Encuesta de salida** (mide disposición a pagar mostrando el precio real, más experiencia y calidad de la guía IA).
-- **Herramienta del formulario:** se arma en **Tally** (gratis, brandeable, exporta a Google Sheets), NO Google Forms, por la primera impresión premium. Pendiente montarlo.
+- **Formulario de inscripción: CONSTRUIDO completo en Tally (7 preguntas) y PUBLICADO.**
+  - **Link (puerta de entrada de la beta): https://tally.so/r/KYO4EM** ← guardar este link.
+  - 7 preguntas: nombre; correo que debe coincidir con la cuenta; edad del hijo; más de un hijo; motivación; compromiso de ~3 semanas; consentimiento de términos.
+  - El link a los **términos** quedó como **bloque de texto visible** apuntando a `huella.lat/terminos#privacidad`.
+- **Mensaje de invitación (WhatsApp, 1 a 1): definido en DOS versiones** — una para **cercanos** y otra para **conocidos/desconocidos** —, cada una con el link del formulario adentro.
+- **Términos de la beta** (texto corto y humano; promete que no se vende ni se cobra sin avisar; linkea la privacidad) y **encuesta de salida** (mide disposición a pagar con el precio real + experiencia + calidad de la guía IA): textos definidos, montaje pendiente.
+- **Herramienta del formulario:** **Tally** (gratis, brandeable, exporta a Google Sheets), NO Google Forms, por la primera impresión premium.
 - **Canal de feedback: PASIVO** (formulario abierto + correo oficial), NO grupo de WhatsApp, para no inflar artificialmente la retención (métrica principal). Invitar 1 a 1 está bien; arrear en grupo no.
 - El **origen de cada tester** (cercano vs. desconocido) se etiqueta a mano en la hoja de respuestas, no se pregunta.
 
@@ -92,18 +94,20 @@
 - Contenido consistente con lo que promete la beta: no vende datos, no publicidad, solo Supabase/Anthropic/Vercel como infraestructura, con sección dedicada a datos de menores (Ley 19.628).
 - El link de privacidad en los términos de beta apunta a `huella.lat/terminos#privacidad`.
 
-### Correo oficial (buzón) — BUZÓN CREADO y DOMINIO VERIFICADO, falta propagación + QA
+### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
 
-- **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días), como **upgrade de la cuenta Google personal existente** (la cuenta personal queda solo como titular/admin, no se expone).
-- **Buzón `contacto@huella.lat` CREADO** y el dominio `huella.lat` **VERIFICADO**.
-- **DNS automático:** la conexión de los registros MX se hizo **automática desde Google vía la integración Entri Connect con Vercel**, sin tocar a mano los registros de Resend en `send.huella.lat`.
-- **Estado: "Gmail is now ready".** Falta la **propagación (hasta 24h)** y el **QA de enviar/recibir**, pendiente para la próxima sesión.
-- **Acceso al buzón:** `mail.google.com` iniciando sesión como `contacto@huella.lat` (misma password de Google), o cambiando de cuenta dentro del Gmail personal.
+- **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días).
+- **Buzón `contacto@huella.lat` OPERATIVO:** recibe y envía correctamente (QA pasado). DNS de los MX automático vía la integración **Entri Connect** Google↔Vercel, sin tocar los registros de Resend en `send.huella.lat`.
+- **IMPORTANTE — bandeja compartida:** se creó vía **"Upgrade this account"**, lo que **ligó el dominio a la cuenta Google PERSONAL** (`danielundurraga.r@gmail.com`). Por eso `contacto@huella.lat` y la cuenta personal **COMPARTEN bandeja**, no quedaron separadas.
+- **PENDIENTE (otra sesión):** separarlas — sea con una **cuenta nueva independiente**, o con un **perfil de Chrome aparte solo para Huella**.
 
-### Pendientes que se desbloquean tras el QA del correo
+### Pendientes para retomar y reclutar
 
-- Llenar el placeholder `[correo oficial]` en los **términos de beta** con `contacto@huella.lat`.
-- Cambiar el contacto del **responsable en la Política de Privacidad** y el **registrante del dominio** (hoy ambos usan el gmail personal `danielundurraga.r@gmail.com`) a `contacto@huella.lat`.
+1. **Armar la lista de 10-15 testers** y escribirles 1 a 1 (con el mensaje de invitación ya definido + el link del formulario).
+2. **Decidir la separación de la cuenta de correo** (bandeja compartida con el gmail personal): cuenta nueva independiente o perfil de Chrome aparte.
+3. **Llenar los placeholders en los textos:** `[correo oficial]` = `contacto@huella.lat` y `[tu precio Pro]`.
+4. **Cambiar el gmail personal por `contacto@huella.lat`** en la Política de Privacidad (y el registrante del dominio).
+5. **Activar el pase Pro** a cada inscrito (`plan_beta_hasta` futuro por `user_id`).
 - Opcional: alinear el remitente transaccional de la app (hoy `hola@huella.lat` vía Resend) a `contacto@` para coherencia.
 
 ### Pendientes que siguen abiertos (sin avanzar esta sesión)
