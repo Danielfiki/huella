@@ -131,6 +131,19 @@
   - **Fase 4: "El loop de la pareja"** — aprovechar el registro compartido para que la pareja sea motivo de retorno suave.
 - **PRÓXIMO PASO:** aterrizar la **Fase 1** en algo construible.
 
+#### FASE 1 ("El retrato que madura") — diseño APROBADO (handoff de Claude Design revisado)
+
+Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Decisiones cerradas:
+
+- **Ubicación:** el retrato vive en la **pantalla del niño (`/hijo`)**, renovándola (hoy muestra stats + racha; se reemplaza por el retrato). Se entra **tocando el avatar del header**. **Card de anticipo en el Home** debajo del CTA Registrar, antes del resumen semanal, que lleva a `/hijo` (es el **gatillo de retorno**). **NO** se agrega 6º ítem al bottom nav. **NO** se pisa Estrategias. Se **ELIMINA la racha de `/hijo`** (viola el marco anti-vergüenza).
+- **Estructura del retrato:** cabecera mocha (foto que se revela + rastro del escarabajo + nombre + píldora de nitidez sutil) + **card de propuesta de rasgo** + **4 familias en orden fijo** (mueve, fortalezas, cuesta, calma). En la card de propuesta, **reemplazar la "h" del avatar por el escarabajo** (Code ya tiene el SVG inline).
+- **Motor de rasgos (lógica):** los rasgos maduran en **SILENCIO**; el papá solo ve un rasgo con **evidencia sólida** (opción A, protege la credibilidad). **Confirma el PAPÁ** (Huella propone, no afirma). Si rechaza ("no lo veo en él"): se deja de lado **sin penalizar**, no reaparece salvo evidencia mucho más fuerte. La **nitidez solo crece o se mantiene, nunca reversible**; llega a 100% de lo entendido hoy, pero el mapa se expande porque el niño crece.
+- **Specs clave:** 5 niveles de nitidez vía **filtro CSS** (blur/grayscale/saturate/contrast), transición `filter 1.2s ease` al confirmar; **colores de familia** (mueve naranja, fortalezas verde, cuesta lavanda **jamás rojo**, calma mocha); **rastro del escarabajo** en arco ~314° con el bicho posado en la última marca, solo avanza; tipografía **Fraunces** títulos + **Plus Jakarta** cuerpo. Detalle en el documento.
+- **Mejoras aprobadas:** micro-animación de revelado ~1.2s al confirmar un rasgo (celebra sin gamificar); **tocar una ficha abre los momentos del Historial que la originaron** (refuerza credibilidad, puede ir fast-follow).
+- **Cortes de nivel de nitidez y rasgos rechazados: resueltos** (los cortes se calibran con datos de la beta; el rechazo no reaparece salvo evidencia fuerte).
+
+**PRÓXIMO PASO FASE 1:** diseñar el **MOTOR DE RASGOS** (detección, propuesta y persistencia de rasgos desde los momentos). Tabla nueva **`rasgos`** ligada a `hijo_id` con patrón RLS **`family_data`** (`get_family_user_ids` ya existe). **Materia prima:** `descripcion_libre`, `emocion`, `gatillantes`, `tipo`, `intensidad`, `accion_rapida_dimension` de cada episodio. **Recordar:** `schema.sql` está desfasado, la **base real es la fuente de verdad**; las migraciones se aplican a mano en el SQL Editor y se documentan en `supabase/migrations`.
+
 ### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
 
 - **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días).
@@ -148,7 +161,7 @@
 
 ### Pendientes que siguen abiertos (sin avanzar esta sesión)
 
-- **`NotifBanner`** ("Activa recordatorios…"): falta **confirmar si las notificaciones push son reales o solo UI**.
+- **`NotifBanner`** ("Activa recordatorios…"): falta **confirmar si las notificaciones push son reales o solo UI**. **BLOQUEA la Fase 3 del gancho** ("La notificación noble").
 - **Consent screen de Google OAuth:** muestra el subdominio crudo de Supabase. Decisión pendiente: **dominio propio en Supabase (~US$10/mes)** vs. **esperar la verificación lenta de Google**.
 
 ---
