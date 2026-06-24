@@ -118,6 +118,19 @@
 - **Intuición clave:** NO es una recompensa puesta encima, es **ESTRUCTURAL del producto** — el flujo, qué pasa **después de registrar**, qué motiva a volver.
 - **Cómo abordarlo:** como **rediseño de producto**, no como feature suelta. **Conecta directo con la métrica reina (retención).**
 
+### Gancho de retención generativo (ROADMAP definido, por construir)
+
+- **Documento estratégico creado** (vive en el Drive de Daniel): `huella-gancho-retencion.md`.
+- **Principio:** gancho **GENERATIVO** (la persona vuelve porque gana algo real sobre su hijo), no extractivo tipo TikTok/IG. **Combustible:** la unicidad que se profundiza con cada registro.
+- **Investigación base:** Calm (recordatorio diario = 3x retención; registrar + feedback más potente que registrar solo); Duolingo (rachas crean hábito pero pueden generar uso hueco; el valor real es lo que las salva); efecto Zeigarnik (bucles abiertos hacen volver, pero hay que cerrarlos con valor real); apps de crianza/uGrow (insights motivan a seguir registrando, 77%; ver patrones en el tiempo da sensación de control).
+- **MARCO ANTI-VERGÜENZA (línea roja, sobre todas las fases):** nada de rachas que se rompen, ni "llevas X días sin registrar", ni puntajes que juzguen. El gancho es por **deseo de saber más del hijo**, nunca por culpa ni miedo a perder. Hallazgo crítico: en crianza, los datos pueden volverse un reflejo del valor del padre y generar juicio/aislamiento; Huella debe evitarlo siempre.
+- **Orden de ejecución** (vamos por fases, ninguna se descarta):
+  - **Fase 1 (base): "El retrato que madura"** — sección donde el papá ve crecer el retrato cualitativo de la huella única de su hijo con cada registro (rasgos confirmados, patrones emergentes), no un porcentaje frío.
+  - **Fase 2: "La revelación incompleta"** — que la orientación abra bucles honestos ("noto algo en las tardes de Lucas, necesito 2 momentos más") en vez de cerrar todo de golpe.
+  - **Fase 3: "La notificación noble"** — gatillo de retorno que siempre lleva valor ("vi algo sobre María"), nunca culpa. Depende de resolver si las push del `NotifBanner` son reales o solo UI.
+  - **Fase 4: "El loop de la pareja"** — aprovechar el registro compartido para que la pareja sea motivo de retorno suave.
+- **PRÓXIMO PASO:** aterrizar la **Fase 1** en algo construible.
+
 ### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
 
 - **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días).
