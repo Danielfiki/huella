@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import Logo from '../../components/ui/Logo'
 import styles from './TerminosPage.module.css'
 
-const CONTACTO = 'danielundurraga.r@gmail.com'
+const CONTACTO = 'contacto@huella.lat'
 const FECHA = '19 de abril de 2026'
 
 function Section({ id, title, children }) {
