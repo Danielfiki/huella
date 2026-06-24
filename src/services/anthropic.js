@@ -1544,6 +1544,96 @@ ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.le
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// Motor de rasgos — "el retrato que madura" (pieza 1: detección pura).
+// Clona la mecánica de detectarPatronesEstructurado pero adaptada a
+// rasgos en 4 familias. Función pura: NO escribe en BD ni toca el flujo
+// de registro (eso son las piezas 2 y 3). Devuelve { rasgos: [...] }.
+// ════════════════════════════════════════════════════════════════════
+
+const PROMPT_DETECTAR_RASGOS = `Eres Huella, una compañera de crianza cálida basada en evidencia del desarrollo infantil. NO eres clínica y NO diagnosticas. Tu rol es PROPONER, con humildad, rasgos que podrían describir a este niño a partir de lo que su padre o madre registró. El padre/madre es el verdadero experto en su hijo: tú ofreces una mirada extra, nunca una sentencia.
+
+Tu tarea: detectar rasgos del niño y clasificarlos en EXACTAMENTE estas 4 familias (usa el id tal cual en el campo "familia"):
+- mueve: lo que lo enciende, le interesa o disfruta.
+- fortalezas: capacidades y recursos propios del niño.
+- cuesta: lo que le resulta difícil, SIEMPRE enmarcado con cariño, jamás como falla ni diagnóstico.
+- calma: qué lo regula, cómo se tranquiliza.
+
+Reglas duras:
+1. Solo propón un rasgo si hay AL MENOS 3 episodios coherentes que lo respalden. Si no llega a 3, no lo incluyas.
+2. "titulo": una frase corta, observacional y cálida, sin diagnóstico ni etiquetas (ejemplo: "Busca consolar cuando alguien está triste"). Habla del niño con respeto; nunca lo reduzcas a un problema.
+3. "evidencia": lista con los ids de los episodios que respaldan el rasgo (mínimo 3 ids reales tomados de los datos entregados).
+4. "confianza": número entre 0 y 1 según la fuerza de la evidencia (3 episodios coherentes ~0.7; 5 o más concentrados ~0.85).
+5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
+6. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
+
+Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este shape exacto:
+{
+  "rasgos": [
+    {
+      "familia": "mueve|fortalezas|cuesta|calma",
+      "titulo": "<frase corta observacional>",
+      "evidencia": ["<id>", "<id>", "<id>"],
+      "confianza": 0.0
+    }
+  ]
+}`
+
+// Decisión de diseño (confirmada con Daniel): un mismo episodio PUEDE
+// respaldar varios rasgos — relación muchos-a-muchos, se permite solape de
+// evidencia entre rasgos. Lo resolverá la pieza 3 (guardado en la tabla rasgos).
+export async function detectarRasgos({ hijo, episodios }) {
+  const FAMILIAS_VALIDAS = ['mueve', 'fortalezas', 'cuesta', 'calma']
+
+  // Los episodios llegan en shape de app (camelCase, vía dbEpisodioToApp):
+  // descripcionLibre, accionRapida?.dimension. Se vuelcan a claves limpias
+  // para el prompt. descripcion_libre se trunca a 300 chars para no inflar
+  // el prompt ni el costo con relatos largos.
+  const compactados = (episodios || []).slice(0, 20).map((e) => ({
+    id: e.id,
+    fecha: e.fecha,
+    tipo: e.tipo || '',
+    intensidad: e.intensidad,
+    gatillantes: e.gatillantes || [],
+    emocion: e.emocion || null,
+    contexto: e.contexto || null,
+    descripcion_libre: e.descripcionLibre ? e.descripcionLibre.slice(0, 300) : null,
+    dimension: e.accionRapida?.dimension || null,
+  }))
+
+  const prompt = `${PROMPT_DETECTAR_RASGOS}
+
+Datos a analizar:
+${JSON.stringify({
+  contexto: {
+    hijo_nombre: hijo?.nombre || 'sin nombre',
+    hijo_edad: hijo?.edad ?? null,
+    total_episodios: (episodios || []).length,
+  },
+  episodios: compactados,
+}, null, 2)}`
+
+  const raw = await llamarAPI(prompt, 2000)
+
+  const match = raw.match(/\{[\s\S]*\}/)
+  if (!match) return { rasgos: [] }
+  try {
+    const parsed = JSON.parse(match[0])
+    if (!parsed || !Array.isArray(parsed.rasgos)) return { rasgos: [] }
+    // Filtro de validez: familia permitida, >=3 ids de evidencia, y confianza
+    // dentro de 0-1 si viene. Protege los CHECK de la tabla rasgos downstream.
+    const validos = parsed.rasgos.filter((r) => {
+      if (!r || !FAMILIAS_VALIDAS.includes(r.familia)) return false
+      if (!Array.isArray(r.evidencia) || r.evidencia.length < 3) return false
+      if (r.confianza != null && (typeof r.confianza !== 'number' || r.confianza < 0 || r.confianza > 1)) return false
+      return true
+    })
+    return { rasgos: validos }
+  } catch {
+    return { rasgos: [] }
+  }
+}
+
 // ── Onboarding · primer encuentro ─────────────────────────────────────────
 // Se usa en el slide 3 del Onboarding Susurro, donde el padre/madre escribe
 // algo que vivió y la IA le devuelve una respuesta cálida y validante.
