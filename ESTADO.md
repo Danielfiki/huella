@@ -144,6 +144,15 @@ Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Dec
 
 **PRÓXIMO PASO FASE 1:** diseñar el **MOTOR DE RASGOS** (detección, propuesta y persistencia de rasgos desde los momentos). Tabla nueva **`rasgos`** ligada a `hijo_id` con patrón RLS **`family_data`** (`get_family_user_ids` ya existe). **Materia prima:** `descripcion_libre`, `emocion`, `gatillantes`, `tipo`, `intensidad`, `accion_rapida_dimension` de cada episodio. **Recordar:** `schema.sql` está desfasado, la **base real es la fuente de verdad**; las migraciones se aplican a mano en el SQL Editor y se documentan en `supabase/migrations`.
 
+#### MOTOR DE RASGOS (en construcción)
+
+- **Diseño cerrado.** **Detección:** corre **fire-and-forget después de `addEpisodio`** (como la Acción Rápida, **no bloquea el guardado**), **cada 5 momentos nuevos** (control del rate limit de **20 llamadas IA/día/usuario**). Se **clona `detectarPatronesEstructurado`** como plantilla (compactar episodios → prompt JSON → parse defensivo → `confianza` + `episodios_ids`), agregando **`descripcion_libre`, `emocion` y `accion_rapida_dimension`** a los datos (materia prima cualitativa). **Salida rediseñada:** rasgos en **4 familias** (mueve/fortalezas/cuesta/calma) en vez de habilidades.
+- **Umbral:** mínimo **3 momentos coherentes** para proponer un rasgo (se calibra con datos de la beta).
+- **Propuesta al papá: de a UNO a la vez** (no varios de golpe), para no abrumar y dar razón de retorno.
+- **Ciclo de vida del rasgo:** `candidato` (IA detectó, evidencia sólida) → `confirmado` (papá dijo sí, entra al retrato y suma nitidez) → `descartado` (papá dijo "no lo veo", no reaparece salvo evidencia mucho más fuerte).
+- **PERSISTENCIA LISTA:** tabla **`public.rasgos` creada en producción** (migración `006_rasgos.sql`). Columnas: `id`, `user_id`, `hijo_id` (NOT NULL), `familia` (check mueve/fortalezas/cuesta/calma), `titulo`, `evidencia` (jsonb), `evidencia_count` (int), `estado` (check candidato/confirmado/descartado, default `candidato`), `confianza` (numeric 0-1 nullable), `created_at`, `updated_at`. **RLS `family_data`** con `get_family_user_ids`. `updated_at` **sin trigger** (se setea desde el front, como `estrategia_ciclos`). Índice `idx_rasgos_hijo_id`. `schema.sql` sigue desfasado; la migración 006 documenta el cambio.
+- **PRÓXIMO PASO:** construir la **detección** (clonar/adaptar `detectarPatronesEstructurado` a rasgos por familia) y el **guardado** en la tabla `rasgos`.
+
 ### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
 
 - **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días).
