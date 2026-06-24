@@ -76,13 +76,18 @@
 
 - Formularios + términos + canal de feedback. Después: métricas/observabilidad.
 
-### Infraestructura de la beta — formulario PUBLICADO + invitación lista
+### Infraestructura de la beta — formulario PUBLICADO; invitación PENDIENTE de afinar
 
 - **Formulario de inscripción: CONSTRUIDO completo en Tally (7 preguntas) y PUBLICADO.**
   - **Link (puerta de entrada de la beta): https://tally.so/r/KYO4EM** ← guardar este link.
   - 7 preguntas: nombre; correo que debe coincidir con la cuenta; edad del hijo; más de un hijo; motivación; compromiso de ~3 semanas; consentimiento de términos.
   - El link a los **términos** quedó como **bloque de texto visible** apuntando a `huella.lat/terminos#privacidad`.
-- **Mensaje de invitación (WhatsApp, 1 a 1): definido en DOS versiones** — una para **cercanos** y otra para **conocidos/desconocidos** —, cada una con el link del formulario adentro.
+- **Mensaje de invitación (WhatsApp, 1 a 1): PENDIENTE de afinar, NO cerrado.** Se iteraron varias versiones y el tono/foco aún no convence a Daniel. Feedback de dos amigos: la versión inicial era ambigua, no se entendía qué hace la app; se intentó corregir con un ejemplo, falta afinar el tono. **Dirección correcta a respetar cuando se retome:**
+  1. Abrir con **"Soy Daniel, fundador de Huella"** (con seguridad, no "estoy construyendo").
+  2. **NO** usar "entender mejor a los hijos" ni nada que insinúe que la app sabe más que el padre o le baja autoridad a la figura parental: **Huella ACOMPAÑA y aporta una mirada extra; el padre sigue siendo el experto.**
+  3. Mantener el formato **"funciona así" + un ejemplo concreto** (a Daniel le gustó).
+  4. Núcleo de valor: **mientras más registros, más conoce Huella la UNICIDAD del niño**, así las ideas y estrategias son hechas a su medida, no genéricas/de manual; por eso se busca comprometer al tester a registrar seguido.
+  5. Redactar con **voz propia de Daniel**, no genérica.
 - **Términos de la beta** (texto corto y humano; promete que no se vende ni se cobra sin avisar; linkea la privacidad) y **encuesta de salida** (mide disposición a pagar con el precio real + experiencia + calidad de la guía IA): textos definidos, montaje pendiente.
 - **Herramienta del formulario:** **Tally** (gratis, brandeable, exporta a Google Sheets), NO Google Forms, por la primera impresión premium.
 - **Canal de feedback: PASIVO** (formulario abierto + correo oficial), NO grupo de WhatsApp, para no inflar artificialmente la retención (métrica principal). Invitar 1 a 1 está bien; arrear en grupo no.
@@ -103,11 +108,12 @@
 
 ### Pendientes para retomar y reclutar
 
-1. **Armar la lista de 10-15 testers** y escribirles 1 a 1 (con el mensaje de invitación ya definido + el link del formulario).
-2. **Decidir la separación de la cuenta de correo** (bandeja compartida con el gmail personal): cuenta nueva independiente o perfil de Chrome aparte.
-3. **Llenar los placeholders en los textos:** `[correo oficial]` = `contacto@huella.lat` y `[tu precio Pro]`.
-4. **Cambiar el gmail personal por `contacto@huella.lat`** en la Política de Privacidad (y el registrante del dominio).
-5. **Activar el pase Pro** a cada inscrito (`plan_beta_hasta` futuro por `user_id`).
+1. **Cerrar el mensaje de invitación** siguiendo la dirección de arriba (fundador / no bajar autoridad parental / "funciona así" + ejemplo / unicidad del niño / voz propia).
+2. **Armar la lista de 10-15 testers** y escribirles 1 a 1 (con el mensaje ya cerrado + el link del formulario).
+3. **Decidir la separación de la cuenta de correo** (bandeja compartida con el gmail personal): cuenta nueva independiente o perfil de Chrome aparte.
+4. **Llenar los placeholders en los textos:** `[correo oficial]` = `contacto@huella.lat` y `[tu precio Pro]`.
+5. **Cambiar el gmail personal por `contacto@huella.lat`** en la Política de Privacidad (y el registrante del dominio).
+6. **Activar el pase Pro** a cada inscrito (`plan_beta_hasta` futuro por `user_id`).
 - Opcional: alinear el remitente transaccional de la app (hoy `hola@huella.lat` vía Resend) a `contacto@` para coherencia.
 
 ### Pendientes que siguen abiertos (sin avanzar esta sesión)
