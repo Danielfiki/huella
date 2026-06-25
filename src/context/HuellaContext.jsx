@@ -28,6 +28,7 @@ const initialState = {
   estrategias:          [],
   hitos:                [],
   rutinas:              [],
+  rasgos:               [],
   padreNombre:          '',
   plan:                 null,
   sugerenciaEstrategia: null,
@@ -85,6 +86,18 @@ function reducer(state, action) {
 
     case 'REMOVE_RUTINA':
       return { ...state, rutinas: state.rutinas.filter((r) => r.id !== action.payload) }
+
+    case 'SET_RASGOS':
+      return { ...state, rasgos: action.payload }
+
+    case 'ADD_RASGO':
+      return { ...state, rasgos: [...state.rasgos, action.payload] }
+
+    case 'UPDATE_RASGO':
+      return {
+        ...state,
+        rasgos: state.rasgos.map((r) => (r.id === action.payload.id ? action.payload : r)),
+      }
 
     case 'ADD_EPISODIO':
       return { ...state, episodios: [action.payload, ...state.episodios] }
@@ -163,6 +176,22 @@ function dbRutinaToApp(row) {
     nota:            row.nota            ?? null,
     esMomentoRiesgo: row.es_momento_riesgo ?? false,
     createdAt:       row.created_at,
+  }
+}
+
+function dbRasgoToApp(row) {
+  return {
+    id:            row.id,
+    userId:        row.user_id,
+    hijoId:        row.hijo_id,
+    familia:       row.familia,
+    titulo:        row.titulo,
+    evidencia:     row.evidencia       ?? [],   // jsonb tal cual: [{ episodio_id, fecha }]
+    evidenciaCount: row.evidencia_count ?? 0,
+    estado:        row.estado,
+    confianza:     row.confianza        ?? null,
+    createdAt:     row.created_at,
+    updatedAt:     row.updated_at,
   }
 }
 
@@ -559,19 +588,23 @@ export function HuellaProvider({ children }) {
     const episodiosApp = data ? data.map(dbEpisodioToApp) : null
     if (episodiosApp) dispatch({ type: 'SET_EPISODIOS', payload: episodiosApp })
 
-    // Pieza 2 del motor de rasgos — enganche fire-and-forget.
-    // Reusa el refetch que ya hicimos (episodiosApp, shape de app), sin
-    // contador nuevo ni query extra. Corre cada 5 momentos del hijo activo.
+    // Motor de rasgos — enganche fire-and-forget (pieza 2 deteccion + pieza 3
+    // guardado). Reusa el refetch que ya hicimos (episodiosApp, shape de app),
+    // sin contador nuevo ni query extra. Corre cada 5 momentos del hijo activo.
     // Igual patron que generarAccionInmediata: sin await, errores tragados,
-    // NUNCA bloquea ni rompe el guardado. Por ahora solo loguea (pieza 3
-    // persistira en la tabla rasgos, pieza 4 hara la UI).
+    // NUNCA bloquea ni rompe el guardado. La IA detecta y luego se persiste en
+    // silencio en la tabla rasgos como 'candidato' (la pieza 4 hara la UI).
     if (episodiosApp) {
       const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
       const total = episodiosApp.length
       if (hijoActivo && total > 0 && total % 5 === 0) {
         detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp })
-          .then(resultado => console.log('[rasgos] detectados:', resultado))
-          .catch(err => console.warn('[rasgos] fallo deteccion:', err))
+          .then(resultado => guardarRasgosDetectados({
+            hijoId: state.hijoActivoId,
+            rasgosDetectados: resultado.rasgos,
+            episodios: episodiosApp,
+          }))
+          .catch(err => console.warn('[rasgos] fallo deteccion/guardado:', err))
       }
     }
 
@@ -615,6 +648,105 @@ export function HuellaProvider({ children }) {
     }
     if (Object.keys(dbFields).length === 0) return
     await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+  }
+
+  // ── Rasgos (motor de rasgos · pieza 3: guardado) ───────────────────────────
+
+  // Normaliza un titulo SOLO para comparar en el dedup: trim, minuscula y sin
+  // tildes. No altera el titulo que se guarda; es unicamente para detectar si
+  // un rasgo detectado ya existe en la tabla.
+  function normalizarTitulo(t) {
+    return (t || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+  }
+
+  // Persiste en silencio los rasgos que detecto la IA. Corre en background
+  // (fire-and-forget desde addEpisodio), por eso NO hace dispatch optimista: no
+  // hay UI esperando. Transforma la evidencia de ids a jsonb
+  // [{ episodio_id, fecha }], deduplica contra los rasgos del hijo y, si el
+  // rasgo ya existe, fusiona evidencia en vez de duplicar la fila. NUNCA
+  // propaga errores: solo loguea (no debe romper el guardado del episodio).
+  async function guardarRasgosDetectados({ hijoId, rasgosDetectados, episodios }) {
+    try {
+      if (!user || !supabase || !hijoId) return
+      if (!Array.isArray(rasgosDetectados) || rasgosDetectados.length === 0) return
+
+      // Mapa id -> fecha para resolver la evidencia (ids) a { episodio_id, fecha }.
+      const fechaPorId = new Map((episodios || []).map((e) => [e.id, e.fecha]))
+
+      // Snapshot de los rasgos ya guardados del hijo (mismo filtro de familia/RLS
+      // que el resto de los refetch). Sirve para el dedup por familia + titulo.
+      const { data: existentesRaw } = await supabase
+        .from('rasgos').select('*')
+        .in('user_id', getPartnerIds())
+        .eq('hijo_id', hijoId)
+      const existentes = existentesRaw ?? []
+
+      for (const rasgo of rasgosDetectados) {
+        if (!rasgo || !rasgo.familia || !rasgo.titulo) continue
+
+        // a) Evidencia: cruza cada id contra los episodios; omite los que no
+        //    matchean. evidencia_count = largo del resultado.
+        const evidencia = (rasgo.evidencia || [])
+          .filter((id) => fechaPorId.has(id))
+          .map((id) => ({ episodio_id: id, fecha: fechaPorId.get(id) }))
+        if (evidencia.length === 0) continue
+
+        // b) Dedup: mismo hijo + misma familia + mismo titulo normalizado.
+        const tituloNorm = normalizarTitulo(rasgo.titulo)
+        const previo = existentes.find(
+          (r) => r.familia === rasgo.familia && normalizarTitulo(r.titulo) === tituloNorm
+        )
+
+        if (!previo) {
+          // c) No existe -> INSERT nuevo (estado 'candidato' por default de la tabla).
+          const { error } = await supabase.from('rasgos').insert({
+            user_id:         user.id,
+            hijo_id:         hijoId,
+            familia:         rasgo.familia,
+            titulo:          rasgo.titulo,
+            evidencia,
+            evidencia_count: evidencia.length,
+            confianza:       rasgo.confianza ?? null,
+          })
+          if (error) console.warn('[rasgos] insert fallo:', error.message)
+        } else {
+          // d) Ya existe -> UPDATE fusionando evidencia (union por episodio_id,
+          //    sin duplicar ids ya presentes). Recalcula count y actualiza
+          //    confianza. NO toca `estado` (respeta si el papa ya confirmo o
+          //    descarto). updated_at a mano: la tabla NO tiene trigger.
+          const previaEvidencia = Array.isArray(previo.evidencia) ? previo.evidencia : []
+          const idsPresentes = new Set(previaEvidencia.map((x) => x.episodio_id))
+          const fusion = [
+            ...previaEvidencia,
+            ...evidencia.filter((x) => !idsPresentes.has(x.episodio_id)),
+          ]
+          const { error } = await supabase
+            .from('rasgos')
+            .update({
+              evidencia:       fusion,
+              evidencia_count: fusion.length,
+              confianza:       rasgo.confianza ?? previo.confianza ?? null,
+              updated_at:      new Date().toISOString(),
+            })
+            .eq('id', previo.id)
+            .eq('user_id', user.id)
+          if (error) console.warn('[rasgos] update fallo:', error.message)
+        }
+      }
+
+      // Un solo refetch al final -> estado local en sync para la pieza 4 (UI).
+      const { data } = await supabase
+        .from('rasgos').select('*')
+        .in('user_id', getPartnerIds())
+        .eq('hijo_id', hijoId)
+      if (data) dispatch({ type: 'SET_RASGOS', payload: data.map(dbRasgoToApp) })
+    } catch (err) {
+      console.warn('[rasgos] fallo guardado:', err)
+    }
   }
 
   // ── Hitos ─────────────────────────────────────────────────────────────────
@@ -977,6 +1109,7 @@ export function HuellaProvider({ children }) {
       addRutina,
       updateRutina,
       deleteRutina,
+      rasgos: state.rasgos,
       savePadreNombre,
       isPro,
       isAdmin,
