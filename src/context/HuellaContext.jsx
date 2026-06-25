@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useM
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
-import { generarAccionInmediata } from '../services/anthropic'
+import { generarAccionInmediata, detectarRasgos } from '../services/anthropic'
 import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
 
 const HuellaContext = createContext(null)
@@ -556,7 +556,25 @@ export function HuellaProvider({ children }) {
       .in('user_id', getPartnerIds())
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
-    if (data) dispatch({ type: 'SET_EPISODIOS', payload: data.map(dbEpisodioToApp) })
+    const episodiosApp = data ? data.map(dbEpisodioToApp) : null
+    if (episodiosApp) dispatch({ type: 'SET_EPISODIOS', payload: episodiosApp })
+
+    // Pieza 2 del motor de rasgos — enganche fire-and-forget.
+    // Reusa el refetch que ya hicimos (episodiosApp, shape de app), sin
+    // contador nuevo ni query extra. Corre cada 5 momentos del hijo activo.
+    // Igual patron que generarAccionInmediata: sin await, errores tragados,
+    // NUNCA bloquea ni rompe el guardado. Por ahora solo loguea (pieza 3
+    // persistira en la tabla rasgos, pieza 4 hara la UI).
+    if (episodiosApp) {
+      const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
+      const total = episodiosApp.length
+      if (hijoActivo && total > 0 && total % 5 === 0) {
+        detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp })
+          .then(resultado => console.log('[rasgos] detectados:', resultado))
+          .catch(err => console.warn('[rasgos] fallo deteccion:', err))
+      }
+    }
+
     return real
   }
 
