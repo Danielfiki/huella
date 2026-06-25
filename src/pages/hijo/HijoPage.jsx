@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
+import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
 
@@ -160,10 +161,10 @@ const TONO_POR_TITULO = {
 // ── Componente ────────────────────────────────────────────────────────────
 
 export default function HijoPage() {
-  const { state, setHijo } = useHuella()
+  const { state, setHijo, confirmarRasgo, descartarRasgo } = useHuella()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { hijo, episodios, hitos, estrategias } = state
+  const { hijo, episodios, hitos, estrategias, rasgos } = state
 
   const esNuevo = searchParams.get('nuevo') === 'true'
 
@@ -365,6 +366,13 @@ export default function HijoPage() {
 
   const tabActiva = searchParams.get('tab') ?? 'perfil'
 
+  // Card de propuesta de rasgo (motor de rasgos · 4A): el PRIMER rasgo
+  // candidato del hijo activo. Es de a UNO: al confirmar/descartar deja de ser
+  // 'candidato' y la card desaparece sola (no salta al siguiente en la sesion).
+  const rasgoPropuesto = (rasgos || []).find(
+    (r) => r.estado === 'candidato' && r.hijoId === hijo.id
+  ) ?? null
+
   return (
     <div className={s.page}>
       <div className={s.heroBlock}>
@@ -457,6 +465,14 @@ export default function HijoPage() {
 
       {tabActiva === 'perfil' && (
         <div className={s.body}>
+          {rasgoPropuesto && (
+            <PropuestaRasgo
+              rasgo={rasgoPropuesto}
+              nombreHijo={hijo.nombre}
+              onConfirmar={confirmarRasgo}
+              onDescartar={descartarRasgo}
+            />
+          )}
           <article className={s.card}>
             <div className={s.cardHd}>
               <h2 className={s.cardTtl}>Episodios en {evolucion.mesActualLabel}</h2>

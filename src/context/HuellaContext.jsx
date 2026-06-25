@@ -365,7 +365,7 @@ export function HuellaProvider({ children }) {
   async function loadHijoDatos(hijoId, currentFamily) {
     if (!user || !hijoId) return
     const partnerIds = getPartnerIds(currentFamily)
-    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes] = await Promise.all([
+    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes] = await Promise.all([
       supabase.from('episodios')
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
@@ -391,11 +391,15 @@ export function HuellaProvider({ children }) {
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
         .order('hora', { ascending: true }),
+      supabase.from('rasgos')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId),
     ])
     dispatch({ type: 'SET_EPISODIOS',   payload: (episodiosRes.data   ?? []).map(dbEpisodioToApp) })
     dispatch({ type: 'SET_HITOS',       payload:  hitosRes.data        ?? [] })
     dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data  ?? []).map(dbEstrategiaToApp) })
     dispatch({ type: 'SET_RUTINAS',     payload: (rutinasRes.data      ?? []).map(dbRutinaToApp) })
+    dispatch({ type: 'SET_RASGOS',      payload: (rasgosRes.data       ?? []).map(dbRasgoToApp) })
   }
 
   async function loadUserData(userId, currentFamily) {
@@ -416,9 +420,9 @@ export function HuellaProvider({ children }) {
         : (hijos[0]?.id ?? null)
 
       // Fase 2: datos filtrados por hijo activo
-      let episodios = [], hitos = [], estrategias = [], rutinas = []
+      let episodios = [], hitos = [], estrategias = [], rutinas = [], rasgos = []
       if (hijoActivoId) {
-        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes] = await Promise.all([
+        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes] = await Promise.all([
           supabase.from('episodios')
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
@@ -444,11 +448,15 @@ export function HuellaProvider({ children }) {
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
             .order('hora', { ascending: true }),
+          supabase.from('rasgos')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId),
         ])
         episodios   = (episodiosRes.data   ?? []).map(dbEpisodioToApp)
         hitos       =  hitosRes.data        ?? []
         estrategias = (estrategiasRes.data  ?? []).map(dbEstrategiaToApp)
         rutinas     = (rutinasRes.data      ?? []).map(dbRutinaToApp)
+        rasgos      = (rasgosRes.data       ?? []).map(dbRasgoToApp)
       }
 
       dispatch({
@@ -460,6 +468,7 @@ export function HuellaProvider({ children }) {
           hitos,
           estrategias,
           rutinas,
+          rasgos,
           padreNombre: perfilRes.data?.nombre ?? '',
           plan:        perfilRes.data?.plan   ?? null,
           plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
@@ -748,6 +757,33 @@ export function HuellaProvider({ children }) {
       console.warn('[rasgos] fallo guardado:', err)
     }
   }
+
+  // Cambia el estado de un rasgo desde la UI (papa confirma o descarta una
+  // propuesta). Mismo patron que updateRutina: filtro .eq('id').eq('user_id')
+  // y updated_at a mano (la tabla rasgos no tiene trigger). Es optimista: como
+  // la card de propuesta depende de estado==='candidato', al cambiarlo en local
+  // la card desaparece al instante; si la BD falla, revierte y avisa.
+  async function cambiarEstadoRasgo(rasgoId, estado) {
+    if (!user || !supabase || !rasgoId) return
+    const previo = state.rasgos.find((r) => r.id === rasgoId)
+    if (previo) dispatch({ type: 'UPDATE_RASGO', payload: { ...previo, estado } })
+    const { data, error } = await supabase
+      .from('rasgos')
+      .update({ estado, updated_at: new Date().toISOString() })
+      .eq('id', rasgoId)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+    if (error) {
+      if (previo) dispatch({ type: 'UPDATE_RASGO', payload: previo })
+      console.warn('[rasgos] cambiar estado fallo:', error.message)
+      return
+    }
+    if (data) dispatch({ type: 'UPDATE_RASGO', payload: dbRasgoToApp(data) })
+  }
+
+  function confirmarRasgo(rasgoId) { return cambiarEstadoRasgo(rasgoId, 'confirmado') }
+  function descartarRasgo(rasgoId) { return cambiarEstadoRasgo(rasgoId, 'descartado') }
 
   // ── Hitos ─────────────────────────────────────────────────────────────────
 
@@ -1110,6 +1146,8 @@ export function HuellaProvider({ children }) {
       updateRutina,
       deleteRutina,
       rasgos: state.rasgos,
+      confirmarRasgo,
+      descartarRasgo,
       savePadreNombre,
       isPro,
       isAdmin,
