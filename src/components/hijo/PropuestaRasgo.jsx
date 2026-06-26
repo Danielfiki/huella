@@ -7,7 +7,8 @@ import s from './PropuestaRasgo.module.css'
 // porque dependen del dato `familia` del rasgo. El texto del titulo SIEMPRE
 // usa tinta calida del sistema; el color de familia es solo el punto.
 // Regla del diseno: `cuesta` jamas en rojo (lavanda), para no estigmatizar.
-const COLOR_FAMILIA = {
+// Exportado para reusarlo en la ficha de familias del retrato (4C).
+export const COLOR_FAMILIA = {
   mueve:      '#E56E26', // naranja
   fortalezas: '#8FA840', // verde
   cuesta:     '#6C8EF5', // lavanda — jamas rojo

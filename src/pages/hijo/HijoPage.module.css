@@ -73,128 +73,44 @@
   font-weight: 700;
 }
 
-/* Evolución mensual */
-.evolNums { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.evolNow {
-  font-family: var(--font-heading) !important;
-  font-size: 36px; font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  color: var(--color-text);
+/* ─── Ficha del niño · rasgos confirmados por familia (motor · 4C) ───── */
+/* Dot de acento con el color de la familia (de COLOR_FAMILIA, inline). */
+.famDot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
 }
-.evolNow small {
-  font-family: var(--font-family);
-  font-size: 11px; font-weight: 600;
+.rasgoLista {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+}
+.rasgoItem {
+  padding: 9px 0;
+  border-top: 1px solid var(--color-border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.rasgoItem:first-child { border-top: none; padding-top: 2px; }
+.rasgoTitulo {
+  font-family: var(--font-heading);
+  font-size: 14.5px; font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text);
+  margin: 0;
+}
+.rasgoEvidencia {
+  font-size: 11px;
   color: var(--color-text-muted);
-  letter-spacing: 0.04em;
-  margin-left: 4px;
-  text-transform: lowercase;
+  letter-spacing: 0.02em;
 }
-.evolPrev {
-  font-size: 11.5px; color: var(--color-text-muted); line-height: 1.4;
-}
-.evolPrev b {
-  font-family: var(--font-heading);
-  font-size: 14px; font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -0.005em;
-}
-.evolTrend {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-family: var(--font-heading);
-  font-size: 12.5px; font-weight: 700;
-  letter-spacing: -0.005em;
-  padding: 3px 9px;
-  border-radius: 999px;
-}
-.evolTrend.down { background: var(--color-leaf-bg);    color: var(--color-tag-green); }
-.evolTrend.up   { background: var(--color-coral-bg);   color: var(--color-danger-text); }
-.evolTrend.flat { background: var(--color-surface-alt); color: var(--color-text-muted); }
-.evolInterp { font-size: 11.5px; color: var(--color-text-muted); line-height: 1.5; margin: 0; }
-
-/* Chips de logros recientes · usan paleta semántica de Logros */
-.logroChips {
-  display: flex; gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 -14px;
-  padding: 2px 14px;
-}
-.logroChips::-webkit-scrollbar { display: none; }
-.logroChip {
-  flex: 0 0 auto;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 12px 6px 8px;
-  border-radius: 999px;
-  border: 1.5px solid;
-  font-size: 11.5px;
-}
-.logroChip .emo {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: 13px; color: #fff;
-  flex-shrink: 0;
-}
-.logroChip .cnm {
-  font-family: var(--font-heading);
-  font-size: 11.5px; font-weight: 700;
-  color: var(--color-text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.logroChip .cdt {
-  font-size: 9.5px; color: var(--color-text-muted);
-  letter-spacing: 0.04em; font-weight: 600;
-}
-
-/* Wrapper de cnm+cdt dentro de cada logroChip */
-.tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-
-/* Tonos — heredan los tokens de HitosPage */
-.cEstrella    { background: var(--color-medalla-estrella-bg);    border-color: var(--color-medalla-estrella-border);    }
-.cEstrella    .emo { background: var(--color-medalla-estrella); }
-.cCelebracion { background: var(--color-medalla-celebracion-bg); border-color: var(--color-medalla-celebracion-border); }
-.cCelebracion .emo { background: var(--color-medalla-celebracion); }
-.cCalma       { background: var(--color-medalla-calma-bg);       border-color: var(--color-medalla-calma-border);       }
-.cCalma       .emo { background: var(--color-medalla-calma); }
-.cConstancia  { background: var(--color-medalla-constancia-bg);  border-color: var(--color-medalla-constancia-border);  }
-.cConstancia  .emo { background: var(--color-medalla-constancia); }
-.cBase        { background: var(--color-medalla-base-bg);        border-color: var(--color-medalla-base-border);        }
-.cBase        .emo { background: var(--color-medalla-base); color: var(--color-text); }
-
-/* Timeline · avances positivos */
-.timeline { display: flex; flex-direction: column; gap: 12px; padding-left: 2px; list-style: none; margin: 0; }
-.timelineRow { display: flex; gap: 12px; align-items: flex-start; position: relative; }
-.timelineDot {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--color-leaf-bg);
-  border: 1.5px solid var(--color-leaf-border);
-  display: grid; place-items: center;
-  font-size: 13px;
-  flex-shrink: 0;
-  position: relative; z-index: 1;
-}
-.timelineRow:not(:last-child)::before {
-  content: ""; position: absolute;
-  left: 13.5px; top: 28px; bottom: -12px;
-  width: 1px;
-  background: var(--color-border);
-  z-index: 0;
-}
-.timelineDesc { font-size: 12.5px; color: var(--color-text); line-height: 1.45; margin: 0; }
-.timelineDt   { font-size: 10px; color: var(--color-text-muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
-.verAlbum {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-heading);
-  font-size: 12.5px; font-weight: 700;
-  color: var(--color-primary-dark);
-  letter-spacing: -0.005em;
-  padding: 8px 0 2px;
-  align-self: flex-end;
-  background: none;
-  border: none;
-  cursor: pointer;
+/* Mensaje anticipatorio (familia sin rasgos aún): promesa, no falla. */
+.famVacio {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* ════════════════════════════════════════════════════════════════

@@ -1,67 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  ArrowLeft, ArrowRight,
-  TrendingUp, TrendingDown, Minus,
-} from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
-import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
+import PropuestaRasgo, { COLOR_FAMILIA } from '../../components/hijo/PropuestaRasgo'
 import RetratoSendero from '../../components/hijo/RetratoSendero'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-function calcularEvolucion(episodios) {
-  const now = new Date()
-  const mes = now.getMonth()
-  const anio = now.getFullYear()
-  const mesPrev = mes === 0 ? 11 : mes - 1
-  const anioPrev = mes === 0 ? anio - 1 : anio
-  const este = episodios.filter((e) => {
-    const d = new Date(e.fecha)
-    return d.getMonth() === mes && d.getFullYear() === anio
-  }).length
-  const anterior = episodios.filter((e) => {
-    const d = new Date(e.fecha)
-    return d.getMonth() === mesPrev && d.getFullYear() === anioPrev
-  }).length
-  const diff = este - anterior
-  const pct = anterior > 0 ? Math.round((Math.abs(diff) / anterior) * 100) : null
-  return { este, anterior, diff, pct }
-}
-
-function calcularLogrosRecientes(data) {
-  const { episodios, hitos, estrategias } = data
-  const diasActivos = (() => {
-    const fechas = [...episodios.map((e) => e.fecha), ...hitos.map((h) => h.fecha)]
-    if (!fechas.length) return 0
-    const oldest = Math.min(...fechas.map((f) => new Date(f).getTime()))
-    return Math.floor((Date.now() - oldest) / 86400000)
-  })()
-
-  const BADGES = [
-    { emoji: '🌟', titulo: 'Primer paso',    check: () => episodios.length >= 1,  getDate: () => episodios.at(-1)?.fecha },
-    { emoji: '📊', titulo: 'Observador',     check: () => episodios.length >= 5,  getDate: () => episodios[episodios.length - 5]?.fecha },
-    { emoji: '🔍', titulo: 'Analista',       check: () => episodios.length >= 10, getDate: () => episodios[episodios.length - 10]?.fecha },
-    { emoji: '💛', titulo: 'Primer avance',  check: () => hitos.length >= 1,      getDate: () => hitos.at(-1)?.fecha },
-    { emoji: '🏅', titulo: 'Coleccionista',  check: () => hitos.length >= 5,      getDate: () => hitos[hitos.length - 5]?.fecha },
-    { emoji: '🎯', titulo: 'Estratega',      check: () => estrategias.length >= 1, getDate: () => estrategias.at(-1)?.fechaInicio },
-    { emoji: '🏆', titulo: '4 semanas',      check: () => estrategias.some((e) => e.semanaActual >= 4), getDate: () => estrategias.find((e) => e.semanaActual >= 4)?.fechaInicio },
-    { emoji: '📅', titulo: 'Un mes',         check: () => diasActivos >= 30,      getDate: () => null },
-    { emoji: '🔥', titulo: 'Semana activa',  check: () => episodios.length >= 7,  getDate: () => episodios[episodios.length - 7]?.fecha },
-    { emoji: '🌈', titulo: 'Multihabilidad', check: () => estrategias.length >= 3, getDate: () => estrategias[estrategias.length - 3]?.fechaInicio },
-    { emoji: '💎', titulo: 'Experto',        check: () => episodios.length >= 25, getDate: () => episodios[episodios.length - 25]?.fecha },
-    { emoji: '🤝', titulo: 'Mentor',         check: () => hitos.length >= 10,     getDate: () => hitos[hitos.length - 10]?.fecha },
-  ]
-
-  return BADGES.filter((b) => b.check())
-    .map((b) => ({ ...b, fecha: b.getDate() }))
-    .filter((b) => b.fecha)
-    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    .slice(0, 3)
-}
 
 // ── Helpers fecha (modo creación) ─────────────────────────────────────────
 
@@ -80,27 +25,16 @@ function displayToIso(display) {
   return `${y}-${m}-${d}`
 }
 
-const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
-const HITO_EMOJIS = { autorregulacion: '🌱', empatia: '💛', disculpa: '🤝', frustration: '💪', social: '👫', otro: '⭐' }
-
-// Mapeo de título de badge → tono semántico (paleta de Logros).
-// Se aplica solo a la presentación; la lógica de calcularLogrosRecientes
-// queda intacta. La unificación con NIVELES de HitosPage es trabajo
-// futuro registrado como deuda.
-const TONO_POR_TITULO = {
-  'Primer paso':    'base',
-  'Observador':     'base',
-  'Analista':       'base',
-  'Primer avance':  'celebracion',
-  'Coleccionista': 'celebracion',
-  'Estratega':      'constancia',
-  '4 semanas':      'estrella',
-  'Un mes':         'constancia',
-  'Semana activa':  'constancia',
-  'Multihabilidad': 'estrella',
-  'Experto':        'base',
-  'Mentor':         'celebracion',
-}
+// Las 4 familias del retrato (motor de rasgos · 4C), en orden fijo. `titulo`
+// es el nombre cálido (no el id técnico); `verbo` arma el mensaje anticipatorio
+// cuando la familia aún no tiene rasgos confirmados. El color sale de
+// COLOR_FAMILIA (mismo mapa que la card de propuesta, 4A).
+const FAMILIAS = [
+  { id: 'mueve',      titulo: 'Lo que lo mueve',  verbo: 'lo mueve' },
+  { id: 'fortalezas', titulo: 'Sus fortalezas',   verbo: 'lo fortalece' },
+  { id: 'cuesta',     titulo: 'Lo que le cuesta', verbo: 'le cuesta' },
+  { id: 'calma',      titulo: 'Lo que lo calma',  verbo: 'lo calma' },
+]
 
 // ── Componente ────────────────────────────────────────────────────────────
 
@@ -108,7 +42,7 @@ export default function HijoPage() {
   const { state, setHijo, confirmarRasgo, descartarRasgo } = useHuella()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { hijo, episodios, hitos, estrategias, rasgos } = state
+  const { hijo, episodios, hitos, rasgos } = state
 
   const esNuevo = searchParams.get('nuevo') === 'true'
 
@@ -261,59 +195,7 @@ export default function HijoPage() {
     )
   }
 
-  // ── Modo stats (Refugio) ──────────────────────────────────────────────────
-  const evolBase = calcularEvolucion(episodios)
-  const logrosBase = calcularLogrosRecientes({ episodios, hitos, estrategias })
-  const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 3)
-
-  // Derivar shape esperado por el JSX (sin tocar selectores).
-  const mesActualIdx = new Date().getMonth()
-  const mesAnteriorIdx = mesActualIdx === 0 ? 11 : mesActualIdx - 1
-  const evolucion = {
-    actual: evolBase.este,
-    anterior: evolBase.anterior > 0 ? evolBase.anterior : null,
-    mesActualLabel: MESES[mesActualIdx],
-    mesAnteriorLabel: MESES[mesAnteriorIdx],
-    interpretacion: evolBase.diff < 0
-      ? '📉 Menos episodios que el mes pasado. Algo está funcionando.'
-      : (evolBase.diff > 0 && evolBase.anterior > 0
-          ? 'Sigue registrando para identificar qué está pasando.'
-          : ''),
-  }
-
-  const logrosRecientes = logrosBase.map((b) => ({
-    id: b.titulo,
-    emoji: b.emoji,
-    nombre: b.titulo,
-    fecha: b.fecha,
-    tono: TONO_POR_TITULO[b.titulo] || 'base',
-  }))
-
-  const avancesPositivos = ultimosHitos.map((h) => ({
-    id: h.id,
-    emoji: HITO_EMOJIS[h.categoria] || '⭐',
-    descripcion: h.descripcion,
-    fecha: h.fecha,
-  }))
-
-  // trendInfo inline (usa los iconos lucide ya importados).
-  const trend = (() => {
-    const a = evolucion.actual, p = evolucion.anterior
-    if (p == null || p === 0) return { cls: s.flat, label: '±0%', Icon: Minus }
-    const pct = Math.round(((a - p) / p) * 100)
-    if (pct < 0) return { cls: s.down, label: `${Math.abs(pct)}%`, Icon: TrendingDown }
-    if (pct > 0) return { cls: s.up,   label: `${pct}%`,           Icon: TrendingUp }
-    return { cls: s.flat, label: '±0%', Icon: Minus }
-  })()
-
-  const chipToneCls = {
-    estrella:    s.cEstrella,
-    celebracion: s.cCelebracion,
-    calma:       s.cCalma,
-    constancia:  s.cConstancia,
-    base:        s.cBase,
-  }
-
+  // ── Modo retrato (Refugio) ────────────────────────────────────────────────
   const tabActiva = searchParams.get('tab') ?? 'perfil'
 
   // El candidato fijado para esta visita se busca en el estado vivo. La card
@@ -324,10 +206,12 @@ export default function HijoPage() {
     : null
   const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
 
-  // Cuántos rasgos del hijo activo ya confirmó el papá (alimenta el retrato).
-  const rasgosConfirmados = (rasgos || []).filter(
+  // Rasgos confirmados del hijo activo: alimentan el retrato (conteo) y la
+  // ficha de las 4 familias.
+  const confirmados = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo.id
-  ).length
+  )
+  const rasgosConfirmados = confirmados.length
 
   return (
     <div className={s.page}>
@@ -366,91 +250,41 @@ export default function HijoPage() {
               onDescartar={descartarRasgo}
             />
           )}
-          <article className={s.card}>
-            <div className={s.cardHd}>
-              <h2 className={s.cardTtl}>Episodios en {evolucion.mesActualLabel}</h2>
-              <span className={[s.evolTrend, trend.cls].join(' ')}>
-                <trend.Icon size={14} /> {trend.label}
-              </span>
-            </div>
-            <div className={s.evolNums}>
-              <span className={s.evolNow}>
-                {evolucion.actual}<small>episodios</small>
-              </span>
-              <span className={s.evolPrev}>
-                {evolucion.anterior == null
-                  ? 'aún sin historial previo'
-                  : <>vs. <b>{evolucion.anterior}</b> en {evolucion.mesAnteriorLabel}</>}
-              </span>
-            </div>
-            {evolucion.interpretacion && (
-              <p className={s.evolInterp}>{evolucion.interpretacion}</p>
-            )}
-          </article>
+          {FAMILIAS.map((fam) => {
+            const items = confirmados.filter((r) => r.familia === fam.id)
+            return (
+              <article key={fam.id} className={s.card}>
+                <div className={s.cardHd}>
+                  <h2 className={s.cardTtl}>
+                    <span
+                      className={s.famDot}
+                      style={{ background: COLOR_FAMILIA[fam.id] }}
+                      aria-hidden="true"
+                    />
+                    {fam.titulo}
+                  </h2>
+                  {items.length > 0 && <span className={s.cardSub}>{items.length}</span>}
+                </div>
 
-          <article className={s.card}>
-            <div className={s.cardHd}>
-              <h2 className={s.cardTtl}>Logros recientes</h2>
-              <span className={s.cardSub}>
-                {logrosRecientes.length === 0 ? 'Por desbloquear' : `${logrosRecientes.length} últimos`}
-              </span>
-            </div>
-            {logrosRecientes.length > 0 && (
-              <div className={s.logroChips}>
-                {logrosRecientes.map((logro) => (
-                  <div
-                    key={logro.id}
-                    className={[s.logroChip, chipToneCls[logro.tono] ?? s.cBase].join(' ')}
-                  >
-                    <span className={s.emo} aria-hidden="true" />
-                    <span className={s.tx}>
-                      <span className={s.cnm}>{logro.nombre}</span>
-                      <span className={s.cdt}>
-                        {new Date(logro.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </article>
-
-          <article className={s.card}>
-            <div className={s.cardHd}>
-              <h2 className={s.cardTtl}>Avances positivos</h2>
-              <span className={s.cardSub}>
-                {avancesPositivos.length === 0 ? 'Aún sin hitos' : 'Últimos 3'}
-              </span>
-            </div>
-
-            {avancesPositivos.length === 0 ? (
-              <p className={s.evolInterp}>
-                El primer hito de {hijo.nombre} aparecerá aquí en cuanto lo guardes.
-              </p>
-            ) : (
-              <>
-                <ol className={s.timeline}>
-                  {avancesPositivos.map((h) => (
-                    <li key={h.id} className={s.timelineRow}>
-                      <span className={s.timelineDot} aria-hidden="true">{h.emoji ?? '·'}</span>
-                      <div>
-                        <p className={s.timelineDesc}>{h.descripcion}</p>
-                        <span className={s.timelineDt}>
-                          {new Date(h.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                {items.length === 0 ? (
+                  <p className={s.famVacio}>
+                    Aún por descubrir. Sigue registrando y Huella irá conociendo qué {fam.verbo} a {hijo.nombre}.
+                  </p>
+                ) : (
+                  <ul className={s.rasgoLista}>
+                    {items.map((r) => (
+                      <li key={r.id} className={s.rasgoItem}>
+                        <p className={s.rasgoTitulo}>{r.titulo}</p>
+                        <span className={s.rasgoEvidencia}>
+                          Notado {r.evidenciaCount} {r.evidenciaCount === 1 ? 'vez' : 'veces'}
                         </span>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-                <button
-                  className={s.verAlbum}
-                  onClick={() => navigate('/hitos?tab=album')}
-                >
-                  Ver todos en Álbum <ArrowRight size={14} />
-                </button>
-              </>
-            )}
-          </article>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            )
+          })}
         </div>
       )}
 
