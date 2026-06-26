@@ -1,74 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Settings, ArrowLeft, ArrowRight,
+  ArrowLeft, ArrowRight,
   TrendingUp, TrendingDown, Minus,
 } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
-import Escarabajo from '../../components/ui/Escarabajo'
+import RetratoSendero from '../../components/hijo/RetratoSendero'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-// Nitidez del retrato (motor de rasgos · 4B-1): la foto del niño "madura" (se
-// revela) a medida que el papá confirma rasgos. 5 niveles. Cortes iniciales
-// (calibrables con datos de la beta): 0 confirmados -> N1, 1 -> N2, 2 -> N3,
-// 3-4 -> N4, 5+ -> N5.
-function nivelNitidez(rasgosConfirmados) {
-  if (rasgosConfirmados >= 5) return 5
-  if (rasgosConfirmados >= 3) return 4
-  if (rasgosConfirmados === 2) return 3
-  if (rasgosConfirmados === 1) return 2
-  return 1
-}
-
-// Filtros CSS por nivel (valores exactos del diseño). El revelado "respira"
-// con transition: filter 1.2s ease (definida en .retratoImg).
-const FILTRO_NITIDEZ = {
-  1: 'grayscale(1) saturate(.20) contrast(.92) brightness(.97)',
-  2: 'grayscale(.72) saturate(.45) contrast(.96)',
-  3: 'grayscale(.45) saturate(.70) contrast(1)',
-  4: 'grayscale(.18) saturate(.92) contrast(1.02)',
-  5: 'grayscale(0) saturate(1.10) contrast(1.05)',
-}
-
-// ── Rastro del escarabajo (motor de rasgos · 4B-1 + adelanto 4B-2) ──────────
-// Un anillo de marcas sobre un arco de 314° (hueco de 46° abajo, donde nace el
-// camino). Avanza UNA marca por cada rasgo confirmado; el escarabajo se posa en
-// la última marca recorrida. Solo avanza, nunca retrocede. Coordenadas en el
-// viewBox de 190x190 (1:1 con los px del contenedor).
-const RASTRO_N     = 14            // total de marcas del anillo (calibrable)
-const RASTRO_C     = 95            // centro (190 / 2)
-const RASTRO_R     = 86            // radio del anillo (la foto es 150 → r 75)
-const RASTRO_GAP   = 46            // grados de hueco, centrado abajo
-const RASTRO_START = 90 + RASTRO_GAP / 2   // 113° = borde izquierdo del hueco
-const RASTRO_SPAN  = 360 - RASTRO_GAP      // 314° de arco recorrible
-
-function rastroPunto(i) {
-  const angDeg = RASTRO_START + RASTRO_SPAN * (i / (RASTRO_N - 1))
-  const ang = (angDeg * Math.PI) / 180
-  return {
-    x: RASTRO_C + RASTRO_R * Math.cos(ang),
-    y: RASTRO_C + RASTRO_R * Math.sin(ang),
-    angDeg,
-  }
-}
-
-function construirRastro(confirmados) {
-  const recorridas = Math.max(0, Math.min(confirmados, RASTRO_N))
-  const marcas = Array.from({ length: RASTRO_N }, (_, i) => {
-    const p = rastroPunto(i)
-    return { x: p.x, y: p.y, on: i < recorridas }
-  })
-  // Con 0 confirmados el escarabajo arranca al inicio del arco; si no, va en la
-  // última marca recorrida. Rotación tangente al anillo (+90°, calibrable).
-  const idxBicho = recorridas === 0 ? 0 : recorridas - 1
-  const pb = rastroPunto(idxBicho)
-  return { marcas, bicho: { x: pb.x, y: pb.y, rot: pb.angDeg + 90 } }
-}
 
 function calcularEvolucion(episodios) {
   const now = new Date()
@@ -353,10 +296,6 @@ export default function HijoPage() {
     fecha: h.fecha,
   }))
 
-  // Sin historial = el hijo no tiene episodios ni hitos todavía (antes salía de
-  // la racha, eliminada en 4B-1). Solo alimenta el texto del lede del retrato.
-  const sinHistorial = episodios.length === 0 && hitos.length === 0
-
   // trendInfo inline (usa los iconos lucide ya importados).
   const trend = (() => {
     const a = evolucion.actual, p = evolucion.anterior
@@ -385,83 +324,20 @@ export default function HijoPage() {
     : null
   const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
 
-  // Nitidez del retrato: cuántos rasgos del hijo activo ya confirmó el papá.
+  // Cuántos rasgos del hijo activo ya confirmó el papá (alimenta el retrato).
   const rasgosConfirmados = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo.id
   ).length
-  const nivel = nivelNitidez(rasgosConfirmados)
-  const rastro = construirRastro(rasgosConfirmados)
 
   return (
     <div className={s.page}>
-      <div className={s.heroBlock}>
-        <header className={s.hero}>
-          <button
-            className={s.heroIconBtn}
-            onClick={() => navigate('/perfil')}
-            aria-label="Ajustes de perfil"
-          >
-            <Settings size={18} />
-          </button>
-
-          <div className={s.retratoWrap}>
-            <div className={s.rastroAnillo}>
-              <svg className={s.rastroSvg} viewBox="0 0 190 190" aria-hidden="true">
-                {rastro.marcas.map((m, i) => (
-                  <circle
-                    key={i}
-                    cx={m.x}
-                    cy={m.y}
-                    r="3"
-                    className={m.on ? s.rastroMarcaOn : s.rastroMarca}
-                  />
-                ))}
-              </svg>
-
-              <div className={s.retratoFoto} aria-hidden="true">
-                {hijo.avatarUrl
-                  ? (
-                    <img
-                      src={hijo.avatarUrl}
-                      alt={hijo.nombre}
-                      className={s.retratoImg}
-                      style={{ filter: FILTRO_NITIDEZ[nivel] }}
-                    />
-                  )
-                  : <Escarabajo className={s.retratoBicho} />
-                }
-              </div>
-
-              <span
-                className={s.rastroBicho}
-                style={{
-                  left: `${rastro.bicho.x}px`,
-                  top: `${rastro.bicho.y}px`,
-                  transform: `translate(-50%, -50%) rotate(${rastro.bicho.rot}deg)`,
-                }}
-                aria-hidden="true"
-              >
-                <Escarabajo className={s.rastroBichoSvg} />
-              </span>
-            </div>
-            <span className={s.nitidezPill}>Nitidez {nivel}/5</span>
-          </div>
-
-          <div className={s.heroWho}>
-            <h1 className={s.heroName}>{hijo.nombre}</h1>
-            {hijo.edad != null && (
-              <div className={s.heroAge}>
-                {hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}
-              </div>
-            )}
-            <p className={s.heroLede}>
-              {sinHistorial
-                ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
-                : `La huella que ${hijo.nombre} va dejando, día tras día.`}
-            </p>
-          </div>
-        </header>
-      </div>
+      <RetratoSendero
+        nombre={hijo.nombre}
+        avatarUrl={hijo.avatarUrl}
+        rasgosConfirmados={rasgosConfirmados}
+        rasgosTotales={12}
+        onAjustes={() => navigate('/perfil')}
+      />
 
       <div className={s.tabs} role="tablist">
         <button

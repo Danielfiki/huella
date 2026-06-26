@@ -1,0 +1,142 @@
+/* ════════════════════════════════════════════════════════════════
+   RetratoSendero · cabecera del retrato (motor de rasgos · 4B "El Sendero")
+   El header escala al ancho real; las medidas vienen del lienzo 394x432.
+   ════════════════════════════════════════════════════════════════ */
+
+.hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 394 / 432;
+  overflow: hidden;
+  /* Fondo mocha del header (gradiente del handoff; base = --color-accent-mocha). */
+  background: radial-gradient(120% 100% at 50% 32%, #B08E7B 0%, var(--color-accent-mocha) 52%, #7E5F50 100%);
+}
+
+.ajustes {
+  position: absolute;
+  top: 16px; right: 16px;
+  z-index: 5;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  display: grid; place-items: center;
+  color: var(--color-primary);
+  border: none;
+  box-shadow: var(--shadow-card-soft);
+}
+
+.lienzo {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+/* Mask de revelado: traza blanca que descubre solo el tramo recorrido.
+   Con pathLength=1, stroke-dasharray:1 = largo total y el offset revela. */
+.revPath {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset 1.2s ease;
+}
+
+/* Línea punteada del camino (huella crema). */
+.camino {
+  fill: none;
+  stroke: var(--color-on-mocha);
+  stroke-width: 2.5;
+  stroke-dasharray: 2 11;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.nodoHito   { fill: var(--color-primary); }
+.nodoNormal { fill: var(--color-on-mocha); opacity: 0.75; }
+
+.etiqueta {
+  font-family: var(--font-family);
+  font-weight: 700;
+  fill: var(--color-on-mocha);
+  opacity: 0.78;
+  text-transform: uppercase;
+}
+.nombre {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  fill: var(--color-on-mocha);
+}
+
+/* Medallón: posición y tamaño en % del lienzo (122,75,150 sobre 394x432). */
+.medallon {
+  position: absolute;
+  left: 30.96%;     /* 122 / 394 */
+  top: 17.36%;      /* 75 / 432 */
+  width: 38.07%;    /* 150 / 394 */
+  aspect-ratio: 1;
+  z-index: 2;
+  border-radius: 50%;
+  background: var(--color-mocha-light);
+  box-shadow: 0 10px 26px rgba(42, 26, 14, 0.30);
+}
+.foto {
+  position: absolute;
+  inset: 8.67%;     /* 13 / 150 */
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid; place-items: center;
+  background: var(--color-mocha-light);
+}
+.fotoColor, .fotoDuo {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+/* Capa duotono B/N cálida que se recorta según el progreso (color sube desde
+   abajo). Foto SIEMPRE nítida, nunca blur. */
+.fotoDuo {
+  filter: grayscale(1) sepia(0.26) contrast(1.03);
+  transition: clip-path 1.2s ease;
+}
+.fotoPlaceholder {
+  width: 58%; height: 58%;
+  color: var(--color-on-mocha);
+}
+
+/* Aro de progreso (viewBox 222 renderizado al tamaño del medallón). */
+.aro {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+.aroRiel {
+  fill: none;
+  stroke: rgba(250, 246, 241, 0.28);
+  stroke-width: 9;
+}
+.aroActivo {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s ease;
+}
+
+/* Escarabajo del rastro: overlay en la punta. Tamaño 72/394 del ancho. */
+.bicho {
+  position: absolute;
+  z-index: 3;
+  width: 18.27%;    /* 72 / 394 */
+  color: var(--color-on-mocha);
+  filter: drop-shadow(0 8px 16px rgba(42, 26, 14, 0.45));
+  transition: left 1.2s ease, top 1.2s ease, transform 1.2s ease;
+  pointer-events: none;
+}
+.bichoSvg {
+  width: 100%; height: auto;
+  display: block;
+}
