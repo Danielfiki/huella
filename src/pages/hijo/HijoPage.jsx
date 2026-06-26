@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Settings, ArrowLeft, ArrowRight,
@@ -175,6 +175,29 @@ export default function HijoPage() {
   const [genero, setGenero]               = useState('')
   const [loadingCrear, setLoadingCrear]   = useState(false)
   const [errorCrear, setErrorCrear]       = useState('')
+
+  // Card de propuesta de rasgo (motor de rasgos · 4A) — "uno por sesion".
+  // Se fija UN candidato al entrar a la pantalla y NO se reemplaza aunque el
+  // papa lo resuelva: al confirmar/descartar la card desaparece y el resto de
+  // los candidatos espera a la proxima visita (no se siente a "examen").
+  const [rasgoPropuesto, setRasgoPropuesto] = useState(null)
+
+  // Fija el candidato UNA sola vez (cuando los rasgos terminan de cargar). La
+  // guarda "solo si esta en null" evita que salte al siguiente tras resolver.
+  useEffect(() => {
+    if (rasgoPropuesto !== null) return
+    if (!hijo) return
+    const candidato = (rasgos || []).find(
+      (r) => r.estado === 'candidato' && r.hijoId === hijo.id
+    )
+    if (candidato) setRasgoPropuesto(candidato)
+  }, [rasgos, hijo?.id, rasgoPropuesto])
+
+  // Al cambiar de hijo activo, reinicia para que la nueva pantalla fije su
+  // propio candidato.
+  useEffect(() => {
+    setRasgoPropuesto(null)
+  }, [hijo?.id])
 
   function handleFechaChange(e) {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
@@ -366,12 +389,13 @@ export default function HijoPage() {
 
   const tabActiva = searchParams.get('tab') ?? 'perfil'
 
-  // Card de propuesta de rasgo (motor de rasgos · 4A): el PRIMER rasgo
-  // candidato del hijo activo. Es de a UNO: al confirmar/descartar deja de ser
-  // 'candidato' y la card desaparece sola (no salta al siguiente en la sesion).
-  const rasgoPropuesto = (rasgos || []).find(
-    (r) => r.estado === 'candidato' && r.hijoId === hijo.id
-  ) ?? null
+  // El candidato fijado para esta visita se busca en el estado vivo. La card
+  // solo se muestra mientras ese rasgo siga siendo 'candidato'; al resolverlo
+  // (confirmado/descartado) se oculta y NO aparece otro en esta visita.
+  const rasgoVivo = rasgoPropuesto
+    ? (rasgos || []).find((r) => r.id === rasgoPropuesto.id)
+    : null
+  const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
 
   return (
     <div className={s.page}>
@@ -465,9 +489,9 @@ export default function HijoPage() {
 
       {tabActiva === 'perfil' && (
         <div className={s.body}>
-          {rasgoPropuesto && (
+          {mostrarPropuesta && (
             <PropuestaRasgo
-              rasgo={rasgoPropuesto}
+              rasgo={rasgoVivo}
               nombreHijo={hijo.nombre}
               onConfirmar={confirmarRasgo}
               onDescartar={descartarRasgo}
