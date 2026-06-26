@@ -597,21 +597,24 @@ export function HuellaProvider({ children }) {
     const episodiosApp = data ? data.map(dbEpisodioToApp) : null
     if (episodiosApp) dispatch({ type: 'SET_EPISODIOS', payload: episodiosApp })
 
-    // Motor de rasgos — enganche fire-and-forget (pieza 2 deteccion + pieza 3
-    // guardado). Reusa el refetch que ya hicimos (episodiosApp, shape de app),
-    // sin contador nuevo ni query extra. Corre cada 5 momentos del hijo activo.
-    // Igual patron que generarAccionInmediata: sin await, errores tragados,
-    // NUNCA bloquea ni rompe el guardado. La IA detecta y luego se persiste en
-    // silencio en la tabla rasgos como 'candidato' (la pieza 4 hara la UI).
+    // Motor de rasgos — enganche fire-and-forget. Reusa el refetch que ya
+    // hicimos (episodiosApp, shape de app) y suma los hitos del hijo activo
+    // desde state.hitos (last-known, ya filtrado al hijo activo; sin refetch
+    // extra aca). El gatillo cuenta TODO junto: episodios + hitos, cada 5
+    // registros totales corre la deteccion. Igual patron que
+    // generarAccionInmediata: sin await, errores tragados, NUNCA bloquea ni
+    // rompe el guardado. La IA detecta y se persiste en silencio como 'candidato'.
     if (episodiosApp) {
       const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
-      const total = episodiosApp.length
+      const hitosHijo = (state.hitos || []).filter(h => h.hijo_id === state.hijoActivoId)
+      const total = episodiosApp.length + hitosHijo.length
       if (hijoActivo && total > 0 && total % 5 === 0) {
-        detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp })
+        detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp, hitos: hitosHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
             rasgosDetectados: resultado.rasgos,
             episodios: episodiosApp,
+            hitos: hitosHijo,
           }))
           .catch(err => console.warn('[rasgos] fallo deteccion/guardado:', err))
       }
@@ -673,18 +676,27 @@ export function HuellaProvider({ children }) {
   }
 
   // Persiste en silencio los rasgos que detecto la IA. Corre en background
-  // (fire-and-forget desde addEpisodio), por eso NO hace dispatch optimista: no
-  // hay UI esperando. Transforma la evidencia de ids a jsonb
-  // [{ episodio_id, fecha }], deduplica contra los rasgos del hijo y, si el
-  // rasgo ya existe, fusiona evidencia en vez de duplicar la fila. NUNCA
-  // propaga errores: solo loguea (no debe romper el guardado del episodio).
-  async function guardarRasgosDetectados({ hijoId, rasgosDetectados, episodios }) {
+  // (fire-and-forget desde addEpisodio y addHito), por eso NO hace dispatch
+  // optimista: no hay UI esperando. Transforma la evidencia (que llega como
+  // { tipo, id }) a jsonb [{ tipo, id, fecha }] cubriendo episodios Y hitos,
+  // deduplica contra los rasgos del hijo y, si el rasgo ya existe, fusiona
+  // evidencia en vez de duplicar la fila. NUNCA propaga errores: solo loguea
+  // (no debe romper el guardado del momento).
+  async function guardarRasgosDetectados({ hijoId, rasgosDetectados, episodios, hitos }) {
     try {
       if (!user || !supabase || !hijoId) return
       if (!Array.isArray(rasgosDetectados) || rasgosDetectados.length === 0) return
 
-      // Mapa id -> fecha para resolver la evidencia (ids) a { episodio_id, fecha }.
-      const fechaPorId = new Map((episodios || []).map((e) => [e.id, e.fecha]))
+      // Mapa id -> { tipo, fecha } cubriendo episodios Y hitos, para resolver
+      // cada item de evidencia ({ tipo, id }) a { tipo, id, fecha }.
+      const infoPorId = new Map()
+      for (const e of (episodios || [])) infoPorId.set(e.id, { tipo: 'episodio', fecha: e.fecha })
+      for (const h of (hitos || []))     infoPorId.set(h.id, { tipo: 'hito',     fecha: h.fecha })
+
+      // idDe normaliza la clave de identidad soportando AMBOS shapes de
+      // evidencia: el nuevo { tipo, id, fecha } y el viejo { episodio_id, fecha }
+      // de las filas antiguas. Asi la fusion deduplica sin romper lo ya guardado.
+      const idDe = (item) => item?.id ?? item?.episodio_id
 
       // Snapshot de los rasgos ya guardados del hijo (mismo filtro de familia/RLS
       // que el resto de los refetch). Sirve para el dedup por familia + titulo.
@@ -697,11 +709,16 @@ export function HuellaProvider({ children }) {
       for (const rasgo of rasgosDetectados) {
         if (!rasgo || !rasgo.familia || !rasgo.titulo) continue
 
-        // a) Evidencia: cruza cada id contra los episodios; omite los que no
-        //    matchean. evidencia_count = largo del resultado.
+        // a) Evidencia: resuelve cada item { tipo, id } a { tipo, id, fecha }
+        //    cruzando contra el mapa de momentos; omite ids que no matchean.
+        //    evidencia_count = largo del resultado.
         const evidencia = (rasgo.evidencia || [])
-          .filter((id) => fechaPorId.has(id))
-          .map((id) => ({ episodio_id: id, fecha: fechaPorId.get(id) }))
+          .map((ev) => {
+            const id = ev?.id
+            const info = id != null ? infoPorId.get(id) : null
+            return info ? { tipo: info.tipo, id, fecha: info.fecha } : null
+          })
+          .filter(Boolean)
         if (evidencia.length === 0) continue
 
         // b) Dedup: mismo hijo + misma familia + mismo titulo normalizado.
@@ -723,15 +740,17 @@ export function HuellaProvider({ children }) {
           })
           if (error) console.warn('[rasgos] insert fallo:', error.message)
         } else {
-          // d) Ya existe -> UPDATE fusionando evidencia (union por episodio_id,
-          //    sin duplicar ids ya presentes). Recalcula count y actualiza
-          //    confianza. NO toca `estado` (respeta si el papa ya confirmo o
-          //    descarto). updated_at a mano: la tabla NO tiene trigger.
+          // d) Ya existe -> UPDATE fusionando evidencia (union por id, sin
+          //    duplicar ids ya presentes). idDe soporta el shape viejo
+          //    ({ episodio_id }) y el nuevo ({ id }) sin reescribir lo antiguo.
+          //    Recalcula count y actualiza confianza. NO toca `estado` (respeta
+          //    si el papa ya confirmo o descarto). updated_at a mano: la tabla
+          //    NO tiene trigger.
           const previaEvidencia = Array.isArray(previo.evidencia) ? previo.evidencia : []
-          const idsPresentes = new Set(previaEvidencia.map((x) => x.episodio_id))
+          const idsPresentes = new Set(previaEvidencia.map(idDe))
           const fusion = [
             ...previaEvidencia,
-            ...evidencia.filter((x) => !idsPresentes.has(x.episodio_id)),
+            ...evidencia.filter((x) => !idsPresentes.has(idDe(x))),
           ]
           const { error } = await supabase
             .from('rasgos')
@@ -808,6 +827,29 @@ export function HuellaProvider({ children }) {
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
     if (data) dispatch({ type: 'SET_HITOS', payload: data })
+
+    // Motor de rasgos — mismo enganche fire-and-forget que en addEpisodio. El
+    // gatillo cuenta episodios + hitos del hijo activo: cada 5 registros
+    // totales corre la deteccion. Los hitos salen del refetch fresco (data);
+    // los episodios del hijo activo de state.episodios (last-known, ya filtrado
+    // al hijo activo). Sin await, errores tragados, NUNCA bloquea el guardado.
+    if (data) {
+      const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
+      const hitosHijo = data
+      const episodiosHijo = state.episodios || []
+      const total = episodiosHijo.length + hitosHijo.length
+      if (hijoActivo && total > 0 && total % 5 === 0) {
+        detectarRasgos({ hijo: hijoActivo, episodios: episodiosHijo, hitos: hitosHijo })
+          .then(resultado => guardarRasgosDetectados({
+            hijoId: state.hijoActivoId,
+            rasgosDetectados: resultado.rasgos,
+            episodios: episodiosHijo,
+            hitos: hitosHijo,
+          }))
+          .catch(err => console.warn('[rasgos] fallo deteccion/guardado:', err))
+      }
+    }
+
     return inserted
   }
 

@@ -1553,6 +1553,11 @@ ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.le
 
 const PROMPT_DETECTAR_RASGOS = `Eres Huella, una compañera de crianza cálida basada en evidencia del desarrollo infantil. NO eres clínica y NO diagnosticas. Tu rol es PROPONER, con humildad, rasgos que podrían describir a este niño a partir de lo que su padre o madre registró. El padre/madre es el verdadero experto en su hijo: tú ofreces una mirada extra, nunca una sentencia.
 
+La materia prima son los momentos que el padre o madre registró sobre su hijo. Cada momento trae un campo "origen":
+- "episodio": un momento difícil (rabieta, llanto, miedo, oposición u otro momento complicado).
+- "hito": un avance positivo (se calmó solo, mostró empatía, pidió disculpas, toleró un "no" u otro logro).
+Usa AMBOS tipos de momentos para construir el retrato. Las familias positivas o neutras (mueve, fortalezas, calma) se nutren sobre todo de los avances; la familia "cuesta" se nutre sobre todo de los episodios difíciles, pero cualquier momento puede aportar a cualquier familia si la respalda.
+
 Tu tarea: detectar rasgos del niño y clasificarlos en EXACTAMENTE estas 4 familias (usa el id tal cual en el campo "familia"):
 - mueve: lo que lo enciende, le interesa o disfruta.
 - fortalezas: capacidades y recursos propios del niño.
@@ -1560,10 +1565,10 @@ Tu tarea: detectar rasgos del niño y clasificarlos en EXACTAMENTE estas 4 famil
 - calma: qué lo regula, cómo se tranquiliza.
 
 Reglas duras:
-1. Solo propón un rasgo si hay AL MENOS 3 episodios coherentes que lo respalden. Si no llega a 3, no lo incluyas.
+1. Solo propón un rasgo si hay AL MENOS 3 momentos coherentes que lo respalden (sean episodios, hitos o una mezcla). Si no llega a 3, no lo incluyas.
 2. "titulo": una frase corta, observacional y cálida, sin diagnóstico ni etiquetas (ejemplo: "Busca consolar cuando alguien está triste"). Habla del niño con respeto; nunca lo reduzcas a un problema.
-3. "evidencia": lista con los ids de los episodios que respaldan el rasgo (mínimo 3 ids reales tomados de los datos entregados).
-4. "confianza": número entre 0 y 1 según la fuerza de la evidencia (3 episodios coherentes ~0.7; 5 o más concentrados ~0.85).
+3. "evidencia": lista con los ids de los momentos que respaldan el rasgo (mínimo 3 ids reales tomados de los datos entregados, sean de episodios o de hitos).
+4. "confianza": número entre 0 y 1 según la fuerza de la evidencia (3 momentos coherentes ~0.7; 5 o más concentrados ~0.85).
 5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
 6. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
 
@@ -1579,17 +1584,20 @@ Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este sh
   ]
 }`
 
-// Decisión de diseño (confirmada con Daniel): un mismo episodio PUEDE
-// respaldar varios rasgos — relación muchos-a-muchos, se permite solape de
-// evidencia entre rasgos. Lo resolverá la pieza 3 (guardado en la tabla rasgos).
-export async function detectarRasgos({ hijo, episodios }) {
+// Decisión de diseño (confirmada con Daniel): un mismo momento (episodio o
+// hito) PUEDE respaldar varios rasgos — relación muchos-a-muchos, se permite
+// solape de evidencia entre rasgos. Lo resuelve guardarRasgosDetectados.
+export async function detectarRasgos({ hijo, episodios, hitos }) {
   const FAMILIAS_VALIDAS = ['mueve', 'fortalezas', 'cuesta', 'calma']
 
   // Los episodios llegan en shape de app (camelCase, vía dbEpisodioToApp):
-  // descripcionLibre, accionRapida?.dimension. Se vuelcan a claves limpias
-  // para el prompt. descripcion_libre se trunca a 300 chars para no inflar
-  // el prompt ni el costo con relatos largos.
-  const compactados = (episodios || []).slice(0, 20).map((e) => ({
+  // descripcionLibre, accionRapida?.dimension. Los hitos llegan crudos de la
+  // BD (snake_case: categoria, descripcion). Se vuelcan a "momentos" marcados
+  // con "origen" ('episodio'|'hito') para que la IA distinga un momento difícil
+  // de un avance positivo. El relato se trunca a 300 chars para no inflar el
+  // prompt ni el costo. Se toman hasta 20 de cada tipo (los más recientes).
+  const episodiosCompactados = (episodios || []).slice(0, 20).map((e) => ({
+    origen: 'episodio',
     id: e.id,
     fecha: e.fecha,
     tipo: e.tipo || '',
@@ -1601,6 +1609,22 @@ export async function detectarRasgos({ hijo, episodios }) {
     dimension: e.accionRapida?.dimension || null,
   }))
 
+  const hitosCompactados = (hitos || []).slice(0, 20).map((h) => ({
+    origen: 'hito',
+    id: h.id,
+    fecha: h.fecha,
+    categoria: h.categoria || null,
+    descripcion: h.descripcion ? h.descripcion.slice(0, 300) : null,
+  }))
+
+  // Mapa id -> origen para resolver la evidencia que devuelve la IA (lista de
+  // ids) a objetos { tipo, id }, sin depender de que la IA adivine el origen.
+  const tipoPorId = new Map()
+  for (const e of episodiosCompactados) tipoPorId.set(e.id, 'episodio')
+  for (const h of hitosCompactados) tipoPorId.set(h.id, 'hito')
+
+  const momentos = [...episodiosCompactados, ...hitosCompactados]
+
   const prompt = `${PROMPT_DETECTAR_RASGOS}
 
 Datos a analizar:
@@ -1609,8 +1633,9 @@ ${JSON.stringify({
     hijo_nombre: hijo?.nombre || 'sin nombre',
     hijo_edad: hijo?.edad ?? null,
     total_episodios: (episodios || []).length,
+    total_hitos: (hitos || []).length,
   },
-  episodios: compactados,
+  momentos,
 }, null, 2)}`
 
   const raw = await llamarAPI(prompt, 2000)
@@ -1620,14 +1645,27 @@ ${JSON.stringify({
   try {
     const parsed = JSON.parse(match[0])
     if (!parsed || !Array.isArray(parsed.rasgos)) return { rasgos: [] }
-    // Filtro de validez: familia permitida, >=3 ids de evidencia, y confianza
-    // dentro de 0-1 si viene. Protege los CHECK de la tabla rasgos downstream.
-    const validos = parsed.rasgos.filter((r) => {
-      if (!r || !FAMILIAS_VALIDAS.includes(r.familia)) return false
-      if (!Array.isArray(r.evidencia) || r.evidencia.length < 3) return false
-      if (r.confianza != null && (typeof r.confianza !== 'number' || r.confianza < 0 || r.confianza > 1)) return false
-      return true
-    })
+    // Resuelve cada id de evidencia a { tipo, id } según de dónde salió
+    // (episodio o hito); descarta ids que no estén entre los momentos enviados.
+    // Luego filtra por validez: familia permitida, >=3 items de evidencia, y
+    // confianza dentro de 0-1 si viene. Protege los CHECK de la tabla rasgos.
+    const validos = parsed.rasgos
+      .map((r) => {
+        if (!r) return null
+        const evidencia = (Array.isArray(r.evidencia) ? r.evidencia : [])
+          .map((id) => {
+            const tipo = tipoPorId.get(id)
+            return tipo ? { tipo, id } : null
+          })
+          .filter(Boolean)
+        return { ...r, evidencia }
+      })
+      .filter((r) => {
+        if (!r || !FAMILIAS_VALIDAS.includes(r.familia)) return false
+        if (r.evidencia.length < 3) return false
+        if (r.confianza != null && (typeof r.confianza !== 'number' || r.confianza < 0 || r.confianza > 1)) return false
+        return true
+      })
     return { rasgos: validos }
   } catch {
     return { rasgos: [] }
