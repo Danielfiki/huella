@@ -7,66 +7,32 @@ import {
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
+import Escarabajo from '../../components/ui/Escarabajo'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-function toDateStr(fecha) {
-  return new Date(fecha).toISOString().slice(0, 10)
+// Nitidez del retrato (motor de rasgos · 4B-1): la foto del niño "madura" (se
+// revela) a medida que el papá confirma rasgos. 5 niveles. Cortes iniciales
+// (calibrables con datos de la beta): 0 confirmados -> N1, 1 -> N2, 2 -> N3,
+// 3-4 -> N4, 5+ -> N5.
+function nivelNitidez(rasgosConfirmados) {
+  if (rasgosConfirmados >= 5) return 5
+  if (rasgosConfirmados >= 3) return 4
+  if (rasgosConfirmados === 2) return 3
+  if (rasgosConfirmados === 1) return 2
+  return 1
 }
 
-function calcularRacha(episodios, hitos) {
-  // Permite 1 "día de gracia" por racha: un gap de 1 día no rompe la
-  // racha. Un gap de 2 días seguidos sí la rompe. Una vez gastado el
-  // freeze (sea porque hoy no hay actividad pero ayer sí, sea porque
-  // saltamos un gap interno), cualquier gap adicional la rompe.
-  const set = new Set([
-    ...episodios.map((e) => toDateStr(e.fecha)),
-    ...hitos.map((h) => toDateStr(h.fecha)),
-  ])
-  if (set.size === 0) return { streak: 0, usedFreeze: false }
-
-  const cursor = new Date()
-  cursor.setHours(0, 0, 0, 0)
-
-  let freezeUsed = false
-  if (!set.has(toDateStr(cursor))) {
-    cursor.setDate(cursor.getDate() - 1)
-    if (!set.has(toDateStr(cursor))) return { streak: 0, usedFreeze: false }
-    freezeUsed = true
-  }
-
-  let streak = 0
-  while (true) {
-    if (set.has(toDateStr(cursor))) {
-      streak++
-      cursor.setDate(cursor.getDate() - 1)
-    } else if (!freezeUsed) {
-      const peek = new Date(cursor)
-      peek.setDate(cursor.getDate() - 1)
-      if (set.has(toDateStr(peek))) {
-        freezeUsed = true
-        cursor.setDate(cursor.getDate() - 1)
-      } else {
-        break
-      }
-    } else {
-      break
-    }
-  }
-  return { streak, usedFreeze: freezeUsed }
-}
-
-function frasePorRacha(racha, nombre) {
-  const n = nombre || 'tu hijo/a'
-  if (racha === 0) return `Registra algo hoy para empezar tu racha con ${n} 🌱`
-  if (racha === 1) return `Llevas 1 día acompañando a ${n} 🌱`
-  if (racha < 4) return `Llevas ${racha} días seguidos con ${n} 🌿`
-  if (racha < 7) return `${racha} días consecutivos. Estás construyendo un hábito 🌿`
-  if (racha < 14) return `¡${racha} días seguidos acompañando a ${n}! 🌟`
-  if (racha < 30) return `${racha} días. Tu constancia ya tiene raíces 🌳`
-  return `${racha} días de presencia consciente junto a ${n} 🏆`
+// Filtros CSS por nivel (valores exactos del diseño). El revelado "respira"
+// con transition: filter 1.2s ease (definida en .retratoImg).
+const FILTRO_NITIDEZ = {
+  1: 'blur(5px) grayscale(1) saturate(.30) contrast(.92)',
+  2: 'blur(4px) grayscale(.70) saturate(.50) contrast(.95)',
+  3: 'blur(2px) grayscale(.35) saturate(.75) contrast(1)',
+  4: 'blur(1px) grayscale(.15) saturate(.95) contrast(1.02)',
+  5: 'blur(0) grayscale(0) saturate(1.10) contrast(1.05)',
 }
 
 function calcularEvolucion(episodios) {
@@ -318,7 +284,6 @@ export default function HijoPage() {
   }
 
   // ── Modo stats (Refugio) ──────────────────────────────────────────────────
-  const { streak: diasRacha, usedFreeze: rachaUsoFreeze } = calcularRacha(episodios, hitos)
   const evolBase = calcularEvolucion(episodios)
   const logrosBase = calcularLogrosRecientes({ episodios, hitos, estrategias })
   const ultimosHitos = [...hitos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 3)
@@ -338,19 +303,6 @@ export default function HijoPage() {
           : ''),
   }
 
-  // rachaInicio derivado: hoy - (diasRacha - 1).
-  const rachaInicio = (() => {
-    if (diasRacha === 0) return null
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    d.setDate(d.getDate() - (diasRacha - 1))
-    return d.toISOString()
-  })()
-
-  // calcularRacha no expone la fecha del freeze. Queda null y el chip
-  // omite la parte "· {fecha}" cuando no hay dato.
-  const rachaUltimoFreezeDate = null
-
   const logrosRecientes = logrosBase.map((b) => ({
     id: b.titulo,
     emoji: b.emoji,
@@ -366,8 +318,9 @@ export default function HijoPage() {
     fecha: h.fecha,
   }))
 
-  const sinHistorial = diasRacha === 0
-  const frase = frasePorRacha(diasRacha, hijo.nombre)
+  // Sin historial = el hijo no tiene episodios ni hitos todavía (antes salía de
+  // la racha, eliminada en 4B-1). Solo alimenta el texto del lede del retrato.
+  const sinHistorial = episodios.length === 0 && hitos.length === 0
 
   // trendInfo inline (usa los iconos lucide ya importados).
   const trend = (() => {
@@ -397,77 +350,55 @@ export default function HijoPage() {
     : null
   const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
 
+  // Nitidez del retrato: cuántos rasgos del hijo activo ya confirmó el papá.
+  const rasgosConfirmados = (rasgos || []).filter(
+    (r) => r.estado === 'confirmado' && r.hijoId === hijo.id
+  ).length
+  const nivel = nivelNitidez(rasgosConfirmados)
+
   return (
     <div className={s.page}>
       <div className={s.heroBlock}>
         <header className={s.hero}>
-          <div className={s.heroTop}>
-            <div className={s.heroAvatar} aria-hidden="true">
+          <button
+            className={s.heroIconBtn}
+            onClick={() => navigate('/perfil')}
+            aria-label="Ajustes de perfil"
+          >
+            <Settings size={18} />
+          </button>
+
+          <div className={s.retratoWrap}>
+            <div className={s.retratoFoto} aria-hidden="true">
               {hijo.avatarUrl
-                ? <img src={hijo.avatarUrl} alt={hijo.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                : (hijo.nombre?.[0]?.toUpperCase() ?? '·')
+                ? (
+                  <img
+                    src={hijo.avatarUrl}
+                    alt={hijo.nombre}
+                    className={s.retratoImg}
+                    style={{ filter: FILTRO_NITIDEZ[nivel] }}
+                  />
+                )
+                : <Escarabajo className={s.retratoBicho} />
               }
             </div>
-            <div className={s.heroWho}>
-              <h1 className={s.heroName}>{hijo.nombre}</h1>
-              {hijo.edad != null && (
-                <div className={s.heroAge}>
-                  {hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}
-                </div>
-              )}
-              <p className={s.heroLede}>
-                {sinHistorial
-                  ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
-                  : `La huella que ${hijo.nombre} va dejando, día tras día.`}
-              </p>
-            </div>
-            <button
-              className={s.heroIconBtn}
-              onClick={() => navigate('/perfil')}
-              aria-label="Ajustes de perfil"
-            >
-              <Settings size={18} />
-            </button>
+            <span className={s.nitidezPill}>Nitidez {nivel}/5</span>
+          </div>
+
+          <div className={s.heroWho}>
+            <h1 className={s.heroName}>{hijo.nombre}</h1>
+            {hijo.edad != null && (
+              <div className={s.heroAge}>
+                {hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}
+              </div>
+            )}
+            <p className={s.heroLede}>
+              {sinHistorial
+                ? `La huella de ${hijo.nombre} empieza con tu primer registro.`
+                : `La huella que ${hijo.nombre} va dejando, día tras día.`}
+            </p>
           </div>
         </header>
-
-        <section
-          className={[s.rachaShelf, sinHistorial && s.empty].filter(Boolean).join(' ')}
-          aria-labelledby="shelf-lbl"
-        >
-          <div className={s.shelfBody}>
-            <div className={s.shelfMain}>
-              <span id="shelf-lbl" className={s.shelfLbl}>
-                {sinHistorial ? (
-                  'Sin racha aún'
-                ) : (
-                  <><span className={s.fire}>🔥</span> Racha activa</>
-                )}
-              </span>
-              <div className={s.shelfNumLine}>
-                <span className={s.shelfNum}>
-                  {diasRacha}<small>{sinHistorial ? 'días' : 'días seguidos'}</small>
-                </span>
-              </div>
-            </div>
-            <div className={s.shelfMeta}>
-              <span className={s.shelfSince}>
-                {sinHistorial || !rachaInicio
-                  ? '·'
-                  : `desde el ${new Date(rachaInicio).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`}
-              </span>
-              <p className={s.shelfFrase}>{frase}</p>
-              {rachaUsoFreeze && !sinHistorial && (
-                <span className={s.graceChip}>
-                  🌿 Día de gracia usado
-                  {rachaUltimoFreezeDate
-                    ? ` · ${new Date(rachaUltimoFreezeDate).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`
-                    : ''}
-                </span>
-              )}
-            </div>
-          </div>
-        </section>
       </div>
 
       <div className={s.tabs} role="tablist">

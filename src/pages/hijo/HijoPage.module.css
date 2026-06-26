@@ -38,30 +38,53 @@
   pointer-events: none; z-index: 1;
 }
 
-.heroTop {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-.heroAvatar {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-dark));
-  display: grid; place-items: center;
-  font-family: var(--font-heading);
-  color: #fff;
-  font-weight: 700; font-size: 32px;
-  letter-spacing: -0.01em;
-  flex-shrink: 0;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.22), var(--shadow-racha);
-}
-.heroWho {
-  flex: 1;
-  min-width: 0;
-  padding-top: 2px;
+/* ─── Retrato · cabecera (motor de rasgos · 4B-1) ──────────────── */
+.retratoWrap {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.retratoFoto {
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-mocha-light);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-md);
+}
+/* La foto "madura": el filtro de nitidez se aplica inline por nivel; aquí solo
+   vive la transición para que el revelado respire al confirmar un rasgo. */
+.retratoImg {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: filter 1.2s ease;
+}
+/* Sin foto: el escarabajo crema sobre el medallón mocha. Va SIEMPRE nítido (el
+   "madurar" sin foto se reflejará en el rastro, pieza 4B-2). */
+.retratoBicho {
+  width: 58%; height: 58%;
+  color: var(--color-on-mocha);
+}
+/* Píldora de nitidez · sutil, texto sobre mocha, sin barra ni puntaje. */
+.nitidezPill {
+  font-family: var(--font-family);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--color-on-mocha);
+  opacity: 0.72;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.heroWho {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 4px;
 }
 .heroName {
@@ -79,6 +102,9 @@
   margin-top: 4px;
 }
 .heroIconBtn {
+  position: absolute;
+  top: 18px; right: 18px;
+  z-index: 3;
   width: 38px; height: 38px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.94);
@@ -92,107 +118,6 @@
   opacity: 0.78;
   line-height: 1.45;
   margin: 6px 0 0;
-}
-
-/* ─── Shelf · zona 2 del shingle (cream) ──────────────────────── */
-.rachaShelf {
-  background: var(--color-celebration-end);
-  border-top: 1px solid var(--color-primary-border);
-  border-bottom-left-radius: 28px;
-  border-bottom-right-radius: 28px;
-  padding: 18px 22px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.shelfBody {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-}
-.shelfMain {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.shelfMeta {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-.shelfLbl {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--color-primary-dark);
-}
-.shelfLbl .fire { font-size: 12px; margin-right: 4px; }
-.shelfSince {
-  font-family: var(--font-family);
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  letter-spacing: 0.02em;
-}
-.shelfNumLine {
-  display: flex; align-items: baseline;
-  gap: 10px; flex-wrap: wrap;
-}
-.shelfNum {
-  font-family: var(--font-heading) !important;
-  font-size: 56px; font-weight: 700;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  color: var(--color-primary);
-}
-.shelfNum small {
-  font-family: var(--font-family);
-  font-size: 13px; font-weight: 600;
-  letter-spacing: 0;
-  color: var(--color-text-muted);
-  margin-left: 4px;
-}
-.shelfFrase {
-  font-family: var(--font-heading);
-  font-style: italic;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--color-text);
-  letter-spacing: -0.005em;
-  max-width: 26ch;
-}
-
-/* Modifier · hijo sin historial */
-.rachaShelf.empty {
-  background: var(--color-bg);
-  border-top-color: var(--color-border);
-}
-.rachaShelf.empty .shelfNum   { color: var(--color-text-light); font-size: 36px; }
-.rachaShelf.empty .shelfFrase {
-  font-style: normal;
-  font-family: var(--font-family);
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-.rachaShelf.empty .shelfLbl   { color: var(--color-text-muted); }
-
-/* Chip "Día de gracia" — pistachio */
-.graceChip {
-  display: inline-flex;
-  align-items: center; gap: 5px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--color-leaf-bg);
-  border: 1px solid var(--color-leaf-border);
-  color: var(--color-tag-green);
-  font-size: 10.5px; font-weight: 700;
-  letter-spacing: 0.02em;
-  align-self: flex-start;
-  margin-top: 4px;
 }
 
 /* ─── Tabs · border-bottom estilo HitosPage ───────────────────── */
