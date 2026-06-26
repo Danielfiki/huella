@@ -28,11 +28,46 @@ function nivelNitidez(rasgosConfirmados) {
 // Filtros CSS por nivel (valores exactos del diseño). El revelado "respira"
 // con transition: filter 1.2s ease (definida en .retratoImg).
 const FILTRO_NITIDEZ = {
-  1: 'blur(5px) grayscale(1) saturate(.30) contrast(.92)',
-  2: 'blur(4px) grayscale(.70) saturate(.50) contrast(.95)',
-  3: 'blur(2px) grayscale(.35) saturate(.75) contrast(1)',
-  4: 'blur(1px) grayscale(.15) saturate(.95) contrast(1.02)',
-  5: 'blur(0) grayscale(0) saturate(1.10) contrast(1.05)',
+  1: 'grayscale(1) saturate(.20) contrast(.92) brightness(.97)',
+  2: 'grayscale(.72) saturate(.45) contrast(.96)',
+  3: 'grayscale(.45) saturate(.70) contrast(1)',
+  4: 'grayscale(.18) saturate(.92) contrast(1.02)',
+  5: 'grayscale(0) saturate(1.10) contrast(1.05)',
+}
+
+// ── Rastro del escarabajo (motor de rasgos · 4B-1 + adelanto 4B-2) ──────────
+// Un anillo de marcas sobre un arco de 314° (hueco de 46° abajo, donde nace el
+// camino). Avanza UNA marca por cada rasgo confirmado; el escarabajo se posa en
+// la última marca recorrida. Solo avanza, nunca retrocede. Coordenadas en el
+// viewBox de 190x190 (1:1 con los px del contenedor).
+const RASTRO_N     = 14            // total de marcas del anillo (calibrable)
+const RASTRO_C     = 95            // centro (190 / 2)
+const RASTRO_R     = 86            // radio del anillo (la foto es 150 → r 75)
+const RASTRO_GAP   = 46            // grados de hueco, centrado abajo
+const RASTRO_START = 90 + RASTRO_GAP / 2   // 113° = borde izquierdo del hueco
+const RASTRO_SPAN  = 360 - RASTRO_GAP      // 314° de arco recorrible
+
+function rastroPunto(i) {
+  const angDeg = RASTRO_START + RASTRO_SPAN * (i / (RASTRO_N - 1))
+  const ang = (angDeg * Math.PI) / 180
+  return {
+    x: RASTRO_C + RASTRO_R * Math.cos(ang),
+    y: RASTRO_C + RASTRO_R * Math.sin(ang),
+    angDeg,
+  }
+}
+
+function construirRastro(confirmados) {
+  const recorridas = Math.max(0, Math.min(confirmados, RASTRO_N))
+  const marcas = Array.from({ length: RASTRO_N }, (_, i) => {
+    const p = rastroPunto(i)
+    return { x: p.x, y: p.y, on: i < recorridas }
+  })
+  // Con 0 confirmados el escarabajo arranca al inicio del arco; si no, va en la
+  // última marca recorrida. Rotación tangente al anillo (+90°, calibrable).
+  const idxBicho = recorridas === 0 ? 0 : recorridas - 1
+  const pb = rastroPunto(idxBicho)
+  return { marcas, bicho: { x: pb.x, y: pb.y, rot: pb.angDeg + 90 } }
 }
 
 function calcularEvolucion(episodios) {
@@ -355,6 +390,7 @@ export default function HijoPage() {
     (r) => r.estado === 'confirmado' && r.hijoId === hijo.id
   ).length
   const nivel = nivelNitidez(rasgosConfirmados)
+  const rastro = construirRastro(rasgosConfirmados)
 
   return (
     <div className={s.page}>
@@ -369,18 +405,44 @@ export default function HijoPage() {
           </button>
 
           <div className={s.retratoWrap}>
-            <div className={s.retratoFoto} aria-hidden="true">
-              {hijo.avatarUrl
-                ? (
-                  <img
-                    src={hijo.avatarUrl}
-                    alt={hijo.nombre}
-                    className={s.retratoImg}
-                    style={{ filter: FILTRO_NITIDEZ[nivel] }}
+            <div className={s.rastroAnillo}>
+              <svg className={s.rastroSvg} viewBox="0 0 190 190" aria-hidden="true">
+                {rastro.marcas.map((m, i) => (
+                  <circle
+                    key={i}
+                    cx={m.x}
+                    cy={m.y}
+                    r="3"
+                    className={m.on ? s.rastroMarcaOn : s.rastroMarca}
                   />
-                )
-                : <Escarabajo className={s.retratoBicho} />
-              }
+                ))}
+              </svg>
+
+              <div className={s.retratoFoto} aria-hidden="true">
+                {hijo.avatarUrl
+                  ? (
+                    <img
+                      src={hijo.avatarUrl}
+                      alt={hijo.nombre}
+                      className={s.retratoImg}
+                      style={{ filter: FILTRO_NITIDEZ[nivel] }}
+                    />
+                  )
+                  : <Escarabajo className={s.retratoBicho} />
+                }
+              </div>
+
+              <span
+                className={s.rastroBicho}
+                style={{
+                  left: `${rastro.bicho.x}px`,
+                  top: `${rastro.bicho.y}px`,
+                  transform: `translate(-50%, -50%) rotate(${rastro.bicho.rot}deg)`,
+                }}
+                aria-hidden="true"
+              >
+                <Escarabajo className={s.rastroBichoSvg} />
+              </span>
             </div>
             <span className={s.nitidezPill}>Nitidez {nivel}/5</span>
           </div>

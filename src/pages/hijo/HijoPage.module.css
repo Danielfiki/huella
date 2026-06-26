@@ -46,6 +46,43 @@
   gap: 10px;
   margin-bottom: 14px;
 }
+/* Anillo del rastro: contenedor de 190px con la foto (150px) centrada dentro,
+   el SVG de marcas por encima y el escarabajo posado sobre la última marca. */
+.rastroAnillo {
+  position: relative;
+  width: 190px; height: 190px;
+  display: grid;
+  place-items: center;
+}
+.rastroSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+/* Marcas: por delante = contorno mocha translúcido; recorridas = terracota
+   sólida. La transición hace que el paso "respire" al confirmar un rasgo. */
+.rastroMarca {
+  fill: color-mix(in srgb, var(--color-accent-mocha) 28%, transparent);
+  transition: fill 1.2s ease;
+}
+.rastroMarcaOn {
+  fill: var(--color-primary);
+  transition: fill 1.2s ease;
+}
+/* Escarabajo del rastro: la posición la fija el inline style por ángulo; la
+   transición de left/top/transform hace que avance suave (solo avanza). */
+.rastroBicho {
+  position: absolute;
+  z-index: 2;
+  width: 24px; height: 24px;
+  color: var(--color-primary);
+  transition: left 1.2s ease, top 1.2s ease, transform 1.2s ease;
+}
+.rastroBichoSvg {
+  width: 100%; height: 100%;
+  display: block;
+}
 .retratoFoto {
   width: 150px; height: 150px;
   border-radius: 50%;
