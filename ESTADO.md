@@ -185,6 +185,17 @@ Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Dec
 - **PRÓXIMO PENDIENTE DEL MOTOR — FASE B:** **afinar el `PROMPT_DETECTAR_RASGOS` para equilibrar las 4 familias** cuando haya **datos reales de la beta** (calibrar para que no se sesgue, ej. demasiadas `fortalezas` vs. `mueve`/`calma`).
 - **MÁS ADELANTE — Fases 2/3/4 del gancho** (según `huella-gancho-retencion.md` en el Drive de Daniel): **Fase 2** "La revelación incompleta" (que la orientación abra bucles honestos), **Fase 3** "La notificación noble" (gatillo de retorno con valor, depende de resolver si las push del `NotifBanner` son reales), **Fase 4** "El loop de la pareja".
 
+##### FASE 2 del gancho ("la revelación incompleta") — DISEÑADA, pendiente de construir
+
+- **Qué es:** mostrarle al papá, de forma **honesta**, cuando Huella está detectando un patrón pero **aún NO tiene evidencia suficiente** (1-2 momentos, menos de los 3 que exige un rasgo). Abre un bucle de retorno ("hay algo en camino") sin afirmar nada del niño con evidencia insuficiente.
+- **DECISIÓN DE PRODUCTO DE DANIEL:** la pista **NO revela el contenido** del patrón emergente — solo avisa que *"hay algo en camino, faltan momentos"*. Esto **protege la credibilidad** (no se afirma ningún rasgo del niño hasta tenerlo sólido). El bucle se **cierra solo cuando el patrón llega a 3 momentos** y se vuelve rasgo confirmable (verdad real, no clickbait).
+- **DECISIÓN TÉCNICA:** los emergentes se manejan con un **estado nuevo en la tabla `rasgos`** (`'emergente'`), **NO en memoria** (todo el retrato se persiste y se lee al abrir la app). Requiere **migración del CHECK de `estado`** + ajustes en el **dedup** de `guardarRasgosDetectados` y en **todos los conteos de UI** que hoy asumen solo 3 estados (`HijoPage`/`PanelPage`/card 4A/retrato).
+- **PLAN DE CONSTRUCCIÓN en 3 capas (en este orden, con QA entre cada una):**
+  - **Capa 1 — capturar:** persistir los patrones emergentes (1-2 momentos) que **hoy se botan** en `detectarRasgos` (el filtro `< 3` los descarta). Guardarlos como `'emergente'`, **sin que cuenten para la nitidez ni se mezclen con los candidatos**.
+  - **Capa 2 — cerrar el bucle:** cuando un emergente junta su **3er momento**, **graduarlo a `candidato`** (UPDATE de `estado` + evidencia, **NO** INSERT duplicado).
+  - **Capa 3 — mostrar la pista honesta** al papá (Home y/o retrato), sin revelar contenido.
+- **TERRENO YA RELEVADO (lectura de hoy):** (1) hoy los `< 3` momentos **se pierden** — el prompt los suprime (regla 1) y el `.filter` (`anthropic.js:1665`) los remata; (2) para incluirlos, el prompt debería devolver un arreglo **`"emergentes"` separado** del de `rasgos`, con umbral más bajo y dedup contra los confirmables; (3) el CHECK actual es `estado IN ('candidato','confirmado','descartado')`; (4) **espacio visual disponible**: la `AnticipoRetratoCard` del Home (subtexto / un 4º estado) y, en el retrato, las cards de familia / la metáfora del camino (el tramo por delante aún sin dibujar) — ninguno reservado para esto todavía.
+
 ### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
 
 - **CAMBIO de proveedor: se descartó Zoho gratis.** Su interfaz precargaba "www" en el campo del dominio y no dejaba corregirlo; además el plan gratis no integra con Gmail. Se eligió **Google Workspace** (~CLP 15.150/mes, prueba gratis de 14 días).
