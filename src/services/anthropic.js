@@ -1565,10 +1565,10 @@ Tu tarea: detectar rasgos del niño y clasificarlos en EXACTAMENTE estas 4 famil
 - calma: qué lo regula, cómo se tranquiliza.
 
 Reglas duras:
-1. Solo propón un rasgo si hay AL MENOS 3 momentos coherentes que lo respalden (sean episodios, hitos o una mezcla). Si no llega a 3, no lo incluyas.
+1. Propon cualquier patron real y coherente que observes en el nino, aunque por ahora solo lo respalden 1 o 2 momentos (sean episodios, hitos o una mezcla). No exijas una cantidad minima de momentos para incluirlo. Lo unico que NO debes proponer es ruido: coincidencias sueltas, suposiciones sin respaldo en los momentos entregados, o rasgos genericos que le calzarian a cualquier nino. Si el patron es real, incluyelo aunque su evidencia sea todavia pequena.
 2. "titulo": una frase corta, observacional y cálida, sin diagnóstico ni etiquetas (ejemplo: "Busca consolar cuando alguien está triste"). Habla del niño con respeto; nunca lo reduzcas a un problema.
-3. "evidencia": lista con los ids de los momentos que respaldan el rasgo (mínimo 3 ids reales tomados de los datos entregados, sean de episodios o de hitos).
-4. "confianza": número entre 0 y 1 según la fuerza de la evidencia (3 momentos coherentes ~0.7; 5 o más concentrados ~0.85).
+3. "evidencia": lista con los ids de los momentos que respaldan el rasgo (al menos 1 id real tomado de los datos entregados, sea de episodios o de hitos; incluye TODOS los ids que de verdad lo respalden).
+4. "confianza": numero entre 0 y 1 segun la fuerza de la evidencia (1 momento ~0.4; 2 momentos coherentes ~0.55; 3 momentos ~0.7; 5 o mas concentrados ~0.85).
 5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
 6. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
 
@@ -1658,11 +1658,19 @@ ${JSON.stringify({
             return tipo ? { tipo, id } : null
           })
           .filter(Boolean)
-        return { ...r, evidencia }
+        // Clasificacion por CONTEO, no por etiqueta del modelo: 1-2 momentos =
+        // patron emergente (aun sin evidencia suficiente para proponerlo como
+        // rasgo confirmable); 3 o mas = candidato, como hasta hoy. El guardado
+        // leera este flag en el paso siguiente; aca NO se escribe en la tabla.
+        const esEmergente = evidencia.length < 3
+        return { ...r, evidencia, esEmergente }
       })
       .filter((r) => {
         if (!r || !FAMILIAS_VALIDAS.includes(r.familia)) return false
-        if (r.evidencia.length < 3) return false
+        // Antes se botaban los de menos de 3 momentos; ahora se conservan y se
+        // distinguen via esEmergente. Solo se descarta si NO hay ninguna
+        // evidencia real que lo ancle (0 momentos resueltos = ruido).
+        if (r.evidencia.length < 1) return false
         if (r.confianza != null && (typeof r.confianza !== 'number' || r.confianza < 0 || r.confianza > 1)) return false
         return true
       })
