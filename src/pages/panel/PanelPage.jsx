@@ -6,6 +6,7 @@ import { useHuella } from '../../context/HuellaContext'
 import { interpretarPatrones, detectarPatronesEstructurado } from '../../services/anthropic'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import Escarabajo from '../../components/ui/Escarabajo'
 import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
@@ -127,6 +128,43 @@ function UltimoHitoCard({ hito, onVerLogros, authorName }) {
   )
 }
 
+// Card de anticipo del retrato (motor de rasgos · 4D): el gatillo de retorno.
+// Lleva a /hijo. Tres estados: con candidato por confirmar = gancho fuerte;
+// sin candidato pero con confirmados = progreso; sin nada = no se renderiza
+// (el caller decide con candidato/confirmados). Sigue el patron de UltimoHitoCard.
+function AnticipoRetratoCard({ nombre, candidato, confirmados, onClick }) {
+  const hayCandidato = !!candidato
+  const eyebrow  = hayCandidato ? 'Nuevo en su huella' : 'Su huella'
+  const titulo   = hayCandidato ? `Huella notó algo nuevo en ${nombre}` : `El retrato de ${nombre}`
+  const subtexto = hayCandidato ? 'Toca para descubrirlo' : `${confirmados} de 12 rasgos descubiertos`
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+        background: 'var(--color-surface)', border: '1.5px solid var(--color-primary-border)',
+        borderRadius: 'var(--radius-md)', padding: '12px 14px', cursor: 'pointer',
+        textAlign: 'left', boxShadow: 'var(--shadow-sm)',
+      }}
+    >
+      <div style={{
+        width: '52px', height: '52px', borderRadius: '50%', flexShrink: 0,
+        background: 'var(--color-accent-mocha)', color: 'var(--color-on-mocha)',
+        display: 'grid', placeItems: 'center',
+      }}>
+        <Escarabajo className={styles.anticipoBicho} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{eyebrow}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{titulo}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>{subtexto}</p>
+      </div>
+      <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+    </button>
+  )
+}
+
 // ── Computaciones de narrativas ───────────────────────────────────────────────
 
 function useNarrativaFrecuencia(episodios, estrategias) {
@@ -214,8 +252,16 @@ export default function PanelPage() {
   const [upgradeCopy, setUpgradeCopy] = useState(null)
   const analisisRef = useRef(null)
 
-  const { hijo, hijos, episodios, hitos, estrategias, padreNombre } = state
+  const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
+
+  // Motor de rasgos · 4D — datos para la card de anticipo del retrato.
+  const rasgoCandidato = (rasgos || []).find(
+    (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
+  ) ?? null
+  const rasgosConfirmadosCount = (rasgos || []).filter(
+    (r) => r.estado === 'confirmado' && r.hijoId === hijo?.id
+  ).length
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
   // Consejo del día: live en la campana del Hero. Visible solo si hay
@@ -440,6 +486,16 @@ export default function PanelPage() {
 
         {/* ── CTA primario ── */}
         <CTAPrimary onClick={() => navigate('/nuevo')} />
+
+        {/* ── Anticipo del retrato (motor de rasgos · 4D) · gatillo de retorno ── */}
+        {(rasgoCandidato || rasgosConfirmadosCount > 0) && (
+          <AnticipoRetratoCard
+            nombre={nombreHijo}
+            candidato={rasgoCandidato}
+            confirmados={rasgosConfirmadosCount}
+            onClick={() => navigate('/hijo')}
+          />
+        )}
 
         {/* ── CTA Pregúntale a Huella (visible solo con datos suficientes) ── */}
         {episodios.length >= 3 && (
