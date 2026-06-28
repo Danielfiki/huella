@@ -31,7 +31,31 @@
 
 ---
 
-## Cerrado HOY (domingo 28 junio 2026) — FASE 2 del gancho · Capa 2 (persistencia y graduación) COMPLETA y en producción
+## Cerrado HOY (domingo 28 junio 2026) — FASE 2 del gancho · Capa 3 (la pista honesta) COMPLETA · FASE 2 COMPLETA de punta a punta
+
+**Sesión de la Capa 3 de la Fase 2 ("la revelación incompleta"): mostrarle al papá la pista honesta de que "hay algo en camino" cuando hay un rasgo emergente, SIN revelar contenido. Con esto la Fase 2 queda COMPLETA end-to-end: detecta (Capa 1), persiste y gradúa (Capa 2), muestra la pista (Capa 3). 2 commits pusheados a `main`, HEAD en `829f427`.**
+
+### Qué se hizo (solo `PanelPage.jsx`)
+
+- **Tercer estado de la `AnticipoRetratoCard` (Home).** Prioridad de la card: **candidato > emergente > progreso** (se muestra UNO). Cuando NO hay candidato pero SÍ hay un rasgo emergente para el hijo activo, aparece la pista honesta: eyebrow **"Algo se está dibujando"**, título **"El retrato de {nombre} está creciendo"**, subtexto **"Huella está notando algo. Necesita unos momentos más para mostrártelo."** Los estados candidato ("Huella notó algo nuevo") y progreso ("N de 12 rasgos") quedaron **sin cambios**.
+- **Acento lavanda** en eyebrow y chevron del estado emergente: `var(--color-accent-blue)` (`#6C8EF5`), para diferenciarla del candidato (terracota `--color-primary`) y de la card verde de análisis. El token literal `--color-accent-lavender` es **otro** lila (`#CAC0E0`) y **NO se usó**: se eligió `--color-accent-blue` por ser el hex exacto del mockup, sin hardcodear hex y con dark override ya cubierto.
+- **`hayEmergente`** calculado en `PanelPage` (`.some` por `estado === 'emergente' && r.hijoId === hijo?.id`); la condición de render de la card se amplió a `(rasgoCandidato || hayEmergente || rasgosConfirmadosCount > 0)`.
+- **Título a 2 líneas solo en el estado emergente** (clamp `-webkit-box` + `WebkitLineClamp: 2`), porque el `whiteSpace: nowrap` heredado lo truncaba con "…". Candidato y progreso siguen en **una** línea.
+- **2 commits pusheados:** `c74ad31` (la pista · 3er estado) y `829f427` (fix del título a 2 líneas). Validado en **producción** con una fila emergente sintética de prueba para Pipa (insertada para el QA y **borrada después; tabla limpia**).
+
+### Decisiones de diseño
+
+- **La pista NUNCA usa la palabra "patrón".** Eso evita confundirla con la card verde `CTAAskHuella` ("¿Qué patrón ves esta semana?"), que analiza los **episodios de la semana** — concepto distinto del **retrato/rasgos**. Las dos viven en el mismo scroll del Home y comparten el escarabajo de marca, así que es el lenguaje el que las separa.
+- **Solo el Home, NO la ficha del hijo (`HijoPage`).** La pista es un **gatillo de retorno** y se mantuvo el cambio acotado a un solo archivo. `HijoPage`, el contexto y el motor no se tocaron.
+
+### Pendientes anotados (no para ahora)
+
+- **PULIDO DEL ESCARABAJO:** el símbolo del escarabajo (ej. el del círculo café en la ficha del hijo y en la card del Home) se ve poco prolijo. Merece una **pasada de diseño aparte, posiblemente con Claude Design**. Daniel lo marcó explícitamente.
+- **APRENDIZAJE DE PROCESO (para no repetir):** el QA visual debe hacerse en **localhost** o **DESPUÉS de pushear a producción**, NUNCA mirando huella.lat antes de desplegar. En esta sesión se perdió tiempo intentando verificar en producción cambios que solo existían en local. Para verificar UI: o se corre el dev server local, o se pushea primero.
+
+---
+
+## Sesión domingo 28 junio 2026 — FASE 2 del gancho · Capa 2 (persistencia y graduación) COMPLETA y en producción
 
 **Sesión enfocada en la Capa 2 de la Fase 2 ("la revelación incompleta"): persistir los rasgos emergentes que el motor ya detecta (Capa 1) y graduarlos a `candidato` cuando juntan su 3er momento, SIN tocar todavía la UI. 3 pasos con QA antes de cada commit; nada se commiteó ni pusheó sin OK de Daniel. 4 commits pusheados a `main`, HEAD en `f07f9f3`.**
 
@@ -248,15 +272,15 @@ Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Dec
 - **PRÓXIMO PENDIENTE DEL MOTOR — FASE B:** **afinar el `PROMPT_DETECTAR_RASGOS` para equilibrar las 4 familias** cuando haya **datos reales de la beta** (calibrar para que no se sesgue, ej. demasiadas `fortalezas` vs. `mueve`/`calma`).
 - **MÁS ADELANTE — Fases 2/3/4 del gancho** (según `huella-gancho-retencion.md` en el Drive de Daniel): **Fase 2** "La revelación incompleta" (que la orientación abra bucles honestos), **Fase 3** "La notificación noble" (gatillo de retorno con valor, depende de resolver si las push del `NotifBanner` son reales), **Fase 4** "El loop de la pareja".
 
-##### FASE 2 del gancho ("la revelación incompleta") — Capas 1-2 (motor + persistencia/graduación) COMPLETAS y en producción; Capa 3 (pista al papá) pendiente
+##### FASE 2 del gancho ("la revelación incompleta") — COMPLETA de punta a punta y en producción (Capas 1, 2 y 3)
 
 - **Qué es:** mostrarle al papá, de forma **honesta**, cuando Huella está detectando un patrón pero **aún NO tiene evidencia suficiente** (1-2 momentos, menos de los 3 que exige un rasgo). Abre un bucle de retorno ("hay algo en camino") sin afirmar nada del niño con evidencia insuficiente.
 - **DECISIÓN DE PRODUCTO DE DANIEL:** la pista **NO revela el contenido** del patrón emergente — solo avisa que *"hay algo en camino, faltan momentos"*. Esto **protege la credibilidad** (no se afirma ningún rasgo del niño hasta tenerlo sólido). El bucle se **cierra solo cuando el patrón llega a 3 momentos** y se vuelve rasgo confirmable (verdad real, no clickbait).
 - **DECISIÓN TÉCNICA:** los emergentes se manejan con un **estado nuevo en la tabla `rasgos`** (`'emergente'`), **NO en memoria** (todo el retrato se persiste y se lee al abrir la app). Requiere **migración del CHECK de `estado`** + ajustes en el **dedup** de `guardarRasgosDetectados` y en **todos los conteos de UI** que hoy asumen solo 3 estados (`HijoPage`/`PanelPage`/card 4A/retrato).
 - **PLAN DE CONSTRUCCIÓN en 3 capas (en este orden, con QA entre cada una):**
   - ✅ **Capa 1 — motor: COMPLETA y en producción (commit `22a392d`, 27 jun).** `detectarRasgos` ahora devuelve también los patrones de 1-2 momentos que antes botaba, marcados con el flag **`esEmergente`** (clasificación por conteo, la hace el código). Migrado el CHECK de `rasgos` para admitir el estado `'emergente'`. **OJO:** los emergentes se **DETECTAN pero todavía NO se persisten ni se muestran** — eso es Capa 2/3. Detalle en "Sesión sábado 27 junio 2026".
-  - ✅ **Capa 2 — cerrar el bucle: COMPLETA y en producción (commits `f397479` + `012e2ab` + `f07f9f3`, 28 jun).** El emergente se **persiste** con su estado propio (INSERT lee `esEmergente`) y **gradúa a `candidato`** al juntar su **3er momento** (UPDATE unidireccional: solo `emergente` + `fusion>=3`; sin INSERT duplicado; sin revertir confirmado/descartado). Dedup reforzado (`normalizarTitulo`: espacios + puntuación de borde) para reencontrar el rasgo entre sesiones. **OJO:** invisible en prod todavía — se persiste/gradúa en silencio, el papá aún no ve ninguna pista. Detalle en "Cerrado HOY (domingo 28 junio 2026)".
-  - **Capa 3 — mostrar la pista honesta (pendiente)** al papá (Home y/o retrato), sin revelar contenido.
+  - ✅ **Capa 2 — cerrar el bucle: COMPLETA y en producción (commits `f397479` + `012e2ab` + `f07f9f3`, 28 jun).** El emergente se **persiste** con su estado propio (INSERT lee `esEmergente`) y **gradúa a `candidato`** al juntar su **3er momento** (UPDATE unidireccional: solo `emergente` + `fusion>=3`; sin INSERT duplicado; sin revertir confirmado/descartado). Dedup reforzado (`normalizarTitulo`: espacios + puntuación de borde) para reencontrar el rasgo entre sesiones. **OJO:** invisible en prod todavía — se persiste/gradúa en silencio, el papá aún no ve ninguna pista. Detalle en "Sesión domingo 28 junio 2026".
+  - ✅ **Capa 3 — la pista honesta: COMPLETA y en producción (commits `c74ad31` + `829f427`, 28 jun).** Tercer estado de la `AnticipoRetratoCard` del Home (prioridad candidato > emergente > progreso): cuando hay emergente y ningún candidato, muestra "Algo se está dibujando / El retrato de {nombre} está creciendo" con acento lavanda (`--color-accent-blue`), sin revelar contenido. Solo el Home (no `HijoPage`). La pista NUNCA dice "patrón" para no chocar con la card verde `CTAAskHuella`. Detalle en "Cerrado HOY (domingo 28 junio 2026)".
 - **TERRENO RELEVADO (lectura previa, parcialmente superado por la Capa 1):** (1) hoy los `< 3` momentos **se pierden** — el prompt los suprimía (regla 1) y el `.filter` (`anthropic.js`) los remataba *(RESUELTO en Capa 1)*; (2) la hipótesis original era que el prompt devolviera un arreglo **`"emergentes"` separado** del de `rasgos` — **NO se hizo así:** se mantuvo el mismo shape del modelo y la clasificación emergente vs candidato la hace el **código** vía flag `esEmergente` por conteo; (3) el CHECK actual ya es `estado IN ('candidato','confirmado','descartado','emergente')` *(MIGRADO en Capa 1)*; (4) **espacio visual disponible para la Capa 3**: la `AnticipoRetratoCard` del Home (subtexto / un 4º estado) y, en el retrato, las cards de familia / la metáfora del camino (el tramo por delante aún sin dibujar) — ninguno reservado para esto todavía.
 
 ### Correo oficial (buzón) — OPERATIVO (recibe y envía), con bandeja compartida pendiente de separar
