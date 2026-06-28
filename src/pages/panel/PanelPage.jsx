@@ -132,11 +132,28 @@ function UltimoHitoCard({ hito, onVerLogros, authorName }) {
 // Lleva a /hijo. Tres estados: con candidato por confirmar = gancho fuerte;
 // sin candidato pero con confirmados = progreso; sin nada = no se renderiza
 // (el caller decide con candidato/confirmados). Sigue el patron de UltimoHitoCard.
-function AnticipoRetratoCard({ nombre, candidato, confirmados, onClick }) {
+function AnticipoRetratoCard({ nombre, candidato, hayEmergente, confirmados, onClick }) {
   const hayCandidato = !!candidato
-  const eyebrow  = hayCandidato ? 'Nuevo en su huella' : 'Su huella'
-  const titulo   = hayCandidato ? `Huella notó algo nuevo en ${nombre}` : `El retrato de ${nombre}`
-  const subtexto = hayCandidato ? 'Toca para descubrirlo' : `${confirmados} de 12 rasgos descubiertos`
+  // Prioridad de la card (mayor a menor): candidato > emergente > progreso.
+  // El estado emergente es la pista honesta de la Fase 2: avisa que hay algo en
+  // camino sin revelar el contenido. Solo aplica si NO hay candidato.
+  const esPista = !hayCandidato && hayEmergente
+  let eyebrow, titulo, subtexto
+  if (hayCandidato) {
+    eyebrow  = 'Nuevo en su huella'
+    titulo   = `Huella notó algo nuevo en ${nombre}`
+    subtexto = 'Toca para descubrirlo'
+  } else if (esPista) {
+    eyebrow  = 'Algo se está dibujando'
+    titulo   = `El retrato de ${nombre} está creciendo`
+    subtexto = 'Huella está notando algo. Necesita unos momentos más para mostrártelo.'
+  } else {
+    eyebrow  = 'Su huella'
+    titulo   = `El retrato de ${nombre}`
+    subtexto = `${confirmados} de 12 rasgos descubiertos`
+  }
+  // Acento: lavanda (accent-blue) para la pista emergente, terracota para el resto.
+  const acento = esPista ? 'var(--color-accent-blue)' : 'var(--color-primary)'
 
   return (
     <button
@@ -156,11 +173,11 @@ function AnticipoRetratoCard({ nombre, candidato, confirmados, onClick }) {
         <Escarabajo className={styles.anticipoBicho} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{eyebrow}</p>
+        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: acento, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{eyebrow}</p>
         <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{titulo}</p>
         <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>{subtexto}</p>
       </div>
-      <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+      <ChevronRight size={16} style={{ color: acento, flexShrink: 0 }} />
     </button>
   )
 }
@@ -262,6 +279,12 @@ export default function PanelPage() {
   const rasgosConfirmadosCount = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo?.id
   ).length
+  // Fase 2 · Capa 3 — hay un rasgo en camino (1-2 momentos) para este hijo.
+  // Alimenta el estado intermedio de la card: la pista honesta sin revelar
+  // contenido. Tiene menos prioridad que el candidato, mas que el progreso.
+  const hayEmergente = (rasgos || []).some(
+    (r) => r.estado === 'emergente' && r.hijoId === hijo?.id
+  )
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
   // Consejo del día: live en la campana del Hero. Visible solo si hay
@@ -488,10 +511,11 @@ export default function PanelPage() {
         <CTAPrimary onClick={() => navigate('/nuevo')} />
 
         {/* ── Anticipo del retrato (motor de rasgos · 4D) · gatillo de retorno ── */}
-        {(rasgoCandidato || rasgosConfirmadosCount > 0) && (
+        {(rasgoCandidato || hayEmergente || rasgosConfirmadosCount > 0) && (
           <AnticipoRetratoCard
             nombre={nombreHijo}
             candidato={rasgoCandidato}
+            hayEmergente={hayEmergente}
             confirmados={rasgosConfirmadosCount}
             onClick={() => navigate('/hijo')}
           />
