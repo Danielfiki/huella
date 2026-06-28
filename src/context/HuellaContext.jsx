@@ -752,18 +752,26 @@ export function HuellaProvider({ children }) {
           // d) Ya existe -> UPDATE fusionando evidencia (union por id, sin
           //    duplicar ids ya presentes). idDe soporta el shape viejo
           //    ({ episodio_id }) y el nuevo ({ id }) sin reescribir lo antiguo.
-          //    Recalcula count y actualiza confianza. NO toca `estado` (respeta
-          //    si el papa ya confirmo o descarto). updated_at a mano: la tabla
-          //    NO tiene trigger.
+          //    Recalcula count y actualiza confianza. updated_at a mano: la
+          //    tabla NO tiene trigger.
           const previaEvidencia = Array.isArray(previo.evidencia) ? previo.evidencia : []
           const idsPresentes = new Set(previaEvidencia.map(idDe))
           const fusion = [
             ...previaEvidencia,
             ...evidencia.filter((x) => !idsPresentes.has(idDe(x))),
           ]
+          // Graduacion emergente -> candidato: SOLO si el previo era 'emergente'
+          //    Y la evidencia fusionada ya llega a 3 momentos. En cualquier otro
+          //    caso se mantiene el estado previo, por lo que confirmado y
+          //    descartado NUNCA revierten y un candidato no retrocede.
+          const estadoNuevo =
+            previo.estado === 'emergente' && fusion.length >= 3
+              ? 'candidato'
+              : previo.estado
           const { error } = await supabase
             .from('rasgos')
             .update({
+              estado:          estadoNuevo,
               evidencia:       fusion,
               evidencia_count: fusion.length,
               confianza:       rasgo.confianza ?? previo.confianza ?? null,
