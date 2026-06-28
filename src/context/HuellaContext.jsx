@@ -733,12 +733,16 @@ export function HuellaProvider({ children }) {
         )
 
         if (!previo) {
-          // c) No existe -> INSERT nuevo (estado 'candidato' por default de la tabla).
+          // c) No existe -> INSERT nuevo. El estado lo decide el flag esEmergente
+          //    que entrega el motor (detectarRasgos): 1-2 momentos = 'emergente',
+          //    3 o mas = 'candidato'. Antes no se pasaba estado y todo caia al
+          //    default 'candidato' de la tabla; ahora se setea explicito.
           const { error } = await supabase.from('rasgos').insert({
             user_id:         user.id,
             hijo_id:         hijoId,
             familia:         rasgo.familia,
             titulo:          rasgo.titulo,
+            estado:          rasgo.esEmergente ? 'emergente' : 'candidato',
             evidencia,
             evidencia_count: evidencia.length,
             confianza:       rasgo.confianza ?? null,
