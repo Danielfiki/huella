@@ -31,7 +31,35 @@
 
 ---
 
-## Cerrado HOY (sábado 27 junio 2026) — FASE 2 del gancho · Capa 1 (motor) COMPLETA y en producción
+## Cerrado HOY (domingo 28 junio 2026) — FASE 2 del gancho · Capa 2 (persistencia y graduación) COMPLETA y en producción
+
+**Sesión enfocada en la Capa 2 de la Fase 2 ("la revelación incompleta"): persistir los rasgos emergentes que el motor ya detecta (Capa 1) y graduarlos a `candidato` cuando juntan su 3er momento, SIN tocar todavía la UI. 3 pasos con QA antes de cada commit; nada se commiteó ni pusheó sin OK de Daniel. 4 commits pusheados a `main`, HEAD en `f07f9f3`.**
+
+### Los 3 pasos (con QA entre cada uno)
+
+- **Paso 1 — reforzar `normalizarTitulo` (commit `f397479`, `HuellaContext.jsx`).** Sobre lo que ya hacía (trim, minúsculas, quitar tildes) se agregaron **dos** normalizaciones: **colapsa espacios internos múltiples a uno** (`\s+ → ' '`) y **quita puntuación de borde** (`. , ; : " '` al inicio/final; NO la interna). Prepara el dedup para que un emergente **se reencuentre consigo mismo entre sesiones** sin generar filas duplicadas del mismo patrón. **QA:** 4 pares de títulos por la función real → **doble espacio interno y punto final ahora emparejan**, el control de idénticos sigue emparejando, y el **reordenamiento de palabras** ("Las despedidas le generan angustia" vs "Le angustian las despedidas") **sigue SIN emparejar a propósito** (queda para la Fase B del prompt, no es objetivo acá).
+
+- **Paso 2 — la rama INSERT lee `esEmergente` (commit `012e2ab`, `HuellaContext.jsx`).** El INSERT de `guardarRasgosDetectados` ahora **setea `estado` explícito** según el flag del motor: `'emergente'` (1-2 momentos) o `'candidato'` (3+), en vez de caer siempre al default `'candidato'` de la tabla. **QA:** (a) **traza del flag confirmada leyendo el flujo** — `esEmergente` se adjunta en `anthropic.js` (`{ ...r, evidencia, esEmergente }`), **sobrevive el `.filter`** (que no re-mapea) y el `return { rasgos }`, y llega **directo** al call site (`rasgosDetectados: resultado.rasgos`, sin mapeo intermedio ni `dbRasgoToApp`) hasta el `for` del guardado; (b) **simulación de la rama INSERT** con el shape real y los rasgos que Capa 1 detectó de Pascualito → los **3 emergentes construyen `estado: 'emergente'`** y los **2 candidatos `'candidato'`**, sin escribir en la tabla.
+
+- **Paso 3 — la rama UPDATE gradúa (commit `f07f9f3`, `HuellaContext.jsx`).** El UPDATE (que ya fusionaba evidencia y recalculaba `evidencia_count` en prod hace meses) ahora calcula `estadoNuevo` y **gradúa `emergente → candidato` cuando la evidencia fusionada llega a 3 momentos**. Regla exacta e innegociable: **solo si `previo.estado === 'emergente'` Y `fusion.length >= 3`**; en cualquier otro caso se mantiene `previo.estado`. **`confirmado` y `descartado` NUNCA revierten, `candidato` no retrocede** — una sola dirección. **QA:** (a) Daniel insertó una **fila sintética emergente real** que **pasó el CHECK** → confirma que la tabla acepta `'emergente'` contra la base viva; (b) por el riesgo de **falso OK** (RLS bloquea el anon key del runner + el `try/catch` traga el error del UPDATE → reportaría "ok" sin haber escrito), **NO se usó runner autenticado**; en su lugar se **extrajo la expresión `estadoNuevo` del archivo (verbatim, sin re-tipearla)** y se corrió contra **10 casos** (`emergente×{1,2,3,5}`, `candidato×{2,4}`, `confirmado×{1,5}`, `descartado×{2,6}`) → **todos coinciden** con la tabla de transiciones. La fila de prueba **`2819d817` se borró después; tabla limpia.**
+
+### Decisiones de diseño registradas
+
+- **La graduación vive solo en el UPDATE y es unidireccional (`emergente → candidato`).** Respeta el principio de la Fase 2: **la claridad solo crece, nunca retrocede** (lo que el papá confirmó o descartó jamás vuelve atrás; un candidato no recae a emergente).
+- **La identidad del rasgo se ancla en `familia` + título normalizado.** Es **frágil ante el reordenamiento de palabras** del modelo (el paso 1 cubre espacios y puntuación, no el orden). La solución robusta —un **slug semántico estable** del patrón— queda **anotada para la Fase B del prompt; NO se hizo acá**.
+
+### Lo que NO se hizo (pendiente, próxima sesión)
+
+- **Capa 3 — la pista honesta:** mostrarle al papá que **"hay algo en camino"** sin revelar el contenido (Home y/o retrato). Es el **primer punto donde el papá ve algo de la Fase 2**. Arranca con **diagnóstico de terreno propio**.
+- **IMPORTANTE:** la **Capa 2 es invisible en producción**. Los emergentes se **persisten y gradúan en silencio**, pero el papá **todavía no ve ninguna pista**. Eso es la Capa 3.
+
+### Estado del deploy
+
+- `git push origin main` confirmado: `22a392d..f07f9f3`, `origin/main` al día en **`f07f9f3`**. Los 4 commits: `f397479` + `012e2ab` + `f07f9f3` (Capa 2) + el docs `2d25be2` del cierre de Capa 1 que había quedado local. **La verificación de que Vercel tomó el deploy sin error queda del lado de Daniel** (Deployments → Ready): desde la sesión no se puede leer el status (sin `gh` ni token de Vercel).
+
+---
+
+## Sesión sábado 27 junio 2026 — FASE 2 del gancho · Capa 1 (motor) COMPLETA y en producción
 
 **Sesión enfocada en la Capa 1 de la Fase 2 del gancho de retención ("la revelación incompleta"): que el motor capture los patrones emergentes de 1-2 momentos que hasta hoy se botaban, SIN tocar todavía el guardado ni la UI. Commit `22a392d`, pusheado a `main`.**
 
@@ -220,14 +248,14 @@ Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Dec
 - **PRÓXIMO PENDIENTE DEL MOTOR — FASE B:** **afinar el `PROMPT_DETECTAR_RASGOS` para equilibrar las 4 familias** cuando haya **datos reales de la beta** (calibrar para que no se sesgue, ej. demasiadas `fortalezas` vs. `mueve`/`calma`).
 - **MÁS ADELANTE — Fases 2/3/4 del gancho** (según `huella-gancho-retencion.md` en el Drive de Daniel): **Fase 2** "La revelación incompleta" (que la orientación abra bucles honestos), **Fase 3** "La notificación noble" (gatillo de retorno con valor, depende de resolver si las push del `NotifBanner` son reales), **Fase 4** "El loop de la pareja".
 
-##### FASE 2 del gancho ("la revelación incompleta") — Capa 1 (motor) COMPLETA y en producción; Capas 2-3 pendientes
+##### FASE 2 del gancho ("la revelación incompleta") — Capas 1-2 (motor + persistencia/graduación) COMPLETAS y en producción; Capa 3 (pista al papá) pendiente
 
 - **Qué es:** mostrarle al papá, de forma **honesta**, cuando Huella está detectando un patrón pero **aún NO tiene evidencia suficiente** (1-2 momentos, menos de los 3 que exige un rasgo). Abre un bucle de retorno ("hay algo en camino") sin afirmar nada del niño con evidencia insuficiente.
 - **DECISIÓN DE PRODUCTO DE DANIEL:** la pista **NO revela el contenido** del patrón emergente — solo avisa que *"hay algo en camino, faltan momentos"*. Esto **protege la credibilidad** (no se afirma ningún rasgo del niño hasta tenerlo sólido). El bucle se **cierra solo cuando el patrón llega a 3 momentos** y se vuelve rasgo confirmable (verdad real, no clickbait).
 - **DECISIÓN TÉCNICA:** los emergentes se manejan con un **estado nuevo en la tabla `rasgos`** (`'emergente'`), **NO en memoria** (todo el retrato se persiste y se lee al abrir la app). Requiere **migración del CHECK de `estado`** + ajustes en el **dedup** de `guardarRasgosDetectados` y en **todos los conteos de UI** que hoy asumen solo 3 estados (`HijoPage`/`PanelPage`/card 4A/retrato).
 - **PLAN DE CONSTRUCCIÓN en 3 capas (en este orden, con QA entre cada una):**
-  - ✅ **Capa 1 — motor: COMPLETA y en producción (commit `22a392d`, 27 jun).** `detectarRasgos` ahora devuelve también los patrones de 1-2 momentos que antes botaba, marcados con el flag **`esEmergente`** (clasificación por conteo, la hace el código). Migrado el CHECK de `rasgos` para admitir el estado `'emergente'`. **OJO:** los emergentes se **DETECTAN pero todavía NO se persisten ni se muestran** — eso es Capa 2/3. Detalle en "Cerrado HOY (sábado 27 junio 2026)".
-  - **Capa 2 — cerrar el bucle (pendiente):** persistir el emergente y, cuando junta su **3er momento**, **graduarlo a `candidato`** (UPDATE de `estado` + evidencia, **NO** INSERT duplicado). Toca `guardarRasgosDetectados` (ahí se escribe en la tabla). **Arrancar con el diagnóstico del dedup.**
+  - ✅ **Capa 1 — motor: COMPLETA y en producción (commit `22a392d`, 27 jun).** `detectarRasgos` ahora devuelve también los patrones de 1-2 momentos que antes botaba, marcados con el flag **`esEmergente`** (clasificación por conteo, la hace el código). Migrado el CHECK de `rasgos` para admitir el estado `'emergente'`. **OJO:** los emergentes se **DETECTAN pero todavía NO se persisten ni se muestran** — eso es Capa 2/3. Detalle en "Sesión sábado 27 junio 2026".
+  - ✅ **Capa 2 — cerrar el bucle: COMPLETA y en producción (commits `f397479` + `012e2ab` + `f07f9f3`, 28 jun).** El emergente se **persiste** con su estado propio (INSERT lee `esEmergente`) y **gradúa a `candidato`** al juntar su **3er momento** (UPDATE unidireccional: solo `emergente` + `fusion>=3`; sin INSERT duplicado; sin revertir confirmado/descartado). Dedup reforzado (`normalizarTitulo`: espacios + puntuación de borde) para reencontrar el rasgo entre sesiones. **OJO:** invisible en prod todavía — se persiste/gradúa en silencio, el papá aún no ve ninguna pista. Detalle en "Cerrado HOY (domingo 28 junio 2026)".
   - **Capa 3 — mostrar la pista honesta (pendiente)** al papá (Home y/o retrato), sin revelar contenido.
 - **TERRENO RELEVADO (lectura previa, parcialmente superado por la Capa 1):** (1) hoy los `< 3` momentos **se pierden** — el prompt los suprimía (regla 1) y el `.filter` (`anthropic.js`) los remataba *(RESUELTO en Capa 1)*; (2) la hipótesis original era que el prompt devolviera un arreglo **`"emergentes"` separado** del de `rasgos` — **NO se hizo así:** se mantuvo el mismo shape del modelo y la clasificación emergente vs candidato la hace el **código** vía flag `esEmergente` por conteo; (3) el CHECK actual ya es `estado IN ('candidato','confirmado','descartado','emergente')` *(MIGRADO en Capa 1)*; (4) **espacio visual disponible para la Capa 3**: la `AnticipoRetratoCard` del Home (subtexto / un 4º estado) y, en el retrato, las cards de familia / la metáfora del camino (el tramo por delante aún sin dibujar) — ninguno reservado para esto todavía.
 
