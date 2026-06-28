@@ -673,6 +673,11 @@ export function HuellaProvider({ children }) {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[̀-ͯ]/g, '')
+      // colapsa espacios internos multiples a uno solo (dos o tres -> uno)
+      .replace(/\s+/g, ' ')
+      // quita puntuacion de los bordes (punto, coma, dos puntos, punto y coma,
+      // comillas) al inicio o al final; NO toca la puntuacion interna
+      .replace(/^["'.,;:]+|["'.,;:]+$/g, '')
   }
 
   // Persiste en silencio los rasgos que detecto la IA. Corre en background
