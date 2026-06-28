@@ -154,6 +154,12 @@ function AnticipoRetratoCard({ nombre, candidato, hayEmergente, confirmados, onC
   }
   // Acento: lavanda (accent-blue) para la pista emergente, terracota para el resto.
   const acento = esPista ? 'var(--color-accent-blue)' : 'var(--color-primary)'
+  // El titulo se trunca a una linea en candidato y progreso (como hoy). La pista
+  // emergente es mas larga: se permite hasta 2 lineas con clamp para que no se
+  // corte con puntos suspensivos.
+  const tituloStyle = esPista
+    ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' }
+    : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
 
   return (
     <button
@@ -174,7 +180,7 @@ function AnticipoRetratoCard({ nombre, candidato, hayEmergente, confirmados, onC
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: acento, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{eyebrow}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{titulo}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, ...tituloStyle }}>{titulo}</p>
         <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>{subtexto}</p>
       </div>
       <ChevronRight size={16} style={{ color: acento, flexShrink: 0 }} />
