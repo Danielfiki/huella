@@ -21,7 +21,20 @@
 
 ## ⏭️ PRIORIDAD INMEDIATA (próxima sesión) — LANZAR LA BETA
 
-**PRÓXIMO PASO PARA LANZAR LA BETA (prioridad, hacer ASAP).** La beta está lista en producto y textos. El **único bloqueante real** para invitar a los primeros testers (círculo cercano) es **montar el formulario de inscripción de 7 preguntas en Tally** (las preguntas ya están escritas en `huella-textos-beta.md`, en el Drive de Daniel). Es **trabajo manual en Tally, NO toca código**. Después: **separar la bandeja de `contacto@huella.lat`** de la cuenta personal, y la **consent screen de Google OAuth** antes de invitar a desconocidos (con el círculo cercano NO bloquea).
+**PRÓXIMO PASO PARA LANZAR LA BETA (prioridad, hacer ASAP).** La beta está lista en producto y textos. El **formulario de inscripción de 7 preguntas en Tally YA ESTÁ LISTO y publicado** (link: `tally.so/r/KYO4EM`, confirmado en `huella-textos-beta.md`). **NO es pendiente.**
+
+**Lo único que falta antes de invitar al círculo cercano:**
+- **Verificar el formulario publicado**: que estén las 7 preguntas y que el link de términos sea el correcto (`huella.lat/terminos#privacidad`).
+- **Tener a mano el SQL del pase Pro** (`update public.perfiles set plan_beta_hasta = now() + interval 'N days' where user_id = '...'`, con un `SELECT` antes para confirmar el `user_id`).
+
+**Antes de invitar a desconocidos (NO bloquea al círculo cercano):**
+- **Separar la bandeja de `contacto@huella.lat`** de la cuenta personal de Google.
+- **Consent screen de Google OAuth** (hoy muestra el subdominio crudo de Supabase) — se arregla por config, no por código.
+
+**Cola NO bloqueante:**
+- **Montar la encuesta de salida en Tally** (texto ya definido con el precio real; recién al final de la beta).
+- **Sincronizar `schema.sql`** con la base real (faltan `plan`, `contexto_inicial`, `intenciones`, `plan_beta_hasta` en `perfiles`).
+- **Decidir el gmail personal** que aún aparece fuera de la legal en `PerfilPage.jsx:193`.
 
 ---
 
