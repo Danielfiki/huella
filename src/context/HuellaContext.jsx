@@ -345,6 +345,12 @@ export function HuellaProvider({ children }) {
   const { family, familyLoading } = useFamily()
   const [state, dispatch] = useReducer(reducer, initialState)
   const [dataLoading, setDataLoading] = useState(false)
+  // `dataLoaded` distingue "todavía no cargué la cuenta" de "ya cargué y estos
+  // son los datos reales". `dataLoading` no sirve para eso porque vale false
+  // ANTES de la primera carga y también DESPUÉS. El gate del onboarding (Layout)
+  // necesita esta certeza para no mostrarlo en el instante previo a saber si el
+  // usuario ya tiene hijo. Una vez true, no vuelve a false.
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -478,6 +484,9 @@ export function HuellaProvider({ children }) {
       console.error('Error cargando datos:', e)
     } finally {
       setDataLoading(false)
+      // Marca que ya completamos una carga de cuenta (con o sin datos). El gate
+      // del onboarding solo decide después de esto.
+      setDataLoaded(true)
     }
   }
 
@@ -1184,6 +1193,7 @@ export function HuellaProvider({ children }) {
       state,
       dispatch,
       dataLoading,
+      dataLoaded,
       reloadData,
       profilesByUserId,
       setHijo,

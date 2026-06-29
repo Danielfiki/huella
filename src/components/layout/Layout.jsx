@@ -57,28 +57,35 @@ function SkeletonLoader() {
 }
 
 export default function Layout() {
-  const { state, dataLoading, reloadData } = useHuella()
+  const { state, dataLoading, dataLoaded, reloadData } = useHuella()
   const { family, familyLoading } = useFamily()
-  // Onboarding visible solo si el usuario no lo completó (localStorage,
-  // persiste para siempre en el dispositivo) Y tampoco lo saltó en esta
-  // sesión (sessionStorage, vuelve a aparecer al cerrar el tab).
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    if (localStorage.getItem('onboarding_done')) return false
-    if (sessionStorage.getItem('huella.onboarding.dismissed')) return false
-    return true
-  })
 
-  // Defensa contra el bug de modo parejas. Si el usuario es partner de una
-  // familia existente, no debe ver el onboarding de creación de hijo nuevo.
-  // FamilyContext puede tardar en cargar; cuando termina y resulta ser
-  // partner, cerramos el state. El render además se gatea con familyLoading
-  // para evitar que el onboarding aparezca brevemente antes de que sepamos
-  // el rol del usuario.
-  useEffect(() => {
-    if (family?.role && family.role !== 'owner') {
-      setShowOnboarding(false)
-    }
-  }, [family?.role])
+  // Fuente de verdad del onboarding: los DATOS DE LA CUENTA, no localStorage.
+  // Un usuario que ya tiene un hijo creado (el onboarding siempre crea uno) o
+  // el nombre de perfil poblado NO es nuevo → nunca ve el onboarding, aunque
+  // el storage del dispositivo se haya borrado (eviction de iOS, reinstalar la
+  // PWA, etc.). Solo lo ve quien de verdad no tiene cuenta armada todavía.
+  const yaTieneCuenta =
+    state.hijos.length > 0 || (state.padreNombre || '').trim() !== ''
+
+  // Latch local de cierre inmediato. NO decide quién es nuevo (eso lo hace
+  // `yaTieneCuenta`); solo silencia el onboarding apenas el usuario actúa:
+  //  - al saltarlo (sessionStorage: vuelve en una sesión nueva si sigue sin
+  //    datos, igual que antes);
+  //  - al completarlo, para puentear el instante entre el guardado y que
+  //    `reloadData` traiga el hijo recién creado (si no, reaparecería un frame).
+  const [onboardingCerrado, setOnboardingCerrado] = useState(
+    () => !!sessionStorage.getItem('huella.onboarding.dismissed')
+  )
+
+  // Solo decidimos DESPUÉS de cargar la cuenta (`dataLoaded`): antes no sabemos
+  // si tiene hijo y no debemos mostrarlo "por defecto". La guarda de modo
+  // pareja (`role === 'owner'`) se conserva en la propia condición.
+  const showOnboarding =
+    dataLoaded &&
+    !yaTieneCuenta &&
+    !onboardingCerrado &&
+    (!family || family.role === 'owner')
 
   const location = useLocation()
 
@@ -106,19 +113,21 @@ export default function Layout() {
               // sin necesidad de un refresh manual.
               reloadData()
             } catch (err) {
-              // Si el guardado falla (red o RPC caída) NO marcamos
-              // onboarding_done ni cerramos: re-lanzamos para que el slide
-              // final avise y deje reintentar, en vez de dejar al usuario sin
-              // perfil ni hijo guardados y sin volver a ver el onboarding.
+              // Si el guardado falla (red o RPC caída) NO cerramos: re-lanzamos
+              // para que el slide final avise y deje reintentar, en vez de dejar
+              // al usuario sin perfil ni hijo guardados. El hijo no quedó creado,
+              // así que `yaTieneCuenta` sigue false y el onboarding persiste.
               console.error('[Layout] persistirPerfilOnboarding falló:', err)
               throw err
             }
-            localStorage.setItem('onboarding_done', '1')
-            setShowOnboarding(false)
+            // Cierre inmediato mientras `reloadData` trae el hijo recién creado.
+            // Tras el reload, `hijos.length > 0` lo mantiene cerrado para siempre,
+            // sin importar el storage del dispositivo.
+            setOnboardingCerrado(true)
           }}
           onSkip={() => {
             marcarOnboardingVisto()
-            setShowOnboarding(false)
+            setOnboardingCerrado(true)
           }}
         />
       )}
