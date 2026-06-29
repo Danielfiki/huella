@@ -19,6 +19,12 @@
 
 ---
 
+## ⏭️ PRIORIDAD INMEDIATA (próxima sesión) — LANZAR LA BETA
+
+**PRÓXIMO PASO PARA LANZAR LA BETA (prioridad, hacer ASAP).** La beta está lista en producto y textos. El **único bloqueante real** para invitar a los primeros testers (círculo cercano) es **montar el formulario de inscripción de 7 preguntas en Tally** (las preguntas ya están escritas en `huella-textos-beta.md`, en el Drive de Daniel). Es **trabajo manual en Tally, NO toca código**. Después: **separar la bandeja de `contacto@huella.lat`** de la cuenta personal, y la **consent screen de Google OAuth** antes de invitar a desconocidos (con el círculo cercano NO bloquea).
+
+---
+
 ## 🚨 REGLA CRÍTICA — LANZAMIENTO DE COBROS REALES
 
 **NO activar cobros reales (credenciales de PRODUCCIÓN de Mercado Pago) hasta cumplir LAS DOS condiciones:**
