@@ -4,6 +4,7 @@ import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
 import { iniciarSuscripcion } from '../../services/pago'
+import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -254,6 +255,14 @@ export default function CuentaPage() {
           {error && <p className={styles.error}>{error}</p>}
         </>
       )}
+
+      {/* ── Canje de codigo de beta — alternativa al pago. Va FUERA del {!pro}
+           de arriba a proposito: se auto-esconde si ya es Pro, pero cuando el
+           canje sale OK conserva visible la confirmacion en verde en el mismo
+           instante en que isPro() pasa a true. ── */}
+      <div style={{ marginTop: '16px' }}>
+        <CanjeCodigoBeta />
+      </div>
     </div>
   )
 }

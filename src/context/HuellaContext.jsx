@@ -1154,6 +1154,40 @@ export function HuellaProvider({ children }) {
     if (error) throw new Error(error.message)
   }
 
+  // Canje de codigo de beta. Logica compartida entre el Home (PanelPage) y la
+  // pagina de plan (CuentaPage): asi el mapeo de resultado a mensaje vive en un
+  // solo lugar. Llama a la RPC security definer canjear_codigo_beta, que
+  // devuelve jsonb { ok, error?, plan_beta_hasta? }. Un codigo malo NO llega
+  // como error de transporte: llega como data.ok === false con data.error.
+  // En exito hace reloadData() para que isPro() cambie al instante (sin recargar).
+  // Devuelve { ok, mensaje } listo para pintar en la UI.
+  async function canjearCodigoBeta(codigo) {
+    const limpio = (codigo ?? '').trim()
+    if (!limpio) {
+      return { ok: false, mensaje: 'Ingresa tu código para activar el acceso.' }
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('canjear_codigo_beta', { p_codigo: limpio })
+      if (error) throw new Error(error.message)
+
+      if (data?.ok) {
+        await reloadData()   // refresca plan_beta_hasta → isPro() pasa a true sin recargar
+        return { ok: true, mensaje: '¡Listo! Ya tienes acceso completo a Huella por la beta 🎉' }
+      }
+
+      // data.ok === false: el codigo no sirve, pero la RPC corrio bien.
+      if (data?.error === 'ya_usado') {
+        return { ok: false, mensaje: 'Este código ya fue usado. Si crees que es un error, escríbenos a contacto@huella.lat' }
+      }
+      // 'invalido', 'no_auth' o cualquier otro: mensaje generico de codigo invalido.
+      return { ok: false, mensaje: 'Ese código no es válido. Revísalo y vuelve a intentar.' }
+    } catch (e) {
+      console.error('canjearCodigoBeta error:', e)
+      return { ok: false, mensaje: 'No pudimos conectar. Intenta de nuevo en un momento.' }
+    }
+  }
+
   // Acción Rápida v1.2 — inyectamos el regenerador en la cola para que las
   // EpisodioCards puedan pedir regeneración sin acoplar la cola al context.
   // Usamos refs porque updateEpisodio y actualizarUltimoAutorIa se recrean
@@ -1218,6 +1252,7 @@ export function HuellaProvider({ children }) {
       confirmarRasgo,
       descartarRasgo,
       savePadreNombre,
+      canjearCodigoBeta,
       isPro,
       isAdmin,
       addCheckin,

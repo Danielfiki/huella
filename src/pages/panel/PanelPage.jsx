@@ -20,6 +20,7 @@ import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
 import { ChartGatillos } from '../../components/panel/ChartGatillos'
 import { AnalisisIA } from '../../components/panel/AnalisisIA'
 import { SectionEyebrow } from '../../components/panel/SectionEyebrow'
+import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import panelStyles from '../../components/panel/panel.module.css'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import styles from './PanelPage.module.css'
@@ -515,6 +516,9 @@ export default function PanelPage() {
 
         {/* ── CTA primario ── */}
         <CTAPrimary onClick={() => navigate('/nuevo')} />
+
+        {/* ── Canje de codigo de beta (se auto-esconde si ya es Pro) ── */}
+        <CanjeCodigoBeta />
 
         {/* ── Anticipo del retrato (motor de rasgos · 4D) · gatillo de retorno ── */}
         {(rasgoCandidato || hayEmergente || rasgosConfirmadosCount > 0) && (
