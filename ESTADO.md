@@ -10,6 +10,46 @@
 
 ---
 
+## PENDIENTES (cola viva)
+
+*Única fuente de pendientes del proyecto. **Regla de proceso:** al cerrar cada sesión, lo que quede diferido ENTRA aquí; lo que se complete SALE. Formato por línea: **qué** — desde cuándo — por qué se difirió.*
+
+**Técnico / costos**
+- **Fase 2 del prompt caching** — mover `marcoEdad`+`TEMAS_CONTEMPORANEOS` (~5.300 tok) al `system` como 2º breakpoint — desde **2 jun 2026** (`COSTOS_IA.md`) — se difirió "hasta tener datos reales de la Fase 1"; requiere cambiar el contrato cliente↔backend (mandar el marco separado de los datos). Recortaría ~otro ⅓ del input en las 9 llamadas de análisis.
+- **Migrar el modelo de IA** — `claude-sonnet-4-5` (legacy) → `claude-sonnet-4-6`; evaluar Haiku para llamadas baratas — desde **2 jun 2026** — anotado como decisión aparte en `COSTOS_IA.md`.
+- **Sincronizar `schema.sql`** con la base viva — faltan `plan`, `contexto_inicial`, `intenciones`, `plan_beta_hasta` en `perfiles` — desde **21 jun 2026** — hacerlo en una pasada; falta confirmar el tipo de elemento de `intenciones` (figura como ARRAY).
+
+**Infra de la beta** (antes de invitar a DESCONOCIDOS; NO bloquea al círculo cercano)
+- **Separar la bandeja `contacto@huella.lat`** de la cuenta Google personal — desde **21 jun 2026** — se creó vía "Upgrade this account" y quedó compartida; separar con cuenta nueva o perfil de Chrome aparte.
+- **Consent screen de Google OAuth** (muestra el subdominio crudo de Supabase) — desde **17 jun 2026** — decisión pendiente: dominio propio en Supabase (~US$10/mes) vs. esperar la verificación lenta de Google. Se arregla por config, no por código.
+- **Montar la encuesta de salida en Tally** — desde **21 jun 2026** — texto ya definido (con precio real); recién al final de la beta.
+- **Cambiar el registrante del dominio** (gmail personal → `contacto@`) + opcional alinear el remitente `hola@huella.lat` (Resend) a `contacto@` — desde **21 jun 2026** — menor, fuera del repo.
+- **Gmail personal en `PerfilPage.jsx:193`** (mensaje de error al eliminar cuenta, fuera de la legal) — desde **21 jun 2026** — decidir si se cambia a `contacto@`.
+
+**Gancho de retención**
+- **Fase 3 — "la notificación noble"** (gatillo de retorno con valor, nunca culpa) — pendiente — el pipeline de Web Push YA es real (confirmado **1 jul 2026**); falta construir el contenido/trigger. Es lo que MÁS mueve la retención.
+- **Fase 4 — "el loop de la pareja"** (el registro compartido como motivo de retorno suave) — pendiente, sin arrancar.
+- **Motor de rasgos — Fase B del prompt** (afinar `PROMPT_DETECTAR_RASGOS` para equilibrar las 4 familias + slug semántico estable para la identidad del rasgo, hoy frágil al reordenamiento de palabras) — desde **27 jun 2026** — requiere datos reales de la beta para calibrar sin sesgo.
+
+**App stores** (diagnóstico hecho **1 jul 2026**; ejecución próxima sesión)
+- **Bloqueante transversal:** convertir los 5 `fetch` relativos `/api/*` a URL base absoluta (`huella.lat`) + agregar CORS a las funciones de Vercel — sin esto ninguna app empaquetada (Capacitor) habla con IA/pagos/push.
+- **Android/TWA:** subir Lighthouse a ≥80 (fuentes duplicadas + code-splitting) + crear `.well-known/assetlinks.json` y verificar que Vercel lo sirva (que no lo pise el catch-all a `index.html`) + opcional `fetch` handler mínimo en el SW.
+- **iOS nativo** (para pasar Guideline 4.2): push nativas por APNs vía Capacitor (canal nuevo; el Web Push actual no corre en WebView iOS) + Face ID + navegación nativa.
+
+**Cobros reales** (ver REGLA CRÍTICA más abajo)
+- **Primer pago REAL de punta a punta** con credenciales de producción de MP — pendiente — condición #2 y gate para activar cobros; prueba EN VIVO la firma del webhook + el camino "confirmado".
+- **Limpiar usuarios/cuentas de prueba de MP** + cancelar el preapproval de prueba que sigue `authorized` — menor.
+
+**Producto / marca** (sin fecha, menores)
+- **Racha por interacción activa** — contar cualquier interacción, no solo registrar episodio — decidido, falta implementar.
+- **Pulir la promesa central** ("Entiende por qué tu hijo actúa así…", provisional) + **evaluar un reverse trial largo** (14-30 días, no de 7) — orfebrería de copy/marca.
+- **Rediseño visual del `UpgradeModal`** (premium; el centrado ya se resolvió) — falta la pasada estética.
+
+**Deuda de diseño (tokens)**
+- **Hex hardcodeados a migrar a token:** `#FFD89C` en `HistorialHeader.module.css` (`.pdfLock`) y `white`/`#fff` en `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary` global — en la próxima pasada de Design.
+
+---
+
 ## 🪝 ESTADO DEL GANCHO DE RETENCIÓN (foto de un vistazo)
 
 - ✅ **Fase 1 — el retrato que madura:** COMPLETA, en producción.
