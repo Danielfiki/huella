@@ -1,12 +1,74 @@
-/* Fraunces local SOLO para el tagline del splash de arranque: familia propia
-   ('FrauncesSplash') para no chocar con la Fraunces de Google Fonts, y para
-   garantizar que el preload de index.html se use. Aditivo: Google Fonts sigue
-   sirviendo la Fraunces del resto de la app. */
+/* Fuentes self-hosted (sin llamadas a Google Fonts): la app carga sin
+   render-blocking externo y funciona offline / dentro de la TWA. Los .ttf
+   viven en /public/fonts. font-display: swap para no bloquear el primer paint.
+   El Bold cubre 700 y 800 (no existe archivo ExtraBold): el peso 800 usa
+   glifos Bold reales en vez de faux-bold sintetizado. */
+
+/* Fraunces — headings (var(--font-heading)) y tagline del splash de arranque.
+   El preload de Fraunces Regular en index.html apunta a este mismo archivo. */
 @font-face {
-  font-family: 'FrauncesSplash';
+  font-family: 'Fraunces';
   font-style: normal;
   font-weight: 400;
   src: url('/fonts/Fraunces_72pt-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/Fraunces_72pt-SemiBold.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 700 800;
+  src: url('/fonts/Fraunces_72pt-Bold.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 400 800;
+  src: url('/fonts/Fraunces_72pt-Italic.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* Plus Jakarta Sans — cuerpo (var(--font-family)), inputs y casi todo el texto. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/PlusJakartaSans-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/PlusJakartaSans-Medium.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700 800;
+  src: url('/fonts/PlusJakartaSans-Bold.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 400 800;
+  src: url('/fonts/PlusJakartaSans-Italic.ttf') format('truetype');
   font-display: swap;
 }
 
