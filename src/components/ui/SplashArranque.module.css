@@ -25,18 +25,23 @@
   transform: translateY(-28px);
 }
 
-/* Escarabajo: ancho fijo 92px, alto auto (sin distorsión, viewBox ~cuadrado).
+/* Escarabajo: anclado por ALTO (112px, como speccó Design); ancho auto (~122px,
+   viewBox real 1.0923:1, sin deformar).
+   El viewBox trae aire vertical: ~18.9px de aire bajo la pata inferior a este
+   tamaño. Por eso el margin-bottom se compensa a -3px (= 16 - 18.9) para que el
+   espacio ÓPTICO entre la pata y el tope de la "h" quede en ~16px, no ~35px.
    Es la ÚNICA pieza que late. */
 .beetle {
-  width: 92px;
-  height: auto;
+  height: 112px;
+  width: auto;
   color: var(--color-primary);
-  margin-bottom: 16px;
+  margin-bottom: -3px;
   transform-origin: center;
   animation: latido 1.6s ease-in-out infinite;
 }
 
-/* Palabra "huella": estable, sin latido. 148px calza con su ratio real 3.79:1. */
+/* Palabra "huella": estable, sin latido. 148px = ancho tight real de la palabra
+   (ratio 3.79:1), sin aire lateral que compensar. */
 .word {
   width: 148px;
   height: auto;
