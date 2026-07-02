@@ -46,8 +46,9 @@
 - **Pulir la promesa central** ("Entiende por qué tu hijo actúa así…", provisional) + **evaluar un reverse trial largo** (14-30 días, no de 7) — orfebrería de copy/marca.
 - **Rediseño visual del `UpgradeModal`** (premium; el centrado ya se resolvió) — falta la pasada estética.
 
-**Deuda de diseño (tokens)**
+**Deuda de diseño**
 - **Hex hardcodeados a migrar a token:** `#FFD89C` en `HistorialHeader.module.css` (`.pdfLock`) y `white`/`#fff` en `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary` global — en la próxima pasada de Design.
+- **Escarabajo del círculo café se ve más chico que el del cuadrado verde** — el de la card "NUEVO EN SU HUELLA" (`.anticipoBicho`, PanelPage) vs el de `CTAAskHuella` (`.brandIcon`); deben verse iguales — detectado **1 jul 2026**. Diagnóstico HECHO: el círculo usa **58%** (vs 90% del cuadrado, 78% estándar de círculos) y el aire del viewBox lo agrava → se ve al ~84%. Fix propuesto: subir `.anticipoBicho` a **~69%** (iguala la caja de 36px del verde; seguro, <78%, patas no tocan el borde). **Pendiente:** aplicarlo + revisar de paso `.fotoPlaceholder` (58%, RetratoSendero) y `.circuloEscarabajoIcon` (60%, GuiaPrimerosPasos) —los otros círculos bajo 78%— para que el fix sea parejo.
 
 ---
 
@@ -98,7 +99,26 @@
 
 ---
 
-## Cerrado HOY (martes 30 junio 2026) — Sistema de códigos de invitación de un solo uso COMPLETO y verificado en producción
+## Cerrado HOY (miércoles 1 – jueves 2 julio 2026) — Splash de arranque nuevo COMPLETO y verificado en producción
+
+**Se reemplazó el loader de inicio (cita + skeletons) por un splash de marca. 3 commits a `main`: `b3eb6a0` (splash), `9b27b56` (fix de proporciones del escarabajo) y el docs de cierre.**
+
+### El splash (commits `b3eb6a0` + `9b27b56`)
+
+- **Qué reemplaza:** el loader de arranque de `ProtectedRoute` (que mostraba `CitaLoader` = cita + skeletons). Ahora un **splash de marca apilado**: escarabajo terracota con **latido** (112px de alto, anclado por altura), palabra **huella** (148px) y tagline **"Conoce la huella única de tus hijos"**, centrado óptico (`translateY(-28px)`) sobre fondo crema (`var(--color-bg)` = `#FAF3EC`, no `#FAF6F1`).
+- **Comportamiento:** se mantiene hasta **auth resuelto + `dataLoaded` + mínimo 900ms**, y hace **fade de opacidad de 280ms** a la app real **sin skeleton intermedio** (gateado por `dataLoaded`, el mismo flag del fix del onboarding). Logged-out → `/login` sin esperar datos; usuario nuevo sin datos → el fade revela el onboarding. Reduced-motion: sin latido, mismo fade.
+- **Solo el escarabajo late** (keyframe idéntico a los loaders de IA: scale 1→1.06, opacity 1→0.85, 1.6s ease-in-out); la palabra queda estable.
+- **Componentes nuevos:** `SplashArranque.jsx` (+ `.module.css`) y `PalabraHuella.jsx` — los paths de la palabra se **extrajeron de `Logo.jsx` sin tocarlo** (viewBox recortado al bbox real, calculado con muestreo de béziers). Preload + `@font-face` local `'FrauncesSplash'` para el tagline (aditivo, sin quitar Google Fonts).
+- **Los loaders de IA conservan sus citas** — `LoadingDignificado`, `PuertaUnoLoading`, `RespuestaIA` y el `CitaLoader` de `Layout` quedaron intactos. Solo se cambió el de arranque.
+- **Fix de proporciones (`9b27b56`):** Design corrigió la spec a la proporción real del SVG. El `92px` original era el ancho del dibujo *tight*, pero el viewBox trae aire lateral → se ancla por **altura (112px, ancho auto ~122px)**. Se compensó el aire vertical con `margin-bottom: -3px` para que el espacio **óptico** pata→"h" quede en ~16px (no ~35px).
+
+### Aprendizaje registrado (reutilizable)
+
+- **El SVG del escarabajo (`Escarabajo.jsx`) trae AIRE en el viewBox `0 0 469.55 429.86`:** el dibujo real ocupa solo **~54% del ancho / ~68% del alto** (bbox medido: x 100.8–356.2, y 63.9–357.2). Consecuencia: **dimensionarlo por "%-de-contenedor" NO da tamaños visibles iguales** entre formas/tamaños distintos, y **anclar por ancho lo achica** (queda más chico de lo esperado). Regla: **anclar por altura y compensar el aire óptico**. Esto conecta directo con el pendiente abierto del escarabajo chico en el círculo café del Home (ver PENDIENTES → Deuda de diseño).
+
+---
+
+## Sesión martes 30 junio 2026 — Sistema de códigos de invitación de un solo uso COMPLETO y verificado en producción
 
 **Se construyó el sistema de códigos de un solo uso para regalar Pro a los testers sin correr SQL a mano tester por tester. Motor (BD) + UI, verificado end-to-end en producción. 1 commit a `main` (`75e5428`); el motor de BD ya se había corrido en el SQL Editor de Supabase y quedó documentado en la migración `007_codigos_beta.sql`, incluida en el commit.**
 
