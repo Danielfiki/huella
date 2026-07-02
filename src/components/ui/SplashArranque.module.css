@@ -1,0 +1,69 @@
+/* Splash de arranque. Overlay a pantalla completa (cubre el status bar) sobre
+   la app ya montada; se desvanece por opacidad cuando la app está lista. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 280ms ease-out;
+}
+
+.fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Bloque apilado, centrado óptico (28px sobre el centro geométrico). */
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-28px);
+}
+
+/* Escarabajo: ancho fijo 92px, alto auto (sin distorsión, viewBox ~cuadrado).
+   Es la ÚNICA pieza que late. */
+.beetle {
+  width: 92px;
+  height: auto;
+  color: var(--color-primary);
+  margin-bottom: 16px;
+  transform-origin: center;
+  animation: latido 1.6s ease-in-out infinite;
+}
+
+/* Palabra "huella": estable, sin latido. 148px calza con su ratio real 3.79:1. */
+.word {
+  width: 148px;
+  height: auto;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+}
+
+.tagline {
+  margin: 0;
+  max-width: 260px;
+  text-align: center;
+  font-family: 'FrauncesSplash', var(--font-heading);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--color-text-muted);
+}
+
+/* Latido idéntico al de los loaders de IA. */
+@keyframes latido {
+  0%, 100% { transform: scale(1);    opacity: 1;    }
+  50%      { transform: scale(1.06); opacity: 0.85; }
+}
+
+/* Reduced motion: logo estático, misma composición. El fade (solo opacidad)
+   se conserva. */
+@media (prefers-reduced-motion: reduce) {
+  .beetle { animation: none; }
+}

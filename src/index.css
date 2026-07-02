@@ -1,3 +1,15 @@
+/* Fraunces local SOLO para el tagline del splash de arranque: familia propia
+   ('FrauncesSplash') para no chocar con la Fraunces de Google Fonts, y para
+   garantizar que el preload de index.html se use. Aditivo: Google Fonts sigue
+   sirviendo la Fraunces del resto de la app. */
+@font-face {
+  font-family: 'FrauncesSplash';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Fraunces_72pt-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
