@@ -31,7 +31,7 @@ const PAYLOAD = JSON.stringify({
 async function enviarAlOwner(client, res) {
   const { data: subs, error } = await client
     .from('push_subscriptions')
-    .select('id, endpoint, p256dh, auth')
+    .select('endpoint, p256dh, auth')
     .eq('user_id', OWNER_ID)
 
   if (error) return res.status(500).json({ error: error.message })
@@ -50,10 +50,11 @@ async function enviarAlOwner(client, res) {
       )
       sent++
     } catch (e) {
-      errores.push({ id: sub.id, status: e.statusCode })
-      // Suscripción expirada o revocada — limpiar.
+      errores.push({ endpoint: sub.endpoint, status: e.statusCode })
+      // Suscripción expirada o revocada — limpiar (la tabla real no tiene
+      // columna id; se borra por endpoint).
       if (e.statusCode === 410 || e.statusCode === 404) {
-        await client.from('push_subscriptions').delete().eq('id', sub.id)
+        await client.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
       }
     }
   }

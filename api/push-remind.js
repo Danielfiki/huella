@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   const { data: subs } = await supabase
     .from('push_subscriptions')
-    .select('id, user_id, endpoint, p256dh, auth')
+    .select('user_id, endpoint, p256dh, auth')
 
   if (!subs?.length) return res.json({ sent: 0, total: 0 })
 
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
     } catch (e) {
       // Suscripción expirada o revocada — limpiar
       if (e.statusCode === 410 || e.statusCode === 404) {
-        await supabase.from('push_subscriptions').delete().eq('id', sub.id)
+        await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
       }
     }
   }
