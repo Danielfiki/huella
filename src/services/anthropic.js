@@ -65,6 +65,17 @@ async function llamarAPI(prompt, max_tokens) {
   return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// REGLA_IDIOMA — regla de voz única y fuerte, compartida por todos los
+// prompts del cliente que llevan su propia instrucción de idioma. Cierra el
+// hueco que dejó pasar el voseo enclítico ("decile chau"): las listas viejas
+// solo prohibían las formas desnudas (decí, hacé), no las de pronombre pegado.
+// NOTA: el backend (api/anthropic.js, sección IDIOMA del SYSTEM_PROMPT) tiene
+// una copia equivalente de esta regla porque el cliente y el serverless no
+// comparten módulo. Si cambias una, cambia la otra.
+// ──────────────────────────────────────────────────────────────────────
+const REGLA_IDIOMA = `IDIOMA — REGLA CRÍTICA E INNEGOCIABLE: escribe SIEMPRE en español latinoamericano neutro con TUTEO: tú dices, puedes, quieres, dile, mira, recuerda, haz. PROHIBIDO el voseo argentino/rioplatense en CUALQUIER forma, incluidas las de pronombre pegado al verbo: vos, sos, tenés, podés, querés, sabés, hacés, fijate, mirá, decí, y sobre todo "decile", "contale", "hacele", "mandale", "dale" (imperativo rioplatense). PROHIBIDOS también los modismos regionales marcados (che, boludo) y el español de España (vale, vosotros, coger). Correcto: "dile chau", "puedes intentar", "cuando quieras". Neutro y cálido.`
+
 const TEMAS_CONTEMPORANEOS = `TEMAS ESPECÍFICOS Y DOLORES PARENTALES CONTEMPORÁNEOS:
 PANTALLAS Y TECNOLOGÍA: Jonathan Haidt ("The Anxious Generation", 2024): smartphones antes de los 16 años están causando la peor crisis de salud mental juvenil de la historia — no smartphone antes de secundaria, no redes sociales antes de 16, sin pantallas en el cuarto, más tiempo no estructurado. Jean Twenge ("iGen", "Generation Me"): la generación Z es la más ansiosa, solitaria y deprimida — correlación directa entre horas de pantalla y depresión, especialmente en niñas. Anya Kamenetz ("The Art of Screen Time"): enfoque equilibrado — ni pánico ni permisividad; el contexto importa más que el tiempo total. Michael Rich (Harvard, "médico de los medios"): los medios digitales afectan el sueño, la atención y el desarrollo social — la clave es la calidad del contenido y el uso compartido. Yalda Uhls ("Media Moms & Digital Dads"): los niños que pasan tiempo sin pantallas mejoran dramáticamente su lectura de emociones.
 ANSIEDAD INFANTIL Y PARENTAL: Tamar Chansky ("Freeing Your Child from Anxiety"): externalizar la ansiedad, darle nombre, no evitar sino acompañar la exposición gradual. Lynn Lyons ("Anxious Kids, Anxious Parents"): la acomodación parental — hacer lo que el hijo ansioso pide para que se calme — refuerza el circuito de la ansiedad; los padres deben modelar tolerancia a la incertidumbre. Rachel Busman (TCC para niños): la terapia cognitivo-conductual es el tratamiento con mayor evidencia para la ansiedad infantil. Dan Peters: alta capacidad intelectual y ansiedad van frecuentemente juntos — el niño brillante que se paraliza ante el error.
@@ -741,7 +752,7 @@ REGLAS DURAS
 - Cero diagnóstico clínico del hijo/a ni del adulto.
 - Cero invención de contexto que no está en EPISODIO.
 - NUNCA nombres en el cuerpo la dimensión, el autor, la lente, ni jerga clínica. Palabras como "duelo", "muerte", "pérdida", "autorregulación", "corregulación", "desregulación", "apego", "vínculo seguro", "ventana de tolerancia", "trauma", "neurodivergencia", "alta sensibilidad", "habilidad rezagada" son metadata del sistema y NO van en el texto. La firma "— Autor · Lente" se imprime aparte fuera de tu output. Escribe en lenguaje cotidiano de papá/mamá, no de manual clínico.
-- Tuteo CHILENO: tú, tienes, puedes, decides. NUNCA voseo argentino (tenés, podés, hacés, fijate).
+- ${REGLA_IDIOMA}
 - Si el bucket es "pasado", está PROHIBIDO usar verbos en presente activo ("acércate ahora", "respira").
 
 FORMATO DE RESPUESTA
@@ -1336,7 +1347,7 @@ Genera un análisis del cierre de este ciclo con TRES secciones:
 3. recomendaciones: 3 a 4 sugerencias prácticas y específicas para el próximo paso (un nuevo ciclo o un cierre definitivo de esta habilidad). Cada recomendación es una frase corta y accionable de 1 a 2 oraciones, NO un párrafo. Concreta, no abstracta. Dirigida al papá o mamá en segunda persona con tuteo chileno ("fíjate", "intenta", "prueba", "ten en cuenta"). Sin numeración dentro del texto del ítem (nada de "1.", "2.") — la UI decide cómo listarlas.
 
 REGLAS DURAS
-- TUTEO CHILENO: tú, tienes, puedes, decides, observas. NUNCA voseo argentino: nada de tenés, querés, hacés, fijate, podés. Esta regla es crítica.
+- ${REGLA_IDIOMA}
 - Habla AL padre o madre en segunda persona singular.
 - Sin diagnósticos clínicos del hijo/a ni del adulto.
 - Sin frases cliché ("recuerda que cada niño es único", "estás haciendo un gran trabajo", "lo importante es el proceso").
@@ -1444,7 +1455,7 @@ Diseña el plan del Ciclo ${numero_ciclo} CONSIDERANDO lo aprendido en el ciclo 
 - Decide la duración del ciclo entre 2 y 6 semanas según la complejidad de lo que queda por trabajar. Más simple = menos semanas. Más complejo o que requiere consolidación = más semanas.
 
 REGLAS DURAS
-- TUTEO CHILENO: tú, tienes, puedes, decides, observas. NUNCA voseo argentino: tenés, querés, hacés, fijate, podés. Esta regla es crítica.
+- ${REGLA_IDIOMA}
 - Habla AL padre o madre en segunda persona singular.
 - Sin diagnósticos clínicos.
 - Sin markdown: prohibido #, ##, ###, **, *, -, _.
@@ -1503,6 +1514,7 @@ Reglas:
 4. "episodios_ids" lista 1-5 ids de episodios concretos que evidencian el patrón.
 5. "confianza" entre 0 y 1 según fuerza de la evidencia (≥3 episodios y < 21 días = ~0.7; ≥5 episodios concentrados = ~0.85).
 6. Si no hay patrón claro: devolver { "patrones": [] }.
+7. ${REGLA_IDIOMA}
 
 Output: JSON válido y sólo JSON, sin texto adicional, con este shape exacto:
 {
@@ -1571,6 +1583,7 @@ Reglas duras:
 4. "confianza": numero entre 0 y 1 segun la fuerza de la evidencia (1 momento ~0.4; 2 momentos coherentes ~0.55; 3 momentos ~0.7; 5 o mas concentrados ~0.85).
 5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
 6. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
+7. ${REGLA_IDIOMA}
 
 Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este shape exacto:
 {
@@ -1726,7 +1739,7 @@ PROHIBIDO: agregar un tercer párrafo, dar consejos prácticos, listar pasos, di
 
 Reglas de tono y lenguaje:
 
-- Español neutro/chileno con tuteo. Usa "tú" siempre, nunca "vos". Decir "puedes" no "podés", "tienes" no "tenés", "fíjate" no "fijate", "haz" no "hacé".
+- ${REGLA_IDIOMA}
 - Cálido, en presente, sin tecnicismos clínicos.
 - Habla en primera persona de Huella si encaja ("te leo", "te entiendo", "estoy contigo").
 - Nunca uses términos diagnósticos hacia el niño (no decir "ansiedad clínica", "TDAH", "trastorno", "patológico").
