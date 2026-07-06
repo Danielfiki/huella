@@ -173,7 +173,7 @@ function AnticipoRetratoCard({ nombre, candidato, hayEmergente, confirmados, onC
       }}
     >
       <div style={{
-        width: '52px', height: '52px', borderRadius: '50%', flexShrink: 0,
+        width: '52px', height: '52px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
         background: 'var(--color-accent-mocha)', color: 'var(--color-on-mocha)',
         display: 'grid', placeItems: 'center',
       }}>

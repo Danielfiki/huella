@@ -2,7 +2,7 @@
 
 /* Escarabajo del mini-medallon de la card de anticipo del retrato (4D).
    Hereda el color crema del contenedor via currentColor. */
-.anticipoBicho { width: 69%; height: 69%; display: block; }
+.anticipoBicho { width: 90%; height: 90%; display: block; }
 
 /* ── Saludo ── */
 .greeting {

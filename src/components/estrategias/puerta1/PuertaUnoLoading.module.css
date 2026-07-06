@@ -34,10 +34,10 @@
 }
 
 /* El escarabajo hereda el crema (color #fff) vía currentColor y late con .pulse.
-   78% del cuadro para que las patas no toquen el borde redondeado. */
+   90% del cuadro, estandar de marca en contenedores cuadrados. */
 .pulseIcon {
-  width: 78%;
-  height: 78%;
+  width: 90%;
+  height: 90%;
 }
 
 @keyframes puertaUnoLoadingPulse {
