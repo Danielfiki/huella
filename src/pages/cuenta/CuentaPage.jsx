@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
+import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check, Bell } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
 import { iniciarSuscripcion } from '../../services/pago'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import styles from './CuentaPage.module.css'
 
@@ -59,6 +60,17 @@ export default function CuentaPage() {
   // Microestado de la verificación al volver del checkout (?suscripcion=ok).
   const [verificando, setVerificando] = useState(false)
   const [avisoPago, setAvisoPago] = useState('')
+
+  // Control permanente de notificaciones push. Reutiliza el MISMO hook que el
+  // NotifBanner (permission/isSupported/requestPermission); no duplica la lógica
+  // de suscripción. Da un camino a activar push aunque el banner se haya
+  // descartado (su X es permanente).
+  const {
+    permission: notifPermission,
+    isSupported: notifSoportado,
+    requestPermission: pedirNotif,
+  } = usePushNotifications()
+  const [notifCargando, setNotifCargando] = useState(false)
 
   const pro = isPro()
   const admin = isAdmin()
@@ -153,6 +165,18 @@ export default function CuentaPage() {
       console.error('handleActivar error:', err, err?.detail)
       setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
       setCargando(false)
+    }
+  }
+
+  // Pide el permiso de notificaciones vía el hook. Al resolverse, el hook
+  // actualiza `permission` y esta pantalla re-renderiza al estado correcto.
+  async function handleActivarNotif() {
+    if (notifCargando) return
+    setNotifCargando(true)
+    try {
+      await pedirNotif()
+    } finally {
+      setNotifCargando(false)
     }
   }
 
@@ -263,6 +287,53 @@ export default function CuentaPage() {
       <div style={{ marginTop: '16px' }}>
         <CanjeCodigoBeta />
       </div>
+
+      {/* ── Notificaciones — control permanente de push, independiente del
+           NotifBanner efímero. Visible para todos (Pro y gratuito). ── */}
+      <section className={styles.beneficios}>
+        <div className={styles.beneficioCard}>
+          <div className={styles.beneficioIcon}>
+            <Bell size={20} />
+          </div>
+          <div>
+            <h2 className={styles.beneficioTitulo}>Notificaciones</h2>
+            {!notifSoportado ? (
+              <p className={styles.beneficioDesc}>
+                Este dispositivo no admite notificaciones aquí. En iPhone, agrega Huella a la pantalla
+                de inicio y ábrela desde el ícono.
+              </p>
+            ) : notifPermission === 'granted' ? (
+              <>
+                <p className={styles.beneficioDesc}>
+                  Recibirás los recordatorios y check-ins de Huella en este dispositivo.
+                </p>
+                <p className={styles.notifActivo}>
+                  <Check size={16} />
+                  Notificaciones activadas
+                </p>
+              </>
+            ) : notifPermission === 'denied' ? (
+              <p className={styles.beneficioDesc}>
+                Bloqueaste las notificaciones. Para volver a activarlas, permítelas desde los ajustes
+                de tu teléfono o navegador.
+              </p>
+            ) : (
+              <>
+                <p className={styles.beneficioDesc}>
+                  Activa recordatorios y check-ins suaves para no perder el hilo con tu hijo.
+                </p>
+                <button
+                  className={styles.notifBtn}
+                  onClick={handleActivarNotif}
+                  disabled={notifCargando}
+                >
+                  {notifCargando ? 'Activando…' : 'Activar notificaciones'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

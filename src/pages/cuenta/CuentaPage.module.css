@@ -247,3 +247,30 @@
   text-align: center;
   margin: 0;
 }
+
+/* ── Notificaciones ── */
+.notifBtn {
+  margin-top: 12px;
+  padding: 11px 18px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.notifBtn:hover { background: var(--color-primary-dark); }
+.notifBtn:disabled { opacity: 0.6; cursor: default; }
+
+.notifActivo {
+  margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-tag-green);
+}
