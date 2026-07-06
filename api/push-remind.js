@@ -60,13 +60,16 @@ export default async function handler(req, res) {
 
     let notification = null
 
-    // 1. Sin registro en 3+ días (solo si alguna vez registraron)
+    // 1. Sin registro en 3+ días (solo si alguna vez registraron).
+    //    Copy SIN culpa: nada de "llevas X días sin registrar". Invitación
+    //    cálida centrada en el hijo, no en la deuda del cuidador. La condición
+    //    de disparo (3+ días) se mantiene; solo cambió el texto.
     if (lastEp) {
       const daysSince = Math.floor((now - new Date(lastEp.fecha)) / 864e5)
       if (daysSince >= 3) {
         notification = {
-          title: 'Huella 📋',
-          body: `Llevas ${daysSince} días sin registrar. ¿Cómo ha estado ${nombreHijo}?`,
+          title: `¿Cómo ha estado ${nombreHijo}?`,
+          body: 'Un momento de hoy suma a su huella.',
           url: '/registro',
         }
       }
