@@ -16,8 +16,14 @@
 
 **Técnico / costos**
 - **Fase 2 del prompt caching** — mover `marcoEdad`+`TEMAS_CONTEMPORANEOS` (~5.300 tok) al `system` como 2º breakpoint — desde **2 jun 2026** (`COSTOS_IA.md`) — se difirió "hasta tener datos reales de la Fase 1"; requiere cambiar el contrato cliente↔backend (mandar el marco separado de los datos). Recortaría ~otro ⅓ del input en las 9 llamadas de análisis.
-- **Migrar el modelo de IA** — `claude-sonnet-4-5` (legacy) → `claude-sonnet-4-6`; evaluar Haiku para llamadas baratas — desde **2 jun 2026** — anotado como decisión aparte en `COSTOS_IA.md`.
+- ✅ **Migrar el modelo de IA — HECHO (9 jul 2026).** `claude-sonnet-4-5` → `claude-sonnet-4-6` aplicado en `api/anthropic.js:250` (única línea de código; las 15 funciones/16 call-sites pasan por ese endpoint). Docs sincronizadas (`COSTOS_IA.md`, `README.md`, este archivo). Nota: Sonnet 4.6 usa `effort: "high"` por defecto, pero el código no setea `thinking`/`effort` → comportamiento cercano a Sonnet 4.5.
+- **Evaluar `claude-sonnet-5`** — desde **9 jul 2026** — thinking siempre encendido, tokenizador nuevo (~30% más tokens), sampling params rechazados. Requiere QA dedicado. Precio introductorio hasta 31 ago 2026. Evaluar también Haiku (`claude-haiku-4-5`) para llamadas baratas.
 - **Sincronizar `schema.sql`** con la base viva — faltan `plan`, `contexto_inicial`, `intenciones`, `plan_beta_hasta` en `perfiles` — desde **21 jun 2026** — hacerlo en una pasada; falta confirmar el tipo de elemento de `intenciones` (figura como ARRAY). **Además (6 jul 2026):** la tabla real `push_subscriptions` **NO tiene la columna `id`** que declara el schema (rompió `push-test`/`push-remind`; se corrigió el código para no pedir `id` y borrar por `endpoint`) — un ejemplo más del desfase.
+
+**Calidad de voz / prompts de IA** (preexistente, detectado en el QA de la migración a `claude-sonnet-4-6`; NO se tocó en ese commit)
+- Palabra vulgar "pico" hardcodeada en el andamiaje de prompts (`src/services/anthropic.js` líneas 549, 550, 627, 648). En Chile es vulgar. Afecta tramos 6-12 y 12-18. Preexistente, detectado 9 jul 2026.
+- `REGLA_IDIOMA` solo se inyecta en 5 de 15 llamadas. Ni `REGLA_IDIOMA` ni el `SYSTEM_PROMPT` prohíben vocabulario vulgar. Detectado 9 jul 2026.
+- Contradicción entre `generarAccionInmediata` y `analizarEpisodio` sobre contacto físico con el niño en desborde. Ningún prompt da guía sobre esto. Detectado 9 jul 2026.
 
 **Infra de la beta** (antes de invitar a DESCONOCIDOS; NO bloquea al círculo cercano)
 - **Separar la bandeja `contacto@huella.lat`** de la cuenta Google personal — desde **21 jun 2026** — se creó vía "Upgrade this account" y quedó compartida; separar con cuenta nueva o perfil de Chrome aparte.
@@ -912,7 +918,7 @@ Specs completas guardadas en `huella-gancho-retencion.md` (Drive de Daniel). Dec
 ## Stack técnico
 
 - Frontend: React + Vite
-- IA: API de Anthropic, modelo `claude-sonnet-4-5`
+- IA: API de Anthropic, modelo `claude-sonnet-4-6`
 - Auth y DB: Supabase
 - Deploy: Vercel (huella-theta.vercel.app, auto-deploy en `git push origin main`)
 - Repo: github.com/Danielfiki/huella

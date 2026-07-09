@@ -5,9 +5,9 @@
 
 ## Modelo
 
-**Todas las llamadas usan `claude-sonnet-4-5`**, hardcodeado en `api/anthropic.js:249`. No hay variación por tipo de llamada (ni Haiku para tareas baratas, ni Opus para nada). Un solo modelo para todo.
+**Todas las llamadas usan `claude-sonnet-4-6`**, hardcodeado en `api/anthropic.js:250`. No hay variación por tipo de llamada (ni Haiku para tareas baratas, ni Opus para nada). Un solo modelo para todo.
 
-> Nota: `claude-sonnet-4-5` es un modelo *legacy pero activo*. Migrar a `claude-sonnet-4-6` (o evaluar Haiku para llamadas baratas) es una decisión aparte, fuera de este doc.
+> Nota: la migración `claude-sonnet-4-5` → `claude-sonnet-4-6` ya se hizo (9 jul 2026). Sonnet 4.6 por defecto usa `effort: "high"` (Sonnet 4.5 no tenía ese parámetro); el código no setea `thinking` ni `effort`, así que el comportamiento queda cercano al de Sonnet 4.5. Queda pendiente aparte evaluar `claude-sonnet-5` (requiere QA dedicado) y/o Haiku para llamadas baratas.
 
 ## El gran driver de costo: andamiaje clínico fijo (y duplicado)
 
@@ -24,20 +24,20 @@ Cada llamada que pasa por `llamarAPI()` (casi todas) carga texto clínico fijo e
 
 | Tipo de llamada | Función | Modelo | Tokens input aprox | max_tokens output |
 |---|---|---|---|---|
-| Acción inmediata (post-episodio) | `generarAccionInmediata` | sonnet-4-5 | ~6.600 *(sys, sin marco)* | 600 |
-| Análisis de episodio | `analizarEpisodio` | sonnet-4-5 | ~11.800 *(sys+marco+1 ep+5 recientes)* | 1.400 |
-| Interpretar patrones | `interpretarPatrones` | sonnet-4-5 | ~12.300 *(sys+marco+hasta 20 eps)* | 2.500 |
-| Detectar patrones (estructurado) | `detectarPatronesEstructurado` | sonnet-4-5 | ~8.000–9.000 *(sys+prompt propio+30 eps)* | 1.024 |
-| Consejo diario | `generarConsejoDiario` | sonnet-4-5 | ~11.900 *(sys+marco+hasta 8 eps)* | 200 |
-| Generar estrategia (Puerta 2) | `generarEstrategia` | sonnet-4-5 | ~11.650 *(sys+marco+habilidad)* | 4.000 |
-| Generar estrategia desde texto (Puerta 1 libre) | `generarEstrategiaDesdeContexto` | sonnet-4-5 | ~11.900 *(sys+marco+catálogo+texto)* | 4.000 |
-| Generar ciclo N (nuevo ciclo) | `generarCicloN` | sonnet-4-5 | ~12.000 *(sys+marco+ciclo anterior)* | 4.000 |
-| Analizar cierre de ciclo | `analizarCierreCiclo` | sonnet-4-5 | ~12.000–13.000 *(sys+marco+notas+eps vinculados)* | 2.000 |
-| Generar tareas semanales | `generarTareas` | sonnet-4-5 | ~11.650 *(sys+marco+habilidad)* | 700 |
-| Celebrar hito | `celebrarHito` | sonnet-4-5 | ~11.600 *(sys+marco+hito)* | 180 |
-| Reflexión check-in | `generarReflexionCheckin` | sonnet-4-5 | ~6.400 *(sys, sin marco)* | 250 |
-| Analizar reflexiones cuidador | `analizarReflexionesCuidador` | sonnet-4-5 | ~6.400 *(sys, sin marco)* | 250 |
-| Primer encuentro (onboarding) | `requestPrimerEncuentro` | sonnet-4-5 | ~1.200 *(system propio, NO usa SYSTEM_PROMPT)* | 200 |
+| Acción inmediata (post-episodio) | `generarAccionInmediata` | sonnet-4-6 | ~6.600 *(sys, sin marco)* | 600 |
+| Análisis de episodio | `analizarEpisodio` | sonnet-4-6 | ~11.800 *(sys+marco+1 ep+5 recientes)* | 1.400 |
+| Interpretar patrones | `interpretarPatrones` | sonnet-4-6 | ~12.300 *(sys+marco+hasta 20 eps)* | 2.500 |
+| Detectar patrones (estructurado) | `detectarPatronesEstructurado` | sonnet-4-6 | ~8.000–9.000 *(sys+prompt propio+30 eps)* | 1.024 |
+| Consejo diario | `generarConsejoDiario` | sonnet-4-6 | ~11.900 *(sys+marco+hasta 8 eps)* | 200 |
+| Generar estrategia (Puerta 2) | `generarEstrategia` | sonnet-4-6 | ~11.650 *(sys+marco+habilidad)* | 4.000 |
+| Generar estrategia desde texto (Puerta 1 libre) | `generarEstrategiaDesdeContexto` | sonnet-4-6 | ~11.900 *(sys+marco+catálogo+texto)* | 4.000 |
+| Generar ciclo N (nuevo ciclo) | `generarCicloN` | sonnet-4-6 | ~12.000 *(sys+marco+ciclo anterior)* | 4.000 |
+| Analizar cierre de ciclo | `analizarCierreCiclo` | sonnet-4-6 | ~12.000–13.000 *(sys+marco+notas+eps vinculados)* | 2.000 |
+| Generar tareas semanales | `generarTareas` | sonnet-4-6 | ~11.650 *(sys+marco+habilidad)* | 700 |
+| Celebrar hito | `celebrarHito` | sonnet-4-6 | ~11.600 *(sys+marco+hito)* | 180 |
+| Reflexión check-in | `generarReflexionCheckin` | sonnet-4-6 | ~6.400 *(sys, sin marco)* | 250 |
+| Analizar reflexiones cuidador | `analizarReflexionesCuidador` | sonnet-4-6 | ~6.400 *(sys, sin marco)* | 250 |
+| Primer encuentro (onboarding) | `requestPrimerEncuentro` | sonnet-4-6 | ~1.200 *(system propio, NO usa SYSTEM_PROMPT)* | 200 |
 
 **Notas:**
 - `max_tokens` es el tope de salida, no lo que sale siempre. Las de estrategia (4.000) son las que más output generan en la práctica (JSON de 4 semanas).

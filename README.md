@@ -3,7 +3,7 @@
 Bundle pegar-y-ejecutar para Claude Code. Implementa el rediseño de la pantalla
 `/estrategias` (lista, detalle, creación) en el repo Huella.
 
-> **Stack:** React + Vite + Supabase + Anthropic API (claude-sonnet-4-5).
+> **Stack:** React + Vite + Supabase + Anthropic API (claude-sonnet-4-6).
 > **Mobile-first.** Paleta Mocha Mix + Fraunces / Plus Jakarta Sans ya configurados.
 
 ---

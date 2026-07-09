@@ -247,7 +247,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens,
         // Si el caller manda su propio `system` en el body, lo usa.
         // Si no, cae al SYSTEM_PROMPT clínico default de Huella.
