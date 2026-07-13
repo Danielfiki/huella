@@ -506,7 +506,7 @@ export default function PerfilPage() {
             </p>
             <p className={styles.familyRejectedDesc}>
               <strong>{pendingInvitation.inviteeEmail}</strong> ya tiene datos en su propia cuenta.
-              Contáctanos a <strong>hola@huella.app</strong> para ayudarles a unificar el historial.
+              Contáctanos a <strong>contacto@huella.lat</strong> para ayudarles a unificar el historial.
             </p>
             <button
               className={styles.familyDiscardBtn}

@@ -180,7 +180,7 @@ export default function InvitarPage() {
                 <>
                   Ya tienes <strong>{describirCounts(pendingCounts)}</strong> en tu cuenta.
                   Para unirte a la familia de <strong>{invitation?.inviterEmail}</strong>{' '}
-                  sin perderlos, escríbenos a <strong>hola@huella.app</strong> y te ayudamos
+                  sin perderlos, escríbenos a <strong>contacto@huella.lat</strong> y te ayudamos
                   a unificar tu historial.
                 </>
               ) : (
@@ -192,7 +192,7 @@ export default function InvitarPage() {
               )}
             </p>
             <a
-              href="mailto:hola@huella.app"
+              href="mailto:contacto@huella.lat"
               className={styles.btnPrimary}
             >
               Contactar soporte
