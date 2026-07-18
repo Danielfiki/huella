@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "lat.huella.app",
       "sha256_cert_fingerprints": [
-        "PENDIENTE_FINGERPRINT_BUBBLEWRAP"
+        "E2:FE:00:36:92:FF:3F:BA:D0:0C:8B:64:C3:8A:58:C7:89:30:20:E9:A4:C8:31:E5:DB:F7:A3:11:C8:B2:42:B4",
+        "44:CA:BB:01:F5:BE:0C:A8:09:04:B8:7C:25:4D:AB:14:83:DB:9D:ED:B1:1D:1E:4E:F9:77:54:51:2E:31:23:CF"
       ]
     }
   }
