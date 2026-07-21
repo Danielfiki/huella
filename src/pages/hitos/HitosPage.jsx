@@ -739,8 +739,8 @@ export default function HitosPage() {
         .from('momentos')
         .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
       if (error) throw new Error(error.message)
-      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
-      await updateHitoFoto(hitoId, `${data.publicUrl}?t=${Date.now()}`)
+      // Bucket privado: se guarda el PATH; el contexto firma la URL para mostrar.
+      await updateHitoFoto(hitoId, path)
     } catch {
       setErrorUpload('No se pudo subir la foto. Intenta de nuevo.')
     } finally {

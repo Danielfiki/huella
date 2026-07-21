@@ -60,12 +60,13 @@ function componerFechaNacimiento(nacimiento) {
 }
 
 /**
- * Sube el File del padre/madre al bucket `avatares` y devuelve la URL pública
- * (con cache-buster ?t=timestamp para que el avatar se vea al toque).
+ * Sube el File del padre/madre al bucket `avatares` y devuelve el PATH del
+ * objeto (`${userId}/${hijoId}.jpg`). El bucket es privado: la app firma la URL
+ * al mostrar (HuellaContext), así que en la BD se guarda el path, no una URL.
  *
- * Path: `${userId}/${hijoId}.jpg` — mismo formato que PerfilPage. El bucket
- * es el mismo, así que si el padre/madre vuelve a cambiar la foto desde
- * Perfil más tarde, el upsert sobreescribe limpiamente.
+ * Mismo formato de path que PerfilPage. El bucket es el mismo, así que si el
+ * padre/madre vuelve a cambiar la foto desde Perfil más tarde, el upsert
+ * sobreescribe limpiamente.
  *
  * Si la subida falla, devuelve null en lugar de tirar: la foto es opcional,
  * no debe bloquear que el hijo quede creado.
@@ -82,9 +83,7 @@ async function subirAvatarHijo(userId, hijoId, file) {
     console.error('[onboardingPersistor] No se pudo subir el avatar:', uploadError)
     return null
   }
-  const { data } = supabase.storage.from(BUCKET_AVATARES).getPublicUrl(path)
-  if (!data?.publicUrl) return null
-  return `${data.publicUrl}?t=${Date.now()}`
+  return path
 }
 
 /**

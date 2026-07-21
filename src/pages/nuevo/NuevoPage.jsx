@@ -102,8 +102,8 @@ export default function NuevoPage() {
             .from('momentos')
             .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
           if (!uploadError) {
-            const { data } = supabase.storage.from('momentos').getPublicUrl(path)
-            await updateHitoFoto(inserted.id, `${data.publicUrl}?t=${Date.now()}`)
+            // Bucket privado: se guarda el PATH; el contexto firma para mostrar.
+            await updateHitoFoto(inserted.id, path)
           }
         } catch { /* foto is non-fatal */ }
       }
@@ -133,10 +133,10 @@ export default function NuevoPage() {
         .from('momentos')
         .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
       if (uploadError) throw new Error(uploadError.message)
-      const { data } = supabase.storage.from('momentos').getPublicUrl(path)
-      const url = `${data.publicUrl}?t=${Date.now()}`
-      await updateHitoFoto(hitoGuardadoId, url)
-      setFotoEnmarcaUrl(url)
+      // Bucket privado: a la BD va el PATH; para el preview local se firma aparte.
+      await updateHitoFoto(hitoGuardadoId, path)
+      const { data: firmada } = await supabase.storage.from('momentos').createSignedUrl(path, 7200)
+      setFotoEnmarcaUrl(firmada?.signedUrl ?? null)
     } catch (err) {
       console.error('Error subiendo foto desde Enmarca:', err)
       setErrorFotoEnmarca('No se pudo subir la foto. Intenta de nuevo.')

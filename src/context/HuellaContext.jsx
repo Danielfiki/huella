@@ -164,6 +164,66 @@ function reducer(state, action) {
   }
 }
 
+// ── Fotos privadas: firma de URLs ─────────────────────────────────────────────
+// Los buckets 'avatares' y 'momentos' pasan a privados: en la BD se guarda el
+// PATH del objeto (`userId/id.jpg`), no una URL. Para mostrar la foto hay que
+// firmar una URL temporal en lectura. TTL de 2 h: solo debe sobrevivir la sesion
+// de visualizacion; cada carga de datos vuelve a firmar.
+const SIGN_TTL = 7200
+
+// Un valor es un PATH (no una URL) si no arranca con http.
+function esPath(v) {
+  return typeof v === 'string' && v.length > 0 && !v.startsWith('http')
+}
+
+// Normaliza cualquier valor a PATH, para lo que se ESCRIBE en la BD:
+//   - path                                             → tal cual
+//   - URL firmada (.../object/sign/<bucket>/<path>?...)  → <path>
+//   - URL publica (.../object/public/<bucket>/<path>?...) → <path>
+//   - null / vacio                                     → null
+// Evita que, al reenviar el avatarUrl del estado (ya firmado) en un guardado de
+// nombre, se pise el path guardado con una URL que expira.
+function resolverPath(valor, bucket) {
+  if (!valor) return null
+  if (esPath(valor)) return valor
+  const m = String(valor).match(new RegExp(`/(?:sign|public)/${bucket}/([^?]+)`))
+  return m ? decodeURIComponent(m[1]) : valor
+}
+
+// Firma un PATH para MOSTRAR. Si no es un path (URL legacy o null) lo deja igual.
+async function firmarPath(path, bucket) {
+  if (!esPath(path) || !supabase) return path
+  try {
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, SIGN_TTL)
+    return data?.signedUrl ?? path
+  } catch {
+    return path
+  }
+}
+
+// Firma en LOTE el `campo` de una lista de items, para las cargas.
+// Tolerante a datos legacy: los valores que aun son URL http se dejan tal cual
+// (funcionan mientras el bucket siga publico, durante la transicion de Fase 1).
+async function firmarCampo(items, campo, bucket) {
+  if (!supabase || !Array.isArray(items) || items.length === 0) return items
+  const paths = [...new Set(items.map((it) => it?.[campo]).filter(esPath))]
+  if (paths.length === 0) return items
+  const mapa = {}
+  try {
+    const { data } = await supabase.storage.from(bucket).createSignedUrls(paths, SIGN_TTL)
+    for (const row of data ?? []) {
+      if (row?.path && row?.signedUrl) mapa[row.path] = row.signedUrl
+    }
+  } catch {
+    return items
+  }
+  return items.map((it) =>
+    esPath(it?.[campo]) && mapa[it[campo]]
+      ? { ...it, [campo]: mapa[it[campo]] }
+      : it
+  )
+}
+
 // ── Mappers DB → app ──────────────────────────────────────────────────────────
 
 function dbRutinaToApp(row) {
@@ -401,8 +461,8 @@ export function HuellaProvider({ children }) {
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId),
     ])
-    dispatch({ type: 'SET_EPISODIOS',   payload: (episodiosRes.data   ?? []).map(dbEpisodioToApp) })
-    dispatch({ type: 'SET_HITOS',       payload:  hitosRes.data        ?? [] })
+    dispatch({ type: 'SET_EPISODIOS',   payload: await firmarCampo((episodiosRes.data ?? []).map(dbEpisodioToApp), 'fotoUrl', 'momentos') })
+    dispatch({ type: 'SET_HITOS',       payload: await firmarCampo(hitosRes.data ?? [], 'foto_url', 'momentos') })
     dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data  ?? []).map(dbEstrategiaToApp) })
     dispatch({ type: 'SET_RUTINAS',     payload: (rutinasRes.data      ?? []).map(dbRutinaToApp) })
     dispatch({ type: 'SET_RASGOS',      payload: (rasgosRes.data       ?? []).map(dbRasgoToApp) })
@@ -465,13 +525,17 @@ export function HuellaProvider({ children }) {
         rasgos      = (rasgosRes.data       ?? []).map(dbRasgoToApp)
       }
 
+      const hijosF     = await firmarCampo(hijos, 'avatarUrl', 'avatares')
+      const episodiosF = await firmarCampo(episodios, 'fotoUrl', 'momentos')
+      const hitosF     = await firmarCampo(hitos, 'foto_url', 'momentos')
+
       dispatch({
         type: 'LOAD_STATE',
         payload: {
-          hijos,
+          hijos:       hijosF,
           hijoActivoId,
-          episodios,
-          hitos,
+          episodios:   episodiosF,
+          hitos:       hitosF,
           estrategias,
           rutinas,
           rasgos,
@@ -512,10 +576,16 @@ export function HuellaProvider({ children }) {
   async function setHijo(datos, hijoId = null) {
     if (!user) return
 
+    // Foto privada: a la BD va el PATH; a la UI, una URL firmada. `resolverPath`
+    // evita que reenviar el avatarUrl del estado (ya firmado) pise el path.
+    const avatarPath = resolverPath(datos.avatarUrl, 'avatares')
+    const avatarUI   = await firmarPath(avatarPath, 'avatares')
+    const datosUI    = { ...datos, avatarUrl: avatarUI }
+
     const rpcParams = {
       p_nombre:            datos.nombre,
       p_edad:              null,
-      p_avatar_url:        datos.avatarUrl       ?? null,
+      p_avatar_url:        avatarPath,
       p_fecha_nacimiento:  datos.fechaNacimiento ?? null,
       p_genero:            datos.genero          ?? null,
       p_hijo_id:           hijoId                ?? null,
@@ -524,7 +594,7 @@ export function HuellaProvider({ children }) {
     if (hijoId) {
       // Optimistic update para edición
       const anterior = state.hijos.find(h => h.id === hijoId)
-      dispatch({ type: 'UPDATE_HIJO', payload: { id: hijoId, ...datos } })
+      dispatch({ type: 'UPDATE_HIJO', payload: { id: hijoId, ...datosUI } })
 
       const { data: returnedId, error } = await supabase.rpc('upsert_family_child', rpcParams)
       if (error) {
@@ -534,7 +604,10 @@ export function HuellaProvider({ children }) {
       }
       const { data: hijoRow } = await supabase
         .from('hijos').select('*').eq('id', returnedId).maybeSingle()
-      if (hijoRow) dispatch({ type: 'UPDATE_HIJO', payload: dbHijoToApp(hijoRow) })
+      if (hijoRow) {
+        const [hijoF] = await firmarCampo([dbHijoToApp(hijoRow)], 'avatarUrl', 'avatares')
+        dispatch({ type: 'UPDATE_HIJO', payload: hijoF })
+      }
       return returnedId
     }
 
@@ -547,7 +620,7 @@ export function HuellaProvider({ children }) {
     const { data: hijoRow } = await supabase
       .from('hijos').select('*').eq('id', returnedId).maybeSingle()
     if (hijoRow) {
-      const nuevoHijo = dbHijoToApp(hijoRow)
+      const [nuevoHijo] = await firmarCampo([dbHijoToApp(hijoRow)], 'avatarUrl', 'avatares')
       dispatch({ type: 'ADD_HIJO',        payload: nuevoHijo })
       dispatch({ type: 'SET_HIJO_ACTIVO', payload: nuevoHijo.id })
     }
@@ -603,7 +676,7 @@ export function HuellaProvider({ children }) {
       .in('user_id', getPartnerIds())
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
-    const episodiosApp = data ? data.map(dbEpisodioToApp) : null
+    const episodiosApp = data ? await firmarCampo(data.map(dbEpisodioToApp), 'fotoUrl', 'momentos') : null
     if (episodiosApp) dispatch({ type: 'SET_EPISODIOS', payload: episodiosApp })
 
     // Motor de rasgos — enganche fire-and-forget. Reusa el refetch que ya
@@ -852,7 +925,7 @@ export function HuellaProvider({ children }) {
       .in('user_id', getPartnerIds())
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
-    if (data) dispatch({ type: 'SET_HITOS', payload: data })
+    if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
 
     // Motor de rasgos — mismo enganche fire-and-forget que en addEpisodio. El
     // gatillo cuenta episodios + hitos del hijo activo: cada 5 registros
@@ -890,20 +963,22 @@ export function HuellaProvider({ children }) {
         .in('user_id', getPartnerIds())
         .eq('hijo_id', state.hijoActivoId)
         .order('fecha', { ascending: false })
-      if (data) dispatch({ type: 'SET_HITOS', payload: data })
+      if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
       throw new Error(error.message)
     }
   }
 
   async function updateHitoFoto(hitoId, fotoUrl) {
     if (!user) return
-    await supabase.from('hitos').update({ foto_url: fotoUrl }).eq('id', hitoId).eq('user_id', user.id)
+    // A la BD va el PATH (bucket privado); la lista se firma para mostrar.
+    const path = resolverPath(fotoUrl, 'momentos')
+    await supabase.from('hitos').update({ foto_url: path }).eq('id', hitoId).eq('user_id', user.id)
     const { data } = await supabase
       .from('hitos').select('*')
       .in('user_id', getPartnerIds())
       .eq('hijo_id', state.hijoActivoId)
       .order('fecha', { ascending: false })
-    if (data) dispatch({ type: 'SET_HITOS', payload: data })
+    if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
   }
 
   // ── Estrategias ───────────────────────────────────────────────────────────

@@ -164,11 +164,10 @@ export default function PerfilPage() {
         upsert: true,
       })
       if (uploadError) throw new Error(uploadError.message)
-      const { data } = supabase.storage.from('avatares').getPublicUrl(path)
-      const url = `${data.publicUrl}?t=${Date.now()}`
+      // Bucket privado: se guarda el PATH; setHijo firma la URL para mostrar.
       await setHijo({
         nombre:          nombre.trim() || state.hijo?.nombre || '',
-        avatarUrl:       url,
+        avatarUrl:       path,
         fechaNacimiento: fechaNacimiento || state.hijo?.fechaNacimiento || null,
         genero:          genero || state.hijo?.genero || null,
       }, state.hijo?.id ?? null)
