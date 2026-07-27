@@ -1311,6 +1311,13 @@ export async function analizarPatron({ descripcion, desde_cuando, frecuencia, in
   const frecTexto   = { diario: 'Todos los días', semanal: 'Varias veces por semana', ocasional: 'De vez en cuando' }
   const interfTexto = { alta: 'Les complica la rutina', baja: 'Molesta pero conviven' }
 
+  // Capa 2: si es regresión, el post-proceso de abajo ya fija la clasificación
+  // en 'derivar'. Se lo avisamos a la IA ANTES de redactar para que los tres
+  // textos no prometan un acompañamiento que esa pantalla no ofrece.
+  const avisoRegresion = desde_cuando === 'regresion'
+    ? `\nCLASIFICACIÓN YA DETERMINADA: este caso es una REGRESIÓN (ya lo había dejado y volvió), así que la clasificación final ya está fijada en "derivar". Devuelve "derivar" en el campo clasificacion y redacta los tres textos en ese marco: es algo que conviene que vea un profesional, sin restarle importancia y sin alarmar. No sugieras que la app ni un plan lo resuelvan.\n`
+    : ''
+
   const prompt = `${marco}
 
 ${REGLA_IDIOMA}
@@ -1328,16 +1335,18 @@ La EDAD es el dato central de la clasificación: una misma conducta puede ser es
 - "esperable": es propia de la etapa de desarrollo a esta edad; no requiere intervención especial, solo acompañamiento.
 - "instalado": es un hábito que se sostiene y se puede trabajar con un plan; no es señal de alerta médica.
 - "derivar": por la edad y el cuadro, conviene que lo vea un profesional (pediatra u otro). Huella no diagnostica.
-
-Escribe SIEMPRE los tres textos, en las tres clasificaciones, incluida "derivar": aunque no haya plan, decir qué ayuda y qué no ayuda protege al ${genero} mientras la familia consulta.
+${avisoRegresion}
+Escribe SIEMPRE los tres textos, en las tres clasificaciones, incluida "derivar": decir qué ayuda y qué no ayuda protege al ${genero} mientras la familia consulta.
 
 Reglas de tono INNEGOCIABLES: nunca diagnostiques, nunca etiquetes al ${genero} (prohibido "es ansioso", "es mañoso", "es problemático" y cualquier rótulo), nunca uses lenguaje de defecto ni culpes al padre/madre. Habla del comportamiento y del contexto, no de una condición del ${genero}. Sereno, cálido y concreto.
+
+REGLA DURA SOBRE LOS TRES TEXTOS: que_esta_pasando, que_ayuda y que_lo_empeora describen SOLO qué está pasando, qué ayuda en el día a día y qué lo empeora. NUNCA mencionan planes, programas, semanas, pasos a seguir ni ofertas de acompañamiento estructurado — ofrecer un plan es trabajo de la interfaz, no del texto. PROHIBIDAS dentro de los tres textos estas palabras y giros: "plan", "programa", "semana 1", "cuatro semanas", "te puedo armar", "sigue estos pasos". Los consejos concretos de "qué ayuda" SÍ se mantienen: lo prohibido es ofrecer un producto de la app, no dar orientación para el día a día.
 
 Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto antes o después. Estructura exacta:
 {
   "clasificacion": "esperable" | "instalado" | "derivar",
-  "que_esta_pasando": "2-3 oraciones que expliquen la conducta a esta edad, sin diagnosticar",
-  "que_ayuda": "2-3 oraciones concretas de qué acompaña o suma",
+  "que_esta_pasando": "2-3 oraciones que expliquen la conducta a esta edad, sin diagnosticar y sin mencionar planes ni pasos a seguir",
+  "que_ayuda": "2-3 oraciones de orientación concreta para el día a día (nunca un plan ni un producto de la app)",
   "que_lo_empeora": "2-3 oraciones concretas de qué conviene evitar o restar"
 }`
 
