@@ -1284,6 +1284,80 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adi
   return extraerJSON(raw)
 }
 
+// ════════════════════════════════════════════════════════════════════
+// analizarPatron — Fase B "Algo que aún no cambia"
+// Clasifica una conducta que dura semanas o meses y devuelve orientación en
+// tres textos. NO genera plan (eso reusa el flujo de caso libre después, si
+// el padre/madre acepta). La EDAD del hijo es el dato central de la
+// clasificación.
+// Recibe: { descripcion, desde_cuando, frecuencia, interferencia, ya_intentado, hijo }
+// Devuelve: { clasificacion, que_esta_pasando, que_ayuda, que_lo_empeora }
+//
+// REGLA DURA DE CLASIFICACIÓN (post-proceso en código, no en el prompt):
+//   - desde_cuando === 'regresion'  →  'derivar' SIEMPRE.
+//   - la IA puede escalar a 'derivar'; nunca puede bajar de 'derivar'.
+// Se aplica aquí sobre la respuesta para que ningún caller pueda saltársela.
+// ════════════════════════════════════════════════════════════════════
+export async function analizarPatron({ descripcion, desde_cuando, frecuencia, interferencia, ya_intentado, hijo }) {
+  const marco = marcoEdad(hijo?.edad)
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
+
+  const desdeTexto  = { siempre: 'Siempre ha sido así, nunca lo dejó', reciente: 'Empezó hace poco', regresion: 'Ya lo había dejado y volvió' }
+  const frecTexto   = { diario: 'Todos los días', semanal: 'Varias veces por semana', ocasional: 'De vez en cuando' }
+  const interfTexto = { alta: 'Les complica la rutina', baja: 'Molesta pero conviven' }
+
+  const prompt = `${marco}
+
+${REGLA_IDIOMA}
+
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+
+El padre/madre registra una conducta que dura semanas o meses (NO un episodio puntual):
+Qué pasa: "${descripcion}"
+Desde cuándo: ${desdeTexto[desde_cuando] || desde_cuando}
+Qué tan seguido: ${frecTexto[frecuencia] || frecuencia}
+Cuánto les complica: ${interfTexto[interferencia] || interferencia}
+Qué ya intentó: ${ya_intentado ? `"${ya_intentado}"` : 'no lo dice'}
+
+La EDAD es el dato central de la clasificación: una misma conducta puede ser esperable a una edad y motivo de consulta a otra. Clasifica en una de estas tres:
+- "esperable": es propia de la etapa de desarrollo a esta edad; no requiere intervención especial, solo acompañamiento.
+- "instalado": es un hábito que se sostiene y se puede trabajar con un plan; no es señal de alerta médica.
+- "derivar": por la edad y el cuadro, conviene que lo vea un profesional (pediatra u otro). Huella no diagnostica.
+
+Escribe SIEMPRE los tres textos, en las tres clasificaciones, incluida "derivar": aunque no haya plan, decir qué ayuda y qué no ayuda protege al ${genero} mientras la familia consulta.
+
+Reglas de tono INNEGOCIABLES: nunca diagnostiques, nunca etiquetes al ${genero} (prohibido "es ansioso", "es mañoso", "es problemático" y cualquier rótulo), nunca uses lenguaje de defecto ni culpes al padre/madre. Habla del comportamiento y del contexto, no de una condición del ${genero}. Sereno, cálido y concreto.
+
+Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto antes o después. Estructura exacta:
+{
+  "clasificacion": "esperable" | "instalado" | "derivar",
+  "que_esta_pasando": "2-3 oraciones que expliquen la conducta a esta edad, sin diagnosticar",
+  "que_ayuda": "2-3 oraciones concretas de qué acompaña o suma",
+  "que_lo_empeora": "2-3 oraciones concretas de qué conviene evitar o restar"
+}`
+
+  const raw = await llamarAPI(prompt, 1500)
+  const parsed = extraerJSON(raw)
+
+  // Post-proceso duro de la clasificación. Si la IA devuelve algo fuera del
+  // set válido, lo tratamos como fallo (el caller muestra reintentar sobre la
+  // fila ya guardada; no escribimos basura que además rebotaría en el CHECK).
+  const VALIDAS = ['esperable', 'instalado', 'derivar']
+  if (!parsed || typeof parsed !== 'object' || !VALIDAS.includes(parsed.clasificacion)) {
+    throw new Error('El análisis no se generó correctamente. Intenta de nuevo.')
+  }
+  const clasificacion = (desde_cuando === 'regresion' || parsed.clasificacion === 'derivar')
+    ? 'derivar'
+    : parsed.clasificacion
+
+  return { ...parsed, clasificacion }
+}
+
 /**
  * Fase 3 del rediseño Estrategias con Ciclos.
  * Genera el análisis estructurado al cerrar un ciclo de una estrategia.

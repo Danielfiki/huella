@@ -148,6 +148,13 @@ export default function NuevoPage() {
 
   // ── ELEGIR ───────────────────────────────────────────────────────────────
   if (vista === 'elegir') {
+    // Tope de producto: máximo 3 patrones abiertos por hijo. El array de
+    // patrones del contexto ya viene filtrado al hijo activo; contamos los
+    // 'abierto' para bloquear la tercera card cuando ya hay 3.
+    const patronesAbiertos = (state.patrones || []).filter(
+      (p) => p.estado === 'abierto' && p.hijo_id === state.hijoActivoId
+    ).length
+    const patronBloqueado = patronesAbiertos >= 3
     return (
       <div className={styles.flujoRefugio}>
         <div className={styles.topRefugio}>
@@ -176,6 +183,27 @@ export default function NuevoPage() {
             <p className={styles.choiceDesc}>Se calmó solo, pidió disculpas, toleró un "no" u otro logro</p>
           </div>
           <span className={styles.choiceChevron}>›</span>
+        </button>
+
+        {/* Tercera entrada: patrones ("Algo que aún no cambia"). Se bloquea
+            con 3 patrones abiertos del hijo activo — sin candado ni alerta,
+            solo apagada. NO alimenta el motor de rasgos. */}
+        <button
+          className={`${styles.choiceCard} ${styles.choicePatron}${patronBloqueado ? ' ' + styles.choicePatronLocked : ''}`}
+          onClick={patronBloqueado ? undefined : () => navigate('/patron')}
+          disabled={patronBloqueado}
+          aria-disabled={patronBloqueado}
+        >
+          <span className={`${styles.choiceIcono} ${styles.choiceIconoPatron}`}>🌀</span>
+          <div className={styles.choiceTexto}>
+            <p className={styles.choiceTitulo}>Algo que aún no cambia</p>
+            <p className={styles.choiceDesc}>
+              {patronBloqueado
+                ? 'Ya tienes 3 abiertos. Cierra uno para agregar otro.'
+                : 'El chupete, el pañal, dormir en tu cama, comer poco'}
+            </p>
+          </div>
+          {!patronBloqueado && <span className={styles.choiceChevron}>›</span>}
         </button>
       </div>
     )

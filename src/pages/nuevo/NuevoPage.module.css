@@ -95,6 +95,18 @@
 .choiceIconoEpisodio { background: var(--color-surface-alt); }
 .choiceIconoAvance   { background: var(--color-celebration-start); }
 
+/* Tercera card: patrones. Filo indigo, disco lavanda, emoji espiral 24px.
+   margin-top -4px lleva el gap con la card de arriba de 16 (del contenedor) a 12. */
+.choicePatron {
+  box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-accent-indigo);
+  margin-top: -4px;
+}
+.choiceIconoPatron { background: var(--color-pill-lavender-bg); font-size: 24px; }
+.choicePatron .choiceDesc { line-height: 1.4; }
+.choicePatron .choiceChevron { font-size: 20px; }
+/* Bloqueada (3 abiertos): apagada, no interactiva. Sin candado, sin rojo. */
+.choicePatronLocked { opacity: 0.55; pointer-events: none; }
+
 .choiceTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
 .choiceTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
 .choiceDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }

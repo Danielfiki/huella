@@ -2,7 +2,9 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useM
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
-import { generarAccionInmediata, detectarRasgos } from '../services/anthropic'
+import { generarAccionInmediata, detectarRasgos, generarEstrategiaDesdeContexto } from '../services/anthropic'
+import { retryAsync, esErrorIAReintentable } from '../utils/retryAsync'
+import { HABILIDADES_CATALOGO } from '../pages/estrategias/helpers'
 import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
 
 const HuellaContext = createContext(null)
@@ -29,6 +31,9 @@ const initialState = {
   hitos:                [],
   rutinas:              [],
   rasgos:               [],
+  // Tercera entrada de registro. PARED con el motor de rasgos: vive en su
+  // propio array y NUNCA se mezcla con episodios ni hitos.
+  patrones:             [],
   padreNombre:          '',
   plan:                 null,
   sugerenciaEstrategia: null,
@@ -98,6 +103,23 @@ function reducer(state, action) {
         ...state,
         rasgos: state.rasgos.map((r) => (r.id === action.payload.id ? action.payload : r)),
       }
+
+    case 'SET_PATRONES':
+      return { ...state, patrones: action.payload }
+
+    case 'ADD_PATRON':
+      return { ...state, patrones: [action.payload, ...state.patrones] }
+
+    case 'UPDATE_PATRON':
+      return {
+        ...state,
+        patrones: state.patrones.map((p) =>
+          p.id === action.payload.id ? { ...p, ...action.payload } : p
+        ),
+      }
+
+    case 'REMOVE_PATRON':
+      return { ...state, patrones: state.patrones.filter((p) => p.id !== action.payload) }
 
     case 'ADD_EPISODIO':
       return { ...state, episodios: [action.payload, ...state.episodios] }
@@ -431,7 +453,7 @@ export function HuellaProvider({ children }) {
   async function loadHijoDatos(hijoId, currentFamily) {
     if (!user || !hijoId) return
     const partnerIds = getPartnerIds(currentFamily)
-    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes] = await Promise.all([
+    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes] = await Promise.all([
       supabase.from('episodios')
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
@@ -460,12 +482,18 @@ export function HuellaProvider({ children }) {
       supabase.from('rasgos')
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId),
+      supabase.from('patrones')
+        .select('*').in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .order('created_at', { ascending: false }),
     ])
     dispatch({ type: 'SET_EPISODIOS',   payload: await firmarCampo((episodiosRes.data ?? []).map(dbEpisodioToApp), 'fotoUrl', 'momentos') })
     dispatch({ type: 'SET_HITOS',       payload: await firmarCampo(hitosRes.data ?? [], 'foto_url', 'momentos') })
     dispatch({ type: 'SET_ESTRATEGIAS', payload: (estrategiasRes.data  ?? []).map(dbEstrategiaToApp) })
     dispatch({ type: 'SET_RUTINAS',     payload: (rutinasRes.data      ?? []).map(dbRutinaToApp) })
     dispatch({ type: 'SET_RASGOS',      payload: (rasgosRes.data       ?? []).map(dbRasgoToApp) })
+    // Patrones: array propio, sin firmar fotos (no las tienen) y sin tocar el motor.
+    dispatch({ type: 'SET_PATRONES',    payload: patronesRes.data ?? [] })
   }
 
   async function loadUserData(userId, currentFamily) {
@@ -486,9 +514,9 @@ export function HuellaProvider({ children }) {
         : (hijos[0]?.id ?? null)
 
       // Fase 2: datos filtrados por hijo activo
-      let episodios = [], hitos = [], estrategias = [], rutinas = [], rasgos = []
+      let episodios = [], hitos = [], estrategias = [], rutinas = [], rasgos = [], patrones = []
       if (hijoActivoId) {
-        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes] = await Promise.all([
+        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes] = await Promise.all([
           supabase.from('episodios')
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
@@ -517,12 +545,17 @@ export function HuellaProvider({ children }) {
           supabase.from('rasgos')
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId),
+          supabase.from('patrones')
+            .select('*').in('user_id', partnerIds)
+            .eq('hijo_id', hijoActivoId)
+            .order('created_at', { ascending: false }),
         ])
         episodios   = (episodiosRes.data   ?? []).map(dbEpisodioToApp)
         hitos       =  hitosRes.data        ?? []
         estrategias = (estrategiasRes.data  ?? []).map(dbEstrategiaToApp)
         rutinas     = (rutinasRes.data      ?? []).map(dbRutinaToApp)
         rasgos      = (rasgosRes.data       ?? []).map(dbRasgoToApp)
+        patrones    =  patronesRes.data     ?? []
       }
 
       const hijosF     = await firmarCampo(hijos, 'avatarUrl', 'avatares')
@@ -539,6 +572,7 @@ export function HuellaProvider({ children }) {
           estrategias,
           rutinas,
           rasgos,
+          patrones,
           padreNombre: perfilRes.data?.nombre ?? '',
           plan:        perfilRes.data?.plan   ?? null,
           plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
@@ -1038,6 +1072,100 @@ export function HuellaProvider({ children }) {
     if (data) dispatch({ type: 'SET_ESTRATEGIAS', payload: data.map(dbEstrategiaToApp) })
   }
 
+  // Camino compartido del plan por texto libre (el mismo de "Cuéntame tu caso"):
+  // genera el plan con la IA, normaliza las semanas y lo persiste de forma
+  // atómica con crearEstrategiaConCiclo. Es la pieza reutilizable para no
+  // duplicar la lógica de caso libre — hoy la usa el enganche de plan de los
+  // patrones (Fase B). Devuelve la fila de estrategias creada; el caller navega.
+  // `planExtra` deja pasar campos opcionales (p. ej. episodios detonantes).
+  async function crearPlanDesdeTexto({ texto_libre, planExtra = {} }) {
+    const hijo = state.hijo
+    const planBase = await retryAsync(
+      () => generarEstrategiaDesdeContexto({ texto_libre, hijo }),
+      { esReintentable: esErrorIAReintentable }
+    )
+    if (!planBase || typeof planBase !== 'object' || !Array.isArray(planBase.semanas) || planBase.semanas.length === 0) {
+      throw new Error('El plan no se generó correctamente. Intenta de nuevo.')
+    }
+    const habilidadLabel = planBase.label_usado || planBase.label_inferido || texto_libre.slice(0, 60)
+    const grupoMatch = planBase.habilidad_id
+      ? (HABILIDADES_CATALOGO.emocional.items.find((i) => i.id === planBase.habilidad_id)
+          ? 'Regulación emocional' : 'Desarrollo y aprendizaje')
+      : 'Caso libre'
+    const planData = {
+      ...planBase,
+      semanas: (planBase.semanas || []).map((s, si) => ({
+        numero: s.numero ?? si + 1,
+        titulo: s.titulo || '',
+        descripcion: s.accion || s.descripcion || '',
+        tareas: (s.tareas || []).map((t, ti) =>
+          typeof t === 'string' ? { id: `s${si + 1}t${ti + 1}`, texto: t, completada: false } : t
+        ),
+      })),
+    }
+    const row = await crearEstrategiaConCiclo({
+      hijo_id:         hijo.id,
+      habilidad:       habilidadLabel,
+      habilidad_grupo: grupoMatch,
+      plan:            planData,
+      ...planExtra,
+    })
+    await reloadEstrategias()
+    return row
+  }
+
+  // ── Patrones ────────────────────────────────────────────────────────────
+  // Tercera entrada de registro (conductas que duran semanas o meses). PARED
+  // DURA con el motor de rasgos: se guardan y leen en state.patrones y NUNCA
+  // se pasan a detectarRasgos. Aquí no hay ningún enganche al motor, a propósito.
+
+  // Paso 1 del orden de guardado: crea la fila con las 5 respuestas, estado
+  // 'abierto' y clasificación/orientacion_ia en null (la IA los llena después).
+  async function crearPatron(respuestas) {
+    if (!user || !supabase) throw new Error('Sesión inválida.')
+    const { data, error } = await supabase.from('patrones').insert({
+      user_id:        user.id,
+      hijo_id:        state.hijoActivoId ?? null,
+      descripcion:    respuestas.descripcion,
+      desde_cuando:   respuestas.desde_cuando,
+      frecuencia:     respuestas.frecuencia,
+      interferencia:  respuestas.interferencia,
+      ya_intentado:   respuestas.ya_intentado ?? null,
+      estado:         'abierto',
+      clasificacion:  null,
+      orientacion_ia: null,
+    }).select().single()
+    if (error) throw new Error(error.message)
+    dispatch({ type: 'ADD_PATRON', payload: data })
+    return data
+  }
+
+  // Paso 3: escribe clasificación + orientacion_ia sobre la MISMA fila ya
+  // creada (nunca al revés). Si el CHECK de la base rechaza una clasificación
+  // que baja de 'derivar', el UPDATE revienta — es a propósito.
+  async function actualizarPatronIA(patronId, clasificacion, orientacion_ia) {
+    if (!user || !supabase) throw new Error('Sesión inválida.')
+    const { data, error } = await supabase.from('patrones')
+      .update({ clasificacion, orientacion_ia })
+      .eq('id', patronId).eq('user_id', user.id)
+      .select().single()
+    if (error) throw new Error(error.message)
+    dispatch({ type: 'UPDATE_PATRON', payload: data })
+    return data
+  }
+
+  // Enganche del plan: al crear una estrategia desde un patrón, guarda su id
+  // en patrones.estrategia_id. No es bloqueante (el plan ya existe).
+  async function vincularEstrategiaAPatron(patronId, estrategiaId) {
+    if (!user || !supabase) return
+    const { data, error } = await supabase.from('patrones')
+      .update({ estrategia_id: estrategiaId })
+      .eq('id', patronId).eq('user_id', user.id)
+      .select().single()
+    if (error) { console.warn('[patrones] vincular estrategia falló:', error.message); return }
+    if (data) dispatch({ type: 'UPDATE_PATRON', payload: data })
+  }
+
   async function addEstrategia(estrategia) {
     if (!user || !supabase) return null
     try {
@@ -1316,6 +1444,7 @@ export function HuellaProvider({ children }) {
       updateHitoFoto,
       addEstrategia,
       crearEstrategiaConCiclo,
+      crearPlanDesdeTexto,
       reloadEstrategias,
       updateEstrategia,
       deleteEstrategia,
@@ -1326,6 +1455,10 @@ export function HuellaProvider({ children }) {
       rasgos: state.rasgos,
       confirmarRasgo,
       descartarRasgo,
+      patrones: state.patrones,
+      crearPatron,
+      actualizarPatronIA,
+      vincularEstrategiaAPatron,
       savePadreNombre,
       canjearCodigoBeta,
       isPro,

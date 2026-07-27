@@ -1,0 +1,259 @@
+/* ── Página /patron ("Algo que aún no cambia") ──
+   El .page cancela el padding de .main del Layout (mismo truco que el flujo
+   Refugio de /nuevo) para que el header mocha llegue de borde a borde. */
+.page {
+  margin: -20px -20px -8px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+/* Header mocha: barra plena, ~56 de alto, título Fraunces 20/700. Idéntico en
+   todas las fases. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  background: var(--color-accent-mocha);
+}
+.headerBack {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-on-mocha);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+.headerTitulo {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-on-mocha);
+  margin: 0;
+}
+
+/* Cuerpo: una sola pantalla con scroll. gap 26 entre preguntas, padding 20. */
+.body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* ── Preguntas ── */
+.pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* label -> control */
+}
+.label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  margin: 0;
+}
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chipOpcional {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+/* ── Opciones de selección única ──
+   Las tres opciones se ven EXACTAMENTE iguales (sin icono ni color por opción);
+   solo cambia el estado seleccionado. */
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.opcion {
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.opcionSel {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ── CTA del formulario ── */
+.cta {
+  width: 100%;
+  margin-top: 6px;
+  padding: 17px;
+  border: none;
+  border-radius: var(--radius-cta);
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-cta-primary);
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cta:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ── Salidas: tres bloques ──
+   El filo interior izquierdo de 4px va como inset box-shadow junto a la sombra
+   suave. El título NO toma el color del filo (queda en --color-text). */
+.bloques {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bloque {
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card-soft);
+}
+.bloque_pasando { box-shadow: var(--shadow-card-soft), inset 4px 0 0 var(--color-accent-indigo); }
+.bloque_ayuda   { box-shadow: var(--shadow-card-soft), inset 4px 0 0 var(--color-accent); }
+.bloque_empeora { box-shadow: var(--shadow-card-soft), inset 4px 0 0 var(--color-accent-mocha); }
+.bloqueTitulo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+.bloqueCuerpo {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ── Pie de la salida ── */
+.pie {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.pieTexto {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+  text-align: center;
+}
+/* Error del plan: sereno, sin rojo (estamos dentro de las salidas). */
+.pieError {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+.btnSecundario {
+  width: 100%;
+  padding: 15px;
+  border: 1.5px solid var(--color-primary-border);
+  background: transparent;
+  color: var(--color-primary-dark);
+  border-radius: var(--radius-cta);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btnPrincipal {
+  width: 100%;
+  padding: 17px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-cta-primary);
+  border-radius: var(--radius-cta);
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.linkAhoraNo {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* ── Cierre de derivar (texto fijo, no generado por la IA) ──
+   Sereno: sin rojo, sin iconos de alerta. */
+.cierreDerivar {
+  margin-top: 16px;
+  background: var(--color-surface-alt);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: inset 4px 0 0 var(--color-accent-mocha);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cierreTitulo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin: 0;
+}
+.cierreCuerpo {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ── Reintentar (falló la IA del análisis) ── */
+.reintentarBox {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.reintentarTexto {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin: 0;
+}

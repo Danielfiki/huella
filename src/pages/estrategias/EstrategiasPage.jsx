@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useHuella } from '../../context/HuellaContext';
 import { useAuth } from '../../context/AuthContext';
-import { detectarPatronesEstructurado, generarEstrategiaDesdeContexto } from '../../services/anthropic';
-import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync';
+import { detectarPatronesEstructurado } from '../../services/anthropic';
 import { supabase } from '../../lib/supabase';
 import HeaderMocha from './components/HeaderMocha';
 import EstrategiaActivaCard from './components/EstrategiaActivaCard';
@@ -20,7 +19,6 @@ import {
   debeMostrarSugerencia,
   estadoPlan,
   MAX_PLANES_ACTIVOS_FREE,
-  HABILIDADES_CATALOGO,
   ciclosAnterioresDe,
   cicloNumeroDe,
 } from './helpers';
@@ -31,7 +29,7 @@ export default function EstrategiasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const sugerenciaPrecocida = location.state?.sugerencia_precocida ?? null;
-  const { state, crearEstrategiaConCiclo, reloadEstrategias, profilesByUserId, isPro } = useHuella();
+  const { state, crearPlanDesdeTexto, profilesByUserId, isPro } = useHuella();
   const { user } = useAuth();
   const [casoLibreEstado, setCasoLibreEstado] = useState('idle');
   const [casoLibreError, setCasoLibreError] = useState(null);
@@ -248,42 +246,9 @@ export default function EstrategiasPage() {
     generandoCasoLibreRef.current = true;
     setCasoLibreEstado('generando');
     try {
-      // Retry silencioso (2 reintentos, backoff 1s/2s) solo para
-      // errores transitorios de red/timeout/5xx. Transparente al papá.
-      const planBase = await retryAsync(
-        () => generarEstrategiaDesdeContexto({ texto_libre: texto, hijo }),
-        { esReintentable: esErrorIAReintentable }
-      );
-      if (!planBase || typeof planBase !== 'object' || !Array.isArray(planBase.semanas) || planBase.semanas.length === 0) {
-        throw new Error('El plan no se generó correctamente. Intenta de nuevo.');
-      }
-
-      const habilidadLabel = planBase.label_usado || planBase.label_inferido || texto.slice(0, 60);
-      const grupoMatch = planBase.habilidad_id
-        ? (HABILIDADES_CATALOGO.emocional.items.find((i) => i.id === planBase.habilidad_id)
-            ? 'Regulación emocional' : 'Desarrollo y aprendizaje')
-        : 'Caso libre';
-
-      const planData = {
-        ...planBase,
-        semanas: (planBase.semanas || []).map((s, si) => ({
-          numero: s.numero ?? si + 1,
-          titulo: s.titulo || '',
-          descripcion: s.accion || s.descripcion || '',
-          tareas: (s.tareas || []).map((t, ti) =>
-            typeof t === 'string' ? { id: `s${si + 1}t${ti + 1}`, texto: t, completada: false } : t
-          ),
-        })),
-      };
-
-      // Fase 4 Bloque 2A: dual insert (identidad + ciclo 1) vía helper del contexto.
-      const row = await crearEstrategiaConCiclo({
-        hijo_id:         hijo.id,
-        habilidad:       habilidadLabel,
-        habilidad_grupo: grupoMatch,
-        plan:            planData,
-      });
-      await reloadEstrategias();
+      // Camino compartido: genera + normaliza + persiste (retry de red incluido).
+      // Misma lógica que reusa el enganche de plan de los patrones (Fase B).
+      const row = await crearPlanDesdeTexto({ texto_libre: texto });
       navigate(`/estrategias/${row.id}`, { replace: true });
     } catch (err) {
       console.error('caso libre falló', err);
