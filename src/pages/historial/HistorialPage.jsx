@@ -303,7 +303,7 @@ export default function HistorialPage() {
                   ? 'Sin episodios difíciles registrados.'
                   : filtro === 'logros'
                   ? 'Sin avances registrados aún.'
-                  : 'Sin registros.'}
+                  : 'Sin momentos registrados aún.'}
               </p>
             )}
 

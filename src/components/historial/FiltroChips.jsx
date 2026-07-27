@@ -2,10 +2,14 @@ import React from 'react'
 import styles from './FiltroChips.module.css'
 
 const TIPOS = [
-  { key: 'todos', label: 'Todos' },
+  // 'todos' lista episodios + hitos agrupados por día (los patrones NO entran
+  // aquí: no tienen fecha de ocurrencia, son un estado continuo). El label es
+  // "Momentos" porque es exacto y ya es la palabra de la app (encabezado
+  // "12 MOMENTOS", CTA "Registrar un momento").
+  { key: 'todos', label: 'Momentos' },
   { key: 'dificiles', label: 'Difíciles' },
   { key: 'logros', label: 'Avances' },
-  { key: 'patrones', label: 'Lo que acompañas' },
+  { key: 'patrones', label: 'Acompañas' },
 ]
 
 export default function FiltroChips({ active, onChange, counts = {}, hijo, rango = '14 días' }) {
