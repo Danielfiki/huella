@@ -27,6 +27,7 @@ import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
+import BetaPage from './pages/beta/BetaPage'
 import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
 
 class PageErrorBoundary extends React.Component {
@@ -152,6 +153,9 @@ export default function App() {
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
+              {/* Tablero privado de la beta. Fuera del Layout (sin barra de
+                  navegación), detrás de login. Solo se llega escribiendo /beta. */}
+              <Route path="/beta"     element={<ProtectedRoute><PageErrorBoundary><BetaPage /></PageErrorBoundary></ProtectedRoute>} />
               <Route
                 path="/"
                 element={
