@@ -21,6 +21,7 @@ import { ChartGatillos } from '../../components/panel/ChartGatillos'
 import { AnalisisIA } from '../../components/panel/AnalisisIA'
 import { SectionEyebrow } from '../../components/panel/SectionEyebrow'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
+import PatronCard from '../../components/patron/PatronCard'
 import panelStyles from '../../components/panel/panel.module.css'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import styles from './PanelPage.module.css'
@@ -313,6 +314,41 @@ export default function PanelPage() {
     [hitos]
   )
 
+  // Patrones abiertos del hijo activo, del más reciente al más viejo por
+  // created_at (NUNCA por gravedad ni clasificación). El [0] es el que se
+  // muestra en Home. Los patrones no tocan el motor de rasgos.
+  const patronesAbiertos = useMemo(
+    () => (state.patrones || [])
+      .filter(p => p.estado === 'abierto' && p.hijo_id === hijo?.id)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    [state.patrones, hijo?.id]
+  )
+
+  // Bloque "Lo que estás acompañando" reutilizado en dos posiciones del Home:
+  // después del último avance cuando hay historial, y después del estado vacío
+  // cuando no lo hay (la mamá que registró el chupete en su primer minuto).
+  const bloquePatrones = patronesAbiertos.length > 0 ? (
+    <>
+      <SectionEyebrow>Lo que estás acompañando</SectionEyebrow>
+      <div className={styles.patronBloque}>
+        <PatronCard
+          patron={patronesAbiertos[0]}
+          authorName={getAuthorDisplay(patronesAbiertos[0].user_id, profilesByUserId, user?.id)}
+          onClick={() => navigate(`/patron/${patronesAbiertos[0].id}`)}
+        />
+        {patronesAbiertos.length > 1 && (
+          <button
+            type="button"
+            className={styles.patronMas}
+            onClick={() => navigate('/historial', { state: { filtro: 'patrones' } })}
+          >
+            y {patronesAbiertos.length - 1} más
+          </button>
+        )}
+      </div>
+    </>
+  ) : null
+
   // ── Datos para ResumenSemanal ────────────────────────────────────────────
 
   const weekData = useMemo(() => {
@@ -542,7 +578,12 @@ export default function PanelPage() {
         {episodios.length === 0 ? (
 
           /* ── Estado vacío ── */
-          <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
+          /* ── Estado vacío ── Sin historial pero puede haber patrones: el
+             bloque va DESPUÉS del estado vacío (posición equivalente). */
+          <>
+            <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
+            {bloquePatrones}
+          </>
 
         ) : (
           <>
@@ -553,6 +594,10 @@ export default function PanelPage() {
                 authorName={getAuthorDisplay(ultimoHitoConFoto.user_id, profilesByUserId, user?.id)}
               />
             )}
+
+            {/* ── Lo que estás acompañando (patrones abiertos) ──
+                Con historial: va DESPUÉS del último avance, nunca antes. */}
+            {bloquePatrones}
 
             {/* ── Resumen semanal ── */}
             <SectionEyebrow>Esta semana · contexto</SectionEyebrow>

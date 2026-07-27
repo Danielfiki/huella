@@ -5,6 +5,7 @@ const TIPOS = [
   { key: 'todos', label: 'Todos' },
   { key: 'dificiles', label: 'Difíciles' },
   { key: 'logros', label: 'Avances' },
+  { key: 'patrones', label: 'Lo que acompañas' },
 ]
 
 export default function FiltroChips({ active, onChange, counts = {}, hijo, rango = '14 días' }) {

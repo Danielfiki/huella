@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { Loader } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
 import HistorialHeader from '../../components/historial/HistorialHeader'
 import FiltroChips from '../../components/historial/FiltroChips'
 import DaySeparator from '../../components/historial/DaySeparator'
 import EpisodioCard from '../../components/historial/EpisodioCard'
+import PatronCard from '../../components/patron/PatronCard'
 import { groupEpisodios } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
@@ -53,11 +54,23 @@ function parseOrientacionIA(text) {
 
 export default function HistorialPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro, profilesByUserId } = useHuella()
   const { user } = useAuth()
   const { episodios, hitos, hijo, estrategias } = state
 
-  const [filtro, setFiltro] = useState('todos')
+  // Filtro inicial:
+  //  1. Si la navegación trae un filtro explícito (p. ej. el "y N más" del Home), manda.
+  //  2. Si el hijo activo no tiene episodios ni hitos pero sí patrones, abre en
+  //     'patrones' — es el caso de origen (chupete registrado en el primer minuto):
+  //     no puede caer en "Sin registros" con el patrón escondido tras un chip.
+  //  3. Si hay historial, 'todos' como hasta ahora.
+  const [filtro, setFiltro] = useState(() => {
+    if (location.state?.filtro) return location.state.filtro
+    const sinHistorial = episodios.length === 0 && hitos.length === 0
+    const hayPatrones = (state.patrones || []).some((p) => p.hijo_id === hijo?.id)
+    return sinHistorial && hayPatrones ? 'patrones' : 'todos'
+  })
   const [showSearch, setShowSearch] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
@@ -164,13 +177,23 @@ export default function HistorialPage() {
     return `Últ. ${Math.ceil(days / 30)} meses`
   }, [todosUnificados])
 
+  // Patrones del hijo activo (abiertos y cerrados), del más reciente al más
+  // viejo por created_at. Array propio: NUNCA entra al pipeline de episodios/hitos.
+  const patronesLista = useMemo(
+    () => (state.patrones || [])
+      .filter((p) => p.hijo_id === hijo?.id)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    [state.patrones, hijo?.id]
+  )
+
   const counts = useMemo(
     () => ({
       todos: todosUnificados.length,
       dificiles: episodiosNorm.filter((e) => e.nivel >= 3).length,
       logros: hitosNorm.length,
+      patrones: patronesLista.length,
     }),
-    [todosUnificados, episodiosNorm, hitosNorm]
+    [todosUnificados, episodiosNorm, hitosNorm, patronesLista]
   )
 
   const totalRegistros = episodios.length + hitos.length
@@ -181,7 +204,9 @@ export default function HistorialPage() {
     return source === 'hito' ? deleteHito(id) : deleteEpisodio(id)
   }
 
-  if (totalRegistros === 0) {
+  // El estado vacío solo aplica si NO hay absolutamente nada. Con patrones (aunque
+  // sin episodios ni hitos) la página se muestra: filtros + filtro de patrones.
+  if (totalRegistros === 0 && patronesLista.length === 0) {
     return (
       <div className={styles.page}>
         <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />
@@ -254,32 +279,52 @@ export default function HistorialPage() {
           </Suspense>
         )}
 
-        {grupos.length === 0 && (
-          <p className={styles.emptyFilter}>
-            {filtro === 'dificiles'
-              ? 'Sin episodios difíciles registrados.'
-              : filtro === 'logros'
-              ? 'Sin avances registrados aún.'
-              : 'Sin registros.'}
-          </p>
-        )}
+        {filtro === 'patrones' ? (
+          /* ── Rama de patrones: tarjeta propia, fuera del pipeline de episodios/hitos ── */
+          patronesLista.length === 0 ? (
+            <p className={styles.emptyFilter}>Sin patrones registrados aún.</p>
+          ) : (
+            <div className={styles.patronesLista}>
+              {patronesLista.map((p) => (
+                <PatronCard
+                  key={p.id}
+                  patron={p}
+                  authorName={getAuthorDisplay(p.user_id, profilesByUserId, user?.id)}
+                  onClick={() => navigate(`/patron/${p.id}`)}
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <>
+            {grupos.length === 0 && (
+              <p className={styles.emptyFilter}>
+                {filtro === 'dificiles'
+                  ? 'Sin episodios difíciles registrados.'
+                  : filtro === 'logros'
+                  ? 'Sin avances registrados aún.'
+                  : 'Sin registros.'}
+              </p>
+            )}
 
-        {grupos.map((g, i) => (
-          <React.Fragment key={i}>
-            <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} />
-            {g.episodios.map((ep) => (
-              <EpisodioCard
-                key={ep.id}
-                episodio={ep}
-                onDelete={(id) => handleDelete(id, ep._source)}
-                onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
-                tieneCheckin={checkinsHechos.has(ep.id)}
-                onNavigate={navigate}
-                authorName={getAuthorDisplay(ep.userId, profilesByUserId, user?.id)}
-              />
+            {grupos.map((g, i) => (
+              <React.Fragment key={i}>
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} />
+                {g.episodios.map((ep) => (
+                  <EpisodioCard
+                    key={ep.id}
+                    episodio={ep}
+                    onDelete={(id) => handleDelete(id, ep._source)}
+                    onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
+                    tieneCheckin={checkinsHechos.has(ep.id)}
+                    onNavigate={navigate}
+                    authorName={getAuthorDisplay(ep.userId, profilesByUserId, user?.id)}
+                  />
+                ))}
+              </React.Fragment>
             ))}
-          </React.Fragment>
-        ))}
+          </>
+        )}
       </div>
 
       {showUpgrade && (

@@ -1154,6 +1154,21 @@ export function HuellaProvider({ children }) {
     return data
   }
 
+  // Cierre del patrón (Fase C). UPDATE estado='cerrado' + motivo + cerrado_at.
+  // NO borra la fila ni desvincula la estrategia. El motivo 'resuelto' NO genera
+  // hito todavía (fuera de v1). Filtra por user_id: solo el que lo creó lo cierra
+  // (misma convención de escritura que hitos/rutinas).
+  async function cerrarPatron(patronId, motivo) {
+    if (!user || !supabase) throw new Error('Sesión inválida.')
+    const { data, error } = await supabase.from('patrones')
+      .update({ estado: 'cerrado', cierre_motivo: motivo, cerrado_at: new Date().toISOString() })
+      .eq('id', patronId).eq('user_id', user.id)
+      .select().single()
+    if (error) throw new Error(error.message)
+    dispatch({ type: 'UPDATE_PATRON', payload: data })
+    return data
+  }
+
   // Enganche del plan: al crear una estrategia desde un patrón, guarda su id
   // en patrones.estrategia_id. No es bloqueante (el plan ya existe).
   async function vincularEstrategiaAPatron(patronId, estrategiaId) {
@@ -1459,6 +1474,7 @@ export function HuellaProvider({ children }) {
       crearPatron,
       actualizarPatronIA,
       vincularEstrategiaAPatron,
+      cerrarPatron,
       savePadreNombre,
       canjearCodigoBeta,
       isPro,

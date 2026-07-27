@@ -1,5 +1,19 @@
 .page { display: flex; flex-direction: column; gap: 16px; }
 
+/* ── Bloque "Lo que estás acompañando" (patrones) ── */
+.patronBloque { display: flex; flex-direction: column; gap: 6px; }
+.patronMas {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 4px 0 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Escarabajo del mini-medallon de la card de anticipo del retrato (4D).
    Hereda el color crema del contenedor via currentColor. */
 .anticipoBicho { width: 90%; height: 90%; display: block; }

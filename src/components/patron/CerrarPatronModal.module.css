@@ -1,0 +1,93 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--color-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px; /* margen lateral 20 */
+}
+.modal {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  border-radius: 20px;
+  padding: 22px 20px;
+}
+.titulo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--color-text);
+  margin: 0 0 16px; /* gap título -> lista 16 */
+}
+
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: border-color 0.15s, background 0.15s;
+}
+.opcionSel {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+}
+.opcionLabel {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.opcionSub {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.botones {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.volver,
+.listo {
+  flex: 1; /* 50/50 */
+  padding: 14px;
+  border-radius: var(--radius-cta);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.volver {
+  border: 1.5px solid var(--color-primary-border);
+  background: transparent;
+  color: var(--color-primary-dark);
+}
+.listo {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-cta-primary);
+}
+/* Deshabilitado mientras no haya opción: apagado, no clickeable. */
+.listo:disabled {
+  background: var(--color-border);
+  color: var(--color-text-light);
+  box-shadow: none;
+  cursor: default;
+}

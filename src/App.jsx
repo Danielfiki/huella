@@ -13,6 +13,7 @@ import PanelPage from './pages/panel/PanelPage'
 import RegistroPage from './pages/registro/RegistroPage'
 import NuevoPage from './pages/nuevo/NuevoPage'
 import PatronPage from './pages/patron/PatronPage'
+import PatronLecturaPage from './pages/patron/PatronLecturaPage'
 import EstrategiasPage from './pages/estrategias/EstrategiasPage'
 import EstrategiaNuevaPage from './pages/estrategias/EstrategiaNuevaPage'
 import EstrategiaDetailPage from './pages/estrategias/EstrategiaDetailPage'
@@ -163,6 +164,7 @@ export default function App() {
                 <Route path="panel"       element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
                 <Route path="nuevo"       element={<PageErrorBoundary><NuevoPage /></PageErrorBoundary>} />
                 <Route path="patron"      element={<PageErrorBoundary><PatronPage /></PageErrorBoundary>} />
+                <Route path="patron/:id"  element={<PageErrorBoundary><PatronLecturaPage /></PageErrorBoundary>} />
                 <Route path="registro"    element={<PageErrorBoundary><RegistroPage /></PageErrorBoundary>} />
                 <Route path="estrategias" element={<PageErrorBoundary><EstrategiasPage /></PageErrorBoundary>} />
                 <Route path="estrategias/nuevo" element={<PageErrorBoundary><EstrategiaNuevaPage /></PageErrorBoundary>} />

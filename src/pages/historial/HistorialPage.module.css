@@ -29,6 +29,14 @@
   margin: 0;
 }
 
+/* Lista del filtro "Lo que acompañas": tarjetas de patrón apiladas. */
+.patronesLista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+}
+
 /* ─── Buscador inline ─── */
 .busquedaWrap {
   position: relative;
