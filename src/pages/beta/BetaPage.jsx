@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 
 // Colores: tokens reales de src/index.css (así la página es theme-aware).
 const C = {
@@ -20,6 +22,7 @@ const C = {
 };
 
 const KEY = "huella-beta-operacion";
+const GUARDADO_MS = 900;   // espera antes de subir, para no escribir en cada tecla
 const META_CORREOS = 15;
 const MIN_INSTALADOS = 12;
 const DIAS = 14;
@@ -65,29 +68,30 @@ Estoy juntando al grupo completo. Apenas estemos todos les mando el paso a paso 
 
 Cualquier cosa me escriben por acá o por privado, como prefieran.`,
 
-  lanzamiento: `¡Llegó el día! Acá va todo. Son 3 pasos, 5 minutos.
+  lanzamiento: `Llego el dia! Aca va todo. Son 3 pasos, 5 minutos.
 
-1. Únete a la prueba
-Abre este link desde tu teléfono, con la misma cuenta Gmail que me diste:
+1. Unete a la prueba
+Abre este link desde tu telefono, con la misma cuenta Gmail que me diste:
 ${LINK}
-Vas a ver una pantalla de Google Play. Toca el botón para aceptar ser tester.
+Vas a ver una pantalla de Google Play. Toca el boton para aceptar ser tester.
 
-2. Descarga Huella
-En esa misma pantalla toca "descárgala en Google Play" y luego Instalar.
-Si te dice que no está disponible, espera unos minutos y vuelve a entrar. Google se demora un poco en darte el acceso.
+2. Instala Huella
+En esa misma pantalla toca "descargala en Google Play" y luego Instalar.
+Si te dice que no esta disponible, espera unos minutos y vuelve a entrar. Google se demora un poco en darte el acceso.
 
-3. Crea tu cuenta
-Abre la app, regístrate, y pon el código de acceso que te mando por privado ahora.
+3. Crea tu cuenta y activa tu acceso
+Abre la app y registrate con el mismo Gmail que me diste.
+Al entrar vas a quedar en la pantalla de inicio. Ahi busca el bloque que dice "Tienes un codigo de invitacion?", pega el codigo que te mando por privado ahora y toca "Activar".
 
-Eso es todo. Después úsala cuando pase algo con tu hijo o hija, sin apuro.
+Eso es todo. Despues usala cuando pase algo con tu hijo o hija, sin apuro.
 
-Un favor importante: déjala instalada estos 14 días aunque no la uses mucho. Google cuenta eso, y es lo que me permite publicarla.
+Un favor importante: dejala instalada estos 14 dias aunque no la uses mucho. Google cuenta eso, y es lo que me permite publicarla.
 
 Si algo se traba, me escriben y lo vemos.`,
 
-  codigo: `[nombre], tu código es: HUELLA-XX
+  codigo: `[nombre], tu codigo es: HUELLA-XX
 
-Lo pones al crear tu cuenta. Te deja el acceso completo activado.`,
+Lo activas dentro de la app: en la pantalla de inicio busca el bloque que dice "Tienes un codigo de invitacion?", pega el codigo ahi y toca "Activar". Te deja el acceso completo listo.`,
 
   noInstalo: `Hola [nombre], ¿lograste instalarla? Si se trabó en algún paso me dices y lo vemos.`,
 
@@ -324,18 +328,26 @@ function calcularHoy(e) {
 }
 
 export default function BetaPage() {
+  const { user } = useAuth();
   const [e, setE] = useState(inicial);
   const [cargando, setCargando] = useState(true);
   const [falloGuardar, setFalloGuardar] = useState(false);
+  const [falloNube, setFalloNube] = useState(false);
   const [copiado, setCopiado] = useState("");
   const [nom, setNom] = useState("");
   const [mail, setMail] = useState("");
   const [ip, setIp] = useState("");
   const [verMensajes, setVerMensajes] = useState(false);
 
-  // Lectura al montar desde localStorage, en try/catch (misma forma del objeto
-  // de estado; se fusiona con `inicial` por si el guardado viejo no tiene todas
-  // las claves).
+  const timerRef = useRef(null);
+  const pendienteRef = useRef(null);
+  const montadoRef = useRef(true);
+  useEffect(() => () => { montadoRef.current = false; }, []);
+
+  // ── Lectura al montar, en dos fases ─────────────────────────────────────
+  // Fase 1 — cache local: pinta de inmediato, sin esperar la red. Es lo que
+  // evita que el tablero se vea vacio mientras carga. Se fusiona con `inicial`
+  // por si el guardado viejo no tiene todas las claves.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
@@ -347,17 +359,87 @@ export default function BetaPage() {
     }
   }, []);
 
-  // Escritura en cada cambio, en try/catch. Si falla, se muestra el aviso
-  // `falloGuardar` que ya existe abajo.
+  // Fase 2 — la nube manda: si hay fila guardada, reemplaza lo local. Asi el
+  // celular se pone al dia con lo que se hizo en el PC. Regla de conflicto
+  // acordada: al abrir la pagina gana lo que esta en Supabase.
+  useEffect(() => {
+    if (!user) return;
+    let vivo = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("tablero_beta")
+        .select("estado")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!vivo) return;
+      if (error) {
+        setFalloNube(true);
+        return;
+      }
+      if (data?.estado) {
+        const remoto = { ...inicial, ...data.estado };
+        setE(remoto);
+        try {
+          localStorage.setItem(KEY, JSON.stringify(remoto));
+        } catch {
+          /* cache best-effort: si no se puede escribir, igual seguimos */
+        }
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [user]);
+
+  // ── Escritura ───────────────────────────────────────────────────────────
+  // Sube a Supabase lo ultimo que quedo pendiente. Se llama con debounce, al
+  // desmontar y cuando la pestana pasa a segundo plano (clave en el celular).
+  // Es un upsert sobre la misma fila (user_id es PK): nunca borra nada.
+  const subir = useCallback(async () => {
+    const sig = pendienteRef.current;
+    if (!sig || !user) return;
+    pendienteRef.current = null;
+    const { error } = await supabase
+      .from("tablero_beta")
+      .upsert(
+        { user_id: user.id, estado: sig, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    if (montadoRef.current) setFalloNube(!!error);
+  }, [user]);
+
+  // Escritura en cada cambio. El guardado local sigue siendo inmediato y en
+  // try/catch (aviso `falloGuardar`); la subida a la nube va con debounce y
+  // tiene su propio aviso (`falloNube`), porque son fallas distintas: si la
+  // nube falla, el cambio SI quedo guardado en este dispositivo.
   const set = (sig) => {
     setE(sig);
+    // 1. Cache local: inmediata. Si se cae la red, el cambio no se pierde.
     try {
       localStorage.setItem(KEY, JSON.stringify(sig));
       setFalloGuardar(false);
     } catch {
       setFalloGuardar(true);
     }
+    // 2. Nube: con debounce, para no escribir una fila por cada tecla del nombre.
+    pendienteRef.current = sig;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(subir, GUARDADO_MS);
   };
+
+  // Nada se pierde al salir: lo pendiente se sube al cerrar la pestana o al
+  // mandarla a segundo plano.
+  useEffect(() => {
+    const alOcultar = () => {
+      if (document.visibilityState === "hidden") subir();
+    };
+    document.addEventListener("visibilitychange", alOcultar);
+    return () => {
+      document.removeEventListener("visibilitychange", alOcultar);
+      clearTimeout(timerRef.current);
+      subir();
+    };
+  }, [subir]);
 
   const copiar = async (texto, etiqueta) => {
     try {
@@ -528,6 +610,11 @@ export default function BetaPage() {
         )}
         {falloGuardar && (
           <p style={{ fontSize: 12.5, color: C.fresa, marginTop: 8 }}>No se guardó el cambio. Vuelve a tocarlo.</p>
+        )}
+        {falloNube && (
+          <p style={{ fontSize: 12.5, color: C.fresa, marginTop: 8 }}>
+            Se guardó en este dispositivo, pero no se pudo sincronizar. Revisa tu conexión.
+          </p>
         )}
 
         {/* ── RELOJ ── */}
