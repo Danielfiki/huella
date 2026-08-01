@@ -23,7 +23,8 @@ const C = {
 
 const KEY = "huella-beta-operacion";
 const GUARDADO_MS = 900;   // espera antes de subir, para no escribir en cada tecla
-const META_CORREOS = 20;
+const META_CORREOS = 20;   // meta ideal: lo que se muestra en el contador y en los textos
+const MIN_CORREOS = 15;    // minimo para poder lanzar; los 20 son colchon, no requisito
 const MIN_INSTALADOS = 12;
 const DIAS = 14;
 const LINK = "https://play.google.com/apps/testing/lat.huella.app";
@@ -105,7 +106,7 @@ Se te olvido, no le viste el sentido, te costo algo? Lo que sea.`,
 const inicial = {
   historia: [false, false, false],
   grupoCreado: false,
-  lanz: { verificado: false, grupoGoogle: false, codigos: false, mensaje: false, privados: false },
+  lanz: { verificado: false, decidido: false, grupoGoogle: false, codigos: false, mensaje: false, privados: false },
   fechaInicio: "",
   dias: { revisado: false, pregunta: false, clasificado: false, postmortem: false },
   cierre: { agradecido: false, feedback: false, v4: false },
@@ -180,14 +181,24 @@ function calcularHoy(e) {
       extraLabel: "Respuesta por DM",
     };
 
-  if (correos < META_CORREOS)
+  if (correos < MIN_CORREOS)
     return {
       k: "esperar",
       titulo: "Junta los correos que faltan",
-      porque: `Llevas ${correos} de ${META_CORREOS}. Google exige ${MIN_INSTALADOS} instalados a la vez, así que el colchón importa.`,
+      porque: `Llevas ${correos} de ${META_CORREOS}. Con ${MIN_CORREOS} ya puedes partir, porque Google exige ${MIN_INSTALADOS} instalados a la vez; el resto es colchón.`,
       msg: M.dm,
       msgLabel: "Respuesta por DM",
       nota: "No sueltes el link todavía. Rebota hasta que agregues a la persona al grupo de Google.",
+    };
+
+  if (correos < META_CORREOS && !e.lanz.decidido)
+    return {
+      k: "listo",
+      titulo: "Ya puedes lanzar cuando quieras",
+      porque: `Llevas ${correos} de ${META_CORREOS} correos. Con eso ya cubres los ${MIN_INSTALADOS} instalados que exige Google, así que puedes partir cuando quieras. Los que faltan son colchón por si alguien no instala. Puedes seguir sumando gente o lanzar el día que decidas.`,
+      cta: "Lanzo ahora",
+      hacer: (s) => ({ ...s, lanz: { ...s.lanz, decidido: true } }),
+      nota: "El día que lances haces todo junto en una hora: correos al grupo de Google, esperar 20 minutos, paso a paso al grupo, códigos por privado. El link no se manda de a poco.",
     };
 
   if (!e.lanz.grupoGoogle)
