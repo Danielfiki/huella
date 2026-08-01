@@ -23,7 +23,7 @@ const C = {
 
 const KEY = "huella-beta-operacion";
 const GUARDADO_MS = 900;   // espera antes de subir, para no escribir en cada tecla
-const META_CORREOS = 15;
+const META_CORREOS = 20;
 const MIN_INSTALADOS = 12;
 const DIAS = 14;
 const LINK = "https://play.google.com/apps/testing/lat.huella.app";
@@ -41,7 +41,7 @@ Y al otro día pasa de nuevo.
 Huella es para esos momentos. Anotas lo que pasó en 30 segundos y te dice qué había detrás, qué evitar y qué hacer la próxima vez. Con estrategias basadas en evidencia. Y afinadas a tu hijo, no a "los niños".
 
 Slide 3 (con caja de preguntas: "Tu correo Gmail")
-Busco 15 papás y mamás para probarla antes de que salga.
+Busco ${META_CORREOS} papás y mamás para probarla antes de que salga.
 
 Necesito que sea:
 · Android (iPhone va en una segunda ronda)
@@ -81,7 +81,7 @@ Si te dice que no esta disponible, espera unos minutos y vuelve a entrar. Google
 
 3. Crea tu cuenta y activa tu acceso
 Abre la app y registrate con el mismo Gmail que me diste.
-Al entrar vas a quedar en la pantalla de inicio. Ahi busca el bloque que dice "Tienes un codigo de invitacion?", pega el codigo que te mando por privado ahora y toca "Activar".
+Al entrar vas a quedar en la pantalla de inicio. Ahi busca el bloque que dice "¿Tienes un código de invitación?", pega el codigo que te mando por privado ahora y toca "Activar".
 
 Eso es todo. Despues usala cuando pase algo con tu hijo o hija, sin apuro.
 
@@ -91,7 +91,7 @@ Si algo se traba, me escriben y lo vemos.`,
 
   codigo: `[nombre], tu codigo es: HUELLA-XX
 
-Lo activas dentro de la app: en la pantalla de inicio busca el bloque que dice "Tienes un codigo de invitacion?", pega el codigo ahi y toca "Activar". Te deja el acceso completo listo.`,
+Lo activas dentro de la app: en la pantalla de inicio busca el bloque que dice "¿Tienes un código de invitación?", pega el codigo ahi y toca "Activar". Te deja el acceso completo listo.`,
 
   noInstalo: `Hola [nombre], ¿lograste instalarla? Si se trabó en algún paso me dices y lo vemos.`,
 
@@ -156,7 +156,7 @@ function calcularHoy(e) {
     return {
       k: "g",
       titulo: "Crea el grupo de WhatsApp",
-      porque: "Ya tienes 5 con número. No esperes a los 15: el grupo sirve para soltar el link a todos a la vez.",
+      porque: `Ya tienes 5 con número. No esperes a los ${META_CORREOS}: el grupo sirve para soltar el link a todos a la vez.`,
       msg: M.bienvenida,
       msgLabel: "Mensaje de bienvenida · grupo \"Huella · Beta\"",
       cta: "Grupo creado",
@@ -167,7 +167,7 @@ function calcularHoy(e) {
     return {
       k: "h2",
       titulo: "Última repetición de la historia",
-      porque: `Llevas ${correos} de ${META_CORREOS}. La meta son 15 para tener colchón: siempre se cae alguien.`,
+      porque: `Llevas ${correos} de ${META_CORREOS}. La meta son ${META_CORREOS} para tener colchón: siempre se cae alguien.`,
       msg: M.historia,
       msgLabel: "Los tres slides",
       cta: "Repetida",
@@ -184,18 +184,6 @@ function calcularHoy(e) {
       msg: M.dm,
       msgLabel: "Respuesta por DM",
       nota: "No sueltes el link todavía. Rebota hasta que agregues a la persona al grupo de Google.",
-    };
-
-  if (!e.lanz.verificado)
-    return {
-      k: "l0",
-      titulo: "Verifica dónde se canjea el código",
-      porque:
-        "El mensaje de lanzamiento dice que el código va al crear la cuenta. Si en realidad va en Home, quince personas van a buscar un campo que no existe.",
-      cta: "Verificado y corregido",
-      alerta: true,
-      hacer: (s) => ({ ...s, lanz: { ...s.lanz, verificado: true } }),
-      nota: "Confírmalo con Claude Code antes de mandar nada.",
     };
 
   if (!e.lanz.grupoGoogle)
