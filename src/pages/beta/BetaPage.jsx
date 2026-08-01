@@ -96,6 +96,10 @@ Lo activas dentro de la app: en la pantalla de inicio busca el bloque que dice "
   noInstalo: `Hola [nombre], ¿lograste instalarla? Si se trabó en algún paso me dices y lo vemos.`,
 
   pregunta: `Chiquillos, una pregunta y los dejo tranquilos: ¿hubo algo confuso al empezar? Cualquier detalle me sirve.`,
+
+  postmortem: `Hola [nombre], vi que no la seguiste usando y quiero pedirte un favor raro: cuentame por que. En serio, eso me sirve mucho mas que si la hubieras usado por compromiso.
+
+Se te olvido, no le viste el sentido, te costo algo? Lo que sea.`,
 };
 
 const inicial = {
@@ -103,7 +107,7 @@ const inicial = {
   grupoCreado: false,
   lanz: { verificado: false, grupoGoogle: false, codigos: false, mensaje: false, privados: false },
   fechaInicio: "",
-  dias: { revisado: false, pregunta: false },
+  dias: { revisado: false, pregunta: false, clasificado: false, postmortem: false },
   cierre: { agradecido: false, feedback: false, v4: false },
   testers: [],
   iphone: [],
@@ -250,7 +254,7 @@ function calcularHoy(e) {
       alerta: true,
     };
 
-  if (dia <= 2 && !e.dias.revisado)
+  if (!e.dias.revisado)
     return {
       k: "d1",
       titulo: "Revisa quién instaló de verdad",
@@ -261,7 +265,7 @@ function calcularHoy(e) {
       hacer: (s) => ({ ...s, dias: { ...s.dias, revisado: true } }),
     };
 
-  if (dia >= 3 && dia <= 5 && !e.dias.pregunta)
+  if (dia >= 3 && !e.dias.pregunta)
     return {
       k: "d3",
       titulo: "La única pregunta que sí haces",
@@ -270,6 +274,30 @@ function calcularHoy(e) {
       msgLabel: "Al grupo",
       cta: "Preguntado",
       hacer: (s) => ({ ...s, dias: { ...s.dias, pregunta: true } }),
+    };
+
+  if (dia >= 7 && !e.dias.clasificado)
+    return {
+      k: "d7",
+      titulo: "Clasifica a tus testers",
+      porque:
+        "Mira quién registró y quién no. Marca el toggle Registro de los que sí están usando la app. Eso te dice a quién escribirle el día 10 y a quién dejar tranquilo.",
+      cta: "Clasificado",
+      hacer: (s) => ({ ...s, dias: { ...s.dias, clasificado: true } }),
+      nota: "Corre la consulta de métricas en Supabase para saber quién registró de verdad. No preguntes por WhatsApp.",
+    };
+
+  if (dia >= 10 && !e.dias.postmortem)
+    return {
+      k: "d10",
+      titulo: "Escríbele a los que se cayeron",
+      porque:
+        "Solo a los que NO tienen el toggle Registro marcado. A los que sí están usando la app no les escribas nada hasta el final.",
+      msg: M.postmortem,
+      msgLabel: "Privado a cada caído",
+      cta: "Enviados",
+      hacer: (s) => ({ ...s, dias: { ...s.dias, postmortem: true } }),
+      nota: "Un solo mensaje por persona. Si no responde, lo dejas.",
     };
 
   if (dia <= DIAS)
@@ -746,6 +774,7 @@ export default function BetaPage() {
                     ["whatsapp", "WhatsApp", C.mocha],
                     ["optIn", "Aceptó", C.lavanda],
                     ["instalo", "Instaló", C.pistacho],
+                    ["registro", "Registro", C.terracota],
                   ].map(([k, label, col]) => (
                     <button
                       key={k}
@@ -769,6 +798,16 @@ export default function BetaPage() {
                     </button>
                   ))}
                 </div>
+                {/* Nota libre por tester: lo que dijo, para no perderlo en el chat. */}
+                <input
+                  className="in j"
+                  value={t.nota || ""}
+                  placeholder="Anota lo que te diga"
+                  onChange={(ev) =>
+                    set({ ...e, testers: e.testers.map((x) => (x.id === t.id ? { ...x, nota: ev.target.value } : x)) })
+                  }
+                  style={{ ...campo(0), marginTop: 8, width: "100%" }}
+                />
               </div>
             ))}
           </div>
@@ -805,6 +844,8 @@ export default function BetaPage() {
                       whatsapp: false,
                       optIn: false,
                       instalo: false,
+                      registro: false,
+                      nota: "",
                     },
                   ],
                 });
@@ -925,6 +966,7 @@ export default function BetaPage() {
                 ["Código por privado", M.codigo],
                 ["Si alguien no instaló", M.noInstalo],
                 ["La pregunta del día 3", M.pregunta],
+                ["Privado a cada caído (día 10)", M.postmortem],
               ].map(([label, texto]) => (
                 <Mensaje
                   key={label}
