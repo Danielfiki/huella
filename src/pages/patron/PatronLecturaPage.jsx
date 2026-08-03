@@ -4,6 +4,7 @@ import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
 import { canModify } from '../../utils/authorDisplay'
 import CerrarPatronModal from '../../components/patron/CerrarPatronModal'
+import PieCientifico from '../../components/patron/PieCientifico'
 import shared from './PatronPage.module.css'   // reusa header/bloques/cierre de Fase B
 import styles from './PatronLecturaPage.module.css'
 
@@ -86,6 +87,10 @@ export default function PatronLecturaPage() {
             </p>
           </div>
         )}
+
+        {/* En 'derivar' el cierre médico de arriba ya dice que Huella no
+            diagnostica: el descargo sobra y le resta peso. */}
+        <PieCientifico marco={o.marco_aplicado} sinDescargo={esDerivar} />
 
         <div className={styles.footer}>
           {estrategiaId && (

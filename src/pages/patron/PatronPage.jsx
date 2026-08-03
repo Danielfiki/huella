@@ -6,6 +6,7 @@ import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import LoadingDignificado from '../estrategias/components/LoadingDignificado'
 import UpgradeModal from '../../components/ui/UpgradeModal'
+import PieCientifico from '../../components/patron/PieCientifico'
 import styles from './PatronPage.module.css'
 
 // Opciones de selección única. El value es el que va a la BD; el label es copy.
@@ -237,6 +238,21 @@ export default function PatronPage() {
             <Bloque variante="empeora" titulo="Qué lo empeora">{resultado.que_lo_empeora}</Bloque>
           </div>
 
+          {clas === 'derivar' && (
+            <div className={styles.cierreDerivar}>
+              <h3 className={styles.cierreTitulo}>Esto conviene verlo con alguien</h3>
+              <p className={styles.cierreCuerpo}>
+                Huella no diagnostica. Esto se sale de lo que yo puedo acompañar, y conversarlo con el pediatra es lo que más ayuda.
+              </p>
+            </div>
+          )}
+
+          {/* Cierra la orientación (bloques + derivar) y va ANTES de los botones,
+              igual que en el modo lectura. En 'derivar' el cierre médico de
+              arriba ya dice que Huella no diagnostica: el descargo sobra y le
+              resta peso. */}
+          <PieCientifico marco={resultado.marco_aplicado} sinDescargo={clas === 'derivar'} />
+
           {clas === 'esperable' && (
             <div className={styles.pie}>
               <p className={styles.pieTexto}>Si quieres acompañar a {nombre} en esto, puedo armarte un plan.</p>
@@ -256,17 +272,9 @@ export default function PatronPage() {
           )}
 
           {clas === 'derivar' && (
-            <>
-              <div className={styles.cierreDerivar}>
-                <h3 className={styles.cierreTitulo}>Esto conviene verlo con alguien</h3>
-                <p className={styles.cierreCuerpo}>
-                  Huella no diagnostica. Esto se sale de lo que yo puedo acompañar, y conversarlo con el pediatra es lo que más ayuda.
-                </p>
-              </div>
-              <div className={styles.pie}>
-                <button className={styles.btnSecundario} onClick={() => navigate('/panel')} type="button">Entendido</button>
-              </div>
-            </>
+            <div className={styles.pie}>
+              <button className={styles.btnSecundario} onClick={() => navigate('/panel')} type="button">Entendido</button>
+            </div>
           )}
         </div>
 

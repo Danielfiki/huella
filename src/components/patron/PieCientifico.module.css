@@ -1,0 +1,22 @@
+/* Pie científico de las salidas de patrón.
+   Replica el tratamiento de `.marco` de RespuestaIA.module.css (el pie que ya
+   cierra la orientación de los episodios): 11px, itálica, texto muted y un
+   separador superior de 1px. La paridad visual entre episodios y patrones es
+   el punto de este bloque — si cambias uno, cambia el otro. */
+.pie {
+  margin-top: 10px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.linea {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Separación mínima entre el descargo y el marco cuando vienen las dos líneas. */
+.linea + .linea {
+  margin-top: 4px;
+}

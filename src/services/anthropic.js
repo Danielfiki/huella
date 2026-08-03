@@ -1342,12 +1342,23 @@ Reglas de tono INNEGOCIABLES: nunca diagnostiques, nunca etiquetes al ${genero} 
 
 REGLA DURA SOBRE LOS TRES TEXTOS: que_esta_pasando, que_ayuda y que_lo_empeora describen SOLO qué está pasando, qué ayuda en el día a día y qué lo empeora. NUNCA mencionan planes, programas, semanas, pasos a seguir ni ofertas de acompañamiento estructurado — ofrecer un plan es trabajo de la interfaz, no del texto. PROHIBIDAS dentro de los tres textos estas palabras y giros: "plan", "programa", "semana 1", "cuatro semanas", "te puedo armar", "sigue estos pasos". Los consejos concretos de "qué ayuda" SÍ se mantienen: lo prohibido es ofrecer un producto de la app, no dar orientación para el día a día.
 
+MARCO APLICADO — REGLA DURA. El campo marco_aplicado nombra al autor cuyo enfoque guió esta orientación. Formato exacto: nombre completo del autor, espacio, guion largo (—), espacio, concepto clave en minúsculas. Puedes listar dos autores separados por " + ".
+Ejemplos válidos:
+"Daniel Siegel — ventana de tolerancia"
+"Bruce Perry — regular, relacionar, razonar"
+"Ross Greene — habilidades no adquiridas"
+"Carlos González — autorregulación del hambre"
+El autor DEBE salir de la lista cerrada de abajo. PROHIBIDO inventar autores. PROHIBIDO citar a alguien fuera de esta lista. PROHIBIDO inventar títulos de libros. Si ningún autor de la lista calza bien con este patrón, elige el más cercano por dimensión; nunca improvises uno nuevo.
+LISTA CERRADA DE AUTORES VÁLIDOS: Daniel Siegel, Bruce Perry, Ross Greene, Stuart Shanker, Gabor Maté, Adele Faber, Elaine Mazlish, Janet Lansbury, Magda Gerber, John Gottman, Bessel van der Kolk, Carlos González, John Bowlby, Gordon Neufeld, Laura Markham, Jane Nelsen, Lisa Damour, Laurence Steinberg, Alan Wolfelt, Barry Prizant, Elaine Aron, Stephen Porges, Tina Payne Bryson, Mona Delahooke, Dan Hughes, Lawrence Cohen, Peter Levine, Alfie Kohn, Jean Piaget, Lev Vygotsky, Ellyn Satter, Adele Diamond, Russell Barkley, Edward Hallowell, Tamar Chansky, Lynn Lyons, Diana Baumrind, Becky Kennedy, Haim Ginott, Stanley Greenspan, T. Berry Brazelton, Harvey Karp, Ed Tronick, Allan Schore, Jerome Kagan, Stanley Turecki, Brené Brown, Temple Grandin, Kenneth Ginsburg, Erik Erikson, Jon Kabat-Zinn, Shefali Tsabary.
+EXCEPCIÓN ACOTADA: Jonathan Haidt y Jean Twenge SOLO pueden aparecer si este patrón trata de pantallas o redes sociales en un niño o niña mayor de 10 años. En cualquier otro caso están PROHIBIDOS.
+
 Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto antes o después. Estructura exacta:
 {
   "clasificacion": "esperable" | "instalado" | "derivar",
   "que_esta_pasando": "2-3 oraciones que expliquen la conducta a esta edad, sin diagnosticar y sin mencionar planes ni pasos a seguir",
   "que_ayuda": "2-3 oraciones de orientación concreta para el día a día (nunca un plan ni un producto de la app)",
-  "que_lo_empeora": "2-3 oraciones concretas de qué conviene evitar o restar"
+  "que_lo_empeora": "2-3 oraciones concretas de qué conviene evitar o restar",
+  "marco_aplicado": "Autor — concepto clave que guió esta orientación"
 }`
 
   const raw = await llamarAPI(prompt, 1500)
@@ -1364,7 +1375,15 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto ant
     ? 'derivar'
     : parsed.clasificacion
 
-  return { ...parsed, clasificacion }
+  // El marco es un extra, no un requisito: si el modelo lo omite o lo devuelve
+  // mal tipado, la orientación sigue siendo válida. Cae a cadena vacía y la UI
+  // simplemente no pinta esa línea (mismo camino que las filas viejas, que se
+  // guardaron antes de que este campo existiera).
+  const marco_aplicado = typeof parsed.marco_aplicado === 'string'
+    ? parsed.marco_aplicado.trim()
+    : ''
+
+  return { ...parsed, clasificacion, marco_aplicado }
 }
 
 /**
