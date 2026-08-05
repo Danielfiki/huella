@@ -140,9 +140,11 @@
 
 ---
 
-## ⏭️ PRIORIDAD INMEDIATA — 🚀 BETA EN CURSO, DÍA 3 (lanzada el domingo 2 ago, una semana antes de lo acordado) · lo único que toca: que los 8 que faltan instalen
+## ⏭️ PRIORIDAD INMEDIATA — 🚀 BETA EN CURSO · ✅ EL RELOJ DE GOOGLE ARRANCÓ (se llegó a los 12) · lo único que toca ahora: que los 12 se MANTENGAN
 
-**ESTADO AL 4 AGO 2026 (lo más nuevo, leer primero) — DÍA 3:** **9 cuentas creadas de 17 testers, 5 con al menos un registro.** **EL RELOJ DE GOOGLE NO HA ARRANCADO: hay 9 y se necesitan 12.**
+**ESTADO AL 5 AGO 2026 (lo más nuevo, leer primero):** ✅ **SE ALCANZARON LOS 12 MIEMBROS ACTIVOS.** Se sumó `nene.pepita@gmail.com` y ya registró. **Con eso arrancó el reloj de los 14 días corridos que exige Google.** ⚠️ **El requisito es de 12 SIMULTÁNEOS, no acumulados: si alguno desinstala o sale del grupo, el conteo se rompe y el reloj se reinicia.** De aquí en adelante el trabajo es **retención, no reclutamiento**. **Anotar la fecha de los 12 en el tablero de `/beta`** para saber cuándo se cumplen los 14 días.
+
+**ESTADO AL 4 AGO 2026 (histórico) — DÍA 3:** **9 cuentas creadas de 17 testers, 5 con al menos un registro.** **EL RELOJ DE GOOGLE NO HABÍA ARRANCADO: había 9 y se necesitaban 12.**
 
 - **Con cuenta Y registros (5):** `matias.lagos.cartagena` (**2 registros**), `tomas.vergara88` (1), `s.undurragar` (1), `paulinajmg.88` (1), `amgomezsc1` (1).
 - **Con cuenta pero 0 registros (4):** `ddiegodiaz`, `catagrez9363`, `cecilialeivausset`, `bundurraga.r`.
@@ -204,7 +206,7 @@
 
 ---
 
-## Cerrado HOY — miércoles 5 agosto 2026 — El plan de pagos del 4 ago quedó CERRADO ENTERO: dejamos de estar ciegos, el usuario ya ve su código de referencia, y el webhook dejó de caer en el vacío
+## Cerrado HOY — miércoles 5 agosto 2026 — El plan de pagos del 4 ago quedó CERRADO ENTERO · después: se cayó la IA para todos por saldo agotado (resuelto) · y la beta llegó a los 12, así que el reloj de Google arrancó
 
 **Cinco commits, todos de pagos.** El día empezó con "no existe ningún registro de intentos de pago" y cerró con los **4 pasos del plan hechos y verificados en producción**, más un hallazgo grande que no estaba en el plan: **el webhook nunca estaba llegando**.
 
@@ -272,6 +274,42 @@ Nuevo `src/components/ui/ErrorPago.jsx` + su CSS module. Concentra copy y markup
 - **Reintentar sin trampa:** el cuerpo del pago se extrajo a `dispararPago()`, **sin** el guard de `cargando`. El guard queda solo en `handleActivar`; reintentar no pasa por ahí, así que no puede quedar bloqueado.
 - **Diseño:** tokens de `index.css`, sin hex ni rgb. Sigue el lenguaje de caja de error de `AuthPage` y el patrón de reintentar de `RegistroPage`. Los 7 tokens de color usados tienen override de dark mode.
 
+### 6. 🚨 INCIDENTE — LA ORIENTACIÓN DE IA SE CAYÓ PARA TODOS (5 ago, RESUELTO el mismo día)
+
+**Pasó después del cierre de los 5 commits de pagos, así que se registra acá aparte.**
+
+**El síntoma:** **tres testers distintos reportaron lo mismo el mismo día** — Diego, la mamá de Daniel y Paulina: al registrar un episodio aparecía *"No pudimos obtener tu orientación esta vez. Tu episodio quedó guardado."* **Falla determinista: el botón Reintentar tampoco servía**, fallaba igual y al instante. Eso descartó de entrada red intermitente y timeouts.
+
+🔴 **CAUSA RAÍZ: el saldo de la cuenta de Anthropic estaba en −0,05 USD.** La API respondía 401/403 y `api/anthropic.js` (bloque `esProblemaDeCuota`, líneas 304-317) lo traducía a un **503 `servicio_no_disponible`**. Se confirmó con un `curl` directo al endpoint en producción, que devolvía exactamente ese 503.
+
+✅ **RESUELTO:** Daniel recargó a **19,95 USD** y activó **auto-reload** (umbral 10, recarga a 50). **Verificado con el mismo `curl`: el endpoint responde 200 con texto generado de verdad.**
+
+⚡ **HALLAZGO IMPORTANTE — LA ACCIÓN RÁPIDA ENMASCARA LA CAÍDA.** Esto es lo que hizo perder tiempo en el diagnóstico y hay que tenerlo presente para siempre: **`generarAccionInmediata` (`src/services/anthropic.js:789-798`) tiene un fallback local**, y el **autor se elige en el cliente** antes de llamar a la IA. Cuando la API está caída, el `catch` devuelve `construirFallback(...)` y **el usuario ve una tarjeta con cita de autor que se ve perfectamente normal pero NO fue generada por IA.** Durante el incidente, "la acción rápida sí funciona" parecía significar que el servicio estaba vivo — **y no lo estaba.** ⚠️ **Que aparezca la acción rápida NO es evidencia de que la IA funcione.**
+
+🔴 **DEUDA ABIERTA #1 — LOS EPISODIOS QUE FALLARON QUEDAN SIN ORIENTACIÓN PARA SIEMPRE.** Sin suavizarlo: **no hay ninguna forma de recuperarlos desde la app.** El detalle, verificado en el código:
+- `analizarEpisodio` tiene **un solo llamador en todo el proyecto**: `RegistroPage.jsx:564`. No existe otra ruta.
+- El botón **Reintentar vive en la vista `guardado` de `RegistroPage`** y depende de `reintentoRef.current`, un `useRef`. Si el usuario navega, recarga o cierra la app, **el ref muere con el componente y ya no hay vuelta**.
+- **El Historial no muestra ni el error ni oferta de reintento.** `EpisodioCard.jsx:156` hace `{hasIA && ...}`: si `orientacion_ia` es null, el botón "Ver orientación" **simplemente no se dibuja**. El episodio se ve igual que cualquier otro — **el usuario ni siquiera sabe que le falta algo**.
+- **El daño se propaga:** `InformePDF.jsx:913` (el informe para el especialista sale sin esa orientación) y `CheckinPage.jsx:51` (el check-in de 20-48 h la usa como contexto y arranca ciego).
+- Recuperación posible hoy: **solo escribiendo la columna a mano por SQL**, o que el usuario borre el episodio y lo registre de nuevo perdiendo la fecha original.
+- Para contarlos: `select count(*) from public.episodios where orientacion_ia is null;` — y por día, para aislar el pico del apagón del ruido histórico.
+
+🔴 **DEUDA ABIERTA #2 — SEGUIMOS CIEGOS EN LA IA, IGUAL QUE ESTÁBAMOS EN PAGOS.** El único rastro de un fallo de IA es un **`console.error` en Vercel con una hora de retención**. **Nos enteramos por tres testers, no por una alerta.** Y el saldo llegó a **número negativo** sin que nada avisara. El auto-reload cubre el caso del saldo, pero **no cubre ningún otro motivo de caída** (llave revocada, cambio de contrato, saturación).
+
+### 7. 🎉 BETA — SE ALCANZARON LOS 12: EL RELOJ DE GOOGLE ARRANCÓ
+
+**Se sumó `nene.pepita@gmail.com` y ya registró.** Con eso la beta llega a **12 miembros activos**, que es **exactamente el mínimo que Google exige** para que empiece a correr el reloj de los **14 días corridos con 12 testers simultáneos**.
+
+⚠️ **Ojo con lo que esto significa:** el requisito es de **12 simultáneos, no acumulados**. Si alguno desinstala o sale del grupo, **el conteo se rompe y el reloj se reinicia**. De aquí en adelante lo que toca es **que los 12 se mantengan**, no sumar más.
+
+### 8. 🆕 REPORTE NUEVO SIN DIAGNOSTICAR — la app no funciona en la red de un hospital
+
+Un tester que **trabaja en un hospital** reporta que **la app no le funciona con internet público / la red del hospital**. ⚠️ **SIN VERIFICAR, SIN CAUSA IDENTIFICADA. No se investigó.** Queda anotado como pendiente de revisar. No tratarlo como bug confirmado hasta reproducirlo.
+
+### 9. PENDIENTE ACORDADO — bajar el costo de API con prompt caching, NO recortando autores
+
+**Decisión explícita de Daniel:** la optimización de costos de la API va por **prompt caching**, y **NO** por filtrar el banco de autores. **El razonamiento: filtrar autores atenta contra la calidad de las respuestas; el caching no toca el contenido del prompt en absoluto.** Hoy el **hit rate de caché es 40%** — ahí está el margen de mejora. No abrir la puerta a recortar el marco teórico como vía de ahorro.
+
 ### Cabo suelto menor (anotado, NO resuelto)
 
 - **La clase `.error` quedó sin uso** en `CuentaPage.module.css` y en `UpgradeModal.module.css` (0 referencias en el JSX tras el cambio). Es CSS muerto, inofensivo. No se borró para no mezclar limpieza con el cambio funcional.
@@ -280,7 +318,11 @@ Nuevo `src/components/ui/ErrorPago.jsx` + su CSS module. Concentra copy y markup
 
 1. 🔴 **Primer pago REAL verificado de punta a punta** — **condición #2 de la REGLA CRÍTICA**, el gate para activar cobros. Ahí se prueban EN VIVO: la firma `x-signature`, el disparo automático del webhook (ahora sí a una URL que no redirige) y el camino "confirmado" de la red de seguridad.
 2. **Identificar el error de cliente** que apareció en el QA del 5 ago y nunca dejó fila.
-3. **Beta:** el reloj de Google sigue sin arrancar (9 de 12 instalados).
+3. 🔴 **Rescatar (o al menos contar) los episodios que quedaron sin orientación** por la caída de IA, y decidir si se les avisa a los tres testers afectados.
+4. 🔴 **Salir de la ceguera en IA** — hoy un fallo del servicio solo deja un `console.error` de una hora. Nos enteramos por los usuarios.
+5. **Beta:** ✅ **el reloj de Google ARRANCÓ — se llegó a los 12.** Lo que toca ahora es **que los 12 se mantengan 14 días corridos**, no sumar más.
+6. **Revisar el reporte del hospital** (la app no funciona en esa red) — sin diagnosticar.
+7. **Prompt caching** para bajar el costo de API (hit rate actual 40%). **NO recortando autores** — decisión tomada.
 
 ---
 
