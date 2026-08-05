@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { iniciarSuscripcion } from '../../services/pago'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
+import ErrorPago from '../../components/ui/ErrorPago'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -57,6 +58,10 @@ export default function CuentaPage() {
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
+  // Código HP-XXXXXX que devuelve el endpoint cuando el intento falla. Puede
+  // quedar en null si el registro no alcanzó a escribir; el bloque de error
+  // se ve bien igual.
+  const [referenciaPago, setReferenciaPago] = useState(null)
   // Microestado de la verificación al volver del checkout (?suscripcion=ok).
   const [verificando, setVerificando] = useState(false)
   const [avisoPago, setAvisoPago] = useState('')
@@ -151,21 +156,46 @@ export default function CuentaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Si el usuario vuelve atrás desde el checkout de MP, el navegador puede
+  // restaurar esta página desde el bfcache con `cargando` todavía en true: el
+  // botón queda pegado en "Redirigiéndote al pago…" y deshabilitado, sin error
+  // ni redirect. `pageshow` con event.persisted es la señal de esa restauración;
+  // reponemos el estado para que el botón vuelva a responder.
+  useEffect(() => {
+    function alRestaurar(e) {
+      if (e.persisted) setCargando(false)
+    }
+    window.addEventListener('pageshow', alRestaurar)
+    return () => window.removeEventListener('pageshow', alRestaurar)
+  }, [])
+
   // Crea la suscripción en Mercado Pago para el ciclo elegido y redirige al
   // checkout alojado (init_point). El usuario ingresa la tarjeta en la página
   // de MP; nosotros no manejamos datos de tarjeta.
-  async function handleActivar() {
-    if (cargando) return
+  //
+  // SIN guard de `cargando` a propósito: es el cuerpo compartido entre el CTA
+  // normal y el botón de reintentar. El guard vive en handleActivar; reintentar
+  // NO pasa por él, así que aunque el estado de carga quedara pegado, ese botón
+  // siempre puede disparar un intento nuevo.
+  async function dispararPago() {
     setCargando(true)
     setError('')
+    setReferenciaPago(null)
     try {
       const initPoint = await iniciarSuscripcion(ciclo)
       window.location.href = initPoint
     } catch (err) {
       console.error('handleActivar error:', err, err?.detail)
       setError('No pudimos abrir el pago. Intenta de nuevo en un momento.')
+      // El endpoint devuelve la referencia dentro del cuerpo del error.
+      setReferenciaPago(err?.detail?.referencia ?? null)
       setCargando(false)
     }
+  }
+
+  function handleActivar() {
+    if (cargando) return
+    dispararPago()
   }
 
   // Pide el permiso de notificaciones vía el hook. Al resolverse, el hook
@@ -276,7 +306,13 @@ export default function CuentaPage() {
           <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
             {cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro'}
           </button>
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <ErrorPago
+              referencia={referenciaPago}
+              onReintentar={dispararPago}
+              cargando={cargando}
+            />
+          )}
         </>
       )}
 
