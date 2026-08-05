@@ -242,9 +242,17 @@ export default async function handler(req, res) {
         reason: config.reason,
         auto_recurring: config.auto_recurring,
         payer_email: user.email,
-        back_url: 'https://huella.lat/cuenta?suscripcion=ok',
+        // OJO — el host va con `www` a propósito. El apex `huella.lat`
+        // responde 307 hacia `www.huella.lat` (también en POST, verificado
+        // con curl el 5 ago 2026), y Mercado Pago espera un 200/201 en su
+        // notification_url: si no sigue el redirect, el webhook nunca llega
+        // y un pago real no activaría Pro. No está confirmado si MP sigue
+        // redirects — su documentación no lo dice y nunca llegó un webhook
+        // real que lo demuestre. Apuntando directo a `www` el salto deja de
+        // existir y la pregunta deja de importar.
+        back_url: 'https://www.huella.lat/cuenta?suscripcion=ok',
         external_reference: user.id,
-        notification_url: 'https://huella.lat/api/mp-webhook',
+        notification_url: 'https://www.huella.lat/api/mp-webhook',
       }),
     })
 
