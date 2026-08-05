@@ -106,13 +106,14 @@
 - **iOS nativo (DESPUÉS de Android; NO bloquea la beta):** push nativas por APNs vía Capacitor (el Web Push actual no corre en WebView iOS) + Face ID + navegación nativa, para pasar la Guideline 4.2. **Nota:** si iOS se hace con Capacitor, ESE camino SÍ necesitará convertir los 5 `fetch` `/api/*` a URL base absoluta (`huella.lat`) + CORS en las funciones de Vercel (descartado para Android/TWA, pero vigente para Capacitor iOS).
 
 **Cobros reales** (ver REGLA CRÍTICA más abajo)
-- 🟢 **YA NO ESTAMOS CIEGOS EN EL PAGO — el registro de intentos está VIVO en producción** — desde **4 ago 2026**, cerrado en su parte gruesa el **5 ago 2026** — el problema original: no había ningún registro de intentos de pago, solo `console.error` en Vercel con retención de **una hora** (plan Hobby), así que ante cada reclamo de "no pude pagar" se quedaba ciego. Estado del plan acordado: (1) reproducir el camino silencioso en celular → **PENDIENTE**; (2) crear tabla **`pagos_intentos`** con RLS activa sin policies (patrón `codigos_beta`) → ✅ **HECHO — migración `009_pagos_intentos.sql` ejecutada en la base real el 5 ago**; (3) instrumentar `mp-crear-suscripcion.js` con helper blindado → ✅ **HECHO y VERIFICADO EN PRODUCCIÓN el 5 ago** (commit `c609039`); (4) mejorar el error visible con código de referencia + botón de reintentar → 🔴 **ÚNICO PENDIENTE DEL PLAN**. **Hoy el backend deja rastro de cada intento y de cada corte, con user agent y plataforma; lo que falta es que el usuario VEA su código de referencia cuando algo falla.** Consulta de diagnóstico lista en `supabase/consultas/pagos_diagnostico.sql`. **Detalle completo en el bloque de sesión del 4 ago, punto 6, actualizado con el cierre del 5 ago.**
-- 🔴 **Camino silencioso del botón de pago — ABIERTO, y el 5 ago ganó su primera evidencia dura** — desde **4 ago 2026** — la ruta de éxito nunca hace `setCargando(false)` antes del redirect (`CuentaPage.jsx` + `UpgradeModal.jsx`); si el usuario vuelve atrás desde MP, el botón puede quedar en "Redirigiéndote al pago…" y **deshabilitado**, y `if (cargando) return` bloquea cualquier toque: **sin error y sin redirect**. **Probado en Chrome de escritorio: NO se reproduce.** ⚡ **DATO NUEVO (5 ago 2026, QA en celular): a Daniel le apareció un error breve en pantalla ANTES de llegar a Mercado Pago, y en `pagos_intentos` NO quedó ninguna fila de error — solo la de éxito (`HP-9VU7F6`).** Ahora que el backend registra TODOS sus cortes, un error visible sin fila asociada solo puede significar una cosa: **ese error ocurrió en el cliente y nunca llegó a disparar la llamada al endpoint.** **Esto acota el problema al lado del navegador y descarta el backend.** Falta identificar qué error exacto es y reproducirlo. Si es el bfcache, el arreglo es un listener de `pageshow` que reponga `setCargando(false)` cuando `event.persisted` sea true.
-- 🆕🔴 **`notification_url` del webhook apunta al dominio que REDIRIGE — SIN VERIFICAR** — desde **5 ago 2026** — `huella.lat` responde **307 Temporary Redirect** hacia `www.huella.lat` (comprobado con `curl`), y en `mp-crear-suscripcion.js:238` el `notification_url` que se le manda a Mercado Pago es `https://huella.lat/api/mp-webhook`, o sea **la URL que redirige**. `back_url` (línea 236) tiene lo mismo. **Riesgo: si Mercado Pago NO sigue redirects en POST, el webhook nunca llega y un pago real no activaría Pro.** ⚠️ **NO está verificado si MP sigue el 307 o no** — es un riesgo identificado, no un bug confirmado. **No se investigó ni se tocó nada.** Se anota acá porque es exactamente el tipo de cosa que rompe un pago en silencio, y porque el gate del primer pago real (condición #2) pasa justo por ahí. La red de seguridad post-checkout amortigua el caso, pero solo en su ventana de ~6 segundos.
+- 🟢 **YA NO ESTAMOS CIEGOS EN EL PAGO — el registro de intentos está VIVO en producción** — desde **4 ago 2026**, cerrado en su parte gruesa el **5 ago 2026** — el problema original: no había ningún registro de intentos de pago, solo `console.error` en Vercel con retención de **una hora** (plan Hobby), así que ante cada reclamo de "no pude pagar" se quedaba ciego. Estado del plan acordado: (1) reproducir el camino silencioso en celular → **PENDIENTE**; (2) crear tabla **`pagos_intentos`** con RLS activa sin policies (patrón `codigos_beta`) → ✅ **HECHO — migración `009_pagos_intentos.sql` ejecutada en la base real el 5 ago**; (3) instrumentar `mp-crear-suscripcion.js` con helper blindado → ✅ **HECHO y VERIFICADO EN PRODUCCIÓN el 5 ago** (commit `c609039`); (4) mejorar el error visible con código de referencia + botón de reintentar → ✅ **HECHO y VERIFICADO EN CELULAR el 5 ago** (commit `c61a7fa`). **EL PLAN QUEDÓ CERRADO ENTERO.** Hoy el backend deja rastro de cada intento y de cada corte con user agent y plataforma, y el usuario ve su código `HP-XXXXXX` con un botón de reintentar cuando algo falla. Consulta de diagnóstico lista en `supabase/consultas/pagos_diagnostico.sql`. **Detalle completo en el bloque del 5 ago.**
+- 🔴 **Camino silencioso del botón de pago — ABIERTO, y el 5 ago ganó su primera evidencia dura** — desde **4 ago 2026** — la ruta de éxito nunca hace `setCargando(false)` antes del redirect (`CuentaPage.jsx` + `UpgradeModal.jsx`); si el usuario vuelve atrás desde MP, el botón puede quedar en "Redirigiéndote al pago…" y **deshabilitado**, y `if (cargando) return` bloquea cualquier toque: **sin error y sin redirect**. **Probado en Chrome de escritorio: NO se reproduce.** ⚡ **DATO NUEVO (5 ago 2026, QA en celular): a Daniel le apareció un error breve en pantalla ANTES de llegar a Mercado Pago, y en `pagos_intentos` NO quedó ninguna fila de error — solo la de éxito (`HP-9VU7F6`).** Ahora que el backend registra TODOS sus cortes, un error visible sin fila asociada solo puede significar una cosa: **ese error ocurrió en el cliente y nunca llegó a disparar la llamada al endpoint.** **Esto acota el problema al lado del navegador y descarta el backend.** **Falta identificar qué error exacto es y reproducirlo — ese es el frente que sigue abierto.** ⚠️ **ARREGLO PREVENTIVO YA IMPLEMENTADO, PERO EL BUG SIGUE SIN CONFIRMAR (5 ago, commit `c61a7fa`):** se agregó el listener de `pageshow` que repone `setCargando(false)` cuando `event.persisted` es true, en `CuentaPage.jsx` y `UpgradeModal.jsx`. **NO tratar esto como "camino silencioso resuelto":** el bug nunca se logró reproducir, ni en Chrome de escritorio ni en celular, así que **no se sabe si había algo que arreglar.** Lo que existe es un arreglo defensivo para una hipótesis. Además el botón de reintentar del bloque de error **no pasa por el guard `if (cargando) return`**, así que aunque el estado quedara pegado, ese camino siempre puede disparar un intento nuevo.
+- ✅ **EL WEBHOOK NUNCA ESTABA LLEGANDO — ERA REAL, Y QUEDÓ ARREGLADO EL MISMO DÍA** — encontrado y cerrado el **5 ago 2026** — `huella.lat` responde **307 Temporary Redirect** hacia `www.huella.lat`, **también en POST** (verificado con `curl`), y tanto el `notification_url` del código como el webhook del panel de MP apuntaban al **apex que redirige**. Mercado Pago espera **200 o 201** en 22 segundos; un 307 no es ninguno. 🔴 **LA EVIDENCIA QUE LO CONFIRMÓ: el panel de Mercado Pago mostraba 0% DE NOTIFICACIONES ENTREGADAS antes del cambio.** Cero, nunca llegó ninguna — dejó de ser riesgo teórico y pasó a hecho medido. **Arreglado en los dos frentes:** (a) código, commit `b80ed77`, `back_url` y `notification_url` a `https://www.huella.lat` (con comentario en el archivo para que nadie "limpie" el `www`); (b) panel de Mercado Pago, cambiado a mano por Daniel a `www.huella.lat` **en modo productivo Y en modo prueba**. **Lo que esto significa hacia atrás:** la doble vía (webhook + red de seguridad) en realidad corría **en una sola vía** — todo dependía de la red post-checkout, que dura ~6 segundos y corre una sola vez. ⏳ **Falta ver el porcentaje de entrega subir de 0%: eso se comprueba recién con el primer pago real.**
 - **El webhook responde 200 aunque falle el `upsert`** — desde **4 ago 2026** — se hace a propósito para que MP no reintente en loop, pero el efecto es que **si el upsert falla, el pago queda sin Pro para siempre** y el único rastro es un `console.error` que vence en una hora.
 - **La red de seguridad post-checkout tiene ventana de solo ~6 segundos** (0s + 2s + 4s) — desde **4 ago 2026** — y **no hay segunda oportunidad**: tras el intento se borra el query param `?suscripcion=ok` con `replaceState` y el efecto **nunca vuelve a correr**, ni al recargar ni al entrar a `/cuenta` más tarde.
 - **No hay manejo de fallo visible para el usuario** — desde **4 ago 2026** — si el pago se rechaza en MP o el usuario abandona el checkout, vuelve a `/cuenta` **sin ningún mensaje ni camino de recuperación**. El único error nuestro cubre solo la falla ANTES del redirect.
-- **Mensaje "No pudimos abrir el pago" duplicado literal** en `CuentaPage.jsx:166` y `UpgradeModal.jsx:32` — desde **4 ago 2026** — menor; conviene extraerlo junto a `iniciarSuscripcion` en `src/services/pago.js`, que ya es la fuente única del flujo.
+- ✅ **RESUELTO (5 ago, commit `c61a7fa`) — Mensaje "No pudimos abrir el pago" duplicado literal** en `CuentaPage.jsx` y `UpgradeModal.jsx` — el copy y el markup viven ahora en el componente compartido `src/components/ui/ErrorPago.jsx`; las dos pantallas lo consumen con las mismas props.
+- 🆕 **Cabo suelto menor: la clase `.error` quedó SIN USO** en `CuentaPage.module.css` y `UpgradeModal.module.css` — desde **5 ago 2026** — 0 referencias en el JSX tras pasar a `ErrorPago`. Es CSS muerto, inofensivo. No se borró para no mezclar limpieza con el cambio funcional.
 - **El detalle real del error de MP se pierde** — desde **4 ago 2026** — viaja al navegador dentro de `err.detail` pero solo va a `console.error` (`CuentaPage.jsx:165`, `UpgradeModal.jsx:31`), donde **nadie lo ve nunca** en el celular de un usuario real. Es justo lo que la tabla `pagos_intentos` viene a rescatar.
 - **Primer pago REAL de punta a punta** con credenciales de producción de MP — pendiente — condición #2 y gate para activar cobros; prueba EN VIVO la firma del webhook + el camino "confirmado".
 - **Limpiar usuarios/cuentas de prueba de MP** + cancelar el preapproval de prueba que sigue `authorized` — menor.
@@ -203,7 +204,87 @@
 
 ---
 
-## Cerrado HOY — martes 4 agosto 2026 — Día sin código: el flujo de pago quedó diagnosticado y el hallazgo es que estamos ciegos · beta día 3 con 9 de 17
+## Cerrado HOY — miércoles 5 agosto 2026 — El plan de pagos del 4 ago quedó CERRADO ENTERO: dejamos de estar ciegos, el usuario ya ve su código de referencia, y el webhook dejó de caer en el vacío
+
+**Cinco commits, todos de pagos.** El día empezó con "no existe ningún registro de intentos de pago" y cerró con los **4 pasos del plan hechos y verificados en producción**, más un hallazgo grande que no estaba en el plan: **el webhook nunca estaba llegando**.
+
+### Los 5 commits del día
+
+| Commit | Qué hizo |
+|---|---|
+| `f20f9b7` | **Migración 009 ejecutada** — tabla `pagos_intentos` (RLS activa sin policies, referencia `HP-XXXXXX` generada por la base, índices, comentarios) + `supabase/consultas/pagos_diagnostico.sql` |
+| `c609039` | **Instrumentación de `mp-crear-suscripcion.js`** — registra los 8 cortes que antes eran mudos + el camino exitoso, con `user_agent` y `plataforma` |
+| `6cc387c` | **`ESTADO.md`** — paso 3 verificado en producción + se anota la deuda del redirect |
+| `b80ed77` | **`back_url` y `notification_url` a `www.huella.lat`** — se elimina el salto 307 |
+| `c61a7fa` | **Componente `ErrorPago`** — código de referencia visible, botón de reintentar, copy unificado, listener de `pageshow` |
+
+### 1. El plan de pagos del 4 ago: CERRADO ENTERO
+
+| Paso | Estado |
+|---|---|
+| 1. Reproducir el camino silencioso en celular | 🟡 **Arreglo implementado, bug NO confirmado** (ver punto 4) |
+| 2. Crear la tabla `pagos_intentos` | ✅ **HECHO** — migración 009 en la base real |
+| 3. Instrumentar `mp-crear-suscripcion.js` | ✅ **HECHO y VERIFICADO EN PRODUCCIÓN** |
+| 4. Error visible con código de referencia + reintentar | ✅ **HECHO y VERIFICADO EN CELULAR** |
+
+**QA del paso 3 (en producción, desde el celular):** se tocó el botón de pagar y la fila aterrizó — **referencia `HP-9VU7F6`, etapa `preapproval`, resultado `ok`, plataforma `movil`**. Las cero filas de los primeros intentos eran **timing de deploy**, no un bug: se probó antes de que Vercel terminara de publicar.
+
+**QA del paso 4 (en producción, desde el celular):** con **modo avión** apareció el bloque de error **sin referencia** — que es el comportamiento correcto, porque el intento nunca llegó al endpoint y por lo tanto no hay fila que referenciar. El botón **"Intentar de nuevo"** funcionó: con internet restablecido llevó al checkout de Mercado Pago. **Los dos casos del bloque (con y sin referencia) quedaron cubiertos.**
+
+**El registro es no bloqueante y está probado como tal:** helper con try/catch que se traga todo, techo de 1200 ms vía `Promise.race`, cliente service-role separado del anon. Con Supabase inalcanzable el endpoint responde igual, solo que sin referencia. **La lógica del pago no cambió en ninguna línea.**
+
+### 2. 🔴➡️✅ HALLAZGO GRANDE — el webhook NUNCA estaba llegando (0% de notificaciones entregadas)
+
+Esto no estaba en el plan y resultó ser lo más importante del día.
+
+**Lo que se encontró:** `huella.lat` responde **307 Temporary Redirect** hacia `www.huella.lat`, **también en POST** (verificado con `curl`). Y tanto el `notification_url` del código como el webhook configurado a mano en el panel de MP apuntaban al **apex que redirige**. Mercado Pago espera un **200 o 201** dentro de 22 segundos; un 307 no es ninguno de los dos.
+
+**LA EVIDENCIA QUE LO CONFIRMÓ: el panel de Mercado Pago mostraba 0% DE NOTIFICACIONES ENTREGADAS antes del cambio.** Cero. Ni una sola notificación llegó nunca. Eso deja de ser un riesgo teórico y pasa a ser un hecho medido.
+
+**Lo que se arregló, en dos frentes:**
+- **En el código** (commit `b80ed77`): `back_url` y `notification_url` pasan a `https://www.huella.lat`. Quedó un comentario en el archivo explicando el porqué, para que nadie "limpie" el `www` más adelante sin saber qué desarma.
+- **En el panel de Mercado Pago** (a mano, fuera del repo): Daniel cambió la URL del webhook a `www.huella.lat` **en modo productivo Y en modo prueba**.
+
+**Por qué importa tanto:** el diseño de doble vía (webhook rápido + red de seguridad como respaldo) en realidad estaba corriendo **en una sola vía**. Todo dependía de la red de seguridad post-checkout, que dura ~6 segundos y corre una sola vez. Si un usuario pagaba y cerraba la pestaña, quedaba sin Pro y sin reintento posible.
+
+**Falta verificarlo en vivo:** que el porcentaje de entrega suba deja de ser 0% recién cuando MP dispare una notificación real. Se comprueba con el primer pago real.
+
+### 3. Barrido de URLs — no había más casos
+
+Se revisó **todo el repo** buscando URLs hardcodeadas hacia nosotros: las únicas dos eran las de `mp-crear-suscripcion.js`. Todo lo que arma URLs propias en `src/` usa `window.location.origin` (dinámico, se adapta al host). `manifest.json` usa `start_url: "/"` relativo, `assetlinks.json` no tiene URLs, `sw.js` e `index.html` tampoco. Lo demás que apareció con "huella.lat" son direcciones de correo `contacto@huella.lat`, que no son callbacks.
+
+### 4. ⚠️ Listener de `pageshow` — ARREGLO IMPLEMENTADO, BUG NO CONFIRMADO
+
+**Hay que leer esto con cuidado y no darlo por cerrado.**
+
+Se agregó en `CuentaPage.jsx` y `UpgradeModal.jsx` un listener de `pageshow` que, cuando `event.persisted` es true (la página vuelve del bfcache), repone `setCargando(false)`.
+
+- **Por qué se agregó:** sin él, el botón de reintentar **no sirve en el escenario real**. Si el estado de carga queda pegado, NO hay error en pantalla, y sin error tampoco hay bloque de reintentar: el usuario solo ve el CTA congelado en "Redirigiéndote al pago…" y deshabilitado. Decisión explícita de Daniel de incluirlo.
+- ⚠️ **PERO: NO está verificado que el bug exista.** La hipótesis del camino silencioso **sigue sin confirmar**. En Chrome de escritorio no se reproduce, y en celular no se logró reproducir tampoco. **Lo que hay es un arreglo preventivo para un bug que nunca se vio ocurrir.** No anotarlo como "camino silencioso resuelto", porque no se sabe si había algo que resolver.
+- **Dato que sigue abierto del QA del 5 ago:** a Daniel le apareció **un error breve en pantalla antes de llegar a Mercado Pago** y NO quedó fila de error en `pagos_intentos`, solo la de éxito. Como el backend registra todos sus cortes, ese error vino del cliente y nunca disparó la llamada al endpoint. **Ese error concreto todavía no se identificó.**
+
+### 5. Componente `ErrorPago` — el copy dejó de estar duplicado
+
+Nuevo `src/components/ui/ErrorPago.jsx` + su CSS module. Concentra copy y markup en un solo lugar; `CuentaPage` y `UpgradeModal` lo consumen con las mismas tres props (`referencia`, `onReintentar`, `cargando`). Antes el mensaje "No pudimos abrir el pago" vivía **duplicado literal** en los dos archivos.
+
+- **Con referencia:** muestra el código `HP-XXXXXX` grande y espaciado, con `user-select: all` (un toque lo selecciona completo en el celular) e invita a escribir a `contacto@huella.lat`.
+- **Sin referencia:** no renderiza esa parte. **No queda hueco ni aparece "null" en pantalla.**
+- **Reintentar sin trampa:** el cuerpo del pago se extrajo a `dispararPago()`, **sin** el guard de `cargando`. El guard queda solo en `handleActivar`; reintentar no pasa por ahí, así que no puede quedar bloqueado.
+- **Diseño:** tokens de `index.css`, sin hex ni rgb. Sigue el lenguaje de caja de error de `AuthPage` y el patrón de reintentar de `RegistroPage`. Los 7 tokens de color usados tienen override de dark mode.
+
+### Cabo suelto menor (anotado, NO resuelto)
+
+- **La clase `.error` quedó sin uso** en `CuentaPage.module.css` y en `UpgradeModal.module.css` (0 referencias en el JSX tras el cambio). Es CSS muerto, inofensivo. No se borró para no mezclar limpieza con el cambio funcional.
+
+### Lo que sigue pendiente
+
+1. 🔴 **Primer pago REAL verificado de punta a punta** — **condición #2 de la REGLA CRÍTICA**, el gate para activar cobros. Ahí se prueban EN VIVO: la firma `x-signature`, el disparo automático del webhook (ahora sí a una URL que no redirige) y el camino "confirmado" de la red de seguridad.
+2. **Identificar el error de cliente** que apareció en el QA del 5 ago y nunca dejó fila.
+3. **Beta:** el reloj de Google sigue sin arrancar (9 de 12 instalados).
+
+---
+
+## Sesión martes 4 agosto 2026 — Día sin código: el flujo de pago quedó diagnosticado y el hallazgo es que estamos ciegos · beta día 3 con 9 de 17
 
 **DÍA SIN CÓDIGO. Cero commits de feature.** El día fue **diagnóstico de solo lectura** y **operación de beta**. Nada de lo que sigue está implementado: es hallazgo y plan. Lo único que se tocó fue este archivo.
 
