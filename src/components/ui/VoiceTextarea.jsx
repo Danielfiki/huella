@@ -9,6 +9,10 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const [voiceEstado, setVoiceEstado] = useState('idle')
   const [transcriptText, setTranscriptText] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  // Aviso del toque corto. Va aparte de `voiceEstado` a propósito: convive con
+  // el estado idle para que el textarea y el micrófono sigan visibles y el
+  // usuario pueda intentarlo de nuevo en el acto, sin esperar a que se vaya.
+  const [mostrandoPista, setMostrandoPista] = useState(false)
 
   const recRef            = useRef(null)
   const transcriptRef     = useRef('')
@@ -21,11 +25,13 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const isRecordingRef    = useRef(false)
   const holdStartRef      = useRef(0)
   const endTimeoutRef     = useRef(null)
+  const pistaTimeoutRef   = useRef(null)
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
   useEffect(() => () => {
     clearTimeout(endTimeoutRef.current)
+    clearTimeout(pistaTimeoutRef.current)
     if (releaseHandlerRef.current) {
       document.removeEventListener('mouseup', releaseHandlerRef.current)
       document.removeEventListener('touchend', releaseHandlerRef.current)
@@ -53,13 +59,24 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     tick()
   }
 
+  // Toque corto: el usuario tocó el micrófono como si fuera un botón normal,
+  // sin sostenerlo. Antes esto volvía a idle en silencio — el usuario tocaba,
+  // no pasaba nada visible y no tenía forma de entender por qué. Ahora se le
+  // explica cómo se usa, sin tratarlo como un error suyo.
+  function mostrarPista() {
+    clearTimeout(pistaTimeoutRef.current)
+    setVoiceEstado('idle')
+    setMostrandoPista(true)
+    pistaTimeoutRef.current = setTimeout(() => setMostrandoPista(false), 4000)
+  }
+
   // Called by rec.onend (after stop() + all pending onresult events have fired)
   function finalizarRevision() {
     clearTimeout(endTimeoutRef.current)
     const held = Date.now() - holdStartRef.current
     const captured = transcriptRef.current.trim()
     if (held < 300 && !captured) {
-      setVoiceEstado('idle')
+      mostrarPista()
     } else {
       setTranscriptText(captured)
       setVoiceEstado('revisando')
@@ -87,6 +104,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     isRecordingRef.current = true
     holdStartRef.current = Date.now()
     transcriptRef.current = ''
+    clearTimeout(pistaTimeoutRef.current)
+    setMostrandoPista(false)
     setVoiceEstado('grabando')
 
     const onRelease = () => {
@@ -213,7 +232,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
                   type="button"
                   aria-label="Mantén presionado para dictar"
                 >
-                  <Mic size={17} />
+                  <Mic size={20} />
                 </button>
               </div>
             )}
@@ -271,6 +290,27 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
         )}
 
       </div>
+
+      {/* ── Aviso del toque corto ──
+          Pisa al hint cuando aparece: son la misma franja, así que el layout
+          no salta. Tiene prioridad porque responde a algo que el usuario
+          acaba de hacer. */}
+      {voiceEstado === 'idle' && disponibleVoz && mostrandoPista && (
+        <p className={styles.narrativaPista} role="status">
+          <Mic size={13} aria-hidden="true" />
+          Mantén presionado mientras hablas, y suelta al terminar.
+        </p>
+      )}
+
+      {/* ── Hint permanente ──
+          El modelo push-to-talk no se adivina, así que se dice. Se esconde en
+          cuanto el campo tiene texto: ahí ya cumplió y solo estorbaría. */}
+      {voiceEstado === 'idle' && disponibleVoz && !mostrandoPista && !value && (
+        <p className={styles.narrativaHint}>
+          <Mic size={12} aria-hidden="true" />
+          Mantén presionado el micrófono para dictar
+        </p>
+      )}
     </div>
   )
 }
