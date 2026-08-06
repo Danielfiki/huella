@@ -17,7 +17,18 @@ const AVISO_SEGUNDOS = 20
 // el gesto (un dedo sostenido, un botón); con toggle no: el usuario puede
 // dejar uno grabando y tocar el de al lado. Pasa en PatronPage y en el
 // detallado de RegistroPage, que muestran dos campos de voz a la vez.
-let detenerGrabadorActivo = null
+//
+// Guarda { token, detenerRef }, NO la función suelta. El token es un objeto de
+// identidad estable por instancia: comparar funciones acá fue justamente el bug
+// de la regresión — `detenerGrabacion` se recrea en cada render, así que el
+// `===` era casi siempre falso y el registro no se limpiaba nunca. El ref
+// (en vez de la función capturada) garantiza llamar a la versión viva.
+let grabadorActivo = null
+
+// Safari corta el reconocimiento por su cuenta tras un silencio. Lo
+// reiniciamos, pero con techo: si rebota una y otra vez es que el motor quedó
+// inservible y seguir intentando solo deja la UI mintiendo.
+const MAX_REINICIOS_SR = 8
 
 function formatearTiempo(seg) {
   const m = Math.floor(seg / 60)
@@ -43,9 +54,13 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const endTimeoutRef     = useRef(null)
   const tickIntervalRef   = useRef(null)
   const segundosRef       = useRef(0)
-  // Identidad estable de `detenerGrabacion` para el registro global: la función
-  // se recrea en cada render, el ref no.
+  const reiniciosRef      = useRef(0)
+  // Puntero siempre-vivo a `detenerGrabacion` (la función se recrea en cada
+  // render; el ref no).
   const detenerRef        = useRef(null)
+  // Identidad de ESTA instancia, estable de por vida. Es lo que se compara
+  // contra el registro global — nunca la función.
+  const tokenRef          = useRef({})
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
@@ -56,11 +71,16 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   useEffect(() => () => {
     clearTimeout(endTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
-    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
+    if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
+    // Bajar la bandera antes de abortar: si algún handler pendiente del SR
+    // dispara durante el desmontaje, tiene que verse a sí mismo como detenido
+    // y no intentar reiniciarse.
+    isRecordingRef.current = false
     recRef.current?.abort()
+    recRef.current = null
   }, [])
 
   function startWaveform() {
@@ -85,6 +105,10 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // "No se captó audio", así que detener nunca termina en silencio.
   function finalizarRevision() {
     clearTimeout(endTimeoutRef.current)
+    // La instancia de SpeechRecognition ya cumplió y no se reusa: una que ya
+    // terminó no vuelve a emitir onresult. Dejarla colgando acá era lo que
+    // permitía que un stop() posterior apuntara a un motor muerto.
+    recRef.current = null
     setTranscriptText(transcriptRef.current.trim())
     setVoiceEstado('revisando')
   }
@@ -93,7 +117,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     clearTimeout(endTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
     isRecordingRef.current = false
-    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
+    if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
@@ -109,7 +133,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   function detenerGrabacion() {
     if (!isRecordingRef.current) return
     isRecordingRef.current = false
-    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
+    if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     clearInterval(tickIntervalRef.current)
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -133,14 +157,15 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
     // Si hay otro campo de voz grabando, se cierra antes de abrir este. Nunca
     // dos micrófonos abiertos a la vez.
-    if (detenerGrabadorActivo && detenerGrabadorActivo !== detenerRef.current) {
-      detenerGrabadorActivo()
+    if (grabadorActivo && grabadorActivo.token !== tokenRef.current) {
+      grabadorActivo.detenerRef.current?.()
     }
-    detenerGrabadorActivo = detenerRef.current
+    grabadorActivo = { token: tokenRef.current, detenerRef }
 
     isRecordingRef.current = true
     transcriptRef.current = ''
     segundosRef.current = 0
+    reiniciosRef.current = 0
     setSegundos(0)
     setVoiceEstado('grabando')
 
@@ -195,7 +220,28 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
     // onend fires after stop() + all pending onresult events — safe to read transcript here
     rec.onend = () => {
-      if (isRecordingRef.current) return // SR ended unexpectedly while still recording
+      // Si seguimos grabando, este onend NO lo pedimos nosotros: Safari corta
+      // el reconocimiento por su cuenta tras un silencio. Con push-to-talk casi
+      // no pasaba porque las grabaciones duraban lo que el dedo aguantaba; con
+      // toggle duran mucho más y pasa seguido. Antes acá había un `return` a
+      // secas, que dejaba un motor muerto con la UI mostrando el waveform: a
+      // partir de ese momento no se capturaba una palabra más. Ahora se
+      // reinicia y la grabación continúa de verdad.
+      if (isRecordingRef.current) {
+        reiniciosRef.current += 1
+        if (reiniciosRef.current > MAX_REINICIOS_SR) {
+          detenerRef.current?.()
+          return
+        }
+        try {
+          rec.start()
+        } catch {
+          // Ya está arrancando o el motor no acepta más: cerrar prolijo en vez
+          // de dejar al usuario hablándole a un micrófono que no escucha.
+          detenerRef.current?.()
+        }
+        return
+      }
       finalizarRevision()
     }
 
