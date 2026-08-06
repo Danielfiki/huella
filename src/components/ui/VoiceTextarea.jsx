@@ -30,6 +30,19 @@ let grabadorActivo = null
 // inservible y seguir intentando solo deja la UI mintiendo.
 const MAX_REINICIOS_SR = 8
 
+/* ══════════════════════════════════════════════════════════════════════════
+   TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR
+
+   Rastrea por que la 2a grabacion falla despues de tocar "Agregar".
+   Los logs salen SIEMPRE (Eruda captura console.log normal); la consola
+   movil se enciende aparte con ?debug=1 (ver index.html).
+
+   PARA SACARLO: borrar este bloque y todas las lineas que contengan
+   `logVoz(` — estan todas en su propia linea a proposito.
+   ══════════════════════════════════════════════════════════════════════════ */
+const logVoz = (...args) => console.log('[VOZ]', ...args)
+/* ══ FIN TEMPORAL ═══════════════════════════════════════════════════════ */
+
 function formatearTiempo(seg) {
   const m = Math.floor(seg / 60)
   const s = seg % 60
@@ -68,7 +81,10 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // desmonta y esto cierra todo: el micrófono nunca queda abierto de fondo.
   // Con toggle importa más que antes — ya no hay un dedo levantándose que
   // marque el fin de la grabación.
-  useEffect(() => () => {
+  useEffect(() => {
+    logVoz('MONTA instancia')
+    return () => {
+    logVoz('DESMONTA instancia', { isRecording: isRecordingRef.current, recRefNull: recRef.current === null })
     clearTimeout(endTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
@@ -81,6 +97,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     isRecordingRef.current = false
     recRef.current?.abort()
     recRef.current = null
+    }
   }, [])
 
   function startWaveform() {
@@ -131,7 +148,14 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // document; ahora se llama desde el botón de stop, desde el tope de tiempo, o
   // desde otro grabador que arranca y reclama el micrófono.
   function detenerGrabacion() {
-    if (!isRecordingRef.current) return
+    logVoz('detener: ENTRA', { isRecording: isRecordingRef.current, recRefNull: recRef.current === null, segundos: segundosRef.current, transcript: JSON.stringify(transcriptRef.current) })
+    if (!isRecordingRef.current) {
+      logVoz('detener: SALE POR GUARD (no estaba grabando)')
+      return
+    }
+    if (recRef.current === null) {
+      logVoz('detener: recRef es NULL -> va derecho a finalizarRevision con transcript vacio. ESTA ES LA RUTA DEL FALLO INMEDIATO')
+    }
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     clearInterval(tickIntervalRef.current)
@@ -153,11 +177,16 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   detenerRef.current = detenerGrabacion
 
   async function iniciarGrabacion() {
-    if (isRecordingRef.current || voiceEstado !== 'idle') return
+    logVoz('iniciar: ENTRA', { estado: voiceEstado, isRecording: isRecordingRef.current, recRefNull: recRef.current === null, hayGrabadorActivo: !!grabadorActivo, esOtro: !!grabadorActivo && grabadorActivo.token !== tokenRef.current })
+    if (isRecordingRef.current || voiceEstado !== 'idle') {
+      logVoz('iniciar: SALE POR GUARD (no arranca nada)')
+      return
+    }
 
     // Si hay otro campo de voz grabando, se cierra antes de abrir este. Nunca
     // dos micrófonos abiertos a la vez.
     if (grabadorActivo && grabadorActivo.token !== tokenRef.current) {
+      logVoz('iniciar: hay OTRO grabador activo, lo detengo')
       grabadorActivo.detenerRef.current?.()
     }
     grabadorActivo = { token: tokenRef.current, detenerRef }
@@ -181,8 +210,13 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     // Web Audio API — best-effort waveform visualization
     if (navigator.mediaDevices?.getUserMedia) {
       try {
+        logVoz('getUserMedia: pidiendo…')
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        if (!isRecordingRef.current) { stream.getTracks().forEach((t) => t.stop()); return }
+        logVoz('getUserMedia: OK', { isRecordingTrasAwait: isRecordingRef.current })
+        if (!isRecordingRef.current) {
+          logVoz('getUserMedia: SALE — isRecording se apago durante el await. NO se crea el SpeechRecognition')
+          stream.getTracks().forEach((t) => t.stop()); return
+        }
         streamRef.current = stream
         const AudioCtx = window.AudioContext || window.webkitAudioContext
         if (AudioCtx) {
@@ -194,16 +228,24 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
           ctx.createMediaStreamSource(stream).connect(analyser)
           startWaveform()
         }
-      } catch {
+      } catch (err) {
+        logVoz('getUserMedia: FALLO', err?.name, err?.message)
         // getUserMedia denied or unavailable — SR may still work independently
       }
     }
 
-    if (!isRecordingRef.current) return
+    if (!isRecordingRef.current) {
+      logVoz('SALE antes de crear SR — isRecording en false. Esta es la ruta que deja recRef en null')
+      return
+    }
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return
+    if (!SR) {
+      logVoz('SALE — SpeechRecognition no existe en este navegador')
+      return
+    }
 
+    logVoz('creando SpeechRecognition')
     const rec = new SR()
     rec.lang = 'es-CL'
     rec.continuous = true
@@ -211,15 +253,18 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     recRef.current = rec
 
     rec.onresult = (e) => {
+      logVoz('SR onresult', { resultIndex: e.resultIndex, total: e.results.length })
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
           transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
         }
       }
+      logVoz('SR onresult -> transcript acumulado:', JSON.stringify(transcriptRef.current))
     }
 
     // onend fires after stop() + all pending onresult events — safe to read transcript here
     rec.onend = () => {
+      logVoz('SR onend', { isRecording: isRecordingRef.current, reinicios: reiniciosRef.current, transcript: JSON.stringify(transcriptRef.current) })
       // Si seguimos grabando, este onend NO lo pedimos nosotros: Safari corta
       // el reconocimiento por su cuenta tras un silencio. Con push-to-talk casi
       // no pasaba porque las grabaciones duraban lo que el dedo aguantaba; con
@@ -246,6 +291,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     }
 
     rec.onerror = (e) => {
+      logVoz('SR onerror:', e.error)
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         mostrarError('Permiso de micrófono denegado. Habilítalo en la configuración del navegador.')
       }
@@ -260,18 +306,22 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   }
 
   function cancelarVoz() {
+    logVoz('cancelarVoz (X): ENTRA', { recRefNull: recRef.current === null, hayGrabadorActivo: !!grabadorActivo })
     transcriptRef.current = ''
     setTranscriptText('')
     setVoiceEstado('idle')
   }
 
   function confirmarVoz() {
+    logVoz('confirmarVoz (Agregar): ENTRA', { texto: JSON.stringify(transcriptText), recRefNull: recRef.current === null, hayGrabadorActivo: !!grabadorActivo })
     if (transcriptText && onVoiceResult) {
+      logVoz('confirmarVoz: llamando onVoiceResult -> esto re-renderiza el PADRE')
       onVoiceResult((prev) => prev ? prev.trim() + ' ' + transcriptText : transcriptText)
     }
     transcriptRef.current = ''
     setTranscriptText('')
     setVoiceEstado('idle')
+    logVoz('confirmarVoz: SALE, estado -> idle')
   }
 
   return (
