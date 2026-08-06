@@ -22,6 +22,8 @@
 - ✅ **Migrar el modelo de IA — EN PRODUCCIÓN (verificada 10 jul 2026).** `claude-sonnet-4-5` → `claude-sonnet-4-6` aplicado en `api/anthropic.js:250` (única línea de código; las 15 funciones/16 call-sites pasan por ese endpoint). Commit `e5f190a`, pusheado a `origin/main`. **Daniel verificó en producción: el modelo responde bien, tono correcto, sin voseo.** Docs sincronizadas (`COSTOS_IA.md`, `README.md`, este archivo). Nota: Sonnet 4.6 usa `effort: "high"` por defecto, pero el código no setea `thinking`/`effort` → comportamiento cercano a Sonnet 4.5.
 - **Evaluar `claude-sonnet-5`** — desde **9 jul 2026** — thinking siempre encendido, tokenizador nuevo (~30% más tokens), sampling params rechazados. Requiere QA dedicado. Precio introductorio hasta 31 ago 2026. Evaluar también Haiku (`claude-haiku-4-5`) para llamadas baratas.
 - **Sincronizar `schema.sql`** con la base viva — faltan `plan`, `contexto_inicial`, `intenciones`, `plan_beta_hasta` en `perfiles` — desde **21 jun 2026** — hacerlo en una pasada; falta confirmar el tipo de elemento de `intenciones` (figura como ARRAY). **Además (6 jul 2026):** la tabla real `push_subscriptions` **NO tiene la columna `id`** que declara el schema (rompió `push-test`/`push-remind`; se corrigió el código para no pedir `id` y borrar por `endpoint`) — un ejemplo más del desfase.
+- 🔴 **BUG DE VOZ ABIERTO — la 2ª grabación da "No se captó audio"** — desde **6 ago 2026** — tras grabar y tocar **"Agregar"**, la siguiente grabación falla. **El waveform SÍ se mueve** → `getUserMedia` funciona y muere `SpeechRecognition`. **Dos hipótesis ya probadas y REFUTADAS con tests — no repetirlas** (registro global stale; instancia vieja de SR compitiendo). **Instrumentación con Eruda lista** (commit `9fe7876`, `?debug=1`): falta capturar los logs en el celular. **Detalle completo en el bloque del 6 ago, punto 2.**
+- 🆕 **La tarjeta de patrones no deja elegir y dice 3 cuando hay 2 casos reales** — desde **6 ago 2026** — **SIN DIAGNOSTICAR**, sin causa identificada. No tratar como bug confirmado hasta reproducirlo.
 - 🔴 **RECUPERACIÓN DE EPISODIOS SIN ORIENTACIÓN** — desde **5 ago 2026** — hoy un episodio cuya orientación falló **queda muerto y el usuario ni se entera: el Historial no lo marca de ninguna forma**. Falta **(a) marcarlo visualmente en el Historial** y **(b) permitir regenerar la orientación desde ahí**. **Sin esto, cualquier caída futura de la IA deja episodios vacíos de forma permanente.** (Contexto del incidente que lo destapó: bloque del 5 ago, punto 6.)
 - **Cortar la línea 3 de `ESTADO.md`** — desde **4 ago 2026** — pesa **~69 mil caracteres en una sola línea** y **ya no se puede leer con herramientas normales** (hay que medirla e inspeccionarla con PowerShell para poder editarla). Conviene **cortarla dejando solo las últimas 2 o 3 sesiones**; el resto ya vive en los bloques de sesión de más abajo. **Requiere sesión propia: NO hacerlo al cierre de un día**, porque implica decidir qué se conserva y qué se archiva.
 
@@ -143,7 +145,9 @@
 
 ## ⏭️ PRIORIDAD INMEDIATA — 🚀 BETA EN CURSO · ✅ EL RELOJ DE GOOGLE ARRANCÓ (se llegó a los 12) · lo único que toca ahora: que los 12 se MANTENGAN
 
-**ESTADO AL 5 AGO 2026 (lo más nuevo, leer primero):** ✅ **SE ALCANZARON LOS 12 MIEMBROS ACTIVOS.** Se sumó `nene.pepita@gmail.com` y ya registró. **Con eso arrancó el reloj de los 14 días corridos que exige Google.** ⚠️ **El requisito es de 12 SIMULTÁNEOS, no acumulados: si alguno desinstala o sale del grupo, el conteo se rompe y el reloj se reinicia.** De aquí en adelante el trabajo es **retención, no reclutamiento**. **Anotar la fecha de los 12 en el tablero de `/beta`** para saber cuándo se cumplen los 14 días.
+**ESTADO AL 6 AGO 2026 (lo más nuevo, leer primero):** **17 testers en total** — **Nicole salió por falta de espacio en el teléfono**. **13 instalados, 11 con registros.** **Faltan por instalar (3):** Benja, Moni, Igna. **Instalaron pero no registraron (2):** Cata, Javi. Se mandó el **privado de instalación** a los que faltan y **la pregunta del día 3** al grupo. ⚠️ **Con 13 instalados hay apenas 1 de colchón sobre los 12 que exige Google, y el requisito es de 12 SIMULTÁNEOS: si dos desinstalan, el reloj se reinicia.** Por eso los 3 que faltan siguen importando aunque el mínimo ya esté cubierto.
+
+**ESTADO AL 5 AGO 2026 (histórico):** ✅ **SE ALCANZARON LOS 12 MIEMBROS ACTIVOS.** Se sumó `nene.pepita@gmail.com` y ya registró. **Con eso arrancó el reloj de los 14 días corridos que exige Google.** ⚠️ **El requisito es de 12 SIMULTÁNEOS, no acumulados: si alguno desinstala o sale del grupo, el conteo se rompe y el reloj se reinicia.** De aquí en adelante el trabajo es **retención, no reclutamiento**. **Anotar la fecha de los 12 en el tablero de `/beta`** para saber cuándo se cumplen los 14 días.
 
 **ESTADO AL 4 AGO 2026 (histórico) — DÍA 3:** **9 cuentas creadas de 17 testers, 5 con al menos un registro.** **EL RELOJ DE GOOGLE NO HABÍA ARRANCADO: había 9 y se necesitaban 12.**
 
@@ -207,7 +211,69 @@
 
 ---
 
-## Cerrado HOY — miércoles 5 agosto 2026 — El plan de pagos del 4 ago quedó CERRADO ENTERO · después: se cayó la IA para todos por saldo agotado (resuelto) · y la beta llegó a los 12, así que el reloj de Google arrancó
+## Cerrado HOY — jueves 6 agosto 2026 — El grabador de voz pasó a toggle tipo ChatGPT en los 8 campos · queda un bug ABIERTO sin causa confirmada y la instrumentación lista para cazarlo
+
+**4 commits, todos de voz.** El día arrancó con un reporte de tester ("el grabador es confuso") y terminó con el modelo de interacción cambiado entero — más un bug que resistió dos intentos de arreglo.
+
+### Los 4 commits
+
+| Commit | Qué hizo |
+|---|---|
+| `c4c3ac4` | **Hacer visible el push-to-talk** — botón de 34 a 44px con relleno y borde, hint visible, aviso cuando el toque es corto en vez de fallar en silencio, y CSS contra el menú Copiar/Consultar/Traducir de Safari iOS |
+| `467f4a3` | **Cambio a toggle** — se elimina push-to-talk completo; tocar para grabar, botón de stop rojo para detener |
+| `af3d1fb` | **Intento de arreglo** de la regresión (ver abajo) |
+| `9fe7876` | **Instrumentación TEMPORAL** con Eruda para diagnosticar en el celular |
+
+### 1. Push-to-talk → toggle: el modelo de interacción cambió
+
+**El reporte del tester traía tres síntomas** (ícono chico que no parece botón, no se nota que está grabando, no se entiende cómo detener) **y resultaron ser uno solo: el push-to-talk nunca estuvo comunicado.** La única pista de "mantén presionado" vivía en un `aria-label`, invisible salvo para lectores de pantalla.
+
+Primero se intentó **comunicarlo mejor** (commit `c4c3ac4`). El QA en celular mostró que no alcanzaba: además del menú contextual del sistema que levantaba el long-press, el modelo en sí confundía. **Decisión de Daniel: cambiar a toggle con la estructura de ChatGPT.**
+
+**Lo que hay ahora:** tocar el micrófono una vez arranca la grabación; mientras graba se ve el waveform, un contador y un botón de stop rojo con un cuadrado; tocar stop lleva al estado de revisión de siempre. Aplica a **los 8 campos de voz de la app** (RegistroPage ×4, PatronPage ×2, NuevoPage, SelectorHabilidades).
+
+**Casos que se resolvieron de paso:** tope de **2 minutos** con contador visible que se pone rojo en los últimos 20 segundos (al llegar al tope no se descarta nada, corta y pasa a revisión); **singleton** para que nunca graben dos campos a la vez; **cierre del micrófono al navegar** a otra pantalla; y detener sin audio ya no falla en silencio.
+
+### 2. 🔴 BUG ABIERTO — SIN CAUSA CONFIRMADA
+
+**La secuencia exacta que falla:** grabo (transcribe bien) → toco **"Agregar"** (el texto se agrega correctamente al campo) → toco grabar de nuevo → **"No se captó audio"**.
+
+⚡ **El dato que más acota:** durante la grabación que falla, **las barras del waveform SÍ se mueven con la voz**. O sea `getUserMedia` funciona perfecto y **lo que muere es `SpeechRecognition`**.
+
+**El disparador es confirmar con "Agregar", no la simple repetición.** La asimetría existe en el código y es de una sola línea: `confirmarVoz` y `cancelarVoz` son idénticas salvo que la primera llama a `onVoiceResult`, que es el `setDescripcionLibre` del padre — o sea, **tocar Agregar re-renderiza RegistroPage; tocar la X no toca nada fuera del componente.**
+
+⚠️ **DOS HIPÓTESIS PROBADAS Y REFUTADAS. No repetirlas:**
+1. **El registro global no se limpiaba** (comparaba funciones que cambian en cada render). Era un bug real y se arregló en `af3d1fb` con un token estable — **pero no era la causa de esto.**
+2. **La instancia vieja de SpeechRecognition competía con la nueva.** Se escribió un test que replica los 4 pasos y **no reprodujo el fallo**; el cambio se revirtió sin commitear en vez de dejarlo sin evidencia.
+
+**Lo único que sí está confirmado:** hay un solo camino en el código que produce el fallo instantáneo — `detenerGrabacion()` con `recRef.current === null` cae directo a `finalizarRevision()` con el transcript vacío. Y existe una ventana real donde eso es posible: **`iniciarGrabacion` es `async` y espera a `getUserMedia` ANTES de crear el SpeechRecognition**, así que durante todo ese await `isRecordingRef` ya está en true pero `recRef` sigue en null.
+
+### 3. Instrumentación lista para cazarlo (commit `9fe7876` — TEMPORAL, HAY QUE SACARLA)
+
+Como no hay Mac ni cable para el Web Inspector de Safari, se agregó **Eruda** (consola móvil embebida) que se activa **solo con `?debug=1`** en la URL: sin ese parámetro no se descarga un byte y no entra al bundle (verificado). Más **24 logs con prefijo `[VOZ]`** en cada punto donde se bifurca el flujo.
+
+**Cómo se usa:** abrir `https://www.huella.lat/?debug=1` **desde el navegador, no desde la PWA instalada** (el parámetro no llega ahí) → botón flotante abajo a la derecha → pestaña Console → filtrar por `[VOZ]` → hacer la secuencia de 4 pasos.
+
+**Los tres logs que resuelven el caso:** si `detener` entra con `recRef` en null; si el flujo sale antes de crear el SpeechRecognition; y si el componente se desmonta y remonta justo después de tocar Agregar.
+
+⚠️ **SACAR LA INSTRUMENTACIÓN cuando se cierre el bug.** Los marcadores dicen `TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR` y son grepeables.
+
+### 4. Beta — el número real, y no son 12
+
+**17 testers en total** (Nicole salió por falta de espacio en el teléfono). **13 instalados. 11 con registros.**
+
+- **Faltan por instalar (3):** Benja, Moni, Igna.
+- **Instalaron pero no registraron (2):** Cata, Javi.
+
+Se mandó el **privado de instalación** a los que faltan y **la pregunta del día 3** al grupo.
+
+### 5. 🆕 PENDIENTE NUEVO SIN DIAGNOSTICAR — la tarjeta de patrones
+
+**La tarjeta de patrones no deja elegir, y dice 3 cuando hay 2 casos reales.** ⚠️ Sin diagnosticar, sin causa identificada. Queda anotado para revisar.
+
+---
+
+## Sesión miércoles 5 agosto 2026 — El plan de pagos del 4 ago quedó CERRADO ENTERO · después: se cayó la IA para todos por saldo agotado (resuelto) · y la beta llegó a los 12, así que el reloj de Google arrancó
 
 **Cinco commits, todos de pagos.** El día empezó con "no existe ningún registro de intentos de pago" y cerró con los **4 pasos del plan hechos y verificados en producción**, más un hallazgo grande que no estaba en el plan: **el webhook nunca estaba llegando**.
 
