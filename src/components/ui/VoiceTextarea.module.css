@@ -59,42 +59,67 @@
   justify-content: center;
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s, transform 0.1s;
+
+  /* Push-to-talk contra el long-press del sistema. Mantener el dedo apretado
+     es, para el navegador, el gesto de "seleccionar texto": en Safari iOS eso
+     levanta el menú Copiar / Consultar / Traducir encima del campo y pinta el
+     resaltado azul. Estas cuatro líneas lo apagan SOLO en el botón — el
+     textarea queda intacto para que el usuario pueda seleccionar lo que
+     escribió. `-webkit-touch-callout` es la que mata el menú en iOS;
+     `user-select` mata el resaltado; `tap-highlight-color` quita el flash. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* El ícono no debe poder ser el target del gesto: si el touch aterriza en el
+   SVG en vez del botón, el long-press vuelve a escaparse al sistema. */
+.narrativaMicBtn > * { pointer-events: none; }
 .narrativaMicBtn:hover {
   background: var(--color-primary);
   color: var(--color-white);
 }
-/* Respuesta inmediata al apretar: en push-to-talk el usuario necesita saber
-   que el gesto se registró en el instante del toque, no medio segundo después. */
+/* Respuesta inmediata al apretar. */
 .narrativaMicBtn:active { transform: scale(0.94); }
 
-/* ── Instrucción del push-to-talk ──
-   La misma franja bajo la barra sirve al hint permanente y al aviso del toque
-   corto, así el layout no salta cuando uno reemplaza al otro. */
-.narrativaHint,
-.narrativaPista {
+/* ── Contador de la grabación ──
+   Comunica sin texto que el tiempo corre y que hay un tope. */
+.vozTiempo {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Últimos segundos antes del corte automático. */
+.vozTiempoPorTerminar { color: var(--color-danger); }
+
+/* ── Botón de detener ──
+   Cuadrado sobre disco rojo: lenguaje universal de "stop", imposible de
+   confundir con el micrófono al que reemplaza. Mismo tamaño táctil que el de
+   grabar para que el dedo no tenga que recalibrar entre uno y otro. */
+.vozStopBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-danger);
+  color: var(--color-white);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin: 0;
-  padding: 0 6px;
-  line-height: 1.35;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-
-.narrativaHint {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-/* El aviso pesa un poco más que el hint — responde a un gesto que el usuario
-   acaba de hacer. Va en el primario y NO en danger a propósito: no hizo nada
-   malo, solo todavía no sabe cómo funciona. */
-.narrativaPista {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-primary);
-  animation: narrativaFadeIn 0.2s ease both;
-}
+.vozStopBtn:hover { opacity: 0.88; }
+.vozStopBtn:active { transform: scale(0.94); }
+.vozStopBtn > * { pointer-events: none; }
 
 .narrativaEnviarBtn {
   width: 34px;

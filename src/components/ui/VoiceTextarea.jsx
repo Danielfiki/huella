@@ -1,18 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Mic, Check, X } from 'lucide-react'
+import { Mic, Check, X, Square } from 'lucide-react'
 import styles from './VoiceTextarea.module.css'
 
 const NUM_BARS = 20
+
+// Techo de duración de una grabación. Dos minutos cubre de sobra el relato de
+// un episodio hablado, y protege del olvido: con toggle el micrófono queda
+// abierto hasta que alguien lo cierre, así que si el usuario se distrae o
+// bloquea el teléfono, esto lo cierra por él. Al llegar al tope NO se descarta
+// nada — corta y pasa a revisión con todo lo dicho hasta ahí.
+const MAX_SEGUNDOS = 120
+// Umbral para avisar que se está acabando el tiempo.
+const AVISO_SEGUNDOS = 20
+
+// Un solo grabador activo en toda la app. Con push-to-talk esto lo garantizaba
+// el gesto (un dedo sostenido, un botón); con toggle no: el usuario puede
+// dejar uno grabando y tocar el de al lado. Pasa en PatronPage y en el
+// detallado de RegistroPage, que muestran dos campos de voz a la vez.
+let detenerGrabadorActivo = null
+
+function formatearTiempo(seg) {
+  const m = Math.floor(seg / 60)
+  const s = seg % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 export default function VoiceTextarea({ value, onChange, onVoiceResult, placeholder = '' }) {
   // idle | grabando | finalizando | revisando | error
   const [voiceEstado, setVoiceEstado] = useState('idle')
   const [transcriptText, setTranscriptText] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  // Aviso del toque corto. Va aparte de `voiceEstado` a propósito: convive con
-  // el estado idle para que el textarea y el micrófono sigan visibles y el
-  // usuario pueda intentarlo de nuevo en el acto, sin esperar a que se vaya.
-  const [mostrandoPista, setMostrandoPista] = useState(false)
+  const [segundos, setSegundos] = useState(0)
 
   const recRef            = useRef(null)
   const transcriptRef     = useRef('')
@@ -21,21 +39,24 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const streamRef         = useRef(null)
   const animFrameRef      = useRef(null)
   const barsRef           = useRef([])
-  const releaseHandlerRef = useRef(null)
   const isRecordingRef    = useRef(false)
-  const holdStartRef      = useRef(0)
   const endTimeoutRef     = useRef(null)
-  const pistaTimeoutRef   = useRef(null)
+  const tickIntervalRef   = useRef(null)
+  const segundosRef       = useRef(0)
+  // Identidad estable de `detenerGrabacion` para el registro global: la función
+  // se recrea en cada render, el ref no.
+  const detenerRef        = useRef(null)
 
   const disponibleVoz = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
+  // Si el usuario navega a otra pantalla mientras graba, el componente se
+  // desmonta y esto cierra todo: el micrófono nunca queda abierto de fondo.
+  // Con toggle importa más que antes — ya no hay un dedo levantándose que
+  // marque el fin de la grabación.
   useEffect(() => () => {
     clearTimeout(endTimeoutRef.current)
-    clearTimeout(pistaTimeoutRef.current)
-    if (releaseHandlerRef.current) {
-      document.removeEventListener('mouseup', releaseHandlerRef.current)
-      document.removeEventListener('touchend', releaseHandlerRef.current)
-    }
+    clearInterval(tickIntervalRef.current)
+    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
@@ -59,80 +80,78 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     tick()
   }
 
-  // Toque corto: el usuario tocó el micrófono como si fuera un botón normal,
-  // sin sostenerlo. Antes esto volvía a idle en silencio — el usuario tocaba,
-  // no pasaba nada visible y no tenía forma de entender por qué. Ahora se le
-  // explica cómo se usa, sin tratarlo como un error suyo.
-  function mostrarPista() {
-    clearTimeout(pistaTimeoutRef.current)
-    setVoiceEstado('idle')
-    setMostrandoPista(true)
-    pistaTimeoutRef.current = setTimeout(() => setMostrandoPista(false), 4000)
-  }
-
   // Called by rec.onend (after stop() + all pending onresult events have fired)
+  // Siempre pasa a revisión, incluso sin audio captado: ahí el estado muestra
+  // "No se captó audio", así que detener nunca termina en silencio.
   function finalizarRevision() {
     clearTimeout(endTimeoutRef.current)
-    const held = Date.now() - holdStartRef.current
-    const captured = transcriptRef.current.trim()
-    if (held < 300 && !captured) {
-      mostrarPista()
-    } else {
-      setTranscriptText(captured)
-      setVoiceEstado('revisando')
-    }
+    setTranscriptText(transcriptRef.current.trim())
+    setVoiceEstado('revisando')
   }
 
   function mostrarError(msg) {
     clearTimeout(endTimeoutRef.current)
+    clearInterval(tickIntervalRef.current)
     isRecordingRef.current = false
+    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
     recRef.current = null
-    if (releaseHandlerRef.current) {
-      document.removeEventListener('mouseup', releaseHandlerRef.current)
-      document.removeEventListener('touchend', releaseHandlerRef.current)
-    }
     setErrorMsg(msg)
     setVoiceEstado('error')
     setTimeout(() => { setVoiceEstado('idle'); setErrorMsg('') }, 3500)
   }
 
-  async function startMic() {
+  // Detiene la grabación en curso. Antes era el handler de mouseup/touchend en
+  // document; ahora se llama desde el botón de stop, desde el tope de tiempo, o
+  // desde otro grabador que arranca y reclama el micrófono.
+  function detenerGrabacion() {
+    if (!isRecordingRef.current) return
+    isRecordingRef.current = false
+    if (detenerGrabadorActivo === detenerRef.current) detenerGrabadorActivo = null
+    clearInterval(tickIntervalRef.current)
+    cancelAnimationFrame(animFrameRef.current)
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    audioCtxRef.current?.close().catch(() => {})
+    if (recRef.current) {
+      // Transition to 'finalizando' while SR processes pending audio.
+      // rec.onend fires after all onresult events, then calls finalizarRevision().
+      setVoiceEstado('finalizando')
+      // Safety net: if onend never fires (browser bug), fall through after 2s
+      endTimeoutRef.current = setTimeout(finalizarRevision, 2000)
+      recRef.current.stop()
+    } else {
+      finalizarRevision()
+    }
+  }
+
+  detenerRef.current = detenerGrabacion
+
+  async function iniciarGrabacion() {
     if (isRecordingRef.current || voiceEstado !== 'idle') return
+
+    // Si hay otro campo de voz grabando, se cierra antes de abrir este. Nunca
+    // dos micrófonos abiertos a la vez.
+    if (detenerGrabadorActivo && detenerGrabadorActivo !== detenerRef.current) {
+      detenerGrabadorActivo()
+    }
+    detenerGrabadorActivo = detenerRef.current
+
     isRecordingRef.current = true
-    holdStartRef.current = Date.now()
     transcriptRef.current = ''
-    clearTimeout(pistaTimeoutRef.current)
-    setMostrandoPista(false)
+    segundosRef.current = 0
+    setSegundos(0)
     setVoiceEstado('grabando')
 
-    const onRelease = () => {
-      document.removeEventListener('mouseup', onRelease)
-      document.removeEventListener('touchend', onRelease)
-      if (!isRecordingRef.current) return
-      isRecordingRef.current = false
-      cancelAnimationFrame(animFrameRef.current)
-      streamRef.current?.getTracks().forEach((t) => t.stop())
-      audioCtxRef.current?.close().catch(() => {})
-      if (recRef.current) {
-        // Transition to 'finalizando' while SR processes pending audio.
-        // rec.onend fires after all onresult events, then calls finalizarRevision().
-        setVoiceEstado('finalizando')
-        // Safety net: if onend never fires (browser bug), fall through after 2s
-        endTimeoutRef.current = setTimeout(finalizarRevision, 2000)
-        recRef.current.stop()
-      } else {
-        finalizarRevision()
-      }
-    }
-    releaseHandlerRef.current = onRelease
-    // 80ms delay: prevents the mouseup from the same click triggering onRelease immediately
-    setTimeout(() => {
-      document.addEventListener('mouseup', onRelease)
-      document.addEventListener('touchend', onRelease)
-    }, 80)
+    // Reloj de la grabación: alimenta el contador visible y aplica el tope.
+    // El conteo vive en un ref y el corte se decide acá, fuera del updater de
+    // setState, que debe ser puro.
+    tickIntervalRef.current = setInterval(() => {
+      segundosRef.current += 1
+      setSegundos(segundosRef.current)
+      if (segundosRef.current >= MAX_SEGUNDOS) detenerRef.current?.()
+    }, 1000)
 
     // Web Audio API — best-effort waveform visualization
     if (navigator.mediaDevices?.getUserMedia) {
@@ -227,10 +246,14 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
               <div className={styles.narrativaBtns}>
                 <button
                   className={styles.narrativaMicBtn}
-                  onMouseDown={startMic}
-                  onTouchStart={(e) => { e.preventDefault(); startMic() }}
+                  onClick={iniciarGrabacion}
+                  // Se conservan del modelo anterior: con toggle ya no debería
+                  // dispararse el menú del sistema, pero no estorban y cubren
+                  // el caso de un usuario que igual mantiene el dedo apretado.
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable={false}
                   type="button"
-                  aria-label="Mantén presionado para dictar"
+                  aria-label="Grabar con voz"
                 >
                   <Mic size={20} />
                 </button>
@@ -253,6 +276,19 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
                 />
               ))}
             </div>
+            <span
+              className={`${styles.vozTiempo} ${MAX_SEGUNDOS - segundos <= AVISO_SEGUNDOS ? styles.vozTiempoPorTerminar : ''}`}
+            >
+              {formatearTiempo(segundos)}
+            </span>
+            <button
+              className={styles.vozStopBtn}
+              onClick={detenerGrabacion}
+              type="button"
+              aria-label="Detener grabación"
+            >
+              <Square size={13} fill="currentColor" />
+            </button>
           </div>
         )}
 
@@ -290,27 +326,6 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
         )}
 
       </div>
-
-      {/* ── Aviso del toque corto ──
-          Pisa al hint cuando aparece: son la misma franja, así que el layout
-          no salta. Tiene prioridad porque responde a algo que el usuario
-          acaba de hacer. */}
-      {voiceEstado === 'idle' && disponibleVoz && mostrandoPista && (
-        <p className={styles.narrativaPista} role="status">
-          <Mic size={13} aria-hidden="true" />
-          Mantén presionado mientras hablas, y suelta al terminar.
-        </p>
-      )}
-
-      {/* ── Hint permanente ──
-          El modelo push-to-talk no se adivina, así que se dice. Se esconde en
-          cuanto el campo tiene texto: ahí ya cumplió y solo estorbaría. */}
-      {voiceEstado === 'idle' && disponibleVoz && !mostrandoPista && !value && (
-        <p className={styles.narrativaHint}>
-          <Mic size={12} aria-hidden="true" />
-          Mantén presionado el micrófono para dictar
-        </p>
-      )}
     </div>
   )
 }
