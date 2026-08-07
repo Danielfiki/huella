@@ -50,6 +50,23 @@ const DELAY_WAVEFORM_MS = 300
    `logVoz(` — estan todas en su propia linea a proposito.
    ══════════════════════════════════════════════════════════════════════════ */
 const logVoz = (...args) => console.log('[VOZ]', ...args)
+
+/* EXPERIMENTO DECISIVO — ?sinwaveform=1
+   Saltea POR COMPLETO getUserMedia, el MediaStream y el AudioContext. Sirve
+   para responder una sola pregunta: ¿el reconocimiento captura cuando NADIE
+   MAS toca el microfono? Ya se descartó que sea un problema de orden de
+   arranque; esto prueba si es de coexistencia.
+   Se apaga con ?sinwaveform=0 o cerrando la pestana. */
+function sinWaveformActivo() {
+  try {
+    const v = new URLSearchParams(location.search).get('sinwaveform')
+    if (v === '1') sessionStorage.setItem('huella_sinwaveform', '1')
+    if (v === '0') sessionStorage.removeItem('huella_sinwaveform')
+    return sessionStorage.getItem('huella_sinwaveform') === '1'
+  } catch {
+    return false
+  }
+}
 /* ══ FIN TEMPORAL ═══════════════════════════════════════════════════════ */
 
 function formatearTiempo(seg) {
@@ -93,7 +110,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // Con toggle importa más que antes — ya no hay un dedo levantándose que
   // marque el fin de la grabación.
   useEffect(() => {
-    logVoz('MONTA instancia')
+    logVoz('MONTA instancia', { sinWaveform: sinWaveformActivo() })
     return () => {
     logVoz('DESMONTA instancia', { isRecording: isRecordingRef.current, recRefNull: recRef.current === null })
     clearTimeout(endTimeoutRef.current)
@@ -302,6 +319,15 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       return
     }
 
+    /* ══ TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR ══
+       Con ?sinwaveform=1 se corta acá: ni getUserMedia, ni MediaStream, ni
+       AudioContext. El reconocimiento queda solo con el micrófono. */
+    if (sinWaveformActivo()) {
+      logVoz('EXPERIMENTO sinwaveform=1 -> NO se pide getUserMedia. El SR queda SOLO con el microfono.')
+      return
+    }
+    /* ══ FIN TEMPORAL ══ */
+
     // ── DESPUÉS el waveform, con margen ──
     // Fire-and-forget a propósito: la grabación NO espera al waveform ni le
     // importa si falla. Si getUserMedia se demora, es rechazado, o Safari se lo
@@ -316,6 +342,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       logVoz('waveform: no arranca, la grabacion ya termino')
       return
     }
+    if (sinWaveformActivo()) return   // TEMPORAL - segunda barrera del experimento
     if (!navigator.mediaDevices?.getUserMedia) return
     try {
       logVoz('getUserMedia: pidiendo…', { ms: Date.now() - inicioRef.current })
