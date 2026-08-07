@@ -30,6 +30,15 @@ let grabadorActivo = null
 // inservible y seguir intentando solo deja la UI mintiendo.
 const MAX_REINICIOS_SR = 8
 
+// Margen entre arrancar el reconocimiento y pedirle el micrófono al waveform.
+// En Safari iOS los dos compiten por el mismo recurso: cuando getUserMedia iba
+// primero y el permiso ya estaba concedido, resolvía en milisegundos, tomaba el
+// micrófono y el SpeechRecognition se quedaba sin audio (grababa 3 segundos y
+// devolvía transcript vacío). Ahora el SR arranca primero y el waveform espera
+// este margen para no pisarlo. 300 ms alcanza para que el motor enganche y es
+// imperceptible: las barras ya están en pantalla, solo entran planas.
+const DELAY_WAVEFORM_MS = 300
+
 /* ══════════════════════════════════════════════════════════════════════════
    TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR
 
@@ -68,6 +77,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const tickIntervalRef   = useRef(null)
   const segundosRef       = useRef(0)
   const reiniciosRef      = useRef(0)
+  const waveformTimeoutRef = useRef(null)
+  const inicioRef         = useRef(0)   // t0 de la grabación, para los logs
   // Puntero siempre-vivo a `detenerGrabacion` (la función se recrea en cada
   // render; el ref no).
   const detenerRef        = useRef(null)
@@ -87,6 +98,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     logVoz('DESMONTA instancia', { isRecording: isRecordingRef.current, recRefNull: recRef.current === null })
     clearTimeout(endTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
+    clearTimeout(waveformTimeoutRef.current)
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -133,6 +145,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   function mostrarError(msg) {
     clearTimeout(endTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
+    clearTimeout(waveformTimeoutRef.current)
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     cancelAnimationFrame(animFrameRef.current)
@@ -159,6 +172,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     clearInterval(tickIntervalRef.current)
+    clearTimeout(waveformTimeoutRef.current)
     cancelAnimationFrame(animFrameRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
     audioCtxRef.current?.close().catch(() => {})
@@ -176,7 +190,9 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
   detenerRef.current = detenerGrabacion
 
-  async function iniciarGrabacion() {
+  // Ya no es async: el arranque del reconocimiento es enteramente síncrono.
+  // Lo único asíncrono que queda es el waveform, que corre aparte y no bloquea.
+  function iniciarGrabacion() {
     logVoz('iniciar: ENTRA', { estado: voiceEstado, isRecording: isRecordingRef.current, recRefNull: recRef.current === null, hayGrabadorActivo: !!grabadorActivo, esOtro: !!grabadorActivo && grabadorActivo.token !== tokenRef.current })
     if (isRecordingRef.current || voiceEstado !== 'idle') {
       logVoz('iniciar: SALE POR GUARD (no arranca nada)')
@@ -191,6 +207,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     }
     grabadorActivo = { token: tokenRef.current, detenerRef }
 
+    inicioRef.current = Date.now()
     isRecordingRef.current = true
     transcriptRef.current = ''
     segundosRef.current = 0
@@ -207,38 +224,16 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       if (segundosRef.current >= MAX_SEGUNDOS) detenerRef.current?.()
     }, 1000)
 
-    // Web Audio API — best-effort waveform visualization
-    if (navigator.mediaDevices?.getUserMedia) {
-      try {
-        logVoz('getUserMedia: pidiendo…')
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        logVoz('getUserMedia: OK', { isRecordingTrasAwait: isRecordingRef.current })
-        if (!isRecordingRef.current) {
-          logVoz('getUserMedia: SALE — isRecording se apago durante el await. NO se crea el SpeechRecognition')
-          stream.getTracks().forEach((t) => t.stop()); return
-        }
-        streamRef.current = stream
-        const AudioCtx = window.AudioContext || window.webkitAudioContext
-        if (AudioCtx) {
-          const ctx = new AudioCtx()
-          audioCtxRef.current = ctx
-          const analyser = ctx.createAnalyser()
-          analyser.fftSize = 64
-          analyserRef.current = analyser
-          ctx.createMediaStreamSource(stream).connect(analyser)
-          startWaveform()
-        }
-      } catch (err) {
-        logVoz('getUserMedia: FALLO', err?.name, err?.message)
-        // getUserMedia denied or unavailable — SR may still work independently
-      }
-    }
-
-    if (!isRecordingRef.current) {
-      logVoz('SALE antes de crear SR — isRecording en false. Esta es la ruta que deja recRef en null')
-      return
-    }
-
+    // ── PRIMERO el reconocimiento ──
+    // El orden importa y es la razón de este bloque: getUserMedia y
+    // SpeechRecognition compiten por el micrófono en Safari iOS. Antes el
+    // waveform iba primero y, con el permiso ya concedido, resolvía tan rápido
+    // que le ganaba el micrófono al reconocimiento. El waveform es decoración;
+    // la transcripción es la función. La función va primero.
+    //
+    // Además ya no hay ningún `await` entre acá y `rec.start()`: el arranque
+    // del reconocimiento es síncrono, así que tampoco existe la ventana en la
+    // que `recRef` quedaba en null mientras la UI decía "grabando".
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) {
       logVoz('SALE — SpeechRecognition no existe en este navegador')
@@ -300,8 +295,54 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
     try {
       rec.start()
-    } catch {
+      logVoz('SR start() OK', { ms: Date.now() - inicioRef.current })
+    } catch (err) {
+      logVoz('SR start() FALLO', err?.name, err?.message)
       mostrarError('No se pudo acceder al micrófono en este navegador.')
+      return
+    }
+
+    // ── DESPUÉS el waveform, con margen ──
+    // Fire-and-forget a propósito: la grabación NO espera al waveform ni le
+    // importa si falla. Si getUserMedia se demora, es rechazado, o Safari se lo
+    // niega porque el reconocimiento ya tiene el micrófono, la transcripción
+    // sigue su curso y el usuario solo se queda sin barras.
+    waveformTimeoutRef.current = setTimeout(() => { arrancarWaveform() }, DELAY_WAVEFORM_MS)
+  }
+
+  // Waveform: puramente decorativo. Cualquier fallo acá se traga en silencio.
+  async function arrancarWaveform() {
+    if (!isRecordingRef.current) {
+      logVoz('waveform: no arranca, la grabacion ya termino')
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) return
+    try {
+      logVoz('getUserMedia: pidiendo…', { ms: Date.now() - inicioRef.current })
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      logVoz('getUserMedia: OK', { ms: Date.now() - inicioRef.current, sigueGrabando: isRecordingRef.current })
+      // Si el usuario detuvo mientras pedíamos el micrófono, soltarlo ya.
+      if (!isRecordingRef.current) {
+        logVoz('getUserMedia: llego tarde, suelto el stream')
+        stream.getTracks().forEach((t) => t.stop())
+        return
+      }
+      streamRef.current = stream
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (AudioCtx) {
+        const ctx = new AudioCtx()
+        audioCtxRef.current = ctx
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 64
+        analyserRef.current = analyser
+        ctx.createMediaStreamSource(stream).connect(analyser)
+        startWaveform()
+        logVoz('waveform: andando')
+      }
+    } catch (err) {
+      // Puede fallar justamente porque el reconocimiento ya tomó el micrófono.
+      // Es el precio aceptado: barras sí, transcripción siempre.
+      logVoz('getUserMedia: FALLO (la grabacion sigue igual)', err?.name, err?.message)
     }
   }
 
