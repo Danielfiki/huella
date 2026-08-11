@@ -196,19 +196,37 @@
   height: 40px;
 }
 
+/* Las barras ya NO leen el micrófono: son animación pura. El waveform reactivo
+   necesitaba getUserMedia, y en Safari iOS un MediaStream abierto impide que
+   SpeechRecognition capture — o sea, las barras se movían al precio de que no
+   se transcribiera nada.
+   El alto, la duración y el desfase de cada barra llegan inline desde el JSX,
+   cada una con su propio ritmo, para que el conjunto no se lea como un loop
+   sincronizado. `scaleY` en vez de `height` para animar en la GPU. */
 .vozBar {
   width: 4px;
   border-radius: 4px;
   background: var(--color-primary);
-  height: 3px;
-  transition: height 0.07s ease-out;
-  /* animationDelay se aplica vía inline style en el JSX */
-  animation: vozBarPulse 1.4s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+  animation-name: vozBarLatido;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
-@keyframes vozBarPulse {
-  0%, 100% { opacity: 0.2; }
-  50%       { opacity: 1; }
+@keyframes vozBarLatido {
+  from { transform: scaleY(0.2); opacity: 0.45; }
+  to   { transform: scaleY(1);   opacity: 1; }
+}
+
+/* Quien pidió menos movimiento ve las barras quietas a media altura: sigue
+   comunicando "estoy grabando" sin animación. */
+@media (prefers-reduced-motion: reduce) {
+  .vozBar {
+    animation: none;
+    transform: scaleY(0.6);
+  }
 }
 
 .vozRevisando {

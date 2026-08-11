@@ -18,46 +18,6 @@
   </head>
   <body>
     <div id="root"></div>
-
-    <!-- ══════════════════════════════════════════════════════════════════
-         TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR
-
-         Consola movil embebida (Eruda) para poder leer los console.log
-         desde el propio celular, sin Mac ni cable.
-
-         Se activa SOLO con ?debug=1 en la URL. Sin ese parametro no se
-         descarga ni un byte: cero peso y cero riesgo para usuarios y
-         testers. Una vez activada queda en sessionStorage, asi el router
-         puede limpiar la URL sin apagar la consola; se apaga sola al
-         cerrar la pestana.
-
-         PARA SACARLO: borrar este bloque completo.
-         ══════════════════════════════════════════════════════════════════ -->
-    <script>
-      (function () {
-        try {
-          var qs = new URLSearchParams(location.search)
-
-          // Flag del experimento de voz. Se captura ACA, al cargar la pagina,
-          // por la misma razon que Eruda: cuando el usuario abre la app con
-          // ?sinwaveform=1 aterriza en la home, que NO monta ningun
-          // VoiceTextarea. Para cuando navega a la pantalla del grabador, el
-          // router ya reescribio la URL y el parametro se perdio. Leerlo desde
-          // el componente llegaba siempre tarde.
-          if (qs.get('sinwaveform') === '1') sessionStorage.setItem('huella_sinwaveform', '1')
-          if (qs.get('sinwaveform') === '0') sessionStorage.removeItem('huella_sinwaveform')
-
-          if (qs.get('debug') === '1') sessionStorage.setItem('huella_debug', '1')
-          if (sessionStorage.getItem('huella_debug') !== '1') return
-          var s = document.createElement('script')
-          s.src = 'https://cdn.jsdelivr.net/npm/eruda@3'
-          s.onload = function () { if (window.eruda) window.eruda.init() }
-          document.head.appendChild(s)
-        } catch (e) { /* modo privado sin sessionStorage: no pasa nada */ }
-      })()
-    </script>
-    <!-- ══ FIN TEMPORAL - DIAGNOSTICO BUG VOZ ══════════════════════════ -->
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
