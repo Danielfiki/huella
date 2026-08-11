@@ -22,7 +22,7 @@
 - ✅ **Migrar el modelo de IA — EN PRODUCCIÓN (verificada 10 jul 2026).** `claude-sonnet-4-5` → `claude-sonnet-4-6` aplicado en `api/anthropic.js:250` (única línea de código; las 15 funciones/16 call-sites pasan por ese endpoint). Commit `e5f190a`, pusheado a `origin/main`. **Daniel verificó en producción: el modelo responde bien, tono correcto, sin voseo.** Docs sincronizadas (`COSTOS_IA.md`, `README.md`, este archivo). Nota: Sonnet 4.6 usa `effort: "high"` por defecto, pero el código no setea `thinking`/`effort` → comportamiento cercano a Sonnet 4.5.
 - **Evaluar `claude-sonnet-5`** — desde **9 jul 2026** — thinking siempre encendido, tokenizador nuevo (~30% más tokens), sampling params rechazados. Requiere QA dedicado. Precio introductorio hasta 31 ago 2026. Evaluar también Haiku (`claude-haiku-4-5`) para llamadas baratas.
 - **Sincronizar `schema.sql`** con la base viva — faltan `plan`, `contexto_inicial`, `intenciones`, `plan_beta_hasta` en `perfiles` — desde **21 jun 2026** — hacerlo en una pasada; falta confirmar el tipo de elemento de `intenciones` (figura como ARRAY). **Además (6 jul 2026):** la tabla real `push_subscriptions` **NO tiene la columna `id`** que declara el schema (rompió `push-test`/`push-remind`; se corrigió el código para no pedir `id` y borrar por `endpoint`) — un ejemplo más del desfase.
-- 🔴 **BUG DE VOZ ABIERTO — la 2ª grabación da "No se captó audio"** — desde **6 ago 2026** — tras grabar y tocar **"Agregar"**, la siguiente grabación falla. **El waveform SÍ se mueve** → `getUserMedia` funciona y muere `SpeechRecognition`. **Dos hipótesis ya probadas y REFUTADAS con tests — no repetirlas** (registro global stale; instancia vieja de SR compitiendo). **Instrumentación con Eruda lista** (commit `9fe7876`, `?debug=1`): falta capturar los logs en el celular. **Detalle completo en el bloque del 6 ago, punto 2.**
+- ✅ **BUG DE VOZ — CERRADO (6 → 11 ago 2026), QA aprobado en celular.** El síntoma: tras grabar y tocar **"Agregar"**, la siguiente grabación daba *"No se captó audio"*. 🔴 **CAUSA RAÍZ CONFIRMADA POR EXPERIMENTO: `getUserMedia` (el waveform) y `SpeechRecognition` NO coexisten en Safari iOS** — mientras el `MediaStream` está abierto, el reconocimiento no captura. **La primera grabación funcionaba solo porque el prompt de permiso demoraba a `getUserMedia`** el par de segundos que el reconocimiento necesitaba para engancharse. **Solución:** `getUserMedia` eliminado por completo; el waveform pasó a **animación CSS** (14 barras, ciclos con primos para que no se sincronicen, `prefers-reduced-motion`). ✅ **Cerró de paso el bug del permiso repetido de micrófono.** ✅ **Instrumentación temporal retirada por completo** (Eruda, logs `[VOZ]`, flag `?sinwaveform`). ⚠️ **TRES hipótesis probadas y REFUTADAS — no repetirlas:** registro global stale, instancia vieja de SR compitiendo, y orden de arranque. **La saga: `c4c3ac4` → `467f4a3` → `af3d1fb` → `9fe7876` → `827b508` → `7e21de3` → `a553d55` → `fa756c2`.** **Detalle completo en el bloque del 6 ago, punto 2.**
 - 🆕 **La tarjeta de patrones no deja elegir y dice 3 cuando hay 2 casos reales** — desde **6 ago 2026** — **SIN DIAGNOSTICAR**, sin causa identificada. No tratar como bug confirmado hasta reproducirlo.
 - 🔴 **RECUPERACIÓN DE EPISODIOS SIN ORIENTACIÓN** — desde **5 ago 2026** — hoy un episodio cuya orientación falló **queda muerto y el usuario ni se entera: el Historial no lo marca de ninguna forma**. Falta **(a) marcarlo visualmente en el Historial** y **(b) permitir regenerar la orientación desde ahí**. **Sin esto, cualquier caída futura de la IA deja episodios vacíos de forma permanente.** (Contexto del incidente que lo destapó: bloque del 5 ago, punto 6.)
 - **Cortar la línea 3 de `ESTADO.md`** — desde **4 ago 2026** — pesa **~69 mil caracteres en una sola línea** y **ya no se puede leer con herramientas normales** (hay que medirla e inspeccionarla con PowerShell para poder editarla). Conviene **cortarla dejando solo las últimas 2 o 3 sesiones**; el resto ya vive en los bloques de sesión de más abajo. **Requiere sesión propia: NO hacerlo al cierre de un día**, porque implica decidir qué se conserva y qué se archiva.
@@ -234,29 +234,36 @@ Primero se intentó **comunicarlo mejor** (commit `c4c3ac4`). El QA en celular m
 
 **Casos que se resolvieron de paso:** tope de **2 minutos** con contador visible que se pone rojo en los últimos 20 segundos (al llegar al tope no se descarta nada, corta y pasa a revisión); **singleton** para que nunca graben dos campos a la vez; **cierre del micrófono al navegar** a otra pantalla; y detener sin audio ya no falla en silencio.
 
-### 2. 🔴 BUG ABIERTO — SIN CAUSA CONFIRMADA
+### 2. ✅ BUG DE VOZ — CERRADO el 11 ago 2026, con causa raíz confirmada por experimento
 
-**La secuencia exacta que falla:** grabo (transcribe bien) → toco **"Agregar"** (el texto se agrega correctamente al campo) → toco grabar de nuevo → **"No se captó audio"**.
+**El síntoma era:** grabo (transcribe bien) → toco **"Agregar"** → grabo de nuevo → **"No se captó audio"**. Las barras del waveform sí se movían, así que `getUserMedia` funcionaba y lo que moría era `SpeechRecognition`.
 
-⚡ **El dato que más acota:** durante la grabación que falla, **las barras del waveform SÍ se mueven con la voz**. O sea `getUserMedia` funciona perfecto y **lo que muere es `SpeechRecognition`**.
+🔴 **CAUSA RAÍZ: `getUserMedia` y `SpeechRecognition` NO PUEDEN COEXISTIR en Safari iOS.** Mientras el `MediaStream` está abierto, el reconocimiento no captura una sola palabra. **Y el `getUserMedia` existía únicamente para dibujar las barras del waveform** — o sea, estábamos rompiendo la función principal (transcribir) por una decoración.
 
-**El disparador es confirmar con "Agregar", no la simple repetición.** La asimetría existe en el código y es de una sola línea: `confirmarVoz` y `cancelarVoz` son idénticas salvo que la primera llama a `onVoiceResult`, que es el `setDescripcionLibre` del padre — o sea, **tocar Agregar re-renderiza RegistroPage; tocar la X no toca nada fuera del componente.**
+**Por qué la primera grabación sí funcionaba, que fue lo que despistó todo el diagnóstico:** el prompt de permiso de micrófono **demoraba a `getUserMedia` uno o dos segundos** mientras el usuario tocaba "Permitir". En ese hueco el reconocimiento alcanzaba a engancharse. De la segunda en adelante el permiso ya estaba concedido, `getUserMedia` resolvía en milisegundos y le ganaba el micrófono.
 
-⚠️ **DOS HIPÓTESIS PROBADAS Y REFUTADAS. No repetirlas:**
-1. **El registro global no se limpiaba** (comparaba funciones que cambian en cada render). Era un bug real y se arregló en `af3d1fb` con un token estable — **pero no era la causa de esto.**
-2. **La instancia vieja de SpeechRecognition competía con la nueva.** Se escribió un test que replica los 4 pasos y **no reprodujo el fallo**; el cambio se revirtió sin commitear en vez de dejarlo sin evidencia.
+**Cómo se confirmó:** con el flag temporal `?sinwaveform=1`, que salteaba `getUserMedia` por completo. La segunda grabación transcribió perfecto y apareció el `SR onresult` que nunca había aparecido. **Fue el primer experimento cuyo resultado cerraba la pregunta en cualquiera de los dos sentidos.**
 
-**Lo único que sí está confirmado:** hay un solo camino en el código que produce el fallo instantáneo — `detenerGrabacion()` con `recRef.current === null` cae directo a `finalizarRevision()` con el transcript vacío. Y existe una ventana real donde eso es posible: **`iniciarGrabacion` es `async` y espera a `getUserMedia` ANTES de crear el SpeechRecognition**, así que durante todo ese await `isRecordingRef` ya está en true pero `recRef` sigue en null.
+⚠️ **TRES HIPÓTESIS PROBADAS Y REFUTADAS ANTES DE LLEGAR A LA BUENA. Anotadas para que nadie las repita:**
+1. **El registro global no se limpiaba** (comparaba funciones que se recrean en cada render). Era un bug real y se arregló en `af3d1fb` con un token estable — **pero no era la causa de esto.**
+2. **La instancia vieja de `SpeechRecognition` competía con la nueva.** Un test que replicaba los 4 pasos **no reprodujo el fallo**; el cambio se revirtió sin commitear en vez de dejarlo sin evidencia.
+3. **El orden de arranque** (commit `827b508`): se hizo arrancar el reconocimiento primero y el waveform 300 ms después. Los logs mostraron que el SR tuvo el micrófono para él solo 358 ms **y aun así no capturó nada en 4 segundos.** No era de orden: era de coexistencia.
 
-### 3. Instrumentación lista para cazarlo (commit `9fe7876` — TEMPORAL, HAY QUE SACARLA)
+**LA SOLUCIÓN (commit `fa756c2`):** se elimina `getUserMedia`, `MediaStream`, `AudioContext` y `analyser` por completo, más siete refs que ya no tenían razón de ser. **El waveform pasa a animación CSS pura, sin leer audio:** 14 barras (en vez de 20, porque comparten fila con el contador y el stop), cada una con su duración, desfase y altura tope calculados con módulos de primos distintos para que los ciclos no coincidan y no se lea como un loop sincronizado; se anima con `scaleY` en la GPU y respeta `prefers-reduced-motion`.
 
-Como no hay Mac ni cable para el Web Inspector de Safari, se agregó **Eruda** (consola móvil embebida) que se activa **solo con `?debug=1`** en la URL: sin ese parámetro no se descarga un byte y no entra al bundle (verificado). Más **24 logs con prefijo `[VOZ]`** en cada punto donde se bifurca el flujo.
+✅ **DE PASO QUEDÓ CERRADO EL BUG DEL PERMISO REPETIDO DE MICRÓFONO** (abierto desde el 4 ago). Nuestro código ya no pide micrófono en ningún lado: el único que lo pide es `SpeechRecognition`, que gestiona el suyo. Aquel `getUserMedia` que reclamaba permiso en cada grabación existía solo para las barras.
 
-**Cómo se usa:** abrir `https://www.huella.lat/?debug=1` **desde el navegador, no desde la PWA instalada** (el parámetro no llega ahí) → botón flotante abajo a la derecha → pestaña Console → filtrar por `[VOZ]` → hacer la secuencia de 4 pasos.
+✅ **QA APROBADO EN CELULAR (11 ago):** tres grabaciones seguidas con "Agregar" entre medio, **las tres transcribieron y acumularon bien**, y **el permiso se pidió solo la primera vez**.
 
-**Los tres logs que resuelven el caso:** si `detener` entra con `recRef` en null; si el flujo sale antes de crear el SpeechRecognition; y si el componente se desmonta y remonta justo después de tocar Agregar.
+**Balance del componente: 251 líneas menos, 77 más. Quedó más simple que antes de que empezara todo esto.**
 
-⚠️ **SACAR LA INSTRUMENTACIÓN cuando se cierre el bug.** Los marcadores dicen `TEMPORAL - DIAGNOSTICO BUG VOZ - SACAR` y son grepeables.
+### 3. Instrumentación temporal — RETIRADA POR COMPLETO
+
+Se montó Eruda (consola móvil embebida, solo con `?debug=1`), 24 logs con prefijo `[VOZ]` y el flag `?sinwaveform=1`. **Todo eso ya se sacó** en el commit `fa756c2`: verificado con grep que no queda ni un marcador `TEMPORAL`, ni una llamada a `getUserMedia`, ni un `console.log` en el componente, ni rastro de Eruda en `index.html`.
+
+Las únicas menciones a `getUserMedia` que sobreviven son **comentarios que explican por qué no se puede volver a poner ahí** — para que nadie reintroduzca el bug al intentar "mejorar" unas barras que no reaccionan a la voz.
+
+📌 **Lección del proceso, que es lo que más vale de estos cinco días:** cuatro hipótesis, tres equivocadas. Lo que destrabó el caso no fue una teoría mejor sino **dejar de suponer y montar el experimento**. Con `?debug=1` y `?sinwaveform=1` la pregunta se respondió sola en una prueba de dos minutos en el celular. **Cuando un bug resiste dos intentos, el siguiente movimiento es instrumentar, no adivinar.**
 
 ### 4. Beta — el número real, y no son 12
 
