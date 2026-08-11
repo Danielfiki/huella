@@ -56,12 +56,14 @@ const logVoz = (...args) => console.log('[VOZ]', ...args)
    para responder una sola pregunta: ¿el reconocimiento captura cuando NADIE
    MAS toca el microfono? Ya se descartó que sea un problema de orden de
    arranque; esto prueba si es de coexistencia.
-   Se apaga con ?sinwaveform=0 o cerrando la pestana. */
+
+   El parametro de la URL lo captura `index.html` al CARGAR la pagina, no este
+   componente: cuando el usuario abre la app con ?sinwaveform=1 aterriza en la
+   home, que no monta ningun VoiceTextarea, y para cuando llega a la pantalla
+   del grabador el router ya reescribio la URL. Aca solo se LEE lo que quedo
+   guardado. Se apaga con ?sinwaveform=0 o cerrando la pestana. */
 function sinWaveformActivo() {
   try {
-    const v = new URLSearchParams(location.search).get('sinwaveform')
-    if (v === '1') sessionStorage.setItem('huella_sinwaveform', '1')
-    if (v === '0') sessionStorage.removeItem('huella_sinwaveform')
     return sessionStorage.getItem('huella_sinwaveform') === '1'
   } catch {
     return false

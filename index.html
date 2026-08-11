@@ -36,9 +36,18 @@
     <script>
       (function () {
         try {
-          if (new URLSearchParams(location.search).get('debug') === '1') {
-            sessionStorage.setItem('huella_debug', '1')
-          }
+          var qs = new URLSearchParams(location.search)
+
+          // Flag del experimento de voz. Se captura ACA, al cargar la pagina,
+          // por la misma razon que Eruda: cuando el usuario abre la app con
+          // ?sinwaveform=1 aterriza en la home, que NO monta ningun
+          // VoiceTextarea. Para cuando navega a la pantalla del grabador, el
+          // router ya reescribio la URL y el parametro se perdio. Leerlo desde
+          // el componente llegaba siempre tarde.
+          if (qs.get('sinwaveform') === '1') sessionStorage.setItem('huella_sinwaveform', '1')
+          if (qs.get('sinwaveform') === '0') sessionStorage.removeItem('huella_sinwaveform')
+
+          if (qs.get('debug') === '1') sessionStorage.setItem('huella_debug', '1')
           if (sessionStorage.getItem('huella_debug') !== '1') return
           var s = document.createElement('script')
           s.src = 'https://cdn.jsdelivr.net/npm/eruda@3'
