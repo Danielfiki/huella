@@ -145,7 +145,40 @@
 
 ## ⏭️ PRIORIDAD INMEDIATA — 🚀 BETA EN CURSO · ✅ EL RELOJ DE GOOGLE ARRANCÓ (se llegó a los 12) · lo único que toca ahora: que los 12 se MANTENGAN
 
-**ESTADO AL 6 AGO 2026 (lo más nuevo, leer primero):** **17 testers en total** — **Nicole salió por falta de espacio en el teléfono**. **13 instalados, 11 con registros.** **Faltan por instalar (3):** Benja, Moni, Igna. **Instalaron pero no registraron (2):** Cata, Javi. Se mandó el **privado de instalación** a los que faltan y **la pregunta del día 3** al grupo. ⚠️ **Con 13 instalados hay apenas 1 de colchón sobre los 12 que exige Google, y el requisito es de 12 SIMULTÁNEOS: si dos desinstalan, el reloj se reinicia.** Por eso los 3 que faltan siguen importando aunque el mínimo ya esté cubierto.
+### 📋 LISTA OFICIAL DE TESTERS — LA FUENTE DE VERDAD (fijada el 11 ago 2026)
+
+**Son 18 personas.** ⚠️ **Ojo con el número: veníamos diciendo 17 y el conteo real da 18.** La cuenta que lo explica: los 17 del lanzamiento (2 ago) **+ la mamá** (`nene.pepita`, sumada el 5 ago) = 18, **− Nicole** (salió por falta de espacio en el teléfono) = 17, **+ Nicolás Arriagada** (tomó su lugar) = **18**. En el archivo quedó escrito "17" en varios lados de días anteriores porque cada movimiento se anotó por separado y nunca se rehízo la suma.
+
+**Esta lista es LA FUENTE DE VERDAD** para las métricas del **día 7 del protocolo** y para **cualquier consulta SQL de la beta**. Si un número no cuadra con esta tabla, la tabla manda.
+
+| # | Nombre | Correo | Estado al 11 ago |
+|---|---|---|---|
+| 1 | Diego Diaz | `ddiegodiaz@gmail.com` | con cuenta |
+| 2 | Ceci Leiva | `cecilialeivausset@gmail.com` | con cuenta |
+| 3 | Seba | `s.undurragar@gmail.com` | con cuenta |
+| 4 | Negra | `bundurraga.r@gmail.com` | con cuenta |
+| 5 | **Benja de la Cerda** | `be.delacerda@gmail.com` | 🔴 **sin instalar** |
+| 6 | Pia Heap | `pia.heap@gmail.com` | con cuenta |
+| 7 | Matias Cartagena | `matias.lagos.cartagena@gmail.com` | con cuenta |
+| 8 | Paulina Moraga | `paulinajmg.88@gmail.com` | con cuenta |
+| 9 | Tomas Vergara | `tomas.vergara88@gmail.com` | con cuenta |
+| 10 | **Moni** | `snackclub2022@gmail.com` | 🔴 **sin instalar** |
+| 11 | Vale Ramirez | `v.ramirez@pacificschoolpichilemu.com` | con cuenta |
+| 12 | Cata Grez | `catagrez9363@gmail.com` | con cuenta |
+| 13 | Javi Zamora | `javiera.zamora.r@gmail.com` | con cuenta |
+| 14 | Max Lund | `mlundv@gmail.com` | con cuenta |
+| 15 | Igna | `ignacopardo@gmail.com` | con cuenta |
+| 16 | **Nicolas Arriagada** | `nicolas.arriagada@gmail.com` | 🔴 **sin instalar** (entró en reemplazo de Nicole) |
+| 17 | Anita Gomez | `amgomezsc1@gmail.com` | con cuenta |
+| 18 | Mama | `nene.pepita@gmail.com` | con cuenta |
+
+**Resumen al 11 ago: 18 en la lista, 15 con cuenta, 3 sin instalar** (Benja, Moni, Nicolás). **Fuera de la lista:** Nicole, que salió por falta de espacio en el teléfono.
+
+⚠️ **Con 15 instalados hay 3 de colchón sobre los 12 que exige Google, y el requisito es de 12 SIMULTÁNEOS: si cuatro desinstalan, el reloj se reinicia.**
+
+---
+
+**ESTADO AL 6 AGO 2026 (histórico — el conteo de acá quedó corregido por la lista oficial de arriba):** **17 testers en total** — **Nicole salió por falta de espacio en el teléfono**. **13 instalados, 11 con registros.** **Faltan por instalar (3):** Benja, Moni, Igna. **Instalaron pero no registraron (2):** Cata, Javi. Se mandó el **privado de instalación** a los que faltan y **la pregunta del día 3** al grupo. ⚠️ **Con 13 instalados hay apenas 1 de colchón sobre los 12 que exige Google, y el requisito es de 12 SIMULTÁNEOS: si dos desinstalan, el reloj se reinicia.** Por eso los 3 que faltan siguen importando aunque el mínimo ya esté cubierto.
 
 **ESTADO AL 5 AGO 2026 (histórico):** ✅ **SE ALCANZARON LOS 12 MIEMBROS ACTIVOS.** Se sumó `nene.pepita@gmail.com` y ya registró. **Con eso arrancó el reloj de los 14 días corridos que exige Google.** ⚠️ **El requisito es de 12 SIMULTÁNEOS, no acumulados: si alguno desinstala o sale del grupo, el conteo se rompe y el reloj se reinicia.** De aquí en adelante el trabajo es **retención, no reclutamiento**. **Anotar la fecha de los 12 en el tablero de `/beta`** para saber cuándo se cumplen los 14 días.
 
