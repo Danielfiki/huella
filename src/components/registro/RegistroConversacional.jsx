@@ -24,6 +24,46 @@ import styles from './RegistroConversacional.module.css'
 
 const CAMPOS = ['tipo', 'emocion', 'contexto', 'cuandoPaso']
 
+// Lo tocable dentro del párrafo es un span, no un button, y eso NO es un
+// descuido: WebKit ignora `display: inline` en los botones y los trata como
+// caja atómica, así que un destacado largo no se partía entre renglones — se
+// iba entero a una línea propia y con su texto centrado. Un span sí fluye como
+// texto. Se le devuelve a mano lo que el button traía gratis: rol, foco y
+// teclado.
+function Tocable({ className, onClick, children }) {
+  return (
+    <span
+      className={className}
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+// Cómo se lee un campo que la extracción entendió pero que no quedó dentro del
+// párrafo. Antes se colgaba la etiqueta cruda del catálogo al final del texto
+// ("Rabia por no conseguir algo", sin conector y sin sujeto), que se leía como
+// una ficha de sistema y no como algo que Huella está diciendo.
+const FRASES = {
+  tipo:       (v) => `y lo anoté como ${v}`,
+  emocion:    (v) => `y me pareció que había ${v}`,
+  contexto:   (v) => `y entendí que antes ${v}`,
+  cuandoPaso: (v) => `y lo dejé en ${v}`,
+}
+
+// Solo la primera letra: bajar la etiqueta entera con toLowerCase se comería
+// las mayúsculas de un nombre propio dentro del contexto.
+const bajarInicial = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s)
+
 // Texto de cada hueco. El de tipo empuja un poco más porque es el único campo
 // que la extracción siempre intenta llenar: si quedó vacío, algo no se entendió.
 const HUECOS = {
@@ -311,9 +351,9 @@ export default function RegistroConversacional({
                 Guardé tu relato. Esta vez lo ordenamos entre los dos:{' '}
                 {CAMPOS.map((campo) => (
                   <React.Fragment key={campo}>
-                    <button className={styles.hueco} onClick={() => setCampoEditando(campo)} type="button">
+                    <Tocable className={styles.hueco} onClick={() => setCampoEditando(campo)}>
                       {HUECOS[campo]}
-                    </button>{' '}
+                    </Tocable>{' '}
                   </React.Fragment>
                 ))}
               </p>
@@ -321,28 +361,27 @@ export default function RegistroConversacional({
               <>
                 <p className={styles.parrafo}>
                   {segmentos.map((seg, i) => seg.campo ? (
-                    <button
-                      key={i}
-                      className={styles.marca}
-                      onClick={() => setCampoEditando(seg.campo)}
-                      type="button"
-                    >
+                    <Tocable key={i} className={styles.marca} onClick={() => setCampoEditando(seg.campo)}>
                       {seg.texto}
-                    </button>
+                    </Tocable>
                   ) : (
                     <React.Fragment key={i}>{seg.texto}</React.Fragment>
                   ))}
 
                   {colgados.map(({ campo, etiqueta }) => (
                     <React.Fragment key={campo}>
-                      {' '}
-                      <button
+                      {etiqueta ? ' — ' : ' '}
+                      <Tocable
                         className={etiqueta ? styles.marca : styles.hueco}
                         onClick={() => setCampoEditando(campo)}
-                        type="button"
                       >
-                        {etiqueta || HUECOS[campo]}
-                      </button>
+                        {etiqueta ? (
+                          <>
+                            {FRASES[campo](bajarInicial(etiqueta))}
+                            <span className={styles.pista}> · tócalo si no calza</span>
+                          </>
+                        ) : HUECOS[campo]}
+                      </Tocable>
                     </React.Fragment>
                   ))}
                 </p>
