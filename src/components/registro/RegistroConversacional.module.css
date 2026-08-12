@@ -72,8 +72,8 @@
 /* Avatar del padre: su inicial sobre durazno. Reusa el par de tokens de las
    pills de estado, que ya trae el contraste resuelto y su override de dark. */
 .avatarPadre {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--color-pill-estado-bg);
   color: var(--color-pill-estado-text);
@@ -89,8 +89,8 @@
 
 /* Avatar de Huella: escarabajo crema sobre disco terracota */
 .avatarHuella {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-on-mocha);
@@ -99,7 +99,7 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
-.avatarSvg { width: 18px; height: 18px; }
+.avatarSvg { width: 22px; height: 22px; }
 
 .burbujaHuella {
   background: var(--color-surface);

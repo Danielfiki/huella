@@ -13,6 +13,14 @@
   position: relative;
 }
 
+/* Tono verde: solo en la pantalla post-guardado, donde esta tarjeta es el
+   único acento vivo entre el durazno del alivio y el mocha de la orientación.
+   En el historial el panel sigue en terracota, que es como se distingue de la
+   orientación larga en la misma card. */
+.panelVerde { border-left-color: var(--color-accent-green); }
+.panelVerde .h   { background: var(--color-accent-green); }
+.panelVerde .lbl { color: var(--color-tag-green); }
+
 .head {
   display: flex;
   align-items: center;

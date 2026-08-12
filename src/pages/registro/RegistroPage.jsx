@@ -8,7 +8,7 @@ import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
-import Escarabajo from '../../components/ui/Escarabajo'
+import Escarabajo from '../../components/ui/EscarabajoSolido'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -603,7 +603,7 @@ export default function RegistroPage() {
                 </div>
               </div>
             ) : (
-              <AccionRapida data={accionIA} label="Para la próxima" />
+              <AccionRapida data={accionIA} label="Para la próxima" tono="verde" />
             )
           )}
 

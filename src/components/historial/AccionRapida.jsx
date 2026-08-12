@@ -10,7 +10,7 @@ import styles from './AccionRapida.module.css'
 // `label` existe porque en la pantalla de guardado esto se lee como el paso que
 // viene ("Para la próxima"), mientras que en el historial sigue siendo la acción
 // rápida de una card. El default deja el historial intacto.
-export default function AccionRapida({ data, regenerando = false, label = 'Acción rápida' }) {
+export default function AccionRapida({ data, regenerando = false, label = 'Acción rápida', tono = 'primary' }) {
   // Si no hay texto persistido y tampoco estamos regenerando, nada que mostrar.
   // El estado "regenerando sin data" puede ocurrir en episodios viejos creados
   // antes del rediseño v1.2: la cola los procesa y queremos mostrar placeholder.
@@ -20,7 +20,7 @@ export default function AccionRapida({ data, regenerando = false, label = 'Acci�
   const lente = data ? obtenerLente(data) : ''
 
   return (
-    <div className={styles.panel}>
+    <div className={`${styles.panel} ${tono === 'verde' ? styles.panelVerde : ''}`}>
       <div className={styles.head}>
         <span className={styles.h} aria-hidden="true"><Escarabajo className={styles.hIcon} /></span>
         <span className={styles.lbl}>{label}</span>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import Escarabajo from '../ui/Escarabajo'
+import Escarabajo from '../ui/EscarabajoSolido'
 import styles from './AlivioHuella.module.css'
 
 // ──────────────────────────────────────────────────────────────────────

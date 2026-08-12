@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Keyboard, Check, Mic, ArrowUp } from 'lucide-react'
-import Escarabajo from '../ui/Escarabajo'
+import Escarabajo from '../ui/EscarabajoSolido'
 import VoiceTextarea from '../ui/VoiceTextarea'
 import Button from '../ui/Button'
 import { extraerEpisodio } from '../../services/anthropic'

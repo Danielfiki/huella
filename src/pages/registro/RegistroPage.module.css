@@ -725,7 +725,9 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-primary);
+  /* Verde igual que la tarjeta real: si no, al llegar la accion se veia un
+     salto de terracota a verde. */
+  border-left: 3px solid var(--color-accent-green);
   animation: accionFadeIn 0.5s ease both;
 }
 
@@ -747,7 +749,7 @@
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--color-primary-deep);
+  color: var(--color-tag-green);
 }
 
 .accionTexto {
@@ -923,9 +925,13 @@
    blanco. Sin acento de color propio — el único verde de la pantalla es "Para
    la próxima", y esto no compite con eso. */
 .orientacionPlegable {
-  border: 1px solid var(--color-border);
+  /* Mocha suave: el tercer color de la pantalla. El alivio es durazno y la
+     acción verde, así que esto necesitaba un tono propio para no volver a
+     desaparecer contra el crema. Reusa el par de las pills de emoción, que ya
+     trae contraste resuelto y override de dark. */
+  background: var(--color-pill-emocion-bg);
+  border: 1px solid var(--color-accent-mocha);
   border-radius: var(--radius-md);
-  background: var(--color-surface-alt);
   overflow: hidden;
 }
 
@@ -942,18 +948,19 @@
   text-align: left;
 }
 
+/* Terracota pleno con el escarabajo crema encima: el mismo contraste fuerte
+   que en el hilo. Un disco blanco con el bicho terracota se leía lavado. */
 .orientacionIcono {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-mocha);
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.orientacionEscarabajo { width: 16px; height: 16px; }
+.orientacionEscarabajo { width: 25px; height: 25px; }
 
 .orientacionTextos {
   display: flex;
