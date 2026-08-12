@@ -93,6 +93,13 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // `soltarMotor`).
   const recPendienteRef   = useRef(null)
   const transcriptRef     = useRef('')
+  // Última hipótesis del motor que todavía NO se marcó como final. Safari
+  // descarta lo provisorio al cerrar la sesión, así que sin esto la frase con
+  // que uno cierra el relato ("...fue muy complicado") se perdía siempre.
+  const interimRef        = useRef('')
+  // Lo provisorio que ya se sumó al ref. Si después llega su versión final, hay
+  // que sacar esta copia antes de agregarla: si no, la frase queda dos veces.
+  const interimCobradoRef = useRef('')
   const isRecordingRef    = useRef(false)
   const endTimeoutRef     = useRef(null)
   const tickIntervalRef   = useRef(null)
@@ -145,11 +152,24 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     try { rec.abort() } catch { /* ya estaba muerto */ }
   }
 
+  // Suma al relato lo que quedó como provisorio. Se llama al cerrar: para el
+  // motor esa frase nunca fue definitiva, pero el padre la dijo igual y prefiere
+  // leerla imperfecta antes que no leerla.
+  function cobrarInterim() {
+    const pendiente = interimRef.current.trim()
+    interimRef.current = ''
+    if (!pendiente) return
+    transcriptRef.current += (transcriptRef.current ? ' ' : '') + pendiente
+    interimCobradoRef.current = pendiente
+    logVoz('cobrarInterim: se rescata lo provisorio', { largo: pendiente.length })
+  }
+
   // Called by rec.onend (after stop() + all pending onresult events have fired)
   // Siempre pasa a revisión, incluso sin audio captado: ahí el estado muestra
   // "No se captó audio", así que detener nunca termina en silencio.
   function finalizarRevision(via) {
     clearTimeout(endTimeoutRef.current)
+    cobrarInterim()
     logVoz(`finalizarRevision via ${via}`, { largoRef: transcriptRef.current.length })
     // El motor pasa a "pendiente" en vez de descartarse. Si acá llegamos por la
     // red de seguridad, el motor sigue procesando y lo que emita después es
@@ -222,6 +242,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
     isRecordingRef.current = true
     transcriptRef.current = ''
+    interimRef.current = ''
+    interimCobradoRef.current = ''
     segundosRef.current = 0
     reiniciosRef.current = 0
     setSegundos(0)
@@ -242,16 +264,44 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     const rec = new SR()
     rec.lang = 'es-CL'
     rec.continuous = true
-    rec.interimResults = false
+    // Activado no para mostrar texto en vivo, sino para tener un respaldo de la
+    // frase en curso: es la única forma de no perder lo último que se dijo
+    // cuando la sesión se cierra antes de que el motor la marque como final.
+    rec.interimResults = true
     recRef.current = rec
 
     rec.onresult = (e) => {
+      let provisorio = ''
+      let huboFinal = false
+
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
+        const r = e.results[i]
+        if (!r.isFinal) {
+          // Lo provisorio se ACUMULA dentro del evento pero REEMPLAZA lo del
+          // evento anterior: mientras el motor refina una frase, cada evento
+          // reenvía la versión completa de lo mismo. Sumarlas duplicaría.
+          provisorio += r[0].transcript
+          continue
         }
+        huboFinal = true
+        // Llegó la versión buena de algo que ya habíamos rescatado a la fuerza:
+        // se saca la copia provisoria y queda solo la final.
+        if (interimCobradoRef.current && transcriptRef.current.endsWith(interimCobradoRef.current)) {
+          transcriptRef.current = transcriptRef.current
+            .slice(0, -interimCobradoRef.current.length)
+            .trimEnd()
+        }
+        interimCobradoRef.current = ''
+        transcriptRef.current += (transcriptRef.current ? ' ' : '') + r[0].transcript
       }
-      logVoz('onresult', { grabando: isRecordingRef.current, largoRef: transcriptRef.current.length })
+
+      interimRef.current = provisorio.trim()
+
+      // Solo se loguean los finales: con interimResults activo, los provisorios
+      // disparan decenas de eventos por frase y ahogarían la consola.
+      if (huboFinal) {
+        logVoz('onresult final', { grabando: isRecordingRef.current, largoRef: transcriptRef.current.length })
+      }
       // Llegó tarde: la red de seguridad ya nos pasó a revisión y el padre está
       // leyendo la transcripción. Esto la completa en pantalla; si no, leería
       // la mitad y confirmaría esa.
@@ -267,6 +317,10 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       // motor muerto con la UI mostrando las barras: de ahí en adelante no se
       // capturaba una palabra más.
       if (isRecordingRef.current) {
+        // El corte también mata lo provisorio de esta sesión, así que se rescata
+        // antes de rearrancar: si no, cada rebote se come la frase que estaba en
+        // el aire justo cuando cortó.
+        cobrarInterim()
         reiniciosRef.current += 1
         logVoz('onend: Safari corto, reiniciando', {
           reinicio: reiniciosRef.current,
