@@ -49,6 +49,30 @@ let grabadorActivo = null
 // inservible y seguir intentando solo deja la UI mintiendo.
 const MAX_REINICIOS_SR = 8
 
+// Cuánto se espera el `onend` después de pedir stop() antes de dar por muerto
+// al motor y pasar a revisión igual.
+//
+// Estaban 2s, y era un techo mal calibrado: se eligió pensando en la latencia
+// típica, cuando el trabajo de esta red es detectar que el onend NO va a
+// llegar nunca. Con relatos largos Safari se demora más de 2s solo en procesar
+// el audio pendiente, así que la red se disparaba en grabaciones sanas y
+// congelaba media transcripción. 8s no es latencia: a los 8s el motor está
+// roto de verdad. Y como los resultados tardíos ahora siguen entrando después
+// de finalizar, pasarse de largo ya no cuesta texto — solo tiempo de spinner.
+const MS_ESPERA_ONEND = 8000
+
+// ── TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR ──────────────
+// Sirve para responder UNA pregunta con un solo QA: ¿el relato queda completo,
+// o los rebotes de Safari se comen pedazos? Por eso registra el largo del ref
+// en cada punto donde podría perderse texto, y por dónde entró la finalización.
+// PARA SACARLO: borrar este bloque y toda línea que contenga `logVoz`.
+let seqVoz = 0
+function logVoz(evento, datos) {
+  seqVoz += 1
+  console.log(`[VOZ ${String(seqVoz).padStart(2, '0')}] ${evento}`, datos || '')
+}
+// ── FIN TEMPORAL ────────────────────────────────────────────────────────
+
 function formatearTiempo(seg) {
   const m = Math.floor(seg / 60)
   const s = seg % 60
@@ -63,6 +87,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   const [segundos, setSegundos] = useState(0)
 
   const recRef            = useRef(null)
+  // Motor que ya finalizó pero todavía puede emitir resultados tardíos. Se
+  // separa del activo para que `detenerGrabacion` no lo confunda con uno en
+  // curso, pero sigue siendo un motor vivo y hay que abortarlo (ver
+  // `soltarMotor`).
+  const recPendienteRef   = useRef(null)
   const transcriptRef     = useRef('')
   const isRecordingRef    = useRef(false)
   const endTimeoutRef     = useRef(null)
@@ -90,18 +119,47 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     // dispara durante el desmontaje, tiene que verse a sí mismo como detenido
     // y no intentar reiniciarse.
     isRecordingRef.current = false
-    recRef.current?.abort()
-    recRef.current = null
+    logVoz('desmontaje')
+    soltarMotor()
   }, [])
+
+  // Mata de verdad cualquier motor que siga vivo, activo o pendiente.
+  //
+  // Soltar la referencia NO alcanza, y esa fue la causa del bug: en Safari iOS
+  // un SpeechRecognition abierto impide que el siguiente capture — el mismo
+  // conflicto que teníamos con getUserMedia, solo que ahora entre dos SR. Y
+  // como la app es una SPA, un motor huérfano sobrevive a la navegación y se
+  // arrastra hasta la grabación del episodio siguiente.
+  //
+  // Los handlers se desconectan antes del abort() porque abort() dispara onend,
+  // y sin esto ese onend volvería a entrar a finalizarRevision.
+  function soltarMotor() {
+    const rec = recRef.current || recPendienteRef.current
+    recRef.current = null
+    recPendienteRef.current = null
+    if (!rec) return
+    logVoz('soltarMotor: habia un motor vivo, se aborta')
+    rec.onresult = null
+    rec.onend = null
+    rec.onerror = null
+    try { rec.abort() } catch { /* ya estaba muerto */ }
+  }
 
   // Called by rec.onend (after stop() + all pending onresult events have fired)
   // Siempre pasa a revisión, incluso sin audio captado: ahí el estado muestra
   // "No se captó audio", así que detener nunca termina en silencio.
-  function finalizarRevision() {
+  function finalizarRevision(via) {
     clearTimeout(endTimeoutRef.current)
-    // La instancia de SpeechRecognition ya cumplió y no se reusa: una que ya
-    // terminó no vuelve a emitir onresult.
-    recRef.current = null
+    logVoz(`finalizarRevision via ${via}`, { largoRef: transcriptRef.current.length })
+    // El motor pasa a "pendiente" en vez de descartarse. Si acá llegamos por la
+    // red de seguridad, el motor sigue procesando y lo que emita después es
+    // justamente la parte del relato que faltaba: `onresult` la sigue sumando
+    // al ref y refrescando lo que se ve. Se aborta al confirmar, cancelar,
+    // volver a grabar o desmontar — nunca cruza a la grabación siguiente.
+    if (recRef.current) {
+      recPendienteRef.current = recRef.current
+      recRef.current = null
+    }
     setTranscriptText(transcriptRef.current.trim())
     setVoiceEstado('revisando')
   }
@@ -111,7 +169,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     clearInterval(tickIntervalRef.current)
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
-    recRef.current = null
+    soltarMotor()
     setErrorMsg(msg)
     setVoiceEstado('error')
     setTimeout(() => { setVoiceEstado('idle'); setErrorMsg('') }, 3500)
@@ -124,15 +182,20 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     clearInterval(tickIntervalRef.current)
+    logVoz('detenerGrabacion', {
+      segundos: segundosRef.current,
+      reinicios: reiniciosRef.current,
+      largoRef: transcriptRef.current.length,
+    })
     if (recRef.current) {
       // Transition to 'finalizando' while SR processes pending audio.
       // rec.onend fires after all onresult events, then calls finalizarRevision().
       setVoiceEstado('finalizando')
-      // Safety net: if onend never fires (browser bug), fall through after 2s
-      endTimeoutRef.current = setTimeout(finalizarRevision, 2000)
+      // Red de seguridad por si onend nunca llega (bug del navegador).
+      endTimeoutRef.current = setTimeout(() => finalizarRevision('timeout'), MS_ESPERA_ONEND)
       recRef.current.stop()
     } else {
-      finalizarRevision()
+      finalizarRevision('sin-motor')
     }
   }
 
@@ -150,6 +213,12 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       grabadorActivo.detenerRef.current?.()
     }
     grabadorActivo = { token: tokenRef.current, detenerRef }
+
+    // Último cortafuegos: si de la grabación anterior quedó un motor respirando,
+    // muere acá. Dos SpeechRecognition abiertos en Safari iOS terminan en una
+    // transcripción a medias, y ese es justamente el síntoma que perseguimos.
+    soltarMotor()
+    logVoz('iniciarGrabacion')
 
     isRecordingRef.current = true
     transcriptRef.current = ''
@@ -182,6 +251,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
           transcriptRef.current += (transcriptRef.current ? ' ' : '') + e.results[i][0].transcript
         }
       }
+      logVoz('onresult', { grabando: isRecordingRef.current, largoRef: transcriptRef.current.length })
+      // Llegó tarde: la red de seguridad ya nos pasó a revisión y el padre está
+      // leyendo la transcripción. Esto la completa en pantalla; si no, leería
+      // la mitad y confirmaría esa.
+      if (!isRecordingRef.current) setTranscriptText(transcriptRef.current.trim())
     }
 
     // onend fires after stop() + all pending onresult events — safe to read transcript here
@@ -194,6 +268,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       // capturaba una palabra más.
       if (isRecordingRef.current) {
         reiniciosRef.current += 1
+        logVoz('onend: Safari corto, reiniciando', {
+          reinicio: reiniciosRef.current,
+          segundos: segundosRef.current,
+          largoRef: transcriptRef.current.length,
+        })
         if (reiniciosRef.current > MAX_REINICIOS_SR) {
           detenerRef.current?.()
           return
@@ -207,10 +286,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
         }
         return
       }
-      finalizarRevision()
+      finalizarRevision('onend')
     }
 
     rec.onerror = (e) => {
+      logVoz('onerror', { error: e.error, largoRef: transcriptRef.current.length })
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         mostrarError('Permiso de micrófono denegado. Habilítalo en la configuración del navegador.')
       }
@@ -225,14 +305,22 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   }
 
   function cancelarVoz() {
+    soltarMotor()
     transcriptRef.current = ''
     setTranscriptText('')
     setVoiceEstado('idle')
   }
 
   function confirmarVoz() {
-    if (transcriptText && onVoiceResult) {
-      onVoiceResult((prev) => prev ? prev.trim() + ' ' + transcriptText : transcriptText)
+    // Se manda el ref y no `transcriptText`. El estado es una foto del último
+    // render; el ref es todo lo que se dictó. Cuando un resultado llega entre
+    // ese render y el toque de "Agregar" —que es lo que pasa con relatos
+    // largos— la foto se queda corta y esa diferencia era relato perdido.
+    const texto = transcriptRef.current.trim()
+    logVoz('confirmarVoz', { largoEnviado: texto.length, largoVisible: transcriptText.length })
+    soltarMotor()
+    if (texto && onVoiceResult) {
+      onVoiceResult((prev) => prev ? prev.trim() + ' ' + texto : texto)
     }
     transcriptRef.current = ''
     setTranscriptText('')

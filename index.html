@@ -18,6 +18,37 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR
+
+         Consola movil embebida (Eruda) para leer los console.log desde el
+         propio celular, sin Mac ni cable. Mismo mecanismo que usamos en
+         agosto para cazar el conflicto con getUserMedia.
+
+         Se activa SOLO con ?debug=1 en la URL. Sin ese parametro no se
+         descarga ni un byte: cero peso y cero riesgo para los testers. Una
+         vez activada queda en sessionStorage, asi el router puede limpiar
+         la URL sin apagar la consola; se apaga sola al cerrar la pestana.
+
+         PARA SACARLO: borrar este bloque completo.
+         ══════════════════════════════════════════════════════════════════ -->
+    <script>
+      (function () {
+        try {
+          if (new URLSearchParams(location.search).get('debug') === '1') {
+            sessionStorage.setItem('huella_debug', '1')
+          }
+          if (sessionStorage.getItem('huella_debug') !== '1') return
+          var s = document.createElement('script')
+          s.src = 'https://cdn.jsdelivr.net/npm/eruda@3'
+          s.onload = function () { if (window.eruda) window.eruda.init() }
+          document.head.appendChild(s)
+        } catch (e) { /* modo privado sin sessionStorage: no pasa nada */ }
+      })()
+    </script>
+    <!-- ══ FIN TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION ══════════ -->
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
