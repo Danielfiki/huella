@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
-import { analizarEpisodio, generarAccionInmediata } from '../../services/anthropic'
+import { analizarEpisodio, generarAccionInmediata, extraerEpisodio } from '../../services/anthropic'
+import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
+import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
+import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -13,89 +16,6 @@ import { renderMarkdown } from '../../utils/renderMarkdown'
 import styles from './RegistroPage.module.css'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 
-const TAXONOMIA_EMOCIONES = [
-  {
-    id: 'miedo',
-    label: 'Miedo / Angustia',
-    emoji: '😨',
-    color: 'var(--color-emocion-miedo)',
-    colorBg: 'var(--color-emocion-miedo-bg)',
-    especificas: [
-      'Miedo al abandono',
-      'Miedo a lo desconocido',
-      'Miedo a fracasar',
-      'Miedo a hacerse daño',
-      'Miedo a la oscuridad',
-    ],
-  },
-  {
-    id: 'rabia',
-    label: 'Rabia / Frustración',
-    emoji: '😠',
-    color: 'var(--color-emocion-rabia)',
-    colorBg: 'var(--color-emocion-rabia-bg)',
-    especificas: [
-      'Rabia por injusticia',
-      'Rabia por no conseguir algo',
-      'Rabia por ser interrumpido',
-      'Rabia por perder el control',
-      'Frustración acumulada',
-    ],
-  },
-  {
-    id: 'tristeza',
-    label: 'Tristeza / Pena',
-    emoji: '😢',
-    color: 'var(--color-emocion-tristeza)',
-    colorBg: 'var(--color-emocion-tristeza-bg)',
-    especificas: [
-      'Tristeza por un cambio o pérdida',
-      'Tristeza por sentirse solo',
-      'Tristeza por decepción',
-      'Añoranza de alguien',
-      'Tristeza sin causa clara',
-    ],
-  },
-  {
-    id: 'alegria',
-    label: 'Alegría / Desborde',
-    emoji: '🤩',
-    color: 'var(--color-emocion-alegria)',
-    colorBg: 'var(--color-emocion-alegria-bg)',
-    especificas: [
-      'Euforia que se desbordó',
-      'Alegría que terminó en llanto',
-      'Excitación extrema',
-      'Emoción por anticipación',
-    ],
-  },
-  {
-    id: 'asco',
-    label: 'Asco / Rechazo',
-    emoji: '🤢',
-    color: 'var(--color-emocion-asco)',
-    colorBg: 'var(--color-emocion-asco-bg)',
-    especificas: [
-      'Rechazo a comida o textura',
-      'Rechazo a una actividad',
-      'Disgusto sensorial',
-      'Vergüenza',
-    ],
-  },
-  {
-    id: 'confusion',
-    label: 'Confusión / Sorpresa',
-    emoji: '😵',
-    color: 'var(--color-emocion-confusion)',
-    colorBg: 'var(--color-emocion-confusion-bg)',
-    especificas: [
-      'Confusión por cambio de reglas',
-      'Sorpresa que asustó',
-      'No entendió lo que pasó',
-      'Se sintió ignorado',
-    ],
-  },
-]
 
 function EmocionSelector({ emocion, setEmocion }) {
   const [categoriaAbierta, setCategoriaAbierta] = useState(null)
@@ -179,25 +99,7 @@ function EmocionSelector({ emocion, setEmocion }) {
   )
 }
 
-const TIPOS = [
-  { id: 'rabieta',     label: 'Rabieta / explosión',              emoji: '💥' },
-  { id: 'llanto',      label: 'Llanto intenso',                   emoji: '😭' },
-  { id: 'agresividad', label: 'Golpes / agresividad',             emoji: '👊' },
-  { id: 'miedo',       label: 'Miedo / angustia',                 emoji: '🫣' },
-  { id: 'sueño',       label: 'No quiere dormir',                 emoji: '🛏️' },
-  { id: 'oposicion',   label: 'Oposición / no coopera',           emoji: '🚫' },
-  { id: 'social',      label: 'Se aisló / no quiso relacionarse', emoji: '🫥' },
-  { id: 'desconexion', label: 'Se cerró / no respondía',          emoji: '🔇' },
-  { id: 'otro',        label: 'Otro',                             emoji: '📝' },
-]
 
-const INTENSIDADES = [
-  { valor: 1, emoji: '😌', label: 'Muy leve' },
-  { valor: 2, emoji: '🙁', label: 'Leve' },
-  { valor: 3, emoji: '😟', label: 'Moderado' },
-  { valor: 4, emoji: '😣', label: 'Intenso' },
-  { valor: 5, emoji: '😱', label: 'Muy intenso' },
-]
 
 const ESTADOS_PADRE = ['Calmado', 'Frustrado', 'Cansado', 'Ansioso', 'Triste', 'Abrumado', 'No lo vi yo']
 
@@ -219,14 +121,6 @@ const TIPO_A_HABILIDAD = {
   social:      'Relacionarse mejor con otros niños',
 }
 
-const CUANDO_OPCIONES = [
-  { id: 'ahora',      label: 'Ahora' },
-  { id: 'hora_antes', label: 'Hace ~1 hora' },
-  { id: 'manana',     label: 'Esta mañana' },
-  { id: 'tarde',      label: 'Esta tarde' },
-  { id: 'ayer',       label: 'Ayer' },
-  { id: 'custom',     label: 'Otro momento…' },
-]
 
 function detectarBloqueRutina(fechaEpisodio, rutinas) {
   if (!rutinas || rutinas.length === 0) return null
@@ -479,8 +373,41 @@ export default function RegistroPage() {
     )
   }
 
-  async function handleGuardar(modo) {
-    if (!tipo || !intensidad) return
+  // ── Puentes del registro conversacional ──
+  // El componente maneja su propio estado; acá se vuelca a los estados de la
+  // página para reusar handleGuardar tal cual, sin duplicar la lógica de
+  // guardado ni el disparo de la orientación.
+  function volcarConversacional(d) {
+    setDescripcionLibre(d.transcripcion || '')
+    setTipo(d.tipo || '')
+    setEmocionSeleccionada(d.emocion || '')
+    setContexto(d.contexto || '')
+    // Sin "cuándo" declarado, el episodio queda con la hora actual: es lo
+    // que ya hace computarFecha con un valor vacío, y evita bloquear el
+    // guardado por un campo que el relato no mencionó.
+    setCuandoPaso(d.cuandoPaso || 'ahora')
+    setIntensidad(d.intensidad || null)
+  }
+
+  async function handleConfirmarConversacional(d) {
+    volcarConversacional(d)
+    await handleGuardar('conversacional', d)
+  }
+
+  // "Editar todo": lleva lo extraído al formulario completo, ya prellenado.
+  function handleEditarTodo(d) {
+    volcarConversacional(d)
+    setVista('detallado')
+  }
+
+  // `datos` llega solo desde el flujo conversacional: los setState de
+  // volcarConversacional no se ven todavía en este render, así que los
+  // valores se leen del objeto en vez del estado.
+  async function handleGuardar(modo, datos = null) {
+    const esConv     = modo === 'conversacional'
+    const tipoFinal  = esConv ? (datos?.tipo || 'otro')      : tipo
+    const intenFinal = esConv ? datos?.intensidad            : intensidad
+    if (!tipoFinal || !intenFinal) return
 
     const estadoPadre = modo === 'detallado'
       ? estadoPadrePicker === 'No lo vi yo'
@@ -492,19 +419,27 @@ export default function RegistroPage() {
 
     const episodio = {
       id: Date.now().toString(),
-      tipo,
-      intensidad,
-      contexto:    contexto,
+      tipo: tipoFinal,
+      intensidad: intenFinal,
+      contexto:    esConv ? (datos?.contexto || '') : contexto,
       gatillantes: modo === 'detallado' ? gatillantesSeleccionados : [],
       estadoPadre,
-      // computarFecha se usa en ambos modos: en detallado mapea el chip
+      // computarFecha se usa en los tres modos: en detallado mapea el chip
       // a un timestamp histórico, en rápido también (ahora el modo rápido
       // tiene la misma pregunta "¿Cuándo pasó?" — D2 del fix del Bug 1).
-      fecha: computarFecha(cuandoPaso, fechaCustom),
-      emocion:          modo === 'detallado' ? (emocionSeleccionada || null) : null,
-      descripcionLibre: tipo === 'otro' && tipoOtroTexto.trim()
-        ? tipoOtroTexto.trim() + (descripcionLibre.trim() ? '. ' + descripcionLibre.trim() : '')
-        : descripcionLibre.trim() || null,
+      fecha: computarFecha(esConv ? (datos?.cuandoPaso || 'ahora') : cuandoPaso, fechaCustom),
+      // El conversacional sí guarda emoción: la extrae del relato y el padre
+      // la valida, así que llega con la misma confianza que en el detallado.
+      emocion: (modo === 'detallado' || esConv)
+        ? (esConv ? (datos?.emocion || null) : (emocionSeleccionada || null))
+        : null,
+      // La transcripción completa es el relato del padre y va siempre, aunque
+      // la extracción haya fallado. Es lo único que no se puede perder.
+      descripcionLibre: esConv
+        ? (datos?.transcripcion?.trim() || null)
+        : tipo === 'otro' && tipoOtroTexto.trim()
+          ? tipoOtroTexto.trim() + (descripcionLibre.trim() ? '. ' + descripcionLibre.trim() : '')
+          : descripcionLibre.trim() || null,
     }
 
     const bloqueRutina = detectarBloqueRutina(episodio.fecha, state.rutinas)
@@ -766,77 +701,14 @@ export default function RegistroPage() {
   // ── VISTA: MODO RÁPIDO ────────────────────────────────────────────────────
   if (vista === 'rapido') {
     return (
-      <div ref={pageRef} className={styles.flujoRefugio}>
-        <div className={styles.rapidoHeader}>
-          <div className={styles.topRefugio}>
-            <button className={styles.backDisco} onClick={() => setVista('elegir')} aria-label="Volver">←</button>
-            <h2 className={styles.tituloRefugio}>¿Qué pasó?</h2>
-          </div>
-          <span className={`${styles.modoBadge} ${styles.modoBadgeBasico} ${styles.modoBadgeCentrado}`}>orientación inmediata</span>
-        </div>
-
-        <VoiceTextarea value={descripcionLibre} onChange={setDescripcionLibre} onVoiceResult={setDescripcionLibre} placeholder="Cuéntame qué pasó, con tus palabras…" />
-
-        <div className={styles.refSeccion}>
-          <p className={styles.label}>Tipo de episodio</p>
-          <TipoSelector tipo={tipo} setTipo={setTipo} tipoOtroTexto={tipoOtroTexto} setTipoOtroTexto={setTipoOtroTexto} bigEmoji />
-        </div>
-
-        <div className={styles.refSeccion}>
-          <p className={styles.label}>¿Qué tan intenso fue?</p>
-          <div className={styles.intensidadGridBig}>
-              {INTENSIDADES.map((op) => (
-                <button
-                  key={op.valor}
-                  className={`${styles.intensidadBtnBig} ${intensidad === op.valor ? styles.intensidadBtnBigSelected : ''}`}
-                  onClick={() => setIntensidad(op.valor)}
-                >
-                  <span className={styles.intensidadEmojiBig}>{op.emoji}</span>
-                  <span className={styles.intensidadLabel}>{op.label}</span>
-                </button>
-              ))}
-          </div>
-        </div>
-
-        <div className={styles.refSeccion}>
-          <p className={styles.label}>¿Cuándo pasó?</p>
-          <div className={styles.cuandoGrid}>
-            {CUANDO_OPCIONES.map((op) => (
-              <button
-                key={op.id}
-                className={`${styles.cuandoChip} ${cuandoPaso === op.id ? styles.cuandoChipActiva : ''}`}
-                onClick={() => handleCuando(op.id)}
-              >
-                {op.label}
-              </button>
-            ))}
-          </div>
-          {cuandoPaso === 'custom' && (
-            <FechaHoraPicker
-              value={fechaCustom}
-              onChange={setFechaCustom}
-              max={nowLocal()}
-            />
-          )}
-        </div>
-
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          className={styles.guardarPill}
-          onClick={() => handleGuardar('rapido')}
-          disabled={!tipo || !intensidad || !cuandoPaso}
-          loading={loadingGuardar}
-        >
-          Guardar
-        </Button>
-        {errorGuardar && <p className={styles.error}>{errorGuardar}</p>}
-
-        <button className={styles.cambiarModoBtn} onClick={() => setVista('detallado')}>
-          ¿Quieres agregar más detalle? → Registro detallado
-        </button>
-      </div>
+      <RegistroConversacional
+        hijo={state.hijo}
+        guardando={loadingGuardar}
+        errorGuardar={errorGuardar}
+        onVolver={() => setVista('elegir')}
+        onConfirmar={handleConfirmarConversacional}
+        onEditarTodo={handleEditarTodo}
+      />
     )
   }
 

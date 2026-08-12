@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase.js'
+import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 
 // Timeout duro para cualquier llamada al backend de IA. Sin esto el
 // fetch puede quedar colgado indefinidamente y los loaders de la UI
@@ -1932,5 +1933,169 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
     cita:        String(parsed.cita        || ''),
     autor:       String(parsed.autor       || ''),
     marco:       String(parsed.marco       || ''),
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// extraerEpisodio — el corazón del registro conversacional
+//
+// Toma el relato hablado del padre y devuelve la estructura del episodio
+// más un párrafo de validación escrito con SUS palabras. Una sola llamada.
+//
+// El system va como override (mismo patrón que requestPrimerEncuentro):
+// sin eso, el SYSTEM_PROMPT clínico del backend contesta con el formato
+// "Qué está pasando / Marco aplicado:" en vez del JSON que esto necesita.
+//
+// Dos reglas duras que el prompt repite y el post-proceso hace cumplir:
+//   1. Lo que el relato no dice va en null. Nunca se inventa un campo.
+//   2. La intensidad NO se extrae jamás — la pone el padre, siempre.
+// ════════════════════════════════════════════════════════════════════
+
+// Los 9 tipos reales con una línea de definición cada uno. Sin esto el
+// modelo inventa categorías propias o manda casi todo a 'otro'.
+const TIPOS_PARA_EXTRACCION = `rabieta — explosión emocional intensa: grita, se tira al suelo, patalea, se descontrola.
+llanto — llanto sostenido o desconsolado como manifestación principal, sin explosión.
+agresividad — pega, muerde, empuja, tira cosas, agrede a personas u objetos.
+miedo — miedo, angustia, ansiedad, no querer separarse, terror a algo puntual.
+sueño — resistencia a dormir, despertares, pesadillas, todo lo relacionado al sueño.
+oposicion — se niega, desobedece, no coopera, desafía, "no quiero", lucha de poder.
+social — se aisló, no quiso juntarse con otros, conflicto o retraimiento con pares.
+desconexion — se cerró, no respondía, se quedó en blanco, se desconectó del entorno.
+otro — no calza con ninguno de los anteriores.`
+
+const CUANDO_PARA_EXTRACCION = `ahora — acaba de pasar, recién.
+hora_antes — hace alrededor de una hora.
+manana — esta mañana.
+tarde — esta tarde.
+ayer — ayer.
+custom — un momento específico distinto a los anteriores.`
+
+const EMOCIONES_PARA_EXTRACCION = TAXONOMIA_EMOCIONES
+  .map((c) => `${c.label} → ${c.especificas.join(' | ')}`)
+  .join('\n')
+
+const PROMPT_EXTRACCION = `Eres el oído de Huella, una app de crianza chilena. Un padre o madre acaba de contarte por voz algo difícil que pasó con su hijo. Tu trabajo es entender lo que dijo y devolverlo ordenado, sin agregar nada.
+
+━━━ TIPOS DE EPISODIO ━━━
+${TIPOS_PARA_EXTRACCION}
+
+━━━ CUÁNDO PASÓ ━━━
+${CUANDO_PARA_EXTRACCION}
+
+━━━ EMOCIONES (categoría → específicas) ━━━
+${EMOCIONES_PARA_EXTRACCION}
+
+━━━ REGLAS DURAS ━━━
+1. LO QUE EL RELATO NO DICE VA EN null. No deduzcas, no completes, no adivines. Si el padre no mencionó una emoción, emocion es null. Si no dijo cuándo, cuandoPaso es null. Prefiere null antes que una suposición razonable.
+2. NUNCA devuelvas intensidad. No es tu campo. Esa la pone el padre.
+3. El campo tipo es el único obligatorio: elige siempre el id más cercano. Si de verdad no calza con ninguno, usa "otro".
+4. Los chilenismos y el lenguaje coloquial se entienden por significado, no literalmente: "se amurró" es enojo o retraimiento, "se puso pésimo" es un desborde, "quedó la escoba" es caos, "estaba chato" es cansado o harto, "hizo tira" es rompió, "pescó una pataleta" es una rabieta. Mapea al tipo más cercano según lo que realmente pasó.
+
+━━━ EL PÁRRAFO ━━━
+Es lo que el padre va a leer para confirmar que entendiste. Reglas:
+- USA LAS PALABRAS DEL PADRE. Si dijo "se amurró", el párrafo dice "se amurró". Si dijo "le grité", dice "le grité". No traduzcas a jerga de catálogo.
+- Escríbelo en segunda persona, hablándole a él: "Me contaste que...".
+- Máximo 2 frases. Natural, como se lo repetirías a un amigo para chequear que entendiste bien.
+- PROHIBIDA la estructura "no fue X, fue Y" en cualquiera de sus formas.
+- Sin diagnóstico, sin consejo, sin interpretación. Solo devolver lo que escuchaste.
+- Español latinoamericano neutro con TUTEO. Prohibido el voseo (vos, tenés, podés, decile).
+
+━━━ LAS CITAS ━━━
+Para cada campo que sí pudiste llenar, guarda las palabras EXACTAS del relato que te llevaron a esa conclusión. Textuales, tal como las dijo, sin reescribir. Si un campo es null, no lo incluyas en citas.
+
+━━━ FORMATO ━━━
+Responde SOLO con JSON puro. Sin markdown, sin bloques de código, sin texto antes ni después. Estructura exacta:
+{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","parrafo":"<el párrafo>","citas":{"tipo":"<palabras textuales>","emocion":"<palabras textuales>","contexto":"<palabras textuales>","cuandoPaso":"<palabras textuales>"}}
+
+emocion, contexto y cuandoPaso van en null si el relato no los menciona.`
+
+// Ids válidos: no se confía en que el modelo respete el catálogo.
+const TIPOS_VALIDOS  = ['rabieta', 'llanto', 'agresividad', 'miedo', 'sueño', 'oposicion', 'social', 'desconexion', 'otro']
+const CUANDO_VALIDOS = ['ahora', 'hora_antes', 'manana', 'tarde', 'ayer', 'custom']
+
+export async function extraerEpisodio({ transcripcion, hijo }) {
+  const nombre = hijo?.nombre || 'su hijo/a'
+  const edad   = hijo?.edad ?? '?'
+
+  const prompt = `El hijo se llama ${nombre} y tiene ${edad} años.
+
+Esto es lo que contó el padre o madre, transcrito de su voz:
+
+"${transcripcion}"`
+
+  const headers = { 'content-type': 'application/json' }
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+  }
+
+  const response = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prompt,
+      // ~400 alcanza para la estructura, un párrafo de 2 frases y las citas.
+      // Apretado a propósito: con más espacio el modelo empieza a interpretar.
+      max_tokens: 400,
+      system: PROMPT_EXTRACCION,
+    }),
+  })
+
+  if (!response.ok) {
+    const e = new Error(`HTTP ${response.status}`)
+    e.status = response.status
+    throw e
+  }
+
+  const body = await response.json()
+  const parsed = extraerJSON(body?.text ?? '')
+
+  // extraerJSON devuelve el string crudo cuando no logra parsear: eso es fallo.
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('extraccion-no-parseable')
+  }
+
+  return normalizarExtraccion(parsed)
+}
+
+// Saneado defensivo. El modelo puede devolver un tipo inexistente, una
+// específica de emoción fuera de la taxonomía, o strings vacíos donde debería
+// ir null. Se corrige acá para que la pantalla de validación pueda asumir que
+// lo que recibe es válido o es null, sin defenderse de nuevo.
+function normalizarExtraccion(raw) {
+  const limpiar = (v) => {
+    if (typeof v !== 'string') return null
+    const t = v.trim()
+    return (t === '' || t.toLowerCase() === 'null') ? null : t
+  }
+
+  const tipo       = TIPOS_VALIDOS.includes(raw.tipo) ? raw.tipo : 'otro'
+  const cuandoPaso = CUANDO_VALIDOS.includes(raw.cuandoPaso) ? raw.cuandoPaso : null
+
+  // La emoción vale solo si la específica existe de verdad: una inventada
+  // rompería al selector, que busca por coincidencia exacta en las listas.
+  let emocion = null
+  const esp = limpiar(raw?.emocion?.especifica)
+  if (esp) {
+    const cat = TAXONOMIA_EMOCIONES.find((c) => c.especificas.includes(esp))
+    if (cat) emocion = { categoria: cat.label, especifica: esp }
+  }
+
+  const citasRaw = (raw.citas && typeof raw.citas === 'object') ? raw.citas : {}
+  const citas = {}
+  for (const campo of ['tipo', 'emocion', 'contexto', 'cuandoPaso']) {
+    const c = limpiar(citasRaw[campo])
+    if (c) citas[campo] = c
+  }
+
+  return {
+    tipo,
+    emocion,
+    contexto: limpiar(raw.contexto),
+    cuandoPaso,
+    parrafo: limpiar(raw.parrafo) || '',
+    citas,
   }
 }

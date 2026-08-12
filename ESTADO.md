@@ -244,7 +244,61 @@
 
 ---
 
-## Cerrado HOY — jueves 6 agosto 2026 — El grabador de voz pasó a toggle tipo ChatGPT en los 8 campos · queda un bug ABIERTO sin causa confirmada y la instrumentación lista para cazarlo
+## Cerrado HOY — martes 11 agosto 2026 — FASE 1 del registro conversacional: el modo rápido ya no es un formulario · SIN COMMITEAR, pendiente de QA
+
+**El registro de episodios pasó a "La Conversación".** El modo rápido dejó de ser un formulario de 4 campos: ahora el padre cuenta por voz, la IA extrae la estructura y él valida un párrafo escrito con sus propias palabras. Ataca la causa n°1 de abandono medida en beta. **La vista detallado sobrevive intacta como "Editar todo".**
+
+⚠️ **NADA DE ESTO ESTÁ COMMITEADO.** Build pasa, la lógica está probada, pero **falta el QA de Daniel en celular**. No commitear sin su OK.
+
+### Lo que quedó construido
+
+| Pieza | Dónde |
+|---|---|
+| **`extraerEpisodio`** — relato hablado → estructura + párrafo de validación | `src/services/anthropic.js` (al final) |
+| **`RegistroConversacional`** — P1 narrar + P2 validar + hoja de edición | `src/components/registro/RegistroConversacional.jsx` (nuevo) |
+| Su CSS, solo tokens | `RegistroConversacional.module.css` (nuevo) |
+| **Taxonomía de emociones** extraída a fuente única | `src/constants/taxonomiaEmociones.js` (nuevo) |
+| **Catálogos** (TIPOS, INTENSIDADES, CUANDO_OPCIONES) a fuente única | `src/constants/catalogoEpisodio.js` (nuevo) |
+| Vista `rapido` reemplazada + 2 handlers puente + `handleGuardar` acepta modo `conversacional` | `RegistroPage.jsx` |
+
+### Decisiones que conviene conocer antes de tocar esto
+
+- **Se crearon dos módulos de constantes en vez de duplicar listas.** `extraerEpisodio` necesita la taxonomía de emociones para armar su prompt y para validar que la específica que devuelve el modelo exista de verdad. Un servicio no puede importar de una página, y copiar la lista habría creado un inventario paralelo que se desincroniza — **el repo ya arrastra ese problema con los cuatro inventarios de autores**. Ahora `RegistroPage` y el servicio leen de la misma fuente.
+- **La extracción nunca inventa.** Lo que el relato no dice va en `null`, y hay un saneado defensivo (`normalizarExtraccion`) que descarta tipos inexistentes, emociones fuera de taxonomía y strings vacíos. **La intensidad no se extrae jamás**: la pone el padre, siempre.
+- **El párrafo reusa las palabras del padre.** Si dijo "se amurró", el párrafo dice "se amurró". El prompt prohíbe explícitamente traducir a jerga de catálogo y prohíbe la estructura "no fue X, fue Y".
+- **Chilenismos mapeados en el prompt:** "se amurró", "se puso pésimo", "quedó la escoba", "estaba chato", "hizo tira", "pescó una pataleta".
+
+### Dos cambios de copy (afectan también al detallado)
+
+- **`Rabieta / explosión` → `Desborde / explosión`.** El `id` sigue siendo `'rabieta'` en base y en `TIPO_A_HABILIDAD`: solo cambia lo que ve el usuario. **Ojo: al vivir en el catálogo compartido, el label nuevo aplica en las dos vistas y en cualquier lugar que lea `TIPOS`.**
+- **Emoji de "Muy leve": 😌 → 😕.** La cara serena sugería que no había pasado nada, cuando el padre igual está registrando algo que le costó.
+
+### El estado degradado, que es el que más importa
+
+Ya nos pasó el 5 de agosto: la IA caída medio día y tres testers contra el muro. La regla es que **el relato no se pierde nunca y el guardado no se bloquea**.
+
+- La transcripción se guarda en un ref **antes** de llamar a la IA. Sobrevive a cualquier fallo.
+- Si `extraerEpisodio` falla, P2 abre igual: relato intacto arriba, cuatro fichas punteadas, y Huella diciendo *"Guardé tu relato. Esta vez lo ordenamos entre los dos."* **Sin rojo, sin ícono de alarma, sin disculpa larga.**
+- **Solo la intensidad bloquea el guardado.** Si el tipo queda vacío se guarda como `'otro'`. Se puede guardar con relato + intensidad y nada más.
+- La transcripción completa va a `descripcion_libre` siempre, incluso cuando la extracción funcionó.
+
+### Verificación hecha
+
+- ✅ Build pasa.
+- ⚠️ **No hay lint en el repo** — `package.json` solo tiene `dev`, `build` y `preview`, y no existe `eslint.config.js`. No se pudo correr.
+- ✅ Los 3 caminos probados con un script sobre `normalizarExtraccion`: extracción completa / parcial con basura que hay que sanear (tipo inventado, emoción fuera de taxonomía, strings vacíos) / respuesta vacía. Los tres sanean bien y la intensidad nunca aparece en el resultado.
+- ✅ Cero hex y cero rgb en el CSS nuevo: todo sale de tokens.
+- ✅ Cero rojo, cero iconografía de alarma en cualquier estado.
+
+### Lo que falta — Fases 2 y 3
+
+- **Fase 2:** P1.5 repregunta condicional cuando el relato es vago, y el modo chat completo (hoy el botón "Modo chat" abre el textarea simple).
+- **Fase 3:** P3 con el alivio primero, citando palabras textuales del padre.
+- **Pendiente de QA:** probar los 3 caminos en celular real, y ver cómo se leen los párrafos que devuelve el modelo — el prompt está afinado en frío, sin haber visto una sola salida real.
+
+---
+
+## Sesión jueves 6 agosto 2026 — El grabador de voz pasó a toggle tipo ChatGPT en los 8 campos · queda un bug ABIERTO sin causa confirmada y la instrumentación lista para cazarlo
 
 **4 commits, todos de voz.** El día arrancó con un reporte de tester ("el grabador es confuso") y terminó con el modelo de interacción cambiado entero — más un bug que resistió dos intentos de arreglo.
 
