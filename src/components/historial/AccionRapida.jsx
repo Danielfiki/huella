@@ -7,7 +7,10 @@ import styles from './AccionRapida.module.css'
 // Recibe el objeto persistido en columnas `accion_rapida_*` del episodio,
 // más una flag `regenerando` cuando la cola está actualizando esta card
 // en background tras detectar cambio de bucket de tiempo.
-export default function AccionRapida({ data, regenerando = false }) {
+// `label` existe porque en la pantalla de guardado esto se lee como el paso que
+// viene ("Para la próxima"), mientras que en el historial sigue siendo la acción
+// rápida de una card. El default deja el historial intacto.
+export default function AccionRapida({ data, regenerando = false, label = 'Acción rápida' }) {
   // Si no hay texto persistido y tampoco estamos regenerando, nada que mostrar.
   // El estado "regenerando sin data" puede ocurrir en episodios viejos creados
   // antes del rediseño v1.2: la cola los procesa y queremos mostrar placeholder.
@@ -20,7 +23,7 @@ export default function AccionRapida({ data, regenerando = false }) {
     <div className={styles.panel}>
       <div className={styles.head}>
         <span className={styles.h} aria-hidden="true"><Escarabajo className={styles.hIcon} /></span>
-        <span className={styles.lbl}>Acción rápida</span>
+        <span className={styles.lbl}>{label}</span>
         {regenerando && (
           <span className={styles.regenerando} aria-live="polite">
             {tieneTexto ? 'Actualizando…' : 'Preparando…'}

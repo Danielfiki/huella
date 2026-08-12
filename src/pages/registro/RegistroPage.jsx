@@ -1,18 +1,20 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { X, ChevronDown } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
+import AlivioHuella from '../../components/registro/AlivioHuella'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import RespuestaIA from '../../components/ui/RespuestaIA'
 import AccionRapida from '../../components/historial/AccionRapida'
 import { renderMarkdown } from '../../utils/renderMarkdown'
+import { separarAlivio } from '../../utils/seccionesIA'
 import styles from './RegistroPage.module.css'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 
@@ -307,8 +309,10 @@ export default function RegistroPage() {
   const { state, addEpisodio, updateEpisodio, actualizarUltimoAutorIa, isPro } = useHuella()
   const navigate = useNavigate()
 
-  const [vista, setVista] = useState('elegir')
-  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [vista, setVista] = useState('conversacional')
+  // La orientación larga arranca plegada: lo que el padre necesita al terminar
+  // es el alivio y un paso, no un informe. El resto está si lo quiere.
+  const [orientacionAbierta, setOrientacionAbierta] = useState(false)
 
   // shared fields
   const [tipo, setTipo] = useState('')
@@ -357,10 +361,10 @@ export default function RegistroPage() {
     el.classList.add(styles.vistaEntra)
   }, [vista])
 
-  function trySetVista(v) {
-    if (state.episodios.length >= MAX_EPISODIOS_FREE && !isPro()) { setShowUpgrade(true); return }
-    setVista(v)
-  }
+  // Sin cupo en el plan free. Antes lo atajaba la pantalla selectora, que ya no
+  // existe: ahora se entra directo a la conversación, así que el tope se
+  // verifica acá mismo antes de dejar contar nada.
+  const sinCupo = state.episodios.length >= MAX_EPISODIOS_FREE && !isPro()
 
   function handleCuando(id) {
     setCuandoPaso(id)
@@ -533,34 +537,19 @@ export default function RegistroPage() {
 
   // ── VISTA: GUARDADO ───────────────────────────────────────────────────────
   if (vista === 'guardado') {
-    const tipoObj = TIPOS.find((t) => t.id === tipo)
     const habilidadSugerida = TIPO_A_HABILIDAD[tipo] || ''
+    // El alivio va aparte del resto de la orientación: abre la pantalla como
+    // burbuja y lo demás queda plegado.
+    const { alivio, resto } = separarAlivio(respuestaIA)
+    // La acción rápida espera aunque ya haya llegado: pintarla sobre el alivio
+    // pondría el consejo antes del acompañamiento, que es exactamente el orden
+    // que esta pantalla vino a corregir. Si la orientación falla, se muestra
+    // igual — ahí vale más algo que nada.
+    const mostrarAccion = (!loadingIA || errorOrientacion) && (loadingAccion || accionIA)
+
     return (
       <div ref={pageRef} className={styles.flujoRefugio}>
         <div className={styles.guardadoContainer}>
-          <div className={styles.celebracionCard}>
-            <p className={styles.celebracionIcono}>✅</p>
-            <h3 className={styles.celebracionTitulo}>Episodio registrado</h3>
-            <p className={styles.celebracionSub}>
-              {tipoObj?.emoji} {tipoObj?.label} — Intensidad {intensidad}/5
-            </p>
-          </div>
-          {(loadingAccion || accionIA) && (
-            loadingAccion ? (
-              <div className={styles.accionCard}>
-                <div className={styles.accionHeader}>
-                  <span className={styles.accionEmoji}>⚡</span>
-                  <span className={styles.accionLabel}>Acción rápida</span>
-                </div>
-                <div className={styles.accionSkeleton}>
-                  <div className={styles.accionSkLine} style={{ width: '90%' }} />
-                  <div className={styles.accionSkLine} style={{ width: '75%' }} />
-                </div>
-              </div>
-            ) : (
-              <AccionRapida data={accionIA} />
-            )
-          )}
           {errorOrientacion ? (
             <Card className={styles.errorOrientacionCard}>
               <p className={styles.errorOrientacionIcon}>📡</p>
@@ -581,13 +570,46 @@ export default function RegistroPage() {
               </Button>
             </Card>
           ) : (
-            <RespuestaIA
-              texto={respuestaIA}
-              loading={loadingIA}
-              mensajeCarga="Analizando lo que pasó con tu hijo..."
-              categoria="regulacion"
-            />
+            <AlivioHuella texto={alivio} cargando={loadingIA} />
           )}
+
+          {mostrarAccion && (
+            loadingAccion ? (
+              <div className={styles.accionCard}>
+                <div className={styles.accionHeader}>
+                  <span className={styles.accionEmoji}>⚡</span>
+                  <span className={styles.accionLabel}>Para la próxima</span>
+                </div>
+                <div className={styles.accionSkeleton}>
+                  <div className={styles.accionSkLine} style={{ width: '90%' }} />
+                  <div className={styles.accionSkLine} style={{ width: '75%' }} />
+                </div>
+              </div>
+            ) : (
+              <AccionRapida data={accionIA} label="Para la próxima" />
+            )
+          )}
+
+          {resto && !errorOrientacion && (
+            <div className={styles.orientacionPlegable}>
+              <button
+                className={styles.orientacionToggle}
+                onClick={() => setOrientacionAbierta((v) => !v)}
+                aria-expanded={orientacionAbierta}
+                type="button"
+              >
+                <span>Orientación completa</span>
+                <ChevronDown
+                  size={18}
+                  className={`${styles.orientacionChevron} ${orientacionAbierta ? styles.orientacionChevronAbierto : ''}`}
+                />
+              </button>
+              {orientacionAbierta && (
+                <RespuestaIA texto={resto} categoria="regulacion" />
+              )}
+            </div>
+          )}
+
           <p className={styles.registroMantram}>Cada registro es una conversación contigo mismo sobre cómo quieres criar.</p>
 
           <div className={styles.reflexionSection}>
@@ -640,73 +662,27 @@ export default function RegistroPage() {
   }
 
   // ── VISTA: ELEGIR MODO ────────────────────────────────────────────────────
-  if (vista === 'elegir') {
-    const nombreHijo = state.hijo?.nombre || 'tu hijo/a'
+  // Sin cupo no se entra a contar: se avisa y se vuelve. El modal es el mismo
+  // que antes mostraba la selectora.
+  if (sinCupo) {
     return (
-      <div ref={pageRef} className={styles.flujoRefugio}>
-        <div className={styles.elegirHeaderRefugio}>
-          <div className={styles.topRefugio}>
-            <h2 className={styles.tituloRefugio}>¿Cómo registrar?</h2>
-          </div>
-          <p className={styles.elegirSub}>
-            Más contexto = análisis más preciso para {nombreHijo}
-          </p>
-        </div>
-
-        <button className={`${styles.modoCard} ${styles.modoCardRapido}`} onClick={() => trySetVista('rapido')}>
-          <span className={`${styles.modoIcono} ${styles.modoIconoRapido}`}>⚡</span>
-          <div className={styles.modoTexto}>
-            <h3 className={styles.modoTitulo}>Registro rápido</h3>
-            <p className={styles.modoDesc}>Solo tipo e intensidad. Máximo 3 taps y listo.</p>
-            <span className={`${styles.modoBadge} ${styles.modoBadgeBasico}`}>orientación inmediata</span>
-          </div>
-          <span className={styles.modoChevron}>›</span>
-        </button>
-
-        <button className={`${styles.modoCard} ${styles.modoCardDestacado}`} onClick={() => trySetVista('detallado')}>
-          <span className={`${styles.modoIcono} ${styles.modoIconoDetallado}`}>📊</span>
-          <div className={styles.modoTexto}>
-            <h3 className={styles.modoTitulo}>Registro detallado</h3>
-            <p className={styles.modoDesc}>Agrega contexto, gatillantes y cómo estabas. La IA identifica patrones con más precisión.</p>
-            <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto}`}>análisis completo 🎯</span>
-          </div>
-          <span className={styles.modoChevron}>›</span>
-        </button>
-
-        {!isPro() && (() => {
-          const restantes = MAX_EPISODIOS_FREE - state.episodios.length
-          if (restantes < 1 || restantes > 3) return null
-          return (
-            <p className={styles.avisoLimite}>
-              {restantes === 1
-                ? 'Te queda 1 registro en tu plan gratuito.'
-                : `Te quedan ${restantes} registros en tu plan gratuito.`}{' '}
-              <button type="button" className={styles.avisoLink} onClick={() => navigate('/cuenta')}>
-                Conocer Pro
-              </button>
-            </p>
-          )
-        })()}
-      {showUpgrade && (
-        <UpgradeModal
-          onClose={() => setShowUpgrade(false)}
-          tituloCustom={`Registraste ${MAX_EPISODIOS_FREE} episodios`}
-          mensajeCustom="Eso es dedicación de verdad. Con Huella Pro sigues registrando sin límite y desbloqueas el análisis completo de patrones."
-        />
-      )}
-      </div>
+      <UpgradeModal
+        onClose={() => navigate('/nuevo')}
+        tituloCustom={`Registraste ${MAX_EPISODIOS_FREE} episodios`}
+        mensajeCustom="Eso es dedicación de verdad. Con Huella Pro sigues registrando sin límite y desbloqueas el análisis completo de patrones."
+      />
     )
   }
 
-  // ── VISTA: MODO RÁPIDO ────────────────────────────────────────────────────
-  if (vista === 'rapido') {
+  // ── VISTA: LA CONVERSACIÓN (entrada única) ────────────────────────────────
+  if (vista === 'conversacional') {
     return (
       <RegistroConversacional
         hijo={state.hijo}
         padreNombre={state.padreNombre}
         guardando={loadingGuardar}
         errorGuardar={errorGuardar}
-        onVolver={() => setVista('elegir')}
+        onVolver={() => navigate('/nuevo')}
         onConfirmar={handleConfirmarConversacional}
         onEditarTodo={handleEditarTodo}
       />
@@ -718,7 +694,7 @@ export default function RegistroPage() {
     <div ref={pageRef} className={styles.flujoRefugio}>
       <div className={styles.rapidoHeader}>
         <div className={styles.topRefugio}>
-          <button className={styles.backDisco} onClick={() => setVista('elegir')} aria-label="Volver">←</button>
+          <button className={styles.backDisco} onClick={() => navigate('/nuevo')} aria-label="Volver">←</button>
           <h2 className={styles.tituloRefugio}>¿Qué pasó?</h2>
         </div>
         <span className={`${styles.modoBadge} ${styles.modoBadgeCompleto} ${styles.modoBadgeCentrado}`}>análisis completo 🎯</span>

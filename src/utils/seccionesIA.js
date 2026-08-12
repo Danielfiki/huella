@@ -8,6 +8,7 @@
 // calzar EXACTO con los que produce src/services/anthropic.js.
 
 export const SECTION_TITLES = new Set([
+  'Alivio',
   'Lo que está mejorando',
   'Lo que merece atención',
   'Posibles causas',
@@ -40,4 +41,32 @@ export function esTituloSeccion(linea) {
 // conservando la capitalización original. Usar cuando esTituloSeccion dio true.
 export function tituloSeccionLimpio(linea) {
   return limpiarTitulo(linea)
+}
+
+// Saca la sección "Alivio" del resto de la orientación.
+//
+// El alivio no se lee como las demás secciones: va primero, en una burbuja de
+// Huella, mientras el resto queda plegado detrás de "Orientación completa". Por
+// eso hay que partirlo en dos antes de renderizar.
+//
+// Si el modelo no escribió la sección —puede pasar— `alivio` viene vacío y el
+// texto entero se devuelve como resto: la pantalla sigue funcionando igual, solo
+// que sin burbuja de apertura.
+export function separarAlivio(texto) {
+  if (!texto) return { alivio: '', resto: '' }
+
+  const lineas = texto.split('\n')
+  const inicio = lineas.findIndex((l) => limpiarTitulo(l).toLowerCase() === 'alivio')
+  if (inicio === -1) return { alivio: '', resto: texto }
+
+  // El alivio termina donde empieza la próxima sección.
+  let fin = lineas.length
+  for (let i = inicio + 1; i < lineas.length; i++) {
+    if (esTituloSeccion(lineas[i])) { fin = i; break }
+  }
+
+  return {
+    alivio: lineas.slice(inicio + 1, fin).join('\n').trim(),
+    resto: [...lineas.slice(0, inicio), ...lineas.slice(fin)].join('\n').trim(),
+  }
 }

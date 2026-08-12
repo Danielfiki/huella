@@ -1,0 +1,67 @@
+/* ══════════════════════════════════════════════════════════════════
+   ALIVIO — misma burbuja que el hilo del registro conversacional, para
+   que se lea como la continuación de esa conversación y no como otra
+   pantalla. Todo sale de tokens.
+   ══════════════════════════════════════════════════════════════════ */
+
+.fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: 100%;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-mocha);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.avatarSvg { width: 18px; height: 18px; }
+
+.burbuja {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 5px;
+  padding: 15px 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.parrafo {
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* La voz del padre, devuelta tal cual la dijo. */
+.cita {
+  color: var(--color-primary-deep);
+  font-style: italic;
+}
+
+/* Mientras Huella lee: los mismos puntos del hilo, sin barra ni porcentaje.
+   Acá no se informa progreso, se acompaña. */
+.puntos { display: inline-flex; gap: 4px; padding: 4px 0; }
+.puntos i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-light);
+  animation: latir 1.2s ease-in-out infinite;
+}
+.puntos i:nth-child(2) { animation-delay: .18s; }
+.puntos i:nth-child(3) { animation-delay: .36s; }
+@keyframes latir { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .puntos i { animation: none; opacity: .6; }
+}

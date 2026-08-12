@@ -948,7 +948,12 @@ Responde con este formato exacto, calibrando cada sección al marco científico 
 
 FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown en la respuesta. Escribe cada título de sección en su propia línea con mayúscula inicial, sin negritas ni símbolos. Separa párrafos con una línea en blanco. Para listas usa 1., 2., 3. sin viñetas ni guiones.
 
-FORMATO DE TÍTULOS: cuando uses un título de sección como "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en una línea aparte, sin agregar dos puntos al final, sin agregar palabras antes ni después, sin variarlo. El sistema detecta esos strings exactos para aplicar formato visual.
+FORMATO DE TÍTULOS: cuando uses un título de sección como "Alivio", "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en una línea aparte, sin agregar dos puntos al final, sin agregar palabras antes ni después, sin variarlo. El sistema detecta esos strings exactos para aplicar formato visual.
+
+PROHIBIDO NEGAR PARA AFIRMAR, en todas las secciones. Nada de "eso no es X, es Y" ni "no fue X, fue Y" ni ninguna variante. Afirma directo lo que quieres decir.
+
+Alivio
+(2-3 frases, y es lo primero que el padre lee. Abre CITANDO entre comillas dobles las palabras textuales que usó en su relato, tal cual las dijo. Después normaliza lo que hizo la niña o el niño para su edad, y cierra soltando la culpa del padre. Tono sereno, nada de felicitaciones ni de consejos: acá solo se lo acompaña. Las comillas dobles marcan la cita del padre y no se usan para nada más en esta sección. Ejemplo del tono buscado: Dijiste que te sentiste "pésimo". Eras un papá cansado en una fila larga, y Mateo tampoco tenía cómo ordenarse solo a esa hora. Lo que pasó fue eso, y ya pasó.)
 
 Qué está pasando
 (1-2 oraciones explicando el mecanismo neurológico o de desarrollo específico para esta edad)
@@ -1020,7 +1025,7 @@ Analiza estos patrones desde el marco científico de la edad indicada y responde
 
 FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown en la respuesta. Escribe cada título de sección en su propia línea con mayúscula inicial, sin negritas ni símbolos. Separa párrafos con una línea en blanco. Si enumeras pasos, usa 1., 2., 3. sin viñetas ni guiones.
 
-FORMATO DE TÍTULOS: cuando uses un título de sección como "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en una línea aparte, sin agregar dos puntos al final, sin agregar palabras antes ni después, sin variarlo. El sistema detecta esos strings exactos para aplicar formato visual.
+FORMATO DE TÍTULOS: cuando uses un título de sección como "Alivio", "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en una línea aparte, sin agregar dos puntos al final, sin agregar palabras antes ni después, sin variarlo. El sistema detecta esos strings exactos para aplicar formato visual.
 
 Lo que está mejorando
 [observación positiva basada en los datos, interpretada a la luz del desarrollo esperado para la edad]
@@ -1208,7 +1213,7 @@ Escribe un párrafo corto (máximo 100 palabras) que:
 - Hable en segunda persona al padre/madre usando TÚ (tú, tienes, haces — nunca vos, tenés, hacés)
 - Tono cálido, directo y concreto
 - PROHIBIDO markdown en la respuesta: nada de #, ##, **, *, _ ni símbolos de formato
-- FORMATO DE TÍTULOS: si usas algún título de sección como "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en línea aparte, sin dos puntos al final, sin variación`
+- FORMATO DE TÍTULOS: si usas algún título de sección como "Alivio", "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en línea aparte, sin dos puntos al final, sin variación`
 
   return llamarAPI(prompt, 250)
 }
