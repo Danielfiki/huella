@@ -951,8 +951,8 @@
 /* Terracota pleno con el escarabajo crema encima: el mismo contraste fuerte
    que en el hilo. Un disco blanco con el bicho terracota se leía lavado. */
 .orientacionIcono {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-on-mocha);
@@ -960,7 +960,7 @@
   place-items: center;
   flex-shrink: 0;
 }
-.orientacionEscarabajo { width: 25px; height: 25px; }
+.orientacionEscarabajo { width: 82%; height: 82%; }
 
 .orientacionTextos {
   display: flex;

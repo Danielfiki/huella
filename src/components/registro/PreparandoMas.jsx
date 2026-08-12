@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import ProgressBar from '../ui/ProgressBar'
+import useFakeProgress from '../../hooks/useFakeProgress'
 import styles from './PreparandoMas.module.css'
 
 // ──────────────────────────────────────────────────────────────────────
@@ -8,9 +10,11 @@ import styles from './PreparandoMas.module.css'
 // orientación, y sin nada en pantalla esa pausa se lee como el final: el
 // padre puede irse creyendo que eso era todo lo que Huella tenía para él.
 //
-// No es un spinner de sistema: son los mismos puntos del hilo, con una frase
-// que dice qué se está preparando. Se anuncia lo que viene, no que algo está
-// cargando.
+// Sigue el patrón de la tarjeta de análisis semanal —líneas fantasma de lo
+// que viene, más una barra de avance— en vez de unos puntos sueltos, que a
+// esta altura de la pantalla se leían como un detalle y no como una promesa.
+// La frase dice qué se está preparando: se anuncia lo que viene, no que algo
+// está cargando.
 // ──────────────────────────────────────────────────────────────────────
 
 const FRASES = [
@@ -23,8 +27,14 @@ const FRASES = [
 // está leyendo arriba.
 const MS_ROTACION = 4500
 
+// La orientación completa tarda 15-20s. El progreso no es medible —el stream
+// no anuncia cuánto falta— así que la barra avanza con la curva del hook, que
+// sube rápido al principio, frena cerca del final y nunca retrocede.
+const DURACION_ESTIMADA_MS = 20000
+
 export default function PreparandoMas() {
   const [i, setI] = useState(0)
+  const { progress, phase } = useFakeProgress({ loading: true, duracionMs: DURACION_ESTIMADA_MS })
 
   useEffect(() => {
     const id = setInterval(
@@ -37,11 +47,24 @@ export default function PreparandoMas() {
   }, [])
 
   return (
-    <div className={styles.fila} role="status" aria-live="polite">
-      <span className={styles.puntos} aria-hidden="true">
-        <i /><i /><i />
-      </span>
-      <span key={i} className={styles.frase}>{FRASES[i]}</span>
+    <div className={styles.panel} role="status" aria-live="polite">
+      {/* Fantasma de lo que está por llegar: dos bloques, como las dos piezas
+          que faltan (la acción y la orientación). */}
+      <div className={styles.lineas} aria-hidden="true">
+        <span className={styles.linea} style={{ width: '92%' }} />
+        <span className={styles.linea} style={{ width: '74%' }} />
+        <span className={styles.linea} style={{ width: '58%' }} />
+      </div>
+
+      <p key={i} className={styles.frase}>{FRASES[i]}</p>
+
+      <ProgressBar
+        value={progress}
+        phase={phase}
+        tone="onLight"
+        color="var(--color-primary)"
+        label="Preparando lo que sigue"
+      />
     </div>
   )
 }

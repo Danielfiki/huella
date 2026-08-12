@@ -72,8 +72,8 @@
 /* Avatar del padre: su inicial sobre durazno. Reusa el par de tokens de las
    pills de estado, que ya trae el contraste resuelto y su override de dark. */
 .avatarPadre {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--color-pill-estado-bg);
   color: var(--color-pill-estado-text);
@@ -82,15 +82,15 @@
   flex-shrink: 0;
   margin-top: 2px;
   font-family: var(--font-heading);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
   order: 2;
 }
 
 /* Avatar de Huella: escarabajo crema sobre disco terracota */
 .avatarHuella {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-on-mocha);
@@ -99,7 +99,10 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
-.avatarSvg { width: 22px; height: 22px; }
+/* 82% del disco. En la referencia del analisis semanal el logo ocupa el 90%
+   de un cuadrado redondeado; en un circulo hay que dejar algo mas de aire o
+   las patas tocan el borde. Antes ocupaba el 61% y por eso se veia perdido. */
+.avatarSvg { width: 82%; height: 82%; }
 
 .burbujaHuella {
   background: var(--color-surface);

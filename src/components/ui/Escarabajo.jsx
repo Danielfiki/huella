@@ -6,7 +6,9 @@
 // El stroke va en el <svg> y lo heredan todas las formas. El linecap se queda
 // en butt (el default) a propósito: los dos paths de un solo punto que trae el
 // original pintarían un punto suelto con linecap round.
-const GROSOR_REFUERZO = 12
+// Bajó de 12 a 9 al crecer los avatares: con más píxeles disponibles el mismo
+// refuerzo empezaba a emborronar el detalle en vez de salvarlo.
+const GROSOR_REFUERZO = 9
 
 export default function Escarabajo({ className, reforzado = false }) {
   return (

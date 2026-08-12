@@ -1,31 +1,51 @@
-/* Deliberadamente sin caja: no es una tarjeta más compitiendo por atención,
-   es una señal al pie de lo que ya se puede leer. Todo sale de tokens. */
+/* Mismo patrón que la tarjeta de análisis semanal: caja sobria, fantasma de
+   lo que viene y barra de avance. Todo sale de tokens. */
 
-.fila {
+.panel {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 2px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
-.puntos { display: inline-flex; gap: 4px; flex-shrink: 0; }
-.puntos i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-primary-light);
-  animation: latir 1.2s ease-in-out infinite;
+.lineas {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
-.puntos i:nth-child(2) { animation-delay: .18s; }
-.puntos i:nth-child(3) { animation-delay: .36s; }
-@keyframes latir { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+/* El brillo cruza de izquierda a derecha: da la sensación de algo formándose,
+   no de un bloque muerto esperando. */
+.linea {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-alt) 0%,
+    var(--color-primary-tint) 50%,
+    var(--color-surface-alt) 100%
+  );
+  background-size: 220% 100%;
+  animation: brillo 1.8s ease-in-out infinite;
+}
+.linea:nth-child(2) { animation-delay: .15s; }
+.linea:nth-child(3) { animation-delay: .3s; }
+
+@keyframes brillo {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
 
 .frase {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--color-text-muted);
   line-height: 1.4;
-  /* El `key` del span lo remonta al cambiar de frase, así cada una entra con
-     su propio fade en vez de reemplazarse de golpe. */
+  margin: 0;
+  /* El `key` del párrafo lo remonta al cambiar de frase, así cada una entra
+     con su propio fade en vez de reemplazarse de golpe. */
   animation: entrar 400ms ease-out both;
 }
 @keyframes entrar {
@@ -34,6 +54,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .puntos i { animation: none; opacity: .6; }
-  .frase    { animation: none; }
+  .linea { animation: none; background: var(--color-surface-alt); }
+  .frase { animation: none; }
 }
