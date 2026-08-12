@@ -1,9 +1,22 @@
-export default function Escarabajo({ className }) {
+// `reforzado`: engorda cada forma desde su propio contorno para que el logo
+// sobreviva a tamaños de avatar (~24px). NO cambia la geometría — es el mismo
+// dibujo, con más cuerpo. Las patas son elipses de 7.46 de radio sobre un
+// viewBox de 469, o sea medio píxel a ese tamaño: sin esto se ven como polvo.
+//
+// El stroke va en el <svg> y lo heredan todas las formas. El linecap se queda
+// en butt (el default) a propósito: los dos paths de un solo punto que trae el
+// original pintarían un punto suelto con linecap round.
+const GROSOR_REFUERZO = 12
+
+export default function Escarabajo({ className, reforzado = false }) {
   return (
     <svg
       className={className}
       viewBox="0 0 469.55 429.86"
       fill="currentColor"
+      stroke={reforzado ? 'currentColor' : undefined}
+      strokeWidth={reforzado ? GROSOR_REFUERZO : undefined}
+      strokeLinejoin={reforzado ? 'round' : undefined}
       role="img"
       aria-label="Huella"
       xmlns="http://www.w3.org/2000/svg"

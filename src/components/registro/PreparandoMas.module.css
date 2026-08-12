@@ -1,0 +1,39 @@
+/* Deliberadamente sin caja: no es una tarjeta más compitiendo por atención,
+   es una señal al pie de lo que ya se puede leer. Todo sale de tokens. */
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 2px;
+}
+
+.puntos { display: inline-flex; gap: 4px; flex-shrink: 0; }
+.puntos i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  animation: latir 1.2s ease-in-out infinite;
+}
+.puntos i:nth-child(2) { animation-delay: .18s; }
+.puntos i:nth-child(3) { animation-delay: .36s; }
+@keyframes latir { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+.frase {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  /* El `key` del span lo remonta al cambiar de frase, así cada una entra con
+     su propio fade en vez de reemplazarse de golpe. */
+  animation: entrar 400ms ease-out both;
+}
+@keyframes entrar {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puntos i { animation: none; opacity: .6; }
+  .frase    { animation: none; }
+}

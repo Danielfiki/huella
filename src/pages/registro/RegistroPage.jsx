@@ -8,7 +8,8 @@ import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
-import Escarabajo from '../../components/ui/EscarabajoSolido'
+import PreparandoMas from '../../components/registro/PreparandoMas'
+import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -590,6 +591,11 @@ export default function RegistroPage() {
             <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
           )}
 
+          {/* El alivio ya se puede leer pero abajo todavía no hay nada, y esa
+              pausa muda se lee como el final. Va acá, al pie de lo visible y
+              justo donde van a aparecer la acción y la orientación. */}
+          {loadingIA && alivio && !errorOrientacion && <PreparandoMas />}
+
           {mostrarAccion && (
             loadingAccion ? (
               <div className={styles.accionCard}>
@@ -619,7 +625,7 @@ export default function RegistroPage() {
                 type="button"
               >
                 <span className={styles.orientacionIcono} aria-hidden="true">
-                  <Escarabajo className={styles.orientacionEscarabajo} />
+                  <Escarabajo className={styles.orientacionEscarabajo} reforzado />
                 </span>
                 <span className={styles.orientacionTextos}>
                   <span className={styles.orientacionTitulo}>Orientación completa</span>

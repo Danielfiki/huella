@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import Escarabajo from '../ui/EscarabajoSolido'
+import Escarabajo from '../ui/Escarabajo'
 import styles from './AlivioHuella.module.css'
 
 // ──────────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export default function AlivioHuella({ texto, cargando = false }) {
   return (
     <div className={styles.fila}>
       <span className={styles.avatar} aria-hidden="true">
-        <Escarabajo className={styles.avatarSvg} />
+        <Escarabajo className={styles.avatarSvg} reforzado />
       </span>
       <div className={styles.burbuja}>
         {mostrarPuntos ? (
