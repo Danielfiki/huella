@@ -22,8 +22,82 @@ import styles from './RegistroConversacional.module.css'
 // fichas vacías. El guardado tampoco se bloquea: basta relato + intensidad.
 // ──────────────────────────────────────────────────────────────────────
 
+const CAMPOS = ['tipo', 'emocion', 'contexto', 'cuandoPaso']
+
+// Texto de cada hueco. El de tipo empuja un poco más porque es el único campo
+// que la extracción siempre intenta llenar: si quedó vacío, algo no se entendió.
+const HUECOS = {
+  tipo:       '¿qué pasó? · toca para agregarlo',
+  emocion:    '¿y la emoción? · toca si quieres',
+  contexto:   '¿qué pasaba antes? · toca si quieres',
+  cuandoPaso: '¿cuándo fue? · toca si quieres',
+}
+
+// Minúsculas y sin acentos, pero carácter por carácter: cada reemplazo es 1:1,
+// así el índice que devuelve indexOf sirve tal cual sobre el texto original.
+// Por eso no se usa normalize('NFD'), que cambia los largos.
+function plegar(s) {
+  return s.toLowerCase()
+    .replace(/[áàäâ]/g, 'a')
+    .replace(/[éèëê]/g, 'e')
+    .replace(/[íìïî]/g, 'i')
+    .replace(/[óòöô]/g, 'o')
+    .replace(/[úùüû]/g, 'u')
+    .replace(/ñ/g, 'n')
+}
+
+// Parte el párrafo en trozos: los que corresponden a un campo quedan marcados y
+// tocables, el resto es texto normal.
+//
+// Las citas vienen del modelo, así que no se les cree: se exige que aparezcan de
+// verdad en el párrafo. La que no se encuentra no se marca y su campo cae a
+// hueco — es la única forma de que el padre siempre pueda corregir todo, incluso
+// cuando el modelo devuelve una cita que se inventó a medias.
+function marcarParrafo(parrafo, citas) {
+  const sinMarca = { segmentos: [{ texto: parrafo }], ubicados: [] }
+  if (!parrafo) return sinMarca
+
+  const plano = plegar(parrafo)
+  const marcas = []
+
+  for (const campo of CAMPOS) {
+    const cita = (citas?.[campo] || '').trim()
+      // Puntuación de los bordes: el modelo suele arrastrar la coma o el punto
+      // final, y eso solo hace fallar la búsqueda.
+      .replace(/^[\s"'¿¡(]+/, '')
+      .replace(/[\s"'?!.,;:)]+$/, '')
+    if (cita.length < 3) continue
+
+    const desde = plano.indexOf(plegar(cita))
+    if (desde === -1) continue
+    marcas.push({ campo, desde, hasta: desde + cita.length })
+  }
+
+  // Si dos citas pisan el mismo trozo gana la que empieza antes; la otra pasa a
+  // hueco. Anidar marcas tocables dejaría zonas donde no se sabe qué se abre.
+  marcas.sort((a, b) => a.desde - b.desde)
+  const finales = []
+  for (const m of marcas) {
+    if (finales.length && m.desde < finales[finales.length - 1].hasta) continue
+    finales.push(m)
+  }
+  if (!finales.length) return sinMarca
+
+  const segmentos = []
+  let cursor = 0
+  for (const m of finales) {
+    if (m.desde > cursor) segmentos.push({ texto: parrafo.slice(cursor, m.desde) })
+    segmentos.push({ texto: parrafo.slice(m.desde, m.hasta), campo: m.campo })
+    cursor = m.hasta
+  }
+  if (cursor < parrafo.length) segmentos.push({ texto: parrafo.slice(cursor) })
+
+  return { segmentos, ubicados: finales.map((m) => m.campo) }
+}
+
 export default function RegistroConversacional({
   hijo,
+  padreNombre = '',
   onConfirmar,
   onEditarTodo,
   onVolver,
@@ -54,6 +128,10 @@ export default function RegistroConversacional({
   const transcripcionRef = useRef('')
 
   const nombre = hijo?.nombre || 'tu hijo'
+  // La app no guarda foto del cuidador (la tabla `perfiles` solo tiene nombre y
+  // plan), así que el avatar es la inicial. Sin nombre cargado queda el guion:
+  // un círculo vacío se vería como una foto que no cargó.
+  const inicialPadre = (padreNombre || '').trim().charAt(0).toUpperCase() || '—'
 
   // ── Paso de narrar a validar ──
   async function procesarRelato(texto) {
@@ -136,6 +214,7 @@ export default function RegistroConversacional({
               <div className={styles.burbujaPadre}>
                 <p className={styles.relato}>{transcripcion}</p>
               </div>
+              <span className={styles.avatarPadre} aria-hidden="true">{inicialPadre}</span>
             </div>
           )}
 
@@ -194,6 +273,20 @@ export default function RegistroConversacional({
   // ════════ P2 · VALIDAR ════════
   const puedeGuardar = !!intensidad && !guardando
 
+  // El párrafo es la pantalla: los datos entendidos se leen dentro del texto,
+  // no como fichas al lado. Lo que no alcanzó a quedar dentro del párrafo se
+  // engancha al final, en la misma línea, para que nada quede sin poder tocarse.
+  const { segmentos, ubicados } = marcarParrafo(parrafo, citas)
+  const etiquetas = {
+    tipo:       labelTipo(tipo),
+    emocion:    emocion,
+    contexto:   contexto,
+    cuandoPaso: labelCuando(cuandoPaso),
+  }
+  const colgados = CAMPOS
+    .filter((campo) => !ubicados.includes(campo))
+    .map((campo) => ({ campo, etiqueta: etiquetas[campo] || null }))
+
   return (
     <div className={styles.pantalla}>
       <div className={styles.top}>
@@ -214,38 +307,45 @@ export default function RegistroConversacional({
           </span>
           <div className={styles.burbujaHuella}>
             {sinOrdenar ? (
-              <>
-                <p className={styles.parrafo}>
-                  Guardé tu relato. Esta vez lo ordenamos entre los dos.
-                </p>
-                <div className={styles.fichasHueco}>
-                  <Hueco texto="¿qué pasó?" onClick={() => setCampoEditando('tipo')} />
-                  <Hueco texto="¿qué emoción?" onClick={() => setCampoEditando('emocion')} />
-                  <Hueco texto="¿qué pasaba antes?" onClick={() => setCampoEditando('contexto')} />
-                  <Hueco texto="¿cuándo fue?" onClick={() => setCampoEditando('cuandoPaso')} />
-                </div>
-              </>
+              <p className={styles.parrafo}>
+                Guardé tu relato. Esta vez lo ordenamos entre los dos:{' '}
+                {CAMPOS.map((campo) => (
+                  <React.Fragment key={campo}>
+                    <button className={styles.hueco} onClick={() => setCampoEditando(campo)} type="button">
+                      {HUECOS[campo]}
+                    </button>{' '}
+                  </React.Fragment>
+                ))}
+              </p>
             ) : (
               <>
-                <p className={styles.parrafo}>{parrafo}</p>
+                <p className={styles.parrafo}>
+                  {segmentos.map((seg, i) => seg.campo ? (
+                    <button
+                      key={i}
+                      className={styles.marca}
+                      onClick={() => setCampoEditando(seg.campo)}
+                      type="button"
+                    >
+                      {seg.texto}
+                    </button>
+                  ) : (
+                    <React.Fragment key={i}>{seg.texto}</React.Fragment>
+                  ))}
 
-                <div className={styles.fichasHueco}>
-                  {tipo
-                    ? <Dato label={labelTipo(tipo)} onClick={() => setCampoEditando('tipo')} />
-                    : <Hueco texto="¿qué pasó? · toca para agregarlo" onClick={() => setCampoEditando('tipo')} />}
-
-                  {emocion
-                    ? <Dato label={emocion} onClick={() => setCampoEditando('emocion')} />
-                    : <Hueco texto="¿y él, cómo se sintió? · toca si quieres" onClick={() => setCampoEditando('emocion')} />}
-
-                  {contexto
-                    ? <Dato label={contexto} onClick={() => setCampoEditando('contexto')} />
-                    : <Hueco texto="¿qué pasaba antes? · toca si quieres" onClick={() => setCampoEditando('contexto')} />}
-
-                  {cuandoPaso
-                    ? <Dato label={labelCuando(cuandoPaso)} onClick={() => setCampoEditando('cuandoPaso')} />
-                    : <Hueco texto="¿cuándo fue? · toca si quieres" onClick={() => setCampoEditando('cuandoPaso')} />}
-                </div>
+                  {colgados.map(({ campo, etiqueta }) => (
+                    <React.Fragment key={campo}>
+                      {' '}
+                      <button
+                        className={etiqueta ? styles.marca : styles.hueco}
+                        onClick={() => setCampoEditando(campo)}
+                        type="button"
+                      >
+                        {etiqueta || HUECOS[campo]}
+                      </button>
+                    </React.Fragment>
+                  ))}
+                </p>
 
                 <p className={styles.voyBien}>¿Voy bien?</p>
                 <p className={styles.microcopy}>Toca cualquier palabra destacada si no calza.</p>
@@ -302,24 +402,6 @@ export default function RegistroConversacional({
         />
       )}
     </div>
-  )
-}
-
-// ── Dato entendido: se lee como palabra destacada dentro del párrafo ──
-function Dato({ label, onClick }) {
-  return (
-    <button className={styles.dato} onClick={onClick} type="button">
-      {label}
-    </button>
-  )
-}
-
-// ── Hueco: lo que la IA no captó. Punteado, opcional, nunca exigido ──
-function Hueco({ texto, onClick }) {
-  return (
-    <button className={styles.hueco} onClick={onClick} type="button">
-      {texto}
-    </button>
   )
 }
 

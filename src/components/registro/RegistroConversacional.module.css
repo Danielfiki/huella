@@ -61,8 +61,28 @@
 }
 .filaPadre {
   display: flex;
+  align-items: flex-start;
+  gap: 9px;
   align-self: flex-end;
-  max-width: 90%;
+  max-width: 92%;
+}
+
+/* Avatar del padre: su inicial sobre durazno. Reusa el par de tokens de las
+   pills de estado, que ya trae el contraste resuelto y su override de dark. */
+.avatarPadre {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-pill-estado-bg);
+  color: var(--color-pill-estado-text);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  order: 2;
 }
 
 /* Avatar de Huella: escarabajo crema sobre disco terracota */
@@ -144,45 +164,45 @@
 .puntos i:nth-child(3) { animation-delay: .36s; }
 @keyframes latir { 0%,100% { opacity:.3; } 50% { opacity:1; } }
 
-/* ── Datos y huecos dentro del párrafo ── */
-.fichasHueco {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-/* Lo que Huella entendió: subrayado suave terracota, tocable */
-.dato {
-  font-family: var(--font-family);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--color-primary-deep);
-  background: var(--color-primary-bg);
-  border: none;
-  border-bottom: 1.5px solid var(--color-primary);
-  border-radius: var(--radius-sm) var(--radius-sm) 3px 3px;
-  padding: 5px 9px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.dato:hover { background: var(--color-primary-tint); }
-
-/* Lo que no se captó: punteado, en tono bajo, siempre opcional */
+/* ── Lo entendido y lo que falta, DENTRO del párrafo ──
+   Los dos son botones en línea, no fichas aparte: heredan tipografía y alto de
+   línea del párrafo para que el texto siga leyéndose corrido y las palabras
+   destacadas no rompan el renglón. */
+.marca,
 .hueco {
-  font-family: var(--font-family);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px dashed var(--color-text-light);
-  border-radius: 999px;
-  padding: 5px 11px;
+  display: inline;
+  font: inherit;
+  line-height: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
+  /* El subrayado va como box-decoration para que sobreviva al corte de línea. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Lo que Huella entendió: terracota con subrayado suave, tocable. */
+.marca {
+  color: var(--color-primary-deep);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--color-primary-light);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.marca:hover { text-decoration-color: var(--color-primary); }
+
+/* Lo que no se captó: punteado, en tono bajo, siempre opcional. */
+.hueco {
+  color: var(--color-text-muted);
+  font-size: 0.88em;
+  border-bottom: 1px dashed var(--color-text-light);
   transition: border-color 0.15s, color 0.15s;
 }
-.hueco:hover { border-color: var(--color-primary); color: var(--color-primary-deep); }
+.hueco:hover { border-bottom-color: var(--color-primary); color: var(--color-primary-deep); }
 
 /* ── Intensidad: tarjeta aparte, es del padre ── */
 .tarjetaIntensidad {

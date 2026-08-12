@@ -703,6 +703,7 @@ export default function RegistroPage() {
     return (
       <RegistroConversacional
         hijo={state.hijo}
+        padreNombre={state.padreNombre}
         guardando={loadingGuardar}
         errorGuardar={errorGuardar}
         onVolver={() => setVista('elegir')}

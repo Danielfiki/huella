@@ -2001,11 +2001,15 @@ Es lo que el padre va a leer para confirmar que entendiste. Reglas:
 - Español latinoamericano neutro con TUTEO. Prohibido el voseo (vos, tenés, podés, decile).
 
 ━━━ LAS CITAS ━━━
-Para cada campo que sí pudiste llenar, guarda las palabras EXACTAS del relato que te llevaron a esa conclusión. Textuales, tal como las dijo, sin reescribir. Si un campo es null, no lo incluyas en citas.
+Sirven para resaltar dentro del párrafo la parte que corresponde a cada campo, así el padre puede tocarla si no calza. Por eso:
+- Cada cita tiene que ser un FRAGMENTO LITERAL DEL PÁRRAFO que acabas de escribir, copiado carácter por carácter. No del relato original: del párrafo. Si no aparece igual en el párrafo, no sirve.
+- Lo más corta posible sin dejar de entenderse: unas pocas palabras, no la frase completa.
+- No las hagas solaparse entre sí: cada una apunta a un trozo distinto del párrafo.
+- Si un campo es null, o si en el párrafo no quedó nada que lo diga, no lo incluyas en citas.
 
 ━━━ FORMATO ━━━
 Responde SOLO con JSON puro. Sin markdown, sin bloques de código, sin texto antes ni después. Estructura exacta:
-{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","parrafo":"<el párrafo>","citas":{"tipo":"<palabras textuales>","emocion":"<palabras textuales>","contexto":"<palabras textuales>","cuandoPaso":"<palabras textuales>"}}
+{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","parrafo":"<el párrafo>","citas":{"tipo":"<fragmento literal del párrafo>","emocion":"<fragmento literal del párrafo>","contexto":"<fragmento literal del párrafo>","cuandoPaso":"<fragmento literal del párrafo>"}}
 
 emocion, contexto y cuandoPaso van en null si el relato no los menciona.`
 
