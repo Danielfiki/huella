@@ -13,13 +13,22 @@
   position: relative;
 }
 
-/* Tono verde: solo en la pantalla post-guardado, donde esta tarjeta es el
-   único acento vivo entre el durazno del alivio y el mocha de la orientación.
-   En el historial el panel sigue en terracota, que es como se distingue de la
-   orientación larga en la misma card. */
+/* La variante de la pantalla post-guardado. Ahí esta tarjeta es el único acento
+   vivo entre el durazno del alivio y el mocha de la orientación, y su badge
+   convive con los otros dos de la pantalla. En el historial el panel sigue en
+   terracota y con el badge chico, que es lo que corresponde dentro de una card
+   compacta y lo que lo distingue de la orientación larga. */
 .panelVerde { border-left-color: var(--color-accent-green); }
-.panelVerde .h   { background: var(--color-accent-green); }
 .panelVerde .lbl { color: var(--color-tag-green); }
+
+/* Mismo badge que el alivio y la orientación: 48px, cuadrado redondeado y el
+   logo al 90%. En 20px quedaba visiblemente más chico que sus dos vecinos. */
+.panelVerde .h {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--color-accent-green);
+}
 
 .head {
   display: flex;

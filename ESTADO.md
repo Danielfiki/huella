@@ -244,7 +244,71 @@
 
 ---
 
-## Cerrado HOY — martes 11 agosto 2026 — FASE 1 del registro conversacional EN PRODUCCIÓN + el bug de la mitad del relato, cerrado con logs
+## Cerrado HOY — miércoles 12 agosto 2026 — EL REGISTRO CONVERSACIONAL ESTÁ COMPLETO Y VALIDADO: fases 1, 2 y 3 en producción
+
+**15 commits.** El registro de episodios dejó de ser un formulario y pasó a ser una conversación de punta a punta: se entra directo a hablar, Huella repregunta si hace falta, la validación ocurre en el mismo hilo, y al guardar lo primero que aparece es el alivio citando las palabras del padre. **Todo pasó QA real en celular.**
+
+### Lo que quedó en producción
+
+| Pieza | Qué hace |
+|---|---|
+| **Fase 1** — la conversación | El padre cuenta por voz, la IA extrae la estructura y él valida un párrafo con sus propias palabras, tocando lo que no calza |
+| **Fase 2** — repregunta + chat | Si el relato no cuenta ninguna escena, Huella pide *el momento más difícil*. Una vez y no más. Y el modo chat es un chat de verdad, con burbujas que se acumulan |
+| **Fase 2.5** — `fueraDeTema` | Un saludo o un texto pegado por error recibe un cartel amable en vez de la repregunta. No gasta el turno y **no entra al relato**, así que no llega a la base |
+| **Fase 3** — el alivio primero | Se fue el "Episodio registrado". Ahora abre una burbuja que cita al padre en cursiva, normaliza por edad y cierra su culpa |
+| **Streaming** | La orientación llega escribiéndose. El alivio se lee a los pocos segundos en vez de esperar 15-20s |
+| **Entrada directa** | La selectora "¿Cómo registrar?" se eliminó. `/registro` entra a la conversación; el detallado sobrevive detrás de "Editar todo" |
+
+### Decisiones que conviene conocer antes de tocar esto
+
+- **Validar NO es otra pantalla.** Es una burbuja más al final del mismo hilo. Separarlas hacía desaparecer la repregunta y las burbujas del padre justo en el momento de confirmar, que es cuando más importa que la conversación siga ahí.
+- **Las citas son fragmentos del PÁRRAFO, no del relato.** Es lo que permite resaltarlas en línea. Y como las escribe el modelo, no se les cree: si la cita no aparece literal en el párrafo, ese campo cae a hueco tocable. Así el padre siempre puede corregir los cuatro campos, incluso cuando el modelo inventa una cita a medias.
+- **Lo tocable dentro del párrafo es un `<span>`, no un `<button>`.** WebKit ignora `display: inline` en los botones y los trata como caja atómica: un destacado largo se iba entero a una línea propia, centrado.
+- **El relato acumulado vive solo en `transcripcionRef`**, y es lo que viaja a `descripcion_libre`. Las burbujas se pintan desde `mensajes`. Separarlos es lo que permite mezclar voz y chat sin que se pisen.
+- **Enviar procesa al toque, en chat y en voz.** No hay botón de "ya terminé": si el relato alcanza sale el párrafo, y si quedó corto la repregunta es la invitación a seguir contando.
+- **El camino degradado sigue intacto en las dos pasadas.** Si la IA se cae, la validación abre igual con el hilo completo y fichas vacías. Solo la intensidad bloquea el guardado.
+
+### El bug de la voz, cerrado con logs de dispositivo real
+
+Eran **tres capas distintas**, no una, y por eso resistió tanto:
+
+1. **Motor zombi.** La red de seguridad soltaba la referencia del `SpeechRecognition` sin abortarlo. En Safari iOS un motor abierto impide que el siguiente capture, y como esto es una SPA sobrevivía a la navegación y se arrastraba al episodio siguiente. Es el mismo conflicto que teníamos con `getUserMedia`, ahora entre dos SR. Ahora existe `soltarMotor()` y se llama desde los seis puntos de salida.
+2. **Texto tardío botado.** `confirmarVoz` mandaba `transcriptText`, que es una foto del último render, en vez del ref con todo lo dictado.
+3. **La última frase, descartada.** Safari tira lo provisorio al cerrar. Ahora se rescata — y además **hay una gracia de 1 segundo** antes de congelarlo, porque el motor suele mandar la versión terminada justo después de `stop()`: sin eso "difícil" llegaba como "dif".
+
+Confirmado en los logs: `soltarMotor: habia un motor vivo`, `finalizarRevision via onend` en ambas grabaciones y `largoEnviado = largoVisible`.
+
+### Lo visual, resuelto
+
+- **Los badges del escarabajo.** Investigando la referencia apareció que **no hay otro SVG**: los badges del panel usan el mismo `Escarabajo.jsx`. Lo que cambiaba era la presentación — cuadrado redondeado de 48px con el logo al **90%**, contra círculos con el logo al 61%. Y **sin stroke de refuerzo**: ese refuerzo rellenaba los huecos entre élitros y patas, así que el dibujo quedaba *menos* nítido. La prop se eliminó con su nota: si falta legibilidad en chico, más caja y más proporción, no más trazo.
+- **Jerarquía cromática.** Era crema sobre crema. Ahora hay tres cuerpos: alivio en durazno, acción en verde, orientación en mocha suave.
+- **La espera ya no es un hoyo.** Tras el alivio aparecen líneas fantasma y una barra de 8px en pistacho —el mismo grosor que la del análisis semanal— con una frase que anticipa lo que viene. Sin eso, el padre podía irse creyendo que eso era todo.
+
+### Lo que sigue — en este orden
+
+**1. QA con testers reales del flujo nuevo.** Es lo único que falta y es lo que más pesa: el flujo está validado por Daniel, no por los 18. **El reloj de Google termina el 18 de agosto**, así que hay seis días para que el registro nuevo demuestre que sostiene a los que ya están.
+
+**2. Regenerar los 6 episodios muertos** y mandar los mensajes de reparación a **cecilia** y **ddiegodiaz**. Son episodios cuya orientación falló y hoy no hay forma de recuperarlos desde la app.
+
+**3. La sección semanal "esta semana en el cerebro de [nombre]".** El gancho de retención.
+
+### Pendientes de PRODUCTO — pensarlos, no implementarlos todavía
+
+Decisiones tomadas hoy: **el modo conversacional funciona, pero no se copia y pega.**
+
+- **Llevarlo a AVANCE.** A Daniel le gusta la cercanía que logró, pero un avance necesita ser **más guiado** que un episodio: no es lo mismo contar algo difícil que registrar un progreso. Requiere pensarlo aparte.
+- **"Algo que aún no cambia"** tiene una estructura distinta de la de un episodio. Necesita diseño propio antes de conversacionalizarlo.
+- **El norte post-beta:** una entrada única conversacional que **clasifique sola** — que el padre cuente y el sistema decida si eso fue un episodio, un hito o un avance.
+
+### Otros anotados
+
+- **El aviso de cupo del plan free va al Home.** Decidido, no implementado. Vivía en la selectora que se eliminó; el tope duro sí quedó protegido antes de entrar a la conversación.
+- **Foto de perfil del cuidador en el onboarding.** Idea aprobada. Hoy no existe en la base (`perfiles` solo tiene nombre y plan), así que el avatar del padre es su inicial.
+- **La instrumentación `[VOZ]` se saca** cuando junten 2-3 registros limpios. Marcadores `TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR` en `index.html` y `VoiceTextarea.jsx`, más toda línea con `logVoz`.
+
+---
+
+## Sesión martes 11 agosto 2026 — FASE 1 del registro conversacional EN PRODUCCIÓN + el bug de la mitad del relato, cerrado con logs
 
 **Dos commits, los dos desplegados:** `8761a67` (Fase 1) y `254a2db` (el arreglo de voz que salió del QA de la Fase 1).
 
@@ -312,13 +376,7 @@ Los logs `[VOZ]` y el Eruda de `?debug=1` **siguen en producción a propósito**
 
 **Para sacarla de una pasada:** los marcadores dicen `TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR` en `index.html` y en `VoiceTextarea.jsx`, más toda línea que contenga `logVoz`.
 
-### Lo que sigue
-
-**1. Primero de la lista: QA de los párrafos que genera `extraerEpisodio`.** Nadie ha evaluado todavía **cómo se leen** — naturalidad, si de verdad reusa las palabras del padre, si las fichas tocables calzan con lo que dijo. El prompt está afinado en frío, sin haber visto una sola salida real. **Ese veredicto decide el camino:** si los párrafos se leen bien, se sigue con la Fase 2; si suenan a máquina o traducen a jerga de catálogo, primero se afina el prompt. No tiene sentido montar la repregunta sobre una extracción que todavía no sabemos si convence.
-
-**2. Fase 2:** P1.5 repregunta condicional cuando el relato es vago, y el modo chat completo (hoy el botón "Modo chat" abre el textarea simple).
-
-**3. Fase 3:** P3 con el alivio primero, citando palabras textuales del padre.
+*(Lo que esta sesión dejaba pendiente — el QA de los párrafos, la Fase 2 y la Fase 3 — se cerró el 12 de agosto. Ver el bloque de arriba.)*
 
 ---
 
