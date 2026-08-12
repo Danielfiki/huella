@@ -625,7 +625,7 @@ export default function RegistroPage() {
                 type="button"
               >
                 <span className={styles.orientacionIcono} aria-hidden="true">
-                  <Escarabajo className={styles.orientacionEscarabajo} reforzado />
+                  <Escarabajo className={styles.orientacionEscarabajo} />
                 </span>
                 <span className={styles.orientacionTextos}>
                   <span className={styles.orientacionTitulo}>Orientación completa</span>

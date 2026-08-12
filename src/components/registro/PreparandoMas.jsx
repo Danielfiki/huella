@@ -62,8 +62,13 @@ export default function PreparandoMas() {
         value={progress}
         phase={phase}
         tone="onLight"
-        color="var(--color-primary)"
+        // Pistacho y no terracota: la pantalla ya carga durazno y terracota, y
+        // esto le suma el color que le faltaba. No compite con "Para la
+        // próxima" porque es transitorio — desaparece justo cuando esa tarjeta
+        // aparece, así que nunca se ven los dos verdes a la vez.
+        color="var(--color-accent-green)"
         label="Preparando lo que sigue"
+        className={styles.barra}
       />
     </div>
   )

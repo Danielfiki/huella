@@ -39,6 +39,13 @@
   100% { background-position: -120% 0; }
 }
 
+/* 8px, el mismo grosor que la barra del análisis semanal. El ProgressBar base
+   viene en 3px y ahí se pierde; la referencia lo engorda con este mismo truco
+   de especificidad (`.panel .barra` es 0,2,0 contra el 0,1,0 del `.track`). */
+.panel .barra {
+  height: 8px;
+}
+
 .frase {
   font-size: 13px;
   color: var(--color-text-muted);

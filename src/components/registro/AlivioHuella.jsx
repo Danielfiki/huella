@@ -76,7 +76,7 @@ export default function AlivioHuella({ texto, cargando = false }) {
   return (
     <div className={styles.fila}>
       <span className={styles.avatar} aria-hidden="true">
-        <Escarabajo className={styles.avatarSvg} reforzado />
+        <Escarabajo className={styles.avatarSvg} />
       </span>
       <div className={styles.burbuja}>
         {mostrarPuntos ? (

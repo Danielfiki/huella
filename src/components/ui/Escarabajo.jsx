@@ -1,24 +1,18 @@
-// `reforzado`: engorda cada forma desde su propio contorno para que el logo
-// sobreviva a tamaños de avatar (~24px). NO cambia la geometría — es el mismo
-// dibujo, con más cuerpo. Las patas son elipses de 7.46 de radio sobre un
-// viewBox de 469, o sea medio píxel a ese tamaño: sin esto se ven como polvo.
+// Hubo una prop `reforzado` que engrosaba los trazos con un stroke para que el
+// logo sobreviviera en los avatares del registro. Se eliminó: el problema nunca
+// fue el grosor sino el tamaño. Los badges del panel usan este mismo SVG sin
+// refuerzo y se leen perfecto, porque le dan 48-52px y el 90% del cuadro; los
+// avatares le daban 36px y el 61%. Peor todavía, el stroke rellenaba los huecos
+// entre los élitros y entre las patas, así que el dibujo quedaba MENOS nítido.
 //
-// El stroke va en el <svg> y lo heredan todas las formas. El linecap se queda
-// en butt (el default) a propósito: los dos paths de un solo punto que trae el
-// original pintarían un punto suelto con linecap round.
-// Bajó de 12 a 9 al crecer los avatares: con más píxeles disponibles el mismo
-// refuerzo empezaba a emborronar el detalle en vez de salvarlo.
-const GROSOR_REFUERZO = 9
-
-export default function Escarabajo({ className, reforzado = false }) {
+// Si vuelve a hacer falta legibilidad en chico: más caja y más proporción, no
+// más trazo.
+export default function Escarabajo({ className }) {
   return (
     <svg
       className={className}
       viewBox="0 0 469.55 429.86"
       fill="currentColor"
-      stroke={reforzado ? 'currentColor' : undefined}
-      strokeWidth={reforzado ? GROSOR_REFUERZO : undefined}
-      strokeLinejoin={reforzado ? 'round' : undefined}
       role="img"
       aria-label="Huella"
       xmlns="http://www.w3.org/2000/svg"

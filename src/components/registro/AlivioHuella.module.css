@@ -14,15 +14,20 @@
 .avatar {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  /* Cuadrado redondeado y no circulo, igual que los badges del panel: en un
+     circulo las patas del logo tocan el borde y hay que achicarlo. Asi el
+     dibujo entra al 90% como en la referencia. */
+  border-radius: 10px;
   background: var(--color-primary);
   color: var(--color-on-mocha);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   flex-shrink: 0;
   margin-top: 2px;
 }
-.avatarSvg { width: 82%; height: 82%; }
+.avatarSvg { width: 90%; height: 90%; }
 
 /* Durazno y no blanco, como en el mockup aprobado. Sobre el crema del fondo,
    una burbuja blanca con borde gris desaparecía: crema sobre crema, sin

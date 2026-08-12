@@ -372,7 +372,7 @@ export default function RegistroConversacional({
       <div className={styles.hiloScroll} ref={hiloRef}>
         <div className={styles.filaHuella}>
           <span className={styles.avatarHuella} aria-hidden="true">
-            <Escarabajo className={styles.avatarSvg} reforzado />
+            <Escarabajo className={styles.avatarSvg} />
           </span>
           <div className={styles.burbujaHuella}>
             <p className={styles.pregunta}>¿Qué pasó con {nombre}?</p>
@@ -392,7 +392,7 @@ export default function RegistroConversacional({
         ) : (
           <div className={styles.filaHuella} key={i}>
             <span className={styles.avatarHuella} aria-hidden="true">
-              <Escarabajo className={styles.avatarSvg} reforzado />
+              <Escarabajo className={styles.avatarSvg} />
             </span>
             <div className={styles.burbujaHuella}>
               <p className={styles.pregunta}>{m.texto}</p>
@@ -403,7 +403,7 @@ export default function RegistroConversacional({
         {extrayendo && (
           <div className={styles.filaHuella}>
             <span className={styles.avatarHuella} aria-hidden="true">
-              <Escarabajo className={styles.avatarSvg} reforzado />
+              <Escarabajo className={styles.avatarSvg} />
             </span>
             <div className={styles.burbujaHuella}>
               <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
@@ -416,7 +416,7 @@ export default function RegistroConversacional({
         {validando && (
         <div className={styles.filaHuella}>
           <span className={styles.avatarHuella} aria-hidden="true">
-            <Escarabajo className={styles.avatarSvg} reforzado />
+            <Escarabajo className={styles.avatarSvg} />
           </span>
           <div className={styles.burbujaHuella}>
             {sinOrdenar ? (
