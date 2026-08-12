@@ -35,6 +35,11 @@ const CAMPOS = ['tipo', 'emocion', 'contexto', 'cuandoPaso']
 // contestar que "dame más detalles".
 const PREGUNTA_VAGO = 'Te escucho. ¿Me cuentas el momento más difícil, ese que se te quedó pegado?'
 
+// Para lo que no es un episodio: un saludo, texto pegado por error. Es un
+// cartel amable, no una conversación — por eso es siempre el mismo y no gasta
+// la única repregunta disponible.
+const FUERA_DE_TEMA = (nombre) => `Aquí estoy para lo que pase con ${nombre}. Cuando quieras, cuéntame qué pasó.`
+
 // Lo tocable dentro del párrafo es un span, no un button, y eso NO es un
 // descuido: WebKit ignora `display: inline` en los botones y los trata como
 // caja atómica, así que un destacado largo no se partía entre renglones — se
@@ -191,6 +196,7 @@ export default function RegistroConversacional({
   const [campoEditando, setCampoEditando] = useState(null)
 
   const transcripcionRef = useRef('')
+  const relatoPrevioRef = useRef('')
   const hiloRef = useRef(null)
 
   // Scroll de chat: cada burbuja nueva se asoma sola. Se dispara también con la
@@ -219,6 +225,9 @@ export default function RegistroConversacional({
     const todo = transcripcionRef.current
       ? `${transcripcionRef.current}\n\n${limpio}`
       : limpio
+    // Se recuerda lo anterior por si este mensaje resulta no ser un episodio:
+    // ahí se descarta del relato y no llega a la base.
+    relatoPrevioRef.current = transcripcionRef.current
     // Se guarda antes de cualquier llamada: pase lo que pase, el relato queda.
     transcripcionRef.current = todo
 
@@ -250,6 +259,17 @@ export default function RegistroConversacional({
 
     try {
       const r = await extraerEpisodio({ transcripcion: limpio, hijo })
+
+      // Esto no era un episodio. El mensaje se saca del relato para que no
+      // viaje a la base, la burbuja se queda en el hilo porque el padre la
+      // escribió, y se vuelve a esperar. No gasta la repregunta: no se le
+      // preguntó nada, se le avisó para qué sirve esto.
+      if (r.fueraDeTema) {
+        transcripcionRef.current = relatoPrevioRef.current
+        setMensajes((prev) => [...prev, { de: 'huella', texto: FUERA_DE_TEMA(nombre) }])
+        setFase('narrar')
+        return
+      }
 
       if (r.relatoVago && !esSegundaPasada) {
         extraccionPreviaRef.current = r

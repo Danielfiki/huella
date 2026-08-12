@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Escarabajo from '../ui/Escarabajo'
 import styles from './AlivioHuella.module.css'
 
@@ -15,6 +15,45 @@ import styles from './AlivioHuella.module.css'
 // cursiva terracota. Si el modelo no citó nada, el texto se muestra igual.
 // ──────────────────────────────────────────────────────────────────────
 
+// Desacopla lo que se ve de lo que va llegando.
+//
+// El stream entrega bloques grandes —el QA los vio caer en cuatro saltos— y
+// pintarlos directo se lee como cuatro golpes de texto. Esto avanza siempre a
+// ritmo parejo hacia lo último recibido, así que el tamaño de los chunks deja
+// de notarse y el crecimiento carácter a carácter no da saltos de layout.
+//
+// El paso es proporcional a lo que falta: si entra un bloque gordo, acelera
+// para no quedarse atrás, y desacelera al alcanzarlo.
+const MS_TICK = 28
+
+function useRevelado(texto) {
+  const [visible, setVisible] = useState('')
+  const metaRef = useRef(texto)
+  metaRef.current = texto
+
+  // Sin animación para quien la pidió apagada: el texto aparece y ya.
+  const sinMovimiento = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  useEffect(() => {
+    if (sinMovimiento) return
+    const id = setInterval(() => {
+      setVisible((v) => {
+        const meta = metaRef.current
+        // Cambió la raíz del texto (un reintento, otro episodio): no se anima
+        // un texto que ya no existe.
+        if (!meta.startsWith(v)) return meta
+        if (v.length >= meta.length) return v
+        const paso = Math.max(2, Math.ceil((meta.length - v.length) / 12))
+        return meta.slice(0, v.length + paso)
+      })
+    }, MS_TICK)
+    return () => clearInterval(id)
+  }, [sinMovimiento])
+
+  return sinMovimiento ? texto : visible
+}
+
 // Parte el texto en trozos, separando lo que va entre comillas dobles.
 function conCitas(texto) {
   return texto.split(/"([^"]+)"/g).map((trozo, i) =>
@@ -26,7 +65,13 @@ function conCitas(texto) {
 }
 
 export default function AlivioHuella({ texto, cargando = false }) {
+  const revelado = useRevelado(texto || '')
+
+  // El hook va antes del corte porque los hooks no pueden ser condicionales.
   if (!cargando && !texto) return null
+  // Ya llegó texto pero el revelado todavía no lo alcanza: se siguen mostrando
+  // los puntos en vez de una burbuja vacía por un instante.
+  const mostrarPuntos = cargando && !revelado
 
   return (
     <div className={styles.fila}>
@@ -34,12 +79,12 @@ export default function AlivioHuella({ texto, cargando = false }) {
         <Escarabajo className={styles.avatarSvg} />
       </span>
       <div className={styles.burbuja}>
-        {cargando ? (
+        {mostrarPuntos ? (
           <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
             <i /><i /><i />
           </span>
         ) : (
-          texto.split('\n').filter((l) => l.trim()).map((linea, i) => (
+          revelado.split('\n').filter((l) => l.trim()).map((linea, i) => (
             <p key={i} className={styles.parrafo}>{conCitas(linea)}</p>
           ))
         )}

@@ -34,12 +34,19 @@
   gap: 9px;
 }
 
+/* El texto crece letra a letra, pero un párrafo nuevo sí nace de golpe: este
+   fade suaviza ese único salto. */
 .parrafo {
   font-family: var(--font-heading);
   font-size: 15.5px;
   line-height: 1.5;
   color: var(--color-text);
   margin: 0;
+  animation: aparecer 260ms ease-out both;
+}
+@keyframes aparecer {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* La voz del padre, devuelta tal cual la dijo. */
@@ -64,4 +71,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .puntos i { animation: none; opacity: .6; }
+  .parrafo  { animation: none; }
 }

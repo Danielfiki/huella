@@ -2122,6 +2122,11 @@ Es lo que el padre va a leer para confirmar que entendiste. Reglas:
 - El relato viene de un dictado por voz y la última palabra puede llegar cortada ("dif" por "difícil", "compl" por "complicado"). Si es evidente cuál era, complétala; si no lo es, omítela. Nunca inventes contenido para rellenar.
 - Español latinoamericano neutro con TUTEO. Prohibido el voseo (vos, tenés, podés, decile).
 
+━━━ ¿ESTO ES UN EPISODIO? (fueraDeTema) ━━━
+Devuelve fueraDeTema en true SOLO cuando el mensaje no tiene NADA que ver con el niño ni con la vida familiar: un saludo suelto, texto pegado por error de otra conversación, una pregunta dirigida a ti como IA, instrucciones técnicas, o cualquier cosa que no sea alguien contando algo de su casa.
+CUIDADO CON EL FALSO POSITIVO, y es el error que importa: el padre desahogándose SIN nombrar al niño igual es un episodio. "No doy más", "hoy fue horrible", "estoy agotada" hablan de la vida familiar aunque no mencionen al hijo: eso es fueraDeTema FALSE y relatoVago true. Ante la duda, false.
+Cuando fueraDeTema es true el resto de los campos no se usa: pon tipo "otro", todo lo demás en null y párrafo vacío.
+
 ━━━ ¿EL RELATO ALCANZA? (relatoVago) ━━━
 Devuelve relatoVago en true SOLO cuando el relato no cuenta ninguna escena: no se sabe qué pasó, ni quién hizo qué, ni en qué momento. Son los desahogos sin hechos.
 - "estuvo difícil la tarde, no sé, todo mal" → true. No hay escena.
@@ -2139,7 +2144,7 @@ Sirven para resaltar dentro del párrafo la parte que corresponde a cada campo, 
 
 ━━━ FORMATO ━━━
 Responde SOLO con JSON puro. Sin markdown, sin bloques de código, sin texto antes ni después. Estructura exacta:
-{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","relatoVago":<true o false>,"parrafo":"<el párrafo>","citas":{"tipo":"<fragmento literal del párrafo>","emocion":"<fragmento literal del párrafo>","contexto":"<fragmento literal del párrafo>","cuandoPaso":"<fragmento literal del párrafo>"}}
+{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","fueraDeTema":<true o false>,"relatoVago":<true o false>,"parrafo":"<el párrafo>","citas":{"tipo":"<fragmento literal del párrafo>","emocion":"<fragmento literal del párrafo>","contexto":"<fragmento literal del párrafo>","cuandoPaso":"<fragmento literal del párrafo>"}}
 
 emocion, contexto y cuandoPaso van en null si el relato no los menciona.`
 
@@ -2232,6 +2237,9 @@ function normalizarExtraccion(raw) {
     // Solo un true explícito cuenta. Cualquier otra cosa —ausente, "true" como
     // texto, null— se lee como "el relato alcanza": repreguntar de más molesta
     // más que quedarse corto.
+    // Mismo criterio que relatoVago: solo un true explícito cuenta. Tratar un
+    // relato de verdad como fuera de tema es mucho peor que lo contrario.
+    fueraDeTema: raw.fueraDeTema === true,
     relatoVago: raw.relatoVago === true,
     parrafo: limpiar(raw.parrafo) || '',
     citas,

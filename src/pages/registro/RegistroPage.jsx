@@ -8,6 +8,7 @@ import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
+import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -617,7 +618,13 @@ export default function RegistroPage() {
                 aria-expanded={orientacionAbierta}
                 type="button"
               >
-                <span>Orientación completa</span>
+                <span className={styles.orientacionIcono} aria-hidden="true">
+                  <Escarabajo className={styles.orientacionEscarabajo} />
+                </span>
+                <span className={styles.orientacionTextos}>
+                  <span className={styles.orientacionTitulo}>Orientación completa</span>
+                  <span className={styles.orientacionSub}>Qué está pasando · qué hacer · qué evitar</span>
+                </span>
                 <ChevronDown
                   size={18}
                   className={`${styles.orientacionChevron} ${orientacionAbierta ? styles.orientacionChevronAbierto : ''}`}
