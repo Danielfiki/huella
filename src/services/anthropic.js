@@ -7,6 +7,106 @@ import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 // normal de generación de plan y mata cualquier cuelgue real.
 const TIMEOUT_MS = 75000
 
+// Igual que llamarAPI pero devolviendo el texto por pedazos: llama a `onTexto`
+// con el acumulado cada vez que el modelo escribe algo más.
+//
+// Existe porque la orientación tarda 15-20s en generarse entera, y el alivio
+// —que es lo primero que el padre lee después de contar algo difícil— quedaba
+// de rehén del resto del texto. Con esto empieza a leerse a los pocos segundos.
+//
+// Si el stream se corta a mitad NO lanza: devuelve lo que alcanzó a llegar. Un
+// texto incompleto sirve; perder lo que ya se leyó, no. El caller decide si con
+// eso basta o si cae al camino de error.
+async function llamarAPIStream(prompt, max_tokens, onTexto) {
+  const headers = { 'content-type': 'application/json' }
+
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  let response
+  try {
+    response = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ prompt, max_tokens, stream: true }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err?.name === 'AbortError') {
+      const e = new Error('La consulta está tardando demasiado. Intenta en unos minutos.')
+      e.code = 'servicio_inaccesible'
+      e.status = 0
+      throw e
+    }
+    const e = new Error('No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.')
+    e.code = 'red'
+    e.status = 0
+    throw e
+  }
+
+  // Los errores llegan como JSON normal: con stream el status viene antes que
+  // el primer byte del cuerpo, así que esto se comporta igual que llamarAPI.
+  if (!response.ok) {
+    clearTimeout(timeoutId)
+    let body = null
+    try { body = await response.json() } catch { /* body no-JSON */ }
+    const e = new Error(body?.error || 'Algo no funcionó al conectar con la IA. Inténtalo de nuevo.')
+    e.code = body?.code || 'error_servicio'
+    e.status = response.status
+    throw e
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let pendiente = ''   // línea SSE a medio llegar entre dos chunks
+  let texto = ''
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      pendiente += decoder.decode(value, { stream: true })
+      const lineas = pendiente.split('\n')
+      // La última puede estar cortada: se guarda para el chunk siguiente.
+      pendiente = lineas.pop() ?? ''
+
+      for (const linea of lineas) {
+        if (!linea.startsWith('data:')) continue
+        const crudo = linea.slice(5).trim()
+        if (!crudo || crudo === '[DONE]') continue
+
+        let evento
+        try { evento = JSON.parse(crudo) } catch { continue }
+
+        if (evento.type === 'content_block_delta' && evento.delta?.type === 'text_delta') {
+          texto += evento.delta.text
+          onTexto?.(texto)
+        }
+        // Anthropic manda los errores de mitad de stream como su propio evento.
+        if (evento.type === 'error') {
+          throw new Error(evento.error?.message || 'stream_error')
+        }
+      }
+    }
+  } catch (err) {
+    // Cortado a mitad. Lo recibido vale; el caller ve un texto más corto.
+    console.error('[anthropic] stream cortado:', err?.message)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+
+  return texto.trim()
+}
+
 async function llamarAPI(prompt, max_tokens) {
   const headers = { 'content-type': 'application/json' }
 
@@ -702,11 +802,15 @@ export async function generarAccionInmediata({ hijo, episodio, ultimoAutorUsado 
   // 2. Voz del prompt según el bucket. Cada bucket tiene una apertura modelo
   //    distinta para que la primera frase no se repita entre versiones del
   //    mismo episodio reabierto en distintos momentos.
+  // Cada bucket define QUÉ TIPO de acción cabe según el tiempo transcurrido.
+  // Antes traía además una "apertura modelo" con anclaje emocional, y de ahí
+  // salía literal "Esto está caliente todavía" — que además de invadir el
+  // terreno del alivio, lo contradecía: el alivio cierra con "ya pasó".
   const VOZ_POR_BUCKET = {
-    inmediato: 'Acaba de pasar — voz en presente activo. Apertura tipo "Esto está caliente todavía." o "Esto está pasando ahora y eso es agotador." La acción es física, concreta, ejecutable en los próximos 2 minutos. Verbos en imperativo presente: acércate, baja, respira, ofrece.',
-    reciente:  'Pasó hace algunas horas — voz reflexiva cercana. Apertura tipo "Lo que probablemente necesitaba era…" o "Ya pasó, pero quedó dando vueltas." La acción es un gesto de reparación o de nombrar lo vivido. Verbos: pudiste, podrías, conviene.',
-    dia:       'Pasó hoy más temprano — voz de aprendizaje del día. Apertura tipo "Mirando lo que pasó hoy…" o "Hoy, con calma, se ve más claro que…" La acción es interpretación + un gesto suave para hoy mismo. Sin urgencia.',
-    pasado:    'Pasó hace más de un día — voz de aprendizaje para futuro. Apertura tipo "La próxima vez que algo así pase…" o "Esto ya quedó atrás, lo que sirve mirar hoy es…" La acción es preparación / aprendizaje, no intervención sobre algo en curso.',
+    inmediato: 'Acaba de pasar. Un gesto físico o verbal ejecutable en los próximos 2 minutos. Imperativo presente: acércate, baja, respira, ofrece.',
+    reciente:  'Pasó hace algunas horas. Un gesto de reparación o de nombrar lo vivido, ya no una intervención en caliente.',
+    dia:       'Pasó hoy más temprano. Un gesto suave para hoy mismo, sin urgencia.',
+    pasado:    'Pasó hace más de un día. Preparación para la próxima vez, no intervención sobre algo en curso.',
   }
   const vozBucket = VOZ_POR_BUCKET[bucket] || VOZ_POR_BUCKET.inmediato
 
@@ -738,16 +842,23 @@ Bucket: ${bucket}. ${vozBucket}
 
 LENTE TEÓRICA YA ELEGIDA POR EL SISTEMA (no la cambies, no la inventes, no nombres al autor, no nombres la dimensión clínica)
 - Enfoque: ${lente}
-${articulacion ? `- Ángulo a integrar en la frase final: "${articulacion}"` : ''}
+${articulacion ? `- Ángulo que orienta qué acción elegir: "${articulacion}". Es una guía para ti, no una frase para citar ni explicar.` : ''}
 
 TAREA
-Escribe la Acción Rápida en español neutro/chileno con tuteo. Estructura de 3 partes integradas en prosa fluida (no listas, no saltos de línea):
-1. Anclaje emocional — 1 frase corta calibrada al bucket de tiempo (ver Voz arriba).
-2. Acción o reflexión concreta — 2 a 3 frases. Para bucket inmediato: gesto físico/verbal específico ejecutable ahora. Para reciente: gesto de reparación. Para día: nombrar lo vivido + gesto suave para hoy. Para pasado: aprendizaje para la próxima vez.
-3. Anclaje teórico — 1 frase que integre el "Ángulo a integrar" cuando exista, o que articule el enfoque de la lente. Sin nombrar al autor, sin firma. El cliente pone la firma "— Autor · Lente" aparte.
+Escribe la Acción Rápida en español neutro/chileno con tuteo: 2 o 3 frases en prosa fluida (no listas, no saltos de línea) que digan QUÉ HACER o QUÉ DECIR, y nada más.
+
+- Empieza directo por la acción, en imperativo. Nada de preámbulo.
+- Puedes dar palabras textuales para decirle ${articulo === 'la' ? 'a ella' : 'al ' + genero}, entre comillas.
+- La lente de arriba decide QUÉ acción sugieres. No se explica ni se menciona: se nota en la acción elegida.
+
+ESTO NO VA ACÁ (cada cosa tiene su lugar en la pantalla, y este no es)
+- NO comentes ni valides cómo se siente el padre o la madre, ni cómo estaba el ambiente. De eso se encarga la sección de alivio, que va JUSTO ARRIBA de esta tarjeta, y repetirlo suena a eco. Peor: el alivio cierra diciendo que ya pasó, así que abrir con que la cosa sigue caliente lo contradice.
+- NO expliques por qué ${pronombre} se comportó así, ni qué significa su conducta. De eso se encarga la orientación completa, que va abajo.
+- NO cierres con aforismos, sentencias ni frases de sabiduría general.
+- PROHIBIDO NEGAR PARA AFIRMAR: nada de "no es X, es Y", "eso no fue X, fue Y" ni ninguna variante. Afirma directo.
 
 REGLAS DURAS
-- Largo total entre 40 y 70 palabras. Cuenta antes de devolver.
+- Largo total entre 30 y 60 palabras. Cuenta antes de devolver. Si te sobra espacio no lo rellenes: se corta antes.
 - Cero markdown: nada de #, *, _, listas con guion ni numeración.
 - Cero "Ahora mismo:" literal como apertura.
 - Cero diagnóstico clínico del hijo/a ni del adulto.
@@ -913,7 +1024,10 @@ function construirFallback({ bucket, lente, articulacion }) {
   return `${apertura} Por ahora, quédate cerca, regula tu propio cuerpo primero y desde ahí responde. ${cierre.charAt(0).toUpperCase()}${cierre.slice(1)}.`
 }
 
-export async function analizarEpisodio({ hijo, episodio, historialReciente = [], bloqueRutina = null }) {
+// `onTexto` opcional: si viene, la respuesta llega por streaming y se va
+// avisando el acumulado a medida que el modelo escribe. Sin él se comporta como
+// siempre y devuelve el texto entero al final.
+export async function analizarEpisodio({ hijo, episodio, historialReciente = [], bloqueRutina = null, onTexto = null }) {
   const marco = marcoEdad(hijo?.edad)
 
   const contexto = historialReciente.length > 0
@@ -968,7 +1082,9 @@ Qué evitar
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 1400)
+  return onTexto
+    ? llamarAPIStream(prompt, 1400, onTexto)
+    : llamarAPI(prompt, 1400)
 }
 
 // teaser=true (plan free): genera SOLO la sección "Lo que está mejorando" con

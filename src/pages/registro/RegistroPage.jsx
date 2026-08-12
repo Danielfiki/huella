@@ -499,13 +499,27 @@ export default function RegistroPage() {
     if (!args) return
     setLoadingIA(true)
     setErrorOrientacion(false)
+    setRespuestaIA('')
     try {
       const texto = await analizarEpisodio({
         hijo: state.hijo,
         episodio: args.episodio,
         historialReciente: args.historial,
         bloqueRutina: args.bloqueRutina,
+        // Va llegando por pedazos: el alivio se empieza a leer a los pocos
+        // segundos en vez de esperar a que se genere el texto entero.
+        onTexto: setRespuestaIA,
       })
+
+      // Un stream cortado devuelve lo que alcanzó a llegar. Si trae algo, se
+      // queda: media orientación se lee, y borrarla para mostrar un error sería
+      // quitarle al padre algo que ya estaba leyendo. Solo si no llegó nada se
+      // cae al camino de error.
+      if (!texto.trim()) {
+        setErrorOrientacion(true)
+        return
+      }
+
       setRespuestaIA(texto)
       if (args.episodioId) {
         // Solo persistimos cuando la orientación fue exitosa — nunca
@@ -570,7 +584,9 @@ export default function RegistroPage() {
               </Button>
             </Card>
           ) : (
-            <AlivioHuella texto={alivio} cargando={loadingIA} />
+            // Los puntitos solo hasta que empieza a llegar texto; de ahí en
+            // adelante el alivio se va escribiendo solo en la burbuja.
+            <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
           )}
 
           {mostrarAccion && (
@@ -590,7 +606,10 @@ export default function RegistroPage() {
             )
           )}
 
-          {resto && !errorOrientacion && (
+          {/* El plegable espera a que el stream termine. Mientras el texto
+              fluye, `resto` va cambiando de tamaño y aparecer ahí haría saltar
+              el layout justo debajo de lo que el padre está leyendo. */}
+          {resto && !loadingIA && !errorOrientacion && (
             <div className={styles.orientacionPlegable}>
               <button
                 className={styles.orientacionToggle}

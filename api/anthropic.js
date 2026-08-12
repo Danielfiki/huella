@@ -242,7 +242,7 @@ export default async function handler(req, res) {
     })
   }
 
-  const { prompt, max_tokens = 700, system } = req.body
+  const { prompt, max_tokens = 700, system, stream = false } = req.body
   if (!prompt) {
     return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
@@ -275,6 +275,7 @@ export default async function handler(req, res) {
           },
         ],
         messages: [{ role: 'user', content: prompt }],
+        ...(stream ? { stream: true } : {}),
       }),
     })
   } catch (err) {
@@ -334,6 +335,38 @@ export default async function handler(req, res) {
       error: 'Algo no funcionó al conectar con la IA. Inténtalo de nuevo.',
       code: 'error_servicio',
     })
+  }
+
+  // ── Streaming ──
+  // Se reenvía el SSE de Anthropic tal cual y el cliente lo parsea. Todo el
+  // manejo de errores de arriba ya corrió: con stream la respuesta trae su
+  // status de inmediato, así que un 401 o un 429 caen en el mismo camino que
+  // siempre y nunca llegan acá.
+  if (stream) {
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+    res.setHeader('Cache-Control', 'no-cache, no-transform')
+    res.setHeader('Connection', 'keep-alive')
+    // Sin esto algún proxy puede juntar los chunks y entregar todo al final,
+    // que es exactamente lo que el streaming viene a evitar.
+    res.setHeader('X-Accel-Buffering', 'no')
+    // Los headers salen ya, sin esperar al primer chunk: el cliente abre el
+    // lector de inmediato en vez de quedarse esperando la respuesta.
+    res.flushHeaders?.()
+
+    const reader = response.body.getReader()
+    try {
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        res.write(value)
+      }
+    } catch (err) {
+      // Se cortó a media transmisión. Lo que ya viajó es válido y el cliente se
+      // queda con eso; acá solo se cierra sin ensuciar el stream con un JSON de
+      // error que el parser del cliente no espera.
+      console.error('[anthropic] stream interrumpido:', err?.message)
+    }
+    return res.end()
   }
 
   const data = await response.json()
