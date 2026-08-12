@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Keyboard, Check } from 'lucide-react'
+import { Keyboard, Check, Mic, ArrowUp } from 'lucide-react'
 import Escarabajo from '../ui/Escarabajo'
 import VoiceTextarea from '../ui/VoiceTextarea'
 import Button from '../ui/Button'
@@ -23,6 +23,11 @@ import styles from './RegistroConversacional.module.css'
 // ──────────────────────────────────────────────────────────────────────
 
 const CAMPOS = ['tipo', 'emocion', 'contexto', 'cuandoPaso']
+
+// Lo que Huella pregunta cuando el relato no tiene escena. Pide UN momento, no
+// más datos: es lo único que hace falta para poder orientar, y es más fácil de
+// contestar que "dame más detalles".
+const PREGUNTA_VAGO = 'Te escucho. ¿Me cuentas el momento más difícil, ese que se te quedó pegado?'
 
 // Lo tocable dentro del párrafo es un span, no un button, y eso NO es un
 // descuido: WebKit ignora `display: inline` en los botones y los trata como
@@ -144,10 +149,22 @@ export default function RegistroConversacional({
   guardando = false,
   errorGuardar = '',
 }) {
-  // narrar → (extrayendo) → validar
+  // narrar → (extrayendo) → [repregunta → (extrayendo)] → validar
   const [fase, setFase] = useState('narrar')
   const [transcripcion, setTranscripcion] = useState('')
-  const [modoEscritura, setModoEscritura] = useState(false)
+  const [modoChat, setModoChat] = useState(false)
+  const [borrador, setBorrador] = useState('')
+
+  // El hilo visible: lo que dijo el padre y lo que respondió Huella, en orden.
+  // La burbuja de bienvenida no vive acá, se renderiza fija al principio.
+  const [mensajes, setMensajes] = useState([])
+
+  // Una repregunta por episodio y no más. Si el relato sigue vago después de
+  // preguntar, se pasa a validar igual: insistir dos veces es un interrogatorio.
+  const [yaRepregunto, setYaRepregunto] = useState(false)
+  // Lo que devolvió la primera pasada, por si el padre elige seguir sin
+  // contestar: se usa eso en vez de tirar la extracción a la basura.
+  const extraccionPreviaRef = useRef(null)
 
   // Lo que quedó del episodio. Arranca vacío y lo llena la extracción o el padre.
   const [tipo, setTipo] = useState('')
@@ -173,34 +190,88 @@ export default function RegistroConversacional({
   // un círculo vacío se vería como una foto que no cargó.
   const inicialPadre = (padreNombre || '').trim().charAt(0).toUpperCase() || '—'
 
-  // ── Paso de narrar a validar ──
+  // ── El hilo ──
+
+  // Suma lo que dijo el padre: al hilo visible y al relato acumulado. Devuelve
+  // el acumulado para que quien llama decida si ya procesa o espera más.
+  function recibirDelPadre(texto) {
+    const limpio = (texto || '').trim()
+    if (!limpio) return ''
+
+    setMensajes((prev) => [...prev, { de: 'padre', texto: limpio }])
+    const todo = transcripcionRef.current
+      ? `${transcripcionRef.current}\n\n${limpio}`
+      : limpio
+    // Se guarda antes de cualquier llamada: pase lo que pase, el relato queda.
+    transcripcionRef.current = todo
+    setTranscripcion(todo)
+    return todo
+  }
+
+  function aplicarExtraccion(r) {
+    setTipo(r.tipo || '')
+    setEmocion(r.emocion?.especifica || null)
+    setContexto(r.contexto || '')
+    setCuandoPaso(r.cuandoPaso || '')
+    setParrafo(r.parrafo || '')
+    setCitas(r.citas || {})
+    setSinOrdenar(false)
+  }
+
+  // ── Paso de narrar a validar, con parada opcional en la repregunta ──
   async function procesarRelato(texto) {
     const limpio = (texto || '').trim()
     if (!limpio) return
 
-    // Se guarda antes de cualquier llamada: pase lo que pase, el relato queda.
     transcripcionRef.current = limpio
     setTranscripcion(limpio)
     setFase('extrayendo')
 
+    // Se lee antes del await: si esta es la segunda pasada, lo que diga
+    // relatoVago ya no importa.
+    const esSegundaPasada = yaRepregunto
+
     try {
       const r = await extraerEpisodio({ transcripcion: limpio, hijo })
-      setTipo(r.tipo || '')
-      setEmocion(r.emocion?.especifica || null)
-      setContexto(r.contexto || '')
-      setCuandoPaso(r.cuandoPaso || '')
-      setParrafo(r.parrafo || '')
-      setCitas(r.citas || {})
-      setSinOrdenar(false)
+
+      if (r.relatoVago && !esSegundaPasada) {
+        extraccionPreviaRef.current = r
+        setYaRepregunto(true)
+        setMensajes((prev) => [...prev, { de: 'huella', texto: PREGUNTA_VAGO }])
+        setFase('repregunta')
+        return
+      }
+
+      aplicarExtraccion(r)
     } catch {
       // Sin rojo y sin alarma: el relato está a salvo y se sigue igual,
-      // solo que las fichas las llena el padre.
+      // solo que las fichas las llena el padre. Vale para las dos pasadas.
       setSinOrdenar(true)
       setParrafo('')
       setCitas({})
-    } finally {
-      setFase('validar')
     }
+    setFase('validar')
+  }
+
+  // Llega texto del padre. En voz se procesa al toque, porque el dictado ya
+  // terminó; en chat se acumula y espera, porque puede seguir escribiendo.
+  function recibirVoz(texto) {
+    const todo = recibirDelPadre(texto)
+    if (todo) procesarRelato(todo)
+  }
+
+  function enviarChat() {
+    recibirDelPadre(borrador)
+    setBorrador('')
+  }
+
+  // "Prefiero seguir así": se valida con lo que dio la primera pasada. Si esa
+  // pasada no dejó nada usable, se cae al camino degradado, nunca a un muro.
+  function seguirSinResponder() {
+    const previa = extraccionPreviaRef.current
+    if (previa) aplicarExtraccion(previa)
+    else setSinOrdenar(true)
+    setFase('validar')
   }
 
   function confirmar() {
@@ -225,9 +296,13 @@ export default function RegistroConversacional({
     })
   }
 
-  // ════════ P1 · NARRAR ════════
-  if (fase === 'narrar' || fase === 'extrayendo') {
+  // ════════ P1 · NARRAR (y P1.5 · REPREGUNTA) ════════
+  if (fase !== 'validar') {
     const extrayendo = fase === 'extrayendo'
+    const repreguntando = fase === 'repregunta'
+    // El CTA de procesar solo aparece cuando ya hay algo escrito: antes del
+    // primer mensaje no hay nada que cerrar.
+    const hayRelato = !!transcripcion.trim()
 
     return (
       <div className={styles.pantalla}>
@@ -236,7 +311,7 @@ export default function RegistroConversacional({
           <h2 className={styles.titulo}>{nombre}</h2>
         </div>
 
-        <div className={styles.hilo}>
+        <div className={styles.hiloScroll}>
           <div className={styles.filaHuella}>
             <span className={styles.avatarHuella} aria-hidden="true">
               <Escarabajo className={styles.avatarSvg} />
@@ -249,14 +324,23 @@ export default function RegistroConversacional({
             </div>
           </div>
 
-          {extrayendo && (
-            <div className={styles.filaPadre}>
+          {mensajes.map((m, i) => m.de === 'padre' ? (
+            <div className={styles.filaPadre} key={i}>
               <div className={styles.burbujaPadre}>
-                <p className={styles.relato}>{transcripcion}</p>
+                <p className={styles.relato}>{m.texto}</p>
               </div>
               <span className={styles.avatarPadre} aria-hidden="true">{inicialPadre}</span>
             </div>
-          )}
+          ) : (
+            <div className={styles.filaHuella} key={i}>
+              <span className={styles.avatarHuella} aria-hidden="true">
+                <Escarabajo className={styles.avatarSvg} />
+              </span>
+              <div className={styles.burbujaHuella}>
+                <p className={styles.pregunta}>{m.texto}</p>
+              </div>
+            </div>
+          ))}
 
           {extrayendo && (
             <div className={styles.filaHuella}>
@@ -274,35 +358,52 @@ export default function RegistroConversacional({
 
         {!extrayendo && (
           <div className={styles.zonaEntrada}>
-            {modoEscritura ? (
+            {modoChat ? (
               <div className={styles.escrituraWrap}>
-                <VoiceTextarea
-                  value={transcripcion}
-                  onChange={setTranscripcion}
-                  onVoiceResult={setTranscripcion}
-                  placeholder="Cuéntame qué pasó, con tus palabras…"
-                />
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  onClick={() => procesarRelato(transcripcion)}
-                  disabled={!transcripcion.trim()}
-                >
-                  Continuar
-                </Button>
-                <button className={styles.pillSecundaria} onClick={() => setModoEscritura(false)}>
-                  Volver a la voz
+                <div className={styles.barraChat}>
+                  <textarea
+                    className={styles.campoChat}
+                    value={borrador}
+                    onChange={(e) => setBorrador(e.target.value)}
+                    placeholder={repreguntando ? 'Cuéntame ese momento…' : 'Sigue contándome…'}
+                    rows={1}
+                  />
+                  <button
+                    className={styles.enviarChat}
+                    onClick={enviarChat}
+                    disabled={!borrador.trim()}
+                    type="button"
+                    aria-label="Enviar"
+                  >
+                    <ArrowUp size={18} />
+                  </button>
+                </div>
+
+                {hayRelato && (
+                  <Button variant="primary" size="lg" fullWidth onClick={() => procesarRelato(transcripcion)}>
+                    Listo, eso fue
+                  </Button>
+                )}
+
+                <button className={styles.pillSecundaria} onClick={() => setModoChat(false)} type="button">
+                  <Mic size={15} />
+                  Volver a hablar
                 </button>
               </div>
             ) : (
               <>
-                <GrabadorVoz onTexto={procesarRelato} />
-                <button className={styles.pillSecundaria} onClick={() => setModoEscritura(true)}>
+                <GrabadorVoz onTexto={recibirVoz} />
+                <button className={styles.pillSecundaria} onClick={() => setModoChat(true)} type="button">
                   <Keyboard size={15} />
                   Modo chat
                 </button>
               </>
+            )}
+
+            {repreguntando && (
+              <button className={styles.linkEditar} onClick={seguirSinResponder} type="button">
+                Prefiero seguir así
+              </button>
             )}
           </div>
         )}
@@ -453,11 +554,13 @@ export default function RegistroConversacional({
 function GrabadorVoz({ onTexto }) {
   const [texto, setTexto] = useState('')
 
-  // Cuando VoiceTextarea confirma la transcripción, se pasa directo al
-  // siguiente paso: en este flujo no hay nada más que escribir.
+  // Cada dictado se entrega SOLO, sin arrastrar el anterior: por eso se le pasa
+  // '' al actualizador de VoiceTextarea, que por defecto concatena con lo que
+  // ya había. Quien acumula el relato es el hilo, y si acá también se
+  // concatenara, el segundo dictado entraría dos veces.
   function recibir(actualizador) {
-    const valor = typeof actualizador === 'function' ? actualizador(texto) : actualizador
-    setTexto(valor)
+    const valor = typeof actualizador === 'function' ? actualizador('') : actualizador
+    setTexto('')
     onTexto(valor)
   }
 

@@ -2001,6 +2001,14 @@ Es lo que el padre va a leer para confirmar que entendiste. Reglas:
 - El relato viene de un dictado por voz y la última palabra puede llegar cortada ("dif" por "difícil", "compl" por "complicado"). Si es evidente cuál era, complétala; si no lo es, omítela. Nunca inventes contenido para rellenar.
 - Español latinoamericano neutro con TUTEO. Prohibido el voseo (vos, tenés, podés, decile).
 
+━━━ ¿EL RELATO ALCANZA? (relatoVago) ━━━
+Devuelve relatoVago en true SOLO cuando el relato no cuenta ninguna escena: no se sabe qué pasó, ni quién hizo qué, ni en qué momento. Son los desahogos sin hechos.
+- "estuvo difícil la tarde, no sé, todo mal" → true. No hay escena.
+- "anda insoportable últimamente" → true. Es un juicio, no algo que pasó.
+- "se tiró al suelo gritando cuando le dije que no" → false. Hay escena, aunque falten datos.
+- "lloró como media hora en la noche" → false. Hay escena.
+Que falten campos NO lo hace vago: un relato puede dejar emoción, contexto y momento en null y aun así contar perfectamente qué pasó. Ante la duda, false.
+
 ━━━ LAS CITAS ━━━
 Sirven para resaltar dentro del párrafo la parte que corresponde a cada campo, así el padre puede tocarla si no calza. Por eso:
 - Cada cita tiene que ser un FRAGMENTO LITERAL DEL PÁRRAFO que acabas de escribir, copiado carácter por carácter. No del relato original: del párrafo. Si no aparece igual en el párrafo, no sirve.
@@ -2010,7 +2018,7 @@ Sirven para resaltar dentro del párrafo la parte que corresponde a cada campo, 
 
 ━━━ FORMATO ━━━
 Responde SOLO con JSON puro. Sin markdown, sin bloques de código, sin texto antes ni después. Estructura exacta:
-{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","parrafo":"<el párrafo>","citas":{"tipo":"<fragmento literal del párrafo>","emocion":"<fragmento literal del párrafo>","contexto":"<fragmento literal del párrafo>","cuandoPaso":"<fragmento literal del párrafo>"}}
+{"tipo":"<id>","emocion":{"categoria":"<label de categoría>","especifica":"<específica exacta>"},"contexto":"<frase corta de qué estaba pasando antes>","cuandoPaso":"<id>","relatoVago":<true o false>,"parrafo":"<el párrafo>","citas":{"tipo":"<fragmento literal del párrafo>","emocion":"<fragmento literal del párrafo>","contexto":"<fragmento literal del párrafo>","cuandoPaso":"<fragmento literal del párrafo>"}}
 
 emocion, contexto y cuandoPaso van en null si el relato no los menciona.`
 
@@ -2100,6 +2108,10 @@ function normalizarExtraccion(raw) {
     emocion,
     contexto: limpiar(raw.contexto),
     cuandoPaso,
+    // Solo un true explícito cuenta. Cualquier otra cosa —ausente, "true" como
+    // texto, null— se lee como "el relato alcanza": repreguntar de más molesta
+    // más que quedarse corto.
+    relatoVago: raw.relatoVago === true,
     parrafo: limpiar(raw.parrafo) || '',
     citas,
   }
