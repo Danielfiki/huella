@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Keyboard, Check, Mic, ArrowUp } from 'lucide-react'
 import Escarabajo from '../ui/Escarabajo'
 import VoiceTextarea from '../ui/VoiceTextarea'
@@ -9,17 +9,23 @@ import { TIPOS, INTENSIDADES, CUANDO_OPCIONES, labelTipo, labelCuando } from '..
 import styles from './RegistroConversacional.module.css'
 
 // ──────────────────────────────────────────────────────────────────────
-// REGISTRO CONVERSACIONAL — Fase 1
+// REGISTRO CONVERSACIONAL
 //
-// Reemplaza el formulario del modo rápido por dos momentos:
-//   P1 narrar   — el padre cuenta por voz; Huella escucha.
-//   P2 validar  — Huella devuelve un párrafo con las palabras del padre y
-//                 él toca lo que no calza.
+// Reemplaza el formulario del modo rápido por una conversación:
+//   narrar     — el padre cuenta, por voz o escribiendo; Huella escucha.
+//   repregunta — solo si el relato no contó ninguna escena. Una y no más.
+//   validar    — Huella devuelve un párrafo con las palabras del padre y
+//                él toca lo que no calza.
+//
+// No son pantallas: son momentos de UN hilo que nunca se borra. El párrafo
+// de validación entra como una burbuja más al final, y arriba siguen todas
+// las burbujas de la conversación que llevó hasta ahí.
 //
 // La regla que ordena todo el componente: EL RELATO NO SE PIERDE NUNCA.
-// Vive en `transcripcion` desde que se dicta y sobrevive a cualquier fallo
-// de la extracción; si la IA se cae, P2 igual abre con el relato arriba y
-// fichas vacías. El guardado tampoco se bloquea: basta relato + intensidad.
+// Vive en `transcripcionRef` desde que se dicta y sobrevive a cualquier
+// fallo de la extracción; si la IA se cae, la validación abre igual con el
+// hilo intacto y fichas vacías. El guardado tampoco se bloquea: basta
+// relato + intensidad.
 // ──────────────────────────────────────────────────────────────────────
 
 const CAMPOS = ['tipo', 'emocion', 'contexto', 'cuandoPaso']
@@ -151,7 +157,9 @@ export default function RegistroConversacional({
 }) {
   // narrar → (extrayendo) → [repregunta → (extrayendo)] → validar
   const [fase, setFase] = useState('narrar')
-  const [transcripcion, setTranscripcion] = useState('')
+  // El relato acumulado vive solo en `transcripcionRef`: ahora que las burbujas
+  // se pintan desde `mensajes`, nadie lee el texto fusionado, y tenerlo también
+  // como estado era re-renderizar de gratis.
   const [modoChat, setModoChat] = useState(false)
   const [borrador, setBorrador] = useState('')
 
@@ -183,6 +191,15 @@ export default function RegistroConversacional({
   const [campoEditando, setCampoEditando] = useState(null)
 
   const transcripcionRef = useRef('')
+  const hiloRef = useRef(null)
+
+  // Scroll de chat: cada burbuja nueva se asoma sola. Se dispara también con la
+  // fase porque los puntos de "está leyendo" y el párrafo de validación entran
+  // sin agregar nada a `mensajes`.
+  useEffect(() => {
+    const el = hiloRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [mensajes, fase])
 
   const nombre = hijo?.nombre || 'tu hijo'
   // La app no guarda foto del cuidador (la tabla `perfiles` solo tiene nombre y
@@ -204,7 +221,7 @@ export default function RegistroConversacional({
       : limpio
     // Se guarda antes de cualquier llamada: pase lo que pase, el relato queda.
     transcripcionRef.current = todo
-    setTranscripcion(todo)
+
     return todo
   }
 
@@ -224,7 +241,7 @@ export default function RegistroConversacional({
     if (!limpio) return
 
     transcripcionRef.current = limpio
-    setTranscripcion(limpio)
+
     setFase('extrayendo')
 
     // Se lee antes del await: si esta es la segunda pasada, lo que diga
@@ -260,14 +277,14 @@ export default function RegistroConversacional({
     if (todo) procesarRelato(todo)
   }
 
+  // Enviar es enviar: se procesa al toque, igual que la voz al confirmar el
+  // dictado. No hay botón de "ya terminé" porque no hace falta: si el relato
+  // alcanza, sale el párrafo; y si quedó corto, la repregunta es justamente la
+  // invitación a seguir contando. La conversación no espera a un botón.
   function enviarChat() {
     const todo = recibirDelPadre(borrador)
     setBorrador('')
-    // Contestando una pregunta de Huella, enviar YA es terminar: ella preguntó,
-    // el padre respondió, y pedirle un segundo toque para confirmar corta la
-    // conversación justo donde debería fluir sola. Acumular varios mensajes
-    // solo tiene sentido en el relato inicial, cuando nadie preguntó nada.
-    if (todo && fase === 'repregunta') procesarRelato(todo)
+    if (todo) procesarRelato(todo)
   }
 
   // "Prefiero seguir así": se valida con lo que dio la primera pasada. Si esa
@@ -301,123 +318,15 @@ export default function RegistroConversacional({
     })
   }
 
-  // ════════ P1 · NARRAR (y P1.5 · REPREGUNTA) ════════
-  if (fase !== 'validar') {
-    const extrayendo = fase === 'extrayendo'
-    const repreguntando = fase === 'repregunta'
-    // El CTA de procesar es solo para el relato inicial: aparece cuando ya hay
-    // algo escrito, y nunca en la repregunta, donde enviar ya procesa.
-    const mostrarCierre = !!transcripcion.trim() && !repreguntando
-
-    return (
-      <div className={styles.pantalla}>
-        <div className={styles.top}>
-          <button className={styles.volver} onClick={onVolver} aria-label="Volver">←</button>
-          <h2 className={styles.titulo}>{nombre}</h2>
-        </div>
-
-        <div className={styles.hiloScroll}>
-          <div className={styles.filaHuella}>
-            <span className={styles.avatarHuella} aria-hidden="true">
-              <Escarabajo className={styles.avatarSvg} />
-            </span>
-            <div className={styles.burbujaHuella}>
-              <p className={styles.pregunta}>¿Qué pasó con {nombre}?</p>
-              <p className={styles.subtexto}>
-                Cuéntamelo como se lo contarías a una amiga. Sin orden, sin filtro.
-              </p>
-            </div>
-          </div>
-
-          {mensajes.map((m, i) => m.de === 'padre' ? (
-            <div className={styles.filaPadre} key={i}>
-              <div className={styles.burbujaPadre}>
-                <p className={styles.relato}>{m.texto}</p>
-              </div>
-              <span className={styles.avatarPadre} aria-hidden="true">{inicialPadre}</span>
-            </div>
-          ) : (
-            <div className={styles.filaHuella} key={i}>
-              <span className={styles.avatarHuella} aria-hidden="true">
-                <Escarabajo className={styles.avatarSvg} />
-              </span>
-              <div className={styles.burbujaHuella}>
-                <p className={styles.pregunta}>{m.texto}</p>
-              </div>
-            </div>
-          ))}
-
-          {extrayendo && (
-            <div className={styles.filaHuella}>
-              <span className={styles.avatarHuella} aria-hidden="true">
-                <Escarabajo className={styles.avatarSvg} />
-              </span>
-              <div className={styles.burbujaHuella}>
-                <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
-                  <i /><i /><i />
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {!extrayendo && (
-          <div className={styles.zonaEntrada}>
-            {modoChat ? (
-              <div className={styles.escrituraWrap}>
-                <div className={styles.barraChat}>
-                  <textarea
-                    className={styles.campoChat}
-                    value={borrador}
-                    onChange={(e) => setBorrador(e.target.value)}
-                    placeholder={repreguntando ? 'Cuéntame ese momento…' : 'Sigue contándome…'}
-                    rows={1}
-                  />
-                  <button
-                    className={styles.enviarChat}
-                    onClick={enviarChat}
-                    disabled={!borrador.trim()}
-                    type="button"
-                    aria-label="Enviar"
-                  >
-                    <ArrowUp size={18} />
-                  </button>
-                </div>
-
-                {mostrarCierre && (
-                  <Button variant="primary" size="lg" fullWidth onClick={() => procesarRelato(transcripcion)}>
-                    Listo, eso fue
-                  </Button>
-                )}
-
-                <button className={styles.pillSecundaria} onClick={() => setModoChat(false)} type="button">
-                  <Mic size={15} />
-                  Volver a hablar
-                </button>
-              </div>
-            ) : (
-              <>
-                <GrabadorVoz onTexto={recibirVoz} />
-                <button className={styles.pillSecundaria} onClick={() => setModoChat(true)} type="button">
-                  <Keyboard size={15} />
-                  Modo chat
-                </button>
-              </>
-            )}
-
-            {repreguntando && (
-              <button className={styles.linkEditar} onClick={seguirSinResponder} type="button">
-                Prefiero seguir así
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ════════ P2 · VALIDAR ════════
-  const puedeGuardar = !!intensidad && !guardando
+  // ════════ RENDER ════════
+  // Una sola pantalla para todo el flujo. Validar NO es otra vista: es una
+  // burbuja más al final del mismo hilo. Separarlas hacía que al validar
+  // desaparecieran la repregunta y las burbujas del padre, y la conversación
+  // que se venía teniendo se borraba justo en el momento de confirmarla.
+  const extrayendo    = fase === 'extrayendo'
+  const repreguntando = fase === 'repregunta'
+  const validando     = fase === 'validar'
+  const puedeGuardar  = !!intensidad && !guardando
 
   // El párrafo es la pantalla: los datos entendidos se leen dentro del texto,
   // no como fichas al lado. Lo que no alcanzó a quedar dentro del párrafo se
@@ -440,13 +349,51 @@ export default function RegistroConversacional({
         <h2 className={styles.titulo}>{nombre}</h2>
       </div>
 
-      <div className={styles.hiloScroll}>
-        <div className={styles.filaPadre}>
-          <div className={styles.burbujaPadre}>
-            <p className={styles.relato}>{transcripcion}</p>
+      <div className={styles.hiloScroll} ref={hiloRef}>
+        <div className={styles.filaHuella}>
+          <span className={styles.avatarHuella} aria-hidden="true">
+            <Escarabajo className={styles.avatarSvg} />
+          </span>
+          <div className={styles.burbujaHuella}>
+            <p className={styles.pregunta}>¿Qué pasó con {nombre}?</p>
+            <p className={styles.subtexto}>
+              Cuéntamelo como se lo contarías a una amiga. Sin orden, sin filtro.
+            </p>
           </div>
         </div>
 
+        {mensajes.map((m, i) => m.de === 'padre' ? (
+          <div className={styles.filaPadre} key={i}>
+            <div className={styles.burbujaPadre}>
+              <p className={styles.relato}>{m.texto}</p>
+            </div>
+            <span className={styles.avatarPadre} aria-hidden="true">{inicialPadre}</span>
+          </div>
+        ) : (
+          <div className={styles.filaHuella} key={i}>
+            <span className={styles.avatarHuella} aria-hidden="true">
+              <Escarabajo className={styles.avatarSvg} />
+            </span>
+            <div className={styles.burbujaHuella}>
+              <p className={styles.pregunta}>{m.texto}</p>
+            </div>
+          </div>
+        ))}
+
+        {extrayendo && (
+          <div className={styles.filaHuella}>
+            <span className={styles.avatarHuella} aria-hidden="true">
+              <Escarabajo className={styles.avatarSvg} />
+            </span>
+            <div className={styles.burbujaHuella}>
+              <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
+                <i /><i /><i />
+              </span>
+            </div>
+          </div>
+        )}
+
+        {validando && (
         <div className={styles.filaHuella}>
           <span className={styles.avatarHuella} aria-hidden="true">
             <Escarabajo className={styles.avatarSvg} />
@@ -498,39 +445,90 @@ export default function RegistroConversacional({
             )}
           </div>
         </div>
+        )}
 
-        <div className={styles.tarjetaIntensidad}>
-          <p className={styles.labelIntensidad}>Intensidad — la pones tú</p>
-          <div className={styles.intensidadGrid}>
-            {INTENSIDADES.map((op) => (
-              <button
-                key={op.valor}
-                className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadBtnOn : ''}`}
-                onClick={() => setIntensidad(op.valor)}
-                type="button"
-              >
-                <span className={styles.intensidadEmoji}>{op.emoji}</span>
-                <span className={styles.intensidadLabel}>{op.label}</span>
-              </button>
-            ))}
+        {validando && (
+          <div className={styles.tarjetaIntensidad}>
+            <p className={styles.labelIntensidad}>Intensidad — la pones tú</p>
+            <div className={styles.intensidadGrid}>
+              {INTENSIDADES.map((op) => (
+                <button
+                  key={op.valor}
+                  className={`${styles.intensidadBtn} ${intensidad === op.valor ? styles.intensidadBtnOn : ''}`}
+                  onClick={() => setIntensidad(op.valor)}
+                  type="button"
+                >
+                  <span className={styles.intensidadEmoji}>{op.emoji}</span>
+                  <span className={styles.intensidadLabel}>{op.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className={styles.pieAcciones}>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          onClick={confirmar}
-          disabled={!puedeGuardar}
-          loading={guardando}
-        >
-          Listo, así fue
-        </Button>
-        {errorGuardar && <p className={styles.avisoGuardar}>{errorGuardar}</p>}
-        <button className={styles.linkEditar} onClick={editarTodo}>Editar todo</button>
-      </div>
+      {/* Abajo va lo que corresponde al momento: mientras se cuenta, la entrada;
+          al validar, el cierre. Nunca los dos. */}
+      {validando ? (
+        <div className={styles.pieAcciones}>
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={confirmar}
+            disabled={!puedeGuardar}
+            loading={guardando}
+          >
+            Listo, así fue
+          </Button>
+          {errorGuardar && <p className={styles.avisoGuardar}>{errorGuardar}</p>}
+          <button className={styles.linkEditar} onClick={editarTodo}>Editar todo</button>
+        </div>
+      ) : !extrayendo && (
+        <div className={styles.zonaEntrada}>
+          {modoChat ? (
+            <div className={styles.escrituraWrap}>
+              <div className={styles.barraChat}>
+                <textarea
+                  className={styles.campoChat}
+                  value={borrador}
+                  onChange={(e) => setBorrador(e.target.value)}
+                  placeholder={repreguntando ? 'Cuéntame ese momento…' : 'Cuéntame qué pasó…'}
+                  rows={1}
+                />
+                <button
+                  className={styles.enviarChat}
+                  onClick={enviarChat}
+                  disabled={!borrador.trim()}
+                  type="button"
+                  aria-label="Enviar"
+                >
+                  <ArrowUp size={18} />
+                </button>
+              </div>
+
+              <button className={styles.pillSecundaria} onClick={() => setModoChat(false)} type="button">
+                <Mic size={15} />
+                Volver a hablar
+              </button>
+            </div>
+          ) : (
+            <>
+              <GrabadorVoz onTexto={recibirVoz} />
+              <button className={styles.pillSecundaria} onClick={() => setModoChat(true)} type="button">
+                <Keyboard size={15} />
+                Modo chat
+              </button>
+            </>
+          )}
+
+          {repreguntando && (
+            <button className={styles.linkEditar} onClick={seguirSinResponder} type="button">
+              Prefiero seguir así
+            </button>
+          )}
+        </div>
+      )}
 
       {campoEditando && (
         <HojaEdicion
