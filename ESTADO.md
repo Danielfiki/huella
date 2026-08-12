@@ -244,11 +244,11 @@
 
 ---
 
-## Cerrado HOY — martes 11 agosto 2026 — FASE 1 del registro conversacional: el modo rápido ya no es un formulario · SIN COMMITEAR, pendiente de QA
+## Cerrado HOY — martes 11 agosto 2026 — FASE 1 del registro conversacional EN PRODUCCIÓN + el bug de la mitad del relato, cerrado con logs
+
+**Dos commits, los dos desplegados:** `8761a67` (Fase 1) y `254a2db` (el arreglo de voz que salió del QA de la Fase 1).
 
 **El registro de episodios pasó a "La Conversación".** El modo rápido dejó de ser un formulario de 4 campos: ahora el padre cuenta por voz, la IA extrae la estructura y él valida un párrafo escrito con sus propias palabras. Ataca la causa n°1 de abandono medida en beta. **La vista detallado sobrevive intacta como "Editar todo".**
-
-⚠️ **NADA DE ESTO ESTÁ COMMITEADO.** Build pasa, la lógica está probada, pero **falta el QA de Daniel en celular**. No commitear sin su OK.
 
 ### Lo que quedó construido
 
@@ -290,11 +290,35 @@ Ya nos pasó el 5 de agosto: la IA caída medio día y tres testers contra el mu
 - ✅ Cero hex y cero rgb en el CSS nuevo: todo sale de tokens.
 - ✅ Cero rojo, cero iconografía de alarma en cualquier estado.
 
-### Lo que falta — Fases 2 y 3
+### El bug de la mitad del relato — CERRADO Y CONFIRMADO CON LOGS
 
-- **Fase 2:** P1.5 repregunta condicional cuando el relato es vago, y el modo chat completo (hoy el botón "Modo chat" abre el textarea simple).
-- **Fase 3:** P3 con el alivio primero, citando palabras textuales del padre.
-- **Pendiente de QA:** probar los 3 caminos en celular real, y ver cómo se leen los párrafos que devuelve el modelo — el prompt está afinado en frío, sin haber visto una sola salida real.
+Salió del propio QA de la Fase 1: **la segunda grabación captaba solo la mitad de lo hablado, el resto vacío y sin aviso.** Descartado el tope de 2 min (el contador nunca llegó a 2:00). Se cerraron los dos agujeros por donde se perdía relato, y esta vez **hay evidencia de dispositivo real, no deducción**.
+
+**Lo que dijeron los logs de QA:**
+
+- **`soltarMotor: habia un motor vivo, se aborta`** — el zombi queda **confirmado como la causa**, y el cortafuegos de `iniciarGrabacion` lo atajó.
+- **`finalizarRevision via onend`** en las dos grabaciones — la red de seguridad ya no se dispara sola en grabaciones sanas.
+- **`largoEnviado = largoVisible`** en `confirmarVoz` — cero texto botado.
+
+**Las dos causas y sus arreglos (`254a2db`):**
+
+- **`confirmarVoz` mandaba `transcriptText`**, que es una foto del último render, en vez de `transcriptRef`, que es todo lo dictado. Con relatos largos llegaban resultados entre ese render y el toque de "Agregar", y esa diferencia se botaba.
+- **La red de seguridad soltaba la referencia del motor sin abortarlo.** En Safari iOS un `SpeechRecognition` abierto impide que el siguiente capture — **es el mismo conflicto que teníamos con `getUserMedia`, ahora entre dos SR** — y como esto es una SPA, el motor huérfano sobrevivía a la navegación y se arrastraba hasta el episodio siguiente. Ahora existe `soltarMotor()`, que **desconecta los handlers antes de abortar** (porque `abort()` dispara `onend` y ese `onend` volvía a entrar a `finalizarRevision`) y se llama desde los seis puntos de salida.
+- **La red pasó de 2 s a 8 s.** 2 s era latencia esperada, pero el trabajo de esa red es detectar que el `onend` **no va a llegar nunca**; con relatos largos Safari se demora más de 2 s solo procesando el audio pendiente. Además ya no descarta el motor al dispararse: pasa a pendiente y lo que emita después se suma al ref y refresca lo que se ve — si no, el padre lee media transcripción y confirma esa.
+
+**La instrumentación se queda unos días.**
+
+Los logs `[VOZ]` y el Eruda de `?debug=1` **siguen en producción a propósito**, hasta acumular 2-3 registros reales limpios. Verificado que Eruda no entra al bundle: vive solo en el HTML y sin `?debug=1` no descarga un byte.
+
+**Para sacarla de una pasada:** los marcadores dicen `TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR` en `index.html` y en `VoiceTextarea.jsx`, más toda línea que contenga `logVoz`.
+
+### Lo que sigue
+
+**1. Primero de la lista: QA de los párrafos que genera `extraerEpisodio`.** Nadie ha evaluado todavía **cómo se leen** — naturalidad, si de verdad reusa las palabras del padre, si las fichas tocables calzan con lo que dijo. El prompt está afinado en frío, sin haber visto una sola salida real. **Ese veredicto decide el camino:** si los párrafos se leen bien, se sigue con la Fase 2; si suenan a máquina o traducen a jerga de catálogo, primero se afina el prompt. No tiene sentido montar la repregunta sobre una extracción que todavía no sabemos si convence.
+
+**2. Fase 2:** P1.5 repregunta condicional cuando el relato es vago, y el modo chat completo (hoy el botón "Modo chat" abre el textarea simple).
+
+**3. Fase 3:** P3 con el alivio primero, citando palabras textuales del padre.
 
 ---
 
