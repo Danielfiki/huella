@@ -261,8 +261,13 @@ export default function RegistroConversacional({
   }
 
   function enviarChat() {
-    recibirDelPadre(borrador)
+    const todo = recibirDelPadre(borrador)
     setBorrador('')
+    // Contestando una pregunta de Huella, enviar YA es terminar: ella preguntó,
+    // el padre respondió, y pedirle un segundo toque para confirmar corta la
+    // conversación justo donde debería fluir sola. Acumular varios mensajes
+    // solo tiene sentido en el relato inicial, cuando nadie preguntó nada.
+    if (todo && fase === 'repregunta') procesarRelato(todo)
   }
 
   // "Prefiero seguir así": se valida con lo que dio la primera pasada. Si esa
@@ -300,9 +305,9 @@ export default function RegistroConversacional({
   if (fase !== 'validar') {
     const extrayendo = fase === 'extrayendo'
     const repreguntando = fase === 'repregunta'
-    // El CTA de procesar solo aparece cuando ya hay algo escrito: antes del
-    // primer mensaje no hay nada que cerrar.
-    const hayRelato = !!transcripcion.trim()
+    // El CTA de procesar es solo para el relato inicial: aparece cuando ya hay
+    // algo escrito, y nunca en la repregunta, donde enviar ya procesa.
+    const mostrarCierre = !!transcripcion.trim() && !repreguntando
 
     return (
       <div className={styles.pantalla}>
@@ -379,7 +384,7 @@ export default function RegistroConversacional({
                   </button>
                 </div>
 
-                {hayRelato && (
+                {mostrarCierre && (
                   <Button variant="primary" size="lg" fullWidth onClick={() => procesarRelato(transcripcion)}>
                     Listo, eso fue
                   </Button>
