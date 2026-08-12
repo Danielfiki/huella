@@ -61,6 +61,18 @@ const MAX_REINICIOS_SR = 8
 // de finalizar, pasarse de largo ya no cuesta texto — solo tiempo de spinner.
 const MS_ESPERA_ONEND = 8000
 
+// Gracia antes de congelar la frase provisoria.
+//
+// Rescatarla no basta: Safari la deja a medio cocinar cuando se le interrumpe,
+// y "difícil" llegaba como "dif". Pero el motor sigue emitiendo un momento
+// después de stop(), y ahí suele mandar la versión terminada. Así que se espera
+// un poco antes de dar por buena la hipótesis cruda.
+//
+// 1s: con 800ms un iPhone cargado no siempre alcanza, y sobre 1200ms la espera
+// se empieza a notar. Como el estado sigue en "Procesando…", el costo visible
+// es que ese spinner dure un pelo más.
+const MS_GRACIA_INTERIM = 1000
+
 // ── TEMPORAL - DIAGNOSTICO HUECOS DE TRANSCRIPCION - SACAR ──────────────
 // Sirve para responder UNA pregunta con un solo QA: ¿el relato queda completo,
 // o los rebotes de Safari se comen pedazos? Por eso registra el largo del ref
@@ -100,6 +112,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // Lo provisorio que ya se sumó al ref. Si después llega su versión final, hay
   // que sacar esta copia antes de agregarla: si no, la frase queda dos veces.
   const interimCobradoRef = useRef('')
+  const graciaTimeoutRef  = useRef(null)
+  const enGraciaRef       = useRef(false)
   const isRecordingRef    = useRef(false)
   const endTimeoutRef     = useRef(null)
   const tickIntervalRef   = useRef(null)
@@ -120,6 +134,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // que marque el fin de la grabación.
   useEffect(() => () => {
     clearTimeout(endTimeoutRef.current)
+    clearTimeout(graciaTimeoutRef.current)
     clearInterval(tickIntervalRef.current)
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
     // Bajar la bandera antes de abortar: si algún handler pendiente del SR
@@ -169,23 +184,56 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // "No se captó audio", así que detener nunca termina en silencio.
   function finalizarRevision(via) {
     clearTimeout(endTimeoutRef.current)
-    cobrarInterim()
-    logVoz(`finalizarRevision via ${via}`, { largoRef: transcriptRef.current.length })
-    // El motor pasa a "pendiente" en vez de descartarse. Si acá llegamos por la
-    // red de seguridad, el motor sigue procesando y lo que emita después es
-    // justamente la parte del relato que faltaba: `onresult` la sigue sumando
-    // al ref y refrescando lo que se ve. Se aborta al confirmar, cancelar,
-    // volver a grabar o desmontar — nunca cruza a la grabación siguiente.
+
+    // Ya estamos esperando la frase terminada: un onend que entre acá en medio
+    // no puede cortar la espera, o congelaría justo la palabra a medias que la
+    // gracia venía a rescatar. Solo la red de seguridad manda por encima.
+    if (enGraciaRef.current && via !== 'timeout') {
+      logVoz(`finalizarRevision via ${via}: ya en gracia, se deja correr`)
+      return
+    }
+    // El motor pasa a "pendiente" en vez de descartarse. Sigue procesando, y lo
+    // que emita después es justamente la parte del relato que faltaba:
+    // `onresult` la sigue sumando al ref y refrescando lo que se ve. Se aborta
+    // al confirmar, cancelar, volver a grabar o desmontar — nunca cruza a la
+    // grabación siguiente.
     if (recRef.current) {
       recPendienteRef.current = recRef.current
       recRef.current = null
     }
+
+    // Quedó una frase a medio cocinar. Antes de congelarla se le da un momento
+    // al motor para que mande la versión terminada. No se aplica si venimos de
+    // la red de seguridad: ahí ya se esperaron 8 segundos y el motor no va a
+    // reaccionar.
+    if (interimRef.current.trim() && via !== 'timeout' && !enGraciaRef.current) {
+      enGraciaRef.current = true
+      logVoz(`finalizarRevision via ${via}: hay provisorio, se espera el final`, {
+        provisorio: interimRef.current.trim().length,
+      })
+      setVoiceEstado('finalizando')
+      graciaTimeoutRef.current = setTimeout(() => cerrarRevision('gracia-vencida'), MS_GRACIA_INTERIM)
+      return
+    }
+
+    cerrarRevision(via)
+  }
+
+  // Congela lo que haya y muestra la transcripción. Es el único punto que pasa
+  // a 'revisando'.
+  function cerrarRevision(via) {
+    clearTimeout(graciaTimeoutRef.current)
+    enGraciaRef.current = false
+    cobrarInterim()
+    logVoz(`cerrarRevision via ${via}`, { largoRef: transcriptRef.current.length })
     setTranscriptText(transcriptRef.current.trim())
     setVoiceEstado('revisando')
   }
 
   function mostrarError(msg) {
     clearTimeout(endTimeoutRef.current)
+    clearTimeout(graciaTimeoutRef.current)
+    enGraciaRef.current = false
     clearInterval(tickIntervalRef.current)
     isRecordingRef.current = false
     if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
@@ -240,6 +288,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     soltarMotor()
     logVoz('iniciarGrabacion')
 
+    clearTimeout(graciaTimeoutRef.current)
+    enGraciaRef.current = false
     isRecordingRef.current = true
     transcriptRef.current = ''
     interimRef.current = ''
@@ -302,6 +352,14 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       if (huboFinal) {
         logVoz('onresult final', { grabando: isRecordingRef.current, largoRef: transcriptRef.current.length })
       }
+
+      // Justo lo que la gracia estaba esperando: llegó la frase terminada, así
+      // que no hace falta seguir esperando ni congelar la versión cruda.
+      if (huboFinal && enGraciaRef.current) {
+        cerrarRevision('final-dentro-de-la-gracia')
+        return
+      }
+
       // Llegó tarde: la red de seguridad ya nos pasó a revisión y el padre está
       // leyendo la transcripción. Esto la completa en pantalla; si no, leería
       // la mitad y confirmaría esa.

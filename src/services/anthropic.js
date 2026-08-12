@@ -1998,6 +1998,7 @@ Es lo que el padre va a leer para confirmar que entendiste. Reglas:
 - Máximo 2 frases. Natural, como se lo repetirías a un amigo para chequear que entendiste bien.
 - PROHIBIDA la estructura "no fue X, fue Y" en cualquiera de sus formas.
 - Sin diagnóstico, sin consejo, sin interpretación. Solo devolver lo que escuchaste.
+- El relato viene de un dictado por voz y la última palabra puede llegar cortada ("dif" por "difícil", "compl" por "complicado"). Si es evidente cuál era, complétala; si no lo es, omítela. Nunca inventes contenido para rellenar.
 - Español latinoamericano neutro con TUTEO. Prohibido el voseo (vos, tenés, podés, decile).
 
 ━━━ LAS CITAS ━━━
