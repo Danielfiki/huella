@@ -48,11 +48,12 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo, savePadreNombre, isPro, isAdmin, dataLoading } = useHuella()
+  const { state, setHijo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading } = useHuella()
   const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
   const padreInputRef = useRef(null)
+  const padreAvatarInputRef = useRef(null)
 
   // Gate 2do hijo: free está limitado a 1 hijo; Pro/Admin, ilimitados.
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -74,6 +75,8 @@ export default function PerfilPage() {
 
   const [padreNombre, setPadreNombre] = useState('')
   const [guardadoPadreOk, setGuardadoPadreOk] = useState(false)
+  const [uploadingPadreAvatar, setUploadingPadreAvatar] = useState(false)
+  const [errorPadreAvatar, setErrorPadreAvatar] = useState('')
 
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [eliminandoCuenta, setEliminandoCuenta] = useState(false)
@@ -112,6 +115,35 @@ export default function PerfilPage() {
       setTimeout(() => setGuardadoPadreOk(false), 2500)
     } catch {
       // el estado optimista ya se aplicó en el contexto; el error es silencioso
+    }
+  }
+
+  // Foto del cuidador. Mismo camino que handleAvatarChange (comprimir →
+  // subir al bucket `avatares` dentro de la carpeta del usuario → guardar el
+  // PATH en la BD). El nombre de archivo es fijo `cuidador.jpg`: los avatares
+  // de hijos se llaman con el UUID del hijo, asi que nunca chocan, y con
+  // upsert:true cada foto nueva reemplaza la anterior sin dejar basura.
+  async function handlePadreAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingPadreAvatar(true)
+    setErrorPadreAvatar('')
+    try {
+      const blob = await compressImage(file)
+      if (!blob) throw new Error('No se pudo procesar la imagen.')
+      const path = `${user.id}/cuidador.jpg`
+      const { error: uploadError } = await supabase.storage.from('avatares').upload(path, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      })
+      if (uploadError) throw new Error(uploadError.message)
+      await savePadreAvatar(path)
+    } catch (err) {
+      console.error('Error subiendo foto del cuidador:', err)
+      setErrorPadreAvatar('No se pudo subir la foto. Asegúrate de tener conexión e intenta de nuevo.')
+    } finally {
+      setUploadingPadreAvatar(false)
+      if (padreAvatarInputRef.current) padreAvatarInputRef.current.value = ''
     }
   }
 
@@ -280,6 +312,31 @@ export default function PerfilPage() {
         <p className={styles.sectionDesc}>
           Así te llamará Huella en el saludo del panel.
         </p>
+
+        <input
+          ref={padreAvatarInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handlePadreAvatarChange}
+        />
+        <div
+          className={`${styles.avatarWrap} ${uploadingPadreAvatar ? styles.avatarLoading : ''}`}
+          onClick={() => !uploadingPadreAvatar && padreAvatarInputRef.current?.click()}
+        >
+          {state.padreAvatarUrl ? (
+            <img src={state.padreAvatarUrl} alt="Tu foto" className={styles.avatarImg} />
+          ) : (
+            <div className={styles.avatarPlaceholder}>
+              <UserCircle size={34} color="var(--color-primary-light)" />
+            </div>
+          )}
+          <div className={styles.avatarCamara}>
+            <Camera size={13} color="white" />
+          </div>
+        </div>
+        {errorPadreAvatar && <p className={styles.error}>{errorPadreAvatar}</p>}
+
         <form onSubmit={handleGuardarPadre} className={styles.form}>
           <div className={styles.field}>
             <label className={styles.label}>¿Cómo te llamamos?</label>

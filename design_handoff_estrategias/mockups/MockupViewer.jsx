@@ -5,6 +5,7 @@ import Pantalla3Cierre from './Pantalla3_Cierre';
 import Pantalla4ModalCiclo2 from './Pantalla4_ModalCiclo2';
 import Pantalla5PDF from './Pantalla5_PDF';
 import Pantalla6PanelDescanso from './Pantalla6_PanelDescanso';
+import MotionLab from '../../src/dev/MotionLab';
 import styles from './MockupViewer.module.css';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -20,6 +21,10 @@ const PANTALLAS = [
   { id: 'p4', label: 'P4 · Modal Ciclo 2', Component: Pantalla4ModalCiclo2 },
   { id: 'p5', label: 'P5 · PDF',           Component: Pantalla5PDF },
   { id: 'p6', label: 'P6 · Panel descanso',Component: Pantalla6PanelDescanso },
+  // Laboratorio del sistema de movimiento (Bloque B1). No es un mockup de
+  // Estrategias: vive en src/dev y se engancha aca porque /mockups es la
+  // unica ruta fuera del alcance del usuario.
+  { id: 'mov', label: 'Movimiento · Lab', Component: MotionLab },
 ];
 
 export default function MockupViewer() {

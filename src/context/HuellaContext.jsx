@@ -35,6 +35,10 @@ const initialState = {
   // propio array y NUNCA se mezcla con episodios ni hitos.
   patrones:             [],
   padreNombre:          '',
+  // Foto del cuidador. En la BD vive el PATH (`userId/cuidador.jpg`) en
+  // perfiles.avatar_url; en el estado vive ya firmada para mostrar, igual
+  // que hijos.avatarUrl. Null = todavia usa la inicial del nombre.
+  padreAvatarUrl:       null,
   plan:                 null,
   sugerenciaEstrategia: null,
 }
@@ -177,6 +181,9 @@ function reducer(state, action) {
 
     case 'SET_PADRE_NOMBRE':
       return { ...state, padreNombre: action.payload }
+
+    case 'SET_PADRE_AVATAR':
+      return { ...state, padreAvatarUrl: action.payload }
 
     case 'LOAD_STATE':
       return syncHijo({ ...initialState, ...action.payload })
@@ -504,7 +511,7 @@ export function HuellaProvider({ children }) {
       // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
       const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('perfiles').select('nombre, plan, plan_beta_hasta').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre, avatar_url, plan, plan_beta_hasta').eq('user_id', userId).maybeSingle(),
       ])
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
@@ -561,6 +568,9 @@ export function HuellaProvider({ children }) {
       const hijosF     = await firmarCampo(hijos, 'avatarUrl', 'avatares')
       const episodiosF = await firmarCampo(episodios, 'fotoUrl', 'momentos')
       const hitosF     = await firmarCampo(hitos, 'foto_url', 'momentos')
+      // La foto del cuidador comparte bucket con la de los hijos: mismo
+      // firmado, misma carpeta por usuario, mismas policies.
+      const padreAvatarF = await firmarPath(perfilRes.data?.avatar_url ?? null, 'avatares')
 
       dispatch({
         type: 'LOAD_STATE',
@@ -574,6 +584,7 @@ export function HuellaProvider({ children }) {
           rasgos,
           patrones,
           padreNombre: perfilRes.data?.nombre ?? '',
+          padreAvatarUrl: padreAvatarF,
           plan:        perfilRes.data?.plan   ?? null,
           plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
         },
@@ -1372,6 +1383,27 @@ export function HuellaProvider({ children }) {
     if (error) throw new Error(error.message)
   }
 
+  // Guarda la foto del cuidador. Recibe el PATH del objeto ya subido a
+  // Storage (`userId/cuidador.jpg`), nunca una URL: lo que va a la BD es
+  // siempre el path, igual que en hijos.avatar_url. Para el estado se firma
+  // al vuelo, asi la foto aparece sin esperar un reloadData.
+  // El upsert incluye `nombre` porque perfiles.user_id es PK: si la fila aun
+  // no existe (usuario que salto el onboarding), un upsert solo con
+  // avatar_url la crearia sin nombre y borraria el saludo del Home.
+  async function savePadreAvatar(path) {
+    if (!user) return
+    const limpio = resolverPath(path, 'avatares')
+    const { error } = await supabase
+      .from('perfiles')
+      .upsert(
+        { user_id: user.id, nombre: state.padreNombre || '', avatar_url: limpio },
+        { onConflict: 'user_id' }
+      )
+    if (error) throw new Error(error.message)
+    const firmada = await firmarPath(limpio, 'avatares')
+    dispatch({ type: 'SET_PADRE_AVATAR', payload: firmada })
+  }
+
   // Canje de codigo de beta. Logica compartida entre el Home (PanelPage) y la
   // pagina de plan (CuentaPage): asi el mapeo de resultado a mensaje vive en un
   // solo lugar. Llama a la RPC security definer canjear_codigo_beta, que
@@ -1476,6 +1508,7 @@ export function HuellaProvider({ children }) {
       vincularEstrategiaAPatron,
       cerrarPatron,
       savePadreNombre,
+      savePadreAvatar,
       canjearCodigoBeta,
       isPro,
       isAdmin,

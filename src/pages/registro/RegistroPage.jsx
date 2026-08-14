@@ -712,6 +712,7 @@ export default function RegistroPage() {
       <RegistroConversacional
         hijo={state.hijo}
         padreNombre={state.padreNombre}
+        padreAvatarUrl={state.padreAvatarUrl}
         guardando={loadingGuardar}
         errorGuardar={errorGuardar}
         onVolver={() => navigate('/nuevo')}

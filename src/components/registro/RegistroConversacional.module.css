@@ -85,6 +85,16 @@
   font-size: 17px;
   font-weight: 700;
   order: 2;
+  overflow: hidden;
+}
+
+/* Foto del cuidador dentro del mismo disco de 48px que ocupaba la inicial:
+   llena el circulo sin deformar y sin cambiar la geometria de la fila. */
+.avatarPadreFoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Avatar de Huella: escarabajo crema sobre disco terracota */

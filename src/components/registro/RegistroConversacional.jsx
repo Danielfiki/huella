@@ -154,6 +154,7 @@ function marcarParrafo(parrafo, citas) {
 export default function RegistroConversacional({
   hijo,
   padreNombre = '',
+  padreAvatarUrl = null,
   onConfirmar,
   onEditarTodo,
   onVolver,
@@ -208,9 +209,9 @@ export default function RegistroConversacional({
   }, [mensajes, fase])
 
   const nombre = hijo?.nombre || 'tu hijo'
-  // La app no guarda foto del cuidador (la tabla `perfiles` solo tiene nombre y
-  // plan), así que el avatar es la inicial. Sin nombre cargado queda el guion:
-  // un círculo vacío se vería como una foto que no cargó.
+  // Avatar del cuidador: su foto si la subió en Perfil, si no la inicial del
+  // nombre. Sin nombre cargado queda el guion: un círculo vacío se vería como
+  // una foto que no cargó.
   const inicialPadre = (padreNombre || '').trim().charAt(0).toUpperCase() || '—'
 
   // ── El hilo ──
@@ -387,7 +388,11 @@ export default function RegistroConversacional({
             <div className={styles.burbujaPadre}>
               <p className={styles.relato}>{m.texto}</p>
             </div>
-            <span className={styles.avatarPadre} aria-hidden="true">{inicialPadre}</span>
+            <span className={styles.avatarPadre} aria-hidden="true">
+              {padreAvatarUrl
+                ? <img src={padreAvatarUrl} alt="" className={styles.avatarPadreFoto} />
+                : inicialPadre}
+            </span>
           </div>
         ) : (
           <div className={styles.filaHuella} key={i}>

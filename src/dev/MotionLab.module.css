@@ -1,0 +1,165 @@
+/* MotionLab — laboratorio interno. Solo tokens de index.css. */
+
+.lab {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100%;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.titulo {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.repetir {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.estado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip,
+.chipInfo {
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.chipOn {
+  background: var(--color-pill-green-bg);
+  color: var(--color-pill-green-text);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.bloqueTtl {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── 1. Tarjetas ── */
+.tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tarjeta {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-bg);
+  border: 1.5px solid var(--color-primary-border);
+}
+
+.tarjetaTxt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ── 2. Barras ── */
+.barras {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.barraFila {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.barraLbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ── 3. Numeros ── */
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.numeroCelda {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.numero {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.numeroTang { color: var(--color-primary); }
+.numeroVerde { color: var(--color-accent-green); }
+
+.numeroLbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}

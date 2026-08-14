@@ -196,6 +196,35 @@
   /* ── Scrim ── */
   --color-scrim: rgba(0, 0, 0, 0.45);
 
+  /* ═══ Movimiento ═══════════════════════════════════════════════
+     Fuente unica de verdad del movimiento de la app. Nada de
+     duraciones ni curvas sueltas en los CSS modules: se usan estas.
+
+     Duraciones — cuanto tarda el gesto:
+       rapida  microinteraccion (hover, chip que se prende, chevron)
+       media   la mayoria de las cosas (entrada de tarjeta, fade)
+       lenta   movimientos con peso (barra que crece, numero que cuenta)
+
+     Easings — la personalidad del gesto:
+       estandar  acelera y frena parejo; para lo que ya esta en pantalla
+       entrada   arranca rapido y frena suave; para lo que aparece
+       salida    arranca suave y acelera; para lo que se va
+
+     Con `prefers-reduced-motion: reduce` las tres duraciones caen a 1ms
+     (ver bloque al final del archivo), asi cualquier animacion que las
+     use se apaga sola sin tocar el componente.                        */
+  --motion-rapida: 150ms;
+  --motion-media:  300ms;
+  --motion-lenta:  500ms;
+
+  --motion-ease-estandar: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-entrada:  cubic-bezier(0.22, 0.61, 0.36, 1);
+  --motion-ease-salida:   cubic-bezier(0.4, 0, 1, 1);
+
+  /* Desplazamiento vertical con el que entran las tarjetas. Se apaga
+     junto con las duraciones en modo movimiento reducido. */
+  --motion-desplazamiento: 12px;
+
   /* ── Tipografía ── */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Fraunces', Georgia, serif;
@@ -405,3 +434,41 @@ button:active { transform: scale(0.93); }
 
 input, textarea, select { font-family: var(--font-family); }
 a { color: inherit; text-decoration: none; }
+
+/* ═══ Movimiento reducido ═══════════════════════════════════════════
+   Cuando el sistema operativo pide menos movimiento (iOS: Ajustes →
+   Accesibilidad → Movimiento; Android: Opciones de desarrollador o
+   Accesibilidad), la app deja de animar.
+
+   Dos capas:
+   1. Los tokens caen a 1ms. Todo lo que ya usa var(--motion-*) se
+      apaga solo, sin tocar el componente.
+   2. Barrido global sobre transitions y animations heredadas, que
+      hoy tienen las duraciones escritas a mano en sus modules (los
+      56 @keyframes que ya existian). No se ponen en 0s: un 0.01ms
+      deja que los eventos `animationend`/`transitionend` sigan
+      disparando, y varios componentes dependen de ellos para
+      avanzar de estado.
+
+   El scroll suave tambien se apaga: `scrollIntoView({behavior:'smooth'})`
+   respeta esta media query en los navegadores actuales.               */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-rapida: 1ms;
+    --motion-media:  1ms;
+    --motion-lenta:  1ms;
+    --motion-desplazamiento: 0px;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* El feedback tactil del boton se queda: no es decoracion, es la
+     confirmacion de que el toque entro. Solo se acorta. */
+  button { transition-duration: 0.01ms !important; }
+  button:active { transform: scale(0.97); }
+}
