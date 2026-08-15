@@ -244,7 +244,80 @@
 
 ---
 
-## Cerrado HOY — miércoles 12 agosto 2026 — EL REGISTRO CONVERSACIONAL ESTÁ COMPLETO Y VALIDADO: fases 1, 2 y 3 en producción
+## Cerrado HOY — sábado 15 agosto 2026 — BLOQUE B2 DEL REDISEÑO: el Home dejó de ser un dashboard y pasó a ser LA PÁGINA DEL HIJO
+
+**1 commit.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
+
+**Principio rector nuevo (de Daniel):** la pieza central de Huella es **EL MOMENTO**. Todo se construye alrededor de él, nunca como isla nueva. B2 es la primera aplicación de esa regla.
+
+**Contexto:** B1 (foto del cuidador + framer-motion + tokens de movimiento + `MotionPrimitives`) ya estaba en producción desde el commit `16d615f`. B2 lo consume.
+
+### El Home nuevo, de arriba a abajo
+
+| Pieza | Qué es |
+|---|---|
+| **`CabeceraHijo`** | Foto del hijo de 296px **a sangre**, rotando cada 7s entre avatar + fotos de hitos con crossfade, disolviéndose en el fondo crema. Saludo "Buenas tardes, {padre}" en Fraunces sobre el degradado. Campana del consejo con puntito terracota + avatar del padre arriba a la derecha. Toda la foto es un botón → `/hijo` |
+| **`TarjetaCerebro`** | "Esta semana en el cerebro de {hijo}". **4 estados excluyentes** (ver abajo). Al tocarla despliega el detalle: `CTAAskHuella` + los 3 gráficos + `AnalisisIA`, colapsados por defecto |
+| **`BotonRegistrar`** | 58px, radio 16, gradiente terracota. **Sin subtexto.** Chip de cupo solo cuando al plan gratuito le quedan 3 momentos o menos |
+| **`Puertas`** | "Su huella" (N/12 + 12 segmentos + foto chica + badge cálido si hay rasgo candidato/emergente), "Momentos" (total + timeline de puntos + última foto de avance), "Acompañando" (**solo si hay plan o patrones**: Semana N/4 + chips + badge "Patrón nuevo" si es de los últimos 3 días) |
+
+### Los 4 estados de la tarjeta central
+
+| Estado | Cuándo | Qué muestra |
+|---|---|---|
+| **cero** | Cuenta sin ningún registro | Invitación cálida + hueco reservado para la ilustración definitiva |
+| **primeros** | Menos de 3 registros | N de 3 + barra de 3 segmentos + los 3 pasos. **Absorbe a `GuiaPrimerosPasos`**, que como banner dejó de existir |
+| **rica** | Hay registros esta semana | UNA frase-hallazgo + número que cuenta + 7 barras que crecen |
+| **pobre** | Cuenta activa pero semana vacía | Frase educativa por edad del hijo |
+
+### Decisiones que conviene conocer antes de tocar esto
+
+- **Regla de texto (dura):** ningún párrafo visible de entrada en todo el Home. Todo texto largo está colapsado o eliminado. La información es visual: números grandes, barras, chips.
+- **El banco educativo es LOCAL, no IA.** `bancoEducativo.js`: 5 frases por rango (1-2, 3-4, 5-6, 7-8, 9+) más 4 genéricas si no hay fecha de nacimiento. La frase rota **por día del año**, así que es estable dentro del día — dos aperturas del Home el mismo día muestran lo mismo, que es lo que se espera de una tarjeta educativa. Cuando exista la versión con IA, esto queda igual como respaldo offline.
+- **Dos tokens nuevos en `index.css`, con override de oscuro.** `--gradient-foto-cabecera` (la foto se disuelve hacia `--color-bg`; las paradas repiten el color con distinta alfa porque `transparent` sobre un color cálido produce banda gris en varios navegadores) y `--gradient-cta-registrar`. **En oscuro el CTA fija la terracota profunda a mano**: ahí `--color-primary` se aclara a `#EE9452` y el texto blanco se perdía.
+- **La cabecera se come el padding del Layout.** El `<main>` mete 20px; `.cabeceraBleed` usa `margin: -20px -20px 0` para que la foto toque el header mocha y los dos bordes. El `<main>` tiene `overflow-x: hidden`, así que no genera scroll horizontal.
+- **La campana quedó en la cabecera del Home, no en el header global.** Vivía en el `Hero`; moverla al Layout habría afectado a todas las pantallas.
+- **HTML válido dentro de los botones.** La tarjeta central usa el patrón de *disclosure* (el `<h2>` CONTIENE al botón, no al revés) y las puertas usan `<span>` en vez de `<div>` porque viven dentro de un `<button>`.
+- **`prefers-reduced-motion`:** la rotación de fotos **se apaga entera**, no solo se acelera — cambiar la foto sola es exactamente el tipo de movimiento no pedido que la preferencia existe para apagar.
+- **"Quién lo anotó" queda FUERA del Home, definitivamente.** Vivía en las cards de último avance / estrategia / patrón, que ya no existen. Sigue en Historial.
+
+### Lo que se fue del Home (y a dónde)
+
+| Se fue | A dónde |
+|---|---|
+| `Hero` de doble avatar | Reemplazado por `CabeceraHijo`. UN solo avatar del hijo con UN destino: `/hijo` |
+| `CTAPrimary` con subtexto | Reemplazado por `BotonRegistrar` |
+| `CTAAskHuella` suelto | Vive **dentro** de la tarjeta central expandida |
+| `ResumenSemanal`, gráficos, `AnalisisIA` | Sus datos y los gráficos viven dentro de la tarjeta central |
+| `SectionEyebrow` | Eliminado. El Home ya no tiene secciones |
+| `EstadoVacio` | Reemplazado por el estado **cero** de la tarjeta |
+| `AnticipoRetratoCard` | Su rol lo cumple la puerta "Su huella"; el aviso de rasgo emergente es ahora el badge de esa puerta |
+| `GuiaPrimerosPasos` (banner) | Absorbido por el estado **primeros** |
+| `CanjeCodigoBeta` | **Se mudó a Perfil**, pegado a la card de Pro. No se borró |
+
+**Archivos borrados en este commit** (verificado con grep: cero imports vivos): `Hero.jsx` + `hero.module.css`, `CTAPrimary.jsx` + `ctaPrimary.module.css`, `ResumenSemanal.jsx` + `resumenSemanal.module.css`, `SectionEyebrow.jsx` + `sectionEyebrow.module.css`, `GuiaPrimerosPasos.jsx` + `GuiaPrimerosPasos.module.css`, `panel.module.css`.
+
+### Lo que NO se tocó
+
+Historial, Logros, Estrategias, Registro, la tab bar (**sigue de 5** — el cambio a 3 es B3), las rutas, el motor de rasgos y `HuellaContext`. De Perfil solo se tocó lo necesario para recibir el canje de código.
+
+### Verificación
+
+- Build limpio.
+- **Cero hex/rgba en los módulos nuevos** (grep confirmado) — todo sale de `index.css`.
+- Todas las entradas al Home siguen funcionando: `/nuevo` y `/registro` al guardar, `PatronPage`, `PatronLecturaPage`, `InvitarPage` y el `NotFound` de `App.jsx`. Son navegaciones simples sin estado, así que ninguna dependía del Home antiguo.
+
+### Pendientes que deja B2
+
+- **`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.
+- **La ilustración del estado "semana cero"** es un placeholder con el escarabajo. Falta la definitiva.
+- **El aviso de cupo** (chip bajo el botón) usa el copy provisorio; es el pendiente #4 de Daniel.
+- **B3:** fusión de Momentos con Logros y el cambio de la tab bar de 5 a 3.
+- **La versión con IA del contenido educativo** por edad.
+
+---
+
+## Sesión miércoles 12 agosto 2026 — El registro conversacional quedó completo y validado: fases 1, 2 y 3 en producción
 
 **15 commits.** El registro de episodios dejó de ser un formulario y pasó a ser una conversación de punta a punta: se entra directo a hablar, Huella repregunta si hace falta, la validación ocurre en el mismo hilo, y al guardar lo primero que aparece es el alivio citando las palabras del padre. **Todo pasó QA real en celular.**
 

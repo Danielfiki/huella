@@ -1,0 +1,174 @@
+.puerta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card-soft);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: border-color var(--motion-rapida) var(--motion-ease-estandar);
+}
+.puerta:hover { border-color: var(--color-primary-border); }
+.puerta:active { transform: scale(0.985); }
+
+.centro {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-light);
+  display: grid;
+  place-items: center;
+}
+
+/* ── Avatares de la puerta ── */
+
+.avatar,
+.avatarCuadrado {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  display: grid;
+  place-items: center;
+}
+.avatar { border-radius: 50%; }
+.avatarCuadrado { border-radius: var(--radius-sm); }
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.avatarIcon { width: 22px; height: auto; display: block; }
+
+/* ── Textos ── */
+
+.etiquetaFila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primary);
+}
+
+/* Aviso cálido: nunca rojo. Es una buena noticia, no una alerta. */
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+  border: 1px solid var(--color-primary-border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.dato {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.datoNum {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.datoDe {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ── Barra de segmentos ── */
+
+.segmentos {
+  display: flex;
+  gap: 3px;
+}
+.segmento {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  transform-origin: left center;
+  display: block;
+}
+.segmentoOn { background: var(--color-primary); }
+
+/* ── Mini-timeline de momentos ── */
+
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* ── Chips de patrones abiertos ── */
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip {
+  min-width: 0;
+  max-width: 46%;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipResto {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}

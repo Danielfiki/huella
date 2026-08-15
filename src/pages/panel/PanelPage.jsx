@@ -1,30 +1,39 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronRight } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
 import { interpretarPatrones, detectarPatronesEstructurado } from '../../services/anthropic'
-import Card from '../../components/ui/Card'
-import Button from '../../components/ui/Button'
-import Escarabajo from '../../components/ui/Escarabajo'
-import GuiaPrimerosPasos from '../../components/ui/GuiaPrimerosPasos'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
-import { Hero } from '../../components/panel/Hero'
-import { CTAPrimary } from '../../components/panel/CTAPrimary'
+import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
+import { TarjetaCerebro, calcularEstadoCerebro } from '../../components/panel/TarjetaCerebro'
+import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
+import { PuertaHuella, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
 import { CTAAskHuella } from '../../components/panel/CTAAskHuella'
-import { ResumenSemanal } from '../../components/panel/ResumenSemanal'
 import { ChartFrecuencia } from '../../components/panel/ChartFrecuencia'
 import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
 import { ChartGatillos } from '../../components/panel/ChartGatillos'
 import { AnalisisIA } from '../../components/panel/AnalisisIA'
-import { SectionEyebrow } from '../../components/panel/SectionEyebrow'
-import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
-import PatronCard from '../../components/patron/PatronCard'
-import panelStyles from '../../components/panel/panel.module.css'
-import { getAuthorDisplay } from '../../utils/authorDisplay'
+import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
+import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import styles from './PanelPage.module.css'
+
+// ── Home · Bloque B2 del rediseño ────────────────────────────────────────────
+//
+// El Home dejó de ser un dashboard de secciones: ahora es LA PÁGINA DEL HIJO.
+// De arriba a abajo: su cara, una tarjeta que interpreta la semana, UNA acción,
+// y tres puertas compactas.
+//
+// Regla de texto (dura): ningún párrafo visible de entrada. Los gráficos y el
+// análisis IA no se borraron — viven dentro de la tarjeta central, colapsados.
+//
+// Lo que se fue de acá: Hero de doble avatar, CTAPrimary con subtexto,
+// CTAAskHuella suelto, SectionEyebrows, ResumenSemanal como tarjeta aparte,
+// EstadoVacio, AnticipoRetratoCard, GuiaPrimerosPasos como banner, la card de
+// último avance y la de estrategia activa (su dato vive en las puertas), y
+// CanjeCodigoBeta, que se mudó a Perfil.
 
 // ── Emoji mapping for free-form trigger labels ──────────────────────────────
 
@@ -42,153 +51,13 @@ const GATILLANTE_EMOJIS = {
   visita: '👥', social: '👥',
 }
 
-const CONTEXTOS_ESTRATEGIA = {
-  'Calmarse cuando explota':            { emoji: '🌊' },
-  'Aceptar el "no" sin crisis':         { emoji: '💪' },
-  'Manejar los cambios de rutina':      { emoji: '🔄' },
-  'Relacionarse mejor con otros niños': { emoji: '🤝' },
-  'Manejar el miedo y la angustia':     { emoji: '🛡️' },
-  'Concentrarse y calmarse':            { emoji: '🧘' },
-}
-
-const CATEGORIA_EMOJIS = {
-  autorregulacion: '🌱', empatia: '💛', disculpa: '🤝',
-  frustration: '💪', social: '👫', otro: '⭐',
-}
-
 const DIAS_LABEL = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
 
-// ── Componentes locales preservados ──────────────────────────────────────────
-
-function EstadoVacio({ nombreHijo, onRegistrar }) {
-  return (
-    <Card className={styles.emptyCard}>
-      <div className={styles.emptyIlustracion}>🌱</div>
-      <h2 className={styles.emptyTitulo}>Todo empieza aquí</h2>
-      <p className={styles.emptyTexto}>
-        Cada vez que anotas lo que pasó con <strong>{nombreHijo}</strong>,
-        Huella construye un mapa de sus emociones. Con el tiempo verás
-        patrones que hoy son invisibles.
-      </p>
-      <p className={styles.emptyTip}>No tiene que ser perfecto — una nota rápida ya cuenta.</p>
-      <Button variant="primary" fullWidth onClick={onRegistrar}>
-        <Plus size={18} />
-        Registrar primer episodio
-      </Button>
-    </Card>
-  )
-}
-
-function EstrategiaActivaPanel({ estrategia, onAbrir, authorName }) {
-  const ctx = CONTEXTOS_ESTRATEGIA[estrategia.habilidad] || { emoji: '🎯' }
-  const semana = Math.min(estrategia.semanaActual, 4)
-  return (
-    <button className={styles.estrategiaCard} onClick={onAbrir}>
-      <div className={styles.estrategiaCardLeft}>
-        <span className={styles.estrategiaEmoji}>{ctx.emoji}</span>
-        <div>
-          <p className={styles.estrategiaLabel}>
-            Estrategia activa — Semana {semana}/4
-            {authorName && <span style={{ fontWeight: 600, color: 'var(--color-text-light)', marginLeft: '4px' }}>· {authorName}</span>}
-          </p>
-          <p className={styles.estrategiaTitulo}>{estrategia.habilidad}</p>
-        </div>
-      </div>
-      <ChevronRight size={18} className={styles.estrategiaChevron} />
-    </button>
-  )
-}
-
-function UltimoHitoCard({ hito, onVerLogros, authorName }) {
-  const emoji = CATEGORIA_EMOJIS[hito.categoria] || '⭐'
-  return (
-    <button
-      onClick={onVerLogros}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
-        background: 'var(--color-surface)', border: '1.5px solid var(--color-primary-border)',
-        borderRadius: 'var(--radius-md)', padding: '12px 14px', cursor: 'pointer',
-        textAlign: 'left', boxShadow: 'var(--shadow-sm)',
-      }}
-    >
-      {hito.foto_url
-        ? <img src={hito.foto_url} alt="Logro" style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />
-        : <div style={{ width: '52px', height: '52px', borderRadius: '10px', background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>{emoji}</div>
-      }
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Último avance</p>
-        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {hito.descripcion || emoji}
-        </p>
-        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {new Date(hito.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}
-          {authorName && <span style={{ fontWeight: 600 }}>· {authorName}</span>}
-        </p>
-      </div>
-      <ChevronRight size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-    </button>
-  )
-}
-
-// Card de anticipo del retrato (motor de rasgos · 4D): el gatillo de retorno.
-// Lleva a /hijo. Tres estados: con candidato por confirmar = gancho fuerte;
-// sin candidato pero con confirmados = progreso; sin nada = no se renderiza
-// (el caller decide con candidato/confirmados). Sigue el patron de UltimoHitoCard.
-function AnticipoRetratoCard({ nombre, candidato, hayEmergente, confirmados, onClick }) {
-  const hayCandidato = !!candidato
-  // Prioridad de la card (mayor a menor): candidato > emergente > progreso.
-  // El estado emergente es la pista honesta de la Fase 2: avisa que hay algo en
-  // camino sin revelar el contenido. Solo aplica si NO hay candidato.
-  const esPista = !hayCandidato && hayEmergente
-  let eyebrow, titulo, subtexto
-  if (hayCandidato) {
-    eyebrow  = 'Nuevo en su huella'
-    titulo   = `Huella notó algo nuevo en ${nombre}`
-    subtexto = 'Toca para descubrirlo'
-  } else if (esPista) {
-    eyebrow  = 'Algo se está dibujando'
-    titulo   = `El retrato de ${nombre} está creciendo`
-    subtexto = 'Huella está notando algo. Necesita unos momentos más para mostrártelo.'
-  } else {
-    eyebrow  = 'Su huella'
-    titulo   = `El retrato de ${nombre}`
-    subtexto = `${confirmados} de 12 rasgos descubiertos`
-  }
-  // Acento: lavanda (accent-blue) para la pista emergente, terracota para el resto.
-  const acento = esPista ? 'var(--color-accent-blue)' : 'var(--color-primary)'
-  // El titulo se trunca a una linea en candidato y progreso (como hoy). La pista
-  // emergente es mas larga: se permite hasta 2 lineas con clamp para que no se
-  // corte con puntos suspensivos.
-  const tituloStyle = esPista
-    ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' }
-    : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
-        background: 'var(--color-surface)', border: '1.5px solid var(--color-primary-border)',
-        borderRadius: 'var(--radius-md)', padding: '12px 14px', cursor: 'pointer',
-        textAlign: 'left', boxShadow: 'var(--shadow-sm)',
-      }}
-    >
-      <div style={{
-        width: '52px', height: '52px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
-        background: 'var(--color-accent-mocha)', color: 'var(--color-on-mocha)',
-        display: 'grid', placeItems: 'center',
-      }}>
-        <Escarabajo className={styles.anticipoBicho} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: acento, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{eyebrow}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '14px', color: 'var(--color-text)', fontWeight: 600, ...tituloStyle }}>{titulo}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>{subtexto}</p>
-      </div>
-      <ChevronRight size={16} style={{ color: acento, flexShrink: 0 }} />
-    </button>
-  )
-}
+// Cuántas fotos entran en la rotación de la cabecera y cuántos momentos
+// dibujan la mini-timeline de la puerta "Momentos".
+const MAX_FOTOS_CABECERA = 5
+const DIAS_PATRON_NUEVO = 3
+const CUPO_AVISO_DESDE = 3   // quedan 3 o menos → aparece el chip
 
 // ── Computaciones de narrativas ───────────────────────────────────────────────
 
@@ -269,34 +138,33 @@ function useNarrativaIntensidad(episodios) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, dispatch, setHijoActivo, profilesByUserId, isPro } = useHuella()
+  const { state, dispatch, setHijoActivo, isPro } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeCopy, setUpgradeCopy] = useState(null)
-  const analisisRef = useRef(null)
+  const [detalleAbierto, setDetalleAbierto] = useState(false)
+  const detalleRef = useRef(null)
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
 
-  // Motor de rasgos · 4D — datos para la card de anticipo del retrato.
-  const rasgoCandidato = (rasgos || []).find(
+  // Motor de rasgos · 4D. El aviso de rasgo nuevo (candidato o emergente) ya no
+  // es una card propia: es el badge de la puerta "Su huella".
+  const rasgoCandidato = (rasgos || []).some(
     (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
-  ) ?? null
+  )
   const rasgosConfirmadosCount = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo?.id
   ).length
-  // Fase 2 · Capa 3 — hay un rasgo en camino (1-2 momentos) para este hijo.
-  // Alimenta el estado intermedio de la card: la pista honesta sin revelar
-  // contenido. Tiene menos prioridad que el candidato, mas que el progreso.
   const hayEmergente = (rasgos || []).some(
     (r) => r.estado === 'emergente' && r.hijoId === hijo?.id
   )
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
-  // Consejo del día: live en la campana del Hero. Visible solo si hay
-  // datos suficientes. Puntito de notificación mientras no se vea.
+  // Consejo del día: vive en la campana de la cabecera. Visible solo si hay
+  // datos suficientes. Puntito terracota mientras no se vea.
   const consejo = useConsejoDiario({ user, hijo, episodios, hitos, estrategias })
   const [consejoAbierto, setConsejoAbierto] = useState(false)
   function abrirConsejo() {
@@ -309,14 +177,20 @@ export default function PanelPage() {
     [estrategias]
   )
 
-  const ultimoHitoConFoto = useMemo(
-    () => hitos.find(h => h.foto_url),
+  // Fotos de la cabecera: el avatar del hijo primero y después las fotos de
+  // hitos más recientes. Sin ninguna, la cabecera dibuja el placeholder.
+  const fotosCabecera = useMemo(() => {
+    const lista = [hijo?.avatarUrl, ...hitos.filter(h => h.foto_url).map(h => h.foto_url)]
+    return [...new Set(lista.filter(Boolean))].slice(0, MAX_FOTOS_CABECERA)
+  }, [hijo?.avatarUrl, hitos])
+
+  const fotoUltimoAvance = useMemo(
+    () => hitos.find(h => h.foto_url)?.foto_url ?? null,
     [hitos]
   )
 
   // Patrones abiertos del hijo activo, del más reciente al más viejo por
-  // created_at (NUNCA por gravedad ni clasificación). El [0] es el que se
-  // muestra en Home. Los patrones no tocan el motor de rasgos.
+  // created_at (NUNCA por gravedad ni clasificación).
   const patronesAbiertos = useMemo(
     () => (state.patrones || [])
       .filter(p => p.estado === 'abierto' && p.hijo_id === hijo?.id)
@@ -324,47 +198,25 @@ export default function PanelPage() {
     [state.patrones, hijo?.id]
   )
 
-  // Bloque "Lo que estás acompañando" reutilizado en dos posiciones del Home:
-  // después del último avance cuando hay historial, y después del estado vacío
-  // cuando no lo hay (la mamá que registró el chupete en su primer minuto).
-  const bloquePatrones = patronesAbiertos.length > 0 ? (
-    <>
-      <SectionEyebrow>Lo que estás acompañando</SectionEyebrow>
-      <div className={styles.patronBloque}>
-        <PatronCard
-          patron={patronesAbiertos[0]}
-          authorName={getAuthorDisplay(patronesAbiertos[0].user_id, profilesByUserId, user?.id)}
-          onClick={() => navigate(`/patron/${patronesAbiertos[0].id}`)}
-        />
-        {patronesAbiertos.length > 1 && (
-          <button
-            type="button"
-            className={styles.patronMas}
-            onClick={() => navigate('/historial', { state: { filtro: 'patrones' } })}
-          >
-            y {patronesAbiertos.length - 1} más
-          </button>
-        )}
-      </div>
-    </>
-  ) : null
+  const hayPatronNuevo = useMemo(
+    () => patronesAbiertos.some(
+      p => Date.now() - new Date(p.created_at).getTime() < DIAS_PATRON_NUEVO * 864e5
+    ),
+    [patronesAbiertos]
+  )
 
-  // ── Datos para ResumenSemanal ────────────────────────────────────────────
+  // ── Datos de la semana ───────────────────────────────────────────────────
 
   const weekData = useMemo(() => {
     const now = new Date()
     const hace7  = new Date(now); hace7.setDate(now.getDate() - 7)
     const hace14 = new Date(now); hace14.setDate(now.getDate() - 14)
-    const rangeEnd   = now
-    const rangeStart = hace7
 
     const thisWeekEps = episodios.filter(e => new Date(e.fecha) >= hace7)
     const prevWeekEps = episodios.filter(e => { const f = new Date(e.fecha); return f >= hace14 && f < hace7 })
 
     const episodes     = thisWeekEps.length
     const prevEpisodes = prevWeekEps.length
-    const episodesDelta    = episodes - prevEpisodes
-    const episodesDeltaPct = prevEpisodes > 0 ? episodesDelta / prevEpisodes : 0
 
     const intensityAvg = episodes > 0
       ? thisWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / episodes
@@ -372,27 +224,12 @@ export default function PanelPage() {
     const prevIntensityAvg = prevEpisodes > 0
       ? prevWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / prevEpisodes
       : 0
-    const intensityDelta = intensityAvg - prevIntensityAvg
-
-    const hace30 = new Date(now); hace30.setDate(now.getDate() - 30)
-    const gCounts = {}
-    for (const ep of episodios.filter(e => new Date(e.fecha) >= hace30)) {
-      for (const g of ep.gatillantes || []) gCounts[g] = (gCounts[g] || 0) + 1
-    }
-    const topG = Object.entries(gCounts).sort((a, b) => b[1] - a[1])[0]
-    const topTriggerLabel = topG?.[0] || null
-    const topTriggerEmoji = topTriggerLabel
-      ? (GATILLANTE_EMOJIS[topTriggerLabel.toLowerCase()] || '⭐')
-      : null
-
-    const showDeltas = episodes >= 3 && prevEpisodes > 0
 
     return {
-      rangeStart, rangeEnd,
-      episodes, episodesDelta, episodesDeltaPct,
-      intensityAvg, intensityDelta,
-      topTriggerEmoji, topTriggerLabel,
-      showDeltas,
+      episodes,
+      prevEpisodes,
+      intensityAvg,
+      intensityDelta: intensityAvg - prevIntensityAvg,
     }
   }, [episodios])
 
@@ -444,24 +281,40 @@ export default function PanelPage() {
   const narrativaFrecuencia = useNarrativaFrecuencia(episodios, estrategias)
   const narrativaIntensidad = useNarrativaIntensidad(episodios)
 
-  // ── Scroll al análisis cuando se activa ─────────────────────────────────
+  // Estado de la tarjeta central y la ÚNICA frase que muestra.
+  const estadoCerebro = calcularEstadoCerebro({
+    totalEpisodios: episodios.length,
+    episodiosSemana: weekData.episodes,
+  })
+  const fraseHallazgo = narrativaFrecuencia || narrativaIntensidad
+  const detalleDisponible = episodios.length >= 3
+
+  // Chip de cupo del plan free: solo cuando de verdad queda poco.
+  const cupoRestante = MAX_EPISODIOS_FREE - episodios.length
+  const avisoCupo = !isPro() && cupoRestante <= CUPO_AVISO_DESDE
+    ? (cupoRestante > 0
+        ? `Te quedan ${cupoRestante} momento${cupoRestante === 1 ? '' : 's'} del plan gratuito`
+        : `Llegaste a los ${MAX_EPISODIOS_FREE} momentos del plan gratuito`)
+    : null
+
+  // ── Scroll al detalle cuando arranca el análisis ─────────────────────────
 
   useEffect(() => {
     if (loadingAnalisis) {
       setTimeout(() => {
-        analisisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        detalleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
     }
   }, [loadingAnalisis])
 
   async function handleAnalizarPatrones() {
     if (loadingAnalisis) return
+    setDetalleAbierto(true)
     setLoadingAnalisis(true)
     try {
       if (!isPro()) {
         // Free: gate real. Solo la primera sección (teaser); el resto es Pro y
-        // ni siquiera se genera. detectarPatronesEstructurado alimenta
-        // estrategias (Pro), así que tampoco se llama para el free.
+        // ni siquiera se genera.
         const texto = await interpretarPatrones({ hijo, episodios, teaser: true })
         setAnalisis(texto)
       } else {
@@ -491,19 +344,20 @@ export default function PanelPage() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className={panelStyles.panel}>
-      <GuiaPrimerosPasos totalEpisodios={episodios.length} />
-
-      <Hero
-        userName={userName}
-        childName={nombreHijo}
-        childAvatarUrl={hijo?.avatarUrl ?? null}
-        date={new Date()}
-        onProfileClick={() => navigate('/perfil')}
-        bellActive={consejo.visible}
-        bellHasNew={consejo.tieneConsejoNuevo}
-        onBellClick={abrirConsejo}
-      />
+    <div className={styles.page}>
+      <div className={styles.cabeceraBleed}>
+        <CabeceraHijo
+          nombreHijo={nombreHijo}
+          fotos={fotosCabecera}
+          padreNombre={userName}
+          padreAvatarUrl={state.padreAvatarUrl}
+          onFotoClick={() => navigate('/hijo')}
+          onPadreClick={() => navigate('/perfil')}
+          bellActive={consejo.visible}
+          bellHasNew={consejo.tieneConsejoNuevo}
+          onBellClick={abrirConsejo}
+        />
+      </div>
 
       {consejoAbierto && (
         <ConsejoDelDiaModal
@@ -513,133 +367,106 @@ export default function PanelPage() {
         />
       )}
 
-      <main className={panelStyles.body}>
-
-        {/* ── Selector de hijo (solo si hay más de uno) ── */}
-        {hijos.length > 1 && (
-          <div className={styles.selectorHijos}>
-            {hijos.map(h => (
-              <button
-                key={h.id}
-                type="button"
-                className={`${styles.selectorChip} ${h.id === state.hijoActivoId ? styles.selectorChipActivo : ''}`}
-                onClick={() => setHijoActivo(h.id)}
-              >
-                {h.nombre}
-              </button>
-            ))}
+      {/* ── Selector de hijo (solo si hay más de uno) ── */}
+      {hijos.length > 1 && (
+        <div className={styles.selectorHijos}>
+          {hijos.map(h => (
             <button
+              key={h.id}
               type="button"
-              className={styles.selectorAddBtn}
-              onClick={() => {
-                // Gate 2do hijo: free limitado a 1; Pro/Admin, ilimitados.
-                if (!isPro() && hijos.length >= 1) {
-                  setUpgradeCopy({
-                    titulo: 'Cada hijo tiene su huella',
-                    mensaje: 'Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno.',
-                  })
-                  setShowUpgrade(true)
-                  return
-                }
-                navigate('/hijo?nuevo=true')
-              }}
-              aria-label="Agregar hijo"
+              className={`${styles.selectorChip} ${h.id === state.hijoActivoId ? styles.selectorChipActivo : ''}`}
+              onClick={() => setHijoActivo(h.id)}
             >
-              <Plus size={14} />
+              {h.nombre}
             </button>
-          </div>
-        )}
+          ))}
+          <button
+            type="button"
+            className={styles.selectorAddBtn}
+            onClick={() => {
+              // Gate 2do hijo: free limitado a 1; Pro/Admin, ilimitados.
+              if (!isPro() && hijos.length >= 1) {
+                setUpgradeCopy({
+                  titulo: 'Cada hijo tiene su huella',
+                  mensaje: 'Con Huella Pro registras a todos tus hijos y acompañas la huella única de cada uno.',
+                })
+                setShowUpgrade(true)
+                return
+              }
+              navigate('/hijo?nuevo=true')
+            }}
+            aria-label="Agregar hijo"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      )}
 
-        {/* ── CTA primario ── */}
-        <CTAPrimary onClick={() => navigate('/nuevo')} />
+      {/* ── Tarjeta central: la semana interpretada ── */}
+      <TarjetaCerebro
+        nombreHijo={nombreHijo}
+        estado={estadoCerebro}
+        edadHijo={hijo?.edad ?? null}
+        totalEpisodios={episodios.length}
+        episodiosSemana={weekData.episodes}
+        frecData={frecData}
+        frase={fraseHallazgo}
+        expandible={detalleDisponible}
+        abierto={detalleAbierto}
+        onToggle={() => setDetalleAbierto(v => !v)}
+      >
+        <div ref={detalleRef} className={styles.detalleInterno}>
+          <CTAAskHuella onClick={handleAnalizarPatrones} loading={loadingAnalisis} />
+          <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
+          <ChartIntensidad data={intData} caption={narrativaIntensidad} />
+          {gatillosTop3.length > 0 && <ChartGatillos data={gatillosTop3} />}
+          <AnalisisIA
+            loading={loadingAnalisis}
+            texto={analisis}
+            bloqueado={!isPro()}
+            onAnalizar={handleAnalizarPatrones}
+            onUpgrade={abrirUpgradeAnalisis}
+            onAccept={() => navigate('/estrategias', { state: { sugerencia_precocida: state.sugerenciaEstrategia } })}
+            onDismiss={() => setAnalisis('')}
+          />
+        </div>
+      </TarjetaCerebro>
 
-        {/* ── Canje de codigo de beta (se auto-esconde si ya es Pro) ── */}
-        <CanjeCodigoBeta />
+      {/* ── La única acción ── */}
+      <BotonRegistrar onClick={() => navigate('/nuevo')} avisoCupo={avisoCupo} />
 
-        {/* ── Anticipo del retrato (motor de rasgos · 4D) · gatillo de retorno ── */}
-        {(rasgoCandidato || hayEmergente || rasgosConfirmadosCount > 0) && (
-          <AnticipoRetratoCard
-            nombre={nombreHijo}
-            candidato={rasgoCandidato}
-            hayEmergente={hayEmergente}
+      {/* ── Puertas ── */}
+      <div className={styles.puertas}>
+        <TarjetaEntrada delay={0}>
+          <PuertaHuella
+            nombreHijo={nombreHijo}
+            fotoHijo={hijo?.avatarUrl ?? null}
             confirmados={rasgosConfirmadosCount}
+            hayNovedad={rasgoCandidato || hayEmergente}
             onClick={() => navigate('/hijo')}
           />
-        )}
+        </TarjetaEntrada>
 
-        {/* ── CTA Pregúntale a Huella (visible solo con datos suficientes) ── */}
-        {episodios.length >= 3 && (
-          <CTAAskHuella
-            onClick={handleAnalizarPatrones}
-            loading={loadingAnalisis}
+        <TarjetaEntrada delay={0.06}>
+          <PuertaMomentos
+            total={episodios.length}
+            ultimos={episodios}
+            fotoAvance={fotoUltimoAvance}
+            onClick={() => navigate('/historial')}
           />
+        </TarjetaEntrada>
+
+        {(estrategiaActiva || patronesAbiertos.length > 0) && (
+          <TarjetaEntrada delay={0.12}>
+            <PuertaAcompanando
+              plan={estrategiaActiva ?? null}
+              patrones={patronesAbiertos}
+              hayPatronNuevo={hayPatronNuevo}
+              onClick={() => navigate('/estrategias')}
+            />
+          </TarjetaEntrada>
         )}
-
-        {episodios.length === 0 ? (
-
-          /* ── Estado vacío ── */
-          /* ── Estado vacío ── Sin historial pero puede haber patrones: el
-             bloque va DESPUÉS del estado vacío (posición equivalente). */
-          <>
-            <EstadoVacio nombreHijo={nombreHijo} onRegistrar={() => navigate('/nuevo')} />
-            {bloquePatrones}
-          </>
-
-        ) : (
-          <>
-            {ultimoHitoConFoto && (
-              <UltimoHitoCard
-                hito={ultimoHitoConFoto}
-                onVerLogros={() => navigate('/hitos')}
-                authorName={getAuthorDisplay(ultimoHitoConFoto.user_id, profilesByUserId, user?.id)}
-              />
-            )}
-
-            {/* ── Lo que estás acompañando (patrones abiertos) ──
-                Con historial: va DESPUÉS del último avance, nunca antes. */}
-            {bloquePatrones}
-
-            {/* ── Resumen semanal ── */}
-            <SectionEyebrow>Esta semana · contexto</SectionEyebrow>
-            <ResumenSemanal data={weekData} />
-
-            {/* ── Gráficos (desde 3 episodios) ── */}
-            {episodios.length >= 3 && (
-              <>
-                <SectionEyebrow>Cómo se ve la semana</SectionEyebrow>
-                <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
-                <ChartIntensidad data={intData} caption={narrativaIntensidad} />
-                {gatillosTop3.length > 0 && <ChartGatillos data={gatillosTop3} />}
-              </>
-            )}
-
-            {/* ── Estrategia activa ── */}
-            {estrategiaActiva && (
-              <EstrategiaActivaPanel
-                estrategia={estrategiaActiva}
-                onAbrir={() => navigate('/estrategias')}
-                authorName={getAuthorDisplay(estrategiaActiva.userId, profilesByUserId, user?.id)}
-              />
-            )}
-
-            {/* ── Análisis IA (desde 3 episodios) ── */}
-            {episodios.length >= 3 && (
-              <div ref={analisisRef}>
-                <SectionEyebrow>Análisis de patrones</SectionEyebrow>
-                <AnalisisIA
-                  loading={loadingAnalisis}
-                  texto={analisis}
-                  bloqueado={!isPro()}
-                  onAnalizar={handleAnalizarPatrones}
-                  onUpgrade={abrirUpgradeAnalisis}
-                  onAccept={() => navigate('/estrategias', { state: { sugerencia_precocida: state.sugerenciaEstrategia } })}
-                  onDismiss={() => setAnalisis('')}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </main>
+      </div>
 
       {showUpgrade && (
         <UpgradeModal

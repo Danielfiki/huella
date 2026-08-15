@@ -1,0 +1,142 @@
+.cabecera {
+  position: relative;
+}
+
+/* 296px es la altura de retrato del handoff de Design. El marco recorta la
+   foto y aloja, encima, el degradado, las acciones y el saludo. */
+.marco {
+  position: relative;
+  height: 296px;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+}
+
+.fotoBtn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  display: block;
+  cursor: pointer;
+}
+/* El `button:active { scale(0.93) }` global se ve roto en una foto a sangre:
+   encoge la cabecera entera. El feedback táctil lo da el brillo. */
+.fotoBtn:active { transform: none; opacity: 0.94; }
+
+.foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* La cara suele estar en el tercio superior de una foto de niño. */
+  object-position: center 28%;
+  display: block;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-light);
+  background: var(--color-surface-alt);
+}
+.placeholderIcon { width: 38%; height: auto; display: block; }
+
+/* Disuelve la foto en el fondo crema de la página. pointer-events: none para
+   que el toque siga llegando al botón de la foto que está debajo. */
+.velo {
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-foto-cabecera);
+  pointer-events: none;
+}
+
+.acciones {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campana {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  place-items: center;
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.campanaApagada { opacity: 0.55; cursor: default; }
+
+/* Puntito terracota del consejo del día sin ver. */
+.campanaPunto {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-surface);
+  pointer-events: none;
+}
+
+.padre {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  flex-shrink: 0;
+  border: 2px solid var(--color-surface);
+  background: var(--color-primary-bg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.padreImg {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.padreInicial {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  line-height: 1;
+}
+
+/* Va sobre la zona ya casi opaca del degradado, así que se lee con el color
+   de texto normal de la página. pointer-events: none deja pasar el toque. */
+.saludo {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 10px;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  pointer-events: none;
+}

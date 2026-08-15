@@ -196,6 +196,33 @@
   /* ── Scrim ── */
   --color-scrim: rgba(0, 0, 0, 0.45);
 
+  /* ═══ Degradados ═══════════════════════════════════════════════
+     Los unicos degradados con valores crudos de la app. Viven aca
+     porque un degradado necesita el MISMO color con alfas distintas,
+     y `transparent` sobre un color calido produce banda gris en
+     varios navegadores. Cada uno tiene su override en oscuro.
+
+     foto-cabecera  la foto del hijo en el Home se disuelve hacia el
+                    fondo crema (--color-bg). Las paradas replican
+                    #FAF3EC en claro y #1A1208 en oscuro.
+     cta-registrar  el boton unico del Home. En oscuro NO usa
+                    var(--color-primary) porque ahi el primario se
+                    aclara (#EE9452) y el texto blanco se pierde:
+                    se fija la terracota profunda en ambos modos.  */
+  --gradient-foto-cabecera: linear-gradient(
+    to bottom,
+    rgba(250, 243, 236, 0)    0%,
+    rgba(250, 243, 236, 0.30) 44%,
+    rgba(250, 243, 236, 0.80) 72%,
+    rgba(250, 243, 236, 0.96) 89%,
+    var(--color-bg)           100%
+  );
+  --gradient-cta-registrar: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  );
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
@@ -375,6 +402,18 @@
     --shadow-cta-primary: 0 12px 28px rgba(229, 110, 38, 0.45);
     --shadow-fab: 0 8px 18px rgba(229, 110, 38, 0.5);
     --color-scrim: rgba(0, 0, 0, 0.60);
+
+    /* Degradados · oscuro (ver comentario en :root) */
+    --gradient-foto-cabecera: linear-gradient(
+      to bottom,
+      rgba(26, 18, 8, 0)    0%,
+      rgba(26, 18, 8, 0.30) 44%,
+      rgba(26, 18, 8, 0.80) 72%,
+      rgba(26, 18, 8, 0.96) 89%,
+      var(--color-bg)       100%
+    );
+    --gradient-cta-registrar: linear-gradient(135deg, #C45A18 0%, #E56E26 100%);
+
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);
     --color-nav-text: #B0987A;

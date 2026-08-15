@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import UpgradeModal from '../../components/ui/UpgradeModal'
+import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import styles from './PerfilPage.module.css'
 
 function isoToDisplay(iso) {
@@ -393,6 +394,13 @@ export default function PerfilPage() {
           </>
         )}
       </Card>
+
+      {/* ── Canje de codigo de beta ──────────────────────
+          Vivía en el Home. El Home nuevo (B2) tiene una sola acción, así que
+          el canje se mudó acá, pegado a la card de Pro, que es donde el
+          usuario va a buscar su plan. El componente se auto-esconde si ya
+          es Pro. */}
+      <CanjeCodigoBeta />
 
       {/* ── Hijo ─────────────────────────────────────── */}
       <Card>

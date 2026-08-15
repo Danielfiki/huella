@@ -1,0 +1,38 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 58px de alto y radio 16 (--radius-md) vienen del handoff de Design. */
+.boton {
+  width: 100%;
+  height: 58px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-cta-registrar);
+  color: var(--color-white);
+  box-shadow: var(--shadow-cta-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition: box-shadow var(--motion-rapida) var(--motion-ease-estandar);
+}
+
+.boton:active { box-shadow: var(--shadow-primary-sm); }
+
+.chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
