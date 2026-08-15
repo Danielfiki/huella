@@ -1,8 +1,13 @@
 // HeaderMocha.jsx — header compartido. Recibe título + opciones (stats, progreso, episodios-origen).
+//
+// B3 · se eliminó la tuerca de "Ajustes". Era código muerto: el botón solo se
+// pintaba con `onAjustes` y ningún caller de este header lo pasaba nunca, así
+// que no hacía nada en ninguna pantalla de Estrategias. Si algún día vuelve a
+// hacer falta, tiene que llegar con destino, no como icono decorativo.
 import React from 'react';
 import styles from './HeaderMocha.module.css';
 
-export default function HeaderMocha({ titulo, onBack, onAjustes, stats, clinical, progreso, episodiosOrigen, cicloNumero }) {
+export default function HeaderMocha({ titulo, onBack, stats, clinical, progreso, episodiosOrigen, cicloNumero }) {
   return (
     <header className={styles.top}>
       {cicloNumero > 1 && (
@@ -19,14 +24,6 @@ export default function HeaderMocha({ titulo, onBack, onAjustes, stats, clinical
           </button>
         )}
         <h1 className={styles.h1}>{titulo}</h1>
-        {!onBack && onAjustes && (
-          <button className={styles.iconBtn} onClick={onAjustes} aria-label="Ajustes">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </button>
-        )}
       </div>
       {stats && (
         <div className={styles.stats}>

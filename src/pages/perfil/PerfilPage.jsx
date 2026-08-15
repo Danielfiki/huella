@@ -9,6 +9,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
+import TusMedallas from '../../components/medallas/TusMedallas'
 import styles from './PerfilPage.module.css'
 
 function isoToDisplay(iso) {
@@ -394,6 +395,12 @@ export default function PerfilPage() {
           </>
         )}
       </Card>
+
+      {/* ── Tus medallas ─────────────────────────────────
+          B3: las 33 medallas vivian en /hitos ("Logros"), como si fueran del
+          niño. Son del PADRE — se ganan registrando, observando y sosteniendo
+          un plan — asi que se mudaron aca, debajo de "Tú". */}
+      <TusMedallas />
 
       {/* ── Canje de codigo de beta ──────────────────────
           Vivía en el Home. El Home nuevo (B2) tiene una sola acción, así que

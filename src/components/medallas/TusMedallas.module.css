@@ -1,0 +1,302 @@
+/* "Tus medallas" en Perfil. Los tonos de medalla son los MISMOS que tenía la
+   grilla de HitosPage (los tokens --color-medalla-*); lo que cambia es el
+   envase: niveles colapsables y disco más chico, para que la sección conviva
+   con el resto del Perfil en vez de ser una pantalla. */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-soft);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Cabecera ── */
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tituloWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.titulo {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ayuda {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: none;
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  text-align: right;
+  min-width: 0;
+}
+
+.statNum {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.statNum small {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.55;
+}
+
+.statNivel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Barra global: pistacho, porque es progreso ya conseguido. Misma jerarquía de
+   color que el Home (terracota = acción, pistacho = logrado). */
+.barra {
+  height: 6px;
+  background: var(--color-surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.barra i {
+  display: block;
+  height: 100%;
+  background: var(--color-accent-green);
+  border-radius: 999px;
+  transition: width var(--motion-lenta) var(--motion-ease-entrada);
+}
+
+/* ── Niveles ── */
+
+.niveles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nivel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nivelLocked {
+  background: var(--color-surface-alt);
+  border-style: dashed;
+}
+
+.nivelHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+.nivelHead:active { transform: none; }
+
+.levelBadge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+.nivelLocked .levelBadge {
+  background: var(--color-surface);
+  color: var(--color-text-light);
+}
+
+.nivelLbl {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nivelName {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.nivelSub {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+/* Aviso cálido de medalla nueva sin abrir el nivel. Nunca rojo. */
+.puntoNuevo {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-primary);
+}
+
+.nivelPct {
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.nivelPct small {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.55;
+}
+
+.lockMsg {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Grilla de medallas ── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px 6px;
+}
+
+.med {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  min-width: 0;
+}
+.med[role='button'] { cursor: pointer; }
+
+.disc {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.disc svg { width: 20px; height: 20px; }
+
+.medName {
+  font-family: var(--font-heading);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  color: var(--color-text);
+  text-wrap: pretty;
+}
+
+.tEstrella    .disc { background: var(--color-medalla-estrella-bg);    border: 1.5px solid var(--color-medalla-estrella-border);    color: var(--color-medalla-estrella); }
+.tCelebracion .disc { background: var(--color-medalla-celebracion-bg); border: 1.5px solid var(--color-medalla-celebracion-border); color: var(--color-medalla-celebracion); }
+.tCalma       .disc { background: var(--color-medalla-calma-bg);       border: 1.5px solid var(--color-medalla-calma-border);       color: var(--color-medalla-calma); }
+.tConstancia  .disc { background: var(--color-medalla-constancia-bg);  border: 1.5px solid var(--color-medalla-constancia-border);  color: var(--color-medalla-constancia); }
+.tBase        .disc { background: var(--color-medalla-base-bg);        border: 1.5px solid var(--color-medalla-base-border);        color: var(--color-medalla-base); }
+
+/* Sello de la medalla estrella: las más importantes de cada nivel. */
+.tEstrella .disc::after {
+  content: "★";
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 17px;
+  height: 17px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: 2.5px solid var(--color-surface);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.locked .disc {
+  background: var(--color-surface-alt);
+  border: 1.5px dashed var(--color-border);
+  color: var(--color-text-light);
+}
+.locked .disc svg { fill: transparent; stroke: currentColor; stroke-width: 1.5; opacity: 0.7; }
+.locked .disc::after { display: none; }
+
+/* Medalla recién desbloqueada: puntito que late. Se apaga solo con
+   prefers-reduced-motion por el barrido global de index.css. */
+.nueva .disc::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-surface);
+  animation: medallaPulso 1.6s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes medallaPulso {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.18); opacity: 0.7; }
+}

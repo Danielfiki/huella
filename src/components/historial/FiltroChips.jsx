@@ -9,6 +9,11 @@ const TIPOS = [
   { key: 'todos', label: 'Momentos' },
   { key: 'dificiles', label: 'Difíciles' },
   { key: 'logros', label: 'Avances' },
+  // B3 · reemplaza al álbum, que era una tab aparte dentro de Logros. Las
+  // fotos no se movieron a ninguna galería nueva: siempre estuvieron en la
+  // línea de tiempo, dentro de la tarjeta de su momento. Esto solo deja
+  // verlas juntas.
+  { key: 'fotos', label: 'Con foto' },
   { key: 'patrones', label: 'Acompañas' },
 ]
 

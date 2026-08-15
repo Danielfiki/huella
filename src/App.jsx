@@ -18,7 +18,6 @@ import EstrategiasPage from './pages/estrategias/EstrategiasPage'
 import EstrategiaNuevaPage from './pages/estrategias/EstrategiaNuevaPage'
 import EstrategiaDetailPage from './pages/estrategias/EstrategiaDetailPage'
 import EstrategiaCierrePage from './pages/estrategias/EstrategiaCierrePage'
-import HitosPage from './pages/hitos/HitosPage'
 import HistorialPage from './pages/historial/HistorialPage'
 import PerfilPage from './pages/perfil/PerfilPage'
 import HijoPage from './pages/hijo/HijoPage'
@@ -174,7 +173,14 @@ export default function App() {
                 <Route path="estrategias/nuevo" element={<PageErrorBoundary><EstrategiaNuevaPage /></PageErrorBoundary>} />
                 <Route path="estrategias/:id" element={<PageErrorBoundary><EstrategiaDetailPage /></PageErrorBoundary>} />
                 <Route path="estrategias/:id/cierre/:cicloNumero" element={<PageErrorBoundary><EstrategiaCierrePage /></PageErrorBoundary>} />
-                <Route path="hitos"       element={<PageErrorBoundary><HitosPage /></PageErrorBoundary>} />
+                {/* B3 · "Logros" dejo de ser una pagina: el album se fusiono con la linea
+                    de tiempo (/historial) y las medallas se mudaron a Perfil. La ruta
+                    sobrevive como redireccion para no romper links viejos. */}
+                {/* B3 · "Logros" dejo de ser una pagina: el album se fusiono con la
+                    linea de tiempo (/historial) y las medallas se mudaron a Perfil.
+                    La ruta sobrevive como redireccion para no romper links viejos
+                    (notificaciones, historial del navegador, PWA instalada). */}
+                <Route path="hitos"       element={<Navigate to="/historial" replace />} />
                 <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
                 <Route path="hijo"                    element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />

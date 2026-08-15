@@ -23,7 +23,11 @@ export default function HistorialHeader({
             <polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
-        <h1 className={styles.title}>Historial</h1>
+        {/* B3 · "Momentos" y no "Historial": la pantalla dejó de ser un log y
+            pasó a ser la línea de tiempo única del hijo — episodios difíciles,
+            avances y sus fotos en una sola cronología. Es además la palabra
+            que ya usa el resto de la app ("Registrar un momento"). */}
+        <h1 className={styles.title}>Momentos</h1>
         <button className={styles.iconBtn} onClick={onSearch} aria-label="Buscar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" />

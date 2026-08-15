@@ -456,16 +456,18 @@ export default function PanelPage() {
           />
         </TarjetaEntrada>
 
-        {(estrategiaActiva || patronesAbiertos.length > 0) && (
-          <TarjetaEntrada delay={0.12}>
-            <PuertaAcompanando
-              plan={estrategiaActiva ?? null}
-              patrones={patronesAbiertos}
-              hayPatronNuevo={hayPatronNuevo}
-              onClick={() => navigate('/estrategias')}
-            />
-          </TarjetaEntrada>
-        )}
+        {/* B3 · esta puerta ya no se condiciona a tener plan o patrones: con
+            Estrategias fuera de la tab bar, es la única entrada a /estrategias.
+            Sin nada que acompañar se muestra en modo "explorar". */}
+        <TarjetaEntrada delay={0.12}>
+          <PuertaAcompanando
+            nombreHijo={nombreHijo}
+            plan={estrategiaActiva ?? null}
+            patrones={patronesAbiertos}
+            hayPatronNuevo={hayPatronNuevo}
+            onClick={() => navigate('/estrategias')}
+          />
+        </TarjetaEntrada>
       </div>
 
       {showUpgrade && (

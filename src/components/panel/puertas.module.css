@@ -175,6 +175,16 @@
   text-overflow: ellipsis;
 }
 
+/* Puerta "Acompañando" en modo explorar: sin dato que mostrar, así que la
+   tarjeta se achica en vez de fingir contenido. */
+.centroExplorar { gap: 3px; }
+
+.explorar {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
 .chipResto {
   flex-shrink: 0;
   padding: 4px 8px;

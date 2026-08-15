@@ -144,18 +144,29 @@ export function PuertaMomentos({ total, ultimos, fotoAvance, onClick }) {
 
 // ── Acompañando ────────────────────────────────────────────────────────────
 
-export function PuertaAcompanando({ plan, patrones, hayPatronNuevo, onClick }) {
+export function PuertaAcompanando({ nombreHijo, plan, patrones, hayPatronNuevo, onClick }) {
   const semana = plan ? Math.min(Math.max(plan.semanaActual, 1), 4) : 0
   const chips = patrones.slice(0, 2)
   const resto = patrones.length - chips.length
 
+  // B3 · sin plan ni patrones la puerta ya NO se esconde. Con Estrategias fuera
+  // de la barra, esta es la única entrada a /estrategias: si desapareciera,
+  // quien todavía no tiene un plan no tendría cómo llegar a crearlo. En ese
+  // caso se muestra en modo "explorar": discreta, sin dato ni badge, pero
+  // presente y con destino claro.
+  const vacia = !plan && patrones.length === 0
+
   return (
     <Puerta onClick={onClick} ariaLabel="Lo que estás acompañando">
-      <span className={styles.centro}>
+      <span className={`${styles.centro} ${vacia ? styles.centroExplorar : ''}`}>
         <span className={styles.etiquetaFila}>
           <span className={styles.etiqueta}>Acompañando</span>
           {hayPatronNuevo && <span className={styles.badge}>Patrón nuevo</span>}
         </span>
+
+        {vacia && (
+          <span className={styles.explorar}>Ver estrategias para {nombreHijo}</span>
+        )}
 
         {plan && (
           <>

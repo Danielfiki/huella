@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Home, Plus, Target, Star, BookOpen, User } from 'lucide-react'
+import { Home, Plus, User } from 'lucide-react'
 import Onboarding from '../../pages/onboarding/Onboarding'
 import Logo from '../ui/Logo'
 import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services/onboardingPersistor'
@@ -10,12 +10,20 @@ import { useFamily } from '../../context/FamilyContext'
 import CitaLoader from '../ui/CitaLoader'
 import styles from './Layout.module.css'
 
+// B3 · la barra baja de 5 a 3.
+//
+// Salieron Historial, Estrategias y Logros. No desaparecieron del producto:
+// Momentos (antes Historial) y Estrategias se abren desde las puertas del
+// Home, y las medallas se mudaron a Perfil. La barra queda con lo único que
+// se usa a diario: dónde estás, registrar, y tú.
+//
+// El orden de `navItems` importa para la animación de transición entre
+// páginas: getNavIndex compara el índice actual con el anterior para decidir
+// si la página entra por la derecha o por la izquierda.
 const navItems = [
-  { to: '/panel',       icon: Home,     label: 'Inicio' },
-  { to: '/historial',   icon: BookOpen, label: 'Historial' },
-  { to: '/nuevo',       icon: Plus,     label: 'Registrar', destacado: true },
-  { to: '/estrategias', icon: Target,   label: 'Estrategias' },
-  { to: '/hitos',       icon: Star,     label: 'Logros' },
+  { to: '/panel',  icon: Home, label: 'Inicio' },
+  { to: '/nuevo',  icon: Plus, label: 'Registrar', destacado: true },
+  { to: '/perfil', icon: User, label: 'Tú', esPerfil: true },
 ]
 
 const NAV_PATHS = navItems.map((n) => n.to)
@@ -152,7 +160,7 @@ export default function Layout() {
       </main>
 
       <nav className={styles.bottomNav}>
-        {navItems.map(({ to, icon: Icon, label, destacado }) =>
+        {navItems.map(({ to, icon: Icon, label, destacado, esPerfil }) =>
           destacado ? (
             <NavLink key={to} to={to} className={({ isActive }) =>
               `${styles.navRegistrar} ${isActive ? styles.navRegistrarActive : ''}`
@@ -170,7 +178,14 @@ export default function Layout() {
                 `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
               }
             >
-              <Icon size={22} />
+              {/* "Tú" muestra la foto real del padre cuando existe. Es el mismo
+                  avatar de B1 que ya aparece en la cabecera del Home, así que
+                  la pestaña se reconoce sin leer la etiqueta. */}
+              {esPerfil && state.padreAvatarUrl ? (
+                <img src={state.padreAvatarUrl} alt="" className={styles.navAvatar} />
+              ) : (
+                <Icon size={22} />
+              )}
               <span>{label}</span>
             </NavLink>
           )

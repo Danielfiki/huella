@@ -179,6 +179,34 @@
 .iaHIcon { width: 90%; height: 90%; }
 
 /* ─── hito photo ─── */
+/* Cámara para agregar foto a un avance ya guardado. Discreta: mismo tamaño
+   que las pills con las que comparte fila, sin texto y sin peso de color. */
+.fotoBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color var(--motion-rapida) var(--motion-ease-estandar),
+              border-color var(--motion-rapida) var(--motion-ease-estandar);
+}
+.fotoBtn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+.fotoBtn:disabled { opacity: 0.5; cursor: default; }
+
+.fotoError {
+  font-size: 12px;
+  color: var(--color-danger-text);
+  margin: 0;
+}
+
 .hitoFoto {
   width: 100%; max-height: 180px;
   object-fit: cover;

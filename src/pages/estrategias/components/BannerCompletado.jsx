@@ -18,7 +18,7 @@ export default function BannerCompletado({ plan, hijoNombre, episodiosDurante })
       </p>
       <div className={styles.acts}>
         <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate(`/estrategias/${plan.id}/cierre/${plan.numero_ciclo_actual}`)}>Ver cierre completo</button>
-        <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/hitos?highlight=plan_completo')}>Ver tu hito</button>
+        <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/perfil?highlight=plan_completo')}>Ver tu medalla</button>
       </div>
     </div>
   );

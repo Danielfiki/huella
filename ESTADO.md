@@ -244,9 +244,15 @@
 
 ---
 
-## Cerrado HOY — sábado 15 agosto 2026 — BLOQUE B2 DEL REDISEÑO: el Home dejó de ser un dashboard y pasó a ser LA PÁGINA DEL HIJO
+## Cerrado HOY — sábado 15 agosto 2026 — BLOQUES B2 Y B3 DEL REDISEÑO: el Home pasó a ser LA PÁGINA DEL HIJO y las islas se fusionaron
 
-**3 commits.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
+**6 commits.** Dos bloques en el mismo día. **B2** rehizo el Home. **B3** terminó con las islas: Historial y Logros contaban la misma historia partida, y la tab bar bajó de 5 a 3. El detalle de B3 va al final de este bloque.
+
+---
+
+## B2 — el Home
+
+El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
 
 **Principio rector nuevo (de Daniel):** la pieza central de Huella es **EL MOMENTO**. Todo se construye alrededor de él, nunca como isla nueva. B2 es la primera aplicación de esa regla.
 
@@ -366,6 +372,61 @@ Historial, Logros, Estrategias, Registro, la tab bar (**sigue de 5** — el camb
 - **Cero hex/rgba en los módulos nuevos** (grep confirmado) — todo sale de `index.css`.
 - Todas las entradas al Home siguen funcionando: `/nuevo` y `/registro` al guardar, `PatronPage`, `PatronLecturaPage`, `InvitarPage` y el `NotFound` de `App.jsx`. Son navegaciones simples sin estado, así que ninguna dependía del Home antiguo.
 
+---
+
+## B3 — fusión de islas + tab bar de 3
+
+Historial y Logros eran dos pantallas contando la misma historia partida en dos. Se terminó.
+
+### Momentos (antes Historial)
+
+**Hallazgo: las fotos YA estaban en la línea de tiempo.** `HistorialPage` ya unificaba episodios + hitos y `EpisodioCard` ya renderizaba `fotoUrl`. El álbum era una segunda vista de datos que ya se veían — no hubo nada que "integrar". Lo que faltaba era poder verlas juntas.
+
+- Título "Historial" → **"Momentos"**.
+- Filtro nuevo **"Con foto"**. Cruza episodios e hitos, no solo hitos como hacía el álbum: un episodio difícil con foto también es un momento visual.
+- Sin texto nuevo en la pantalla.
+
+### Las medallas son del PADRE, no del niño
+
+Las 33 medallas se ganan registrando, observando y sosteniendo un plan. Se mudaron de `/hitos` a **Perfil**, en la sección "Tus medallas".
+
+- El catálogo se extrajo a `src/components/medallas/nivelesMedallas.js` y el glifo a `MedalIcon.jsx`. **Mismos ids, mismos checks, mismas frases** — no se reescribió nada. `TusMedallas.jsx` los monta reusando los dos modales que ya existían.
+- **La clave de localStorage es la MISMA** (`huella_badges_vistos_*`). Cambiarla habría marcado como "nuevas" todas las medallas ya ganadas, para todos los usuarios de golpe. **Cambiar un id de medalla tiene el mismo efecto: no se tocan.**
+- **Los niveles vienen colapsados**, solo abre el actual. Los 33 en grilla abierta se comían el Perfil entero. Un nivel con medalla nueva sin ver muestra un puntito terracota.
+- `HitosPage.jsx` y su CSS se borraron. La ruta `/hitos` **redirige a `/historial`** para no romper links viejos (notificaciones, historial del navegador, PWA instalada).
+
+### Tab bar de 5 a 3
+
+**Inicio · Registrar · Tú.** "Tú" usa la foto real del padre cuando existe.
+
+**Problema encontrado al renderizar y corregido:** con 3 pestañas, el `flex: 1` le daba a cada una un tercio del ancho y el fondo de la pestaña activa pasaba de pastilla a un bloque de 140px. Se acotó cada item a **88px** con `space-around` — que es exactamente el ancho que tenían con 5 pestañas, así que el peso visual del indicador quedó idéntico.
+
+La animación de transición ya tenía guarda para páginas fuera de la barra (`currentIndex !== -1`), así que Momentos y Estrategias entran con fade en vez de slide. Correcto, no hubo que tocarlo.
+
+### La tuerca de Estrategias: era código muerto
+
+Se eliminó de `HeaderMocha`, pero **no se veía en ninguna pantalla**: el botón solo se pintaba con `onAjustes` y ningún caller se lo pasaba nunca. La única tuerca viva de la app es la de `RetratoSendero` en `/hijo`, que sí funciona (va a Perfil) y no se tocó.
+
+### La capacidad que casi se pierde
+
+El álbum permitía **subir una foto a un hito ya creado**. Al desaparecer, un avance guardado sin foto no habría podido recibir una nunca más (al crearlo en NuevoPage sí se puede adjuntar, pero después no había camino). **Se recuperó** como un icono de cámara discreto en la tarjeta del avance en Momentos — solo icono, solo hitos, solo sin foto y solo para quien lo anotó. Mismo pipeline que el álbum: comprimir, subir al bucket privado `momentos`, guardar el **PATH** y nunca la URL firmada.
+
+`comprimirImagen` se extrajo a `src/utils/comprimirImagen.js`. **NuevoPage y PerfilPage siguen con su copia local a propósito**: migrarlas tocaba el registro, que estaba fuera de alcance. Cuando se toquen por otra razón, que importen esa.
+
+### Ajuste a B2 que obligó B3
+
+La puerta "Acompañando" del Home **ya no se esconde** cuando no hay plan ni patrones. Con Estrategias fuera de la barra pasó a ser la única entrada a `/estrategias`: si desaparecía, quien todavía no tiene plan se quedaba sin forma de llegar a crearlo. Sin nada que acompañar se muestra en modo "explorar" — discreta, sin dato ni badge, con "Ver estrategias para {hijo}".
+
+### Mapa de rutas de B3
+
+| Entrada | Antes | Ahora |
+|---|---|---|
+| Ruta `/hitos` | HitosPage | Redirige a `/historial` |
+| Tab "Logros" / "Historial" / "Estrategias" | En la barra | Momentos y Estrategias por las puertas del Home; medallas en Perfil |
+| NuevoPage · "Ver todos los avances" | `/hitos` | `/historial` con filtro Avances |
+| BannerCompletado · "Ver tu hito" | `/hitos?highlight=plan_completo` | `/perfil?highlight=plan_completo`, ahora "Ver tu medalla" — `plan_completo` es un **id de medalla**, y las medallas viven en Perfil |
+| Avatar del hijo en el header | `/hijo` | Sin cambios |
+
 ### Pendientes que deja B2
 
 - **`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.
@@ -373,7 +434,7 @@ Historial, Logros, Estrategias, Registro, la tab bar (**sigue de 5** — el camb
 - ~~ABIERTA: la inclinación del escarabajo del disco.~~ **CERRADA.** Nunca fue una rotación: el dibujo es simétrico y no había ningún `transform` que rotara. Lo que se veía chueco era **la pata inferior derecha saliéndose del disco mientras la izquierda quedaba adentro** — un choque asimétrico contra el borde del círculo, sumado a que el bicho estaba corrido hacia abajo. Detalle completo en la sección del escarabajo, más arriba. **Se descartó el Plan B** (reemplazar el escarabajo por un "+"): el SVG está bien dibujado, el defecto era de implementación.
 - **Revisión de accesibilidad app-completa**, no botón por botón. El disparador es el contraste del CTA (ver arriba), pero el problema es transversal: blanco sobre la terracota de marca no llega a 4.5:1 en ningún nivel, y esa combinación está en toda la app vía `Button.module.css`. Decisión de Daniel de no parcharlo pantalla por pantalla.
 - **El aviso de cupo** (chip bajo el botón) usa el copy provisorio; es el pendiente #4 de Daniel.
-- **B3:** fusión de Momentos con Logros y el cambio de la tab bar de 5 a 3.
+- ~~B3: fusión de Momentos con Logros y el cambio de la tab bar de 5 a 3.~~ **HECHO** (ver arriba).
 - **La versión con IA del contenido educativo** por edad.
 
 ---

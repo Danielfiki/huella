@@ -276,7 +276,7 @@ export default function NuevoPage() {
           <Button variant="primary" size="lg" fullWidth className={styles.guardarPill} onClick={() => navigate('/panel')}>
             Volver al inicio
           </Button>
-          <button className={styles.verHitosBtn} onClick={() => navigate('/hitos')}>
+          <button className={styles.verHitosBtn} onClick={() => navigate('/historial', { state: { filtro: 'logros' } })}>
             Ver todos los avances →
           </button>
         </div>

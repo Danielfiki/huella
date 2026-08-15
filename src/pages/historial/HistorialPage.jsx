@@ -144,6 +144,9 @@ export default function HistorialPage() {
     let result
     if (filtro === 'dificiles') result = episodiosNorm.filter((e) => e.nivel >= 3)
     else if (filtro === 'logros') result = hitosNorm
+    // 'fotos' cruza episodios e hitos: es lo que reemplaza al álbum, que solo
+    // mostraba hitos. Un episodio difícil con foto también es un momento visual.
+    else if (filtro === 'fotos') result = todosUnificados.filter((e) => e.fotoUrl)
     else result = todosUnificados
 
     if (busqueda.trim()) {
@@ -191,6 +194,7 @@ export default function HistorialPage() {
       todos: todosUnificados.length,
       dificiles: episodiosNorm.filter((e) => e.nivel >= 3).length,
       logros: hitosNorm.length,
+      fotos: todosUnificados.filter((e) => e.fotoUrl).length,
       patrones: patronesLista.length,
     }),
     [todosUnificados, episodiosNorm, hitosNorm, patronesLista]
@@ -303,6 +307,8 @@ export default function HistorialPage() {
                   ? 'Sin episodios difíciles registrados.'
                   : filtro === 'logros'
                   ? 'Sin avances registrados aún.'
+                  : filtro === 'fotos'
+                  ? 'Sin momentos con foto todavía.'
                   : 'Sin momentos registrados aún.'}
               </p>
             )}

@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Camera } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
+import { supabase } from '../../lib/supabase'
+import comprimirImagen from '../../utils/comprimirImagen'
 import IntensidadDots from './IntensidadDots'
 import OrientacionIA from './OrientacionIA'
 import AccionRapida from './AccionRapida'
@@ -33,8 +35,39 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   const [regenerando, setRegenerando]               = useState(false)
 
   const { user } = useAuth()
-  const { state: huellaState } = useHuella()
+  const { state: huellaState, updateHitoFoto } = useHuella()
   const mine = canModify(episodio.userId, user?.id)
+
+  // ── Foto de un avance ya guardado ─────────────────────────────────────
+  // B3 · esto lo permitia el album de Logros, que desaparecio al fusionarse
+  // con Momentos. Sin esto, un avance guardado sin foto no podia recibir una
+  // nunca mas: al crearlo en NuevoPage si se puede adjuntar, pero despues no
+  // habia camino. Mismo pipeline que usaba el album: comprimir, subir al
+  // bucket privado `momentos` y guardar el PATH (nunca la URL firmada).
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [errorFoto, setErrorFoto] = useState('')
+  const fotoInputRef = useRef(null)
+
+  async function handleFotoAvance(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !user) return
+    setSubiendoFoto(true)
+    setErrorFoto('')
+    try {
+      const blob = await comprimirImagen(file)
+      const path = `${user.id}/${episodio.id}.jpg`
+      const { error } = await supabase.storage
+        .from('momentos')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+      if (error) throw new Error(error.message)
+      await updateHitoFoto(episodio.id, path)
+    } catch {
+      setErrorFoto('No se pudo subir la foto. Intenta de nuevo.')
+    } finally {
+      setSubiendoFoto(false)
+    }
+  }
 
   useEffect(() => {
     if (episodio._source === 'hito') return
@@ -160,7 +193,32 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
             </button>
           )}
           {!isHito && <IntensidadDots tipo={episodio.tipo} nivel={episodio.nivel || 0} />}
+
+          {/* Solo avances, solo sin foto, solo de quien lo anotó. Icono y nada
+              más: el aria-label carga el significado, la tarjeta no gana texto. */}
+          {isHito && !episodio.fotoUrl && mine && (
+            <>
+              <button
+                type="button"
+                className={styles.fotoBtn}
+                onClick={() => !subiendoFoto && fotoInputRef.current?.click()}
+                disabled={subiendoFoto}
+                aria-label="Agregar una foto a este avance"
+              >
+                <Camera size={15} />
+              </button>
+              <input
+                ref={fotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFotoAvance}
+              />
+            </>
+          )}
         </div>
+
+        {errorFoto && <p className={styles.fotoError}>{errorFoto}</p>}
 
         {episodio.fotoUrl && (
           <img

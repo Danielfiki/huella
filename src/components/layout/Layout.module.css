@@ -98,9 +98,14 @@
   animation: fadeIn 320ms ease both;
 }
 
+/* B3 · con 3 pestañas en vez de 5, un `flex: 1` puro le da a cada item un
+   tercio del ancho, y el fondo del item activo pasa de ser una pastilla a ser
+   un bloque de 140px. Se acota el ancho de cada item y se reparte el espacio
+   sobrante, así el indicador de activo sigue siendo una pastilla. */
 .bottomNav {
   display: flex;
   align-items: flex-end;
+  justify-content: space-around;
   background: var(--color-nav);
   border-top: 1px solid var(--color-nav-border);
   padding: 6px 4px max(12px, env(safe-area-inset-bottom, 0px));
@@ -109,7 +114,8 @@
 }
 
 .navItem {
-  flex: 1;
+  flex: 1 1 0;
+  max-width: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -136,8 +142,24 @@
   stroke: var(--color-nav-text-active);
 }
 
+/* Foto del padre en la pestaña "Tú". 22px para ocupar exactamente lo mismo que
+   el icono al que reemplaza, así la etiqueta no baila entre estados. */
+.navAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 1.5px solid transparent;
+}
+
+.navItemActive .navAvatar {
+  border-color: var(--color-nav-text-active);
+}
+
 .navRegistrar {
-  flex: 1;
+  flex: 1 1 0;
+  max-width: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
