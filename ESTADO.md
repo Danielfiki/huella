@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — sábado 15 agosto 2026 — BLOQUE B2 DEL REDISEÑO: el Home dejó de ser un dashboard y pasó a ser LA PÁGINA DEL HIJO
 
-**2 commits.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
+**3 commits.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
 
 **Principio rector nuevo (de Daniel):** la pieza central de Huella es **EL MOMENTO**. Todo se construye alrededor de él, nunca como isla nueva. B2 es la primera aplicación de esa regla.
 
@@ -301,7 +301,7 @@
 
 La estructura del Home quedó aprobada; estos son afinamientos encima.
 
-**El botón "Registrar un momento" pasó a tipografía de marca.** El label es ahora **Fraunces 600 a 18.5px** con `letter-spacing: -0.015em`. El "+" bajó de 20 a 17px y quedó dentro de un disco translúcido de 26px, así el peso visual lo carga la palabra y el glifo es de apoyo. Se mantienen 58px de alto, radio 16 y gradiente terracota. El velo blanco del disco salió a token: **`--color-on-primary-veil`**, sin override de oscuro por la misma razón que `--color-on-mocha` (el CTA es terracota profunda en los dos modos).
+**El botón "Registrar un momento" pasó a tipografía de marca.** El label quedó en **Fraunces 600 a 18.5px** con `letter-spacing: -0.015em`, que es lo que sobrevive hasta hoy. El resto de ese paso (el "+" dentro de un disco translúcido, los 58px de alto, el radio 16) fue **intermedio y quedó reemplazado** por el diseño definitivo del tercer commit — ver más abajo. El token `--color-on-primary-veil` que se creó ahí se eliminó al desaparecer el disco translúcido.
 
 **Balance de color: entra el pistacho como segundo acento.** Había demasiado naranjo como color único. La jerarquía que quedó:
 
@@ -317,6 +317,32 @@ La estructura del Home quedó aprobada; estos son afinamientos encima.
 
 **Deuda visual saldada:** el `#B89A88` hardcodeado del medidor de `chartGatillos.module.css` salió a token como **`--color-mocha-medium`**. Sin override de oscuro, igual que `--color-accent-mocha` y `--color-mocha-light`: la gama mocha es la misma en los dos modos a propósito. **Con esto, los módulos CSS del panel quedaron 100% en tokens** (verificado con grep de hex/rgba: salida vacía).
 
+### El botón definitivo: "la pastilla" (tercer commit del día)
+
+Diseño elegido por Daniel entre las propuestas de Design. **Design usó una huella dactilar como símbolo porque no tenía el asset del escarabajo** — acá se reemplazó por el escarabajo real.
+
+**El escarabajo correcto es `src/components/ui/Escarabajo.jsx`**, el SVG mono con `fill="currentColor"` que ya usan 19 lugares (badges, registro, análisis, historial). Los PNG de `/public` son de email y los SVG sueltos de la raíz no están importados por nadie. En el botón aparece **dos veces**: nítido dentro del disco crema (recoloreado a terracota profunda vía `currentColor`) y gigante al 10% como marca de agua detrás del label.
+
+| Spec | Valor |
+|---|---|
+| Caja | Alto 60, radio 999 (pastilla), padding `0 8 0 26`, label izquierda / disco derecha |
+| Fondo | Gradiente 112deg, tres paradas terracota |
+| Disco | 44px, crema, con el escarabajo a 25px de alto |
+| Marca de agua | Escarabajo 150x150 al 10%, anclado `left -30 / bottom -46`, recortado por el pill |
+| Label | Fraunces 600 a 18.5px, tracking -0.015em, blanco |
+| Presionado | `scale(.975)`, gradiente -8% de luminancia, disco a `scale(.92)`, 90ms |
+
+**Micro-animación en dos capas:** la marca de agua "deriva" (-14px en X, -6deg, 14s alternate infinite) y el disco "late" (scale 1 → 1.055 → 1 en 640ms, cada 8s). Las dos se apagan solas con `prefers-reduced-motion` gracias al barrido global de B1 — no hace falta repetir la media query, y los dos estados en reposo son `transform` vacío, así que al apagarse quedan donde deben.
+
+**Lo que hay que saber si se toca esto:**
+
+- **El latido escribía `transform` en el disco y una animación en curso le gana a una declaración normal**, así que el disco no se hundía al presionar. Se apaga la animación en `:active` y ahí sí aplica el `scale(.92)`.
+- **La pastilla es un OBJETO DE PALETA FIJA y ninguno de sus tokens lleva override de oscuro, a propósito.** Es el mismo criterio que `--color-on-mocha`: si el fondo no cambia entre modos, lo que va encima tampoco puede. Ojo, porque el spec pedía `--color-bg` para el crema del disco y ese token se vuelve casi negro en oscuro; y `--color-primary-dark` para el escarabajo, que se *aclara* a `#F0A870`. Usarlos habría dejado el disco invisible y el bicho perdido sobre el crema.
+- **`overflow: hidden` recorta la marca de agua**, que se ancla fuera de la caja. Ojo en Safari/iOS con la combinación `border-radius: 999px` + `overflow: hidden` + hijo animado: hay un bug conocido donde se pierde el recorte redondeado. No se reprodujo en QA.
+- El escarabajo va envuelto en `aria-hidden` en los dos usos: el componente trae su propio `aria-label="Huella"` y sin eso el botón se anunciaba como *"Huella Registrar un momento Huella"*.
+
+**Decisión de contraste (Daniel, 15 agosto):** el label queda en **18.5px / 600 tal como está**. Blanco sobre el extremo claro del gradiente da **3.07:1**. El fallback que sugería Design (`#E8873E`) **no se aplicó porque es más claro que el color del spec, no más oscuro**: mediría 2.64:1, o sea peor. El dato de fondo es que **ni el extremo más oscuro del gradiente (`#C45A18`, 4.08:1) llega a 4.5:1** — la terracota de marca no da ese ratio con blanco a ningún nivel, y `Button.module.css` ya pinta blanco sobre `--color-primary` (3.20:1) en toda la app. **La accesibilidad se revisará app-completa más adelante, no botón por botón.**
+
 ### Lo que NO se tocó
 
 Historial, Logros, Estrategias, Registro, la tab bar (**sigue de 5** — el cambio a 3 es B3), las rutas, el motor de rasgos y `HuellaContext`. De Perfil solo se tocó lo necesario para recibir el canje de código.
@@ -331,6 +357,7 @@ Historial, Logros, Estrategias, Registro, la tab bar (**sigue de 5** — el camb
 
 - **`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.
 - **La ilustración del estado "semana cero"** es un placeholder con el escarabajo. Falta la definitiva.
+- **Revisión de accesibilidad app-completa**, no botón por botón. El disparador es el contraste del CTA (ver arriba), pero el problema es transversal: blanco sobre la terracota de marca no llega a 4.5:1 en ningún nivel, y esa combinación está en toda la app vía `Button.module.css`. Decisión de Daniel de no parcharlo pantalla por pantalla.
 - **El aviso de cupo** (chip bajo el botón) usa el copy provisorio; es el pendiente #4 de Daniel.
 - **B3:** fusión de Momentos con Logros y el cambio de la tab bar de 5 a 3.
 - **La versión con IA del contenido educativo** por edad.

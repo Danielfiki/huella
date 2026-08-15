@@ -113,10 +113,6 @@
   /* Crema estable para contenido SOBRE el header mocha (ej. el logo). NO
      cambia entre claro/oscuro porque el header es mocha en ambos modos. */
   --color-on-mocha: #FAF3EC;
-  /* Velo blanco para elementos SOBRE el gradiente terracota del CTA (el disco
-     del "+"). Igual que --color-on-mocha, no lleva override de oscuro: el CTA
-     es terracota profunda en los dos modos, así que el blanco sirve en ambos. */
-  --color-on-primary-veil: rgba(255, 255, 255, 0.20);
   --color-accent-blue: #6C8EF5;
   --color-accent-indigo: #7C8BFD;
   --color-accent-orange: #E8956D;
@@ -208,11 +204,8 @@
 
      foto-cabecera  la foto del hijo en el Home se disuelve hacia el
                     fondo crema (--color-bg). Las paradas replican
-                    #FAF3EC en claro y #1A1208 en oscuro.
-     cta-registrar  el boton unico del Home. En oscuro NO usa
-                    var(--color-primary) porque ahi el primario se
-                    aclara (#EE9452) y el texto blanco se pierde:
-                    se fija la terracota profunda en ambos modos.  */
+                    #FAF3EC en claro y #1A1208 en oscuro. Este SI
+                    lleva override de oscuro.                       */
   --gradient-foto-cabecera: linear-gradient(
     to bottom,
     rgba(250, 243, 236, 0)    0%,
@@ -221,11 +214,52 @@
     rgba(250, 243, 236, 0.96) 89%,
     var(--color-bg)           100%
   );
+
+  /* ═══ CTA "Registrar un momento" · la pastilla ══════════════════
+     El boton unico del Home es un OBJETO DE PALETA FIJA: la pastilla
+     es terracota profunda en claro y en oscuro, igual que el header
+     mocha. Por eso NINGUNO de estos tokens lleva override en el
+     bloque de oscuro — si el fondo no cambia, lo que va encima
+     (crema del disco, terracota del escarabajo, sombras) tampoco
+     puede cambiar. Mismo criterio que --color-on-mocha.
+
+     Todos los valores crudos del boton viven aca: el modulo
+     botonRegistrar.module.css no tiene un solo hex ni rgba.        */
   --gradient-cta-registrar: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-dark) 100%
+    112deg,
+    #E5743D 0%,
+    #E56E26 46%,
+    #C45A18 100%
   );
+  /* Presionado: el mismo degradado con la luminancia bajada un 8%. */
+  --gradient-cta-registrar-presion: linear-gradient(
+    112deg,
+    #D26A38 0%,
+    #D26523 46%,
+    #B45316 100%
+  );
+
+  --shadow-cta-pastilla:
+    0 10px 22px rgba(196, 90, 24, 0.26),
+    0 2px 4px rgba(120, 48, 20, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  --shadow-cta-pastilla-presion:
+    0 4px 10px rgba(196, 90, 24, 0.24),
+    inset 0 2px 6px rgba(120, 48, 20, 0.28);
+
+  /* Disco del escarabajo. El crema NO es --color-bg: ese token se
+     vuelve casi negro en oscuro y el disco quedaria invisible sobre
+     la terracota. Es el mismo crema estable de --color-on-mocha. */
+  --color-cta-disco: #FAF3EC;
+  --color-cta-disco-presion: #F1E6D9;
+  --shadow-cta-disco: 0 2px 6px rgba(120, 48, 20, 0.24);
+  --shadow-cta-disco-presion: inset 0 2px 5px rgba(120, 48, 20, 0.22);
+  /* Terracota profunda del escarabajo dentro del disco. Fija por lo
+     mismo: var(--color-primary-dark) se ACLARA en oscuro (#F0A870) y
+     el bicho se perderia sobre el crema. */
+  --color-cta-glifo: #C45A18;
+  /* Marca de agua: escarabajo gigante al 10% detras del label. */
+  --color-cta-marca: #FAF6F1;
 
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
@@ -247,6 +281,12 @@
   --motion-rapida: 150ms;
   --motion-media:  300ms;
   --motion-lenta:  500ms;
+
+  /* Mas corta que `rapida`: es el hundido del boton bajo el dedo, que
+     tiene que sentirse instantaneo. No se lista en el bloque de
+     movimiento reducido porque el barrido global de `button` ya baja
+     todas las transiciones a 0.01ms. */
+  --motion-presion: 90ms;
 
   --motion-ease-estandar: cubic-bezier(0.4, 0, 0.2, 1);
   --motion-ease-entrada:  cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -411,7 +451,9 @@
     --shadow-fab: 0 8px 18px rgba(229, 110, 38, 0.5);
     --color-scrim: rgba(0, 0, 0, 0.60);
 
-    /* Degradados · oscuro (ver comentario en :root) */
+    /* Degradados · oscuro (ver comentario en :root).
+       Los tokens del CTA "Registrar un momento" NO se overridean a
+       proposito: la pastilla es un objeto de paleta fija. */
     --gradient-foto-cabecera: linear-gradient(
       to bottom,
       rgba(26, 18, 8, 0)    0%,
@@ -420,7 +462,6 @@
       rgba(26, 18, 8, 0.96) 89%,
       var(--color-bg)       100%
     );
-    --gradient-cta-registrar: linear-gradient(135deg, #C45A18 0%, #E56E26 100%);
 
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);
