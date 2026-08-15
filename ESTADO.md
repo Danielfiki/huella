@@ -248,6 +248,22 @@
 
 **7 commits.** Dos bloques en el mismo día. **B2** rehizo el Home. **B3** terminó con las islas: Historial y Logros contaban la misma historia partida, y la tab bar bajó de 5 a 3. El detalle de B3 va al final de este bloque.
 
+### Estado de QA al cerrar la sesión
+
+| Bloque | Código | QA en producción |
+|---|---|---|
+| **B1** — foto del cuidador + sistema de movimiento | En producción | ✅ **Cerrado** |
+| **B2** — el Home nuevo | En producción | ✅ **Cerrado** |
+| **B3** — fusión de islas + tab bar de 3 | En producción (hasta `13063b4`) | ⚠️ **Parcial** |
+
+**B3 · verificado:** la tab bar de 3, la puerta "Momentos" y los chips de patrón con sus tres destinos.
+
+**B3 · PENDIENTE DE QA — es lo primero de la próxima sesión:**
+
+- La sección **"Tus medallas"** en Perfil con datos reales (nivel y medallas de Daniel, no un render aislado).
+- La **camarita** para agregar foto a un avance que se guardó sin ella.
+- El **registro completo de punta a punta**, que quedó sin recorrer entero después de los cambios de navegación.
+
 ---
 
 ## B2 — el Home
@@ -446,6 +462,28 @@ Dos cosas de implementación que conviene conocer:
 | BannerCompletado · "Ver tu hito" | `/hitos?highlight=plan_completo` | `/perfil?highlight=plan_completo`, ahora "Ver tu medalla" — `plan_completo` es un **id de medalla**, y las medallas viven en Perfil |
 | Avatar del hijo en el header | `/hijo` | Sin cambios |
 
+---
+
+## 🔴 TEMA DE PRODUCTO ABIERTO — qué son los patrones en la arquitectura nueva
+
+**Decisión de Daniel, pendiente. No se toca código hasta que la tome.** Es el tema más importante que deja esta sesión: no es un bug ni un pendiente de UI, es una pregunta de qué es esta pieza del producto.
+
+**El hallazgo de hoy:** un patrón ("algo que aún no cambia"), después de registrarse y leerse una vez, **no tiene ciclo de vida**.
+
+- **No evoluciona.** Se escribe una vez, la IA lo clasifica una vez, y ahí queda congelado. Los momentos que se registran después no lo actualizan, aunque sean exactamente sobre lo mismo.
+- **No conecta visiblemente con los planes.** El enganche existe en la base (`vincularEstrategiaAPatron`), pero desde el patrón no se ve ni se ofrece: leerlo no propone hacer nada al respecto.
+- **El límite de 3 bloquea sin salida.** Al llegar al tope, la tarjeta de registro se apaga con "Ya tienes 3 abiertos. Cierra uno para agregar otro." (`NuevoPage.jsx:202`), pero **ese mensaje no lleva a ninguna parte**: la tarjeta queda no interactiva y no hay camino desde ahí a donde se cierran los patrones.
+
+**Las tres opciones en evaluación:**
+
+| | Opción | Qué implica |
+|---|---|---|
+| **A** | **Patrón vivo** | Al abrirlo propone un plan, y su lectura se actualiza con los momentos nuevos que caen dentro del mismo patrón |
+| **B** | **Deja de ser categoría de registro** | El patrón emerge solo, desde momentos repetidos, en vez de pedirle al padre que lo declare. Es el norte de la **entrada única** |
+| **C** | **Queda igual, con salidas claras** | Parche: destrabar el límite de 3 y dar caminos de cierre. No resuelve el fondo |
+
+**Recomendación de Claude: B como norte, A como paso intermedio.** B es coherente con el principio rector (todo cuelga del momento, nada es isla) y con el norte post-beta de una entrada única que clasifique sola; pero saltar directo a B invalida los patrones ya registrados, así que A los mantiene vivos mientras tanto. **Daniel lo decide fresco, no al cierre de una sesión larga.**
+
 ### Pendientes que deja B2
 
 - **`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.
@@ -455,6 +493,7 @@ Dos cosas de implementación que conviene conocer:
 - **El aviso de cupo** (chip bajo el botón) usa el copy provisorio; es el pendiente #4 de Daniel.
 - ~~B3: fusión de Momentos con Logros y el cambio de la tab bar de 5 a 3.~~ **HECHO** (ver arriba).
 - **La versión con IA del contenido educativo** por edad.
+- **El mensaje "Ya tienes 3 abiertos" debería ser tocable** y llevar a Momentos con el filtro Acompañas. Hoy es texto muerto dentro de una tarjeta apagada (`NuevoPage.jsx:202`): avisa del tope sin decir dónde se cierran. Es el parche mínimo del tema de patrones de más arriba — **si Daniel elige la opción B, este pendiente se cae solo**, así que conviene decidir el tema de fondo antes de tocarlo.
 
 ---
 
