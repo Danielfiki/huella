@@ -12,8 +12,10 @@ export function BotonRegistrar({ onClick, avisoCupo = null }) {
   return (
     <div className={styles.wrap}>
       <button type="button" className={styles.boton} onClick={onClick}>
-        <Plus size={20} strokeWidth={2.6} />
-        Registrar un momento
+        <span className={styles.glifo} aria-hidden="true">
+          <Plus size={17} strokeWidth={2.4} />
+        </span>
+        <span className={styles.label}>Registrar un momento</span>
       </button>
       {avisoCupo && <span className={styles.chip}>{avisoCupo}</span>}
     </div>

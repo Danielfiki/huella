@@ -223,12 +223,15 @@
   height: 100%;
 }
 
+/* Pistacho es el tono por defecto de la semana; la terracota queda reservada
+   para el día alto (ver comentario en TarjetaCerebro.jsx). */
 .barra {
   display: block;
   width: 100%;
   border-radius: 999px;
-  background: var(--color-primary);
+  background: var(--color-accent-green);
 }
+.barraAlta { background: var(--color-primary); }
 .barraVacia { background: var(--color-surface-alt); }
 
 .dias {

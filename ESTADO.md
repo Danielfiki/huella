@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — sábado 15 agosto 2026 — BLOQUE B2 DEL REDISEÑO: el Home dejó de ser un dashboard y pasó a ser LA PÁGINA DEL HIJO
 
-**1 commit.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
+**2 commits.** El Home ya no es una lista de secciones con eyebrows: lo primero que se ve es la cara del hijo, después una sola tarjeta que interpreta la semana, después UNA acción, y al final tres puertas compactas. Nada de lo que había se borró del producto — se reubicó.
 
 **Principio rector nuevo (de Daniel):** la pieza central de Huella es **EL MOMENTO**. Todo se construye alrededor de él, nunca como isla nueva. B2 es la primera aplicación de esa regla.
 
@@ -296,6 +296,26 @@
 | `CanjeCodigoBeta` | **Se mudó a Perfil**, pegado a la card de Pro. No se borró |
 
 **Archivos borrados en este commit** (verificado con grep: cero imports vivos): `Hero.jsx` + `hero.module.css`, `CTAPrimary.jsx` + `ctaPrimary.module.css`, `ResumenSemanal.jsx` + `resumenSemanal.module.css`, `SectionEyebrow.jsx` + `sectionEyebrow.module.css`, `GuiaPrimerosPasos.jsx` + `GuiaPrimerosPasos.module.css`, `panel.module.css`.
+
+### Ajustes post QA visual (segundo commit del día)
+
+La estructura del Home quedó aprobada; estos son afinamientos encima.
+
+**El botón "Registrar un momento" pasó a tipografía de marca.** El label es ahora **Fraunces 600 a 18.5px** con `letter-spacing: -0.015em`. El "+" bajó de 20 a 17px y quedó dentro de un disco translúcido de 26px, así el peso visual lo carga la palabra y el glifo es de apoyo. Se mantienen 58px de alto, radio 16 y gradiente terracota. El velo blanco del disco salió a token: **`--color-on-primary-veil`**, sin override de oscuro por la misma razón que `--color-on-mocha` (el CTA es terracota profunda en los dos modos).
+
+**Balance de color: entra el pistacho como segundo acento.** Había demasiado naranjo como color único. La jerarquía que quedó:
+
+| Color | Significa | Dónde |
+|---|---|---|
+| **Terracota** | Accionable o en curso | Botón Registrar, semanas del plan en "Acompañando", badge "Patrón nuevo", el día alto de la semana |
+| **Pistacho** | Ya conseguido | Rasgos descubiertos en "Su huella", badge "Algo nuevo", la semana normal, los primeros pasos |
+
+- **Barras de la tarjeta central:** el default pasó a pistacho y la terracota quedó **solo para el día alto**. La regla es: alto = empata con el máximo de la semana **Y** ese máximo es de al menos 2. El piso de 2 no es decorativo — sin él, una semana plana de un registro por día se pintaba entera de naranjo y decía "toda la semana fue fuerte", que es falso.
+- **Segmentos de "Su huella":** los 12 en pistacho, vía un prop `tono` en `BarraSegmentos`. La barra de 4 semanas del plan sigue terracota — se usó un prop y no un cambio de la clase compartida, justamente para que los dos usos no se pisen.
+- **Badge "Algo nuevo":** variante pistacho (`--color-leaf-bg` + `--color-tag-green` + `--color-leaf-border`, los tres con override de oscuro ya existente).
+- **Chip de cupo:** queda neutro.
+
+**Deuda visual saldada:** el `#B89A88` hardcodeado del medidor de `chartGatillos.module.css` salió a token como **`--color-mocha-medium`**. Sin override de oscuro, igual que `--color-accent-mocha` y `--color-mocha-light`: la gama mocha es la misma en los dos modos a propósito. **Con esto, los módulos CSS del panel quedaron 100% en tokens** (verificado con grep de hex/rgba: salida vacía).
 
 ### Lo que NO se tocó
 

@@ -63,6 +63,15 @@ function Segmentos({ total, encendidos }) {
 
 // Semana en 7 columnas. Las barras crecen desde abajo al montar; los días sin
 // registro quedan como una marca mínima para que la semana se lea completa.
+//
+// Color: la semana normal se lee en pistacho y SOLO el día alto sale en
+// terracota. Así el naranjo deja de ser el único color de la vista y pasa a
+// significar algo — "acá pasó lo fuerte" — en vez de ser el relleno por
+// defecto. Un día se considera alto si empata con el máximo de la semana Y ese
+// máximo es de al menos 2: una semana plana de un registro por día no tiene
+// día alto, y marcarla entera de naranjo sería mentir.
+const MIN_DIA_ALTO = 2
+
 function BarrasSemana({ data }) {
   const t = tokensMovimiento()
   const reducido = useMovimientoReducido()
@@ -73,10 +82,14 @@ function BarrasSemana({ data }) {
       <div className={styles.barras}>
         {data.map((d, i) => {
           const alto = d.count === 0 ? 4 : 8 + (d.count / max) * 40
+          const esAlto = d.count === max && max >= MIN_DIA_ALTO
+          const tono = d.count === 0
+            ? styles.barraVacia
+            : esAlto ? styles.barraAlta : ''
           return (
             <span key={i} className={styles.columna}>
               <motion.i
-                className={`${styles.barra} ${d.count === 0 ? styles.barraVacia : ''}`}
+                className={`${styles.barra} ${tono}`}
                 initial={{ height: reducido ? alto : 0 }}
                 animate={{ height: alto }}
                 transition={{

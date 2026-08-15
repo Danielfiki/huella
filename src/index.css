@@ -113,6 +113,10 @@
   /* Crema estable para contenido SOBRE el header mocha (ej. el logo). NO
      cambia entre claro/oscuro porque el header es mocha en ambos modos. */
   --color-on-mocha: #FAF3EC;
+  /* Velo blanco para elementos SOBRE el gradiente terracota del CTA (el disco
+     del "+"). Igual que --color-on-mocha, no lleva override de oscuro: el CTA
+     es terracota profunda en los dos modos, así que el blanco sirve en ambos. */
+  --color-on-primary-veil: rgba(255, 255, 255, 0.20);
   --color-accent-blue: #6C8EF5;
   --color-accent-indigo: #7C8BFD;
   --color-accent-orange: #E8956D;
@@ -305,6 +309,10 @@
 
   /* ── Mocha / Strawberry extendidos · base de las gamas del álbum ── */
   --color-mocha-light:       #C19E8C;
+  /* Punta clara del medidor de gatillos. Sin override de oscuro, igual que
+     --color-accent-mocha y --color-mocha-light: la gama mocha es la misma en
+     los dos modos a propósito. */
+  --color-mocha-medium:      #B89A88;
   --color-strawberry-light:  #F09D95;
   --color-strawberry-dark:   #B84A40;
 

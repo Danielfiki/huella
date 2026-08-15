@@ -73,7 +73,8 @@
   color: var(--color-primary);
 }
 
-/* Aviso cálido: nunca rojo. Es una buena noticia, no una alerta. */
+/* Aviso cálido: nunca rojo. Es una buena noticia, no una alerta.
+   Base terracota (la usa "Patrón nuevo" en Acompañando, que sí pide acción). */
 .badge {
   padding: 2px 8px;
   border-radius: 999px;
@@ -85,6 +86,14 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
+}
+
+/* Variante pistacho para "Algo nuevo" en Su huella: es un descubrimiento, no
+   un pendiente, así que no compite con el naranjo de lo accionable. */
+.badgeVerde {
+  background: var(--color-leaf-bg);
+  color: var(--color-tag-green);
+  border-color: var(--color-leaf-border);
 }
 
 .dato {
@@ -123,7 +132,10 @@
   transform-origin: left center;
   display: block;
 }
+/* Terracota = en curso y pide seguimiento (semanas del plan).
+   Pistacho = ya conseguido (rasgos descubiertos). */
 .segmentoOn { background: var(--color-primary); }
+.segmentoOnVerde { background: var(--color-accent-green); }
 
 /* ── Mini-timeline de momentos ── */
 

@@ -32,9 +32,15 @@ const COLOR_PUNTO = {
 const MAX_PUNTOS = 8
 
 // Barra de N segmentos que se encienden en cascada al montar.
-function BarraSegmentos({ total, encendidos, ariaLabel }) {
+//
+// `tono` marca la jerarquía de color del Home: pistacho para lo que el niño ya
+// tiene (los rasgos descubiertos, que son un logro acumulado y no una acción
+// pendiente) y terracota para lo que está en curso y pide seguimiento (las
+// semanas del plan). El naranjo se reserva para lo accionable.
+function BarraSegmentos({ total, encendidos, ariaLabel, tono = 'terracota' }) {
   const t = tokensMovimiento()
   const reducido = useMovimientoReducido()
+  const claseOn = tono === 'pistacho' ? styles.segmentoOnVerde : styles.segmentoOn
   // <span> y no <div>: esto vive dentro de un <button>.
   return (
     <span
@@ -48,7 +54,7 @@ function BarraSegmentos({ total, encendidos, ariaLabel }) {
       {Array.from({ length: total }, (_, i) => (
         <motion.span
           key={i}
-          className={`${styles.segmento} ${i < encendidos ? styles.segmentoOn : ''}`}
+          className={`${styles.segmento} ${i < encendidos ? claseOn : ''}`}
           initial={{ opacity: reducido ? 1 : 0.2, scaleX: reducido ? 1 : 0.4 }}
           animate={{ opacity: 1, scaleX: 1 }}
           transition={{
@@ -84,7 +90,9 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
       <span className={styles.centro}>
         <span className={styles.etiquetaFila}>
           <span className={styles.etiqueta}>Su huella</span>
-          {hayNovedad && <span className={styles.badge}>Algo nuevo</span>}
+          {hayNovedad && (
+            <span className={`${styles.badge} ${styles.badgeVerde}`}>Algo nuevo</span>
+          )}
         </span>
         <span className={styles.dato}>
           <NumeroQueCuenta valor={confirmados} className={styles.datoNum} />
@@ -94,6 +102,7 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
           total={12}
           encendidos={confirmados}
           ariaLabel={`Rasgos descubiertos de ${nombreHijo}`}
+          tono="pistacho"
         />
       </span>
     </Puerta>
