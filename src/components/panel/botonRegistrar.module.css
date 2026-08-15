@@ -88,27 +88,37 @@
   box-shadow: var(--shadow-cta-disco-presion);
 }
 
-/* OJO con estos numeros: el viewBox del Escarabajo tiene MUCHISIMO aire.
-   El dibujo ocupa solo el 49.4% del ancho del viewBox y el 68.2% del alto
-   (medido: tinta en x[124.35, 356.20] y[63.86, 357.17] sobre 469.55x429.86).
-   O sea que la caja del SVG NO es el tamano del bicho: a 27px de caja el
-   escarabajo medía 13px y por eso se veia timido.
+/* Estos cuatro numeros salieron de MIRAR renders, no de medir el SVG. Los dos
+   intentos anteriores se hicieron con la calculadora y los dos salieron mal.
+   Si vuelves a tocarlos, renderiza el disco ampliado y mira el resultado.
 
-   Para que la tinta llegue a ~32px dentro del disco de 44 hay que darle una
-   caja de 51x47, que desborda el disco. No pasa nada: lo que sobra es padding
-   transparente y el disco no recorta. Si cambias el tamano, escala los dos
-   valores juntos manteniendo la proporcion.
+   1. El viewBox del Escarabajo tiene MUCHISIMO aire: el dibujo ocupa solo el
+      49.4% del ancho y el 68.2% del alto (tinta en x[124.35, 356.20]
+      y[63.86, 357.17] sobre 469.55x429.86). La caja del SVG NO es el tamano
+      del bicho, asi que el numero de aca siempre va a parecer exagerado.
 
-   El translate corrige el centrado optico: el eje de simetria del dibujo esta
-   en x=240.27 y no en el centro del viewBox (234.78), y su tinta esta 4.41
-   arriba. Es un descentrado real del asset, del 1.17% y 1.03%. A este tamano
-   son 0.6px, o sea sub-pixel — se deja igual porque es geometria honesta y
-   sobrevive si el boton crece. NO se toca el SVG: lo comparten 19 pantallas. */
+   2. La caja NO puede dimensionarse como si el hueco fuera un cuadrado. Es un
+      CIRCULO, y las patas del escarabajo se abren justo abajo, donde el
+      circulo ya se cerro. Con la caja en 51x47 la pata inferior DERECHA se
+      salia del disco mientras la izquierda quedaba justo adentro, y ese
+      choque asimetrico contra el borde es lo que se leia como un escarabajo
+      chueco. Nunca fue una rotacion: el dibujo es simetrico.
+
+   3. La masa del dibujo esta abajo. Las antenas de arriba son finas y los
+      elitros de abajo son macizos: el 60% de la tinta vive entre el 45% y el
+      70% de la altura. Por eso el centro optico (centroide) queda un 2% MAS
+      ABAJO que el centro de la caja, y hay que subir el bicho, no bajarlo.
+      El intento anterior lo bajaba y por eso se veia colgando.
+
+   4. En x el dibujo si esta descentrado de origen: su eje de simetria cae en
+      240.27 y el centro del viewBox esta en 234.78, un 1.05% a la derecha.
+
+   NO se toca el SVG: lo comparten 19 pantallas. */
 .discoIcon {
-  width: 51px;
-  height: 47px;
+  width: 46px;
+  height: 42px;
   display: block;
-  transform: translate(-1.17%, 1.03%);
+  transform: translate(-1.05%, -2%);
 }
 
 /* ── Marca de agua ──
