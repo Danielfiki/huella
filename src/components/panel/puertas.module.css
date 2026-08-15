@@ -24,6 +24,36 @@
   gap: 6px;
 }
 
+/* ── Puerta "Acompañando": tarjeta con destinos anidados ──
+   El botón de fondo cubre la tarjeta y lleva a Estrategias; va debajo del
+   contenido para que los chips puedan ser botones de verdad sin anidarse
+   dentro de él. El contenido deja pasar el puntero; solo los chips lo
+   reactivan. Ver el comentario en Puertas.jsx. */
+.puertaCompuesta { position: relative; }
+
+.fondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: inherit;
+  cursor: pointer;
+}
+.fondo:active { transform: none; }
+
+.contenido {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-light);
@@ -161,18 +191,30 @@
   min-width: 0;
 }
 
+/* OJO: el recorte del texto largo NO va acá sino en .chipTexto. `overflow:
+   hidden` en el chip clipa tambien el pseudo-elemento que estira el area
+   tocable a 44px, y el chip se queda con sus 30px reales. Se vio pintando el
+   area en un render: el chip de patron quedaba recortado y el "+N" (que no
+   tiene overflow) llegaba entero. */
 .chip {
   min-width: 0;
   max-width: 46%;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 999px;
   background: var(--color-surface-alt);
   color: var(--color-text);
+  font-family: var(--font-family);
   font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.chipTexto {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Puerta "Acompañando" en modo explorar: sin dato que mostrar, así que la
@@ -187,10 +229,44 @@
 
 .chipResto {
   flex-shrink: 0;
-  padding: 4px 8px;
+  padding: 0 9px;
   border-radius: 999px;
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
+  font-family: var(--font-family);
   font-size: 11.5px;
   font-weight: 700;
 }
+
+/* Chips clicables: cada patrón abre su lectura completa (/patron/:id) y el
+   "+N" abre Momentos con el filtro Acompañas.
+
+   El chip se ve de 30px pero el área tocable llega a 44px con un
+   pseudo-elemento que la estira 7px arriba y 7px abajo. Se hace así y no
+   agrandando el chip porque la puerta es compacta por diseño y un chip de
+   44px de alto la desbalancearía. El estirado es de 7px por lado, poco como
+   para robarle el toque a la barra del plan que va justo encima. */
+.chipPatron {
+  position: relative;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background var(--motion-rapida) var(--motion-ease-estandar),
+              color var(--motion-rapida) var(--motion-ease-estandar);
+}
+.chipPatron::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -7px;
+  bottom: -7px;
+}
+.chipPatron:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+}
+.chipPatron:active { transform: scale(0.96); }

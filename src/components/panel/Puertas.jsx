@@ -144,7 +144,15 @@ export function PuertaMomentos({ total, ultimos, fotoAvance, onClick }) {
 
 // ── Acompañando ────────────────────────────────────────────────────────────
 
-export function PuertaAcompanando({ nombreHijo, plan, patrones, hayPatronNuevo, onClick }) {
+export function PuertaAcompanando({
+  nombreHijo,
+  plan,
+  patrones,
+  hayPatronNuevo,
+  onClick,
+  onPatronClick,
+  onVerTodos,
+}) {
   const semana = plan ? Math.min(Math.max(plan.semanaActual, 1), 4) : 0
   const chips = patrones.slice(0, 2)
   const resto = patrones.length - chips.length
@@ -156,8 +164,25 @@ export function PuertaAcompanando({ nombreHijo, plan, patrones, hayPatronNuevo, 
   // presente y con destino claro.
   const vacia = !plan && patrones.length === 0
 
+  // Esta puerta NO usa el <Puerta> compartido, y la razón importa: sus chips
+  // de patrón son botones con su propio destino, y un <button> dentro de otro
+  // <button> es HTML inválido — el navegador rompe el anidamiento y el click
+  // se vuelve impredecible.
+  //
+  // En vez de eso, el botón que lleva a Estrategias es una capa que cubre la
+  // tarjeta entera y va DEBAJO del contenido. El contenido no recibe punteros
+  // (así el toque lo atraviesa y llega al fondo), salvo los chips, que lo
+  // reactivan. Los chips no necesitan stopPropagation: no son descendientes
+  // del botón de fondo, así que no hay nada que propagar.
   return (
-    <Puerta onClick={onClick} ariaLabel="Lo que estás acompañando">
+    <div className={`${styles.puerta} ${styles.puertaCompuesta}`}>
+      <button
+        type="button"
+        className={styles.fondo}
+        onClick={onClick}
+        aria-label="Lo que estás acompañando"
+      />
+      <span className={styles.contenido}>
       <span className={`${styles.centro} ${vacia ? styles.centroExplorar : ''}`}>
         <span className={styles.etiquetaFila}>
           <span className={styles.etiqueta}>Acompañando</span>
@@ -181,12 +206,32 @@ export function PuertaAcompanando({ nombreHijo, plan, patrones, hayPatronNuevo, 
         {chips.length > 0 && (
           <span className={styles.chips}>
             {chips.map((p) => (
-              <span key={p.id} className={styles.chip}>{p.descripcion}</span>
+              <button
+                key={p.id}
+                type="button"
+                className={`${styles.chip} ${styles.chipPatron}`}
+                onClick={() => onPatronClick(p.id)}
+                aria-label={`Leer el patrón: ${p.descripcion}`}
+              >
+                <span className={styles.chipTexto}>{p.descripcion}</span>
+              </button>
             ))}
-            {resto > 0 && <span className={styles.chipResto}>+{resto}</span>}
+            {resto > 0 && (
+              <button
+                type="button"
+                className={`${styles.chipResto} ${styles.chipPatron}`}
+                onClick={onVerTodos}
+                aria-label={`Ver los ${patrones.length} patrones abiertos`}
+              >
+                +{resto}
+              </button>
+            )}
           </span>
         )}
       </span>
-    </Puerta>
+
+        <span className={styles.chevron} aria-hidden="true"><ChevronRight size={18} /></span>
+      </span>
+    </div>
   )
 }

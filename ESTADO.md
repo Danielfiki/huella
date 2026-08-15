@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — sábado 15 agosto 2026 — BLOQUES B2 Y B3 DEL REDISEÑO: el Home pasó a ser LA PÁGINA DEL HIJO y las islas se fusionaron
 
-**6 commits.** Dos bloques en el mismo día. **B2** rehizo el Home. **B3** terminó con las islas: Historial y Logros contaban la misma historia partida, y la tab bar bajó de 5 a 3. El detalle de B3 va al final de este bloque.
+**7 commits.** Dos bloques en el mismo día. **B2** rehizo el Home. **B3** terminó con las islas: Historial y Logros contaban la misma historia partida, y la tab bar bajó de 5 a 3. El detalle de B3 va al final de este bloque.
 
 ---
 
@@ -416,6 +416,25 @@ El álbum permitía **subir una foto a un hito ya creado**. Al desaparecer, un a
 ### Ajuste a B2 que obligó B3
 
 La puerta "Acompañando" del Home **ya no se esconde** cuando no hay plan ni patrones. Con Estrategias fuera de la barra pasó a ser la única entrada a `/estrategias`: si desaparecía, quien todavía no tiene plan se quedaba sin forma de llegar a crearlo. Sin nada que acompañar se muestra en modo "explorar" — discreta, sin dato ni badge, con "Ver estrategias para {hijo}".
+
+### El bug de la puerta "Acompañando" — diagnóstico y arreglo
+
+Daniel reprodujo en producción: la puerta mostraba un chip de un patrón ("le pega a la perrita") y al entrar a `/estrategias` ese patrón no aparecía en ninguna sección, ni expandiendo todas.
+
+**No era bug de B3 ni de datos. Lo introduje en B2.** Lo que se verificó antes de tocar nada:
+
+- **`EstrategiasPage` NUNCA lee `state.patrones`.** La palabra "patron" aparece una sola vez en ese archivo, en un comentario. Sus secciones salen de `estrategias` (planes activos y pasados) y de la interpretación IA sobre **episodios**. El patrón no estaba escondido en una sección colapsada: no está en esa pantalla, y nunca estuvo.
+- **El patrón está bien en la base**, tabla `patrones` con `estado = 'abierto'`. Se puede afirmar sin consultar: el chip solo se pinta si pasa ese filtro exacto.
+- **Es correcto que no aparezca en Estrategias**: patrones, estrategias y motor de rasgos son tres cosas separadas por diseño. Un patrón solo toca estrategias si se engancha explícitamente con `vincularEstrategiaAPatron`, y ahí lo que se ve es el **plan**, no el patrón.
+
+**La causa:** al fusionar plan y patrones en una sola puerta en B2, le puse **un destino único a dos contenidos distintos**. El plan sí vive en `/estrategias`; los patrones nunca vivieron ahí. Antes de B2 el Home hacía lo correcto: `PatronCard` → `/patron/:id`, y "y N más" → Momentos filtro Acompañas. B3 no cambió esa ruta, solo la hizo más visible.
+
+**El arreglo (opción A, decidida por Daniel):** la puerta pasa a tener **tres destinos**. El cuerpo sigue a `/estrategias`; cada chip abre la lectura de SU patrón (`/patron/:id`); el "+N" abre Momentos filtrado.
+
+Dos cosas de implementación que conviene conocer:
+
+- **Los chips no pueden ser botones dentro del botón de la puerta** (HTML inválido: el navegador rompe el anidamiento y el click se vuelve impredecible). La puerta dejó de usar el `<Puerta>` compartido: ahora el botón que lleva a Estrategias es una capa absoluta que cubre la tarjeta y va **debajo** del contenido; el contenido tiene `pointer-events: none` y solo los chips lo reactivan. Por eso **no hace falta `stopPropagation`**: los chips no son descendientes del botón de fondo, no hay nada que propagar.
+- **`overflow: hidden` clipa el área tocable.** El chip se ve de 30px y llega a 44px con un pseudo-elemento que lo estira 7px por lado — pero `overflow: hidden` (que estaba ahí para los puntos suspensivos) recortaba también ese pseudo, así que el chip se quedaba con sus 30px reales. Se descubrió **pintando el área tocable en un render**: el chip de patrón salía recortado y el "+N" (sin overflow) llegaba entero. El recorte del texto se movió a un `<span>` interno.
 
 ### Mapa de rutas de B3
 

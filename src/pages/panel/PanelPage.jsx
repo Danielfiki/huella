@@ -458,7 +458,13 @@ export default function PanelPage() {
 
         {/* B3 · esta puerta ya no se condiciona a tener plan o patrones: con
             Estrategias fuera de la tab bar, es la única entrada a /estrategias.
-            Sin nada que acompañar se muestra en modo "explorar". */}
+            Sin nada que acompañar se muestra en modo "explorar".
+
+            Tres destinos, porque la puerta junta dos cosas distintas: el plan
+            vive en /estrategias, pero los patrones NUNCA estuvieron ahí (pared
+            dura: patrones, estrategias y motor de rasgos son cosas separadas).
+            Cada chip abre la lectura de SU patrón y el "+N" abre Momentos
+            filtrado, que es donde se ven todos. */}
         <TarjetaEntrada delay={0.12}>
           <PuertaAcompanando
             nombreHijo={nombreHijo}
@@ -466,6 +472,8 @@ export default function PanelPage() {
             patrones={patronesAbiertos}
             hayPatronNuevo={hayPatronNuevo}
             onClick={() => navigate('/estrategias')}
+            onPatronClick={(id) => navigate(`/patron/${id}`)}
+            onVerTodos={() => navigate('/historial', { state: { filtro: 'patrones' } })}
           />
         </TarjetaEntrada>
       </div>
