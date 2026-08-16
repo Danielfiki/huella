@@ -261,6 +261,27 @@
   /* Marca de agua: escarabajo gigante al 10% detras del label. */
   --color-cta-marca: #FAF6F1;
 
+  /* ═══ Tarjeta central del Home · "el cerebro de {hijo}" ═════════
+     La tarjeta que interpreta la semana es EL corazon del Home y no
+     puede leerse igual que las tres puertas (blancas, borde neutro,
+     sombra suave). Se separa por temperatura, no por tamano: la
+     superficie cae desde el blanco de --color-surface hacia un tinte
+     terracota muy bajo (~6%), el borde es el mismo neutro con un
+     cuarto de terracota encima, y la sombra es la de las puertas
+     pero mas profunda y con la sombra tenida de cafe rojizo.
+     Valores crudos porque un degradado necesita el MISMO color con
+     distintas mezclas; los tres llevan override en oscuro.         */
+  --gradient-tarjeta-cerebro: linear-gradient(
+    168deg,
+    #FFFDFA  0%,
+    #FEF6F0 42%,
+    #FAEADF 100%
+  );
+  --color-tarjeta-cerebro-borde: #E9C3A6;
+  --shadow-tarjeta-cerebro:
+    0 10px 26px rgba(168, 75, 40, 0.11),
+    0 2px 6px rgba(42, 26, 14, 0.06);
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
@@ -462,6 +483,19 @@
       rgba(26, 18, 8, 0.96) 89%,
       var(--color-bg)       100%
     );
+
+    /* Tarjeta central · oscuro. Mismo criterio: se cae desde
+       --color-surface (#221A10) hacia un tinte terracota bajo. */
+    --gradient-tarjeta-cerebro: linear-gradient(
+      168deg,
+      #241B11  0%,
+      #2A1E13 42%,
+      #352518 100%
+    );
+    --color-tarjeta-cerebro-borde: #57402C;
+    --shadow-tarjeta-cerebro:
+      0 10px 26px rgba(0, 0, 0, 0.45),
+      0 2px 6px rgba(0, 0, 0, 0.30);
 
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);

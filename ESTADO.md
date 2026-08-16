@@ -244,7 +244,82 @@
 
 ---
 
-## Cerrado HOY — sábado 15 agosto 2026 — BLOQUES B2 Y B3 DEL REDISEÑO: el Home pasó a ser LA PÁGINA DEL HIJO y las islas se fusionaron
+## Cerrado HOY — domingo 16 agosto 2026 — BLOQUE B4 DEL REDISEÑO: la tarjeta central dejó de hablar como planilla y pasó a verse como la protagonista del Home
+
+**2 commits.** Un solo objetivo: la tarjeta "Esta semana en el cerebro de {hijo}". **B4.1** le cambió la voz, **B4.2** la jerarquía visual. No se tocó estructura del Home, puertas, botón de registro, cabecera, tab bar, lógica de estados ni queries.
+
+### El hallazgo que cambió el plan
+
+**No existe ningún prompt de IA detrás de las frases de la tarjeta.** Se buscó en `services/anthropic.js` y no hay función para esto: las frases de los cuatro estados se arman **100% locales**. La del estado "rica" salía de `useNarrativaFrecuencia` / `useNarrativaIntensidad`, dos hooks dentro de `PanelPage.jsx` — **ahí vivía todo el lenguaje estadístico**, no en un prompt. Cuando se construya la versión con IA, la regla de voz ya está escrita como comentario duro en `TarjetaCerebro.jsx` y hay que heredarla al prompt.
+
+### B4.1 — LA VOZ
+
+**La regla (dura, aplica a los cuatro estados, al banco educativo y a las narrativas):** la frase habla del niño **por su nombre**, nunca en lenguaje estadístico. **Máximo ~12 palabras. Sin cifras.** Tono sereno, de alguien que lo conoce. Tuteo neutro/chileno.
+
+| Estado | Antes | Ahora |
+|---|---|---|
+| **rica** | `45% menos episodios que la semana pasada 💪` | `Pascualito tuvo una semana más liviana que la anterior.` |
+| **rica** | `Esta semana fue más intensa que tu promedio` | `Esta semana pesó más para Pascualito.` |
+| **rica** | `Intensidad estable en los últimos registros — promedio 3.2/5` | `Pascualito viene sosteniendo un ritmo parejo.` |
+| **pobre** | `Su cerebro emocional manda: la parte que frena los impulsos recién está empezando a construirse.` (15 palabras, impersonal) | `A Pascualito le manda el cerebro emocional; el freno recién se construye.` |
+| **pobre** | título `A los 5 años…` | `A los cinco años…` — la edad **en letras**, porque la voz no muestra cifras |
+| **cero** | `Anota un momento y Huella empieza a leer.` | `Anota un momento y Huella empieza a conocer a Pascualito.` |
+| **primeros** | `Registra 2 momentos más` · `Huella te muestra los patrones` | `Registra dos momentos más` · `Huella te muestra los patrones de Pascualito` |
+
+**Las 29 frases del banco educativo están reescritas una por una**, todas ≤12 palabras, con `{nombre}` que se reemplaza al pedir la frase (`contenidoEducativo(edad, nombre)`).
+
+**Decisiones que conviene conocer antes de tocar esto:**
+
+- **Las condiciones NO se tocaron.** `useNarrativaFrecuencia` sigue calculando promedios de 5 semanas, comparando semana contra semana y midiendo tasas antes/después de la estrategia, exactamente igual. Lo único que cambió es que **ese cálculo ya no se dice en voz alta**. El dato duro ya está en el número grande y en las barras; la frase es la lectura, no el reporte.
+- **Salieron los adjetivos con género.** "estando tranquilo", "no se calma solo", "si no se siente juzgado", "los demás piensan distinto que él". **La app tiene hijos e hijas y no guarda el género**, así que esas frases estaban mal para la mitad de los usuarios desde antes de esta sesión. El banco quedó escrito neutro a propósito y así se debe seguir escribiendo.
+- **Salieron los emojis** (💪 🌱 📈 🌿) de las narrativas. No cuadran con "sereno".
+- **Las frases terminan con punto.** Antes las narrativas cerraban con emoji y el banco con punto; siendo la misma clase `.hallazgo`, se veía a medio terminar.
+- **El eyebrow del estado "pobre" perdió el nombre**: pasó de `El cerebro de {hijo}` a `El cerebro por dentro`. El nombre ya lo lleva el encabezado y ahora también la frase; tres veces seguidas cansa.
+
+**Efecto lateral, decidido por Daniel:** esas mismas narrativas se usan como **pie de los gráficos de Frecuencia e Intensidad** dentro del detalle desplegado (`PanelPage.jsx:425-426`), así que ahí también perdieron los números. **Se deja así a propósito: el gráfico ya muestra el dato, no se repite en texto.** No se separó la frase del pie.
+
+### B4.2 — LA JERARQUÍA VISUAL
+
+**Síntoma:** la tarjeta central se veía blanca igual que las tres puertas, siendo el corazón del Home.
+
+**Se separa por temperatura, no por tamaño ni por gritar.** Tres tokens nuevos en `index.css`, los tres **con override de oscuro**:
+
+| Token | Qué es |
+|---|---|
+| `--gradient-tarjeta-cerebro` | La superficie cae desde casi-blanco hasta un tinte terracota de ~9% abajo. Valores crudos, como los otros degradados: un degradado necesita el MISMO color con distintas mezclas |
+| `--color-tarjeta-cerebro-borde` | El borde neutro de las puertas con un cuarto de terracota encima |
+| `--shadow-tarjeta-cerebro` | La sombra de las puertas, más profunda y teñida de café rojizo |
+
+**Cómo se eligió: renderizando y mirando, no midiendo.** Se armó un render con los CSS reales (`index.css` + el módulo de la tarjeta, con las fuentes self-hosted) y se compararon **cuatro variantes con una puerta blanca al medio**, en claro y en oscuro:
+
+- **Tinte solo abajo al 6%** (la propuesta base): la mitad de arriba de la tarjeta se leía **igual que una puerta**. Descartada.
+- **Borde suavizado**: perdía el filo, la tarjeta quedaba mullida contra el fondo. Descartada.
+- **Tinte parejo + borde definido**: **la elegida.** En el Home completo la tarjeta se lee como la protagonista, las puertas quedan atrás como papel blanco, y el botón terracota sigue siendo lo único que grita.
+- En **oscuro** hubo que subir el degradado un punto más de lo calculado: la primera versión quedaba indistinguible de las puertas.
+
+### Archivos tocados (5 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/index.css` | 3 tokens nuevos + sus overrides de oscuro |
+| `src/components/panel/tarjetaCerebro.module.css` | `.card` consume los tokens nuevos |
+| `src/components/panel/TarjetaCerebro.jsx` | La regla de voz como comentario duro + copy de "cero" y "primeros" + eyebrow |
+| `src/components/panel/bancoEducativo.js` | 29 frases reescritas, edad en letras, firma `contenidoEducativo(edad, nombre, fecha)` |
+| `src/pages/panel/PanelPage.jsx` | Las dos narrativas |
+
+### Lo que esta sesión NO hizo (sigue pendiente de la anterior)
+
+**El QA de B3 quedó tal cual estaba** — es lo primero de la próxima sesión:
+
+- La sección **"Tus medallas"** en Perfil con datos reales.
+- La **camarita** para agregar foto a un avance que se guardó sin ella.
+- El **registro completo de punta a punta**, sin recorrer entero desde los cambios de navegación.
+
+Y sigue abierto, sin tocarse, el **tema de producto de los patrones** (más abajo): es decisión de Daniel y no se toca código hasta que la tome.
+
+---
+
+## Sesión sábado 15 agosto 2026 — BLOQUES B2 Y B3 DEL REDISEÑO: el Home pasó a ser LA PÁGINA DEL HIJO y las islas se fusionaron
 
 **7 commits.** Dos bloques en el mismo día. **B2** rehizo el Home. **B3** terminó con las islas: Historial y Logros contaban la misma historia partida, y la tab bar bajó de 5 a 3. El detalle de B3 va al final de este bloque.
 

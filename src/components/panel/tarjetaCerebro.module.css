@@ -1,8 +1,11 @@
+/* La protagonista del Home. Las tres puertas son blancas, borde neutro y
+   sombra suave; esta se separa por temperatura (ver el bloque "Tarjeta central
+   del Home" en index.css), no por tamano ni por gritar. */
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--gradient-tarjeta-cerebro);
+  border: 1px solid var(--color-tarjeta-cerebro-borde);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card-soft);
+  box-shadow: var(--shadow-tarjeta-cerebro);
   padding: 16px;
   overflow: hidden;
 }
