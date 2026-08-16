@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useHuella } from '../../context/HuellaContext'
-import { useAuth } from '../../context/AuthContext'
 import { NIVELES, TOTAL_MEDALLAS, getSubmensaje } from './nivelesMedallas'
+import { useMedallasNuevas, marcarVistos } from './medallasNuevas'
 import MedalIcon from './MedalIcon'
 import MedallaDetalleModal from './MedallaDetalleModal'
 import LeyendaMedallasModal from './LeyendaMedallasModal'
@@ -15,61 +14,55 @@ import s from './TusMedallas.module.css'
 // pantalla propia ("Logros", que además mezclaba medallas con el álbum del
 // hijo) y se mudaron acá, junto al resto de lo que es de él.
 //
-// La lógica es la MISMA que tenía HitosPage: mismos ids, mismos checks, mismo
-// tracking de "no vistas" en localStorage. Lo único que cambió es el envase:
-// los niveles vienen colapsados y solo el nivel actual abre por defecto, para
-// que la sección no se coma el Perfil entero.
+// La lógica de las medallas es la MISMA que tenía HitosPage: mismos ids,
+// mismos checks, misma clave de localStorage. Lo que cambió es el envase.
+//
+// TODOS LOS NIVELES ARRANCAN COLAPSADOS (ajuste post-QA). Antes el nivel en
+// curso llegaba abierto; ahora lo primero que se ve es la lista de niveles con
+// su conteo N/M, y el padre despliega el que quiera. La única excepción es el
+// `?highlight` (ej. "Ver tu medalla" desde el banner de plan completado), que
+// sí abre el nivel de esa medalla: quien llega por ese link viene a ver algo
+// puntual.
+//
+// El puntito terracota de "medalla nueva" vive en la cabecera de cada nivel y
+// además en la pestaña "Tú" de la barra baja (ver `medallasNuevas.js`). Se
+// apaga al desplegar el nivel que la contiene, que es cuando de verdad se ve.
 
 export default function TusMedallas() {
-  const { state, getCheckinsHechos } = useHuella()
-  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const highlight = searchParams.get('highlight')
 
-  const [checkinsCount, setCheckinsCount] = useState(0)
   const [medallaAbierta, setMedallaAbierta] = useState(null)
   const [leyendaAbierta, setLeyendaAbierta] = useState(false)
   const [nivelAbierto, setNivelAbierto] = useState(null)
 
-  useEffect(() => {
-    getCheckinsHechos().then((set) => setCheckinsCount(set.size))
-  }, [])
+  const {
+    clave,
+    dataBadge,
+    desbloqueados: desbloqueadosActuales,
+    nuevas: badgesNuevos,
+  } = useMedallasNuevas()
 
-  const { episodios, hitos, estrategias } = state
-  const dataBadge = { episodios, hitos, estrategias, checkinsCount }
+  // El anillo de "recién ganada" se congela al entrar. Si usara `badgesNuevos`
+  // en vivo desaparecería en el mismo gesto de desplegar el nivel —
+  // justamente cuando el padre acaba de abrirlo para mirarla.
+  const nuevasAlEntrarRef = useRef(new Set())
+  badgesNuevos.forEach((id) => nuevasAlEntrarRef.current.add(id))
+  const medallaReciente = nuevasAlEntrarRef.current.size > 0
+    ? { id: [...nuevasAlEntrarRef.current][0] }
+    : null
 
-  // Tracking de medallas nuevas (las recién desbloqueadas que el padre no vio).
-  // La clave de localStorage es la MISMA que usaba HitosPage: quien ya vio sus
-  // medallas antes de B3 no se las encuentra "nuevas" de golpe.
-  const storageKey = `huella_badges_vistos_${user?.id || 'anon'}`
-  const badgesVistosRef = useRef(null)
-  if (badgesVistosRef.current === null) {
-    try {
-      badgesVistosRef.current = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'))
-    } catch { badgesVistosRef.current = new Set() }
+  // Desplegar un nivel = ver sus medallas. Se marcan las que estén
+  // desbloqueadas, y con eso se apagan su puntito y el de la pestaña "Tú".
+  // También se marca en un nivel bloqueado: ahí el padre igual abrió y recibió
+  // la explicación de cuánto le falta, y si no se marcara el punto quedaría
+  // encendido para siempre, sin ningún gesto que lo apague.
+  function verNivel(nivel) {
+    const ids = nivel.badges
+      .filter((b) => desbloqueadosActuales.has(b.id))
+      .map((b) => b.id)
+    if (ids.length) marcarVistos(clave, ids)
   }
-
-  const todosLosBadges = NIVELES.flatMap((n) => n.badges)
-  const desbloqueadosActuales = new Set(
-    todosLosBadges.filter((b) => b.check(dataBadge)).map((b) => b.id)
-  )
-  const badgesNuevos = new Set(
-    [...desbloqueadosActuales].filter((id) => !badgesVistosRef.current.has(id))
-  )
-  const medallaReciente = badgesNuevos.size > 0 ? { id: [...badgesNuevos][0] } : null
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try { localStorage.setItem(storageKey, JSON.stringify([...desbloqueadosActuales])) }
-      catch {}
-    }, 4000)
-    return () => {
-      clearTimeout(timer)
-      try { localStorage.setItem(storageKey, JSON.stringify([...desbloqueadosActuales])) }
-      catch {}
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey])
 
   // Un nivel se desbloquea cuando el anterior llegó a su umbral.
   const nivelesConEstado = NIVELES.map((nivel, i) => {
@@ -89,21 +82,27 @@ export default function TusMedallas() {
   const totalDesbloqueados = desbloqueadosActuales.size
   const esVacio = totalDesbloqueados === 0
 
-  // Nivel desplegado: el que el padre haya tocado; si no tocó nada, el actual.
-  // Si viene un ?highlight (ej. "Ver tu hito" desde el banner de plan
-  // completado), manda el nivel que contiene esa medalla.
+  // Nivel desplegado: SOLO el que el padre haya tocado. Sin toque no hay nada
+  // abierto — la sección arranca entera colapsada. La única excepción es el
+  // ?highlight (ej. "Ver tu medalla" desde el banner de plan completado), que
+  // abre el nivel de esa medalla porque el link viene a mostrar algo puntual.
   const nivelDelHighlight = highlight
     ? nivelesConEstado.find((n) => n.badges.some((b) => b.id === highlight))?.nivel ?? null
     : null
-  const abierto = nivelAbierto ?? nivelDelHighlight ?? nivelActualSrc.nivel
+  const abierto = nivelAbierto ?? nivelDelHighlight
 
   useEffect(() => {
     if (!highlight) return
+    // Llegar por el link también es ver la medalla: se apaga su puntito y el
+    // de la pestaña "Tú" sin pedirle al padre que despliegue lo ya abierto.
+    const nivel = NIVELES.find((n) => n.badges.some((b) => b.id === highlight))
+    if (nivel) verNivel(nivel)
     const timer = setTimeout(() => {
       document.getElementById(highlight)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 400)
     return () => clearTimeout(timer)
-  }, [highlight])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlight, desbloqueadosActuales])
 
   return (
     <section className={s.card}>
@@ -151,7 +150,11 @@ export default function TusMedallas() {
               <button
                 type="button"
                 className={s.nivelHead}
-                onClick={() => setNivelAbierto(desplegado ? -1 : nivel.nivel)}
+                onClick={() => {
+                  if (desplegado) { setNivelAbierto(-1); return }
+                  setNivelAbierto(nivel.nivel)
+                  verNivel(nivel)
+                }}
                 aria-expanded={desplegado}
               >
                 <span className={s.levelBadge}>{nivel.nivel}</span>

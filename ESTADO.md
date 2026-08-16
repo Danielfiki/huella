@@ -244,9 +244,11 @@
 
 ---
 
-## Cerrado HOY — domingo 16 agosto 2026 — BLOQUE B4 DEL REDISEÑO: la tarjeta central dejó de hablar como planilla y pasó a verse como la protagonista del Home
+## Cerrado HOY — domingo 16 agosto 2026 — BLOQUE B4: la tarjeta central dejó de hablar como planilla y pasó a verse como la protagonista · y **el QA de B3 quedó CERRADO ENTERO**
 
-**2 commits.** Un solo objetivo: la tarjeta "Esta semana en el cerebro de {hijo}". **B4.1** le cambió la voz, **B4.2** la jerarquía visual. No se tocó estructura del Home, puertas, botón de registro, cabecera, tab bar, lógica de estados ni queries.
+**3 commits.** **B4.1** le cambió la voz a la tarjeta "Esta semana en el cerebro de {hijo}", **B4.2** la jerarquía visual, y encima entraron los **dos ajustes post-QA de "Tus medallas"**. No se tocó estructura del Home, puertas, botón de registro, cabecera, lógica de estados ni queries.
+
+**✅ El QA de B3 se completó y quedó aprobado por Daniel: medallas, camarita y registro de punta a punta.** Era lo que quedaba abierto de la sesión anterior; ya no queda nada pendiente de verificar de B3.
 
 ### El hallazgo que cambió el plan
 
@@ -297,7 +299,29 @@
 - **Tinte parejo + borde definido**: **la elegida.** En el Home completo la tarjeta se lee como la protagonista, las puertas quedan atrás como papel blanco, y el botón terracota sigue siendo lo único que grita.
 - En **oscuro** hubo que subir el degradado un punto más de lo calculado: la primera versión quedaba indistinguible de las puertas.
 
-### Archivos tocados (5 + ESTADO.md)
+### Ajustes post-QA de "Tus medallas" (cierre de B3)
+
+Daniel revisó la sección con sus datos reales y pidió dos cosas.
+
+**1 · Todos los niveles arrancan colapsados.** Antes el nivel en curso llegaba abierto y la sección se comía el Perfil. Ahora lo primero que se ve son las tres filas de nivel con su conteo N/M, y se despliega la que se toque. **La única excepción es el `?highlight`** (el link "Ver tu medalla" del banner de plan completado): quien llega por ahí viene a ver algo puntual, y caer en una sección colapsada dejaría el link sin sentido.
+
+**2 · Puntito terracota en la pestaña "Tú"** cuando hay una medalla ganada y sin ver. Desde B3 las medallas viven en Perfil, así que sin este aviso **ganar una no se nota**: hay que entrar a buscarla. Es el mismo objeto visual que el puntito de la campana del Home (8px terracota con borde del color del fondo que lo sostiene), anclado al borde superior derecho del icono y no a la esquina de la pestaña, para que se lea como parte del icono. **Pulsa 3 veces y queda quieto** (`--motion-lenta` + `--motion-ease-estandar`): el pulso es de escala y opacidad, no de color, y no toca el halo del botón Registrar, que es lo que de verdad pide el toque.
+
+**Lo que hubo que resolver para que el punto pudiera existir:** el dato de "hay medalla nueva" vivía **encerrado dentro de `TusMedallas`**, y la pestaña vive en `Layout`, que no monta esa sección nunca. Se extrajo a **`medallasNuevas.js`**, que es ahora la fuente única y trae un aviso a mano entre componentes (localStorage **no** notifica sus propios cambios dentro de la misma pestaña). Perfil marca, la barra se entera al toque.
+
+**Cambió CUÁNDO se marca una medalla como vista, y era obligatorio.** Antes bastaba entrar a Perfil: un timer de 4 segundos escribía todo como visto aunque no se hubiera desplegado nada. Con los niveles colapsados eso apaga el punto sin que nadie vea nada — **los dos ajustes juntos no funcionan con esa lógica**. Ahora se marca **al desplegar el nivel que contiene la medalla**. El timer se eliminó.
+
+Tres decisiones de borde, las tres aprobadas por Daniel:
+
+- **El anillo de "recién ganada"** sobre la medalla **se congela al entrar** a Perfil. Con el dato en vivo desaparecería en el mismo gesto de desplegar el nivel, justo cuando se abrió para mirarla.
+- **Nivel bloqueado con una medalla nueva adentro** (pasa: una medalla puede cumplirse mientras su nivel sigue cerrado): se marca como vista igual. Si no, el punto quedaría encendido para siempre sin ningún gesto capaz de apagarlo.
+- **El pulso se repite** si se cierra y reabre la app con la medalla todavía sin ver. Es correcto: la medalla sigue siendo nueva. Dejarlo en una sola vez por medalla pediría otra marca en localStorage.
+
+**Nadie ve una avalancha de puntos al actualizar:** la lógica vieja ya había marcado todo como visto para quien abrió Perfil alguna vez.
+
+### Archivos tocados (9 + ESTADO.md)
+
+**B4 · la tarjeta central**
 
 | Archivo | Qué cambió |
 |---|---|
@@ -307,15 +331,18 @@
 | `src/components/panel/bancoEducativo.js` | 29 frases reescritas, edad en letras, firma `contenidoEducativo(edad, nombre, fecha)` |
 | `src/pages/panel/PanelPage.jsx` | Las dos narrativas |
 
-### Lo que esta sesión NO hizo (sigue pendiente de la anterior)
+**Cierre de B3 · las medallas**
 
-**El QA de B3 quedó tal cual estaba** — es lo primero de la próxima sesión:
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/medallas/medallasNuevas.js` | **NUEVO.** Fuente única de "hay medalla sin ver" + el marcado + el aviso entre componentes |
+| `src/components/medallas/TusMedallas.jsx` | Colapso total, marcado al desplegar, consume el hook |
+| `src/components/layout/Layout.jsx` | El puntito en la pestaña "Tú" |
+| `src/components/layout/Layout.module.css` | `.navPunto` + el keyframe del pulso |
 
-- La sección **"Tus medallas"** en Perfil con datos reales.
-- La **camarita** para agregar foto a un avance que se guardó sin ella.
-- El **registro completo de punta a punta**, sin recorrer entero desde los cambios de navegación.
+### Lo único que esta sesión NO tocó
 
-Y sigue abierto, sin tocarse, el **tema de producto de los patrones** (más abajo): es decisión de Daniel y no se toca código hasta que la tome.
+Sigue abierto, intacto, el **tema de producto de los patrones** (más abajo): es decisión de Daniel y no se toca código hasta que la tome. **Es lo primero de la próxima sesión.**
 
 ---
 
@@ -329,15 +356,15 @@ Y sigue abierto, sin tocarse, el **tema de producto de los patrones** (más abaj
 |---|---|---|
 | **B1** — foto del cuidador + sistema de movimiento | En producción | ✅ **Cerrado** |
 | **B2** — el Home nuevo | En producción | ✅ **Cerrado** |
-| **B3** — fusión de islas + tab bar de 3 | En producción (hasta `13063b4`) | ⚠️ **Parcial** |
+| **B3** — fusión de islas + tab bar de 3 | En producción (hasta `13063b4`) | ⚠️ **Parcial** ese día → ✅ **cerrado entero el 16 agosto** |
 
-**B3 · verificado:** la tab bar de 3, la puerta "Momentos" y los chips de patrón con sus tres destinos.
+**B3 · verificado ese día:** la tab bar de 3, la puerta "Momentos" y los chips de patrón con sus tres destinos.
 
-**B3 · PENDIENTE DE QA — es lo primero de la próxima sesión:**
+**B3 · lo que quedó pendiente de QA ese día — ✅ TODO VERIFICADO Y APROBADO POR DANIEL EL 16 DE AGOSTO** (ver el bloque de esa sesión, más arriba):
 
-- La sección **"Tus medallas"** en Perfil con datos reales (nivel y medallas de Daniel, no un render aislado).
-- La **camarita** para agregar foto a un avance que se guardó sin ella.
-- El **registro completo de punta a punta**, que quedó sin recorrer entero después de los cambios de navegación.
+- ✅ La sección **"Tus medallas"** en Perfil con datos reales (nivel y medallas de Daniel, no un render aislado). De ahí salieron los dos ajustes post-QA: colapso total de los niveles y puntito en la pestaña "Tú".
+- ✅ La **camarita** para agregar foto a un avance que se guardó sin ella.
+- ✅ El **registro completo de punta a punta**, que quedó sin recorrer entero después de los cambios de navegación.
 
 ---
 

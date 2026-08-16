@@ -114,6 +114,7 @@
 }
 
 .navItem {
+  position: relative;
   flex: 1 1 0;
   max-width: 88px;
   display: flex;
@@ -126,6 +127,40 @@
   font-size: 10px;
   font-weight: 500;
   transition: color 0.15s, background 0.15s;
+}
+
+/* Puntito de "tienes una medalla nueva" en la pestaña "Tú". Mismo objeto que
+   el puntito de la campana del Home: 8px terracota con borde del color del
+   fondo que lo sostiene, acá el de la barra.
+
+   Se ancla al borde superior derecho del icono (22px centrado), no a la
+   esquina de la pestaña: pegado al icono se lee como parte de él y no como
+   una marca suelta flotando en la barra. */
+.navPunto {
+  position: absolute;
+  top: 3px;
+  left: calc(50% + 5px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-nav);
+  pointer-events: none;
+  animation: puntoNuevoPulso var(--motion-lenta) var(--motion-ease-estandar) 3;
+}
+
+/* Tres pulsos y se queda quieto: el aviso tiene que hacerse notar una vez, no
+   latir para siempre a un dedo del boton Registrar, que es lo que de verdad
+   pide el toque. Por eso el pulso es de escala y no de color, y no toca el
+   halo del boton.
+
+   `prefers-reduced-motion` lo apaga solo: el barrido global de index.css baja
+   toda animacion a 0.01ms y a una iteracion, asi que el punto aparece estatico
+   sin necesidad de una regla propia. */
+@keyframes puntoNuevoPulso {
+  0%   { transform: scale(1);    opacity: 1; }
+  45%  { transform: scale(1.35); opacity: 0.75; }
+  100% { transform: scale(1);    opacity: 1; }
 }
 
 .navItem:hover {

@@ -7,6 +7,7 @@ import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services
 import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
+import { useMedallasNuevas } from '../medallas/medallasNuevas'
 import CitaLoader from '../ui/CitaLoader'
 import styles from './Layout.module.css'
 
@@ -67,6 +68,13 @@ function SkeletonLoader() {
 export default function Layout() {
   const { state, dataLoading, dataLoaded, reloadData } = useHuella()
   const { family, familyLoading } = useFamily()
+
+  // Medalla ganada y todavía sin ver → puntito terracota en la pestaña "Tú",
+  // el mismo patrón visual del puntito de la campana en el Home. Las medallas
+  // viven en Perfil desde B3, así que sin este aviso ganar una no se nota:
+  // hay que entrar a buscarla. Se apaga cuando el padre despliega el nivel que
+  // la contiene (ver `medallasNuevas.js`).
+  const { hayNuevas: hayMedallaNueva } = useMedallasNuevas()
 
   // Fuente de verdad del onboarding: los DATOS DE LA CUENTA, no localStorage.
   // Un usuario que ya tiene un hijo creado (el onboarding siempre crea uno) o
@@ -185,6 +193,9 @@ export default function Layout() {
                 <img src={state.padreAvatarUrl} alt="" className={styles.navAvatar} />
               ) : (
                 <Icon size={22} />
+              )}
+              {esPerfil && hayMedallaNueva && (
+                <span className={styles.navPunto} aria-label="Tienes una medalla nueva" />
               )}
               <span>{label}</span>
             </NavLink>
