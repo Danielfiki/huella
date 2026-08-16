@@ -23,11 +23,20 @@ import styles from './tarjetaCerebro.module.css'
 // Al tocarla se despliega el detalle (gráficos + análisis IA), que llega como
 // children. Nada de eso se borró del producto: se reubicó acá dentro,
 // colapsado por defecto.
+//
+// LA VOZ de esta tarjeta (regla dura, aplica a los cuatro estados y también al
+// banco educativo y a las narrativas que llegan por `frase`):
+//   · Se habla del niño POR NOMBRE — "Los martes le están costando a Pascual".
+//     Nunca en lenguaje estadístico: nada de promedios, porcentajes, "más
+//     intensa que tu promedio" ni comparaciones con uno mismo en cifras.
+//   · Máximo ~12 palabras por frase. Sin cifras dentro de la frase (los
+//     números grandes y las barras ya son el dato; la frase es la lectura).
+//   · Tono sereno, de alguien que conoce al niño. Tuteo neutro/chileno.
 
 const PASOS = [
-  { texto: 'Registra lo que pasó',          hecho: (n) => n >= 1 },
-  { texto: 'Registra 2 momentos más',       hecho: (n) => n >= 3 },
-  { texto: 'Huella te muestra los patrones', hecho: () => false },
+  { texto: () => 'Registra lo que pasó',   hecho: (n) => n >= 1 },
+  { texto: () => 'Registra dos momentos más', hecho: (n) => n >= 3 },
+  { texto: (nombre) => `Huella te muestra los patrones de ${nombre}`, hecho: () => false },
 ]
 
 export function calcularEstadoCerebro({ totalEpisodios, episodiosSemana }) {
@@ -124,7 +133,7 @@ export function TarjetaCerebro({
 }) {
   const t = tokensMovimiento()
   const reducido = useMovimientoReducido()
-  const educativo = estado === 'pobre' ? contenidoEducativo(edadHijo) : null
+  const educativo = estado === 'pobre' ? contenidoEducativo(edadHijo, nombreHijo) : null
   const pasosHechos = PASOS.filter((p) => p.hecho(totalEpisodios)).length
   const pasoActual = PASOS.findIndex((p) => !p.hecho(totalEpisodios))
 
@@ -161,7 +170,9 @@ export function TarjetaCerebro({
             <Escarabajo className={styles.ilustracionIcon} />
           </div>
           <p className={styles.destacadoTexto}>Aquí va a vivir su semana</p>
-          <p className={styles.linea}>Anota un momento y Huella empieza a leer.</p>
+          <p className={styles.linea}>
+            Anota un momento y Huella empieza a conocer a {nombreHijo}.
+          </p>
         </div>
       )}
 
@@ -190,7 +201,7 @@ export function TarjetaCerebro({
                     <span className={styles.marcaPend} aria-hidden="true" />
                   )}
                   <span className={`${styles.pasoTexto} ${hecho ? styles.pasoTextoHecho : ''}`}>
-                    {paso.texto}
+                    {paso.texto(nombreHijo)}
                   </span>
                 </li>
               )
@@ -218,7 +229,9 @@ export function TarjetaCerebro({
 
       {estado === 'pobre' && educativo && (
         <div className={styles.cuerpo}>
-          <p className={styles.eyebrow}>El cerebro de {nombreHijo}</p>
+          {/* El eyebrow no lleva el nombre: ya lo lleva el encabezado y lo
+              vuelve a llevar la frase educativa. Tres veces seguidas cansa. */}
+          <p className={styles.eyebrow}>El cerebro por dentro</p>
           <p className={styles.destacadoTexto}>{educativo.titulo}</p>
           <p className={styles.hallazgo}>{educativo.frase}</p>
         </div>

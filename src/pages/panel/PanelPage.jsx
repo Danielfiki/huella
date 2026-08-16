@@ -60,8 +60,19 @@ const DIAS_PATRON_NUEVO = 3
 const CUPO_AVISO_DESDE = 3   // quedan 3 o menos → aparece el chip
 
 // ── Computaciones de narrativas ───────────────────────────────────────────────
+//
+// Estas dos son la ÚNICA frase que muestra la tarjeta central en estado "rica".
+// No hay prompt de IA detrás: se arman acá, locales. Por eso la voz de la
+// tarjeta (ver el bloque LA VOZ en TarjetaCerebro.jsx) se cumple o se rompe
+// justo acá.
+//
+// Las condiciones siguen midiendo lo mismo que siempre — promedios, semanas
+// comparadas, tasas antes/después de la estrategia. Lo que cambió es que ese
+// cálculo ya NO se dice en voz alta: la frase habla del niño por su nombre y
+// no muestra ni una cifra. El dato duro ya está en el número grande y en las
+// barras; la frase es la lectura, no el reporte.
 
-function useNarrativaFrecuencia(episodios, estrategias) {
+function useNarrativaFrecuencia(episodios, estrategias, nombre) {
   return useMemo(() => {
     if (episodios.length < 3) return null
     const now = new Date()
@@ -93,30 +104,27 @@ function useNarrativaFrecuencia(episodios, estrategias) {
           const tasaAntes = antes.length / Math.max((inicio - new Date(antes.at(-1).fecha)) / 864e5, 1)
           const tasaDespues = despues.length / diasDesde
           if (tasaDespues < tasaAntes * 0.65) {
-            const pct = Math.round((1 - tasaDespues / tasaAntes) * 100)
-            return `Los episodios bajaron un ${pct}% desde que empezaste tu estrategia 💪`
+            return `Desde que empezaste, ${nombre} viene teniendo semanas más livianas.`
           }
         }
       }
     }
 
-    if (current === 0) return 'Sin episodios esta semana 🌱'
-    if (hasHistory && prev5.every(c => c === 0 || current < c)) return 'Mejor semana en los últimos 30 días 📈'
+    if (current === 0) return `Una semana tranquila para ${nombre}.`
+    if (hasHistory && prev5.every(c => c === 0 || current < c)) return `La semana más suave de ${nombre} en un buen rato.`
     if (prevWeek > 0 && current <= prevWeek * 0.6) {
-      const pct = Math.round((1 - current / prevWeek) * 100)
-      return `${pct}% menos episodios que la semana pasada 💪`
+      return `${nombre} tuvo una semana más liviana que la anterior.`
     }
-    if (avg5 > 0 && current < avg5 * 0.85) return 'Esta semana, por debajo de tu promedio 🌿'
-    if (avg5 > 0 && current > avg5 * 1.2) return 'Esta semana fue más intensa que tu promedio'
+    if (avg5 > 0 && current < avg5 * 0.85) return `La semana de ${nombre} vino más calmada de lo habitual.`
+    if (avg5 > 0 && current > avg5 * 1.2) return `Esta semana pesó más para ${nombre}.`
     if (prevWeek > 0 && current > prevWeek) {
-      const diff = current - prevWeek
-      return `${diff} más que la semana pasada — registrar ayuda a entender el patrón`
+      return `${nombre} está teniendo más momentos que la semana pasada.`
     }
-    return `${current} episodio${current !== 1 ? 's' : ''} esta semana — dentro de tu promedio`
-  }, [episodios, estrategias])
+    return `La semana de ${nombre} va parecida a las anteriores.`
+  }, [episodios, estrategias, nombre])
 }
 
-function useNarrativaIntensidad(episodios) {
+function useNarrativaIntensidad(episodios, nombre) {
   return useMemo(() => {
     const data = [...episodios].reverse().slice(-20)
     if (data.length < 4) return null
@@ -125,13 +133,10 @@ function useNarrativaIntensidad(episodios) {
     const firstAvg = avg(data.slice(0, half))
     const secondAvg = avg(data.slice(-half))
     const delta = secondAvg - firstAvg
-    const overallAvg = avg(data).toFixed(1)
-    if (delta <= -0.4)
-      return `La intensidad está bajando 🌿 — de ${firstAvg.toFixed(1)} a ${secondAvg.toFixed(1)} en los últimos registros`
-    if (delta >= 0.5)
-      return `Los episodios recientes son más intensos (${secondAvg.toFixed(1)}/5) — considera reforzar la estrategia`
-    return `Intensidad estable en los últimos registros — promedio ${overallAvg}/5`
-  }, [episodios])
+    if (delta <= -0.4) return `Los momentos de ${nombre} vienen más suaves.`
+    if (delta >= 0.5)  return `Los momentos de ${nombre} vienen llegando más fuertes.`
+    return `${nombre} viene sosteniendo un ritmo parejo.`
+  }, [episodios, nombre])
 }
 
 // ── Página principal ──────────────────────────────────────────────────────────
@@ -278,8 +283,8 @@ export default function PanelPage() {
       }))
   }, [episodios])
 
-  const narrativaFrecuencia = useNarrativaFrecuencia(episodios, estrategias)
-  const narrativaIntensidad = useNarrativaIntensidad(episodios)
+  const narrativaFrecuencia = useNarrativaFrecuencia(episodios, estrategias, nombreHijo)
+  const narrativaIntensidad = useNarrativaIntensidad(episodios, nombreHijo)
 
   // Estado de la tarjeta central y la ÚNICA frase que muestra.
   const estadoCerebro = calcularEstadoCerebro({
