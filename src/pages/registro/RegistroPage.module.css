@@ -669,42 +669,59 @@
   background: var(--gradient-alivio-canvas);
 }
 
+/* Sin `gap`: el espacio entre la pata del escarabajo y el eyebrow lo pone el
+   propio viewBox. Ver el comentario de `.gSelloBicho`. */
 .gSello {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
   margin-bottom: 26px;
 }
 
-/* El sello es el CHIP de la pantalla, en grande: mismo cuadrado redondeado,
-   mismo terracota suave de fondo y misma terracota profunda de la tinta que los
-   chips de "Para la próxima", "Orientación completa" y "Crear estrategia desde
-   esto". Antes era un disco crema con borde, y ahí estaba el problema: un
-   objeto que no se repetía en ninguna otra parte de la pantalla, en un tono que
-   no pesaba, se leía flotando.
+/* EL ESCARABAJO SOLO, sin contenedor — el mismo gesto del splash de arranque.
+   Antes esto fue un disco circular y después un chip cuadrado; los dos se
+   descartaron. El chip resolvía el "objeto huérfano", pero metía una caja donde
+   no hacía falta ninguna, y además obligaba a pelear con el descentrado del SVG,
+   que solo se nota cuando hay un borde contra el cual compararlo. Sin caja, el
+   problema desaparece: no hay nada respecto de lo cual verse corrido.
 
-   El radio sigue la proporción de los chips chicos (26px→8, 38px→10, o sea
-   ~0.3 del lado), así que a 92px toca `--radius-xl` (28). Es el mismo lenguaje,
-   escalado, y no un radio inventado. */
-.gSelloChip {
-  width: 92px;
-  height: 92px;
-  border-radius: var(--radius-xl);
-  background: var(--color-primary-bg);
-  color: var(--color-primary-deep);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
+   Del splash se copia el lenguaje entero: escarabajo suelto, anclado por ALTO
+   con ancho auto (viewBox 1.0923:1, sin deformar), en `--color-primary`, y
+   latiendo. Lo único distinto es el ritmo — ver abajo.
+
+   98px de caja = ~68px de TINTA real (la tinta es el 69.0% del alto del viewBox,
+   medido con getBBox, no a ojo). La caja miente: pedir "68px" daría un bicho de
+   47.
+
+   El aire de abajo: el viewBox deja ~16px vacíos bajo la pata inferior a este
+   tamaño, y ESE es el espacio óptico hasta el eyebrow. Por eso `.gSello` no
+   lleva `gap`: sumarle 14px más habría dejado un hueco de 30px que se lee como
+   dos bloques separados en vez de uno. Mismo criterio que el `margin-bottom`
+   negativo del splash, resuelto desde el otro lado. */
+.gSelloBicho {
+  height: 98px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+  color: var(--color-primary);
+  transform-origin: center;
+  animation: gRespira 4.5s ease-in-out infinite;
 }
 
-/* La caja del SVG NO es el tamano de la tinta: el escarabajo ocupa ~66% del
-   alto de su viewBox (469x430) y apenas ~48% del ancho — el resto son margenes
-   vacios. Por eso el SVG se pide MAS GRANDE que el chip: a 104px de alto el
-   bicho mide ~69px dentro de un cuadrado de 92. Pedirle "40px" como en la
-   primera version daba un dibujo de 26px perdido en el centro.
-   El chip no lleva `overflow: hidden`: la caja se sale, la tinta no. */
-.gSelloIcono { height: 104px; width: auto; display: block; }
+/* El splash late a 1.6s con scale 1.06: ahí el latido dice "estoy cargando,
+   espera". Acá no se está esperando nada — el texto ya está llegando — así que
+   el mismo gesto a ese ritmo competiría con el alivio apareciendo. Este es un
+   pulso de RESPIRACIÓN: 4.5s de ciclo y 3% de crecimiento, sin tocar la
+   opacidad. Presencia, no actividad.
+
+   La duración va en crudo y no en token de movimiento a propósito: los tokens
+   (`--motion-rapida/media/lenta`, 150-500ms) son para gestos que empiezan y
+   terminan. Los bucles ambiente de la app ya se escriben así — el latido del
+   splash (1.6s), los puntos del alivio (1.2s), el brillo del skeleton (1.8s). */
+@keyframes gRespira {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.03); }
+}
 
 .gEyebrowVoz {
   font-size: 10.5px;
@@ -1085,8 +1102,12 @@
 .gVolver:hover { color: var(--color-text); }
 
 @media (prefers-reduced-motion: reduce) {
-  .gChevron { transition: none; }
-  .gSkLine  { animation: none; background: var(--color-surface-alt); }
+  .gChevron    { transition: none; }
+  .gSkLine     { animation: none; background: var(--color-surface-alt); }
+  /* El barrido global de index.css ya la apagaría; se declara igual, explícita,
+     como en el splash: un latido es exactamente lo que esta preferencia existe
+     para apagar, y no puede depender de que nadie toque ese barrido. */
+  .gSelloBicho { animation: none; }
 }
 
 /* ── Confirmación guardado ──────────────────────────────── */

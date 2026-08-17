@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
 
-**3 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más dos rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
+**4 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más tres rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
 
 **El principio de la pantalla:** hay tres pesos, y se leen sin esfuerzo. La **VOZ** (el alivio, sin caja, escrito sobre el crema) pesa más que las **TARJETAS** (blancas, borde fino), y la **REFLEXIÓN** pesa menos que todo (hundida, sin sombra ni borde) porque es lo único que no viene de Huella y que nadie más va a leer.
 
@@ -289,8 +289,26 @@
 
 ### Lo que queda pendiente de esta pantalla
 
-- **La ilustración del sello es un placeholder** (el escarabajo actual dentro del chip). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
+- **La ilustración del sello es un placeholder** (el escarabajo actual, suelto). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
 - **El estado de streaming no alcanzó a fotografiarse** en la verificación: se miró la pantalla terminada en claro y en oscuro. Es lo primero que conviene mirar en el QA real.
+
+### 🔧 PENDIENTE TÉCNICO ABIERTO — el escarabajo está descentrado dentro de su viewBox
+
+**No bloquea ninguna pantalla de hoy, pero va a volver a aparecer.**
+
+`Escarabajo.jsx` tiene la tinta corrida respecto del centro de su propio viewBox. Medido con `getBBox()`, no a ojo:
+
+| | Valor |
+|---|---|
+| viewBox | 469.55 × 429.86 |
+| Tinta real | 55.2% del ancho · 69.0% del alto |
+| Descentrado | **−4.3 unidades en X, −2.9 en Y** |
+
+**Dónde importa y dónde no:** el descentrado **solo se ve cuando hay una caja alrededor** — un disco, un chip, un botón — porque ahí el ojo compara la tinta contra un borde. **Suelto sobre el fondo no se nota**, y por eso la pantalla post-guardado dejó de tener el problema al sacarle el contenedor al sello.
+
+Sigue vivo en todos los usos CON caja, que son varios: el disco del CTA "Registrar un momento", los badges del panel, el chip de "Crear estrategia desde esto", los avatares del hilo del registro. Hoy se compensa a mano en cada lugar, con números distintos.
+
+**La solución deseable: un `EscarabajoCentrado`** — el mismo dibujo con el viewBox recortado a la caja de la tinta (o con un `transform` de compensación adentro del SVG), para que centrar sea `place-items: center` y nada más. **Ese componente NO existe todavía**: se buscó en `src/` y solo está `Escarabajo.jsx`. Decisión de Daniel cuándo hacerlo.
 
 ### Archivos tocados en el primer commit (7 · 4 borrados)
 
@@ -376,7 +394,9 @@ Daniel lo sentía "desordenado, saliendo desde la izquierda". Padding lateral **
 
 ---
 
-## El sello pasó a ser el chip de la pantalla (tercer commit del día)
+## El sello pasó a ser el chip de la pantalla (tercer commit del día) — ⚠️ SUPERADO por el cuarto commit
+
+> **Este paso ya no está en producción.** El chip cuadrado se descartó unas horas después por el sello suelto (ver el bloque siguiente). Se deja escrito porque el razonamiento del "objeto huérfano" sigue siendo válido y explica por qué el disco circular original no funcionaba.
 
 El disco circular del escarabajo **no convenció en el QA**: se veía flotando y débil, aun con el bicho ya agrandado.
 
@@ -400,6 +420,46 @@ El disco circular del escarabajo **no convenció en el QA**: se veía flotando y
 |---|---|
 | `src/pages/registro/RegistroPage.jsx` | `gSelloDisco` → `gSelloChip` |
 | `src/pages/registro/RegistroPage.module.css` | El chip cuadrado de 92px + el escarabajo a 104px |
+
+---
+
+## El sello definitivo: el escarabajo SOLO, como en el splash (cuarto commit del día)
+
+**Cambio de dirección de Daniel.** Se descartan el chip cuadrado y, con él, toda la pelea por centrar la tinta dentro de un contenedor. **La referencia nueva es el splash de arranque**, donde el escarabajo aparece suelto sobre el wordmark, sin caja.
+
+**Por qué esto cierra el tema de verdad, y no es solo otro intento:** el disco circular fallaba por huérfano y el chip lo arreglaba dándole familia, pero el chip metía **una caja donde no hacía falta ninguna** — y una caja obliga a pelear con el descentrado del SVG, que **solo se ve cuando hay un borde contra el cual compararlo**. Sin caja, el problema no se resuelve: **deja de existir**.
+
+**Lo que se copió de `SplashArranque`,** que es el lenguaje ya establecido para el escarabajo suelto:
+
+| | Splash | Sello post-guardado |
+|---|---|---|
+| Contenedor | ninguno | ninguno |
+| Anclaje | `height: 112px`, `width: auto` | `height: 98px`, `width: auto` |
+| Color | `--color-primary` | `--color-primary` |
+| Aire del viewBox | `margin-bottom: -3px` | `.gSello` sin `gap` |
+
+**El tamaño:** 98px de caja = **~68px de tinta real**. La caja miente — pedir "68px" habría dado un bicho de 47.
+
+**El aire de abajo, que es el detalle que se pasa por alto:** el viewBox deja ~16px vacíos bajo la pata a este tamaño, y **ese es el espacio óptico** hasta el eyebrow. Por eso `.gSello` se quedó **sin `gap`**: sumarle los 14px habría dejado un hueco de 30px, y el escarabajo y el texto se leerían como dos bloques en vez de uno. Es el mismo problema que el splash resuelve con margen negativo, resuelto desde el otro lado.
+
+### El latido: respiración, no carga
+
+`scale 1 → 1.03`, ciclo de **4.5s**, `ease-in-out`, infinito, **sin tocar la opacidad**.
+
+**El splash late a 1.6s con scale 1.06 y opacidad bajando a 0.85** — ahí el latido dice "estoy cargando, espera". **Acá no se espera nada**: el texto del alivio ya está llegando, y el mismo gesto a ese ritmo competiría con él. Este pulso es ~4 veces menos energético en los tres ejes: a tamaño real son **~2px de recorrido en 2.25 segundos**.
+
+**Verificado congelando dos fotogramas** (reposo y pico) y comparándolos contra guías. **Lo que NO se pudo verificar es cómo se siente en movimiento junto al texto apareciendo** — eso solo se ve en la app. Si distrae, se apaga borrando la línea de `animation`.
+
+La duración va en crudo y no en token de movimiento **a propósito**: los tokens (`--motion-rapida/media/lenta`, 150-500ms) son para gestos que empiezan y terminan. Los bucles ambiente ya se escriben así en toda la app — el latido del splash (1.6s), los puntos del alivio (1.2s), el brillo del skeleton (1.8s).
+
+`prefers-reduced-motion` lo deja quieto, **declarado explícito** además del barrido global de `index.css`: un latido es exactamente lo que esa preferencia existe para apagar, y no puede depender de que nadie toque ese barrido.
+
+### Archivos tocados en el cuarto commit (2 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.jsx` | El escarabajo suelto, sin envoltorio |
+| `src/pages/registro/RegistroPage.module.css` | `.gSelloBicho` + la respiración; **borrados** `.gSelloChip` y `.gSelloIcono` |
 
 ---
 
