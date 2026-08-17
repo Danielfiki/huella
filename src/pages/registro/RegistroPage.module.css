@@ -677,14 +677,22 @@
   margin-bottom: 26px;
 }
 
-/* Placeholder del ilustrador: disco liso con el escarabajo actual. */
-.gSelloDisco {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-primary);
+/* El sello es el CHIP de la pantalla, en grande: mismo cuadrado redondeado,
+   mismo terracota suave de fondo y misma terracota profunda de la tinta que los
+   chips de "Para la próxima", "Orientación completa" y "Crear estrategia desde
+   esto". Antes era un disco crema con borde, y ahí estaba el problema: un
+   objeto que no se repetía en ninguna otra parte de la pantalla, en un tono que
+   no pesaba, se leía flotando.
+
+   El radio sigue la proporción de los chips chicos (26px→8, 38px→10, o sea
+   ~0.3 del lado), así que a 92px toca `--radius-xl` (28). Es el mismo lenguaje,
+   escalado, y no un radio inventado. */
+.gSelloChip {
+  width: 92px;
+  height: 92px;
+  border-radius: var(--radius-xl);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -692,11 +700,11 @@
 
 /* La caja del SVG NO es el tamano de la tinta: el escarabajo ocupa ~66% del
    alto de su viewBox (469x430) y apenas ~48% del ancho — el resto son margenes
-   vacios. Por eso el SVG se pide MAS GRANDE que el disco: a 112px de alto el
-   bicho mide ~75px, que es lo que de verdad llena un disco de 100. Pedirle
-   "40px" como antes daba un dibujo de 26px perdido en el centro.
-   El disco no lleva `overflow: hidden`: la caja se sale, la tinta no. */
-.gSelloIcono { height: 112px; width: auto; display: block; }
+   vacios. Por eso el SVG se pide MAS GRANDE que el chip: a 104px de alto el
+   bicho mide ~69px dentro de un cuadrado de 92. Pedirle "40px" como en la
+   primera version daba un dibujo de 26px perdido en el centro.
+   El chip no lleva `overflow: hidden`: la caja se sale, la tinta no. */
+.gSelloIcono { height: 104px; width: auto; display: block; }
 
 .gEyebrowVoz {
   font-size: 10.5px;

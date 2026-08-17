@@ -602,8 +602,8 @@ export default function RegistroPage() {
               que separa la voz de Huella del resto, que sí son tarjetas. */}
           <div className={styles.gCabecera}>
             <div className={styles.gSello}>
-              {/* Placeholder: el disco espera la ilustración definitiva. */}
-              <span className={styles.gSelloDisco} aria-hidden="true">
+              {/* Placeholder: el chip espera la ilustración definitiva. */}
+              <span className={styles.gSelloChip} aria-hidden="true">
                 <Escarabajo className={styles.gSelloIcono} />
               </span>
               <p className={styles.gEyebrowVoz}>huella te lee</p>

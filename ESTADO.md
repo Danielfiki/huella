@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
 
-**2 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más los tres ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
+**3 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más dos rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
 
 **El principio de la pantalla:** hay tres pesos, y se leen sin esfuerzo. La **VOZ** (el alivio, sin caja, escrito sobre el crema) pesa más que las **TARJETAS** (blancas, borde fino), y la **REFLEXIÓN** pesa menos que todo (hundida, sin sombra ni borde) porque es lo único que no viene de Huella y que nadie más va a leer.
 
@@ -289,7 +289,7 @@
 
 ### Lo que queda pendiente de esta pantalla
 
-- **La ilustración del disco es un placeholder** (el escarabajo actual sobre un disco liso). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
+- **La ilustración del sello es un placeholder** (el escarabajo actual dentro del chip). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
 - **El estado de streaming no alcanzó a fotografiarse** en la verificación: se miró la pantalla terminada en claro y en oscuro. Es lo primero que conviene mirar en el QA real.
 
 ### Archivos tocados en el primer commit (7 · 4 borrados)
@@ -373,6 +373,33 @@ Daniel lo sentía "desordenado, saliendo desde la izquierda". Padding lateral **
 | `src/pages/registro/RegistroPage.jsx` | `createPortal` a `document.body` |
 | `src/pages/registro/RegistroPage.module.css` | Disco 100px + SVG 112px, padding 36px, columna de 320px |
 | `src/components/layout/Layout.module.css` | `.bottomNav` encerrada en su propio contexto de apilado |
+
+---
+
+## El sello pasó a ser el chip de la pantalla (tercer commit del día)
+
+El disco circular del escarabajo **no convenció en el QA**: se veía flotando y débil, aun con el bicho ya agrandado.
+
+**El diagnóstico, y es una regla de diseño que sirve para adelante:** el disco era **el único objeto de la pantalla que no se repetía en ninguna otra parte**. Círculo crema con borde fino, mientras los tres chips de abajo ("Para la próxima", "Orientación completa", "Crear estrategia desde esto") son cuadrados redondeados con fondo de color. Un objeto solo, en crema sobre crema, no tiene de dónde agarrarse. **Un elemento se ve débil no por chico, sino por huérfano.**
+
+**El sello es ahora ese mismo chip, en grande:** cuadrado redondeado de 92px, fondo `--color-primary-bg`, escarabajo en `--color-primary-deep` relleno sólido — **exactamente los dos tokens** del chip del reloj de "Para la próxima" y del chip de "Crear estrategia desde esto". Cero tokens nuevos, cero overrides: en oscuro el par ya está resuelto (`#2A1808` de fondo, `#EE9870` de tinta) y calza con el chip chico que aparece justo debajo.
+
+**El radio no es inventado.** Los chips chicos van 26px→8 y 38px→10, o sea **~0.3 del lado**. A 92px eso da 28, que es justo `--radius-xl`. Mismo lenguaje, escalado, y sale de un token.
+
+**El tamaño de la tinta se eligió mirando**, con el disco viejo abajo para comparar:
+
+| SVG | Tinta real | Cómo se ve |
+|---|---|---|
+| 84px | ~55px | El chip queda vacío alrededor |
+| **104px** | **~69px** | **El elegido.** Llena el cuadro con aire justo |
+| 120px | ~79px | Las patas y las antenas se aprietan contra el borde |
+
+### Archivos tocados en el tercer commit (2)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.jsx` | `gSelloDisco` → `gSelloChip` |
+| `src/pages/registro/RegistroPage.module.css` | El chip cuadrado de 92px + el escarabajo a 104px |
 
 ---
 
