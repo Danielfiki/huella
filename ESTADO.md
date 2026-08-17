@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
 
-**4 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más tres rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
+**5 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más cuatro rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
 
 **El principio de la pantalla:** hay tres pesos, y se leen sin esfuerzo. La **VOZ** (el alivio, sin caja, escrito sobre el crema) pesa más que las **TARJETAS** (blancas, borde fino), y la **REFLEXIÓN** pesa menos que todo (hundida, sin sombra ni borde) porque es lo único que no viene de Huella y que nadie más va a leer.
 
@@ -435,14 +435,14 @@ El disco circular del escarabajo **no convenció en el QA**: se veía flotando y
 |---|---|---|
 | Contenedor | ninguno | ninguno |
 | Anclaje | `height: 112px`, `width: auto` | `height: 98px`, `width: auto` |
-| Color | `--color-primary` | `--color-primary` |
+| Color | `--color-primary` | `--color-primary-deep` (ajustado en el quinto commit) |
 | Aire del viewBox | `margin-bottom: -3px` | `.gSello` sin `gap` |
 
 **El tamaño:** 98px de caja = **~68px de tinta real**. La caja miente — pedir "68px" habría dado un bicho de 47.
 
 **El aire de abajo, que es el detalle que se pasa por alto:** el viewBox deja ~16px vacíos bajo la pata a este tamaño, y **ese es el espacio óptico** hasta el eyebrow. Por eso `.gSello` se quedó **sin `gap`**: sumarle los 14px habría dejado un hueco de 30px, y el escarabajo y el texto se leerían como dos bloques en vez de uno. Es el mismo problema que el splash resuelve con margen negativo, resuelto desde el otro lado.
 
-### El latido: respiración, no carga
+### El latido: respiración, no carga — ⚠️ los números de acá se corrigieron en el quinto commit
 
 `scale 1 → 1.03`, ciclo de **4.5s**, `ease-in-out`, infinito, **sin tocar la opacidad**.
 
@@ -460,6 +460,57 @@ La duración va en crudo y no en token de movimiento **a propósito**: los token
 |---|---|
 | `src/pages/registro/RegistroPage.jsx` | El escarabajo suelto, sin envoltorio |
 | `src/pages/registro/RegistroPage.module.css` | `.gSelloBicho` + la respiración; **borrados** `.gSelloChip` y `.gSelloIcono` |
+
+---
+
+## 👁️ "No se anima en mi iPhone" y no era un bug: era imperceptible (quinto commit del día)
+
+**Esta es de las que se repiten, igual que la del contexto de apilado. Vale la pena leerla antes de dar por roto un movimiento que "no corre".**
+
+**El síntoma:** Daniel reportó desde producción, en Safari iOS, que **la respiración del sello no corría** — el escarabajo se veía estático. Y traía el dato que hacía el reporte fuerte: **el splash de arranque SÍ le palpita en ese mismo teléfono.**
+
+**Lo que NO era.** Se descartó cada candidato con una medición, no razonando:
+
+| Candidato | Cómo se descartó |
+|---|---|
+| `prefers-reduced-motion` activo | Lo descarta el propio dato del splash. Además se verificó en el **CSS construido** que el `animation: none` quedó correctamente DENTRO del `@media` y no se escapó |
+| Animación pisada por otra regla de `transform` | `getAnimations()` devuelve **1 animación con `playState: running`**. No hay regla compitiendo |
+| Especificidad, o la clase sin llegar al elemento | La clase aplica. Y se verificó lo que sí podía fallar de verdad: **CSS Modules hashea también los `@keyframes`**, y en el build el nombre calza en los dos lados (`_gRespira_…_1` en la regla y en el bloque de keyframes). Si no calzara, la animación no correría nunca y el CSS se vería perfecto |
+| Safari iOS con `animation` sobre un SVG suelto | **La estructura ya era idéntica al splash**: los dos animan el `<svg>` directo, sin wrapper. Y se descartó la trampa conocida de WebKit con `transform-origin` en SVG midiendo el **desplazamiento del centro** entre reposo y pico: **0.00px exactos**. Si el origen resolviera contra el viewBox, el bicho se movería en vez de escalar |
+
+**Lo que SÍ era: el movimiento estaba bajo el umbral de percepción.** Medido en ejecución:
+
+| | Sello (como estaba) | Splash |
+|---|---|---|
+| El borde del dibujo recorre | **1.47px** | 3.36px |
+| en | 2.25 s | 0.8 s |
+| Velocidad del borde | 0.00065 px/ms | 0.0042 px/ms |
+| Opacidad | sin cambio | baja a 0.85 |
+
+**El splash se mueve 6.4 veces más rápido.** Un recorrido de 1.47px repartido en dos segundos y cuarto, sin cambio de opacidad y sin nada quieto al lado con qué compararlo, simplemente no se ve. El error fue pasarse de calmo al huir del "latido de carga" — y estaba anotado como riesgo al entregarlo, porque desde acá solo se pueden mirar fotogramas congelados, nunca el movimiento.
+
+**La regla que queda:** en un pulso lento, **lo que lo vuelve legible es la OPACIDAD, no la escala.** Un cambio de opacidad se percibe de inmediato; la escala necesita mucha más amplitud para notarse. El splash es legible sobre todo por su caída a 0.85, no por su 6% de escala.
+
+**El arreglo:** entra el canal de opacidad, más suave que el del splash, y sube apenas la escala.
+
+| | Antes | Ahora | Splash |
+|---|---|---|---|
+| Escala | 1.03 | **1.045** | 1.06 |
+| Opacidad | — | **0.92** | 0.85 |
+| Ciclo | 4.5 s | **3.2 s** | 1.6 s |
+| Borde recorre | 1.47px / 2.25s | **2.21px / 1.6s** | 3.36px / 0.8s |
+
+Queda **tres veces más calmo que el splash** y por encima del umbral. **La estructura no se tocó**: ya era la del splash, y ese era el punto.
+
+**De paso, el color:** el escarabajo volvió a `--color-primary-deep` (la terracota profunda del chip descartado) en vez de `--color-primary`. En oscuro ese token ya se aclara a salmón y calza con la tinta del chip del reloj que aparece justo debajo, así que no hizo falta ningún override.
+
+**Lo que sigue sin poder verificarse desde acá:** cómo se siente en movimiento. Si en el iPhone todavía se viera quieto, el siguiente paso ya no es afinar amplitud — sería mirar si algo del entorno de la capa portada afecta la composición en Safari.
+
+### Archivos tocados en el quinto commit (1 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.module.css` | `.gSelloBicho` a `--color-primary-deep` + los keyframes con opacidad |
 
 ---
 

@@ -703,24 +703,37 @@
   width: auto;
   display: block;
   margin: 0 auto;
-  color: var(--color-primary);
+  color: var(--color-primary-deep);
   transform-origin: center;
-  animation: gRespira 4.5s ease-in-out infinite;
+  animation: gRespira 3.2s ease-in-out infinite;
 }
 
-/* El splash late a 1.6s con scale 1.06: ahí el latido dice "estoy cargando,
-   espera". Acá no se está esperando nada — el texto ya está llegando — así que
-   el mismo gesto a ese ritmo competiría con el alivio apareciendo. Este es un
-   pulso de RESPIRACIÓN: 4.5s de ciclo y 3% de crecimiento, sin tocar la
-   opacidad. Presencia, no actividad.
+/* RESPIRACIÓN, no latido de carga. El splash late a 1.6s con scale 1.06 y la
+   opacidad bajando a 0.85: ahí el gesto dice "estoy cargando, espera". Acá no se
+   espera nada — el texto del alivio ya está llegando — así que ese ritmo
+   competiría con él.
+
+   PERO la primera versión de esto (4.5s, scale 1.03, sin opacidad) se veía
+   ESTÁTICA en el celular, y no era un bug: era imperceptible. Medido, el borde
+   del dibujo recorría 1.47px repartidos en 2.25 segundos, contra los 3.36px en
+   0.8s del splash — seis veces más lento. Sin nada quieto al lado con qué
+   comparar, un movimiento así no se ve.
+
+   Lo que hace legible al splash no es tanto la escala como la OPACIDAD: un
+   cambio de opacidad se percibe de inmediato, mientras que la escala necesita
+   mucha más amplitud para notarse. Por eso acá entra ese canal, más suave (0.92
+   contra 0.85), y la escala sube apenas a 1.045.
+
+   El resultado: el borde recorre ~2.2px en 1.6s. Se ve, y sigue siendo tres
+   veces más calmo que el splash.
 
    La duración va en crudo y no en token de movimiento a propósito: los tokens
    (`--motion-rapida/media/lenta`, 150-500ms) son para gestos que empiezan y
    terminan. Los bucles ambiente de la app ya se escriben así — el latido del
    splash (1.6s), los puntos del alivio (1.2s), el brillo del skeleton (1.8s). */
 @keyframes gRespira {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.03); }
+  0%, 100% { transform: scale(1);     opacity: 1; }
+  50%      { transform: scale(1.045); opacity: 0.92; }
 }
 
 .gEyebrowVoz {
