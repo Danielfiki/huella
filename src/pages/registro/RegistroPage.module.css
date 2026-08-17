@@ -665,7 +665,7 @@
 
 .gCabecera {
   margin: 0 -20px;
-  padding: 26px 28px 0;
+  padding: 26px 36px 0;
   background: var(--gradient-alivio-canvas);
 }
 
@@ -673,14 +673,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 26px;
 }
 
 /* Placeholder del ilustrador: disco liso con el escarabajo actual. */
 .gSelloDisco {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -689,7 +689,14 @@
   place-items: center;
   flex-shrink: 0;
 }
-.gSelloIcono { width: 40px; height: auto; display: block; }
+
+/* La caja del SVG NO es el tamano de la tinta: el escarabajo ocupa ~66% del
+   alto de su viewBox (469x430) y apenas ~48% del ancho — el resto son margenes
+   vacios. Por eso el SVG se pide MAS GRANDE que el disco: a 112px de alto el
+   bicho mide ~75px, que es lo que de verdad llena un disco de 100. Pedirle
+   "40px" como antes daba un dibujo de 26px perdido en el centro.
+   El disco no lleva `overflow: hidden`: la caja se sale, la tinta no. */
+.gSelloIcono { height: 112px; width: auto; display: block; }
 
 .gEyebrowVoz {
   font-size: 10.5px;
@@ -701,7 +708,17 @@
   margin: 0;
 }
 
-.gAlivio { padding-bottom: 4px; }
+/* El alivio es una COLUMNA, no texto pegado al borde. Cuelga del mismo eje
+   central que el disco y el eyebrow, con un ancho tope propio: sin esto, en
+   pantallas anchas la linea se estira y el bloque se lee arrancando desde la
+   izquierda, desalineado de lo que tiene encima.
+   El texto queda alineado a la izquierda a proposito: centrar un bloque de 8+
+   lineas empeora la lectura, porque el ojo pierde el punto de retorno. */
+.gAlivio {
+  max-width: 320px;
+  margin: 0 auto;
+  padding-bottom: 4px;
+}
 
 /* Estado de error de la orientación. El episodio ya está persistido: esto
    comunica un problema temporal y ofrece reintentar. Sin rojo: no es una

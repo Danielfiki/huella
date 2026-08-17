@@ -102,7 +102,20 @@
    tercio del ancho, y el fondo del item activo pasa de ser una pastilla a ser
    un bloque de 140px. Se acota el ancho de cada item y se reparte el espacio
    sobrante, así el indicador de activo sigue siendo una pastilla. */
+/* `position: relative` + `z-index` NO son decoracion: encierran la barra en su
+   propio contexto de apilado.
+   Sin esto, cada `.navItem` (que es `position: relative` para poder colgarle el
+   puntito de medalla nueva) escapa por encima de cualquier capa `fixed` que
+   quiera tapar la barra — y lo hace aunque esa capa tenga z-index 300, porque
+   los items posicionados con z-index auto se pintan en el contexto raiz por
+   orden de documento, despues de la capa. Se vio exactamente asi en la pantalla
+   post-guardado: la barra aparecia encima de la tarjeta de orientacion.
+   Encerrandola aca, los items ya no pueden salirse, y el 1 la deja debajo de la
+   capa de guardado (300), del loadingBar (200) y de los modales (1000), pero
+   encima del contenido de la pagina, que es donde siempre estuvo. */
 .bottomNav {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-end;
   justify-content: space-around;

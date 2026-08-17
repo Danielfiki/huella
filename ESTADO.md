@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
 
-**1 commit.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design. **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
+**2 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más los tres ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
 
 **El principio de la pantalla:** hay tres pesos, y se leen sin esfuerzo. La **VOZ** (el alivio, sin caja, escrito sobre el crema) pesa más que las **TARJETAS** (blancas, borde fino), y la **REFLEXIÓN** pesa menos que todo (hundida, sin sombra ni borde) porque es lo único que no viene de Huella y que nadie más va a leer.
 
@@ -289,10 +289,10 @@
 
 ### Lo que queda pendiente de esta pantalla
 
-- **La ilustración del disco de 72px es un placeholder** (el escarabajo actual sobre un disco liso). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
+- **La ilustración del disco es un placeholder** (el escarabajo actual sobre un disco liso). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
 - **El estado de streaming no alcanzó a fotografiarse** en la verificación: se miró la pantalla terminada en claro y en oscuro. Es lo primero que conviene mirar en el QA real.
 
-### Archivos tocados (7 · 4 borrados)
+### Archivos tocados en el primer commit (7 · 4 borrados)
 
 | Archivo | Qué cambió |
 |---|---|
@@ -306,6 +306,73 @@
 | `src/components/panel/Delta.jsx` + `delta.module.css` | **BORRADOS** |
 
 **CSS muerto que se fue de paso:** el bloque `.celebracion*` de `RegistroPage.module.css` (cero referencias desde antes de esta tarea) estaba dentro de la sección que se reescribió y salió con ella.
+
+---
+
+## Ajustes post-QA de la pantalla post-guardado (segundo commit del día)
+
+Daniel revisó en producción y pidió tres cosas. Una era un bug; las otras dos, afinamiento.
+
+### 🪤 LA TRAMPA QUE HAY QUE RECORDAR: una animación con `fill-mode: both` crea un contexto de apilado PARA SIEMPRE
+
+**Esta es de las que se repiten. Vale la pena leerla completa antes de pelear con cualquier `z-index` de esta app.**
+
+**El síntoma:** la barra baja del Layout ("Inicio" / "Tú") se veía **encima** de la tarjeta de Orientación completa, al fondo de la pantalla de guardado, aunque la capa es `position: fixed` con `z-index: 300` y la barra no tiene z-index.
+
+**Lo que NO era** (se descartó cada uno con un render, no razonando):
+
+| Sospecha | Resultado |
+|---|---|
+| Alto de la capa o safe-area | Descartado: la capa medía `top=0 bottom=748` en un viewport de 748. Cubría la barra geométricamente |
+| El `transform` de `.vistaEntra` sobre la capa | Descartado: apagándolo, la barra seguía arriba |
+| El `overflow-y: auto` de `.main` | Descartado igual |
+| El `position: relative` de `.container` | Descartado igual |
+| **Subir el z-index de la capa** | **No sirve. Se probó a 999 y no cambió nada** — esa es justamente la pista |
+
+**Lo que SÍ era:** `.pageWrap` del Layout lleva `.pageVisible { animation: fadeIn 320ms ease both }`. Esa animación es de **`opacity`**, y con **`fill-mode: both` queda en efecto para siempre**. Una animación de opacidad en efecto **crea un contexto de apilado**, aunque el valor final sea exactamente 1 y aunque `getComputedStyle` reporte `opacity: 1`. La capa quedaba **encerrada** ahí dentro: su `z-index: 300` solo competía contra sus hermanos dentro de `.pageWrap`, nunca contra la barra.
+
+Y del otro lado, los `.navItem` son `position: relative` —se lo agregó el commit de medallas (`a868d4c`) para colgarles el puntito de medalla nueva— así que se pintan en el contexto **raíz**, después de todo el subárbol de `.pageWrap`.
+
+**Cómo se encontró:** volcando la pila de pintado real con `document.elementsFromPoint()` sobre el punto exacto de la barra, y después apagando una variable a la vez hasta que la capa ganó. La pila decía:
+
+```
+SPAN                        <- arriba de todo
+navItem   [relative, z auto]
+gScroll
+gCapa     [fixed, z 300]    <- la capa, debajo
+bottomNav
+```
+
+**Las dos señales que delatan esta trampa:** (1) subir el z-index no cambia nada, y (2) los ancestros se ven "limpios" en `getComputedStyle` — porque el contexto lo crea la animación, no el valor computado.
+
+**El arreglo (dos capas, las dos aprobadas):**
+
+1. **La vista de guardado sale por `createPortal` a `document.body`.** Es lo que de verdad resuelve el bug: saca la capa del contexto de `.pageWrap` y la deja en la raíz, el único lugar donde su z-index significa algo. **Regla que queda:** cualquier overlay que tenga que tapar el chrome del Layout va por portal, no por z-index.
+2. **`.bottomNav` pasa a `position: relative; z-index: 1`.** No hace falta para este bug, pero **encierra los `.navItem` en su propio contexto** para que no vuelvan a escaparse sobre ninguna capa futura. El 1 la deja debajo de la capa de guardado (300), del `loadingBar` (200) y de los modales (1000), y encima del contenido de la página, que es donde siempre estuvo.
+
+### El escarabajo del sello: la lección del viewBox, otra vez
+
+Se veía chico y tímido. **La caja del SVG NO es el tamaño de la tinta:** se midió y el escarabajo ocupa **~66% del alto** de su viewBox (469×430) y apenas **~48% del ancho** — el resto son márgenes vacíos. Pedirle "40px de ancho" daba un dibujo real de ~26px perdido en el centro de un disco de 72.
+
+Ahora: **disco de 100px y SVG de 112px de alto** — más grande que el disco a propósito. Así la tinta mide ~75px y lo llena de verdad. El disco **no** lleva `overflow: hidden`: se sale la caja, no el dibujo.
+
+Es la tercera vez que este SVG engaña por lo mismo (antes fueron los avatares del registro y el escarabajo del disco del CTA). **Con este bicho: más caja y más proporción, nunca más trazo.**
+
+### El bloque del alivio: una columna, no texto pegado al borde
+
+Daniel lo sentía "desordenado, saliendo desde la izquierda". Padding lateral **28 → 36px simétrico**, más `max-width: 320px` con `margin: 0 auto`, para que en pantallas anchas siga siendo una columna colgada del **mismo eje central** que el disco y el eyebrow.
+
+**El texto queda alineado a la izquierda a propósito:** centrar un bloque de 8+ líneas empeora la lectura, porque el ojo pierde el punto de retorno.
+
+**Se eligió mirando, no midiendo:** se renderizaron 28 / 36 / 40 lado a lado. **Ganó 36.** A 40 el bloque queda más contenido pero el corte de línea empeora — deja "Pascual" colgando al inicio de línea y abre un hueco mayor en el margen derecho.
+
+### Archivos tocados en el segundo commit (3)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.jsx` | `createPortal` a `document.body` |
+| `src/pages/registro/RegistroPage.module.css` | Disco 100px + SVG 112px, padding 36px, columna de 320px |
+| `src/components/layout/Layout.module.css` | `.bottomNav` encerrada en su propio contexto de apilado |
 
 ---
 

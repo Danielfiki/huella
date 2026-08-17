@@ -1,4 +1,5 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, ChevronDown, Clock, BookOpen, ArrowRight } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
@@ -569,7 +570,17 @@ export default function RegistroPage() {
     // momento íntimo justo después de contar algo difícil, y la navegación
     // alrededor lo rompe. La salida está explícita dos veces: la X de arriba y
     // "Volver al inicio" al final, las dos al mismo lugar.
-    return (
+    //
+    // VA POR PORTAL A `document.body`, y no es un lujo: `.pageWrap` del Layout
+    // anima `opacity` con `fill-mode: both`, y una animación de opacidad en
+    // efecto permanente crea un CONTEXTO DE APILADO aunque el valor final sea 1.
+    // Dentro de ese contexto, el `z-index: 300` de la capa no compite contra la
+    // barra baja: los `.navItem` (que son `position: relative` por el puntito de
+    // medalla nueva) se pintan después, en el contexto raíz, y quedaban ENCIMA
+    // de la tarjeta de orientación. Subir el z-index no servía de nada — se
+    // probó a 999. El portal saca la capa de ese contexto y la deja en la raíz,
+    // que es el único lugar donde su z-index significa algo.
+    return createPortal(
       <div ref={pageRef} className={styles.gCapa}>
         <div className={styles.gScroll}>
 
@@ -756,7 +767,8 @@ export default function RegistroPage() {
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
