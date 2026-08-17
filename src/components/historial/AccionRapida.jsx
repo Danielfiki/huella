@@ -56,7 +56,11 @@ export default function AccionRapida({ data, regenerando = false, label = 'Acci�
 //   1. AUTORES[autor].lente — siempre que el autor esté en el banco.
 //   2. MAPA_DIMENSIONES[dimension].lente — si la dimensión vino persistida.
 //   3. Reformatea la dimensión a texto humano como último recurso.
-function obtenerLente(data) {
+//
+// Exportada porque la pantalla de guardado pinta su propia "Para la próxima"
+// (otro envase, mismos datos) y la firma tiene que resolverse igual en los dos
+// lados. La lógica vive acá y no se duplica.
+export function obtenerLente(data) {
   if (data.autor && AUTORES[data.autor]?.lente) return AUTORES[data.autor].lente
   if (data.dimension && MAPA_DIMENSIONES[data.dimension]?.lente) return MAPA_DIMENSIONES[data.dimension].lente
   if (data.dimension) {

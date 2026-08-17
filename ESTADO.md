@@ -244,7 +244,72 @@
 
 ---
 
-## Cerrado HOY — domingo 16 agosto 2026 — BLOQUE B4: la tarjeta central dejó de hablar como planilla y pasó a verse como la protagonista · y **el QA de B3 quedó CERRADO ENTERO**
+## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
+
+**1 commit.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design. **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
+
+**El principio de la pantalla:** hay tres pesos, y se leen sin esfuerzo. La **VOZ** (el alivio, sin caja, escrito sobre el crema) pesa más que las **TARJETAS** (blancas, borde fino), y la **REFLEXIÓN** pesa menos que todo (hundida, sin sombra ni borde) porque es lo único que no viene de Huella y que nadie más va a leer.
+
+### Auditoría de coherencia contra el Home nuevo (se hizo ANTES de tocar)
+
+| Spec de Design | Estado del sistema | Qué se hizo |
+|---|---|---|
+| Radius 16 cards / 10 campos | `--radius-md` = 16, `--radius-sm` = 10 | Calzan exacto, sin tokens nuevos |
+| `shadow-sm` | **El Home usa `--shadow-card-soft`** en puertas y tarjetas | Se usó `--shadow-sm` como pide Design. Son casi iguales (2px/12px vs 4px/14px). **Divergencia consciente, anotada**: si algún día se quiere coherencia estricta con el Home es un cambio de una línea |
+| Eyebrow 10.5px / tracking 0.14–0.18em | **El Home usa 11px / 0.06em** | Se adoptó la de Design. **Divergencia consciente:** esta pantalla es editorial y el tracking ancho es parte de ese registro |
+| Fraunces / Jakarta | Consistente | El alivio usa **Fraunces 400 a 18px** — primer uso de Fraunces Regular como texto de lectura en la app (en todo el resto es 700 para títulos). Es justamente lo que lo hace sonar a voz y no a interfaz |
+| Radial `#FDFBF2` sobre el alivio | No existía | **Token nuevo `--gradient-alivio-canvas`**, con override de oscuro. En oscuro el halo es el crema oscuro subido un punto y no un gris: un halo frío delataría que es un degradado pegado encima |
+| Puntitos mocha / tag-green / muted, chip lavanda, punto accent-blue, success-bg, primary-deep | Todos existen con override de oscuro | Sin tokens nuevos |
+| Movimiento | Tokens de B1 | `--motion-media` + `--motion-ease-entrada` en el fadeUp de la orientación, `--motion-rapida` en el chevron |
+
+**Un solo token nuevo en toda la pantalla.** Los CSS modules tocados quedaron con **cero hex y cero rgba** (verificado con grep).
+
+### La decisión estructural: sin header mocha y sin barra baja
+
+`/registro` vive dentro del `Layout`, así que siempre los tuvo. Ahora la vista de guardado se monta como una **capa `position: fixed`** acotada a los mismos 430px del contenedor del Layout.
+
+**Por qué así y no escondiendo el chrome desde `Layout`:** el Layout no puede saber en qué vista interna está el registro (`vista` es estado local de `RegistroPage`). Resolviéndolo con una capa, **ninguna otra pantalla se entera del cambio**.
+
+**La salida está explícita dos veces**, las dos a `/panel`: la X de 34px arriba a la derecha y "Volver al inicio" al final. Sin navegación, pero sin encerrar a nadie.
+
+**Bug atrapado en la revisión, antes de que llegara a producción:** la capa se centraba con `transform: translateX(-50%)`, pero la clase `.vistaEntra` —que anima la entrada de cada vista del registro— **también escribe `transform`**. Se pisaban: la capa habría saltado a la mitad izquierda durante los 400ms de la animación de entrada, en cualquier pantalla más ancha que 430px. Se cambió a `left/right: 0` + `margin: 0 auto`, que centra un elemento fijo sin usar `transform`.
+
+### Por qué se escribieron componentes nuevos en vez de reusar
+
+- **`OrientacionSecciones.jsx` (nuevo) en vez de `RespuestaIA`.** Ese componente pinta su propia cabecera ("Orientación de Huella") y su barra de progreso falsa. Acá la cabecera ya la puso la tarjeta plegable, y cuando esto se monta el stream **ya terminó** — quedaba una cabecera repetida y una barra que nunca corre. La detección de secciones sigue saliendo de `seccionesIA.js`, **fuente única, sin duplicar**.
+- **"Para la próxima" pinta su propio envase** en vez de usar `AccionRapida`. Ese componente es de las cards del historial: restilarlo habría cambiado el historial entero. Se **exportó `obtenerLente`** desde ahí para que la firma se resuelva igual en los dos lados sin duplicar la lógica.
+
+### Decisiones de Daniel al cerrar
+
+- **El mantram salió.** "Cada registro es una conversación contigo mismo sobre cómo quieres criar" era texto-relleno: el alivio ya cumple ese rol, y mejor.
+- **`RespuestaIA.jsx` + `RespuestaIA.module.css`: BORRADOS.** Quedaron huérfanos con este cambio (verificado con grep: cero consumidores).
+- **`Delta.jsx` + `delta.module.css`: BORRADOS.** Huérfanos desde B2, anotados y esperando decisión desde entonces. Misma regla, se cierran acá.
+- **El tick del alivio bajó de 28ms a 18ms.** A Fraunces 18px el tick lento se leía como máquina de escribir; acá tiene que leerse como alguien hablando. Es cadencia de presentación, no el streaming de datos.
+- **`VoiceTextarea` NO se tocó.** Su campo tiene radius 22px y el spec pide 10px, pero es componente compartido con el relato del episodio, el avance y el contexto: cambiarlo movería otras cuatro pantallas.
+
+### Lo que queda pendiente de esta pantalla
+
+- **La ilustración del disco de 72px es un placeholder** (el escarabajo actual sobre un disco liso). Espera el asset del ilustrador, igual que la del estado "semana cero" del Home.
+- **El estado de streaming no alcanzó a fotografiarse** en la verificación: se miró la pantalla terminada en claro y en oscuro. Es lo primero que conviene mirar en el QA real.
+
+### Archivos tocados (7 · 4 borrados)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/registro/OrientacionSecciones.jsx` + `.module.css` | **NUEVOS.** Los 3 bloques con puntito de color + disclaimer |
+| `src/index.css` | Token `--gradient-alivio-canvas` + override de oscuro |
+| `src/pages/registro/RegistroPage.jsx` | La vista de guardado completa |
+| `src/pages/registro/RegistroPage.module.css` | Bloque nuevo con prefijo `g*`; borrado el viejo |
+| `src/components/registro/AlivioHuella.jsx` + `.module.css` | Sale de la burbuja, comillas tipográficas, tick 18ms |
+| `src/components/historial/AccionRapida.jsx` | Solo exporta `obtenerLente`. **Sin cambio visual** |
+| `src/components/ui/RespuestaIA.jsx` + `.module.css` | **BORRADOS** |
+| `src/components/panel/Delta.jsx` + `delta.module.css` | **BORRADOS** |
+
+**CSS muerto que se fue de paso:** el bloque `.celebracion*` de `RegistroPage.module.css` (cero referencias desde antes de esta tarea) estaba dentro de la sección que se reescribió y salió con ella.
+
+---
+
+## Sesión domingo 16 agosto 2026 — BLOQUE B4: la tarjeta central dejó de hablar como planilla y pasó a verse como la protagonista · y **el QA de B3 quedó CERRADO ENTERO**
 
 **3 commits.** **B4.1** le cambió la voz a la tarjeta "Esta semana en el cerebro de {hijo}", **B4.2** la jerarquía visual, y encima entraron los **dos ajustes post-QA de "Tus medallas"**. No se tocó estructura del Home, puertas, botón de registro, cabecera, lógica de estados ni queries.
 
@@ -588,7 +653,7 @@ Dos cosas de implementación que conviene conocer:
 
 ### Pendientes que deja B2
 
-- **`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.
+- ~~**`Delta.jsx` + `delta.module.css` quedaron huérfanos**: su único consumidor era `ResumenSemanal`. No se borraron porque no estaban en la lista aprobada. Decisión de Daniel.~~ **BORRADOS el 17 de agosto**, junto con `RespuestaIA`, que quedó huérfano por el rediseño del post-guardado.
 - **La ilustración del estado "semana cero"** es un placeholder con el escarabajo. Falta la definitiva.
 - ~~ABIERTA: la inclinación del escarabajo del disco.~~ **CERRADA.** Nunca fue una rotación: el dibujo es simétrico y no había ningún `transform` que rotara. Lo que se veía chueco era **la pata inferior derecha saliéndose del disco mientras la izquierda quedaba adentro** — un choque asimétrico contra el borde del círculo, sumado a que el bicho estaba corrido hacia abajo. Detalle completo en la sección del escarabajo, más arriba. **Se descartó el Plan B** (reemplazar el escarabajo por un "+"): el SVG está bien dibujado, el defecto era de implementación.
 - **Revisión de accesibilidad app-completa**, no botón por botón. El disparador es el contraste del CTA (ver arriba), pero el problema es transversal: blanco sobre la terracota de marca no llega a 4.5:1 en ningún nivel, y esa combinación está en toda la app vía `Button.module.css`. Decisión de Daniel de no parcharlo pantalla por pantalla.

@@ -10,29 +10,8 @@
 }
 .error { font-size: 13px; color: var(--color-danger); text-align: center; padding: 4px 0; }
 
-/* Estado de error de la orientación IA (post-guardado). El episodio
-   ya está persistido; el bloque comunica el problema temporal y
-   ofrece reintentar sin perder la orientación. */
-.errorOrientacionCard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: center;
-  padding: 20px;
-}
-.errorOrientacionIcon { font-size: 28px; margin-bottom: 4px; }
-.errorOrientacionTitulo {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0;
-}
-.errorOrientacionTexto {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-  margin: 0 0 8px 0;
-}
+/* El estado de error de la orientación se re-vistió junto con el resto de la
+   pantalla de guardado: vive ahora en el bloque POST-GUARDADO, como `.gError*`. */
 .titulo { font-size: 22px; font-weight: 700; }
 .label { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 10px; }
 
@@ -593,191 +572,499 @@
   padding-bottom: 2px;
 }
 
-/* ── Confirmación guardado ──────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   POST-GUARDADO · la pantalla que se lee después de contar algo
+   ══════════════════════════════════════════════════════════════════
 
-.guardadoContainer { display: flex; flex-direction: column; gap: 14px; }
+   Prefijo `g` = guardado. Todo sale de tokens de index.css.
 
-/* celebración elevada (mismo molde que el resultado del avance de NuevoPage) */
-.celebracionCard {
+   La pantalla se monta como una CAPA sobre el Layout: sin header mocha
+   y sin barra baja. No es una pantalla más de la app — es el momento
+   inmediatamente posterior a contar algo difícil, y tener la
+   navegación alrededor lo convierte en un trámite. Se hace acá, con
+   position: fixed, y no escondiendo el chrome desde Layout, porque el
+   Layout no puede saber en qué vista interna está el registro; así
+   además ninguna otra pantalla se entera de este cambio.
+
+   La capa se acota a los mismos 430px del `.container` del Layout para
+   que en escritorio no se despliegue a lo ancho de la ventana.
+
+   Jerarquía de la pantalla: la VOZ (el alivio, sin caja, sobre el
+   crema) pesa más que las TARJETAS (blancas, borde fino), y la
+   reflexión pesa menos que todo (hundida, sin sombra ni borde) porque
+   es lo único que no pide ser leído. Sin rojo, sin alarmas.       */
+
+/* El centrado va con `margin: 0 auto` sobre left/right en cero, NO con
+   `transform: translateX(-50%)`: la clase `.vistaEntra` que anima la entrada de
+   cada vista del registro también escribe `transform`, y se pisarían — la capa
+   saltaría a la mitad izquierda durante los 400ms de la animación. */
+.gCapa {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 430px;
+  z-index: 300;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.gScroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 1 · Top ── */
+
+.gTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 0 0;
+}
+
+/* Pistacho suave: se guardó, y eso es una buena noticia tranquila. Nunca un
+   toast, nunca terracota — la terracota de esta pantalla está reservada para
+   lo accionable. */
+.gChipGuardado {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--color-success-bg);
+  color: var(--color-tag-green);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.gCerrar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* ── 2 y 3 · La voz ──
+   El halo cae sobre este bloque y muere antes de las tarjetas. El padding
+   lateral extra (28px totales, contra los 20px del resto) es lo que hace que
+   el alivio se lea como texto de libro y no como contenido de una app. */
+
+.gCabecera {
+  margin: 0 -20px;
+  padding: 26px 28px 0;
+  background: var(--gradient-alivio-canvas);
+}
+
+.gSello {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 8px;
-  padding: 32px 24px;
-  border-radius: 26px;
-  background: var(--color-celebration-start);
-  box-shadow: var(--shadow-md);
+  gap: 12px;
+  margin-bottom: 26px;
 }
-.celebracionIcono { font-size: 60px; line-height: 1; margin: 0; }
-.celebracionTitulo {
+
+/* Placeholder del ilustrador: disco liso con el escarabajo actual. */
+.gSelloDisco {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.gSelloIcono { width: 40px; height: auto; display: block; }
+
+.gEyebrowVoz {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-mocha);
+  text-align: center;
+  margin: 0;
+}
+
+.gAlivio { padding-bottom: 4px; }
+
+/* Estado de error de la orientación. El episodio ya está persistido: esto
+   comunica un problema temporal y ofrece reintentar. Sin rojo: no es una
+   falla del padre ni de lo que contó. */
+.gErrorCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+.gErrorTitulo {
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text);
   margin: 0;
 }
-.celebracionSub {
-  font-size: 14px;
+.gErrorTexto {
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--color-text-muted);
-  line-height: 1.6;
   margin: 0;
-  max-width: 280px;
 }
 
-.estrategiaBtn {
+.gPreparando { margin-top: 16px; }
+
+/* ── 4 · Divisor de respiración ── */
+
+.gDivisor {
+  width: 32px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--color-border);
+  align-self: center;
+  margin: 20px 0 4px;
+}
+
+/* ── Tarjetas ── */
+
+.gCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.gCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.gCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gChipIcono {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+  display: grid;
+  place-items: center;
+}
+
+.gCardEyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-deep);
+}
+
+/* El texto ES la sugerencia, así que va en 600: es lo que hay que leer de esta
+   tarjeta si se lee una sola cosa. */
+.gAccionTexto {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Firma científica. El punto lavanda es el color de "esto viene de alguien que
+   estudió esto", el mismo criterio que el chip del libro de la orientación. */
+.gFirma {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+}
+.gFirmaPunto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-accent-blue);
+}
+.gFirmaLente { color: var(--color-text-light); }
+
+.gSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gSkLine {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-alt) 0%,
+    var(--color-primary-tint) 50%,
+    var(--color-surface-alt) 100%
+  );
+  background-size: 220% 100%;
+  animation: gBrillo 1.6s ease-in-out infinite;
+}
+.gSkLine:nth-child(2) { animation-delay: .15s; }
+@keyframes gBrillo {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
+/* ── 6 · Orientación completa ── */
+
+.gCardPlegable {
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.gPlegableHead {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  padding: 16px 20px;
+  background: none;
   border: none;
-  box-shadow: var(--shadow-sm), inset 4px 0 0 var(--color-accent-green);
-  cursor: pointer;
   text-align: left;
-  transition: transform 0.12s, box-shadow 0.15s;
+  cursor: pointer;
+  font-family: var(--font-family);
 }
-.estrategiaBtn:active { transform: scale(0.98); }
-.estrategiaBtnEmoji { font-size: 26px; flex-shrink: 0; }
-.estrategiaBtnTexto {
+.gPlegableHead:active { transform: none; }
+
+/* Lavanda = ciencia. Es el mismo significado que el punto de la firma. */
+.gChipLibro {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--color-accent-lavender);
+  color: var(--color-pill-lavender-text);
+  display: grid;
+  place-items: center;
+}
+
+.gPlegableTextos {
   display: flex;
   flex-direction: column;
   gap: 2px;
   flex: 1;
   min-width: 0;
 }
-.estrategiaBtnTexto strong { font-size: 14px; font-weight: 700; color: var(--color-text); }
-.estrategiaBtnTexto span { font-size: 12px; color: var(--color-text-muted); }
-.estrategiaBtnArrow { font-size: 16px; color: var(--color-success); flex-shrink: 0; }
-
-.registroMantram {
-  font-size: 12px;
+.gPlegableTitulo {
+  font-family: var(--font-heading);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.gPlegableSub {
+  font-size: 11px;
+  line-height: 1.35;
   color: var(--color-text-muted);
-  text-align: center;
-  font-style: italic;
-  margin: 0;
 }
 
-/* ── Reflexión personal ───────────────────────────────── */
+.gChevronDisco {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+}
+.gChevron { transition: transform var(--motion-rapida) var(--motion-ease-estandar); }
+.gChevronAbierto { transform: rotate(180deg); }
 
-.reflexionSection {
+/* ── 7 · Reflexión ──
+   Hundida: sin sombra y sin borde. Es lo único de la pantalla que no viene de
+   Huella y que nadie más va a leer, así que no compite por la atención. */
+
+.gWell {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
 }
 
-.reflexionLabel {
-  font-size: 15px;
+.gWellHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gWellTitulo {
+  font-family: var(--font-heading);
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--color-text);
-  line-height: 1.4;
   margin: 0;
 }
 
-.reflexionOpcional {
-  font-size: 12px;
-  font-weight: 400;
+.gWellTag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-surface);
   color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.reflexionFooter {
+.gWellFooter {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   min-height: 34px;
 }
 
-.reflexionSaveBtn {
+.gGuardarReflexion {
+  min-height: 34px;
   padding: 8px 18px;
   border-radius: 999px;
-  border: none;
-  background: var(--color-primary);
-  color: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 13px;
   font-weight: 700;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--motion-rapida) var(--motion-ease-estandar);
 }
-.reflexionSaveBtn:hover:not(:disabled) { opacity: 0.88; }
-.reflexionSaveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gGuardarReflexion:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.reflexionGuardadaMsg {
+.gGuardadaMsg {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-success);
-  animation: narrativaFadeIn 0.2s ease both;
-}
-
-/* ── Acción inmediata ─────────────────────────────────── */
-
-.accionCard {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 20px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  /* Verde igual que la tarjeta real: si no, al llegar la accion se veia un
-     salto de terracota a verde. */
-  border-left: 3px solid var(--color-accent-green);
-  animation: accionFadeIn 0.5s ease both;
-}
-
-@keyframes accionFadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.accionHeader {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.accionEmoji { font-size: 16px; line-height: 1; }
-
-.accionLabel {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
   color: var(--color-tag-green);
 }
 
-.accionTexto {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--color-text);
-  margin: 0;
-  font-weight: 500;
-}
+/* ── 8 · Salidas ── */
 
-.accionSkeleton {
+.gSalidas {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+  margin-top: 24px;
 }
 
-.accionSkLine {
-  height: 13px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-primary-bg) 25%, var(--color-primary) 50%, var(--color-primary-bg) 75%);
-  background-size: 200% 100%;
-  animation: accionShimmer 1.3s ease-in-out infinite;
+/* Deliberadamente NO es la pastilla terracota del Home. Esto es una
+   sugerencia, no la acción de la pantalla: si gritara como el botón de
+   registrar, el padre leería que tiene que hacer algo más justo después de
+   haber hecho algo difícil. Blanco con borde terracota fino = "está acá si
+   lo quieres". */
+.gSugerencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary-border);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-family);
+  transition: border-color var(--motion-rapida) var(--motion-ease-estandar);
+}
+.gSugerencia:hover { border-color: var(--color-primary); }
+
+.gSugerenciaChip {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+  display: grid;
+  place-items: center;
+}
+.gSugerenciaIcono { width: 90%; height: 90%; display: block; }
+
+.gSugerenciaTextos {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.gSugerenciaEyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+.gSugerenciaTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.gSugerenciaHabilidad {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.gSugerenciaFlecha { flex-shrink: 0; color: var(--color-primary); }
+
+/* Fantasma: la salida real de la pantalla, pero sin peso visual. La otra copia
+   de esta misma salida es la X de arriba. */
+.gVolver {
+  min-height: 44px;
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: var(--font-family);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.gVolver:hover { color: var(--color-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gChevron { transition: none; }
+  .gSkLine  { animation: none; background: var(--color-surface-alt); }
 }
 
-@keyframes accionShimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+/* ── Confirmación guardado ──────────────────────────────── */
 
 /* ── Selector de emociones ─────────────────────────────── */
 
@@ -918,82 +1205,4 @@
 }
 .avisoLink:hover { color: var(--color-primary-dark); }
 
-/* ── Orientación completa, plegada ──
-   Después de guardar, lo que el padre necesita es el alivio y un paso. El
-   informe largo queda disponible pero no se impone. */
-/* Se lee como una puerta, no como un borde: fondo crema para despegarla del
-   blanco. Sin acento de color propio — el único verde de la pantalla es "Para
-   la próxima", y esto no compite con eso. */
-.orientacionPlegable {
-  /* Mocha suave: el tercer color de la pantalla. El alivio es durazno y la
-     acción verde, así que esto necesitaba un tono propio para no volver a
-     desaparecer contra el crema. Reusa el par de las pills de emoción, que ya
-     trae contraste resuelto y override de dark. */
-  background: var(--color-pill-emocion-bg);
-  border: 1px solid var(--color-accent-mocha);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
 
-.orientacionToggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-family);
-  text-align: left;
-}
-
-/* Terracota pleno con el escarabajo crema encima: el mismo contraste fuerte
-   que en el hilo. Un disco blanco con el bicho terracota se leía lavado. */
-.orientacionIcono {
-  width: 48px;
-  height: 48px;
-  /* Cuadrado redondeado y no circulo, igual que los badges del panel: en un
-     circulo las patas del logo tocan el borde y hay que achicarlo. Asi el
-     dibujo entra al 90% como en la referencia. */
-  border-radius: 10px;
-  background: var(--color-primary);
-  color: var(--color-on-mocha);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.orientacionEscarabajo { width: 90%; height: 90%; }
-
-.orientacionTextos {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.orientacionTitulo {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-.orientacionSub {
-  font-size: 11.5px;
-  color: var(--color-text-muted);
-  line-height: 1.35;
-}
-.orientacionToggle:hover .orientacionTitulo { color: var(--color-primary-deep); }
-
-.orientacionChevron {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: var(--color-text-light);
-  transition: transform 0.2s ease;
-}
-.orientacionChevronAbierto { transform: rotate(180deg); }
-
-@media (prefers-reduced-motion: reduce) {
-  .orientacionChevron { transition: none; }
-}

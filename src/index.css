@@ -261,6 +261,19 @@
   /* Marca de agua: escarabajo gigante al 10% detras del label. */
   --color-cta-marca: #FAF6F1;
 
+  /* ═══ Canvas del alivio · post-guardado del episodio ═══════════
+     El alivio no vive en una tarjeta: va directo sobre el crema, con
+     un halo apenas mas claro cayendo desde arriba. Es lo que separa
+     "Huella te esta hablando" de "la app te muestra un resultado".
+     Valor crudo porque es un degradado (mismo color, otra mezcla) y
+     el crema de arriba no existe como token: es --color-bg aclarado
+     un punto. Lleva override de oscuro.                            */
+  --gradient-alivio-canvas: radial-gradient(
+    120% 90% at 50% 0%,
+    #FDFBF2  0%,
+    var(--color-bg) 70%
+  );
+
   /* ═══ Tarjeta central del Home · "el cerebro de {hijo}" ═════════
      La tarjeta que interpreta la semana es EL corazon del Home y no
      puede leerse igual que las tres puertas (blancas, borde neutro,
@@ -482,6 +495,15 @@
       rgba(26, 18, 8, 0.80) 72%,
       rgba(26, 18, 8, 0.96) 89%,
       var(--color-bg)       100%
+    );
+
+    /* Canvas del alivio · oscuro. El halo es el crema oscuro subido
+       un punto, no un gris: en oscuro un halo frio delataria que es
+       un degradado pegado encima. */
+    --gradient-alivio-canvas: radial-gradient(
+      120% 90% at 50% 0%,
+      #241A0F  0%,
+      var(--color-bg) 70%
     );
 
     /* Tarjeta central · oscuro. Mismo criterio: se cae desde

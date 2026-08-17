@@ -1,6 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, ChevronDown } from 'lucide-react'
+import { X, ChevronDown, Clock, BookOpen, ArrowRight } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio } from '../../services/anthropic'
@@ -11,10 +11,9 @@ import AlivioHuella from '../../components/registro/AlivioHuella'
 import PreparandoMas from '../../components/registro/PreparandoMas'
 import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
-import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
-import RespuestaIA from '../../components/ui/RespuestaIA'
-import AccionRapida from '../../components/historial/AccionRapida'
+import OrientacionSecciones from '../../components/registro/OrientacionSecciones'
+import { obtenerLente } from '../../components/historial/AccionRapida'
 import { renderMarkdown } from '../../utils/renderMarkdown'
 import { separarAlivio } from '../../utils/seccionesIA'
 import styles from './RegistroPage.module.css'
@@ -562,132 +561,200 @@ export default function RegistroPage() {
     // que esta pantalla vino a corregir. Si la orientación falla, se muestra
     // igual — ahí vale más algo que nada.
     const mostrarAccion = (!loadingIA || errorOrientacion) && (loadingAccion || accionIA)
+    const lenteAccion = accionIA ? obtenerLente(accionIA) : ''
+    const volverAlInicio = () => navigate('/panel')
 
+    // Esta vista se monta como una capa propia sobre el Layout: acá no hay
+    // header mocha ni barra baja. No es una pantalla más de la app, es el
+    // momento íntimo justo después de contar algo difícil, y la navegación
+    // alrededor lo rompe. La salida está explícita dos veces: la X de arriba y
+    // "Volver al inicio" al final, las dos al mismo lugar.
     return (
-      <div ref={pageRef} className={styles.flujoRefugio}>
-        <div className={styles.guardadoContainer}>
-          {errorOrientacion ? (
-            <Card className={styles.errorOrientacionCard}>
-              <p className={styles.errorOrientacionIcon}>📡</p>
-              <h4 className={styles.errorOrientacionTitulo}>
-                No pudimos obtener tu orientación esta vez.
-              </h4>
-              <p className={styles.errorOrientacionTexto}>
-                Tu episodio quedó guardado. Hubo un problema temporal con el servicio de Huella.
-                Puedes intentar de nuevo en un momento.
-              </p>
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={solicitarOrientacion}
-                loading={loadingIA}
-              >
-                Reintentar
-              </Button>
-            </Card>
-          ) : (
-            // Los puntitos solo hasta que empieza a llegar texto; de ahí en
-            // adelante el alivio se va escribiendo solo en la burbuja.
-            <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
-          )}
+      <div ref={pageRef} className={styles.gCapa}>
+        <div className={styles.gScroll}>
+
+          {/* ── 1 · Top: sello de guardado + salida ── */}
+          <div className={styles.gTop}>
+            <span className={styles.gChipGuardado}>Momento guardado</span>
+            <button
+              type="button"
+              className={styles.gCerrar}
+              onClick={volverAlInicio}
+              aria-label="Volver al inicio"
+            >
+              <X size={17} />
+            </button>
+          </div>
+
+          {/* ── 2 y 3 · Quién habla, y lo que dice ──
+              El halo cae sobre este bloque, no sobre la pantalla entera: es lo
+              que separa la voz de Huella del resto, que sí son tarjetas. */}
+          <div className={styles.gCabecera}>
+            <div className={styles.gSello}>
+              {/* Placeholder: el disco espera la ilustración definitiva. */}
+              <span className={styles.gSelloDisco} aria-hidden="true">
+                <Escarabajo className={styles.gSelloIcono} />
+              </span>
+              <p className={styles.gEyebrowVoz}>huella te lee</p>
+            </div>
+
+            <div className={styles.gAlivio}>
+              {errorOrientacion ? (
+                <div className={styles.gErrorCard}>
+                  <h4 className={styles.gErrorTitulo}>
+                    No pudimos leer tu momento esta vez.
+                  </h4>
+                  <p className={styles.gErrorTexto}>
+                    Lo que contaste quedó guardado. Fue un problema temporal del
+                    servicio de Huella y puedes intentar de nuevo en un rato.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={solicitarOrientacion}
+                    loading={loadingIA}
+                  >
+                    Reintentar
+                  </Button>
+                </div>
+              ) : (
+                // Los puntitos solo hasta que empieza a llegar texto; de ahí en
+                // adelante el alivio se va escribiendo solo.
+                <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
+              )}
+            </div>
+          </div>
 
           {/* El alivio ya se puede leer pero abajo todavía no hay nada, y esa
               pausa muda se lee como el final. Va acá, al pie de lo visible y
               justo donde van a aparecer la acción y la orientación. */}
-          {loadingIA && alivio && !errorOrientacion && <PreparandoMas />}
+          {loadingIA && alivio && !errorOrientacion && (
+            <div className={styles.gPreparando}><PreparandoMas /></div>
+          )}
 
-          {mostrarAccion && (
-            loadingAccion ? (
-              <div className={styles.accionCard}>
-                <div className={styles.accionHeader}>
-                  <span className={styles.accionEmoji}>⚡</span>
-                  <span className={styles.accionLabel}>Para la próxima</span>
+          {/* ── 4 · Divisor de respiración: cierra la voz y abre las tarjetas ── */}
+          {(!loadingIA || errorOrientacion) && (
+            <span className={styles.gDivisor} aria-hidden="true" />
+          )}
+
+          <div className={styles.gCards}>
+
+            {/* ── 5 · Para la próxima ── */}
+            {mostrarAccion && (
+              <section className={styles.gCard}>
+                <div className={styles.gCardHead}>
+                  <span className={styles.gChipIcono} aria-hidden="true">
+                    <Clock size={13} />
+                  </span>
+                  <span className={styles.gCardEyebrow}>Para la próxima</span>
                 </div>
-                <div className={styles.accionSkeleton}>
-                  <div className={styles.accionSkLine} style={{ width: '90%' }} />
-                  <div className={styles.accionSkLine} style={{ width: '75%' }} />
-                </div>
+
+                {loadingAccion ? (
+                  <div className={styles.gSkeleton}>
+                    <div className={styles.gSkLine} style={{ width: '92%' }} />
+                    <div className={styles.gSkLine} style={{ width: '68%' }} />
+                  </div>
+                ) : (
+                  <>
+                    <p className={styles.gAccionTexto}>{accionIA?.texto}</p>
+                    {accionIA?.autor && (
+                      <p className={styles.gFirma}>
+                        <span className={styles.gFirmaPunto} aria-hidden="true" />
+                        <span>
+                          {accionIA.autor}
+                          {lenteAccion && <span className={styles.gFirmaLente}> · {lenteAccion}</span>}
+                        </span>
+                      </p>
+                    )}
+                  </>
+                )}
+              </section>
+            )}
+
+            {/* ── 6 · Orientación completa, plegada ──
+                El plegable espera a que el stream termine. Mientras el texto
+                fluye, `resto` va cambiando de tamaño y aparecer ahí haría
+                saltar el layout justo debajo de lo que el padre está leyendo. */}
+            {resto && !loadingIA && !errorOrientacion && (
+              <section className={styles.gCardPlegable}>
+                <button
+                  className={styles.gPlegableHead}
+                  onClick={() => setOrientacionAbierta((v) => !v)}
+                  aria-expanded={orientacionAbierta}
+                  type="button"
+                >
+                  <span className={styles.gChipLibro} aria-hidden="true">
+                    <BookOpen size={14} />
+                  </span>
+                  <span className={styles.gPlegableTextos}>
+                    <span className={styles.gPlegableTitulo}>Orientación completa</span>
+                    <span className={styles.gPlegableSub}>Qué está pasando · qué hacer · qué evitar</span>
+                  </span>
+                  <span className={styles.gChevronDisco} aria-hidden="true">
+                    <ChevronDown
+                      size={15}
+                      className={`${styles.gChevron} ${orientacionAbierta ? styles.gChevronAbierto : ''}`}
+                    />
+                  </span>
+                </button>
+                {orientacionAbierta && <OrientacionSecciones texto={resto} />}
+              </section>
+            )}
+
+            {/* ── 7 · Reflexión: lo único de esta pantalla que es solo suyo ── */}
+            <section className={styles.gWell}>
+              <div className={styles.gWellHead}>
+                <h4 className={styles.gWellTitulo}>¿Cómo te sentiste tú?</h4>
+                <span className={styles.gWellTag}>Opcional</span>
               </div>
-            ) : (
-              <AccionRapida data={accionIA} label="Para la próxima" tono="verde" />
-            )
-          )}
-
-          {/* El plegable espera a que el stream termine. Mientras el texto
-              fluye, `resto` va cambiando de tamaño y aparecer ahí haría saltar
-              el layout justo debajo de lo que el padre está leyendo. */}
-          {resto && !loadingIA && !errorOrientacion && (
-            <div className={styles.orientacionPlegable}>
-              <button
-                className={styles.orientacionToggle}
-                onClick={() => setOrientacionAbierta((v) => !v)}
-                aria-expanded={orientacionAbierta}
-                type="button"
-              >
-                <span className={styles.orientacionIcono} aria-hidden="true">
-                  <Escarabajo className={styles.orientacionEscarabajo} />
-                </span>
-                <span className={styles.orientacionTextos}>
-                  <span className={styles.orientacionTitulo}>Orientación completa</span>
-                  <span className={styles.orientacionSub}>Qué está pasando · qué hacer · qué evitar</span>
-                </span>
-                <ChevronDown
-                  size={18}
-                  className={`${styles.orientacionChevron} ${orientacionAbierta ? styles.orientacionChevronAbierto : ''}`}
-                />
-              </button>
-              {orientacionAbierta && (
-                <RespuestaIA texto={resto} categoria="regulacion" />
-              )}
-            </div>
-          )}
-
-          <p className={styles.registroMantram}>Cada registro es una conversación contigo mismo sobre cómo quieres criar.</p>
-
-          <div className={styles.reflexionSection}>
-            <p className={styles.reflexionLabel}>
-              ¿Cómo te sentiste tú? ¿Qué harías diferente?
-              <span className={styles.reflexionOpcional}> — opcional</span>
-            </p>
-            <VoiceTextarea
-              value={reflexion}
-              onChange={(v) => { setReflexion(v); setReflexionGuardada(false) }}
-              onVoiceResult={(updater) => { setReflexion(updater); setReflexionGuardada(false) }}
-              placeholder="¿Qué harías diferente la próxima vez?"
-            />
-            <div className={styles.reflexionFooter}>
-              {reflexionGuardada
-                ? <span className={styles.reflexionGuardadaMsg}>✓ Guardado</span>
-                : (
-                  <button
-                    className={styles.reflexionSaveBtn}
-                    onClick={handleGuardarReflexion}
-                    disabled={!reflexion.trim() || guardandoReflexion}
-                    type="button"
-                  >
-                    {guardandoReflexion ? 'Guardando…' : 'Guardar reflexión'}
-                  </button>
-                )
-              }
-            </div>
+              <VoiceTextarea
+                value={reflexion}
+                onChange={(v) => { setReflexion(v); setReflexionGuardada(false) }}
+                onVoiceResult={(updater) => { setReflexion(updater); setReflexionGuardada(false) }}
+                placeholder="Escribe si quieres — esto es solo para ti."
+              />
+              <div className={styles.gWellFooter}>
+                {reflexionGuardada
+                  ? <span className={styles.gGuardadaMsg}>✓ Guardado</span>
+                  : (
+                    <button
+                      className={styles.gGuardarReflexion}
+                      onClick={handleGuardarReflexion}
+                      disabled={!reflexion.trim() || guardandoReflexion}
+                      type="button"
+                    >
+                      {guardandoReflexion ? 'Guardando…' : 'Guardar reflexión'}
+                    </button>
+                  )
+                }
+              </div>
+            </section>
           </div>
 
-          {habilidadSugerida && (
-            <button
-              className={styles.estrategiaBtn}
-              onClick={() => navigate('/estrategias', { state: { nueva: true, habilidad: habilidadSugerida, episodioOrigenId: episodioId } })}
-            >
-              <span className={styles.estrategiaBtnEmoji}>🌱</span>
-              <span className={styles.estrategiaBtnTexto}>
-                <strong>Crear estrategia desde esto</strong>
-                <span>{habilidadSugerida}</span>
-              </span>
-              <span className={styles.estrategiaBtnArrow}>→</span>
+          {/* ── 8 · Salidas ── */}
+          <div className={styles.gSalidas}>
+            {habilidadSugerida && (
+              <button
+                type="button"
+                className={styles.gSugerencia}
+                onClick={() => navigate('/estrategias', { state: { nueva: true, habilidad: habilidadSugerida, episodioOrigenId: episodioId } })}
+              >
+                <span className={styles.gSugerenciaChip} aria-hidden="true">
+                  <Escarabajo className={styles.gSugerenciaIcono} />
+                </span>
+                <span className={styles.gSugerenciaTextos}>
+                  <span className={styles.gSugerenciaEyebrow}>Si quieres ir más allá</span>
+                  <strong className={styles.gSugerenciaTitulo}>Crear estrategia desde esto</strong>
+                  <span className={styles.gSugerenciaHabilidad}>{habilidadSugerida}</span>
+                </span>
+                <ArrowRight size={17} className={styles.gSugerenciaFlecha} />
+              </button>
+            )}
+
+            <button type="button" className={styles.gVolver} onClick={volverAlInicio}>
+              Volver al inicio
             </button>
-          )}
-          <Button variant="primary" size="lg" fullWidth className={styles.guardarPill} onClick={() => navigate('/panel')}>
-            Volver al inicio
-          </Button>
+          </div>
         </div>
       </div>
     )

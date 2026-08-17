@@ -1,71 +1,52 @@
 /* ══════════════════════════════════════════════════════════════════
-   ALIVIO — misma burbuja que el hilo del registro conversacional, para
-   que se lea como la continuación de esa conversación y no como otra
-   pantalla. Todo sale de tokens.
+   ALIVIO — ya NO es una burbuja.
+   Antes se leía como la continuación del hilo del registro: avatar a
+   la izquierda y globo durazno. Con el rediseño de la pantalla de
+   guardado el alivio pasa a ser LA VOZ de la pantalla, escrita
+   directo sobre el crema, sin caja que la contenga. Quien habla ya
+   está dicho arriba (el disco del escarabajo + "huella te lee"), así
+   que repetir el avatar acá sobraba.
+   Todo sale de tokens.
    ══════════════════════════════════════════════════════════════════ */
 
-.fila {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  max-width: 100%;
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  /* Cuadrado redondeado y no circulo, igual que los badges del panel: en un
-     circulo las patas del logo tocan el borde y hay que achicarlo. Asi el
-     dibujo entra al 90% como en la referencia. */
-  border-radius: 10px;
-  background: var(--color-primary);
-  color: var(--color-on-mocha);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.avatarSvg { width: 90%; height: 90%; }
-
-/* Durazno y no blanco, como en el mockup aprobado. Sobre el crema del fondo,
-   una burbuja blanca con borde gris desaparecía: crema sobre crema, sin
-   jerarquía. Esta es la pieza que abre la pantalla y tiene que pesar. */
-.burbuja {
-  background: var(--color-primary-bg);
-  border: 1px solid var(--color-primary-border);
-  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 5px;
-  padding: 16px 18px;
+.alivio {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 16px;
+  /* El texto final se reserva de antemano: mientras escribe carácter a
+     carácter, lo de abajo no puede ir saltando. Da para el alivio típico
+     (2-3 frases en dos párrafos); si se pasa, crece sin romper nada. */
+  min-height: 140px;
 }
 
-/* El texto crece letra a letra, pero un párrafo nuevo sí nace de golpe: este
-   fade suaviza ese único salto. */
 .parrafo {
   font-family: var(--font-heading);
-  font-size: 15.5px;
-  line-height: 1.5;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
   color: var(--color-text);
   margin: 0;
-  animation: aparecer 260ms ease-out both;
+  /* El texto crece letra a letra, pero un párrafo nuevo sí nace de golpe:
+     este fade suaviza ese único salto. */
+  animation: aparecer var(--motion-media) var(--motion-ease-entrada) both;
 }
 @keyframes aparecer {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-/* La voz del padre, devuelta tal cual la dijo. */
+/* La voz del padre, devuelta tal cual la dijo. Mocha y no terracota: la
+   terracota de esta pantalla está reservada para lo accionable, y una cita
+   no pide que hagas nada. */
 .cita {
-  color: var(--color-primary-deep);
+  color: var(--color-accent-mocha);
   font-style: italic;
 }
 
 /* Mientras Huella lee: los mismos puntos del hilo, sin barra ni porcentaje.
    Acá no se informa progreso, se acompaña. */
-.puntos { display: inline-flex; gap: 4px; padding: 4px 0; }
+.puntos { display: inline-flex; gap: 5px; padding: 6px 0; }
 .puntos i {
   width: 6px;
   height: 6px;
