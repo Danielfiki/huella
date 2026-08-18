@@ -704,7 +704,6 @@
   display: block;
   margin: 0 auto;
   color: var(--color-primary-deep);
-  transform-origin: center;
   animation: gRespira 2.4s ease-in-out infinite;
 }
 
@@ -719,27 +718,39 @@
    0.8s del splash — seis veces más lento. Sin nada quieto al lado con qué
    comparar, un movimiento así no se ve.
 
-   Lo que hace legible al splash no es tanto la escala como la OPACIDAD: un
-   cambio de opacidad se percibe de inmediato, mientras que la escala necesita
-   mucha más amplitud para notarse. Por eso acá entra ese canal.
+   SIN ESCALA, A PROPÓSITO. El pulso es SOLO de opacidad.
 
-   Estos valores son el TERCER intento, y los dos anteriores fallaron por el
-   mismo lado — quedarse corto:
-     · 4.5s / 1.03 / sin opacidad → 0.00065 px/ms. Invisible.
-     · 3.2s / 1.045 / 0.92        → 0.00138 px/ms. Todavía casi imperceptible.
-     · 2.4s / 1.055 / 0.88        → 0.00225 px/ms. Este.
+   Las tres primeras versiones animaban `transform: scale`, y en Safari iOS eso
+   se veía BORROSO: al escalar un SVG dentro de una animación, WebKit lo
+   rasteriza una vez y después estira esos píxeles, así que el dibujo pierde
+   filo justo mientras crece. Sin `transform` en los keyframes no hay
+   rasterizado que estirar, y el escarabajo se mantiene nítido en todo el ciclo.
+   Por eso el elemento tampoco lleva ya `transform-origin`: no queda nada que
+   originar.
 
-   La referencia de arriba es el splash, a 0.0042 px/ms. O sea: esto quedó a
-   poco más de la mitad de su energía, que es el punto — se ve respirar al
-   primer vistazo, pero no dice "espera", que es lo que dice el splash.
+   Se pierde el canal de escala, pero era el débil de los dos. Lo que vuelve
+   legible un pulso lento es la OPACIDAD — un cambio de opacidad se percibe de
+   inmediato, mientras que la escala necesita mucha amplitud para notarse. El
+   historial de esta animación lo confirma: los tres intentos que fallaron por
+   imperceptibles eran los que apoyaban el gesto en la escala.
+
+     · 4.5s / scale 1.03  / sin opacidad → invisible.
+     · 3.2s / scale 1.045 / 0.92         → todavía casi imperceptible.
+     · 2.4s / scale 1.055 / 0.88         → se veía, pero borroso en iOS.
+     · 2.4s / SIN escala  / 0.82         → este. Nítido y perceptible.
+
+   La opacidad baja a 0.82 y no a 0.88: al quedarse sin el canal de escala, este
+   tiene que cargar el gesto entero. 0.82 es apenas más profundo que el 0.85 del
+   splash, y el splash todavía suma su propia escala encima, así que el conjunto
+   sigue siendo más calmo que él.
 
    La duración va en crudo y no en token de movimiento a propósito: los tokens
    (`--motion-rapida/media/lenta`, 150-500ms) son para gestos que empiezan y
    terminan. Los bucles ambiente de la app ya se escriben así — el latido del
    splash (1.6s), los puntos del alivio (1.2s), el brillo del skeleton (1.8s). */
 @keyframes gRespira {
-  0%, 100% { transform: scale(1);     opacity: 1; }
-  50%      { transform: scale(1.055); opacity: 0.88; }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.82; }
 }
 
 .gEyebrowVoz {

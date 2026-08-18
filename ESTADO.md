@@ -244,9 +244,9 @@
 
 ---
 
-## Cerrado HOY — martes 18 agosto 2026 — La respiración del sello, tercer y último intento: el umbral de percepción se cruzó calibrando, no adivinando
+## Cerrado HOY — martes 18 agosto 2026 — La respiración del sello: se cruzó el umbral de percepción, y después se descubrió que la escala era el problema
 
-**1 commit.** Cierre del hilo que quedó abierto ayer. Nada nuevo de producto: solo terminar de calibrar el pulso del escarabajo de la pantalla post-guardado, que en el iPhone de Daniel seguía leyéndose casi quieto.
+**2 commits.** Cierre del hilo que quedó abierto ayer. Nada nuevo de producto: terminar de calibrar el pulso del escarabajo de la pantalla post-guardado. Primero se subió la energía hasta que se viera; después, al verse, apareció el defecto real que la escala venía escondiendo.
 
 ### El problema de fondo: este movimiento no se puede juzgar desde acá
 
@@ -265,13 +265,44 @@ Desde esta máquina solo se pueden mirar **fotogramas congelados**. La percepci�
 
 **La lección, y es la que sirve para la próxima vez:** cuando lo que se calibra es percepción y no se puede percibir desde donde se trabaja, hay que **encontrar la magnitud medible que correlaciona con la percepción** y anclarla a una referencia viva que el usuario ya valide. Acá esa magnitud fue px/ms del borde y la referencia fue el splash. Sin eso, cada iteración es una adivinanza y se gastan tres rondas de QA.
 
-### Archivos tocados (1)
+### Archivos tocados en el primer commit (1)
 
 | Archivo | Qué cambió |
 |---|---|
 | `src/pages/registro/RegistroPage.module.css` | Los keyframes de `gRespira` y la duración |
 
-**El comentario del CSS deja la tabla de los tres intentos escrita**, para que nadie la vuelva a bajar "porque se ve fuerte en el monitor" — en el monitor siempre se ve más fuerte que en un teléfono en la mano.
+**El comentario del CSS deja la tabla de los intentos escrita**, para que nadie la vuelva a bajar "porque se ve fuerte en el monitor" — en el monitor siempre se ve más fuerte que en un teléfono en la mano.
+
+---
+
+## 🌫️ La escala era el problema: en Safari iOS, animar `scale` sobre un SVG lo deja BORROSO (segundo commit del día)
+
+**Otra de las que se repiten.** Apenas la respiración se volvió perceptible, Daniel vio el defecto que hasta entonces estaba escondido debajo de lo imperceptible: **el escarabajo se veía difuminado mientras crecía y se achicaba.**
+
+**La causa:** al animar `transform: scale` sobre un SVG, **WebKit lo rasteriza una vez y después estira esos píxeles**. El dibujo pierde filo justo mientras se mueve. No es un problema del SVG ni del tamaño: es cómo Safari compone una capa animada por transform.
+
+**La decisión de Daniel, y es la correcta:** en vez de pelear con hacks de rasterizado (`will-change`, capas forzadas, sobre-escalar y reducir), **se elimina la escala**. El pulso queda **solo de opacidad**. Sin `transform` en los keyframes no hay rasterizado que estirar, y el bicho se mantiene nítido en todo el ciclo. El elemento tampoco lleva ya `transform-origin`: no queda nada que originar.
+
+**Se pierde un canal, pero era el débil.** Todo el historial de esta animación lo venía diciendo: los tres intentos que fallaron por imperceptibles eran los que apoyaban el gesto en la escala.
+
+| Versión | Escala | Opacidad | Resultado |
+|---|---|---|---|
+| 1ª | 1.03 | — | Invisible |
+| 2ª | 1.045 | 0.92 | Todavía casi imperceptible |
+| 3ª | 1.055 | 0.88 | Se veía, **pero borroso en iOS** |
+| **4ª** | **ninguna** | **0.82** | **Nítido y perceptible** |
+
+**La opacidad baja a 0.82 y no al 0.85 que se propuso**: al quedarse sin el canal de escala, este tiene que cargar el gesto entero. Se compararon 1 / 0.88 / 0.85 / 0.82 lado a lado y el salto a 0.82 es el único que no deja dudas. Sigue siendo más calmo que el splash, que suma su propia escala encima del 0.85.
+
+**La regla que queda:** en esta app, **un pulso de atención se hace con opacidad, no con escala** — es el canal que se percibe antes, y además es el único que Safari no degrada. Si algún día hace falta escalar algo en bucle, hay que asumir que en iOS se va a ver blando.
+
+**Alternativa preparada y NO implementada:** si el fundido solo tampoco convenciera, dejarlo estático.
+
+### Archivos tocados en el segundo commit (1 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.module.css` | `gRespira` sin `transform`; fuera `transform-origin` |
 
 ---
 
