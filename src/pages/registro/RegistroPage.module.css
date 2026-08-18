@@ -705,7 +705,7 @@
   margin: 0 auto;
   color: var(--color-primary-deep);
   transform-origin: center;
-  animation: gRespira 3.2s ease-in-out infinite;
+  animation: gRespira 2.4s ease-in-out infinite;
 }
 
 /* RESPIRACIÓN, no latido de carga. El splash late a 1.6s con scale 1.06 y la
@@ -721,11 +721,17 @@
 
    Lo que hace legible al splash no es tanto la escala como la OPACIDAD: un
    cambio de opacidad se percibe de inmediato, mientras que la escala necesita
-   mucha más amplitud para notarse. Por eso acá entra ese canal, más suave (0.92
-   contra 0.85), y la escala sube apenas a 1.045.
+   mucha más amplitud para notarse. Por eso acá entra ese canal.
 
-   El resultado: el borde recorre ~2.2px en 1.6s. Se ve, y sigue siendo tres
-   veces más calmo que el splash.
+   Estos valores son el TERCER intento, y los dos anteriores fallaron por el
+   mismo lado — quedarse corto:
+     · 4.5s / 1.03 / sin opacidad → 0.00065 px/ms. Invisible.
+     · 3.2s / 1.045 / 0.92        → 0.00138 px/ms. Todavía casi imperceptible.
+     · 2.4s / 1.055 / 0.88        → 0.00225 px/ms. Este.
+
+   La referencia de arriba es el splash, a 0.0042 px/ms. O sea: esto quedó a
+   poco más de la mitad de su energía, que es el punto — se ve respirar al
+   primer vistazo, pero no dice "espera", que es lo que dice el splash.
 
    La duración va en crudo y no en token de movimiento a propósito: los tokens
    (`--motion-rapida/media/lenta`, 150-500ms) son para gestos que empiezan y
@@ -733,7 +739,7 @@
    splash (1.6s), los puntos del alivio (1.2s), el brillo del skeleton (1.8s). */
 @keyframes gRespira {
   0%, 100% { transform: scale(1);     opacity: 1; }
-  50%      { transform: scale(1.045); opacity: 0.92; }
+  50%      { transform: scale(1.055); opacity: 0.88; }
 }
 
 .gEyebrowVoz {

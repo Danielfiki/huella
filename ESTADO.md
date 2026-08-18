@@ -244,7 +244,38 @@
 
 ---
 
-## Cerrado HOY — lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
+## Cerrado HOY — martes 18 agosto 2026 — La respiración del sello, tercer y último intento: el umbral de percepción se cruzó calibrando, no adivinando
+
+**1 commit.** Cierre del hilo que quedó abierto ayer. Nada nuevo de producto: solo terminar de calibrar el pulso del escarabajo de la pantalla post-guardado, que en el iPhone de Daniel seguía leyéndose casi quieto.
+
+### El problema de fondo: este movimiento no se puede juzgar desde acá
+
+Desde esta máquina solo se pueden mirar **fotogramas congelados**. La percepción del movimiento continuo —que es exactamente lo que se está calibrando— **solo existe en el teléfono de Daniel**. Por eso el ajuste tomó tres intentos y los tres fallaron para el mismo lado: quedarse corto al huir del "latido de carga" del splash.
+
+**Lo que hizo converger esto no fue mirar, fue MEDIR una magnitud comparable:** la velocidad del borde del dibujo en px/ms, con el splash —que en ese mismo teléfono sí se ve— como vara.
+
+| Intento | Escala | Opacidad | Ciclo | Velocidad del borde | Veredicto de Daniel |
+|---|---|---|---|---|---|
+| 1º | 1.03 | — | 4.5s | 0.00065 px/ms | "se ve estático" |
+| 2º | 1.045 | 0.92 | 3.2s | 0.00138 px/ms | "sigue casi imperceptible" |
+| **3º** | **1.055** | **0.88** | **2.4s** | **0.00225 px/ms** | **este** |
+| *Splash (referencia)* | *1.06* | *0.85* | *1.6s* | *0.0042 px/ms* | *dice "espera"* |
+
+**El resultado queda en el 53% de la energía del splash**, que es justo el punto buscado: se ve respirar al primer vistazo, sin decir "estoy cargando".
+
+**La lección, y es la que sirve para la próxima vez:** cuando lo que se calibra es percepción y no se puede percibir desde donde se trabaja, hay que **encontrar la magnitud medible que correlaciona con la percepción** y anclarla a una referencia viva que el usuario ya valide. Acá esa magnitud fue px/ms del borde y la referencia fue el splash. Sin eso, cada iteración es una adivinanza y se gastan tres rondas de QA.
+
+### Archivos tocados (1)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/registro/RegistroPage.module.css` | Los keyframes de `gRespira` y la duración |
+
+**El comentario del CSS deja la tabla de los tres intentos escrita**, para que nadie la vuelva a bajar "porque se ve fuerte en el monitor" — en el monitor siempre se ve más fuerte que en un teléfono en la mano.
+
+---
+
+## Sesión lunes 17 agosto 2026 — LA PANTALLA POST-GUARDADO: el episodio deja de terminar en un recibo y termina en una voz
 
 **5 commits.** Rediseño visual completo de `/registro` en vista "guardado", desde mockup y specs de Claude Design, **más cuatro rondas de ajustes post-QA de Daniel** (el detalle va al final de este bloque). **Es RE-VESTIR: no se tocó una línea de lógica.** El streaming del alivio, `generarAccionInmediata`, el parseo de la orientación, la reflexión y el guardado funcionan exactamente igual. Lo que cambió es el envase y la jerarquía.
 
