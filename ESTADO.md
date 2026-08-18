@@ -244,9 +244,9 @@
 
 ---
 
-## Cerrado HOY — martes 18 agosto 2026 — La respiración del sello: se cruzó el umbral de percepción, y después se descubrió que la escala era el problema
+## Cerrado HOY — martes 18 agosto 2026 — Se cerró la respiración del sello · y **la pantalla de invitación pasó a mostrar de verdad a quién y a qué niño te invitan**
 
-**2 commits.** Cierre del hilo que quedó abierto ayer. Nada nuevo de producto: terminar de calibrar el pulso del escarabajo de la pantalla post-guardado. Primero se subió la energía hasta que se viera; después, al verse, apareció el defecto real que la escala venía escondiendo.
+**3 commits.** Dos temas. Los dos primeros cierran el hilo del pulso del escarabajo que quedó abierto ayer: se subió la energía hasta que se viera y, al verse, apareció el defecto que la escala venía escondiendo. El tercero es el rediseño de `/invitar`, que además obligó a tocar backend — el detalle va al final de este bloque.
 
 ### El problema de fondo: este movimiento no se puede juzgar desde acá
 
@@ -303,6 +303,63 @@ Desde esta máquina solo se pueden mirar **fotogramas congelados**. La percepci�
 | Archivo | Qué cambió |
 |---|---|
 | `src/pages/registro/RegistroPage.module.css` | `gRespira` sin `transform`; fuera `transform-origin` |
+
+---
+
+## `/invitar` — la pantalla pública dejó de mostrar un correo y pasó a mostrar a una familia (tercer commit del día)
+
+Rediseño visual desde mockup y specs de Claude Design. Es la **única pantalla pública con contenido de una familia**: la abre la pareja desde el link del correo, **sin sesión y fuera del Layout**.
+
+### La verificación previa cambió el alcance: no alcanzaba con re-vestir
+
+El brief pedía re-vestir y nada más. Al auditar antes de tocar apareció que **el backend no entregaba ninguno de los datos que el mockup necesita**. El RPC que consumía la pantalla (`get_invitation_by_token`) devuelve el **email** del inviter y nada más — por eso el titular decía literalmente *"danielundurraga te invita a Huella"*, el pedazo del correo antes del arroba.
+
+O sea, el bloqueo no eran las fotos: era **el nombre del hijo/a**, que es lo que hace funcionar el titular del mockup. Daniel eligió la opción completa: rediseño **más RPC nuevo**.
+
+### Dos supuestos del brief que resultaron falsos, y hay que saberlo
+
+1. **El bucket `avatares` NO es privado: es público.** `schema.sql` lo crea con `public = true` más una policy `avatares_select ... to public`. **Las fotos de avatar ya eran legibles por cualquiera que conociera el path**, desde antes de esta tarea. El RPC nuevo no abrió ningún acceso que no existiera.
+2. **Una función SQL no puede generar URLs firmadas de Storage.** Las firma la API de Storage, no Postgres. Así que el RPC devuelve el **PATH** (la convención de toda la app: la base guarda paths, el cliente firma al leer) y **la pantalla firma con TTL de 5 minutos** desde el navegador.
+
+Lo único que el RPC agrega es que ahora se puede *llegar* al path teniendo el token. Como el token es un secreto de 32 bytes que solo viaja al correo del invitado y caduca, **el alcance es el mismo que el del link**.
+
+**Si algún día se quiere endurecer de verdad**, el cambio es hacer PRIVADO el bucket `avatares` — pero eso toca Home, Perfil, el hilo del registro y el historial. No se hace desde una pantalla.
+
+### El RPC nuevo — migración 011, ya corrida
+
+`get_invitation_public_by_token`, `security definer`. Devuelve **solo**: nombre de pila del inviter, nombre del hijo/a y los dos paths de foto.
+
+**Lo que NO devuelve, a propósito:** ningún email (el RPC viejo sí los devuelve — por eso este es una función NUEVA y no un cambio al anterior: exponer correos en una pantalla pública es peor que lo que ya había), ningún dato de crianza, ningún id.
+
+Tres decisiones de la función:
+- **El apellido se recorta** (`split_part`): quien recibe la invitación ya sabe quién se la mandó; el apellido completo en una URL pública no agrega nada.
+- **`SET search_path`**: un `security definer` sin search_path fijo es un vector conocido de escalada de privilegios. El RPC viejo no lo tiene; el nuevo sí.
+- **Respuesta uniforme `{valid:false}`**: no distingue "no existe" de "expirada" de "ya usada". Quien pruebe tokens no aprende nada de la diferencia.
+- **Respaldo si `hijos.family_id` viene NULL** (pasa en cuentas creadas antes de que existiera esa columna): cae al primer hijo del propio inviter.
+
+**El RPC viejo quedó intacto.** Verificado con grep: su único consumidor era esta misma pantalla.
+
+**⚠️ Verificación que quedó A MEDIAS.** El bloque 4 de la migración —el que prueba la función con una invitación real— devolvió `{"valid": false}` porque en ese momento no había ninguna invitación pendiente vigente. **Eso prueba que la función corre y valida, pero NO prueba la forma de la respuesta.** La revisión de privacidad que importa —que no aparezca ningún `@` en el JSON y que las fotos vengan como paths y no como URLs— **sigue sin hacerse contra datos reales**. Hay que mandar una invitación de prueba desde la app y volver a correr el bloque 4.
+
+### La pantalla
+
+Escarabajo suelto de 75px de caja para ~52px de tinta (mismo gesto del splash y del sello post-guardado), par de fotos con el hijo encima abajo a la derecha y anillo crema, y **fallback a iniciales**, que no es un estado de error: mucha gente no sube foto y la pantalla tiene que verse igual de terminada.
+
+**La lógica no se tocó**: aceptación, creación de cuenta, conexión de pareja y correos siguen igual.
+
+Dos decisiones que conviene conocer:
+- **La sombra del CTA reusa `--shadow-primary-sm`** en vez de crear un token con el `rgba(229,116,61,.28)` del spec. El existente es `0 6px 16px rgba(230,138,92,.3)`: misma geometría, diferencia imperceptible, y **ya trae override de oscuro resuelto**. Un token nuevo habría sido uno más que mantener para algo que no se ve.
+- **El enlace inferior lleva `margin-top: 4px`, no los 18 del spec.** Su caja tocable de 44px ya aporta ~14px de aire óptico sobre el texto de 14px. Medir el hueco desde el borde de la caja en vez de desde el texto dejaba el doble de espacio del que muestra el mockup. **Es la misma trampa que el aire del viewBox del escarabajo**: la caja no es lo que se ve.
+
+Los estados que el spec no cubría (conectados, datos previos, error, cargando) pasaron al mismo envase centrado de la invitación caída, para que la pantalla hable con una sola voz en vez de tener cada estado su propio diseño.
+
+### Archivos tocados en el tercer commit (3 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `supabase/migrations/011_invitacion_publica.sql` | **NUEVO.** El RPC, en 4 bloques con verificación antes y después |
+| `src/pages/invitar/InvitarPage.jsx` | Pantalla nueva, consume el RPC nuevo y firma las fotos |
+| `src/pages/invitar/InvitarPage.module.css` | Reescrito entero |
 
 ---
 

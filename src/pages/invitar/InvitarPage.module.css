@@ -1,184 +1,253 @@
-.page {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px;
-  background: var(--color-bg);
-}
+/* ══════════════════════════════════════════════════════════════════
+   /invitar — la pantalla publica de la invitacion.
 
-.card {
-  width: 100%;
-  max-width: 420px;
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  padding: 40px 32px 36px;
-  box-shadow: var(--shadow-lg);
+   Vive FUERA del Layout: sin header mocha y sin barra baja. No hay a
+   donde navegar porque quien la abre todavia no tiene cuenta; la
+   pantalla ofrece una sola accion y una salida.
+
+   Todo sale de tokens de index.css. Sin rojo y sin alarmas, tampoco
+   en la invitacion caida: que un link expire no es culpa de nadie.
+   ══════════════════════════════════════════════════════════════════ */
+
+.pagina {
+  min-height: 100dvh;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: calc(72px + env(safe-area-inset-top, 0px)) 28px
+           calc(40px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background: var(--color-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
   text-align: center;
 }
 
-.logo {
-  /* Logo de marca (SVG) en terracota; el SVG hereda el color por currentColor.
-     Primera impresión de la pareja invitada: protagonista y centrado. */
+/* ── Marca ── */
+
+/* Sin `gap`: el espacio hasta la palabra lo pone el aire del propio viewBox.
+   Ver `.marcaBicho`. */
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* El escarabajo suelto, sin contenedor — el gesto del splash y del sello de
+   post-guardado.
+
+   75px de CAJA para ~52x45 de TINTA. La caja miente: el dibujo ocupa el 69%
+   del alto de su viewBox y el 55% del ancho, asi que pedirle "52px" habria
+   dado una tinta de 36.
+
+   El `margin-bottom` negativo compensa los ~12px de aire que el viewBox deja
+   bajo la pata inferior a este tamano, para que el espacio OPTICO hasta la
+   palabra sea de 8px y no de 20. Mismo truco que el splash. */
+.marcaBicho {
+  height: 75px;
+  width: auto;
   display: block;
-  color: var(--color-primary);
-  margin: 0 auto 28px;
+  color: var(--color-accent-mocha);
+  margin-bottom: -4px;
 }
 
-.center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.icon {
-  font-size: 52px;
+.marcaPalabra {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 600;
   line-height: 1;
-  margin-bottom: 4px;
+  color: var(--color-accent-mocha);
 }
 
-.avatarGroup {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+/* ── El par de fotos ──
+   Quien invita en grande, el hijo encima abajo a la derecha. El anillo crema
+   del chico no es decoracion: sin el, dos circulos con foto se tocan y se
+   leen como una sola mancha. */
+
+.par {
+  position: relative;
+  width: 148px;
+  height: 108px;
+  margin-top: 44px;
+  flex-shrink: 0;
 }
 
-.avatarCircle {
-  width: 56px;
-  height: 56px;
+.fotoInviter,
+.fotoHijo {
+  position: absolute;
   border-radius: 50%;
+  object-fit: cover;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.fotoInviter {
+  top: 0;
+  left: 0;
+  width: 104px;
+  height: 104px;
+}
+
+/* `content-box` para que el anillo sume por fuera: 64 de foto + 4 de anillo por
+   lado = 72 reales, que es lo que cierra el bloque de 148x108. */
+.fotoHijo {
+  right: 0;
+  bottom: 0;
+  width: 64px;
+  height: 64px;
+  border: 4px solid var(--color-bg);
+  box-sizing: content-box;
+}
+
+/* Sin foto: la inicial. Es el estado normal, no un error — mucha gente no sube
+   foto, y la pantalla tiene que verse igual de terminada. */
+.avatarInicial {
   background: var(--color-surface-alt);
-  border: 2px solid var(--color-primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
+  color: var(--color-text-muted);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  line-height: 1;
 }
+.fotoInviter.avatarInicial { font-size: 40px; }
+.fotoHijo.avatarInicial    { font-size: 25px; }
 
-.avatarPlus {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-primary);
-}
+/* ── Textos ── */
 
-.title {
-  font-size: 20px;
-  font-weight: 700;
+.titular {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
   color: var(--color-text);
-  margin: 0 0 8px;
-  line-height: 1.3;
+  max-width: 310px;
+  margin: 28px 0 0;
 }
 
-.subtitle {
-  font-size: 14px;
+.bajada {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
   color: var(--color-text-muted);
-  line-height: 1.65;
-  margin: 0 0 24px;
+  max-width: 290px;
+  margin: 14px 0 0;
 }
 
-.hint {
+.cargando {
   font-size: 14px;
-  color: var(--color-text-muted);
-  margin: 8px 0 0;
+  color: var(--color-text-light);
+  margin: 24px 0 0;
 }
 
-.noSessionBox {
+/* ── Pie: lo que empuja la accion contra el borde de abajo ── */
+
+.pie {
+  margin-top: auto;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.noSessionText {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin: 0 0 4px;
-  line-height: 1.5;
-}
-
-.myEmail {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 4px;
-}
-
-.btnPrimary {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  padding-top: 32px;
+}
+
+.microcopy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-light);
+  margin: 0 0 16px;
+}
+
+.btnPrimario {
   width: 100%;
-  padding: 14px 20px;
-  background: var(--color-primary);
-  color: #fff;
+  height: 56px;
   border: none;
   border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.15s, opacity 0.15s;
-  box-sizing: border-box;
-}
-.btnPrimary:hover { background: var(--color-primary-dark); }
-.btnPrimary:disabled { opacity: 0.6; cursor: default; }
-
-.btnSecondary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 13px 20px;
-  background: transparent;
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: 14px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-primary-sm);
+  font-family: var(--font-family);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  display: grid;
+  place-items: center;
   text-decoration: none;
-  transition: border-color 0.15s;
+  transition: opacity var(--motion-rapida) var(--motion-ease-estandar);
+}
+.btnPrimario:disabled { opacity: 0.6; cursor: default; }
+
+.btnSecundario {
+  width: 100%;
+  min-height: 56px;
   box-sizing: border-box;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-accent-mocha);
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
 }
-.btnSecondary:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-.legalNote {
-  font-size: 11px;
+/* El margen es 4 y no 18 a proposito: la caja tocable de 44px ya aporta ~14px
+   de aire optico por encima del texto (44 menos la linea de 17, repartido). 4 + 14
+   son los 18 que pide el spec. Medir el hueco desde el borde de la caja en vez
+   de desde el texto deja el doble de espacio del que se ve en el mockup. */
+.enlace {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-mocha);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  /* El texto se ve de 14px pero el area tocable llega a 44px: es un destino
+     real, no un pie de pagina. */
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.enlaceNota {
+  margin: 18px 0 0;
+  font-size: 13px;
   color: var(--color-text-light);
-  line-height: 1.5;
-  margin: 8px 0 0;
 }
 
-/* Spinners */
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── Pantallas de un solo mensaje ──
+   Invitacion caida, conexion lista, datos previos y error. Centradas
+   verticalmente: no hay nada que recorrer, solo algo que leer. */
 
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--color-primary-light);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.centrado {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.spinnerBtn {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+.tituloMensaje {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  max-width: 300px;
+  margin: 32px 0 0;
 }
+
+.accionesMensaje {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+}
+.accionesMensaje .enlace { margin-top: 6px; }   /* 6 + 14 opticos = los 20 del spec */

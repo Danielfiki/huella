@@ -4,8 +4,36 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useFamily } from '../../context/FamilyContext'
 import { useHuella } from '../../context/HuellaContext'
-import Logo from '../../components/ui/Logo'
+import Escarabajo from '../../components/ui/Escarabajo'
 import styles from './InvitarPage.module.css'
+
+// ── /invitar · la ÚNICA pantalla pública con contenido de una familia ────────
+//
+// La abre la pareja desde el link del correo, SIN sesión y fuera del Layout: no
+// hay header mocha ni barra baja. Es la primera vez que esta persona ve Huella,
+// así que la pantalla no explica un producto: muestra a quién la invitó y a qué
+// niño va a acompañar, y ofrece una sola acción.
+//
+// EL FLUJO NO CAMBIÓ. Validar token → aceptar → crear cuenta o entrar →
+// conectados, y el estado de invitación caída. Lo que cambió es el envase.
+//
+// De dónde salen los datos: `get_invitation_public_by_token` (migración 011),
+// un RPC nuevo que devuelve SOLO nombre de pila del inviter, nombre del hijo y
+// los PATHS de las dos fotos. Nunca correos. El RPC viejo
+// (`get_invitation_by_token`, que sí devuelve emails) quedó intacto porque lo
+// usa el camino de aceptación, pero esta pantalla ya no lo consume.
+//
+// Las fotos se firman acá con TTL corto, no en el RPC: una función SQL no puede
+// generar URLs firmadas de Storage — las firma la API de Storage. Si el firmado
+// falla o la persona no tiene foto, cae a la inicial del nombre.
+
+const TTL_FOTO = 300   // 5 min: la pantalla se ve una vez y se abandona
+
+function Avatar({ url, nombre, className }) {
+  if (url) return <img src={url} alt="" className={className} />
+  const inicial = (nombre || '·').trim().charAt(0).toUpperCase()
+  return <span className={`${className} ${styles.avatarInicial}`}>{inicial}</span>
+}
 
 export default function InvitarPage() {
   const [searchParams] = useSearchParams()
@@ -16,9 +44,9 @@ export default function InvitarPage() {
   const { reloadData } = useHuella()
 
   const [status, setStatus] = useState('loading')    // loading | invalid | ready | accepting | done | error | pending_data
-  const [invitation, setInvitation] = useState(null) // { inviterEmail, inviteeEmail, expiresAt }
+  const [invitacion, setInvitacion] = useState(null) // { inviterNombre, hijoNombre, fotoInviter, fotoHijo }
   const [errorMsg, setErrorMsg] = useState('')
-  const [pendingCounts, setPendingCounts] = useState(null) // { episodios, hitos, estrategias, rutinas }
+  const [pendingCounts, setPendingCounts] = useState(null)
 
   useEffect(() => {
     if (!token) {
@@ -31,15 +59,36 @@ export default function InvitarPage() {
   async function validateToken() {
     setStatus('loading')
     try {
-      const { data, error } = await supabase.rpc('get_invitation_by_token', { p_token: token })
+      const { data, error } = await supabase.rpc('get_invitation_public_by_token', { p_token: token })
       if (error || !data?.valid) {
         setStatus('invalid')
         return
       }
-      setInvitation(data)
+      // Las dos firmas van en paralelo y ninguna puede voltear la pantalla: si
+      // una falla, esa foto cae a inicial y el resto sigue igual.
+      const [fotoInviter, fotoHijo] = await Promise.all([
+        firmar(data.inviterFotoPath),
+        firmar(data.hijoFotoPath),
+      ])
+      setInvitacion({
+        inviterNombre: data.inviterNombre || null,
+        hijoNombre:    data.hijoNombre || null,
+        fotoInviter,
+        fotoHijo,
+      })
       setStatus('ready')
     } catch {
       setStatus('invalid')
+    }
+  }
+
+  async function firmar(path) {
+    if (!path || !supabase) return null
+    try {
+      const { data } = await supabase.storage.from('avatares').createSignedUrl(path, TTL_FOTO)
+      return data?.signedUrl ?? null
+    } catch {
+      return null
     }
   }
 
@@ -67,7 +116,9 @@ export default function InvitarPage() {
     }
   }
 
-  const loginUrl = `/login?redirect=${encodeURIComponent(`/invitar?token=${token}`)}`
+  const destino  = `/invitar?token=${token}`
+  const loginUrl  = `/login?redirect=${encodeURIComponent(destino)}`
+  const signupUrl = `/signup?redirect=${encodeURIComponent(destino)}`
 
   function describirCounts(counts) {
     if (!counts) return null
@@ -82,132 +133,140 @@ export default function InvitarPage() {
     return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
   }
 
+  // La marca: escarabajo suelto + palabra, el mismo gesto del splash.
+  const marca = (
+    <div className={styles.marca}>
+      <Escarabajo className={styles.marcaBicho} />
+      <span className={styles.marcaPalabra}>huella</span>
+    </div>
+  )
+
+  // Pantalla centrada de un solo mensaje. La usan la invitación caída y los
+  // estados de cierre (conectados, datos previos, error), para que todos hablen
+  // con la misma voz en vez de tener cada uno su propio envase.
+  function Mensaje({ titulo, texto, children }) {
+    return (
+      <div className={styles.pagina}>
+        <div className={styles.centrado}>
+          {marca}
+          <h1 className={styles.tituloMensaje}>{titulo}</h1>
+          {texto && <p className={styles.bajada}>{texto}</p>}
+          {children && <div className={styles.accionesMensaje}>{children}</div>}
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className={styles.pagina}>
+        <div className={styles.centrado}>
+          {marca}
+          <p className={styles.cargando}>Abriendo la invitación…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'invalid') {
+    return (
+      <Mensaje
+        titulo="Esta invitación ya no está activa"
+        texto="Pídele a quien te invitó que te envíe una nueva desde la app."
+      >
+        <Link to="/signup" className={styles.btnSecundario}>Descargar huella</Link>
+        <a href="mailto:contacto@huella.lat" className={styles.enlace}>
+          ¿Necesitas ayuda? Escríbenos
+        </a>
+      </Mensaje>
+    )
+  }
+
+  if (status === 'done') {
+    return (
+      <Mensaje
+        titulo="Quedaron conectados"
+        texto="Desde ahora ven y registran los mismos momentos. Te llevamos a tu inicio…"
+      />
+    )
+  }
+
+  if (status === 'pending_data') {
+    return (
+      <Mensaje
+        titulo="Ya tienes registros tuyos"
+        texto={
+          describirCounts(pendingCounts)
+            ? `En tu cuenta hay ${describirCounts(pendingCounts)}. Escríbenos y unimos tu historial con el de esta familia, sin perder nada.`
+            : 'En tu cuenta ya hay registros. Escríbenos y unimos tu historial con el de esta familia, sin perder nada.'
+        }
+      >
+        <a href="mailto:contacto@huella.lat" className={styles.btnSecundario}>Escribirnos</a>
+        <Link to="/panel" className={styles.enlace}>Ir a mi inicio</Link>
+      </Mensaje>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <Mensaje titulo="No pudimos completar la conexión" texto={errorMsg}>
+        <Link to="/perfil" className={styles.btnSecundario}>Ir a mi perfil</Link>
+      </Mensaje>
+    )
+  }
+
+  // ── Invitación válida ──
+  const inviter = invitacion?.inviterNombre || 'Tu pareja'
+  const hijo    = invitacion?.hijoNombre
+  const titular = hijo
+    ? `${inviter} te invita a acompañar juntos a ${hijo}`
+    : `${inviter} te invita a acompañar juntos a su hijo o hija`
+  const bajada = hijo
+    ? `huella es un diario privado para guardar los momentos de ${hijo} y entender cómo crece.`
+    : 'huella es un diario privado para guardar los momentos de tu hijo o hija y entender cómo crece.'
+
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <Logo className={styles.logo} height={52} />
+    <div className={styles.pagina}>
+      {marca}
 
-        {status === 'loading' && (
-          <div className={styles.center}>
-            <div className={styles.spinner} />
-            <p className={styles.hint}>Verificando invitación…</p>
-          </div>
-        )}
+      <div className={styles.par}>
+        <Avatar
+          url={invitacion?.fotoInviter}
+          nombre={inviter}
+          className={styles.fotoInviter}
+        />
+        <Avatar
+          url={invitacion?.fotoHijo}
+          nombre={hijo}
+          className={styles.fotoHijo}
+        />
+      </div>
 
-        {status === 'invalid' && (
-          <div className={styles.center}>
-            <div className={styles.icon}>⏰</div>
-            <h2 className={styles.title}>Invitación inválida o expirada</h2>
-            <p className={styles.subtitle}>
-              Este link ya no es válido. Pídele a tu pareja que envíe una nueva invitación desde su perfil en Huella.
-            </p>
-            <Link to="/login" className={styles.btnPrimary}>Ir al inicio</Link>
-          </div>
-        )}
+      <h1 className={styles.titular}>{titular}</h1>
+      <p className={styles.bajada}>{bajada}</p>
 
-        {(status === 'ready' || status === 'accepting') && invitation && (
+      <div className={styles.pie}>
+        <p className={styles.microcopy}>Solo {inviter} y tú verán sus registros.</p>
+
+        {user ? (
           <>
-            <div className={styles.avatarGroup}>
-              <div className={styles.avatarCircle}>👤</div>
-              <div className={styles.avatarPlus}>+</div>
-              <div className={styles.avatarCircle}>👤</div>
-            </div>
-
-            <h2 className={styles.title}>
-              {invitation.inviterEmail?.split('@')[0] ?? 'Tu pareja'} te invita a Huella
-            </h2>
-            <p className={styles.subtitle}>
-              <strong>{invitation.inviterEmail}</strong> quiere que compartan el seguimiento
-              de su hijo/a juntos: episodios, hitos y estrategias de crianza.
-            </p>
-
-            {!user ? (
-              <div className={styles.noSessionBox}>
-                <p className={styles.noSessionText}>
-                  Para aceptar la invitación necesitas tener una cuenta en Huella.
-                </p>
-                <Link to={loginUrl} className={styles.btnPrimary}>
-                  Iniciar sesión para aceptar
-                </Link>
-                <Link
-                  to={`/signup?redirect=${encodeURIComponent(`/invitar?token=${token}`)}`}
-                  className={styles.btnSecondary}
-                >
-                  Crear cuenta nueva
-                </Link>
-              </div>
-            ) : (
-              <>
-                <div className={styles.myEmail}>
-                  Aceptarás como <strong>{user.email}</strong>
-                </div>
-                <button
-                  className={styles.btnPrimary}
-                  onClick={handleAccept}
-                  disabled={status === 'accepting'}
-                >
-                  {status === 'accepting' ? (
-                    <><span className={styles.spinnerBtn} /> Aceptando…</>
-                  ) : (
-                    'Aceptar invitación'
-                  )}
-                </button>
-                <p className={styles.legalNote}>
-                  Al aceptar, compartirás los datos de crianza con {invitation.inviterEmail}.
-                  Puedes desvincularte en cualquier momento desde tu perfil.
-                </p>
-              </>
-            )}
-          </>
-        )}
-
-        {status === 'done' && (
-          <div className={styles.center}>
-            <div className={styles.icon}>🎉</div>
-            <h2 className={styles.title}>¡Familia conectada!</h2>
-            <p className={styles.subtitle}>
-              Ya pueden ver y registrar episodios juntos. Redirigiendo al panel…
-            </p>
-          </div>
-        )}
-
-        {status === 'pending_data' && (
-          <div className={styles.center}>
-            <div className={styles.icon}>📋</div>
-            <h2 className={styles.title}>Tienes datos previos</h2>
-            <p className={styles.subtitle}>
-              {describirCounts(pendingCounts) ? (
-                <>
-                  Ya tienes <strong>{describirCounts(pendingCounts)}</strong> en tu cuenta.
-                  Para unirte a la familia de <strong>{invitation?.inviterEmail}</strong>{' '}
-                  sin perderlos, escríbenos a <strong>contacto@huella.lat</strong> y te ayudamos
-                  a unificar tu historial.
-                </>
-              ) : (
-                <>
-                  Ya tienes episodios o registros en tu cuenta. Para unirte a la familia de{' '}
-                  <strong>{invitation?.inviterEmail}</strong> sin perder tus datos, escríbenos
-                  y te ayudamos a unificar tu historial.
-                </>
-              )}
-            </p>
-            <a
-              href="mailto:contacto@huella.lat"
-              className={styles.btnPrimary}
+            <button
+              type="button"
+              className={styles.btnPrimario}
+              onClick={handleAccept}
+              disabled={status === 'accepting'}
             >
-              Contactar soporte
-            </a>
-            <Link to="/panel" className={styles.btnSecondary}>Ir a mi panel</Link>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div className={styles.center}>
-            <div className={styles.icon}>⚠️</div>
-            <h2 className={styles.title}>No se pudo aceptar</h2>
-            <p className={styles.subtitle}>{errorMsg}</p>
-            <Link to="/perfil" className={styles.btnPrimary}>Ir a mi perfil</Link>
-          </div>
+              {status === 'accepting' ? 'Conectando…' : 'Aceptar invitación'}
+            </button>
+            <p className={styles.enlaceNota}>Entrarás como {user.email}</p>
+          </>
+        ) : (
+          <>
+            <Link to={signupUrl} className={styles.btnPrimario}>Aceptar invitación</Link>
+            <Link to={loginUrl} className={styles.enlace}>
+              ¿Ya tienes cuenta? Inicia sesión
+            </Link>
+          </>
         )}
       </div>
     </div>
