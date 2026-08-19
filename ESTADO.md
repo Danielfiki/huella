@@ -244,9 +244,13 @@
 
 ---
 
-## Cerrado HOY — miércoles 19 agosto 2026 — Las fotos de la invitación no salían, y la causa era una creencia equivocada mía sobre el bucket
+## Cerrado HOY — miércoles 19 agosto 2026 — Dos bugs de producción: las fotos de la invitación · y **el relato escrito que se perdía en silencio**
 
-**1 commit.** Arreglo del bug que dejó el QA de ayer: `/invitar` cargaba perfecta pero mostraba las iniciales en vez de las fotos reales, aunque el RPC entregaba los paths correctos.
+**2 commits.** Los dos son bugs encontrados en producción, no features. El primero: `/invitar` mostraba iniciales en vez de fotos. El segundo, y es el grave: **en modo voz del registro, todo lo que el padre escribía con el teclado se perdía sin aviso.**
+
+### Bug 1 — las fotos de la invitación no salían
+
+`/invitar` cargaba perfecta pero mostraba las iniciales en vez de las fotos reales, aunque el RPC entregaba los paths correctos.
 
 ### 🪤 LA CAUSA: el bucket `avatares` NO es público. La auditoría del rediseño dijo que sí, y estaba mal.
 
@@ -289,7 +293,7 @@ La creencia equivocada estaba por escrito en los comentarios de la **migración 
 
 **El endpoint solo se puede probar en producción.** No hay `SUPABASE_SERVICE_ROLE_KEY` en el entorno local, así que no se comprobó de punta a punta que el service role logre firmar esos paths. El diagnóstico está confirmado con datos; el arreglo está razonado sobre ese diagnóstico. **Falta el QA:** levantar de nuevo la invitación de prueba (bloque 1 de `supabase/consultas/qa_invitar.sql`) y confirmar que aparecen las fotos.
 
-### Archivos tocados (4)
+### Archivos tocados en el primer commit (4)
 
 | Archivo | Qué cambió |
 |---|---|
@@ -297,6 +301,66 @@ La creencia equivocada estaba por escrito en los comentarios de la **migración 
 | `src/pages/invitar/InvitarPage.jsx` | Pide las fotos al endpoint; ya no firma por su cuenta |
 | `supabase/migrations/011_invitacion_publica.sql` | Corregido el comentario que afirmaba que el bucket era público |
 | `ESTADO.md` | Corregida la misma afirmación en el bloque de ayer |
+
+---
+
+## 🚨 Bug 2 — EL RELATO ESCRITO SE PERDÍA EN SILENCIO (segundo commit del día)
+
+**Es el bug más grave que ha aparecido en el rediseño.** En el modo voz del registro conversacional, el campo aceptaba escritura del teclado, pero **nada de lo escrito se enviaba ni se guardaba**. Un padre podía escribir su relato completo y perderlo sin ningún aviso. Solo cambiando a "Modo chat" lo escrito contaba.
+
+### La causa: `GrabadorVoz` guardaba el texto en un estado propio del que nada salía
+
+```js
+function GrabadorVoz({ onTexto }) {
+  const [texto, setTexto] = useState('')     // <- el tecleo entra acá...
+  function recibir(actualizador) {
+    const valor = actualizador('')           // <- ...y acá se DESCARTA
+    setTexto('')
+    onTexto(valor)                           // <- unica salida: solo la dispara el dictado
+  }
+}
+```
+
+**Tres caminos por los que el texto moría, no uno:**
+
+1. **En modo voz no hay botón de enviar.** `onTexto` solo se dispara al terminar un dictado, así que quien escribe y no dicta **no tiene ningún camino** para mandar su relato.
+2. **Al dictar, lo escrito se borraba activamente.** `VoiceTextarea` entrega un actualizador `(prev) => prev + ' ' + dictado`, y acá se le pasaba `''` a propósito. El comentario explicaba el motivo —evitar que un dictado arrastrara al anterior— pero la corrección se pasó de largo: junto con el dictado viejo se llevaba **lo tecleado**.
+3. **Cambiar de modo desmonta el componente** y el estado moría con él.
+
+**El dato que confirmó el diagnóstico:** los otros **siete** usos de `VoiceTextarea` en la app pasan el actualizador directo a un `setState`, así que en todos ellos el dictado sí se suma a lo tecleado. `GrabadorVoz` era el ÚNICO que rompía el contrato del componente.
+
+### El arreglo: un solo borrador, compartido por los dos modos
+
+`GrabadorVoz` **deja de tener estado propio**. El borrador vive en el padre y lo usan por igual el modo voz y el modo chat, así que escribir, dictar y cambiar de modo operan sobre el mismo texto y no queda ninguna ruta donde algo se cuelgue.
+
+- **Dictado y tecleo se suman**: `actualizador(borrador)` en vez de `actualizador('')`.
+- **Salida para quien solo teclea**: botón "Enviar lo que escribiste", visible solo cuando hay algo escrito. Sin él, el modo voz seguiría sin camino de salida para el teclado.
+- **El cambio de modo ya no pierde nada**: el borrador no está dentro del componente que se desmonta.
+
+El `''` original dejó de hacer falta: el borrador se vacía al enviar, así que nunca contiene un dictado viejo. Verificado explícitamente (flujo E).
+
+### Flujos verificados
+
+Simulados contra el contrato real de `VoiceTextarea`, comparando el modelo viejo y el nuevo:
+
+| Flujo | Antes | Ahora |
+|---|---|---|
+| A · solo voz | ✅ | ✅ |
+| B · solo tecleo en modo voz | ❌ **se perdía todo** | ✅ |
+| C · mezcla: teclea y dicta | ❌ **quedaba solo el dictado** | ✅ |
+| D · cambia de modo con texto pendiente | ❌ **se perdía todo** | ✅ |
+| E · dos dictados seguidos *(control anti-duplicado)* | ✅ | ✅ |
+
+**No se tocó `getUserMedia` ni `SpeechRecognition`.** La restricción conocida de Safari iOS no entra acá: el bug era de manejo de estado, no de captura. **`VoiceTextarea` quedó intacto**, así que los otros siete usos no se enteran del cambio.
+
+**Copy:** el placeholder pasó de "Toca el micrófono y cuéntame" a **"Toca el micrófono o escribe acá"**. El anterior no mencionaba que se podía escribir, y eso ayudaba a que el teclado se sintiera como una rendija no soportada.
+
+### Archivos tocados en el segundo commit (2 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/registro/RegistroConversacional.jsx` | Borrador levantado al padre, dictado que suma, botón de envío |
+| `src/components/registro/RegistroConversacional.module.css` | `.enviarEscrito` |
 
 ---
 

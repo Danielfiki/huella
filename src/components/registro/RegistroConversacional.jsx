@@ -291,9 +291,19 @@ export default function RegistroConversacional({
     setFase('validar')
   }
 
-  // Llega texto del padre. En voz se procesa al toque, porque el dictado ya
-  // terminó; en chat se acumula y espera, porque puede seguir escribiendo.
-  function recibirVoz(texto) {
+  // Llega un dictado. En voz se procesa al toque, porque el dictado ya terminó;
+  // en chat se acumula y espera, porque puede seguir escribiendo.
+  //
+  // El dictado se SUMA a lo que el padre haya tecleado, no lo reemplaza.
+  // `onVoiceResult` entrega un actualizador `(prev) => prev + ' ' + dictado`, y
+  // acá se le pasa el borrador actual como `prev`. Antes se le pasaba '' a
+  // propósito, para que un dictado no arrastrara al anterior — pero eso también
+  // borraba lo tecleado, y ese era el bug: el padre escribía y se perdía.
+  // Ahora no hace falta ese '': el borrador se vacía en cuanto se envía, así que
+  // nunca tiene un dictado viejo adentro.
+  function recibirVoz(actualizador) {
+    const texto = typeof actualizador === 'function' ? actualizador(borrador) : actualizador
+    setBorrador('')
     const todo = recibirDelPadre(texto)
     if (todo) procesarRelato(todo)
   }
@@ -539,7 +549,12 @@ export default function RegistroConversacional({
             </div>
           ) : (
             <>
-              <GrabadorVoz onTexto={recibirVoz} />
+              <GrabadorVoz
+                value={borrador}
+                onChange={setBorrador}
+                onDictado={recibirVoz}
+                onEnviar={enviarChat}
+              />
               <button className={styles.pillSecundaria} onClick={() => setModoChat(true)} type="button">
                 <Keyboard size={15} />
                 Modo chat
@@ -579,27 +594,32 @@ export default function RegistroConversacional({
 // del micrófono (toggle, tope de 2 min, singleton) vive en VoiceTextarea
 // y se hereda tal cual.
 // ══════════════════════════════════════════════════════════════════════
-function GrabadorVoz({ onTexto }) {
-  const [texto, setTexto] = useState('')
-
-  // Cada dictado se entrega SOLO, sin arrastrar el anterior: por eso se le pasa
-  // '' al actualizador de VoiceTextarea, que por defecto concatena con lo que
-  // ya había. Quien acumula el relato es el hilo, y si acá también se
-  // concatenara, el segundo dictado entraría dos veces.
-  function recibir(actualizador) {
-    const valor = typeof actualizador === 'function' ? actualizador('') : actualizador
-    setTexto('')
-    onTexto(valor)
-  }
-
+// YA NO TIENE ESTADO PROPIO, y ese era el bug. El texto vivía acá adentro, y
+// como en modo voz no hay botón de enviar, nada lo mandaba nunca hacia arriba:
+// el padre escribía su relato y se perdía en silencio. Peor, al cambiar de modo
+// este componente se desmonta y el texto moría con él.
+//
+// Ahora el borrador es UNO SOLO y vive en el padre, compartido con el modo chat.
+// Escribir, dictar y cambiar de modo operan sobre el mismo texto, así que nada
+// se puede quedar colgado en ninguna de las tres rutas.
+function GrabadorVoz({ value, onChange, onDictado, onEnviar }) {
   return (
     <div className={styles.grabador}>
       <VoiceTextarea
-        value={texto}
-        onChange={setTexto}
-        onVoiceResult={recibir}
-        placeholder="Toca el micrófono y cuéntame"
+        value={value}
+        onChange={onChange}
+        onVoiceResult={onDictado}
+        placeholder="Toca el micrófono o escribe acá"
       />
+
+      {/* La salida para quien teclea sin dictar. Sin esto, en modo voz el texto
+          escrito no tiene ningún camino: el dictado es el único que envía. */}
+      {value.trim() && (
+        <button className={styles.enviarEscrito} onClick={onEnviar} type="button">
+          <ArrowUp size={15} />
+          Enviar lo que escribiste
+        </button>
+      )}
     </div>
   )
 }
