@@ -244,9 +244,9 @@
 
 ---
 
-## Cerrado HOY — miércoles 19 agosto 2026 — Dos bugs de producción: las fotos de la invitación · y **el relato escrito que se perdía en silencio**
+## Cerrado HOY — miércoles 19 agosto 2026 — Dos bugs de producción · y **arrancó PATRONES VIVOS (opción A)**
 
-**2 commits.** Los dos son bugs encontrados en producción, no features. El primero: `/invitar` mostraba iniciales en vez de fotos. El segundo, y es el grave: **en modo voz del registro, todo lo que el padre escribía con el teclado se perdía sin aviso.**
+**3 commits.** Los dos primeros son bugs encontrados en producción, no features. El primero: `/invitar` mostraba iniciales en vez de fotos. El segundo, y es el grave: **en modo voz del registro, todo lo que el padre escribía con el teclado se perdía sin aviso.**
 
 ### Bug 1 — las fotos de la invitación no salían
 
@@ -361,6 +361,56 @@ Simulados contra el contrato real de `VoiceTextarea`, comparando el modelo viejo
 |---|---|
 | `src/components/registro/RegistroConversacional.jsx` | Borrador levantado al padre, dictado que suma, botón de envío |
 | `src/components/registro/RegistroConversacional.module.css` | `.enviarEscrito` |
+
+---
+
+## 🌀 PATRONES VIVOS — opción A, bloque 1 de 8 (tercer commit del día)
+
+**Daniel tomó la decisión que quedaba abierta desde el 15 de agosto:** los patrones dejan de ser contenido muerto y pasan a ser **patrón vivo (opción A)**. El norte sigue siendo B —que el patrón emerja solo desde momentos repetidos— y nada de A puede cerrarle esa puerta.
+
+### Lo que la investigación encontró (sesión de solo lectura, previa)
+
+- **La orientación es un snapshot.** `analizarPatron` (`anthropic.js:1423`) recibe **solo las 5 respuestas del formulario y el hijo** — no ve ni un episodio — y se corre **una sola vez**. `PatronLecturaPage` repinta `orientacion_ia` sin ninguna llamada.
+- **`vincularEstrategiaAPatron` SÍ se llama**, pero en un único lugar: `PatronPage.jsx:185`, o sea **solo al crear el patrón**. El vínculo es unidireccional (`patrones.estrategia_id`); la estrategia no sabe de qué patrón viene.
+- **No existe ninguna relación en datos entre momentos y patrones.** `episodios` no tiene `patron_id` y no hay tabla puente. Hay que crearla.
+- **El cierre NO genera hito.** El comentario de `cerrarPatron` lo dice explícito: quedó fuera de v1. El "hito en timeline" que se daba por hecho no existe.
+- **La tabla `patrones` no está en ningún SQL versionado.** Se creó directo en Supabase. Es deuda: no hay migración que la reproduzca (bloque 2).
+- **Costo de un re-análisis, medido:** modelo `claude-sonnet-4-6`, plantilla ~1.530 tokens + un rango de `marcoEdad` ~2.770 = **~4.300 de entrada**, salida tope 1.500. El `SYSTEM_PROMPT` (~6.400) va cacheado con `cache_control: ephemeral`. El banco `AUTORES` **no se inyecta completo**: solo la lista de nombres. Es una llamada barata.
+- **Aislamiento del motor de rasgos: intacto.** `detectarRasgos` recibe solo `{hijo, episodios, hitos}` y no menciona `patrones` en ninguna línea. Ningún bloque del plan lo toca.
+
+### El plan, en 8 bloques (cada uno = commit + QA)
+
+| # | Bloque | Backend | Design |
+|---|---|---|---|
+| **1** | **Destrabar el límite de 3** ✅ **hecho** | no | no |
+| 2 | Migración 012: reproducir `patrones` en SQL | sí | no |
+| 3 | Ofrecer plan desde la lectura | no | **sí** |
+| 4 | Progreso del plan vinculado en la lectura | no | **sí** (mismo handoff que el 3) |
+| 5 | Migración 013: `episodios.patron_id` | sí | no |
+| 6 | Vincular momento a patrón al registrar | no | **sí** |
+| 7 | Botón "Actualizar lectura" | no | **sí** |
+| 8 | Cierre visible en la timeline | quizá | **sí** |
+
+**Sobre el re-análisis se recomendó el botón, no el automático**, y no por costo: (1) el automático necesita una relación que aún no existe, (2) una lectura que cambia sola rompe la confianza —el padre leyó algo sobre su hijo y volver a encontrarlo distinto sin pedirlo desconcierta—, y (3) el botón es el paso barato hacia B: cuando exista el vínculo, se vuelve automático cambiando una condición. Al revés hay que desarmarlo.
+
+### Bloque 1 — el tope de 3 dejó de ser un cartel muerto
+
+**El síntoma:** con 3 patrones abiertos la card quedaba `disabled` diciendo *"Cierra uno para agregar otro"*, pero **no llevaba a ninguna parte**. El padre leía una instrucción que no tenía cómo cumplir.
+
+**El arreglo:** la card **no se apaga, cambia de destino**. Con tope abre `/historial` con `{ state: { filtro: 'patrones' } }`, que es donde se cierran. El recorrido ya existía entero — lista → `PatronCard` → `/patron/:id` → "Cerrar esto" —, solo faltaba la entrada.
+
+**El filtro no es nuevo:** `HistorialPage.jsx:69` ya lee `location.state.filtro`, y el Home navega igual desde la puerta "Acompañando" (`PanelPage.jsx:481`). Cero backend.
+
+**Decisión de affordance:** se quitó la opacidad de la card entera y quedó **solo en el disco del ícono**. Bajarle la opacidad a algo que se puede tocar lo hace ver deshabilitado y deja de invitar — era la contradicción del estado anterior. La señal de "esto va a alguna parte" es **el chevron que ya usan las otras dos cards**, y que justamente en este estado se ocultaba.
+
+**Copy:** *"Ya tienes 3 abiertos. Míralos y cierra el que ya haya cambiado."* Reencuadra el tope: deja de ser un bloqueo y pasa a ser una posibilidad —quizás uno ya mejoró—, que además es verdad, porque cerrar un patrón es lo que se hace cuando cambió.
+
+### Archivos tocados en el tercer commit (2 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/pages/nuevo/NuevoPage.jsx` | La card con tope navega en vez de estar `disabled`; chevron siempre visible |
+| `src/pages/nuevo/NuevoPage.module.css` | `.choicePatronLocked` → `.choicePatronLleno`: atenúa solo el ícono |
 
 ---
 

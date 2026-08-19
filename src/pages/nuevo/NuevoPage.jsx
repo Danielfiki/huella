@@ -185,25 +185,32 @@ export default function NuevoPage() {
           <span className={styles.choiceChevron}>›</span>
         </button>
 
-        {/* Tercera entrada: patrones ("Algo que aún no cambia"). Se bloquea
-            con 3 patrones abiertos del hijo activo — sin candado ni alerta,
-            solo apagada. NO alimenta el motor de rasgos. */}
+        {/* Tercera entrada: patrones ("Algo que aún no cambia"). NO alimenta el
+            motor de rasgos.
+
+            Con 3 abiertos la card NO se apaga: CAMBIA DE DESTINO. Antes quedaba
+            `disabled` diciendo "cierra uno para agregar otro", pero no llevaba a
+            ninguna parte — el padre leia la instruccion y no tenia como
+            cumplirla. Ahora abre la lista de patrones, que es donde se cierran.
+
+            El filtro no es nuevo: HistorialPage ya lee `location.state.filtro` y
+            el Home navega igual desde la puerta "Acompanando". */}
         <button
-          className={`${styles.choiceCard} ${styles.choicePatron}${patronBloqueado ? ' ' + styles.choicePatronLocked : ''}`}
-          onClick={patronBloqueado ? undefined : () => navigate('/patron')}
-          disabled={patronBloqueado}
-          aria-disabled={patronBloqueado}
+          className={`${styles.choiceCard} ${styles.choicePatron}${patronBloqueado ? ' ' + styles.choicePatronLleno : ''}`}
+          onClick={() => patronBloqueado
+            ? navigate('/historial', { state: { filtro: 'patrones' } })
+            : navigate('/patron')}
         >
           <span className={`${styles.choiceIcono} ${styles.choiceIconoPatron}`}>🌀</span>
           <div className={styles.choiceTexto}>
             <p className={styles.choiceTitulo}>Algo que aún no cambia</p>
             <p className={styles.choiceDesc}>
               {patronBloqueado
-                ? 'Ya tienes 3 abiertos. Cierra uno para agregar otro.'
+                ? 'Ya tienes 3 abiertos. Míralos y cierra el que ya haya cambiado.'
                 : 'El chupete, el pañal, dormir en tu cama, comer poco'}
             </p>
           </div>
-          {!patronBloqueado && <span className={styles.choiceChevron}>›</span>}
+          <span className={styles.choiceChevron}>›</span>
         </button>
       </div>
     )
