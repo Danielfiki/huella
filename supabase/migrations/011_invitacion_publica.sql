@@ -26,22 +26,24 @@
 -- SOBRE LAS FOTOS -- leer, porque cambia lo que se pidio:
 --   Una funcion SQL NO PUEDE generar URLs firmadas de Storage. Las firma la API
 --   de Storage, no Postgres. Asi que este RPC devuelve el PATH del objeto
---   (misma convencion que toda la app: la base guarda paths, el cliente firma
---   al leer) y la pantalla firma con TTL corto (5 min) desde el navegador.
+--   (misma convencion que toda la app: la base guarda paths, alguien los firma
+--   al leer). QUIEN los firma se resolvio despues del QA -- ver la correccion.
 --
---   Eso funciona hoy porque el bucket `avatares` es PUBLICO (schema.sql linea
---   164: `public = true`, mas la policy `avatares_select ... to public`). O sea:
---   este RPC no abre ningun acceso nuevo. Las fotos de avatar ya son legibles
---   por cualquiera que conozca el path, desde antes de esta migracion.
+--   CORRECCION (18 ago, tras el QA): la version original de este comentario
+--   decia que el bucket `avatares` es PUBLICO, apoyandose en el
+--   `public = true` de schema.sql. ESO ES FALSO EN PRODUCCION. Verificado
+--   contra la API real: GET /storage/v1/object/public/avatares/... responde
+--   "Bucket not found", igual que `momentos`. schema.sql quedo desactualizado
+--   -- la app entera firma siempre y no usa `getPublicUrl` en ninguna parte.
 --
---   Lo unico que este RPC agrega es que ahora se puede LLEGAR al path teniendo
---   el token de invitacion. Como el token es un secreto de 32 bytes que solo
---   viaja al correo del invitado, y la invitacion caduca, el alcance es el
---   mismo que el del link.
+--   Consecuencia practica: el cliente ANONIMO no puede convertir estos paths en
+--   una URL. Ni firmando (la RLS de storage.objects esconde las filas del rol
+--   anon, y createSignedUrl devuelve "Object not found") ni por URL publica
+--   (el bucket no lo es). Por eso las fotos las firma un endpoint serverless
+--   con el service role -- api/invitacion-fotos.js -- y no la pantalla.
 --
---   Si mas adelante se quiere endurecer de verdad, el cambio es hacer PRIVADO
---   el bucket `avatares` -- pero eso toca TODA la app (Home, Perfil, hilo del
---   registro, historial) y no se hace desde aca.
+--   Lo que este RPC entrega sigue siendo solo el PATH, que por si mismo no
+--   abre nada: sin credenciales, un path no sirve para leer el archivo.
 --
 -- Idempotente (CREATE OR REPLACE). Se puede correr dos veces sin efecto.
 -- Ejecutar en: Supabase Dashboard -> SQL Editor.
@@ -134,7 +136,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.get_invitation_public_by_token(text) IS
-  'Datos publicos minimos de una invitacion, para la pantalla /invitar sin sesion. Devuelve nombre de pila del inviter, nombre del hijo y PATHS de las dos fotos. NUNCA emails, ids ni datos de crianza. El cliente firma los paths con TTL corto.';
+  'Datos publicos minimos de una invitacion, para la pantalla /invitar sin sesion. Devuelve nombre de pila del inviter, nombre del hijo y PATHS de las dos fotos. NUNCA emails, ids ni datos de crianza. Los paths los firma api/invitacion-fotos.js con el service role: el bucket avatares no es publico y el rol anon no puede firmarlos.';
 
 -- Solo EXECUTE, y explicito: primero se revoca el default de PUBLIC y despues
 -- se otorga a los dos roles que de verdad la usan.

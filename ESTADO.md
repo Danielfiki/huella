@@ -244,7 +244,63 @@
 
 ---
 
-## Cerrado HOY — martes 18 agosto 2026 — Se cerró la respiración del sello · y **la pantalla de invitación pasó a mostrar de verdad a quién y a qué niño te invitan**
+## Cerrado HOY — miércoles 19 agosto 2026 — Las fotos de la invitación no salían, y la causa era una creencia equivocada mía sobre el bucket
+
+**1 commit.** Arreglo del bug que dejó el QA de ayer: `/invitar` cargaba perfecta pero mostraba las iniciales en vez de las fotos reales, aunque el RPC entregaba los paths correctos.
+
+### 🪤 LA CAUSA: el bucket `avatares` NO es público. La auditoría del rediseño dijo que sí, y estaba mal.
+
+**Esto es una lección sobre de dónde se saca la verdad, no sobre Storage.** La auditoría previa del rediseño concluyó "el bucket es público" leyendo `supabase/schema.sql`, donde dice `public = true`. **Ese archivo quedó desactualizado respecto de la base real**, y la conclusión falsa se propagó a los comentarios de la migración 011, a `ESTADO.md` y al diseño de la pantalla.
+
+**La regla que queda: para afirmar algo sobre PRODUCCIÓN, hay que preguntarle a producción.** Un archivo de esquema versionado dice cuál era la intención en algún momento, no cuál es el estado hoy.
+
+**Cómo se comprobó**, reproduciendo sin sesión con la anon key, igual que el navegador en incógnito:
+
+| Prueba | Resultado |
+|---|---|
+| Firmar como anon un path inexistente | `400 · "Object not found"` — **ambiguo**: una fila escondida por RLS responde igual que un archivo inexistente |
+| Listar el bucket como anon | `[]` — el rol anónimo no ve ningún objeto |
+| **`GET /object/public/avatares/…`** | **`"Bucket not found"`** |
+| **`GET /object/public/momentos/…`** (control) | **`"Bucket not found"`** |
+
+Los dos buckets responden lo mismo: **ninguno es público**. Lo corrobora el propio código — **la app no usa `getPublicUrl` en ninguna parte**, firma siempre, que es lo que se hace con buckets privados.
+
+**El encadenamiento real del bug:** el RPC entrega los paths bien → la pantalla intenta firmarlos **como anon** → la RLS de `storage.objects` esconde las filas → `"Object not found"` → el `catch` mudo devuelve `null` → cae a iniciales. El `catch` sin log no era la causa, pero sí la razón de que esto se leyera como un fallback caprichoso en vez de como un error de permisos.
+
+### El arreglo: firmar donde sí se puede
+
+**`api/invitacion-fotos.js`** (nuevo): recibe el token, llama al **mismo RPC** con el service role —para que la validación del token viva en un solo lugar y no se desincronice— y firma las dos fotos con TTL de 5 minutos. La pantalla ya no firma nada.
+
+**Dos alternativas descartadas, y por qué:**
+- **Abrir una policy de lectura anónima sobre `avatares`** — haría legibles TODAS las fotos de TODAS las familias para cualquiera que adivine un path. Es exactamente lo que el encargo pedía no hacer.
+- **Guardar URLs firmadas de 7 días en la fila de la invitación** — deja una credencial de larga duración en la base y obliga a tocar la creación de invitaciones.
+
+**Propiedad de seguridad deliberada:** ante *cualquier* problema —token inválido, expirado, sin configuración, error de Storage— el endpoint responde `200 {}`. Nunca distingue un token malo de uno bueno sin fotos, así que **no sirve como oráculo para adivinar tokens**, y la pantalla cae a iniciales, que es un estado válido.
+
+**Variables de entorno:** usa `SUPABASE_SERVICE_ROLE_KEY` y `VITE_SUPABASE_URL`, los mismos nombres exactos que los 4 endpoints que ya corren en producción (`mp-webhook`, `mp-crear-suscripcion`, `mp-verificar-suscripcion`, `push-remind`). Verificado con grep sobre `api/`: no existe ninguna variante del nombre. Y si la variable faltara, el endpoint degrada a `{}` — se verían iniciales, no una pantalla rota.
+
+**La pantalla ahora pinta los nombres apenas llegan** y las fotos entran después: esperar por una foto para mostrar la pantalla sería dejarla en blanco por lo accesorio.
+
+### Se corrigió la afirmación falsa donde estaba escrita
+
+La creencia equivocada estaba por escrito en los comentarios de la **migración 011** y en el bloque de ayer de **`ESTADO.md`**. Los dos quedaron corregidos con la verificación real y la fecha. Es justo el tipo de nota que, sin corregir, habría hecho repetir este bug dentro de un mes.
+
+### Lo que NO se pudo verificar desde acá
+
+**El endpoint solo se puede probar en producción.** No hay `SUPABASE_SERVICE_ROLE_KEY` en el entorno local, así que no se comprobó de punta a punta que el service role logre firmar esos paths. El diagnóstico está confirmado con datos; el arreglo está razonado sobre ese diagnóstico. **Falta el QA:** levantar de nuevo la invitación de prueba (bloque 1 de `supabase/consultas/qa_invitar.sql`) y confirmar que aparecen las fotos.
+
+### Archivos tocados (4)
+
+| Archivo | Qué cambió |
+|---|---|
+| `api/invitacion-fotos.js` | **NUEVO.** Firma las dos fotos con el service role |
+| `src/pages/invitar/InvitarPage.jsx` | Pide las fotos al endpoint; ya no firma por su cuenta |
+| `supabase/migrations/011_invitacion_publica.sql` | Corregido el comentario que afirmaba que el bucket era público |
+| `ESTADO.md` | Corregida la misma afirmación en el bloque de ayer |
+
+---
+
+## Sesión martes 18 agosto 2026 — Se cerró la respiración del sello · y **la pantalla de invitación pasó a mostrar de verdad a quién y a qué niño te invitan**
 
 **3 commits.** Dos temas. Los dos primeros cierran el hilo del pulso del escarabajo que quedó abierto ayer: se subió la energía hasta que se viera y, al verse, apareció el defecto que la escala venía escondiendo. El tercero es el rediseño de `/invitar`, que además obligó a tocar backend — el detalle va al final de este bloque.
 
@@ -318,7 +374,7 @@ O sea, el bloqueo no eran las fotos: era **el nombre del hijo/a**, que es lo que
 
 ### Dos supuestos del brief que resultaron falsos, y hay que saberlo
 
-1. **El bucket `avatares` NO es privado: es público.** `schema.sql` lo crea con `public = true` más una policy `avatares_select ... to public`. **Las fotos de avatar ya eran legibles por cualquiera que conociera el path**, desde antes de esta tarea. El RPC nuevo no abrió ningún acceso que no existiera.
+1. ~~**El bucket `avatares` NO es privado: es público.**~~ **ESTO ERA FALSO y se descubrió en el QA — ver el bloque de la sesión siguiente.** La auditoría se apoyó en el `public = true` de `schema.sql`, que quedó desactualizado respecto de producción. El bucket **es privado**, y esa creencia equivocada es lo que hizo que la primera versión de la pantalla mostrara iniciales en vez de fotos.
 2. **Una función SQL no puede generar URLs firmadas de Storage.** Las firma la API de Storage, no Postgres. Así que el RPC devuelve el **PATH** (la convención de toda la app: la base guarda paths, el cliente firma al leer) y **la pantalla firma con TTL de 5 minutos** desde el navegador.
 
 Lo único que el RPC agrega es que ahora se puede *llegar* al path teniendo el token. Como el token es un secreto de 32 bytes que solo viaja al correo del invitado y caduca, **el alcance es el mismo que el del link**.

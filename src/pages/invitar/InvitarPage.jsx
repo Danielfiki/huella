@@ -23,11 +23,18 @@ import styles from './InvitarPage.module.css'
 // (`get_invitation_by_token`, que sí devuelve emails) quedó intacto porque lo
 // usa el camino de aceptación, pero esta pantalla ya no lo consume.
 //
-// Las fotos se firman acá con TTL corto, no en el RPC: una función SQL no puede
-// generar URLs firmadas de Storage — las firma la API de Storage. Si el firmado
-// falla o la persona no tiene foto, cae a la inicial del nombre.
-
-const TTL_FOTO = 300   // 5 min: la pantalla se ve una vez y se abandona
+// Las fotos NO se firman acá. Se piden a `/api/invitacion-fotos`, que las firma
+// con el service role y TTL corto.
+//
+// El motivo, que costó un QA descubrir: el bucket `avatares` NO es público en
+// producción, y la RLS de storage esconde los objetos del rol anónimo. Un
+// visitante sin sesión no puede firmar ni construir una URL pública — el intento
+// devuelve "Object not found", indistinguible de un archivo que no existe. Por
+// eso la primera versión de esta pantalla mostraba iniciales aunque el RPC
+// entregara los paths correctos.
+//
+// Si el endpoint no responde o la persona no tiene foto, cae a la inicial del
+// nombre, que es un estado válido y no un error.
 
 function Avatar({ url, nombre, className }) {
   if (url) return <img src={url} alt="" className={className} />
@@ -64,31 +71,33 @@ export default function InvitarPage() {
         setStatus('invalid')
         return
       }
-      // Las dos firmas van en paralelo y ninguna puede voltear la pantalla: si
-      // una falla, esa foto cae a inicial y el resto sigue igual.
-      const [fotoInviter, fotoHijo] = await Promise.all([
-        firmar(data.inviterFotoPath),
-        firmar(data.hijoFotoPath),
-      ])
+      // La pantalla se muestra con los NOMBRES apenas llegan; las fotos entran
+      // después, si entran. Esperar por ellas para pintar dejaría la pantalla en
+      // blanco por una foto, que es lo accesorio.
       setInvitacion({
         inviterNombre: data.inviterNombre || null,
         hijoNombre:    data.hijoNombre || null,
-        fotoInviter,
-        fotoHijo,
+        fotoInviter:   null,
+        fotoHijo:      null,
       })
       setStatus('ready')
+      pedirFotos()
     } catch {
       setStatus('invalid')
     }
   }
 
-  async function firmar(path) {
-    if (!path || !supabase) return null
+  // Las fotos son un extra: cualquier fallo se traga y la pantalla queda con las
+  // iniciales, que ya se están mostrando.
+  async function pedirFotos() {
     try {
-      const { data } = await supabase.storage.from('avatares').createSignedUrl(path, TTL_FOTO)
-      return data?.signedUrl ?? null
+      const r = await fetch(`/api/invitacion-fotos?token=${encodeURIComponent(token)}`)
+      if (!r.ok) return
+      const { inviter, hijo } = await r.json()
+      if (!inviter && !hijo) return
+      setInvitacion((prev) => prev && ({ ...prev, fotoInviter: inviter ?? null, fotoHijo: hijo ?? null }))
     } catch {
-      return null
+      /* sin fotos, con iniciales */
     }
   }
 
