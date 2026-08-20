@@ -5,6 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 import { canModify } from '../../utils/authorDisplay'
 import CerrarPatronModal from '../../components/patron/CerrarPatronModal'
 import PieCientifico from '../../components/patron/PieCientifico'
+import PlanDelPatron from '../../components/patron/PlanDelPatron'
+import UpgradeModal from '../../components/ui/UpgradeModal'
+import { usarPlanDesdePatron } from './usarPlanDesdePatron'
 import shared from './PatronPage.module.css'   // reusa header/bloques/cierre de Fase B
 import styles from './PatronLecturaPage.module.css'
 
@@ -39,6 +42,9 @@ export default function PatronLecturaPage() {
   const { state, dataLoaded, cerrarPatron } = useHuella()
   const { user } = useAuth()
   const [showCerrar, setShowCerrar] = useState(false)
+  // Mismo hook que usa PatronPage al salir del análisis: los cuatro pasos del
+  // armado del plan viven en un solo lugar.
+  const { armarPlan, creando, error: planError, showUpgrade, cerrarUpgrade } = usarPlanDesdePatron()
 
   const patron = (state.patrones || []).find((p) => p.id === id)
 
@@ -50,7 +56,13 @@ export default function PatronLecturaPage() {
   if (!patron) return null
 
   const o = patron.orientacion_ia || {}
-  const estrategiaId = patron.estrategia_id
+  // El plan vinculado, si existe y si sigue estando. `estrategia_id` puede
+  // apuntar a un plan borrado: la FK lo deja en NULL, pero entre que se borra y
+  // que el estado global se refresca el id puede seguir acá. Si no se
+  // encuentra, la pantalla vuelve a ofrecer armar uno, que es lo correcto.
+  const plan = patron.estrategia_id
+    ? (state.estrategias || []).find((e) => e.id === patron.estrategia_id) || null
+    : null
   const esDerivar = patron.clasificacion === 'derivar'
   const cerrado = patron.estado === 'cerrado'
   // "Cerrar esto" solo para el autor (misma convención que editar/borrar en la
@@ -92,16 +104,21 @@ export default function PatronLecturaPage() {
             diagnostica: el descargo sobra y le resta peso. */}
         <PieCientifico marco={o.marco_aplicado} sinDescargo={esDerivar} />
 
+        {/* El plan: la invitación si no hay ninguno, o dónde va el que hay.
+            En 'derivar' NO se ofrece plan — el cierre médico de arriba dice
+            que esto se ve con un profesional, y ofrecer un plan de la app
+            justo debajo lo contradiría. */}
+        {!esDerivar && (
+          <PlanDelPatron
+            plan={plan}
+            creando={creando}
+            error={planError}
+            onCrear={() => armarPlan(patron)}
+            onVer={() => navigate(`/estrategias/${plan.id}`)}
+          />
+        )}
+
         <div className={styles.footer}>
-          {estrategiaId && (
-            <button
-              type="button"
-              className={styles.verPlan}
-              onClick={() => navigate(`/estrategias/${estrategiaId}`)}
-            >
-              Ver el plan
-            </button>
-          )}
           {!cerrado && esMio && (
             <button type="button" className={shared.btnSecundario} onClick={() => setShowCerrar(true)}>
               Cerrar esto
@@ -109,6 +126,14 @@ export default function PatronLecturaPage() {
           )}
         </div>
       </div>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={cerrarUpgrade}
+          tituloCustom="Un plan para trabajar lo que importa"
+          mensajeCustom="Con Huella Pro creas planes de 4 semanas con tareas concretas para acompañar a tu hijo en esto."
+        />
+      )}
 
       {showCerrar && (
         <CerrarPatronModal

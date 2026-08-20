@@ -7,6 +7,7 @@ import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import LoadingDignificado from '../estrategias/components/LoadingDignificado'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import PieCientifico from '../../components/patron/PieCientifico'
+import { usarPlanDesdePatron } from './usarPlanDesdePatron'
 import styles from './PatronPage.module.css'
 
 // Opciones de selección única. El value es el que va a la BD; el label es copy.
@@ -68,8 +69,8 @@ function Bloque({ variante, titulo, children }) {
 export default function PatronPage() {
   const navigate = useNavigate()
   const {
-    state, dataLoaded, isPro,
-    crearPatron, actualizarPatronIA, crearPlanDesdeTexto, vincularEstrategiaAPatron,
+    state, dataLoaded,
+    crearPatron, actualizarPatronIA,
   } = useHuella()
   const hijo = state.hijo
   const nombre = hijo?.nombre || 'tu hijo/a'
@@ -86,9 +87,17 @@ export default function PatronPage() {
   const [patronRow, setPatronRow] = useState(null)
   const [resultado, setResultado] = useState(null)
   const [error, setError]         = useState('')
-  const [planError, setPlanError] = useState('')
   const [pasoActual, setPasoActual] = useState(0)
-  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  // El armado del plan vive en un hook compartido con PatronLecturaPage: son
+  // los mismos cuatro pasos en el mismo orden, y duplicarlos era la forma
+  // segura de que un dia se desincronizaran.
+  const {
+    armarPlan,
+    error: planError,
+    showUpgrade,
+    cerrarUpgrade,
+  } = usarPlanDesdePatron()
 
   // Guard: sin hijo activo no hay contexto para el patrón.
   useEffect(() => {
@@ -127,22 +136,6 @@ export default function PatronPage() {
     ya_intentado:  yaIntentado.trim() || null,
   })
 
-  // Contexto del plan a partir de las 5 respuestas (NO del VoiceTextarea de
-  // Estrategias). Es lo que se le pasa a crearPlanDesdeTexto.
-  function construirTextoPlan() {
-    const desdeL  = OPCIONES_DESDE.find((o) => o.value === desde)?.label || ''
-    const frecL   = OPCIONES_FREC.find((o) => o.value === frecuencia)?.label || ''
-    const interfL = OPCIONES_INTERF.find((o) => o.value === interferencia)?.label || ''
-    const partes = [
-      descripcion.trim(),
-      `Desde cuándo: ${desdeL}.`,
-      `Frecuencia: ${frecL}.`,
-      `Cuánto complica: ${interfL}.`,
-    ]
-    if (yaIntentado.trim()) partes.push(`Ya intentaron: ${yaIntentado.trim()}.`)
-    return partes.join(' ')
-  }
-
   // Orden de guardado: 1) INSERT fila abierta, 2) IA, 3) UPDATE misma fila,
   // 4) mostrar. Nunca al revés. Si la IA falla, la fila ya está guardada y se
   // muestra un estado de reintentar (no se pierde lo escrito).
@@ -174,21 +167,12 @@ export default function PatronPage() {
     }
   }
 
-  // Enganche del plan: reusa el flujo de caso libre (crearPlanDesdeTexto). El
-  // plan es Pro → el UpgradeModal aparece solo, sin candado visual en el botón.
+  // El plan es Pro → el UpgradeModal aparece solo, sin candado visual en el
+  // botón. La fila del patrón ya existe acá, así que se le pasa entera: de ahí
+  // salen las 5 respuestas que arman el contexto del plan.
   async function handleArmarPlan() {
-    if (!isPro()) { setShowUpgrade(true); return }
-    setPlanError('')
-    setFase('plan')
-    try {
-      const row = await crearPlanDesdeTexto({ texto_libre: construirTextoPlan() })
-      if (patronRow?.id) await vincularEstrategiaAPatron(patronRow.id, row.id)
-      navigate(`/estrategias/${row.id}`, { replace: true })
-    } catch (err) {
-      console.error('armar plan desde patron falló', err)
-      setPlanError('No pudimos generar el plan. Intenta de nuevo.')
-      setFase('resultado')
-    }
+    const ok = await armarPlan(patronRow ?? respuestas(), { onAntes: () => setFase('plan') })
+    if (ok === false) setFase('resultado')
   }
 
   // ── Loaders ────────────────────────────────────────────────────────────
@@ -280,7 +264,7 @@ export default function PatronPage() {
 
         {showUpgrade && (
           <UpgradeModal
-            onClose={() => setShowUpgrade(false)}
+            onClose={cerrarUpgrade}
             tituloCustom="Un plan para trabajar lo que importa"
             mensajeCustom="Con Huella Pro creas planes de 4 semanas con tareas concretas para acompañar a tu hijo en esto."
           />

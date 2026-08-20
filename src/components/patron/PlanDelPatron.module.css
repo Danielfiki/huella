@@ -1,0 +1,175 @@
+/* Pie de la lectura del patron. Todo sale de tokens de index.css.
+   Sin rojo y sin alarmas: ni la invitacion presiona, ni el plan en pausa
+   reprocha. */
+
+/* ── SIN PLAN: la invitacion ── */
+
+.invitacion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-celebration-start) 100%);
+  border: 1px solid var(--color-primary-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.invitacionTitulo {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.invitacionCuerpo {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* El gradiente sale de `--gradient-cta-registrar` y NO de
+   `--color-primary` -> `--color-primary-light`, que es lo que pedia el spec.
+   Motivo: `--color-primary-light` no es "primary mas claro" sino un token de
+   fondo tenue, y en oscuro vale #2A1808 (cafe casi negro). Ese gradiente iba a
+   ir de naranjo brillante a casi negro en modo oscuro.
+   `--gradient-cta-registrar` es el gradiente terracota que ya usa el boton
+   principal del Home y tiene paleta fija en los dos modos a proposito. */
+.cta {
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-cta-registrar);
+  box-shadow: var(--shadow-primary-sm);
+  color: var(--color-white);
+  font-family: var(--font-family);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--motion-rapida) var(--motion-ease-estandar);
+}
+.cta:disabled { opacity: 0.65; cursor: default; }
+
+.error {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── CON PLAN: el progreso ──
+   La tarjeta entera es el destino, no un enlace al final: quien mira en que va
+   su plan quiere entrar, y obligarlo a apuntarle a un texto de 13px es pedirle
+   punteria. */
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: border-color var(--motion-rapida) var(--motion-ease-estandar);
+}
+.plan:hover { border-color: var(--color-primary-border); }
+
+.planCabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.pildora {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.planNombre {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.planMeta {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.planPie {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+/* ── Barra de semanas ── */
+
+.segmentos {
+  display: flex;
+  gap: 6px;
+}
+.segmento {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  display: block;
+}
+/* Pistacho = ya conseguido · terracota = en curso · neutro = pendiente.
+   Es la misma gramatica de color del Home (ver el bloque de balance de color
+   en ESTADO.md), no una paleta propia de esta pantalla. */
+.segLograda   { background: var(--color-accent-green); }
+.segEnCurso   { background: var(--color-primary); }
+.segPendiente { background: var(--color-surface-alt); }
+
+/* ── Variantes por estado del plan ── */
+
+.plan_completado .eyebrow  { color: var(--color-tag-green); }
+.plan_completado .pildora {
+  background: var(--color-leaf-bg);
+  color: var(--color-tag-green);
+}
+
+/* En pausa: todo baja de intensidad menos el pie, que sigue siendo la puerta
+   de vuelta. Nada de gris de "roto": es un plan esperando, no un plan fallado. */
+.plan_abandonado .eyebrow  { color: var(--color-text-light); }
+.plan_abandonado .pildora {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}

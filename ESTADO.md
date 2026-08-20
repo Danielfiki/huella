@@ -244,9 +244,9 @@
 
 ---
 
-## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · ajuste 1.1 + **bloque 2: la tabla `patrones` por fin existe en el repo**
+## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · bloques 1.1, 2, 3 y 4: **el patrón dejó de ser algo que se lee una vez**
 
-**2 commits.** El primero, un ajuste chico salido del QA del bloque 1. El segundo cierra una deuda vieja: la tabla `patrones` vivía solo en Supabase y ahora está documentada, con sus reglas reales.
+**3 commits.** Un ajuste del QA del bloque 1; la tabla `patrones` documentada, que cierra una deuda vieja; y los bloques 3 y 4, que son el corazón de la opción A: **la lectura ahora propone un plan, y si ya hay uno, muestra en qué va.**
 
 ### Ajuste 1.1 — la lista de patrones dejó de desorientar
 
@@ -328,6 +328,70 @@ Una **regresión no puede** terminar clasificada como esperable ni instalado. La
 | `supabase/migrations/012_patrones_documentada.sql` | **NUEVO.** 3 bloques: verificación, definición idempotente, verificación de equivalencia |
 
 **Siguiente:** bloque 3 (ofrecer plan desde la lectura), que **sí necesita handoff de Claude Design** — conviene pedirlo junto con el 4, porque la lectura enriquecida es una pantalla y no dos cambios sueltos.
+
+---
+
+## 🌱 Bloques 3 y 4 — la lectura del patrón propone y acompaña (tercer commit del día)
+
+Implementados juntos, desde handoff de Claude Design, **porque son la misma pantalla**: partirlos en dos habría dado dos diseños que después había que reconciliar.
+
+**Un bloque nuevo al final de `/patron/:id`, con dos estados excluyentes:**
+
+- **Sin plan** → la invitación: *"¿Quieres trabajar esto con un plan?"* + CTA.
+- **Con plan** → reemplaza al botón "Ver el plan" por una tarjeta que dice **en qué va**: nombre, píldora de estado, barra de 4 semanas y la puerta de entrada.
+
+### ⚠️ Lo que se DESCARTÓ del handoff
+
+Design puso en la cabecera *"Visto en 6 registros · últimas 3 semanas"*. **No se implementó: ese dato no existe.** La relación momento↔patrón es el bloque 5 y todavía no hay tabla que la sostenga. La cabecera quedó como estaba.
+
+### 🪤 El token del spec que se rompía en oscuro
+
+Design pidió el CTA con gradiente `--color-primary` → `--color-primary-light`. **Ese gradiente se rompe en modo oscuro:**
+
+| Token | Claro | Oscuro |
+|---|---|---|
+| `--color-primary` | `#E56E26` | `#EE9452` |
+| `--color-primary-light` | `#EE9452` | **`#2A1808`** |
+
+**`--color-primary-light` NO es "primary más claro": es un token de fondo tenue**, y en oscuro se invierte a café casi negro. El botón habría ido de naranjo brillante a negro.
+
+Se usó **`--gradient-cta-registrar`**, el gradiente terracota del botón principal del Home, que tiene **paleta fija en ambos modos a propósito**. De paso, este CTA habla el mismo idioma que la acción principal de la app. **Ningún token nuevo:** todos los demás del spec ya existían.
+
+**La lección, que va más allá de este caso:** los tokens `*-light` de esta paleta son **fondos**, no versiones claras del color. Antes de meter uno en un gradiente o en texto, hay que mirar su override de oscuro.
+
+### Tres decisiones de implementación
+
+- **En `derivar` no se ofrece plan.** El spec no lo mencionaba, pero el cierre médico dice "esto conviene verlo con alguien" y ofrecer un plan de la app justo debajo lo contradiría. No es criterio nuevo: **`PatronPage` ya se comporta así** — en `derivar` solo muestra "Entendido".
+- **Los segmentos salen de `total_semanas`, no de un 4 fijo.** El campo existe (`duracion_semanas ?? total_semanas ?? 4`). Si un plan durara otra cosa, la barra y el texto dicen la verdad en vez de mentir "de 4".
+- **Si el plan vinculado no aparece en el estado, vuelve la invitación.** `estrategia_id` puede apuntar a un plan borrado: la FK lo deja en NULL, pero entre el borrado y el refresco el id sigue ahí.
+
+### El refactor: `usarPlanDesdePatron`
+
+Armar un plan desde un patrón son **cuatro pasos que tienen que pasar siempre en el mismo orden**: gate Pro → crear el plan → engancharlo al patrón → navegar. Ahora viven en un hook compartido por las dos pantallas que lo ofrecen.
+
+**El paso que más fácil se olvida es el enganche:** si se cae, el plan existe pero el patrón no sabe de él, y la lectura vuelve a ofrecer "crear un plan" para algo que ya tiene uno.
+
+`construirTextoPlan` también se movió ahí, con los labels que ve el padre: a la IA se le pasa *"Ya lo había dejado y volvió"*, no `'regresion'`.
+
+**`PatronPage` quedó más corto que antes**: perdió `construirTextoPlan`, `handleArmarPlan` y tres funciones del contexto que ya no necesita.
+
+### Tono
+
+**`abandonado` NUNCA aparece como palabra.** En pantalla es **"En pausa"**, sin segmento terracota —nada está en curso ahora mismo— y con el meta *"Quedó en la semana X · puedes retomarlo cuando quieras"*. Un plan a medias no es un fracaso, y nombrarlo así invita a retomarlo en vez de cerrar el tema.
+
+La clasificación interna del patrón sigue **sin aparecer nunca** en pantalla.
+
+### Archivos tocados en el tercer commit (6 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/patron/PlanDelPatron.jsx` + `.module.css` | **NUEVOS.** Los dos estados |
+| `src/pages/patron/usarPlanDesdePatron.js` | **NUEVO.** El hook compartido |
+| `src/pages/patron/PatronLecturaPage.jsx` | Consume el bloque nuevo + gate Pro |
+| `src/pages/patron/PatronLecturaPage.module.css` | Se fue `.verPlan`, ya huérfano |
+| `src/pages/patron/PatronPage.jsx` | Usa el hook; se le fue el armado duplicado |
+
+**Quedan los bloques 5 a 8.** El 5 (`episodios.patron_id`) es el que abre la puerta al norte B y del que dependen el 6 y el 7.
 
 ---
 

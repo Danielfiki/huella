@@ -6,15 +6,5 @@
   gap: 12px;
   margin-top: 6px;
 }
-/* "Ver el plan": link de texto, va ARRIBA del botón "Cerrar esto". */
-.verPlan {
-  align-self: center;
-  background: none;
-  border: none;
-  color: var(--color-primary-dark);
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 0;
-  cursor: pointer;
-}
+/* El link "Ver el plan" que vivia aca quedo sin uso: ahora es el pie de la
+   tarjeta de PlanDelPatron, que ademas dice en que va el plan. */
