@@ -244,9 +244,13 @@
 
 ---
 
-## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · ajuste 1.1: la lista de patrones dejó de desorientar
+## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · ajuste 1.1 + **bloque 2: la tabla `patrones` por fin existe en el repo**
 
-**1 commit.** Ajuste chico salido del QA del bloque 1, antes de seguir con el 2. Sin backend, sin componentes nuevos, sin tokens nuevos.
+**2 commits.** El primero, un ajuste chico salido del QA del bloque 1. El segundo cierra una deuda vieja: la tabla `patrones` vivía solo en Supabase y ahora está documentada, con sus reglas reales.
+
+### Ajuste 1.1 — la lista de patrones dejó de desorientar
+
+Sin backend, sin componentes nuevos, sin tokens nuevos.
 
 **El QA aprobó el bloque 1 con un hallazgo:** al caer en Momentos con el filtro de patrones desde el tope de 3, la lista confunde — mezcla abiertos y cerrados sin nada que oriente, y el chip del filtro "queda cortado a la derecha".
 
@@ -278,6 +282,52 @@ El render comparativo del chip **no salió** (el harness quedó con las dos barr
 | `src/components/historial/FiltroChips.jsx` | Trae el chip activo a la vista ajustando `scrollLeft` |
 | `src/pages/historial/HistorialPage.jsx` | Orden por estado + línea orientadora condicionada al origen |
 | `src/pages/historial/HistorialPage.module.css` | `.notaPatrones` |
+
+---
+
+## 🗂️ Bloque 2 — la tabla `patrones`, documentada (migración 012)
+
+**La deuda que salda:** `patrones` se creó directo en el editor de Supabase y **nunca quedó en un archivo**. Para saber qué columnas tenía había que deducirlas leyendo `crearPatron` — y ahí no aparecen ni los CHECK, ni las FK, ni la policy, que es justamente lo que importa.
+
+**No se corrió contra producción**: la tabla ya está. El archivo existe para que la forma real viva en el repo, para poder levantar un entorno nuevo idéntico, y para dejar escritas las reglas de producto que hoy solo existen como CHECK.
+
+**Escrita desde introspección real**, no deducida: `information_schema`, `pg_constraint`, `pg_indexes`, `pg_policies` y `pg_trigger`. Daniel corrió un SELECT de solo lectura que devolvió todo en un JSON.
+
+### Lo que la introspección corrigió respecto de lo que se creía
+
+| | Se creía | Es |
+|---|---|---|
+| `estado` | lo ponía siempre el cliente | tiene **`DEFAULT 'abierto'`** |
+| `orientacion_ia` | json o jsonb, sin saber | **`jsonb`** |
+| `estrategia_id` | quizá sin FK | **FK real a `estrategias`, `ON DELETE SET NULL`** |
+| Policies | dos convenciones conviviendo | **una sola, idéntica a la de `episodios`/`hitos`/`estrategias`** |
+
+### Los dos hallazgos que valían el ejercicio
+
+**1 · `patrones_regresion_deriva` — un CHECK que nadie adivinaría leyendo el front:**
+
+```sql
+CHECK (NOT (desde_cuando = 'regresion'
+            AND clasificacion = ANY (ARRAY['esperable','instalado'])))
+```
+
+Una **regresión no puede** terminar clasificada como esperable ni instalado. La regla está **dos veces a propósito**: `analizarPatron` la fuerza en el post-proceso y se la avisa al modelo antes de redactar, y este CHECK es la red por si alguien escribe la fila por otro camino. **Queda documentado porque es exactamente el tipo de cosa que alguien "arregla" en seis meses creyendo que es un bug.**
+
+**2 · Cómo funciona de verdad la protección de escritura.** La policy es `USING` por familia + `WITH CHECK (auth.uid() = user_id)`. O sea: **la base YA impide que la pareja cierre un patrón ajeno** — alcanza la fila por el `USING`, pero la fila resultante seguiría teniendo el `user_id` del autor y ahí el `WITH CHECK` la rechaza. El `.eq('user_id', user.id)` del cliente **no es la defensa**: solo convierte ese rechazo en un no-op silencioso en vez de un error.
+
+### Tres decisiones del archivo
+
+- **Los grants NO se reproducen.** `anon` y `authenticated` tienen los 7 privilegios, TRUNCATE incluido, pero eso es lo que Supabase da por defecto a toda tabla de `public`. Quien protege es la RLS, no los grants. Escribirlos daría la impresión de que alguien decidió darle TRUNCATE a `anon`, y pisaría los defaults en un entorno nuevo. Van en comentario.
+- **La policy se crea dentro de un `DO ... IF NOT EXISTS`**, no con `DROP POLICY IF EXISTS` + `CREATE`. Con el patrón habitual, correr esto en producción tiraría la policy vigente durante un instante. Así el archivo es seguro incluso corrido por accidente.
+- **Sin `COMMENT ON TABLE`.** Producción no tiene comentario; agregarlo sería el único cambio real que el archivo introduciría en prod, y contradice su propósito de documentar sin modificar.
+
+### Archivos tocados en el segundo commit (1 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `supabase/migrations/012_patrones_documentada.sql` | **NUEVO.** 3 bloques: verificación, definición idempotente, verificación de equivalencia |
+
+**Siguiente:** bloque 3 (ofrecer plan desde la lectura), que **sí necesita handoff de Claude Design** — conviene pedirlo junto con el 4, porque la lectura enriquecida es una pantalla y no dos cambios sueltos.
 
 ---
 
