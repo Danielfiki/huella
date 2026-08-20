@@ -1,5 +1,6 @@
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
+import { estadoPlan } from '../../pages/estrategias/helpers'
 import styles from './PlanDelPatron.module.css'
 
 // El pie de la lectura de un patrón, en dos estados excluyentes:
@@ -66,7 +67,15 @@ export default function PlanDelPatron({ plan, onCrear, onVer, creando = false, e
   }
 
   // ── CON PLAN: el progreso ──
-  const estado = plan.estado
+  //
+  // El estado NO viene como campo: el objeto de estrategia del estado global no
+  // tiene clave `estado`. Se deriva de los ciclos, y `estadoPlan` es el helper
+  // canónico que ya usan Estrategias y el detalle del plan.
+  //
+  // Leerlo como `plan.estado` daba `undefined`, y eso hacía que la barra se
+  // viera entera gris: la píldora caía al default "En curso" y parecía correcta,
+  // pero ningún segmento matcheaba 'activo'.
+  const estado = estadoPlan(plan)
   // El total sale del plan, no de un 4 fijo: si algún día un plan dura otra
   // cosa, la barra y el texto tienen que decir la verdad.
   const total = plan.total_semanas || TOTAL_POR_DEFECTO

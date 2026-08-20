@@ -7,7 +7,7 @@ import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import LoadingDignificado from '../estrategias/components/LoadingDignificado'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import PieCientifico from '../../components/patron/PieCientifico'
-import { usarPlanDesdePatron } from './usarPlanDesdePatron'
+import { usarPlanDesdePatron, PASOS_PLAN } from './usarPlanDesdePatron'
 import styles from './PatronPage.module.css'
 
 // Opciones de selección única. El value es el que va a la BD; el label es copy.
@@ -35,12 +35,6 @@ const PASOS_ANALISIS = [
   'Considerando la edad',
   'Buscando bibliografía pediátrica',
   'Escribiendo lo que encontramos',
-]
-const PASOS_PLAN = [
-  'Leyendo lo que registraste',
-  'Buscando bibliografía pediátrica',
-  'Adaptando a la edad de tu hijo',
-  'Escribiendo tu plan personalizado',
 ]
 
 // Header mocha idéntico en todas las fases (form, loaders y las tres salidas).
@@ -94,6 +88,7 @@ export default function PatronPage() {
   // segura de que un dia se desincronizaran.
   const {
     armarPlan,
+    pasoActual: pasoPlan,
     error: planError,
     showUpgrade,
     cerrarUpgrade,
@@ -120,7 +115,9 @@ export default function PatronPage() {
   // Avance suave de los pasos del loader mientras corre la IA.
   useEffect(() => {
     if (fase !== 'generando' && fase !== 'plan') return
-    const pasos = fase === 'plan' ? PASOS_PLAN : PASOS_ANALISIS
+    // Solo el análisis: el avance de la fase 'plan' lo lleva el hook.
+    if (fase === 'plan') return
+    const pasos = PASOS_ANALISIS
     setPasoActual(0)
     const id = setInterval(() => setPasoActual((p) => Math.min(p + 1, pasos.length - 1)), 3500)
     return () => clearInterval(id)
@@ -186,7 +183,7 @@ export default function PatronPage() {
             titulo={esPlan ? 'Estamos armando tu plan.' : 'Estamos mirando esto.'}
             sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
             pasos={esPlan ? PASOS_PLAN : PASOS_ANALISIS}
-            pasoActual={pasoActual}
+            pasoActual={esPlan ? pasoPlan : pasoActual}
             hijoEdad={hijo?.edad}
           />
         </div>

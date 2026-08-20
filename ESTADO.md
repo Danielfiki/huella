@@ -246,7 +246,7 @@
 
 ## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · bloques 1.1, 2, 3 y 4: **el patrón dejó de ser algo que se lee una vez**
 
-**3 commits.** Un ajuste del QA del bloque 1; la tabla `patrones` documentada, que cierra una deuda vieja; y los bloques 3 y 4, que son el corazón de la opción A: **la lectura ahora propone un plan, y si ya hay uno, muestra en qué va.**
+**4 commits.** Un ajuste del QA del bloque 1; la tabla `patrones` documentada, que cierra una deuda vieja; los bloques 3 y 4, que son el corazón de la opción A —**la lectura ahora propone un plan, y si ya hay uno, muestra en qué va**—; y el ajuste 3.1 salido de su QA.
 
 ### Ajuste 1.1 — la lista de patrones dejó de desorientar
 
@@ -392,6 +392,64 @@ La clasificación interna del patrón sigue **sin aparecer nunca** en pantalla.
 | `src/pages/patron/PatronPage.jsx` | Usa el hook; se le fue el armado duplicado |
 
 **Quedan los bloques 5 a 8.** El 5 (`episodios.patron_id`) es el que abre la puerta al norte B y del que dependen el 6 y el 7.
+
+---
+
+## Ajuste 3.1 — el QA destapó un bug más grande de lo que se veía (cuarto commit del día)
+
+### 🪤 Asumí un campo que no existe, y el síntoma escondía el tamaño real
+
+**Lo reportado:** con un plan activo en "Semana 1 de 4", los 4 segmentos se veían grises.
+
+**La causa:** `PlanDelPatron` leía `plan.estado`, pero **el objeto de estrategia del estado global NO TIENE esa clave**. El estado se deriva de los ciclos, y `estadoPlan()` (`pages/estrategias/helpers.js`) es el helper canónico que ya usan Estrategias y el detalle del plan.
+
+**El handoff decía que `estado` ya estaba en `state.estrategias`, y no era así.** Se implementó sobre ese supuesto sin verificarlo contra el mapeo real del contexto.
+
+**Por qué el síntoma engañaba:** `plan.estado` daba `undefined`, lo que hacía dos cosas a la vez — ningún segmento matcheaba `'activo'`, y **la píldora caía al default "En curso", que parecía correcto**. Se veía un bug de color cuando en realidad estaban rotos los tres estados.
+
+Simulado contra el helper real, viejo contra nuevo:
+
+| Caso | Antes | Ahora |
+|---|---|---|
+| Recién creado, semana 1 | `gris gris gris gris` | `TERRACOTA gris gris gris` |
+| En curso, semana 3 | `verde verde gris gris` | `verde verde TERRACOTA gris` |
+| Completado | `verde verde verde gris` | `verde verde verde verde` |
+| En pausa, semana 2 | `verde gris gris gris` | igual ✓ |
+
+Y además: en **completado** la píldora decía "En curso" y el meta "Semana 4 de 4" en vez de "Terminaste las 4 semanas"; en **pausa**, "En curso" y "Semana 2 de 4" en vez de "En pausa" y "Quedó en la semana 2". **Solo se vio la barra porque es el único estado al que el QA podía llegar.**
+
+**La regla que queda:** antes de leer un campo de un objeto del estado global, mirar el MAPEO en `HuellaContext` — no el nombre que sugiere el handoff ni lo que devuelve la tabla. Entre la fila de la base y el objeto que consume la UI hay un mapeo que agrega, quita y renombra.
+
+### El loader al crear un plan
+
+Al tocar "Crear plan de 4 semanas" desde la lectura, el botón solo cambiaba de etiqueta. **Armar un plan tarda cerca de un minuto**, y una etiqueta distinta no alcanza para decir que hay algo pasando.
+
+Se aplicó lo que la app ya hace: `LoadingDignificado` con `PASOS_PLAN`, la misma secuencia que `PatronPage` muestra al armar un plan tras el análisis. La pantalla entera pasa al loader.
+
+**Para no duplicar, `PASOS_PLAN` y el avance de los pasos se movieron al hook compartido.** Antes vivían en `PatronPage`; ahora las dos pantallas cuentan la misma secuencia sin que nadie tenga que acordarse de replicar el intervalo. `PatronPage` conserva su intervalo solo para la fase de análisis.
+
+### 🖱️ Nota verificada, sin arreglar: los chips no se arrastran con mouse en PC
+
+Reportado por Daniel. **No es un bug del código: es una limitación auto-impuesta.**
+
+- `.bar` tiene `overflow-x: auto` — el scroll existe.
+- **La barra de scroll está oculta a propósito**: `scrollbar-width: none` + `::-webkit-scrollbar { display: none }`.
+- **No hay ningún handler de arrastre** (`mousedown`, `pointerdown`, `wheel`): cero JS de scroll.
+
+Quedan trackpad de dos dedos, `Shift` + rueda, y teclado. Arrastrar con el mouse **no lo hacen solos los navegadores** — requiere JS —, y la barra que sí se podría arrastrar está escondida.
+
+**No se pudo verificar en headless** el comportamiento de la rueda vertical: Chrome suele reenviarla a un scroller horizontal, pero varía entre navegadores.
+
+**Decisión de Daniel: queda como está.** La app es mobile-first (PWA/TWA). Si algún día se quiere, son ~20 líneas de arrastre con `pointerdown/move`.
+
+### Archivos tocados en el cuarto commit (4 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/patron/PlanDelPatron.jsx` | Deriva el estado con `estadoPlan` en vez de leer un campo inexistente |
+| `src/pages/patron/PatronLecturaPage.jsx` | Pantalla de loader mientras arma el plan |
+| `src/pages/patron/usarPlanDesdePatron.js` | `PASOS_PLAN` + el avance del loader |
+| `src/pages/patron/PatronPage.jsx` | Consume los pasos del hook; su intervalo queda solo para el análisis |
 
 ---
 

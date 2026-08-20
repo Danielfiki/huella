@@ -7,7 +7,8 @@ import CerrarPatronModal from '../../components/patron/CerrarPatronModal'
 import PieCientifico from '../../components/patron/PieCientifico'
 import PlanDelPatron from '../../components/patron/PlanDelPatron'
 import UpgradeModal from '../../components/ui/UpgradeModal'
-import { usarPlanDesdePatron } from './usarPlanDesdePatron'
+import LoadingDignificado from '../estrategias/components/LoadingDignificado'
+import { usarPlanDesdePatron, PASOS_PLAN } from './usarPlanDesdePatron'
 import shared from './PatronPage.module.css'   // reusa header/bloques/cierre de Fase B
 import styles from './PatronLecturaPage.module.css'
 
@@ -44,7 +45,7 @@ export default function PatronLecturaPage() {
   const [showCerrar, setShowCerrar] = useState(false)
   // Mismo hook que usa PatronPage al salir del análisis: los cuatro pasos del
   // armado del plan viven en un solo lugar.
-  const { armarPlan, creando, error: planError, showUpgrade, cerrarUpgrade } = usarPlanDesdePatron()
+  const { armarPlan, creando, pasoActual, error: planError, showUpgrade, cerrarUpgrade } = usarPlanDesdePatron()
 
   const patron = (state.patrones || []).find((p) => p.id === id)
 
@@ -79,6 +80,27 @@ export default function PatronLecturaPage() {
       console.warn('cerrar patron falló', e)
       setShowCerrar(false)
     }
+  }
+
+  // Armando el plan: la pantalla entera pasa al loader, igual que en
+  // PatronPage. Antes solo cambiaba el texto del botón, y armar un plan tarda
+  // cerca de un minuto: un botón con otra etiqueta no alcanza para decir que
+  // hay algo pasando.
+  if (creando) {
+    return (
+      <div className={shared.page}>
+        <Header />
+        <div className={shared.body}>
+          <LoadingDignificado
+            titulo="Estamos armando tu plan."
+            sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
+            pasos={PASOS_PLAN}
+            pasoActual={pasoActual}
+            hijoEdad={state.hijo?.edad}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (

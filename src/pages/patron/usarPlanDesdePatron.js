@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 
@@ -46,6 +46,19 @@ export function construirTextoPlan(p) {
   return partes.join(' ')
 }
 
+// Los pasos del loader viven acá, junto al hook que los enciende, y no en cada
+// pantalla: las dos que ofrecen armar un plan tienen que contar lo mismo.
+export const PASOS_PLAN = [
+  'Leyendo lo que registraste',
+  'Buscando bibliografía pediátrica',
+  'Adaptando a la edad de tu hijo',
+  'Escribiendo tu plan personalizado',
+]
+
+// Cada cuánto avanza el paso visible. No mide nada real: es el ritmo con el que
+// se cuenta lo que está pasando mientras la IA trabaja.
+const MS_PASO = 3500
+
 export function usarPlanDesdePatron() {
   const navigate = useNavigate()
   const { isPro, crearPlanDesdeTexto, vincularEstrategiaAPatron } = useHuella()
@@ -53,6 +66,19 @@ export function usarPlanDesdePatron() {
   const [creando, setCreando] = useState(false)
   const [error, setError] = useState('')
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [pasoActual, setPasoActual] = useState(0)
+
+  // El avance del loader lo maneja el hook, no la pantalla: así las dos
+  // pantallas que arman un plan muestran exactamente la misma secuencia sin
+  // tener que acordarse de replicar el intervalo.
+  useEffect(() => {
+    if (!creando) { setPasoActual(0); return }
+    const id = setInterval(
+      () => setPasoActual((n) => Math.min(n + 1, PASOS_PLAN.length - 1)),
+      MS_PASO
+    )
+    return () => clearInterval(id)
+  }, [creando])
 
   // `patron` puede ser la fila guardada o el objeto recién armado del form.
   // `onAntes` deja que la pantalla que llama muestre su propio loader.
@@ -76,5 +102,5 @@ export function usarPlanDesdePatron() {
     return true
   }
 
-  return { armarPlan, creando, error, showUpgrade, cerrarUpgrade: () => setShowUpgrade(false) }
+  return { armarPlan, creando, pasoActual, error, showUpgrade, cerrarUpgrade: () => setShowUpgrade(false) }
 }
