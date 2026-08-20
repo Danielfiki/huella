@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useMemo, useEffect, lazy, Suspense, useRef } from 'react'
 import { Loader } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
@@ -71,6 +71,10 @@ export default function HistorialPage() {
     const hayPatrones = (state.patrones || []).some((p) => p.hijo_id === hijo?.id)
     return sinHistorial && hayPatrones ? 'patrones' : 'todos'
   })
+  // Se congela al montar: distingue "me trajeron acá con el filtro puesto" de
+  // "toqué el chip yo". Solo en el primer caso hace falta explicar la lista.
+  const llegoConPatrones = useRef(location.state?.filtro === 'patrones').current
+
   const [showSearch, setShowSearch] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [checkinsHechos, setCheckinsHechos] = useState(new Set())
@@ -180,14 +184,27 @@ export default function HistorialPage() {
     return `Últ. ${Math.ceil(days / 30)} meses`
   }, [todosUnificados])
 
-  // Patrones del hijo activo (abiertos y cerrados), del más reciente al más
-  // viejo por created_at. Array propio: NUNCA entra al pipeline de episodios/hitos.
+  // Patrones del hijo activo. Array propio: NUNCA entra al pipeline de
+  // episodios/hitos.
+  //
+  // ABIERTOS PRIMERO, y recién después los cerrados. Antes iban todos mezclados
+  // por fecha, y quien llega acá desde el tope de 3 —que viene justamente a
+  // cerrar uno— tenía que ir cazando cuáles seguían abiertos entre los que ya
+  // no. Dentro de cada grupo se mantiene del más reciente al más viejo.
   const patronesLista = useMemo(
     () => (state.patrones || [])
       .filter((p) => p.hijo_id === hijo?.id)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+      .sort((a, b) => {
+        const abiertoA = a.estado === 'abierto' ? 0 : 1
+        const abiertoB = b.estado === 'abierto' ? 0 : 1
+        if (abiertoA !== abiertoB) return abiertoA - abiertoB
+        return new Date(b.created_at) - new Date(a.created_at)
+      }),
     [state.patrones, hijo?.id]
   )
+
+  // Cuántos siguen abiertos: decide si se muestra la línea que orienta la lista.
+  const patronesAbiertos = patronesLista.filter((p) => p.estado === 'abierto').length
 
   const counts = useMemo(
     () => ({
@@ -289,6 +306,14 @@ export default function HistorialPage() {
             <p className={styles.emptyFilter}>Sin patrones registrados aún.</p>
           ) : (
             <div className={styles.patronesLista}>
+              {/* Solo para quien llega derivado desde el tope de 3: viene a
+                  cerrar uno y la lista sola no lo dice. Quien tocó el chip por
+                  su cuenta no necesita que le expliquen dónde está. */}
+              {llegoConPatrones && patronesAbiertos > 0 && (
+                <p className={styles.notaPatrones}>
+                  Primero los abiertos. Cierra el que ya haya cambiado.
+                </p>
+              )}
               {patronesLista.map((p) => (
                 <PatronCard
                   key={p.id}

@@ -89,3 +89,13 @@
 
 @keyframes pdfSpin { to { transform: rotate(360deg); } }
 .pdfSpin { animation: pdfSpin 0.8s linear infinite; }
+
+/* Linea que orienta la lista de patrones a quien llega derivado desde el tope
+   de 3. Es una nota, no un titulo: mismo tono que .emptyFilter, sin peso ni
+   color propio, para que no compita con las tarjetas. */
+.notaPatrones {
+  margin: 0 0 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}

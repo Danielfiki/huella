@@ -244,7 +244,44 @@
 
 ---
 
-## Cerrado HOY — miércoles 19 agosto 2026 — Dos bugs de producción · y **arrancó PATRONES VIVOS (opción A)**
+## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · ajuste 1.1: la lista de patrones dejó de desorientar
+
+**1 commit.** Ajuste chico salido del QA del bloque 1, antes de seguir con el 2. Sin backend, sin componentes nuevos, sin tokens nuevos.
+
+**El QA aprobó el bloque 1 con un hallazgo:** al caer en Momentos con el filtro de patrones desde el tope de 3, la lista confunde — mezcla abiertos y cerrados sin nada que oriente, y el chip del filtro "queda cortado a la derecha".
+
+### El chip no estaba cortado: no se veía
+
+Medido en un viewport de 390px, el chip **"Acompañas" está en x 435–548**. O sea **completamente fuera de pantalla, por 158px**. Es el quinto de siete chips en una barra con `overflow-x: auto` que nunca se desplazaba sola.
+
+Eso convertía la derivación en algo peor que un filtro invisible: quien llegaba desde el tope caía en una lista recortada **sin ver por cuál filtro**, que se lee como si la app hubiera perdido registros.
+
+**El arreglo** mueve `scrollLeft` a mano al montar y cuando cambia el filtro activo: `scrollLeft = 178` deja el chip en 257–370, visible con 20px de aire.
+
+**Por qué NO se usó `scrollIntoView`:** ese método también corrige el eje vertical, y como la barra es `sticky` terminaba moviendo la página entera. Así solo se toca el horizontal, y solo cuando hace falta. **Beneficio lateral:** también acomoda el chip que el dedo toca cuando queda a medias.
+
+### Orden y línea orientadora
+
+- **Abiertos primero, cerrados después**, y dentro de cada grupo se mantiene el orden por fecha. Los cerrados no se esconden: `PatronCard` ya los pinta atenuados y con la meta "CERRADO", así que bajarlos basta.
+- **Una línea sobre la lista**, solo si se llegó con `state.filtro === 'patrones'` **y** hay abiertos: *"Primero los abiertos. Cierra el que ya haya cambiado."* Se congela al montar, así que quien toca el chip por su cuenta no recibe una explicación que no pidió.
+
+**El copy se corrigió respecto de la propuesta inicial** ("Tus patrones abiertos…") por precisión: la lista muestra abiertos **y** cerrados, así que encabezarla con "Tus patrones abiertos" describe algo distinto de lo que hay en pantalla, con tarjetas "CERRADO" justo debajo. La versión final explica el orden que se acaba de ver y conserva la invitación a la acción.
+
+### Lo que no se pudo verificar desde acá
+
+El render comparativo del chip **no salió** (el harness quedó con las dos barras sin desplazar). La evidencia del arreglo es **la medición numérica**, que es más sólida que una foto, pero la comprobación en pantalla es del QA. Lo que sí quedó confirmado en render es la línea orientadora.
+
+### Archivos tocados (3 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/historial/FiltroChips.jsx` | Trae el chip activo a la vista ajustando `scrollLeft` |
+| `src/pages/historial/HistorialPage.jsx` | Orden por estado + línea orientadora condicionada al origen |
+| `src/pages/historial/HistorialPage.module.css` | `.notaPatrones` |
+
+---
+
+## Sesión miércoles 19 agosto 2026 — Dos bugs de producción · y **arrancó PATRONES VIVOS (opción A)**
 
 **3 commits.** Los dos primeros son bugs encontrados en producción, no features. El primero: `/invitar` mostraba iniciales en vez de fotos. El segundo, y es el grave: **en modo voz del registro, todo lo que el padre escribía con el teclado se perdía sin aviso.**
 
