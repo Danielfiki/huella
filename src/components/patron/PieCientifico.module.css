@@ -16,7 +16,5 @@
   margin: 0;
 }
 
-/* Separación mínima entre el descargo y el marco cuando vienen las dos líneas. */
-.linea + .linea {
-  margin-top: 4px;
-}
+/* El descargo y el marco van en una sola línea desde la dieta de la lectura,
+   así que ya no hay dos párrafos que separar. */

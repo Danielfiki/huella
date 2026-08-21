@@ -244,7 +244,86 @@
 
 ---
 
-## Cerrado HOY — jueves 20 agosto 2026 — PATRONES VIVOS · bloques 1.1, 2, 3 y 4: **el patrón dejó de ser algo que se lee una vez**
+## Cerrado HOY — viernes 21 agosto 2026 — LA DIETA DE LA LECTURA DEL PATRÓN: el prompt pedía brevedad en la unidad equivocada
+
+**1 commit.** Daniel detectó sobrecarga de información en `/patron/:id`: tres bloques de texto denso para un padre cansado a las 11 de la noche. Investigación previa de solo lectura, y después dos palancas — una de UI que arregla a todos, y una de prompt que arregla a los nuevos.
+
+### 🪤 La causa: el prompt limitaba ORACIONES, no palabras
+
+`analizarPatron` pedía **"2-3 oraciones"** por bloque. Eso no es un límite de largo: un modelo al que le piden dos oraciones sin tope de palabras escribe dos oraciones clínicas de 35 palabras cada una. Y `max_tokens` es 1500, así que había muchísimo espacio.
+
+**El dato que lo remató:** `analizarPatron` era **el ÚNICO prompt de su familia sin instrucción de brevedad**. Sus hermanos del mismo archivo —`analizarEpisodio`, `celebrarHito`, `generarConsejoDiario`, `analizarCierreCiclo`— todos terminan con *"Usa oraciones cortas y claras"*. Este terminaba justo después del esquema JSON, sin nada.
+
+**No es que el modelo se explayara: es que nadie le pidió que no lo hiciera.**
+
+### Lo que medía, medido de verdad
+
+Daniel corrió un SELECT sobre los 16 patrones con orientación:
+
+| Campo | Promedio real | Máximo |
+|---|---|---|
+| `que_esta_pasando` | **570 chars** (~104 palabras) | 731 |
+| `que_ayuda` | 556 | |
+| `que_lo_empeora` | 475 | |
+
+**Peor que la simulación previa** (544/420/372). Renderizado con el CSS real a 390px, la orientación sola ocupa **914px — 1,5 pantallas de iPhone**, sin contar cabecera, tarjeta del plan ni botón de cerrar.
+
+### D1 — el pie científico, en una sola línea (UI, universal)
+
+Se compararon cuatro formas midiendo el alto de cada una:
+
+| Opción | Alto |
+|---|---|
+| Hoy (descargo largo, dos párrafos) | 63px |
+| Descargo corto, dos párrafos | **63px** — no ahorra nada, sigue siendo 3 líneas |
+| **Corto, todo junto** | **42px** ✅ |
+| Corto + marco sin etiqueta | 63px, y el autor queda colgando como firma suelta |
+
+**Descargo y marco son la misma cosa** —de dónde sale esto— y separarlos en dos párrafos le daba a una nota al pie el peso de un bloque de contenido.
+
+**Peor caso verificado** (marco de dos autores): 59px, todavía por debajo de los 63 de hoy. Los dos casos heredados siguen bien: `derivar` sin descargo (26px) y patrón viejo sin marco.
+
+**El texto corto no se inventó:** es literalmente el que ya usa el pie del post-guardado. Deja de haber dos redacciones del mismo descargo en la app.
+
+**Ojo:** `PieCientifico` es compartido, así que esto **también cambia la pantalla de resultado** de un patrón recién analizado, no solo la lectura. Es deseable — si no, serían dos redacciones distintas del mismo descargo.
+
+### D2 — topes de palabras en el prompt (solo patrones nuevos)
+
+| Campo | Antes | Ahora | Real hoy |
+|---|---|---|---|
+| `que_esta_pasando` | 2-3 oraciones | **45 palabras** | ~104 |
+| `que_ayuda` | 2-3 oraciones | **45 palabras** | ~101 |
+| `que_lo_empeora` | 2-3 oraciones | **35 palabras** | ~86 |
+
+`que_lo_empeora` va más corto porque **ya es el más corto en los datos reales**: el tope acompaña la tendencia natural en vez de pelearla.
+
+Y se agregó la instrucción de brevedad que faltaba, **en la formulación exacta de la familia**, precedida de dos frases que dicen PARA QUIÉN se escribe — un tope sin motivo se cumple a regañadientes:
+
+> *"Los topes son máximos, no metas: si se dice en menos, mejor. Quien lee esto es un padre o una madre cansada, muchas veces de noche, y un párrafo denso se abandona a la mitad."*
+
+**No se tocó nada más del prompt:** estructura JSON, clasificación, lista cerrada de autores y reglas de tono quedaron intactas.
+
+### D3 descartado, y por qué eso está bien
+
+La tercera palanca evaluada era colapsar el cuerpo con "ver más" — la única que acorta los patrones **ya generados**. Daniel la descartó: los patrones abiertos reales son ~3, y **el bloque 7 del plan (el botón "Actualizar lectura") los va a acortar solos al re-analizarse**, sin backfill ni migración. **D2 y el bloque 7 se componen.**
+
+### Lo que no se puede verificar desde acá
+
+**Si el modelo respeta los topes.** Solo se ve creando un patrón nuevo en producción. Si se pasa, el siguiente paso es bajar los números o pedir el conteo explícito, no cambiar el enfoque.
+
+**Diferencia esperada:** de 914px a ~490px en la orientación. De 1,5 pantallas a 0,8.
+
+### Archivos tocados (3 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `src/components/patron/PieCientifico.jsx` | Descargo corto + descargo y marco en una sola línea |
+| `src/components/patron/PieCientifico.module.css` | Se fue la regla de separación entre los dos párrafos |
+| `src/services/anthropic.js` | Topes de palabras + la regla de extensión que faltaba |
+
+---
+
+## Sesión jueves 20 agosto 2026 — PATRONES VIVOS · bloques 1.1, 2, 3 y 4: **el patrón dejó de ser algo que se lee una vez**
 
 **4 commits.** Un ajuste del QA del bloque 1; la tabla `patrones` documentada, que cierra una deuda vieja; los bloques 3 y 4, que son el corazón de la opción A —**la lectura ahora propone un plan, y si ya hay uno, muestra en qué va**—; y el ajuste 3.1 salido de su QA.
 

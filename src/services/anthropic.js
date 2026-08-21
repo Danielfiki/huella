@@ -1474,12 +1474,14 @@ El autor DEBE salir de la lista cerrada de abajo. PROHIBIDO inventar autores. PR
 LISTA CERRADA DE AUTORES VÁLIDOS: Daniel Siegel, Bruce Perry, Ross Greene, Stuart Shanker, Gabor Maté, Adele Faber, Elaine Mazlish, Janet Lansbury, Magda Gerber, John Gottman, Bessel van der Kolk, Carlos González, John Bowlby, Gordon Neufeld, Laura Markham, Jane Nelsen, Lisa Damour, Laurence Steinberg, Alan Wolfelt, Barry Prizant, Elaine Aron, Stephen Porges, Tina Payne Bryson, Mona Delahooke, Dan Hughes, Lawrence Cohen, Peter Levine, Alfie Kohn, Jean Piaget, Lev Vygotsky, Ellyn Satter, Adele Diamond, Russell Barkley, Edward Hallowell, Tamar Chansky, Lynn Lyons, Diana Baumrind, Becky Kennedy, Haim Ginott, Stanley Greenspan, T. Berry Brazelton, Harvey Karp, Ed Tronick, Allan Schore, Jerome Kagan, Stanley Turecki, Brené Brown, Temple Grandin, Kenneth Ginsburg, Erik Erikson, Jon Kabat-Zinn, Shefali Tsabary.
 EXCEPCIÓN ACOTADA: Jonathan Haidt y Jean Twenge SOLO pueden aparecer si este patrón trata de pantallas o redes sociales en un niño o niña mayor de 10 años. En cualquier otro caso están PROHIBIDOS.
 
+REGLA DE EXTENSIÓN — DURA. Los topes de palabras de abajo son máximos, no metas: si se dice en menos, mejor. Quien lee esto es un padre o una madre cansada, muchas veces de noche, y un párrafo denso se abandona a la mitad. Prefiere la frase que se entiende de una sola pasada. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
+
 Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto antes o después. Estructura exacta:
 {
   "clasificacion": "esperable" | "instalado" | "derivar",
-  "que_esta_pasando": "2-3 oraciones que expliquen la conducta a esta edad, sin diagnosticar y sin mencionar planes ni pasos a seguir",
-  "que_ayuda": "2-3 oraciones de orientación concreta para el día a día (nunca un plan ni un producto de la app)",
-  "que_lo_empeora": "2-3 oraciones concretas de qué conviene evitar o restar",
+  "que_esta_pasando": "MAXIMO 45 PALABRAS. Explica la conducta a esta edad, sin diagnosticar y sin mencionar planes ni pasos a seguir",
+  "que_ayuda": "MAXIMO 45 PALABRAS. Orientación concreta para el día a día (nunca un plan ni un producto de la app)",
+  "que_lo_empeora": "MAXIMO 35 PALABRAS. Qué conviene evitar o restar, concreto.",
   "marco_aplicado": "Autor — concepto clave que guió esta orientación"
 }`
 
