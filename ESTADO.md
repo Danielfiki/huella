@@ -56,7 +56,12 @@
 - **`NotifBanner` se ve FEO** — desde **6 jul 2026** — pendiente de pasada de Claude Design.
 - **Título de la push muestra "from Huella"** (default del sistema, no se está seteando) — desde **6 jul 2026** — limpiar al afinar los textos reales de notificaciones.
 
-**App stores — 🟢 v3 APROBADA · PRUEBA CERRADA (Alpha) LISTA PARA RECIBIR TESTERS · TWA por Bubblewrap** (arrancó **2 jul 2026**; etapas 1-3 CERRADAS; cuenta Google Play creada **4 jul 2026**, identidad APROBADA **8 jul 2026**; app CREADA + ficha COMPLETADA **14 jul**; 11 cuestionarios 11/11 + cuenta demo + página de eliminación + prueba interna **15 jul**; **el 18 jul: `assetlinks.json` corregido con fingerprints reales + verificación TWA CONFIRMADA en tablet (sin barra) + AAB `versionCode 3` + prueba cerrada (Alpha) armada + declaraciones de contenido completas → v3 ENVIADA A REVISIÓN**; **la v3 quedó APROBADA el 18 jul 16:36** —descubierto el **24 jul** revisando Play Console, el correo nunca llegó—, **grupo de testers arreglado** (admite externos) y **flujo de tester probado de punta a punta**; **falta solo: reclutar 12 testers instalados simultáneos ≥14 días corridos** antes de producción)
+**App stores — 🟢 v3 APROBADA · PRUEBA CERRADA (Alpha) LISTA PARA RECIBIR TESTERS · TWA por Bubblewrap** (arrancó **2 jul 2026**; etapas 1-3 CERRADAS; cuenta Google Play creada **4 jul 2026**, identidad APROBADA **8 jul 2026**; app CREADA + ficha COMPLETADA **14 jul**; 11 cuestionarios 11/11 + cuenta demo + página de eliminación + prueba interna **15 jul**; **el 18 jul: `assetlinks.json` corregido con fingerprints reales + verificación TWA CONFIRMADA en tablet (sin barra) + AAB `versionCode 3` + prueba cerrada (Alpha) armada + declaraciones de contenido completas → v3 ENVIADA A REVISIÓN**; **la v3 quedó APROBADA el 18 jul 16:36** —descubierto el **24 jul** revisando Play Console, el correo nunca llegó—, **grupo de testers arreglado** (admite externos) y **flujo de tester probado de punta a punta**; **los 3 requisitos de la prueba cerrada se CUMPLIERON y el 21 ago 2026 13:11 se ENVIÓ la solicitud de acceso a producción — en revisión, Google responde en ~7 días**)
+- ⏳ **SOLICITUD DE ACCESO A PRODUCCIÓN — ENVIADA, EN REVISIÓN** — desde el **21 ago 2026 13:11** — los 3 requisitos de la prueba cerrada quedaron cumplidos. El canal de producción figura **"Inactivo"** mientras Google revisa. **Responden en ~7 días por correo al propietario de la cuenta.** No hay nada que hacer hasta que llegue esa respuesta.
+- 🔴 **SDK 36 ANTES DE LA PRÓXIMA SUBIDA — plazo 31 ago 2026** — desde **21 ago 2026** — la versión 3 (canal alpha, 18 jul) apunta a **SDK 35 y cumple HOY**, así que la solicitud en revisión no corre riesgo. Pero **desde el 31 ago 2026 toda actualización nueva a Play exige SDK 36 (Android 16)**: la próxima subida obliga a **regenerar el AAB con Bubblewrap apuntando a SDK 36**. Hay **extensión posible hasta el 1 nov 2026** si se pide. ⚠️ **SDK 36 trae reglas nuevas que sí tocan la app: sin bloqueo de orientación en pantallas grandes, y edge-to-edge obligatorio** — es lo mismo que ya avisan los 2 mensajes de Play Console sobre la versión 3, así que **se resuelven todos juntos en esa pasada**. (Verificado contra la documentación oficial de Google el 21 ago.)
+- 🔴 **VERIFICACIÓN DE DESARROLLADORES DE ANDROID — plazo 30 sep 2026** — desde **21 ago 2026** — trámite de cuenta en Play Console, **lo hace Daniel y no toca código**. Con fecha tope: conviene no dejarlo para la última semana.
+- **2 avisos de Play Console sobre edge-to-edge en la versión 3** (insets y APIs obsoletas) — desde **21 ago 2026** — **menor y sin urgencia**: se resuelven junto con la pasada a SDK 36, no antes. La notificación roja del **21 jul** es residuo previo y es **descartable**.
+
 - **Decisión (2 jul 2026): TWA por Bubblewrap, NO Capacitor.** La TWA carga `www.huella.lat` en su **mismo origen**, así que los 5 `fetch` relativos `/api/*` funcionan tal cual → **el paso de URL absolutas + CORS queda DESCARTADO para Android** (bajó a la nota de iOS futuro; solo Capacitor iOS lo necesitaría). El Web Push actual (VAPID) también funciona en TWA sin cambios. CLI usado: `@bubblewrap/cli@1.24.1` global.
 - **Etapa 1 — CERRADA (2 jul 2026, commit `ce7b2ee`):** fuentes self-hosted. Se declararon los `@font-face` locales (Fraunces + Plus Jakarta Sans, `font-display: swap`) en `src/index.css` apuntando a los `.ttf` de `/public/fonts`, se consolidó `FrauncesSplash` en la Fraunces regular, y se quitaron los `preconnect` + el stylesheet de `fonts.googleapis.com` de `index.html`. **Lighthouse producción móvil: 89** (mediana de 3 corridas; umbral TWA ≥80 superado), 0 llamadas externas de fuentes.
   - **Corrección de diagnóstico:** el plan viejo culpaba a `PDFSection` (~1.4MB) y al code-splitting, pero **`PDFSection` NO afectaba Lighthouse** — ya era un chunk **lazy**, fuera de la ruta crítica del arranque (no se descarga al abrir). El fix real que subió el score fue **solo las fuentes** (eliminar el render-blocking de Google Fonts). El bundle JS NO se tocó.
@@ -246,7 +251,7 @@
 
 ## Cerrado HOY — viernes 21 agosto 2026 — La dieta de la lectura · y **el cimiento del norte B: los momentos ya pueden pertenecer a un patrón**
 
-**2 commits.** El primero, la dieta de la lectura. El segundo, la migración 013 — corta en líneas, grande en consecuencias: **es la relación en datos que hasta hoy no existía entre un momento y un patrón.**
+**3 commits.** El primero, la dieta de la lectura. El segundo, la migración 013 — corta en líneas, grande en consecuencias: **es la relación en datos que hasta hoy no existía entre un momento y un patrón.** El tercero, este cierre. Además, **en paralelo y sin código, salió la solicitud de acceso a producción en Google Play** (detalle al final del bloque).
 
 ### La dieta de la lectura: el prompt pedía brevedad en la unidad equivocada
 
@@ -371,6 +376,50 @@ En la práctica el riesgo es nulo —los ids son UUID y la UI solo va a ofrecer 
 | `supabase/migrations/013_episodios_patron_id.sql` | **NUEVO.** 3 bloques: verificación previa con conteo, migración, verificación posterior comparando el conteo |
 
 **Quedan los bloques 6, 7 y 8.** El 6 (vincular momento a patrón al registrar) y el 7 (botón "Actualizar lectura") ya tienen su cimiento; los dos necesitan handoff de Design.
+
+## 📱 Google Play — la solicitud de producción salió hoy (trabajo paralelo de Daniel)
+
+Sin código. Verificado contra la documentación oficial de Google el mismo día.
+
+**LA NOTICIA: el 21 ago 13:11 se envió la solicitud de acceso a producción.** Los 3 requisitos de la prueba cerrada quedaron cumplidos. El canal de producción figura **"Inactivo"** mientras Google revisa, y **responden en ~7 días por correo al propietario de la cuenta**. Hasta entonces no hay nada que hacer.
+
+### El plazo que sí importa: SDK 36 antes del 31 de agosto
+
+La **versión 3** (canal alpha, subida el 18 jul) apunta a **SDK 35 y cumple HOY**, así que **la solicitud en revisión no corre ningún riesgo**.
+
+Pero **desde el 31 ago 2026 toda actualización nueva a Play exige SDK 36 (Android 16)**. Eso significa que **la próxima subida de versión, sea cual sea, obliga a regenerar el AAB con Bubblewrap apuntando a SDK 36**. Hay **extensión posible hasta el 1 nov 2026** si se pide.
+
+**SDK 36 no es solo cambiar un número:** trae reglas nuevas que tocan la app — **sin bloqueo de orientación en pantallas grandes** y **edge-to-edge obligatorio**. Y eso conecta con los **2 avisos que Play Console ya muestra sobre la versión 3** (insets y APIs obsoletas): **son el mismo trabajo**, así que se resuelven todos juntos en esa pasada y no antes.
+
+**La notificación roja del 21 jul es residuo previo — descartable.**
+
+### El otro plazo: verificación de desarrolladores, antes del 30 sep 2026
+
+Trámite de cuenta en Play Console. **Lo hace Daniel y no toca código.** Con fecha tope, así que conviene no dejarlo para la última semana.
+
+**Los cuatro puntos entraron a la cola viva**, en la sección "App stores", con sus fechas.
+
+---
+
+## ⏭️ Próxima sesión — bloque 6 de Patrones Vivos
+
+**Arranca con el bloque 6: vincular momento a patrón al registrar.**
+
+**Decisión de producto PENDIENTE DE CONFIRMAR al retomar** — está tomada pero conviene ratificarla con la cabeza fresca:
+
+> La pregunta aparece **solo si hay patrones abiertos del hijo** (opción B), **discreta**, **después del alivio** del post-guardado, y **nunca obligatoria**.
+
+El "después del alivio" no es un detalle de orden: la pantalla post-guardado está construida para que lo primero que reciba el padre sea acompañamiento, no una tarea. Una pregunta antes del alivio invierte eso.
+
+⚠️ **RECORDAR AL ESCRIBIR `patron_id`: la FK garantiza que el patrón exista, pero NO que sea de la misma familia.** La RLS de `episodios` valida quién puede tocar la fila, no a qué apunta la columna. **La validación de pertenencia la tiene que poner el cliente o un CHECK/trigger** — la migración 013 no la da. (Detalle en el bloque 5, más arriba.)
+
+**Falta el brief para Design del bloque 6.** Es el bloque que más cuidado pide de los tres que quedan, porque interviene una pantalla recién rediseñada.
+
+### Aclaración sobre un pendiente que NO existe
+
+Un resumen de chat paralelo mencionaba el **bug del modo voz** como prioridad #1. **Ese chat estaba desactualizado: el bug ya está cerrado** (commit `b6b0c16`, el del borrador compartido entre modo voz y modo chat, 19 ago). **No es un pendiente y no debe volver a la cola.**
+
+---
 
 ---
 
