@@ -244,7 +244,11 @@
 
 ---
 
-## Cerrado HOY — viernes 21 agosto 2026 — LA DIETA DE LA LECTURA DEL PATRÓN: el prompt pedía brevedad en la unidad equivocada
+## Cerrado HOY — viernes 21 agosto 2026 — La dieta de la lectura · y **el cimiento del norte B: los momentos ya pueden pertenecer a un patrón**
+
+**2 commits.** El primero, la dieta de la lectura. El segundo, la migración 013 — corta en líneas, grande en consecuencias: **es la relación en datos que hasta hoy no existía entre un momento y un patrón.**
+
+### La dieta de la lectura: el prompt pedía brevedad en la unidad equivocada
 
 **1 commit.** Daniel detectó sobrecarga de información en `/patron/:id`: tres bloques de texto denso para un padre cansado a las 11 de la noche. Investigación previa de solo lectura, y después dos palancas — una de UI que arregla a todos, y una de prompt que arregla a los nuevos.
 
@@ -320,6 +324,53 @@ La tercera palanca evaluada era colapsar el cuerpo con "ver más" — la única 
 | `src/components/patron/PieCientifico.jsx` | Descargo corto + descargo y marco en una sola línea |
 | `src/components/patron/PieCientifico.module.css` | Se fue la regla de separación entre los dos párrafos |
 | `src/services/anthropic.js` | Topes de palabras + la regla de extensión que faltaba |
+
+---
+
+## 🧱 Bloque 5 — `episodios.patron_id` (migración 013, CORRIDA EN PRODUCCIÓN)
+
+**Corrida y verificada por Daniel: 84 episodios antes, 84 después, `ya_vinculados = 0`.** Cero filas tocadas, que es exactamente lo que tenía que pasar.
+
+### Qué abre, que es lo que importa
+
+Hasta hoy **no existía ninguna relación en datos entre un momento y un patrón**. Los momentos se registraban, los patrones se registraban, y nadie sabía que el berrinche del martes era una manifestación más de "no deja el chupete".
+
+Sin esa relación no se puede decir cuántos momentos lleva un patrón, ni re-analizar la lectura con lo que pasó después de escribirla (bloque 7), ni —sobre todo— **hacer que el patrón EMERJA SOLO desde momentos repetidos, que es el norte del producto (opción B)**. Esta columna es el cimiento de los tres.
+
+### Por qué era de bajo riesgo
+
+- **Aditiva**: no altera ninguna columna existente ni toca ninguna fila.
+- **Nullable y sin default**: los episodios que ya existían quedan en NULL, que es exactamente lo que corresponde — "este momento no está vinculado a ningún patrón". **Sin backfill.**
+- **Idempotente**: correrla dos veces no cambia nada ni tira error.
+- **Sin downtime**: `ADD COLUMN` nullable sin default no reescribe la tabla en Postgres moderno.
+
+### Dos decisiones de diseño
+
+**`ON DELETE SET NULL`**, el mismo criterio que `patrones.hijo_id` y `patrones.estrategia_id`. Borrar un patrón **no puede** borrar los momentos que se le vincularon: el momento lo escribió el padre y no se pierde por borrar otra cosa. Al borrar el patrón, sus momentos vuelven a quedar sin vincular.
+
+**Índice PARCIAL (`WHERE patron_id IS NOT NULL`), no completo.** La consulta que tiene que servir es una sola: "dame los momentos de este patrón". Como la enorme mayoría de los episodios va a tener `patron_id` NULL, un índice completo guardaría un montón de entradas nulas que nadie consulta. El parcial sirve igual —Postgres lo usa cuando `patron_id = '<uuid>'`, que implica `IS NOT NULL`— a una fracción del tamaño.
+
+### RLS: NO hizo falta ninguna policy nueva
+
+Verificado contra el esquema. `episodios` tiene `family_data` FOR ALL. **Las policies de Postgres son a nivel de FILA, no de columna**, así que una columna nueva queda cubierta automáticamente por la policy que ya protege esa fila. Es la misma herencia que ocurrió al agregar `hijo_id` (migración 001) y las columnas de acción rápida (003).
+
+### ⚠️ LÍMITE CONOCIDO — leer antes de implementar el bloque 6
+
+**La FK garantiza que el patrón EXISTA, pero NO que sea de la misma familia.** Nada a nivel de base impide escribir en `patron_id` el id de un patrón ajeno: la RLS de `episodios` valida **quién puede tocar la FILA**, no **a qué apunta la columna**.
+
+En la práctica el riesgo es nulo —los ids son UUID y la UI solo va a ofrecer los patrones del hijo activo— pero **si el bloque 6 escribe esta columna, la validación de pertenencia la tiene que poner el cliente o un CHECK/trigger**. Esta migración no la da.
+
+### Aislamiento del motor de rasgos: intocado
+
+`detectarRasgos` recibe episodios e hitos y nunca lee `patrones`. Agregarle una columna a `episodios` no cambia lo que ese motor consume. **La separación sigue igual de estricta que antes.**
+
+### Archivos tocados en el segundo commit (1 + ESTADO.md)
+
+| Archivo | Qué cambió |
+|---|---|
+| `supabase/migrations/013_episodios_patron_id.sql` | **NUEVO.** 3 bloques: verificación previa con conteo, migración, verificación posterior comparando el conteo |
+
+**Quedan los bloques 6, 7 y 8.** El 6 (vincular momento a patrón al registrar) y el 7 (botón "Actualizar lectura") ya tienen su cimiento; los dos necesitan handoff de Design.
 
 ---
 
