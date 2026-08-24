@@ -132,6 +132,18 @@
 - **Rediseño visual del `UpgradeModal`** (premium; el centrado ya se resolvió) — falta la pasada estética.
 - **Tarjeta del Home "El retrato de {hijo} está creciendo / necesita unos momentos más"** — ABIERTO (14 jul 2026): sigue mostrando el estado **casi-vacío** aunque el retrato ya tiene 5 rasgos confirmados (visto con "Mateo"). **Revisar la lógica** del estado de esa tarjeta.
 
+**Producto — piezas mayores**
+- 🧠 **CEREBRO HUELLA — FASE B EN CURSO, PRIORIZADA POR DANIEL (ago 2026)** — desde **24 ago 2026** — un **cerebro 3D manipulable del hijo**. No es una pantalla suelta: es una pieza que vive en cinco lugares. **(a)** card en el Home, *"En el cerebro de {hijo}"*, como **gancho diario**; **(b)** lugar permanente en la **página del hijo**; **(c)** momento contextual dentro de la **orientación post-episodio**; **(d)** **push mensual**; **(e)** **compartible**.
+  - **Matriz de contenido: zona × lente × edad.** 6 zonas × 6 lentes — *fisiológico, psicológico, conductual, relacional, curiosidad, espejo del adulto*.
+  - **Fase A (prototipos): CERRADA (ago 2026).**
+  - **Fase B — EN CURSO (priorizada por Daniel, ago 2026):** **Design** (dirección visual + coreografía de las transiciones por edad: el cerebro **se transforma**, no solo escala) + **Code** (**modelo anatómico 3D real** de licencia abierta con regiones separadas, integración con los hijos reales, **absorción de `TarjetaCerebro`**, el Lugar) + **Editorial** (banco de la matriz a la vara de las orientaciones; fuentes Siegel, Perry, Shanker; piso: una nota por año por zona).
+  - **Fase C:** conexión con **patrones y episodios** reales, el Momento en la orientación, push mensual y compartible.
+  - **Documento completo de producto:** `docs/cerebro-huella-producto.md` — **entró al repo el 24 ago 2026** (antes vivía fuera).
+  - ✅ **DECISIÓN TOMADA — el cerebro 3D ABSORBE la `TarjetaCerebro` que ya existe** (`src/components/panel/TarjetaCerebro.jsx`, montada en `PanelPage.jsx:411`): **no se duplica**. La tarjeta de hoy es el **embrión** — pasa a alimentarse de la matriz nueva y al tocarla abre el Lugar 3D. **Un solo cerebro en toda la app.**
+  - ✅ **DECISIÓN TOMADA — la matriz cubre 0-18**, que calza con los tramos de los prompts actuales. Para **19+** (la app **no pone tope** al crear un hijo — `calcularEdad`, `src/context/HuellaContext.jsx:12`, acepta cualquier edad ≥ 0) el cerebro muestra el estado *"cerebro adulto joven — obra gruesa terminada"*, **sin romperse**.
+  - ⬜ **Decisión abierta:** el rol futuro de la **campanita del consejo de hoy** frente a la card — fusionarla o dejarla secundaria.
+  - ⏭️ **Orden de trabajo:** el cerebro va **primero**; el **bloque 6 de Patrones Vivos** (vincular momento a patrón al registrar) queda **en la cola, detrás de esto**.
+
 **Deuda de diseño**
 - **Hex hardcodeados a migrar a token:** `#FFD89C` en `HistorialHeader.module.css` (`.pdfLock`) y `white`/`#fff` en `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary` global — en la próxima pasada de Design.
 - **Escarabajo del círculo café se ve más chico que el del cuadrado verde** — el de la card "NUEVO EN SU HUELLA" (`.anticipoBicho`, PanelPage) vs el de `CTAAskHuella` (`.brandIcon`); deben verse iguales — detectado **1 jul 2026**. Diagnóstico HECHO: el círculo usa **58%** (vs 90% del cuadrado, 78% estándar de círculos) y el aire del viewBox lo agrava → se ve al ~84%. Fix propuesto: subir `.anticipoBicho` a **~69%** (iguala la caja de 36px del verde; seguro, <78%, patas no tocan el borde). **Pendiente:** aplicarlo + revisar de paso `.fotoPlaceholder` (58%, RetratoSendero) y `.circuloEscarabajoIcon` (60%, GuiaPrimerosPasos) —los otros círculos bajo 78%— para que el fix sea parejo.
@@ -401,9 +413,11 @@ Trámite de cuenta en Play Console. **Lo hace Daniel y no toca código.** Con fe
 
 ---
 
-## ⏭️ Próxima sesión — bloque 6 de Patrones Vivos
+## ⏭️ Próxima sesión — Cerebro Huella, Fase B · el bloque 6 de Patrones Vivos queda detrás
 
-**Arranca con el bloque 6: vincular momento a patrón al registrar.**
+⚠️ **ACTUALIZADO EL 24 AGO 2026: el orden cambió.** Daniel priorizó el **Cerebro Huella (Fase B)**, así que **arranca por ahí** — la pieza está documentada en `docs/cerebro-huella-producto.md` y en la cola viva (sección "Producto — piezas mayores"). **El bloque 6 de Patrones Vivos NO se descarta: queda en la cola, inmediatamente detrás del cerebro**, con todo lo de abajo todavía válido para cuando se retome.
+
+**Cuando se retome, el bloque 6: vincular momento a patrón al registrar.**
 
 **Decisión de producto PENDIENTE DE CONFIRMAR al retomar** — está tomada pero conviene ratificarla con la cabeza fresca:
 
