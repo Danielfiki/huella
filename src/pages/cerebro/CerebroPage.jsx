@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { lazy, Suspense, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import styles from './CerebroPage.module.css'
@@ -24,11 +24,47 @@ function hayWebGL() {
   }
 }
 
+// Panel de diagnóstico. Solo aparece con ?diag=1 en la URL: sirve para que un
+// dispositivo real cuente qué le pasa cuando el cerebro no se ve. No cambia
+// nada del render. Se saca cuando el bug esté cerrado.
+function PanelDiag({ datos, soportado, vitrinaRef }) {
+  const caja = vitrinaRef.current?.getBoundingClientRect()
+  const filas = [
+    ['webgl detectado', soportado ? 'si' : 'NO'],
+    ['vitrina css', caja ? `${Math.round(caja.width)}x${Math.round(caja.height)}` : '—'],
+    ['pantalla', datos?.pantalla ?? '—'],
+    ['dpr', datos?.dpr ?? '—'],
+    ['canvas css', datos?.canvasCss ?? '—'],
+    ['canvas buffer', datos?.canvasBuffer ?? '—'],
+    ['contexto', datos?.gl ?? '—'],
+    ['gpu', datos?.gpu ?? '—'],
+    ['max textura', datos?.maxTextura ?? '—'],
+    ['modelo', datos?.modelo ?? '—'],
+    ['mallas', datos?.mallas ?? '—'],
+    ['contexto perdido', datos?.contextoPerdido ? 'SI' : 'no'],
+    ['fallo', datos?.fallo || '—'],
+  ]
+  return (
+    <div className={styles.diag}>
+      {filas.map(([k, v]) => (
+        <div className={styles.diagFila} key={k}>
+          <span className={styles.diagClave}>{k}</span>
+          <span className={styles.diagValor}>{String(v)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function CerebroPage() {
   const navigate = useNavigate()
   const { state } = useHuella()
   const hijo = state.hijo
   const soportado = useMemo(hayWebGL, [])
+  const [params] = useSearchParams()
+  const diagOn = params.get('diag') === '1'
+  const [datosDiag, setDatosDiag] = useState(null)
+  const vitrinaRef = React.useRef(null)
 
   return (
     <div className={styles.page}>
@@ -46,10 +82,13 @@ export default function CerebroPage() {
         </h1>
       </div>
 
-      <div className={styles.vitrina}>
+      <div className={styles.vitrina} ref={vitrinaRef}>
+        {diagOn && (
+          <PanelDiag datos={datosDiag} soportado={soportado} vitrinaRef={vitrinaRef} />
+        )}
         {soportado ? (
           <Suspense fallback={<p className={styles.estado}>Armando el cerebro…</p>}>
-            <EscenaCerebro />
+            <EscenaCerebro onDiag={diagOn ? setDatosDiag : undefined} />
           </Suspense>
         ) : (
           // Fallback sereno: esto no es un error del que haya que disculparse,

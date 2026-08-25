@@ -102,6 +102,46 @@
   color: var(--color-text-muted);
 }
 
+/* Panel de diagnóstico (?diag=1). Va encima del canvas a propósito: si el
+   canvas no dibuja, este panel igual se ve y cuenta por qué. Temporal. */
+.diag {
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* Todo alineado a la IZQUIERDA y envolviendo. El string de la GPU es larguísimo
+   y sin espacios donde cortar: alineado a la derecha se salía de la pantalla y
+   el valor quedaba ilegible, que es justo lo único que este panel tiene que
+   lograr. Leído desde el borde izquierdo, ningún valor se pierde. */
+.diagFila {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.diagClave {
+  color: var(--color-text-muted);
+}
+
+.diagClave::after {
+  content: ': ';
+}
+
+.diagValor {
+  font-weight: 600;
+}
+
 /* Crédito y aclaración: obligatorios por la licencia CC BY del modelo y por
    la regla de producto de no insinuar que esta forma es la de un niño. */
 .pie {
