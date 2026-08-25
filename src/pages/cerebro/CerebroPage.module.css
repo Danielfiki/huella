@@ -48,7 +48,14 @@
 .vitrina {
   flex: 1;
   position: relative;
-  min-height: 0;
+  /* NO puede ser min-height: 0. El .page vive dentro del wrapper de
+     PageTransition, que tiene altura automática, así que el `min-height: 100%`
+     del .page no resuelve contra nada y el .page queda del alto de su
+     contenido. Con la vitrina en flex:1 + min-height:0 y el canvas dentro de
+     un hijo absoluto, eso la dejaba en 0px: la página cargaba con header y pie
+     visibles y el cerebro sin espacio donde dibujarse. Medido: 0.0px a 390px
+     de ancho. El alto se toma del viewport para no depender de los ancestros. */
+  min-height: 56dvh;
   margin: 10px 12px;
   border-radius: var(--radius-xl);
   overflow: hidden;
