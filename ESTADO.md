@@ -143,6 +143,13 @@
   - ✅ **DECISIÓN TOMADA — el cerebro 3D ABSORBE la `TarjetaCerebro` que ya existe** (`src/components/panel/TarjetaCerebro.jsx`, montada en `PanelPage.jsx:411`): **no se duplica**. La tarjeta de hoy es el **embrión** — pasa a alimentarse de la matriz nueva y al tocarla abre el Lugar 3D. **Un solo cerebro en toda la app.**
   - ✅ **DECISIÓN TOMADA — la matriz cubre 0-18**, que calza con los tramos de los prompts actuales. Para **19+** (la app **no pone tope** al crear un hijo — `calcularEdad`, `src/context/HuellaContext.jsx:12`, acepta cualquier edad ≥ 0) el cerebro muestra el estado *"cerebro adulto joven — obra gruesa terminada"*, **sin romperse**.
   - ⬜ **Decisión abierta:** el rol futuro de la **campanita del consejo de hoy** frente a la card — fusionarla o dejarla secundaria.
+  - ✅ **INTEGRACIÓN A LA APP — PASOS 1 A 3 COMPLETADOS Y VERIFICADOS EN PRODUCCIÓN (25 ago 2026).** `three` entró como dependencia **con lazy import** (`EscenaCerebro.jsx` es el único archivo que lo importa) → **el bundle inicial NO creció**: 840,0 → 841,8 KiB, y esos 1,8 KiB son la página, no la librería. Verificado sobre el artefacto: `WebGLRenderer` aparece **0 veces** en `index-*.js` y 6 en el chunk de la escena. El **GLB v1** (196.050 triángulos, 1,29 MB) vive en `public/modelos/cerebro.glb`. La ruta **`/cerebro` está viva en `huella.lat`**, dentro del layout protegido, con el modelo girable. **Commits: `349364e`** (la ruta), **`cf2aca8`** (fix) y **`513b4c2`** (panel de diagnóstico).
+  - 🪤 **La lección del día — el fix `cf2aca8`:** la vitrina medía **0 píxeles** y el modelo no tenía dónde dibujarse. El `.page` pedía `min-height: 100%` contra el wrapper de `PageTransition`, que tiene **altura automática**: un porcentaje contra un padre auto **no resuelve a nada**. El patrón venía copiado de `PatronPage`, donde funciona porque ese contenido tiene altura propia — ninguna página del repo usaba `flex:1` para llenar altura vertical dentro de `.page`. **No era un bug de producción ni de móvil: fallaba igual en dev y en desktop, y se coló porque el QA se hizo con `curl`, que devuelve 200 y no ve píxeles.** Arreglado con `min-height: 56dvh` en la vitrina. **De aquí en adelante, pantalla nueva se verifica con un screenshot, no con un código HTTP.**
+  - ✅ **QA MÓVIL DE DANIEL (iPhone) — TODO SANO.** `WebGL2` disponible, **GPU Apple**, el modelo carga en **682 ms**, llegan las **6 mallas** y **no hubo pérdida de contexto**. 🎯 **El "cerebro invisible" que persistía después del fix era CACHÉ DEL NAVEGADOR DEL TELÉFONO**, no un segundo defecto: el código desplegado ya era el correcto. Anotado para no volver a perseguir fantasmas: **ante un "no se ve" en móvil después de un deploy, lo primero es descartar caché.**
+  - ⏭️ **PENDIENTE INMEDIATO — PASO 4: portar la capa de producto** del prototipo congelado a la ruta real: **tap con tarjetas de zona, slider de edad con la coreografía completa, latido de la amígdala, haces director↔alarma y sombra de contacto**. Todo eso está resuelto y aprobado; es portarlo, no diseñarlo.
+  - ⏭️ **Después:** **paso 5** (edad decimal del hijo real, función nueva junto a `calcularEdad`, sin tocarla) · **paso 6** (tercer tab en `HijoPage`) · **paso 7** (QA en la tablet y decisión **GLB v1 vs v2**).
+  - 🧹 **El panel `?diag=1` (`513b4c2`) SE ELIMINA cuando el paso 4 esté estable.** Es instrumentación temporal, no una feature.
+  - 📎 **Prototipo congelado de referencia:** `cerebro-fase-b.html`, en la carpeta `z-anatomy-exploracion` del escritorio — **fuera del repo**. Es la fuente de verdad visual del paso 4.
   - ⏭️ **Orden de trabajo:** el cerebro va **primero**; el **bloque 6 de Patrones Vivos** (vincular momento a patrón al registrar) queda **en la cola, detrás de esto**.
 
 **Deuda de diseño**
@@ -262,7 +269,38 @@
 
 ---
 
-## Cerrado HOY — viernes 21 agosto 2026 — La dieta de la lectura · y **el cimiento del norte B: los momentos ya pueden pertenecer a un patrón**
+## Cerrado HOY — lunes 25 agosto 2026 — **El Cerebro Huella dejó de ser un prototipo y entró a la app**
+
+**4 commits.** El Cerebro Huella pasó de ser un HTML suelto en el escritorio a una ruta viva en producción. Además quedaron anotados dos pendientes nuevos que Daniel detectó usando la app.
+
+### Lo que entró al repo
+
+`0b8eb4c` (24 ago) dejó el documento de producto en `docs/cerebro-huella-producto.md` y cerró dos decisiones: el cerebro 3D **absorbe** la `TarjetaCerebro` que ya existía —un solo cerebro en toda la app— y la matriz cubre **0-18**, con un estado especial para 19+ porque la app no pone tope al crear un hijo.
+
+`349364e` montó la ruta **`/cerebro`**: `three` con lazy import, el GLB v1 en `public/modelos/`, detección de WebGL **antes** del import (para no bajarle 633 KiB a un dispositivo que no puede dibujar) y un fallback sereno en vez de una pantalla de error. El bundle inicial no se movió.
+
+`cf2aca8` arregló que **la vitrina medía cero**. `513b4c2` agregó el panel **`?diag=1`** para cazar lo que parecía un segundo defecto.
+
+### El modelo, que es lo que cambia la conversación
+
+Es **anatomía real**, no esferas. Sale de **BodyParts3D** (Database Center for Life Science, Japón) bajado directo del origen: 47 mallas por estructura fusionadas en **6 zonas con slugs estables** y exportadas a GLB con un pipeline **100% Node, sin Blender**. **Licencia CC BY 4.0** según la página vigente del proveedor (actualizada el 27 feb 2025), o sea **atribución sin ShareAlike** — el crédito obligatorio va visible al pie. Ojo con el detalle: las cabeceras dentro de los OBJ todavía dicen `CC BY-SA 2.1 Japan`, que es el texto viejo; **manda la página**.
+
+Y un hallazgo que cambió una decisión: **la corteza prefrontal existe como estructura propia** en BodyParts3D (`FMA242625`/`FMA242627`, tres giros por lado). Z-Anatomy no la tenía, así que ya no hace falta usar el lóbulo frontal completo como aproximación.
+
+### La lección cara del día
+
+El "cerebro invisible" tuvo **dos causas encadenadas**, y ninguna era la que parecía. La primera fue la vitrina en 0px, que **fallaba igual en dev y en desktop** y se coló porque el QA se hizo con `curl`. La segunda no era un defecto: era **caché del navegador del teléfono**. En el medio se gastó una ronda entera diagnosticando producción —artefactos byte a byte, headers, CSP, emulación móvil con DPR 3— para terminar comprobando que **el código desplegado siempre fue el correcto**.
+
+**Las dos reglas que quedan:** pantalla nueva se verifica con **un screenshot, no con un 200**; y ante un "no se ve" en móvil después de un deploy, **lo primero es descartar caché**.
+
+### Pendientes nuevos anotados
+
+- 🔴 **Recuperar contraseña no deja crear una nueva** (detectado en producción): el correo llega bien pero el botón abre la app con sesión iniciada y **nunca pide la clave nueva**. Queda una pista sin verificar: `ResetPasswordPage` **sí** escucha `PASSWORD_RECOVERY` y es el único lugar que lo hace, así que el manejador existe pero vive en `/reset-password` y el enlace probablemente aterriza en otra parte. Si se confirma, **el arreglo es de configuración, no de código**.
+- 🎨 El pendiente del **`NotifBanner`** dejó de decir "se ve FEO" y pasó a tener el diagnóstico concreto: azul genérico fuera de la paleta Mocha Mix. **Entra a la cola del próximo bloque de Design.**
+
+---
+
+## Sesión viernes 21 agosto 2026 — La dieta de la lectura · y **el cimiento del norte B: los momentos ya pueden pertenecer a un patrón**
 
 **3 commits.** El primero, la dieta de la lectura. El segundo, la migración 013 — corta en líneas, grande en consecuencias: **es la relación en datos que hasta hoy no existía entre un momento y un patrón.** El tercero, este cierre. Además, **en paralelo y sin código, salió la solicitud de acceso a producción en Google Play** (detalle al final del bloque).
 
