@@ -1,0 +1,31 @@
+/* La vitrina clara del prototipo congelado: gradiente vainilla/arena.
+   El canvas se monta acá dentro con alpha, así que este fondo es el que se ve
+   detrás del cerebro. */
+.lienzo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 78% 68% at 50% 46%,
+    var(--cerebro-vitrina-centro) 0%,
+    var(--cerebro-vitrina-medio) 45%,
+    var(--cerebro-vitrina-borde) 100%
+  );
+}
+
+.lienzo canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.estado {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

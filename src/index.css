@@ -295,6 +295,13 @@
     0 10px 26px rgba(168, 75, 40, 0.11),
     0 2px 6px rgba(42, 26, 14, 0.06);
 
+  /* Vitrina del Cerebro 3D (/cerebro). Vainilla/arena: es el fondo contra el
+     que se recorta el modelo, calibrado con Daniel en el prototipo de Fase B.
+     No se reutiliza en otras pantallas. */
+  --cerebro-vitrina-centro: #F4ECE2;
+  --cerebro-vitrina-medio:  #EFE6DA;
+  --cerebro-vitrina-borde:  #EADDCF;
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
@@ -518,6 +525,12 @@
     --shadow-tarjeta-cerebro:
       0 10px 26px rgba(0, 0, 0, 0.45),
       0 2px 6px rgba(0, 0, 0, 0.30);
+
+    /* Vitrina del Cerebro 3D en oscuro: mocha profundo, nunca negro. Los
+       colores de zona saltan igual contra este fondo. */
+    --cerebro-vitrina-centro: #4A3A30;
+    --cerebro-vitrina-medio:  #43342B;
+    --cerebro-vitrina-borde:  #382C24;
 
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);

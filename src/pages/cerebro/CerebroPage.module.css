@@ -1,0 +1,108 @@
+/* ── Página /cerebro — "El Lugar" del Cerebro Huella ──
+   Paso 1 de la integración: solo el modelo girable. Sin coreografía de edad,
+   sin tarjetas de zona, sin franja. Esos llegan en pasos siguientes.
+   El .page cancela el padding de .main del Layout, igual que /patron. */
+.page {
+  margin: -20px -20px -8px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+/* Header mocha de borde a borde, como el resto de las pantallas del flujo. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  background: var(--color-accent-mocha);
+  flex: none;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-on-mocha);
+  cursor: pointer;
+}
+
+.titulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-on-mocha);
+}
+
+/* La vitrina: el área donde vive el canvas. El fondo real lo pinta la escena
+   3D con su propio gradiente; este color es el respaldo mientras carga. */
+.vitrina {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  margin: 10px 12px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-card-medium);
+  touch-action: none;
+}
+
+.estado {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.sinWebgl {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.sinWebglTitulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sinWebglTexto {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* Crédito y aclaración: obligatorios por la licencia CC BY del modelo y por
+   la regla de producto de no insinuar que esta forma es la de un niño. */
+.pie {
+  flex: none;
+  margin: 0;
+  padding: 0 18px 14px;
+  text-align: center;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--color-text-light);
+}

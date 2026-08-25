@@ -21,6 +21,7 @@ import EstrategiaCierrePage from './pages/estrategias/EstrategiaCierrePage'
 import HistorialPage from './pages/historial/HistorialPage'
 import PerfilPage from './pages/perfil/PerfilPage'
 import HijoPage from './pages/hijo/HijoPage'
+import CerebroPage from './pages/cerebro/CerebroPage'
 import TerminosPage from './pages/legal/TerminosPage'
 import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import InvitarPage from './pages/invitar/InvitarPage'
@@ -184,6 +185,7 @@ export default function App() {
                 <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
                 <Route path="hijo"                    element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
+                <Route path="cerebro"                 element={<PageErrorBoundary><CerebroPage /></PageErrorBoundary>} />
                 <Route path="checkin/:episodioId"  element={<PageErrorBoundary><CheckinPage /></PageErrorBoundary>} />
                 <Route path="cuenta"              element={<PageErrorBoundary><CuentaPage /></PageErrorBoundary>} />
                 <Route path="*"                    element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
