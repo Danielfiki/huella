@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
@@ -256,50 +257,64 @@ export default function CerebroPage() {
         Modelo 3D: BodyParts3D © The Database Center for Life Science, CC BY 4.0
       </p>
 
-      {/* El velo y la tarjeta van en 1000: la barra de navegación está
-          encerrada en su propio contexto de apilado y los modales de la app
-          viven en ese nivel. La tarjeta va un punto más arriba que el velo. */}
-      <div
-        className={`${styles.velo} ${abierta ? styles.veloOn : ''}`}
-        onClick={cerrar}
-        aria-hidden="true"
-      />
-      <section
-        className={`${styles.tarjeta} ${abierta ? styles.tarjetaAbierta : ''}`}
-        aria-hidden={!abierta}
-      >
-        <div className={styles.asa} />
-        <button type="button" className={styles.tCerrar} onClick={cerrar} aria-label="Cerrar">
-          ×
-        </button>
-        {zona && (
-          <>
-            <div className={styles.tApodo}>{zona.apodo}</div>
-            <h2 className={styles.tNombre}>{zona.nombre}</h2>
-            <div className={styles.tMadurez}>
-              <div className={styles.tFila}>
-                <span>Qué tan formada está a esta edad</span>
-                <b ref={fichaPctRef}>—</b>
-              </div>
-              <div className={styles.barra}>
-                <span
-                  ref={fichaBarRef}
-                  style={{ '--zona-color': `var(--cerebro-zona-${zonaVista})` }}
-                />
-              </div>
-            </div>
-            <p className={styles.tBase}>{zona.base}</p>
-            <div className={styles.bloque}>
-              <span className={styles.rot}>{rotuloNota(edad)}</span>
-              <p>{porTope(zona.notas, edad)}</p>
-            </div>
-            <div className={styles.tConsejo}>
-              <span className={styles.rot}>En la práctica</span>
-              <p>{zona.consejo}</p>
-            </div>
-          </>
-        )}
-      </section>
+      {/* Portal a document.body, mismo patrón que UpgradeModal y
+          CerrarPatronModal. NO es opcional: `.pageWrap` del Layout anima la
+          entrada de cada página con `animation-fill-mode: both`, así que se
+          queda con el transform aplicado para siempre. Un ancestro con
+          transform (a) crea un contexto de apilado, y ahí el z-index 1000 de
+          la tarjeta se mide DENTRO de .pageWrap en vez de contra la raíz, así
+          que la barra de navegación le gana; y (b) se vuelve el bloque
+          contenedor del position:fixed, así que la tarjeta se movía con el
+          scroll en vez de quedarse pegada al viewport. Los dos síntomas que
+          Daniel vio en el QA salen del mismo transform heredado.
+          El velo va en el MISMO portal: si se quedara atrás, seguiría sin
+          cubrir la barra. */}
+      {createPortal(
+        <>
+          <div
+            className={`${styles.velo} ${abierta ? styles.veloOn : ''}`}
+            onClick={cerrar}
+            aria-hidden="true"
+          />
+          <section
+            className={`${styles.tarjeta} ${abierta ? styles.tarjetaAbierta : ''}`}
+            aria-hidden={!abierta}
+          >
+            <div className={styles.asa} />
+            <button type="button" className={styles.tCerrar} onClick={cerrar} aria-label="Cerrar">
+              ×
+            </button>
+            {zona && (
+              <>
+                <div className={styles.tApodo}>{zona.apodo}</div>
+                <h2 className={styles.tNombre}>{zona.nombre}</h2>
+                <div className={styles.tMadurez}>
+                  <div className={styles.tFila}>
+                    <span>Qué tan formada está a esta edad</span>
+                    <b ref={fichaPctRef}>—</b>
+                  </div>
+                  <div className={styles.barra}>
+                    <span
+                      ref={fichaBarRef}
+                      style={{ '--zona-color': `var(--cerebro-zona-${zonaVista})` }}
+                    />
+                  </div>
+                </div>
+                <p className={styles.tBase}>{zona.base}</p>
+                <div className={styles.bloque}>
+                  <span className={styles.rot}>{rotuloNota(edad)}</span>
+                  <p>{porTope(zona.notas, edad)}</p>
+                </div>
+                <div className={styles.tConsejo}>
+                  <span className={styles.rot}>En la práctica</span>
+                  <p>{zona.consejo}</p>
+                </div>
+              </>
+            )}
+          </section>
+        </>,
+        document.body
+      )}
     </div>
   )
 }

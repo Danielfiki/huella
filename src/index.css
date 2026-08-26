@@ -319,6 +319,12 @@
      prototipo ya coincidia con un token del sistema no se duplico nada: el
      mocha es --color-accent-mocha y el blanco de la tarjeta es
      --color-surface. */
+  /* El blanco de las islas del cerebro: la tarjeta de zona, el chip activo y
+     la perilla del slider. Existe aparte de --color-surface porque ese token
+     se vuelve #221A10 en oscuro, y estas piezas tienen texto en --cerebro-tinta
+     fijo: con el fondo del tema quedaba marron casi negro sobre marron casi
+     negro (contraste 1,31:1, ilegible). Con este blanco fijo son 13,08:1. */
+  --cerebro-superficie: #FFFFFF;
   --cerebro-vainilla: #F3EAE0;
   --cerebro-linea: #E7DACE;
   --cerebro-tinta: #3B2E27;

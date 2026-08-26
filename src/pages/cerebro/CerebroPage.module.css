@@ -185,12 +185,18 @@
 /* La bajada del prototipo. Allá vivía dentro del header crema, junto al
    título; acá el header es la barra mocha de la app, así que baja al cuerpo
    de la página en vez de meterse en la barra. */
+/* OJO con los tokens de acá abajo: esta bajada, el rótulo "Edad" y el valor de
+   la edad NO viven en una isla crema, viven sobre el fondo de la PÁGINA, que sí
+   cambia con el tema. Por eso van con tokens del tema y no con los --cerebro-*
+   fijos: con `--cerebro-tinta-suave` sobre el fondo oscuro daban 3,41:1, y el
+   valor de la edad con `--cerebro-mocha-osc` daba 2,69:1, o sea ilegible.
+   La regla corta: fondo fijo → texto fijo; fondo del tema → texto del tema. */
 .bajada {
   flex: none;
   margin: 10px 18px 0;
   text-align: center;
   font-size: 12px;
-  color: var(--cerebro-tinta-suave);
+  color: var(--color-text-muted);
 }
 
 /* ── La franja: "Ahora mismo en su cerebro" ──
@@ -250,17 +256,18 @@
   margin-bottom: 6px;
 }
 
+/* Sobre el fondo de la página, igual que .bajada: tokens del tema. */
 .edadLbl {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--cerebro-tinta-suave);
+  color: var(--color-text-muted);
 }
 
 .edadVal {
   font-family: var(--font-heading);
   font-size: 20px;
-  color: var(--cerebro-mocha-osc);
+  color: var(--color-text);
 }
 
 .slider {
@@ -298,7 +305,7 @@
   margin-top: -10px;
   border: 2.5px solid var(--cerebro-indigo);
   border-radius: 50%;
-  background: var(--color-surface);
+  background: var(--cerebro-superficie);
   box-shadow: var(--cerebro-sombra-perilla);
 }
 
@@ -307,7 +314,7 @@
   height: 22px;
   border: 2.5px solid var(--cerebro-indigo);
   border-radius: 50%;
-  background: var(--color-surface);
+  background: var(--cerebro-superficie);
 }
 
 /* ── Los chips de zona ── */
@@ -399,7 +406,7 @@
 }
 
 .chipOn {
-  background: var(--color-surface);
+  background: var(--cerebro-superficie);
   border-color: var(--color-accent-mocha);
   color: var(--cerebro-tinta);
   font-weight: 600;
@@ -434,7 +441,7 @@
   overflow-y: auto;
   padding: 0 20px calc(22px + env(safe-area-inset-bottom));
   border-radius: var(--radius-cta) var(--radius-cta) 0 0;
-  background: var(--color-surface);
+  background: var(--cerebro-superficie);
   box-shadow: var(--cerebro-sombra-tarjeta);
   transform: translateY(102%);
   transition: transform 0.34s cubic-bezier(0.22, 0.9, 0.3, 1);
