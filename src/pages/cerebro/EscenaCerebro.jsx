@@ -3,40 +3,29 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { ZONAS, interp, pfNorm, CRECE } from './contenidoCerebro'
 import styles from './EscenaCerebro.module.css'
 
 // ÚNICO archivo que importa three. Se carga por lazy import desde CerebroPage,
 // así que todo three vive en su propio chunk y no toca el bundle inicial.
 //
-// PASO 4 · BLOQUE A — la baseline visual.
-// Todo lo de acá está portado 1:1 del prototipo congelado cerebro-fase-b.html
-// (fuente legible: plantilla-fase-b.html, idéntica salvo el GLB inline). El
-// GLB del repo es byte a byte el mismo que el del prototipo, así que cualquier
-// diferencia visual es de este archivo, nunca del modelo.
+// PASO 4 — la escena completa, portada 1:1 del prototipo congelado
+// cerebro-fase-b.html (fuente legible: plantilla-fase-b.html, idéntica salvo
+// el GLB inline). El GLB del repo es byte a byte el mismo que el del
+// prototipo, así que cualquier diferencia visual es de este archivo.
 //
-// Lo que ENTRA en el bloque A: las seis luces, los materiales completos, la
-// silueta del vidrio, la sombra de contacto, el encuadre medido y la escena
-// congelada en los valores de 4 años.
-// Lo que NO entra todavía (bloque B, después del QA visual de Daniel): slider
-// de edad, tarjetas de zona, chips, franja "Ahora", latido de la amígdala y
-// haces director↔alarma.
+// ── El puente con React ────────────────────────────────────────────────────
+// La escena se monta UNA vez y nunca se reinicia: todo lo que cambia entra por
+// refs que el loop lee cuadro a cuadro.
+//   · edad          → prop, la mueve el slider de CerebroPage
+//   · zonaAbierta   → prop, para saber si hay que alimentar la ficha
+//   · onTapZona     → sube el slug que el raycast encontró
+//   · medidores     → refs a los <em> de los chips y a la barra de la tarjeta.
+//                     Los porcentajes los ESCRIBE el loop directo en el DOM.
+//                     Pasarlos por setState serían 60 renders por segundo de
+//                     toda la página para mover dos dígitos.
 
 const MODELO = '/modelos/cerebro.glb'
-
-// Colores de las zonas, tomados del prototipo aprobado. Viven acá y no en
-// index.css porque son valores de materiales WebGL, no estilos de la UI:
-// nunca se pintan como CSS.
-// OJO con el índigo: tiene que ser el MISMO valor que el token --cerebro-indigo
-// que llega en el bloque B, porque el slider y los haces se leen del mismo
-// color que la zona. Si cambia uno, cambian los dos.
-const COLOR_ZONA = {
-  amigdala:  '#E5743D',
-  hipocampo: '#8FA840',
-  cerebelo:  '#E8B33C',
-  tronco:    '#E04F5F',
-  frontal:   '#4A63E7',
-  corteza:   '#DDD6CD',
-}
 
 // El vidrio: neutro cálido MUY claro. El gris malva que se probó antes
 // (#B3ADB4) se veía plomizo y ensuciaba el interior. Este apenas tiñe: el
@@ -48,36 +37,29 @@ const VIDRIO_TINTE = '#DDD6CD'
 // La construcción por edad se cuenta con color, brillo y material — nunca con
 // transparencia, que la dejaba acuosa al lado de las zonas opacas.
 const GRIS_OBRA = new THREE.Color('#8E8D95')
-const INDIGO = new THREE.Color('#4A63E7')
+const INDIGO = new THREE.Color(ZONAS.frontal.color)
+// El extremo cálido del degradado de los haces: el color de la alarma.
+const ALARMA = new THREE.Color(ZONAS.amigdala.color)
 
 const MARGEN = 1.15 // aire alrededor del cerebro al encuadrar
 
-// ── La escena congelada a los 4 años ────────────────────────────────────────
-// El bloque B reemplaza estas dos constantes por el estado que mueve el
-// slider. Hasta entonces se calculan igual que en el prototipo, pero una sola
-// vez, para poder comparar contra él sin tener todavía la UI de edad.
-//
-// pfn es el recorrido de la prefrontal normalizado a 0..1: sale de
-// interp(curva de la frontal, edad) contra PF_MIN = 3 y PF_MAX = 75. La curva
-// es [[0,3],[2,10],[5,22],[8,35],[11,48],[14,62],[17,75]], y a los 4 años cae
-// entre [2,10] y [5,22]: 10 + 12 * (2/3) = 18.
-const P_BASE = (18 - 3) / (75 - 3)
-
-// El cerebro además CRECE con la edad. CRECE es
-// [[0,.78],[1,.87],[3,.93],[6,.96],[12,.99],[18,1]] y a los 4 años cae entre
-// [3,.93] y [6,.96]: .93 + .03 * (1/3). Sin esto el cerebro se ve ~6% más
-// grande que en el prototipo y el screenshot lado a lado no calza.
-const ESCALA_BASE = 0.93 + 0.03 * (1 / 3)
-
-export default function EscenaCerebro({ onDiag }) {
+export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores, onDiag }) {
   const contRef = useRef(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(false)
 
-  // El callback de diagnóstico vive en un ref para que no reinicie la escena
-  // cuando cambia la identidad de la función.
+  // Todo lo que cambia entra por refs, para que el efecto de abajo corra una
+  // sola vez y la escena no se reinicie al mover el slider.
   const diagRef = useRef(onDiag)
   diagRef.current = onDiag
+  const edadRef = useRef(edad)
+  edadRef.current = edad
+  const zonaRef = useRef(zonaAbierta)
+  zonaRef.current = zonaAbierta
+  const onTapRef = useRef(onTapZona)
+  onTapRef.current = onTapZona
+  const medidoresRef = useRef(medidores)
+  medidoresRef.current = medidores
 
   useEffect(() => {
     const cont = contRef.current
@@ -172,7 +154,9 @@ export default function EscenaCerebro({ onDiag }) {
     esc.add(contorno2)
 
     const mallas = {}
+    const conexiones = []
     let grupo = null
+    let grupoConex = null
     let silueta = null
     let sombra = null
     let texSombra = null
@@ -279,48 +263,167 @@ export default function EscenaCerebro({ onDiag }) {
       grupo.add(sombra)
     }
 
-    // ── La escena a los 4 años ───────────────────────────────────────────
-    // En el prototipo estos valores los escribe el loop de animación cuadro a
-    // cuadro, a partir de la edad del slider. Acá se aplican UNA vez con la
-    // edad congelada en 4. El bloque B los devuelve al loop tal cual están.
-    function congelarEdad4() {
-      const p = P_BASE
-
-      if (grupo) grupo.scale.setScalar(ESCALA_BASE)
-
-      // La prefrontal: SIEMPRE sólida, como las demás zonas.
-      //   color:     gris de obra → índigo, con arranque lento
-      //   emissive:  0 → .55, tardío, para que el encendido se sienta ganado
-      //   roughness: mate de niño → satinada de adolescente
-      // A los 4 años esto da un gris con apenas 12% de índigo: el director de
-      // orquesta todavía casi no existe, y ese es el punto de la pieza.
+    // ── Haces director ↔ alarma ──────────────────────────────────────────
+    // La conversación entre la prefrontal y la amígdala, que se va
+    // construyendo con los años: aparecen y se aceleran con la edad.
+    function armarConexiones() {
       const mf = mallas.frontal
-      if (mf) {
-        mf.material.opacity = 1
-        mf.material.color.copy(GRIS_OBRA).lerp(INDIGO, Math.pow(p, 1.35))
-        mf.material.emissive.copy(INDIGO)
-        mf.material.emissiveIntensity = 0.55 * Math.pow(p, 1.8)
-        mf.material.roughness = 0.88 - 0.62 * Math.pow(p, 1.1)
-      }
-
-      // La corteza de vidrio se densifica apenas con la edad. La silueta la
-      // pone el casco BackSide, no la opacidad.
-      const mc = mallas.corteza
-      if (mc) {
-        mc.material.opacity = 0.0958 + 0.025 * p
-        mc.material.emissiveIntensity = 0.03 + 0.02 * p
-      }
-
-      // La alarma: en el prototipo LATE (urgente cuando no hay director,
-      // serena cuando ya lo hay). Acá queda congelada en el punto medio de esa
-      // oscilación —onda = 0—, que es su escala base y su brillo promedio. El
-      // bloque B le devuelve el latido alrededor de exactamente este punto.
       const ma = mallas.amigdala
-      if (ma) {
-        ma.scale.copy(ma.userData.escalaBase)
-        ma.material.emissiveIntensity = 0.12 + 0.55 * (1 - p) * 0.5
+      if (!mf || !ma) return
+      const cajaF = new THREE.Box3().setFromObject(mf)
+      const cajaA = new THREE.Box3().setFromObject(ma)
+      grupoConex = new THREE.Group()
+      grupo.add(grupoConex)
+
+      const centroF = cajaF.getCenter(new THREE.Vector3())
+      const centroA = cajaA.getCenter(new THREE.Vector3())
+      const anchoF = (cajaF.max.x - cajaF.min.x) * 0.28
+      const anchoA = (cajaA.max.x - cajaA.min.x) * 0.3
+
+      for (const lado of [-1, 1]) {
+        for (let k = 0; k < 3; k++) {
+          const desvio = (k - 1) * 0.012
+          const a = new THREE.Vector3(centroF.x + lado * anchoF, centroF.y + desvio * 2, centroF.z * 0.85)
+          const b = new THREE.Vector3(centroA.x + lado * anchoA, centroA.y + desvio, centroA.z)
+          const medio = a.clone().lerp(b, 0.5)
+          medio.y += 0.07 + k * 0.018
+          medio.z += 0.03
+          const curva3 = new THREE.QuadraticBezierCurve3(
+            grupo.worldToLocal(a.clone()),
+            grupo.worldToLocal(medio.clone()),
+            grupo.worldToLocal(b.clone())
+          )
+          const pts = curva3.getPoints(38)
+          const geo = new THREE.BufferGeometry().setFromPoints(pts)
+          const cols = []
+          for (let i = 0; i < pts.length; i++) {
+            const c = INDIGO.clone().lerp(ALARMA, i / (pts.length - 1))
+            cols.push(c.r, c.g, c.b)
+          }
+          geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3))
+          const linea = new THREE.Line(
+            geo,
+            new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false })
+          )
+          linea.renderOrder = 3
+          grupoConex.add(linea)
+
+          // Halo: una segunda pasada apenas desplazada engrosa ópticamente el
+          // haz (linewidth no existe en WebGL) para que aguante contra el
+          // fondo claro.
+          const halo = new THREE.Line(
+            geo.clone(),
+            new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false })
+          )
+          halo.scale.setScalar(1.004)
+          halo.renderOrder = 2
+          grupoConex.add(halo)
+
+          // Contra vainilla un punto blanco no existe: va índigo profundo, que
+          // es el extremo oscuro del mismo degradado del haz.
+          const punto = new THREE.Mesh(
+            new THREE.SphereGeometry(0.011, 10, 8),
+            new THREE.MeshBasicMaterial({ color: 0x2e3f9e, transparent: true, opacity: 0, depthWrite: false })
+          )
+          punto.renderOrder = 4
+          grupoConex.add(punto)
+
+          conexiones.push({ linea, halo, punto, curva3, fase: (k * 0.33 + (lado > 0 ? 0.5 : 0)) % 1 })
+        }
       }
     }
+
+    // ── Estado ───────────────────────────────────────────────────────────
+    // Todo lo visual se interpola: la edad mueve un OBJETIVO y cada cuadro el
+    // estado visible corre hacia él. Así el cambio se ve como coreografía y no
+    // como un salto.
+    const edadInicial = edadRef.current
+    const obj = { pfn: pfNorm(edadInicial), escala: interp(CRECE, edadInicial), chips: {}, ficha: 0 }
+    const vis = { pfn: obj.pfn, escala: obj.escala, chips: {}, ficha: 0 }
+    Object.keys(ZONAS).forEach((s) => {
+      obj.chips[s] = interp(ZONAS[s].curva, edadInicial)
+      vis.chips[s] = obj.chips[s]
+    })
+
+    function aplicarEdad(e, deGolpe) {
+      obj.pfn = pfNorm(e)
+      obj.escala = interp(CRECE, e)
+      Object.keys(ZONAS).forEach((s) => { obj.chips[s] = interp(ZONAS[s].curva, e) })
+      const z = zonaRef.current
+      if (z && ZONAS[z]) obj.ficha = interp(ZONAS[z].curva, e)
+
+      if (deGolpe) {
+        vis.pfn = obj.pfn
+        vis.escala = obj.escala
+        vis.ficha = obj.ficha
+        Object.keys(ZONAS).forEach((s) => { vis.chips[s] = obj.chips[s] })
+      }
+    }
+
+    // Espejo de lo que ya se leyó de los props: el loop compara contra esto
+    // para saber cuándo cambió la edad o la zona abierta.
+    let edadVista = edadInicial
+    let zonaLeida = zonaRef.current
+
+    function sincronizarProps() {
+      const e = edadRef.current
+      if (e !== edadVista) {
+        edadVista = e
+        aplicarEdad(e)
+      }
+      const z = zonaRef.current
+      if (z !== zonaLeida) {
+        zonaLeida = z
+        // Al abrir una zona la ficha NO se anima desde cero: parte ya en su
+        // valor, como en el prototipo. Lo que se anima es el cambio de edad
+        // con la tarjeta abierta.
+        if (z && ZONAS[z]) {
+          obj.ficha = interp(ZONAS[z].curva, edadVista)
+          vis.ficha = obj.ficha
+        }
+      }
+    }
+
+    // ── Tap con raycast ──────────────────────────────────────────────────
+    // La deriva se detiene al tocar y vuelve sola. El umbral de 9 px separa un
+    // tap de un arrastre: sin él, girar el cerebro abriría una tarjeta.
+    const ray = new THREE.Raycaster()
+    const pt = new THREE.Vector2()
+    let quieto = null
+    let movio = false
+    let x0 = 0
+    let y0 = 0
+
+    const despertar = () => {
+      ctr.autoRotate = false
+      clearTimeout(quieto)
+      quieto = setTimeout(() => { ctr.autoRotate = true }, 3200)
+    }
+    const onDown = (e) => {
+      movio = false
+      x0 = e.clientX
+      y0 = e.clientY
+      despertar()
+    }
+    const onMove = (e) => {
+      if (Math.hypot(e.clientX - x0, e.clientY - y0) > 9) movio = true
+      despertar()
+    }
+    const onUp = (e) => {
+      despertar()
+      if (movio) return
+      const r = ren.domElement.getBoundingClientRect()
+      pt.x = ((e.clientX - r.left) / r.width) * 2 - 1
+      pt.y = -((e.clientY - r.top) / r.height) * 2 + 1
+      ray.setFromCamera(pt, cam)
+      const hit = ray
+        .intersectObjects(esc.children, true)
+        .filter((h) => h.object.isMesh && h.object.userData.slug)
+      if (hit.length && onTapRef.current) onTapRef.current(hit[0].object.userData.slug)
+    }
+    ren.domElement.addEventListener('pointerdown', onDown)
+    ren.domElement.addEventListener('pointermove', onMove)
+    ren.domElement.addEventListener('pointerup', onUp)
 
     const t0 = performance.now()
     const loader = new GLTFLoader()
@@ -335,15 +438,15 @@ export default function EscenaCerebro({ onDiag }) {
           if (!o.isMesh) return
           diag.mallas++
           const slug = o.name || (o.parent && o.parent.name) || ''
-          const color = COLOR_ZONA[slug]
-          if (!color) return
+          const z = ZONAS[slug]
+          if (!z) return
           conMaterial++
           const vidrio = slug === 'corteza'
           // Contra fondo claro las zonas internas necesitan más cuerpo: color
           // un punto más saturado, roughness baja para que capten la key, y un
           // piso de emissive para que ninguna quede apagada en su cara en
           // sombra. El vidrio no se satura: ya viene vivo.
-          const col = new THREE.Color(color)
+          const col = new THREE.Color(z.color)
           if (!vidrio) col.offsetHSL(0, 0.05, 0)
           o.material = new THREE.MeshStandardMaterial({
             color: vidrio ? new THREE.Color(VIDRIO_TINTE) : col,
@@ -362,13 +465,14 @@ export default function EscenaCerebro({ onDiag }) {
           mallas[slug] = o
         })
         esc.add(grupo)
-        // El orden importa: medir ANTES de agregar silueta y sombra, porque
-        // las dos agrandan la caja del grupo y correrían el encuadre.
+        // El orden importa: medir ANTES de agregar silueta, sombra y haces,
+        // porque los tres agrandan la caja del grupo y correrían el encuadre.
         medirModelo()
         armarSilueta()
         armarSombra()
+        armarConexiones()
         encuadrar()
-        congelarEdad4()
+        aplicarEdad(edadRef.current, true)
         setCargando(false)
         diag.modelo = `OK en ${Math.round(performance.now() - t0)}ms`
         diag.mallas = `${diag.mallas} (${conMaterial} con color)`
@@ -388,18 +492,6 @@ export default function EscenaCerebro({ onDiag }) {
       }
     )
 
-    // La deriva se detiene mientras tocas y vuelve sola.
-    let quieto = null
-    const despertar = () => {
-      ctr.autoRotate = false
-      clearTimeout(quieto)
-      quieto = setTimeout(() => {
-        ctr.autoRotate = true
-      }, 3200)
-    }
-    ren.domElement.addEventListener('pointerdown', despertar)
-    ren.domElement.addEventListener('pointermove', despertar)
-
     function onResize() {
       if (!cont.clientWidth || !cont.clientHeight) return
       cam.aspect = cont.clientWidth / cont.clientHeight
@@ -409,8 +501,91 @@ export default function EscenaCerebro({ onDiag }) {
     }
     window.addEventListener('resize', onResize)
 
+    // ── Loop ─────────────────────────────────────────────────────────────
+    const reloj = new THREE.Clock()
+
     function anim() {
       animId = requestAnimationFrame(anim)
+      sincronizarProps()
+
+      const dt = Math.min(reloj.getDelta(), 0.05)
+      const t = reloj.elapsedTime
+      const k = 1 - Math.exp(-dt * 5.5) // suavizado
+
+      vis.pfn += (obj.pfn - vis.pfn) * k
+      vis.escala += (obj.escala - vis.escala) * k
+      vis.ficha += (obj.ficha - vis.ficha) * k
+      const p = vis.pfn
+
+      if (grupo) grupo.scale.setScalar(vis.escala)
+
+      // La prefrontal: SIEMPRE sólida, como las demás zonas.
+      //   color:     gris de obra → índigo, con arranque lento
+      //   emissive:  0 → .55, tardío, para que el encendido se sienta ganado
+      //   roughness: mate de niño → satinada de adolescente
+      const mf = mallas.frontal
+      if (mf) {
+        mf.material.opacity = 1
+        mf.material.color.copy(GRIS_OBRA).lerp(INDIGO, Math.pow(p, 1.35))
+        mf.material.emissive.copy(INDIGO)
+        mf.material.emissiveIntensity = 0.55 * Math.pow(p, 1.8)
+        mf.material.roughness = 0.88 - 0.62 * Math.pow(p, 1.1)
+      }
+
+      // La corteza de vidrio se densifica apenas con la edad. La silueta la
+      // pone el casco BackSide, no la opacidad.
+      const mc = mallas.corteza
+      if (mc) {
+        mc.material.opacity = 0.0958 + 0.025 * p
+        mc.material.emissiveIntensity = 0.03 + 0.02 * p
+      }
+
+      // La alarma: urgente cuando no hay director, serena cuando ya lo hay.
+      const ma = mallas.amigdala
+      if (ma) {
+        const amp = 0.03 + 0.15 * Math.pow(1 - p, 1.25)
+        const vel = 1.5 + 3.0 * (1 - p)
+        const onda = Math.sin(t * vel)
+        ma.scale.copy(ma.userData.escalaBase).multiplyScalar(1 + onda * amp)
+        ma.material.emissiveIntensity = 0.12 + 0.55 * (1 - p) * (0.5 + 0.5 * onda)
+      }
+
+      // Los haces director ↔ alarma: aparecen y se aceleran con la edad.
+      if (conexiones.length) {
+        const vista = Math.pow(p, 1.2)
+        for (const c of conexiones) {
+          c.linea.material.opacity = 0.95 * vista
+          c.halo.material.opacity = 0.34 * vista
+          c.punto.material.opacity = 1.0 * vista
+          const u = (t * (0.14 + 0.3 * p) + c.fase) % 1
+          c.curva3.getPoint(u, c.punto.position)
+          const s = 0.7 + 0.6 * Math.sin(u * Math.PI)
+          c.punto.scale.setScalar(s)
+        }
+      }
+
+      // Los números que corren con el slider. Se escriben directo en el DOM:
+      // esto pasa 60 veces por segundo y no puede ser estado de React.
+      const med = medidoresRef.current
+      if (med) {
+        for (const s in vis.chips) {
+          vis.chips[s] += (obj.chips[s] - vis.chips[s]) * k
+          const el = med.chips?.current?.[s]
+          if (!el) continue
+          const n = Math.round(vis.chips[s])
+          if (el.textContent !== n + '%') el.textContent = n + '%'
+        }
+        if (zonaLeida) {
+          const pctEl = med.fichaPct?.current
+          const barEl = med.fichaBar?.current
+          const n = Math.round(vis.ficha)
+          if (pctEl && pctEl.textContent !== n + '%') {
+            pctEl.textContent = n + '%'
+            if (barEl) barEl.style.width = n + '%'
+          }
+        }
+      }
+
       ctr.update()
       ren.render(esc, cam)
     }
@@ -424,15 +599,16 @@ export default function EscenaCerebro({ onDiag }) {
       clearTimeout(quieto)
       window.removeEventListener('resize', onResize)
       ren.domElement.removeEventListener('webglcontextlost', onCtxLost)
-      ren.domElement.removeEventListener('pointerdown', despertar)
-      ren.domElement.removeEventListener('pointermove', despertar)
+      ren.domElement.removeEventListener('pointerdown', onDown)
+      ren.domElement.removeEventListener('pointermove', onMove)
+      ren.domElement.removeEventListener('pointerup', onUp)
       ctr.dispose()
       // La silueta COMPARTE la geometría de la corteza, así que hay que llevar
       // la cuenta de lo ya liberado: dispose() dos veces sobre la misma
       // geometría descuadra el contador de memoria de three.
       const liberadas = new Set()
       esc.traverse((o) => {
-        if (!o.isMesh) return
+        if (!o.isMesh && !o.isLine) return
         if (o.geometry && !liberadas.has(o.geometry)) {
           liberadas.add(o.geometry)
           o.geometry.dispose()

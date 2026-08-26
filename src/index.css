@@ -313,6 +313,45 @@
   --cerebro-vitrina-hairline: rgba(107, 84, 68, 0.097);
   --cerebro-vitrina-sombra: 0 10px 30px rgba(107, 84, 68, 0.18);
 
+  /* Paleta de la capa de producto del Cerebro Huella (franja, slider, chips y
+     tarjeta de zona), portada tal cual del prototipo de Fase B. Aplica la
+     misma nota de arriba: SIN override de oscuro a proposito. Donde el
+     prototipo ya coincidia con un token del sistema no se duplico nada: el
+     mocha es --color-accent-mocha y el blanco de la tarjeta es
+     --color-surface. */
+  --cerebro-vainilla: #F3EAE0;
+  --cerebro-linea: #E7DACE;
+  --cerebro-tinta: #3B2E27;
+  --cerebro-tinta-suave: #7A6659;
+  --cerebro-mocha-osc: #6E5548;
+  --cerebro-terracota: #E5743D;
+  --cerebro-velo: rgba(59, 46, 39, 0.28);
+  /* Dos radios que el sistema no tenia: la pastilla de los chips y del riel
+     del slider, y el panel del consejo de la tarjeta. Son los valores exactos
+     del prototipo. */
+  --cerebro-radio-pastilla: 99px;
+  --cerebro-radio-panel: 14px;
+  --cerebro-sombra-franja: 0 8px 28px rgba(107, 84, 68, 0.14);
+  --cerebro-sombra-tarjeta: 0 -10px 40px rgba(107, 84, 68, 0.22);
+  --cerebro-sombra-perilla: 0 2px 8px rgba(74, 99, 231, 0.35);
+
+  /* El indigo de la corteza prefrontal. Es el MISMO valor que usa el material
+     WebGL de la zona (ZONAS.frontal.color en contenidoCerebro.js): el slider y
+     los haces tienen que leerse del mismo color que la zona que representan.
+     Si cambia uno, cambia el otro. */
+  --cerebro-indigo: #4A63E7;
+
+  /* Los 6 colores de zona, gemelos de ZONAS[slug].color en
+     contenidoCerebro.js. Los usa el punto del chip y la barra de madurez de la
+     tarjeta; el 3D los toma del JS. La corteza es la unica que NO calza con su
+     material: en 3D se dibuja con el tinte del vidrio. */
+  --cerebro-zona-amigdala: #E5743D;
+  --cerebro-zona-frontal: #4A63E7;
+  --cerebro-zona-hipocampo: #8FA840;
+  --cerebro-zona-cerebelo: #E8B33C;
+  --cerebro-zona-tronco: #E04F5F;
+  --cerebro-zona-corteza: #B9A894;
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
