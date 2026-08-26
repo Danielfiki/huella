@@ -302,6 +302,17 @@
   --cerebro-vitrina-medio:  #EFE6DA;
   --cerebro-vitrina-borde:  #EADDCF;
 
+  /* Vineta corta, hairline y sombra de la vitrina, portados tal cual del
+     prototipo de Fase B: la vineta hace que la vitrina flote en vez de
+     arrancar de golpe, y el hairline le dibuja el borde. Van SIN override de
+     oscuro a proposito (decision de Daniel, 26 ago 2026): el prototipo no
+     tiene modo oscuro, asi que la Fase B se porta 1:1 y el QA en oscuro queda
+     anotado como pendiente aparte en ESTADO.md. */
+  --cerebro-vitrina-vineta-0: rgba(107, 84, 68, 0);
+  --cerebro-vitrina-vineta-1: rgba(107, 84, 68, 0.10);
+  --cerebro-vitrina-hairline: rgba(107, 84, 68, 0.097);
+  --cerebro-vitrina-sombra: 0 10px 30px rgba(107, 84, 68, 0.18);
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
@@ -531,6 +542,9 @@
     --cerebro-vitrina-centro: #4A3A30;
     --cerebro-vitrina-medio:  #43342B;
     --cerebro-vitrina-borde:  #382C24;
+    /* --cerebro-vitrina-vineta-*, -hairline y -sombra NO se redefinen aca a
+       proposito: son el valor exacto del prototipo, que solo existe en claro.
+       Ver la nota en el bloque :root. */
 
     --color-nav: #1A1208;
     --color-nav-border: rgba(255, 255, 255, 0.08);

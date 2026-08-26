@@ -60,8 +60,26 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
   background: var(--color-surface-alt);
-  box-shadow: var(--shadow-card-medium);
+  box-shadow: var(--cerebro-vitrina-sombra);
   touch-action: none;
+}
+
+/* Vineta corta y hairline: la vitrina flota, no arranca de golpe. Va encima
+   del canvas a proposito —es la capa que oscurece las esquinas del 3D— pero
+   con pointer-events en none para no comerse los gestos de giro, y sin
+   z-index para quedar por debajo del panel de ?diag=1, que va en 5. */
+.vitrina::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 88% 80% at 50% 46%,
+    var(--cerebro-vitrina-vineta-0) 55%,
+    var(--cerebro-vitrina-vineta-1) 100%
+  );
+  box-shadow: inset 0 0 0 1px var(--cerebro-vitrina-hairline);
 }
 
 .estado {
