@@ -311,17 +311,59 @@
 }
 
 /* ── Los chips de zona ── */
+
+/* El envoltorio existe solo para anclar el desvanecido del borde: si el fade
+   colgara de .zonas, que es el contenedor que scrollea, se iría con el
+   contenido en vez de quedarse pegado al borde derecho. */
+.zonasWrap {
+  position: relative;
+  flex: none;
+}
+
 .zonas {
   display: flex;
-  flex: none;
   gap: 6px;
   overflow-x: auto;
   padding: 2px 18px 8px;
   scrollbar-width: none;
+  /* EL ARREGLO DEL 26 AGO 2026 — en el teléfono la fila no se dejaba deslizar.
+     No era el layout (los 6 chips suman ~1.100px contra ~366px de vitrina, o
+     sea el overflow existe y se ven 3, que es exactamente lo que se reportó):
+     era que el gesto se lo llevaba el scroll VERTICAL de la página.
+     El prototipo no podía tener este problema porque allá `html, body` estaban
+     en `overflow: hidden` y la página no scrolleaba nunca, así que la fila era
+     lo único deslizable bajo el dedo. Acá la página sí scrollea, y iOS fija el
+     eje del gesto en los primeros píxeles: sobre una franja de 30px de alto,
+     un pulgar casi siempre entra con algo de vertical y el navegador le
+     entrega el gesto al ancestro.
+     `pan-x` declara que sobre esta fila el gesto es horizontal y punto, así
+     que deja de poder cedérselo al scroll vertical de arriba. */
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
 
 .zonas::-webkit-scrollbar {
   display: none;
+}
+
+/* La insinuación de que la fila sigue: un desvanecido hacia el fondo de la
+   página en el borde derecho. `transparent` interpola en alfa premultiplicado
+   en todos los navegadores actuales, así que no aparece la franja gris de los
+   degradados a transparente, y --color-bg ya cambia solo en modo oscuro. */
+.zonasFade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  background: linear-gradient(90deg, transparent, var(--color-bg));
+}
+
+.zonasFadeOn {
+  opacity: 1;
 }
 
 .chip {

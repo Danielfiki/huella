@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react'
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
@@ -39,11 +39,16 @@ const rotuloNota = (e) =>
 // dispositivo real cuente qué le pasa cuando el cerebro no se ve. No cambia
 // nada del render. Se saca cuando el paso 4 esté estable, o sea cuando el QA
 // del bloque B esté aprobado.
-function PanelDiag({ datos, soportado, vitrinaRef }) {
+function PanelDiag({ datos, soportado, vitrinaRef, medidaFila }) {
   const caja = vitrinaRef.current?.getBoundingClientRect()
   const filas = [
     ['webgl detectado', soportado ? 'si' : 'NO'],
     ['vitrina css', caja ? `${Math.round(caja.width)}x${Math.round(caja.height)}` : '—'],
+    // Visible x total de la fila de chips. Si el segundo numero es mayor, la
+    // fila SI es deslizable y cualquier problema es del gesto; si son iguales,
+    // el problema es de ancho y el arreglo seria otro completamente.
+    ['chips visible x total', medidaFila ? `${medidaFila.visible} x ${medidaFila.total}` : '—'],
+    ['chips scrollLeft', medidaFila ? String(medidaFila.pos) : '—'],
     ['pantalla', datos?.pantalla ?? '—'],
     ['dpr', datos?.dpr ?? '—'],
     ['canvas css', datos?.canvasCss ?? '—'],
@@ -96,6 +101,38 @@ export default function CerebroPage() {
     []
   )
 
+  // La fila de chips y su desvanecido. El fade se apaga al llegar al final:
+  // deja de ser una insinuación cuando ya no hay nada que insinuar.
+  const filaRef = useRef(null)
+  const [hayMasChips, setHayMasChips] = useState(false)
+  // Medidas de la fila, SOLO para el panel de ?diag=1. Se guardan en estado y
+  // no se leen del ref al pintar, porque si no el scrollLeft queda congelado
+  // en el valor que tenía la última vez que la página se volvió a dibujar.
+  // Con el panel encendido esto re-renderiza en cada evento de scroll; es
+  // instrumentación temporal y se va junto con el panel.
+  const [medidaFila, setMedidaFila] = useState(null)
+
+  const medirFila = useCallback(() => {
+    const el = filaRef.current
+    if (!el) return
+    // El -1 absorbe el redondeo subpíxel: sin él, en algunos zooms el final
+    // del scroll queda en 1103,6 de 1104 y el fade no se apaga nunca.
+    setHayMasChips(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+    if (diagOn) {
+      setMedidaFila({
+        visible: el.clientWidth,
+        total: el.scrollWidth,
+        pos: Math.round(el.scrollLeft),
+      })
+    }
+  }, [diagOn])
+
+  useEffect(() => {
+    medirFila()
+    window.addEventListener('resize', medirFila)
+    return () => window.removeEventListener('resize', medirFila)
+  }, [medirFila])
+
   const abrir = useCallback((slug) => {
     if (!ZONAS[slug]) return
     setZonaVista(slug)
@@ -125,7 +162,12 @@ export default function CerebroPage() {
 
       <div className={styles.vitrina} ref={vitrinaRef}>
         {diagOn && (
-          <PanelDiag datos={datosDiag} soportado={soportado} vitrinaRef={vitrinaRef} />
+          <PanelDiag
+            datos={datosDiag}
+            soportado={soportado}
+            vitrinaRef={vitrinaRef}
+            medidaFila={medidaFila}
+          />
         )}
         {soportado ? (
           <Suspense fallback={<p className={styles.estado}>Armando el cerebro…</p>}>
@@ -179,29 +221,32 @@ export default function CerebroPage() {
         />
       </div>
 
-      <div className={styles.zonas}>
-        {Object.entries(ZONAS).map(([slug, z]) => (
-          <button
-            key={slug}
-            type="button"
-            className={`${styles.chip} ${abierta && zonaVista === slug ? styles.chipOn : ''}`}
-            onClick={() => abrir(slug)}
-          >
-            {/* El color de zona entra como referencia al token gemelo, nunca
-                como hex suelto en el JSX. */}
-            <b
-              className={styles.chipPunto}
-              style={{ '--zona-color': `var(--cerebro-zona-${slug})` }}
-            />
-            {z.nombre}{' '}
-            <em
-              className={styles.chipPct}
-              ref={(el) => { chipsRef.current[slug] = el }}
+      <div className={styles.zonasWrap}>
+        <div className={styles.zonas} ref={filaRef} onScroll={medirFila}>
+          {Object.entries(ZONAS).map(([slug, z]) => (
+            <button
+              key={slug}
+              type="button"
+              className={`${styles.chip} ${abierta && zonaVista === slug ? styles.chipOn : ''}`}
+              onClick={() => abrir(slug)}
             >
-              —
-            </em>
-          </button>
-        ))}
+              {/* El color de zona entra como referencia al token gemelo, nunca
+                  como hex suelto en el JSX. */}
+              <b
+                className={styles.chipPunto}
+                style={{ '--zona-color': `var(--cerebro-zona-${slug})` }}
+              />
+              {z.nombre}{' '}
+              <em
+                className={styles.chipPct}
+                ref={(el) => { chipsRef.current[slug] = el }}
+              >
+                —
+              </em>
+            </button>
+          ))}
+        </div>
+        <div className={`${styles.zonasFade} ${hayMasChips ? styles.zonasFadeOn : ''}`} />
       </div>
 
       <p className={styles.pie}>

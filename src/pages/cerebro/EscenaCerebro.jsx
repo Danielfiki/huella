@@ -41,7 +41,21 @@ const INDIGO = new THREE.Color(ZONAS.frontal.color)
 // El extremo cálido del degradado de los haces: el color de la alarma.
 const ALARMA = new THREE.Color(ZONAS.amigdala.color)
 
-const MARGEN = 1.15 // aire alrededor del cerebro al encuadrar
+// Aire alrededor del cerebro al encuadrar. Bajó de 1.15 a 0.95 el 26 ago 2026:
+// `radioModelo` es la media diagonal de la CAJA del modelo, o sea el radio de
+// una esfera que el cerebro nunca llena —su ancho es el 87,7% de ese diámetro
+// y su alto apenas el 48%—, así que 1.15 encima de eso acumulaba dos holguras
+// y dejaba el cerebro chico justo en las edades tempranas, que es donde están
+// casi todos los hijos de los usuarios. Con 0.95 el cerebro pasa a ocupar el
+// 87% del ancho de la vitrina a los 4 años (antes 72%) y el 92% a los 18, en
+// el ángulo de giro MÁS desfavorable (`hypot(X, Z)`, que la deriva sí alcanza
+// porque da la vuelta completa). O sea: no se corta, y queda 8% de aire.
+//
+// Esto NO toca la curva CRECE: MARGEN mueve la distancia de la cámara y CRECE
+// escala el modelo, son multiplicadores independientes. La proporción se
+// conserva —a los 0 años el cerebro sigue siendo el 78% del de los 18— y todo
+// el rango crece parejo, que era la condición del ajuste.
+const MARGEN = 0.95
 
 export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores, onDiag }) {
   const contRef = useRef(null)
