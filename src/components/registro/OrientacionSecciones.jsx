@@ -22,6 +22,33 @@ import styles from './OrientacionSecciones.module.css'
 
 const TONOS = [styles.puntoMocha, styles.puntoVerde, styles.puntoNeutro]
 
+// Letra chica que a veces escribe el MODELO al final de la orientación, y que
+// esta pantalla ya pone por su cuenta (el `.disclaimer` de más abajo). Sin este
+// filtro el mismo descargo se lee dos veces seguidas: una dentro del texto y
+// otra fuera. Está documentado en `PieCientifico.jsx` — "en los episodios esta
+// misma frase la escribe el modelo (va pedida en el prompt)".
+//
+// El prompt ya dejó de pedirla, así que esto cubre dos casos que el prompt no
+// alcanza: los episodios generados antes del arreglo, y que el modelo la
+// escriba igual por inercia del marco científico.
+//
+// También descarta la línea de "Marco aplicado": en episodios no se pide (es un
+// campo de patrones), pero si el modelo la agrega sola es letra chica académica
+// que debe quedar DESPUÉS del enlace, no empujarlo hacia abajo.
+function esLetraChicaDelModelo(linea) {
+  const l = (linea || '').normalize('NFC').trim().toLowerCase()
+  if (!l) return false
+
+  if (l.startsWith('marco aplicado')) return true
+
+  // Las DOS condiciones juntas, nunca una sola: "no es un diagnóstico" a secas
+  // podría ser una frase legítima del cuerpo, y "evidencia" también. Es la
+  // combinación la que identifica al descargo.
+  const niegaDiagnostico = l.includes('no constituye un diagn') || l.includes('no es un diagn')
+  const hablaDelRespaldo = l.includes('evidencia') || l.includes('orientacion') || l.includes('orientación')
+  return niegaDiagnostico && hablaDelRespaldo
+}
+
 function partirEnSecciones(texto) {
   const secciones = []
   let actual = null
@@ -33,6 +60,7 @@ function partirEnSecciones(texto) {
       continue
     }
     if (!linea.trim()) continue
+    if (esLetraChicaDelModelo(linea)) continue
     // Texto suelto antes del primer título: se guarda igual, sin título, para
     // no perder nada de lo que el modelo escribió.
     if (!actual) {
@@ -75,9 +103,11 @@ export default function OrientacionSecciones({ texto, zona = null }) {
         </section>
       ))}
 
-      {/* El enlace cierra la orientacion y va ANTES del descargo: el descargo
-          es el pie de la pieza entera, no una seccion mas que el enlace pueda
-          empujar hacia abajo. */}
+      {/* El enlace va ANTES de toda la letra chica — el descargo de acá abajo, y
+          cualquier cierre académico que el modelo haya escrito y que
+          `esLetraChicaDelModelo` ya sacó de las secciones. Las referencias
+          quedan al final, después del enlace: es lo que el QA de Daniel pidió
+          cuando el enlace aparecía camuflado debajo de ellas. */}
       {zona && <EnlaceZona zona={zona} />}
 
       <p className={styles.disclaimer}>

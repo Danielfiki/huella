@@ -1081,7 +1081,9 @@ Qué hacer ahora
 Qué evitar
 1. [cosa a evitar y por qué en 1 línea, específica para la edad]
 
-Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
+NO ESCRIBAS NINGÚN DESCARGO. Nada de "esta orientación se basa en evidencia del desarrollo infantil", nada de "no constituye un diagnóstico clínico", nada de "Marco aplicado" ni de citar autores al cierre. La app ya muestra ese descargo por su cuenta, fuera de tu texto: si además lo escribes tú, el padre lee la misma letra chica dos veces seguidas. El TEXTO DE LA ORIENTACIÓN termina en la última línea de "Qué evitar" (después va una línea de metadata que se te pide más abajo, y que no es parte de la orientación).
+
+Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
 
 ÚLTIMA LÍNEA DE TU RESPUESTA, SIEMPRE. Después de todo lo anterior, en una línea suelta y aparte, escribe exactamente:
 Zona del cerebro: slug

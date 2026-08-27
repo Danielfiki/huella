@@ -1,50 +1,67 @@
 /* El enlace de cierre de la orientacion. Todo sale de tokens de index.css.
 
-   Deliberadamente mas callado que `.ctaCerebro` del Home: sin fondo, sin borde,
-   sin latido y con tipografia de cuerpo. Lo unico que lo distingue del parrafo
-   de arriba es el punto de color de la zona y el chevron, los dos chicos. */
+   Misma familia que `.ctaCerebro` del Home: fondo suave, --radius-md, padding
+   comodo de tap y el punto latiendo. Lo que cambia es donde aparece — alla
+   invita a entrar, aca cierra algo que el padre ya termino de leer. */
 
 .enlace {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  padding: 4px 0 0;
+  /* El margen propio lo despega del ultimo parrafo de seccion: sin esto la
+     fila se leia pegada al texto y volvia a parecer parte de el. */
+  margin-top: 6px;
+  padding: 12px 14px;
   border: none;
-  background: none;
-  color: var(--color-text-muted);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
   font-family: var(--font-family);
-  font-size: 13px;
-  line-height: 1.55;
-  text-align: left;
   cursor: pointer;
 }
 
-/* El global `button:active` baja a 0.93, que en una fila ancha se lee como un
+/* El global `button:active` baja a 0.93, que en una fila ancha se ve como un
    salto. Un class+pseudo gana en especificidad al element+pseudo — misma
    correccion que ya se hizo en el CTA del Home. */
 .enlace:active {
-  opacity: 0.65;
-  transform: none;
+  transform: scale(0.985);
 }
 
-/* Mismo tamaño que el punto de los titulos de seccion: la fila de cierre pesa
-   lo mismo que las que ya venia leyendo. El color lo pone el JSX con el token
-   de la zona, porque cual token es solo se sabe en tiempo de ejecucion. */
+/* Mismo latido que el CTA del Home, y a proposito: los dos dicen "hay algo
+   vivo al otro lado". Aca el color no es fijo — lo pone el JSX con el token de
+   la zona, porque cual zona es solo se sabe en tiempo de ejecucion.
+   Los keyframes se repiten porque los modules los scopean. */
 .punto {
-  width: 6px;
-  height: 6px;
+  flex: none;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  flex-shrink: 0;
+  animation: latirZona 2.2s ease-in-out infinite;
 }
 
-/* Sin `flex: 1`: si el texto se estirara, el chevron se iria al borde derecho
-   de la pantalla y la fila dejaria de leerse como una sola cosa. */
+@keyframes latirZona {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+/* Sin `flex: 1`: si el texto se estirara a todo el ancho, el bloque volveria a
+   quedar alineado a la izquierda por dentro y el centrado no se notaria. */
 .texto {
-  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .flecha {
   flex: none;
-  color: var(--color-text-light);
+  color: var(--color-text-muted);
+}
+
+/* El CTA del Home no lleva esta guarda; aca si, que es lo correcto y ademas lo
+   que ya hacen las otras piezas de esta pantalla (AlivioHuella, secciones). */
+@media (prefers-reduced-motion: reduce) {
+  .punto { animation: none; opacity: 1; }
 }
