@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Escarabajo from '../ui/Escarabajo'
 import {
@@ -240,10 +240,16 @@ export function TarjetaCerebro({
 
       {/* La entrada al Cerebro Huella. Va al pie y en los cuatro estados: es
           especialmente valiosa en "cero" y "pobre", donde la tarjeta tiene
-          poco que mostrar y esto le da al papá algo real que mirar. */}
+          poco que mostrar y esto le da al papá algo real que mirar.
+          El copy nombra las tres acciones —tocarlo, girarlo, verlo crecer—
+          porque la pieza es manipulable y eso no se adivina desde afuera. */}
       {onIrAlCerebro && (
-        <button type="button" className={styles.enlaceCerebro} onClick={onIrAlCerebro}>
-          Conoce el cerebro de {nombreHijo} por dentro →
+        <button type="button" className={styles.ctaCerebro} onClick={onIrAlCerebro}>
+          <span className={styles.ctaPunto} aria-hidden="true" />
+          <span className={styles.ctaTexto}>
+            Mira su cerebro por dentro — tócalo, gíralo, velo crecer
+          </span>
+          <ChevronRight className={styles.ctaFlecha} size={18} aria-hidden="true" />
         </button>
       )}
 

@@ -261,31 +261,69 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* ── El enlace al Cerebro Huella ──
-   Vive al pie de la tarjeta y aparece en los CUATRO estados. Es la unica
-   entrada al cerebro 3D desde el Home, y va aca adentro en vez de en una card
-   propia porque esta tarjeta ya se llama "el cerebro de {hijo}": dos tarjetas
-   hablando del cerebro del mismo hijo en la misma pantalla serian la
-   duplicacion que la decision del 24 ago pidio evitar.
+
+/* ── El CTA al Cerebro Huella ──
+   Mini fila tappeable al pie de la tarjeta, presente en los CUATRO estados.
+   Es la unica entrada al cerebro 3D desde el Home, y va aca adentro en vez de
+   en una card propia porque esta tarjeta ya se llama "el cerebro de {hijo}":
+   dos tarjetas hablando del cerebro del mismo hijo en la misma pantalla
+   serian la duplicacion que la decision del 24 ago pidio evitar.
+
    Es permanente y no se puede descartar. Una X lo convertiria en una tarea
    pendiente, y si desapareciera tras la primera visita la pieza quedaria
-   inencontrable justo para quien vuelve semanas despues buscandola. */
-.enlaceCerebro {
-  display: inline-flex;
+   inencontrable justo para quien vuelve semanas despues buscandola.
+
+   Contraste medido en los dos modos (regla del 26 ago): el texto da 13,32:1
+   en claro y 13,10:1 en oscuro, y la flecha 4,61:1 y 6,82:1. El punto indigo
+   queda en 3,95:1 y 3,06:1, que alcanza porque es una vinieta decorativa y no
+   texto — ademas late, asi que se hace ver. */
+.ctaCerebro {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  width: 100%;
   margin-top: 14px;
-  padding: 0;
-  background: none;
+  padding: 12px 14px;
   border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
   font-family: var(--font-family);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-primary);
-  cursor: pointer;
   text-align: left;
+  cursor: pointer;
 }
 
-.enlaceCerebro:hover {
-  color: var(--color-primary-dark);
+/* El global `button:active` baja a 0.93, que en una fila ancha se ve como un
+   salto. Un class+pseudo gana en especificidad al element+pseudo. */
+.ctaCerebro:active {
+  transform: scale(0.985);
+}
+
+/* Mismo latido que el punto de la franja "Ahora mismo" del cerebro, pero en
+   indigo: alla anuncia lo que pasa ahora, aca anuncia que hay algo vivo al
+   otro lado. Los keyframes se repiten porque los modules los scopean. */
+.ctaPunto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cerebro-indigo);
+  animation: latirCta 2.2s ease-in-out infinite;
+}
+
+@keyframes latirCta {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+.ctaTexto {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ctaFlecha {
+  flex: none;
+  color: var(--color-text-muted);
 }

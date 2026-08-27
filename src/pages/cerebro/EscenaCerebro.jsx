@@ -57,6 +57,12 @@ const ALARMA = new THREE.Color(ZONAS.amigdala.color)
 // el rango crece parejo, que era la condición del ajuste.
 const MARGEN = 0.95
 
+// El estado "en reposo" de OrbitControls (su `_STATE.NONE`, que vale -1). No se
+// exporta desde la librería, así que se escribe acá con nombre propio. Solo se
+// usa para devolver el control al reposo cuando no queda ningún dedo apoyado,
+// nunca en medio de un gesto, así que es una operación segura.
+const ESTADO_REPOSO = -1
+
 export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores }) {
   const contRef = useRef(null)
   const [cargando, setCargando] = useState(true)
@@ -374,22 +380,43 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     let x0 = 0
     let y0 = 0
 
+    // Los dedos que están efectivamente apoyados sobre el canvas. Sin esto,
+    // `pointermove` llega también cuando un puntero solo PASA por encima —el
+    // hover del mouse, o un dedo que cruza la vitrina— y apagaba la deriva sin
+    // que hubiera ninguna interacción real. En el tab de HijoPage eso pasa
+    // mucho más que en /cerebro, porque la vitrina ocupa casi toda la pantalla
+    // y tiene `touch-action: none`, así que se queda con esos gestos.
+    const punteros = new Set()
+
     const despertar = () => {
       ctr.autoRotate = false
       clearTimeout(quieto)
       quieto = setTimeout(() => { ctr.autoRotate = true }, 3200)
     }
+    const soltar = (e) => { punteros.delete(e.pointerId) }
+
     const onDown = (e) => {
+      punteros.add(e.pointerId)
       movio = false
       x0 = e.clientX
       y0 = e.clientY
       despertar()
     }
     const onMove = (e) => {
+      // Solo cuenta como interacción si ESE puntero está apoyado.
+      if (!punteros.has(e.pointerId)) return
       if (Math.hypot(e.clientX - x0, e.clientY - y0) > 9) movio = true
       despertar()
     }
+    // Un gesto puede terminar sin `pointerup`: el sistema lo cancela, o el
+    // elemento pierde la captura del puntero. Si no lo recogemos, el dedo
+    // queda "apoyado" para siempre y la deriva no vuelve nunca.
+    const onCancel = (e) => {
+      soltar(e)
+      despertar()
+    }
     const onUp = (e) => {
+      soltar(e)
       despertar()
       if (movio) return
       const r = ren.domElement.getBoundingClientRect()
@@ -404,6 +431,8 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     ren.domElement.addEventListener('pointerdown', onDown)
     ren.domElement.addEventListener('pointermove', onMove)
     ren.domElement.addEventListener('pointerup', onUp)
+    ren.domElement.addEventListener('pointercancel', onCancel)
+    ren.domElement.addEventListener('lostpointercapture', onCancel)
 
     const loader = new GLTFLoader()
     loader.setMeshoptDecoder(MeshoptDecoder)
@@ -554,6 +583,17 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
         }
       }
 
+      // Centinela de la deriva. OrbitControls SOLO aplica el giro automático
+      // cuando está en reposo: `if (this.autoRotate && this.state === NONE)`.
+      // Si un gesto termina sin su `pointerup` el control se queda atascado en
+      // ROTATE, y entonces la deriva no vuelve NUNCA aunque `autoRotate` valga
+      // true — que es exactamente el síntoma que se vio al volver al tab.
+      // Cuando no queda ningún dedo apoyado, el reposo es el único estado
+      // correcto, así que se lo devolvemos.
+      if (punteros.size === 0 && ctr.state !== ESTADO_REPOSO) {
+        ctr.state = ESTADO_REPOSO
+      }
+
       ctr.update()
       ren.render(esc, cam)
     }
@@ -570,6 +610,8 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
       ren.domElement.removeEventListener('pointerdown', onDown)
       ren.domElement.removeEventListener('pointermove', onMove)
       ren.domElement.removeEventListener('pointerup', onUp)
+      ren.domElement.removeEventListener('pointercancel', onCancel)
+      ren.domElement.removeEventListener('lostpointercapture', onCancel)
       ctr.dispose()
       // La silueta COMPARTE la geometría de la corteza, así que hay que llevar
       // la cuenta de lo ya liberado: dispose() dos veces sobre la misma
