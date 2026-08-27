@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useStat
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { useHuella } from '../../context/HuellaContext'
+import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
 import { ZONAS, AHORA, porTope } from './contenidoCerebro'
 import styles from './CerebroPage.module.css'
 
@@ -12,10 +12,19 @@ import styles from './CerebroPage.module.css'
 // estática, ese ahorro se pierde.
 const EscenaCerebro = lazy(() => import('./EscenaCerebro'))
 
-// Edad de arranque. El paso 5 la reemplaza por la edad real del hijo (función
-// decimal nueva, junto a calcularEdad y sin tocarla); hasta entonces el slider
-// parte donde partía el prototipo.
-const EDAD_INICIAL = 4
+// Edad de respaldo, para cuando no hay forma de saber la del hijo. Es donde
+// partía el prototipo.
+const EDAD_POR_DEFECTO = 4
+
+// El slider cubre 0-18, que es el rango de la matriz de contenido.
+const EDAD_MIN = 0
+const EDAD_MAX = 18
+const acotar = (e) => Math.min(EDAD_MAX, Math.max(EDAD_MIN, e))
+
+// Desde esta edad se dejan de decir los meses. Bajo los 6 los meses son
+// información real —hay mundo entre 2 años y 2 años y 10 meses— y los papás
+// los dicen; de la edad escolar en adelante nadie dice "9 años y 4 meses".
+const EDAD_SIN_MESES = 6
 
 // Se pregunta ANTES de cargar el chunk: si el dispositivo no puede dibujar,
 // no tiene sentido bajarle 600 KB de librería 3D.
@@ -31,10 +40,34 @@ function hayWebGL() {
   }
 }
 
-// El rótulo de la edad, con los dos casos especiales de los primeros años.
-const rotuloEdad = (e) => (e === 0 ? '0-1 año' : e === 1 ? '1 año' : `${e} años`)
-const rotuloNota = (e) =>
-  e === 0 ? 'Entre los 0 y 1 año' : e === 1 ? 'Al año' : `A los ${e} años`
+// El rótulo de la edad. `real` distingue la edad verdadera del hijo del valor
+// que dejó el usuario al arrastrar: la primera se dice con meses, como la
+// diría un papá; la segunda usa el formato de siempre.
+//
+// La bandera es necesaria y no se puede deducir del número: un recién nacido
+// da 0 y un hijo que cumplió años justo hoy da un entero exacto, así que por
+// valor serían indistinguibles de un slider arrastrado.
+function rotuloEdad(e, real) {
+  if (!real) {
+    return e === 0 ? '0-1 año' : e === 1 ? '1 año' : `${e} años`
+  }
+  const meses = Math.round(e * 12)
+  if (meses <= 0) return 'recién nacido'
+  if (meses < 12) return meses === 1 ? '1 mes' : `${meses} meses`
+
+  const anios = Math.floor(meses / 12)
+  const resto = meses % 12
+  const enAnios = `${anios} ${anios === 1 ? 'año' : 'años'}`
+  if (anios >= EDAD_SIN_MESES || resto === 0) return enAnios
+  return `${enAnios} y ${resto === 1 ? '1 mes' : `${resto} meses`}`
+}
+
+// El rótulo de la tarjeta. Va contra la edad en años cumplidos: con la edad
+// real sin redondear escribiría "A los 4.58 años".
+function rotuloNota(e) {
+  const a = Math.floor(e)
+  return a === 0 ? 'Entre los 0 y 1 año' : a === 1 ? 'Al año' : `A los ${a} años`
+}
 
 export default function CerebroPage() {
   const navigate = useNavigate()
@@ -42,7 +75,29 @@ export default function CerebroPage() {
   const hijo = state.hijo
   const soportado = useMemo(hayWebGL, [])
 
-  const [edad, setEdad] = useState(EDAD_INICIAL)
+  // La edad real del hijo activo, con la misma fuente que el nombre del
+  // header: state.hijo. Baja por escalones — fecha de nacimiento, la edad
+  // entera que algunos hijos tienen guardada sin fecha, y recién ahí el
+  // respaldo.
+  const edadDelHijo = useMemo(() => {
+    const decimal = calcularEdadDecimal(hijo?.fechaNacimiento)
+    if (decimal != null) return acotar(decimal)
+    if (typeof hijo?.edad === 'number') return acotar(hijo.edad)
+    return EDAD_POR_DEFECTO
+  }, [hijo?.fechaNacimiento, hijo?.edad])
+
+  const [edad, setEdad] = useState(edadDelHijo)
+
+  // `state.hijo` es null en el primer render mientras cargan los datos, así
+  // que la edad real llega DESPUÉS. Sin esto el slider se quedaría pegado en
+  // el respaldo, y el bug sería intermitente según lo que demore la carga: de
+  // los que no aparecen en el QA.
+  // Solo se adopta mientras el usuario no haya tocado el slider. Si ya lo
+  // movió, mandan sus manos y no se le pisa.
+  const tocado = useRef(false)
+  useEffect(() => {
+    if (!tocado.current) setEdad(edadDelHijo)
+  }, [edadDelHijo])
   // `zonaVista` NO se limpia al cerrar: la tarjeta se va deslizando hacia
   // abajo y si le borráramos el contenido se vaciaría a mitad de camino.
   // `abierta` es lo que manda la animación.
@@ -140,20 +195,31 @@ export default function CerebroPage() {
       <div className={styles.controles}>
         <div className={styles.edadFila}>
           <span className={styles.edadLbl}>Edad</span>
-          <span className={styles.edadVal}>{rotuloEdad(edad)}</span>
+          <span className={styles.edadVal}>{rotuloEdad(edad, !tocado.current)}</span>
         </div>
         {/* --pos no es un color ni un tamaño: es la posición del relleno del
             riel, o sea estado que solo se conoce en tiempo de ejecución. Es el
-            mismo mecanismo del prototipo (slider.style.setProperty). */}
+            mismo mecanismo del prototipo (slider.style.setProperty).
+
+            El slider y el relleno van con la edad REDONDEADA, no con la real.
+            Un input de rango con step=1 sanitiza su valor a la grilla de
+            pasos: si le pasáramos 4,58 el navegador pondría el pulgar en 5 y
+            el relleno quedaría ~8px antes que el pulgar, que sí se nota. Con
+            los dos redondeados quedan siempre alineados, y como el riel no
+            tiene números el redondeo del pulgar es invisible. El cerebro y el
+            rótulo siguen usando la edad exacta, que es el punto del paso 5. */}
         <input
           type="range"
           className={styles.slider}
-          min="0"
-          max="18"
+          min={EDAD_MIN}
+          max={EDAD_MAX}
           step="1"
-          value={edad}
-          onChange={(e) => setEdad(+e.target.value)}
-          style={{ '--pos': `${(edad / 18) * 100}%` }}
+          value={Math.round(edad)}
+          onChange={(e) => {
+            tocado.current = true
+            setEdad(+e.target.value)
+          }}
+          style={{ '--pos': `${(Math.round(edad) / EDAD_MAX) * 100}%` }}
           aria-label="Edad del hijo"
         />
       </div>

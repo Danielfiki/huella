@@ -19,6 +19,34 @@ export function calcularEdad(fechaNacimiento) {
   return edad >= 0 ? edad : null
 }
 
+// Edad en anios CON decimales, con precision de mes. Vive al lado de
+// `calcularEdad` pero NO la reemplaza: esa devuelve anios enteros y la usa
+// media app (`dbHijoToApp`, `PerfilPage`), asi que se queda como esta.
+//
+// Para que sirve: el Cerebro Huella interpola su estado entre los puntos de
+// cada curva, asi que un hijo de 4,58 tiene un cerebro distinto al de uno de
+// 4,0. Con la edad entera esa diferencia se pierde.
+//
+// La fecha se construye igual que en `calcularEdad` a proposito: con fechas
+// sin hora eso puede correrse un dia segun la zona horaria, pero lo que
+// importa es que las dos funciones NUNCA se contradigan entre si. A
+// precision de mes, un dia no se nota.
+//
+// Devuelve null si no hay fecha, si no se puede parsear o si es futura.
+export function calcularEdadDecimal(fechaNacimiento) {
+  if (!fechaNacimiento) return null
+  const nac = new Date(fechaNacimiento)
+  if (Number.isNaN(nac.getTime())) return null
+  const hoy = new Date()
+
+  // Meses cumplidos: se cuenta el salto de mes y se descuenta uno si todavia
+  // no se llega al dia del mes en que nacio.
+  let meses = (hoy.getFullYear() - nac.getFullYear()) * 12 + (hoy.getMonth() - nac.getMonth())
+  if (hoy.getDate() < nac.getDate()) meses--
+
+  return meses >= 0 ? meses / 12 : null
+}
+
 // state.hijo siempre apunta al elemento activo de state.hijos[].
 // Es un campo derivado mantenido por el reducer — la UI existente
 // que lee state.hijo sigue funcionando sin cambios.
