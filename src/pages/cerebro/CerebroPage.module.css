@@ -478,7 +478,9 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-accent-mocha);
+  /* El color de la zona, heredado de .tarjeta. El mocha queda de respaldo
+     por si algun dia se pinta un rotulo fuera de una tarjeta de zona. */
+  color: var(--zona-rotulo, var(--color-accent-mocha));
 }
 
 .tNombre {
@@ -553,7 +555,7 @@
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-accent-mocha);
+  color: var(--zona-rotulo, var(--color-accent-mocha));
 }
 
 .tConsejo {
@@ -563,9 +565,11 @@
   background: var(--cerebro-vainilla);
 }
 
+/* Este rótulo va sobre el crema, que es el fondo más exigente de la tarjeta:
+   contra él se calibraron las variantes --cerebro-rotulo-*. Ya no fuerza el
+   mocha oscuro, hereda el color de la zona igual que los otros dos. */
 .tConsejo .rot {
   margin-bottom: 5px;
-  color: var(--cerebro-mocha-osc);
 }
 
 .tConsejo p {

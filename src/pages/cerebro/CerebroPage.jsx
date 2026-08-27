@@ -279,6 +279,17 @@ export default function CerebroPage() {
           <section
             className={`${styles.tarjeta} ${abierta ? styles.tarjetaAbierta : ''}`}
             aria-hidden={!abierta}
+            /* El color de los rótulos se declara UNA vez acá y lo heredan los
+               tres (el apodo, "A los N años" y "En la práctica"), porque las
+               custom properties se heredan. Va la variante legible del tono,
+               no el color puro: ninguno de los seis puros llega a 4,5:1 como
+               texto. Sin zona abierta no se declara, así no queda apuntando a
+               un token que no existe. */
+            style={
+              zonaVista
+                ? { '--zona-rotulo': `var(--cerebro-rotulo-${zonaVista})` }
+                : undefined
+            }
           >
             <div className={styles.asa} />
             <button type="button" className={styles.tCerrar} onClick={cerrar} aria-label="Cerrar">

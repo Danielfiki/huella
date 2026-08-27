@@ -358,6 +358,25 @@
   --cerebro-zona-tronco: #E04F5F;
   --cerebro-zona-corteza: #B9A894;
 
+  /* Variante de cada color de zona para los ROTULOS de la tarjeta (el apodo,
+     "A LOS N ANIOS" y "EN LA PRACTICA"). Mismo tono y misma saturacion, solo
+     con la luminosidad bajada hasta pasar 4,5:1.
+     Por que existen aparte: NINGUNO de los seis colores puros llega a 4,5:1
+     como texto, ni siquiera el indigo, que se queda en 4,17. El mostaza del
+     cerebelo era el peor de todos con 1,61.
+     El listón se fijó contra el CREMA de "EN LA PRACTICA", que es el fondo mas
+     exigente de los dos que tiene la tarjeta; sobre el blanco quedan todos por
+     encima de 5,4:1. Los valores se midieron sobre el hex ya redondeado, que
+     es el que pinta el navegador, no sobre el color en coma flotante.
+     Los colores PUROS de arriba no se tocan: los siguen usando el punto del
+     chip y la barra de madurez, que son manchas de color y no texto. */
+  --cerebro-rotulo-amigdala: #B14A18;
+  --cerebro-rotulo-frontal: #415BE6;
+  --cerebro-rotulo-hipocampo: #5F702B;
+  --cerebro-rotulo-cerebelo: #876310;
+  --cerebro-rotulo-tronco: #CC2436;
+  --cerebro-rotulo-corteza: #79664F;
+
   /* ═══ Movimiento ═══════════════════════════════════════════════
      Fuente unica de verdad del movimiento de la app. Nada de
      duraciones ni curvas sueltas en los CSS modules: se usan estas.
