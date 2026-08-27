@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
 import { ZONAS, AHORA, porTope } from './contenidoCerebro'
 import styles from './CerebroPage.module.css'
@@ -148,6 +149,25 @@ export default function CerebroContenido({ compacto = false }) {
     setAbierta(true)
   }, [])
   const cerrar = useCallback(() => setAbierta(false), [])
+
+  // Paso 8 — llegar con la tarjeta de una zona ya abierta: /cerebro?zona=amigdala
+  //
+  // Es la contraparte del enlace que cierra la orientación de un episodio. Se
+  // lee UNA sola vez al montar, con un ref de guarda: si se releyera en cada
+  // render, cerrar la tarjeta la volvería a abrir sola mientras el parámetro
+  // siga en la URL, y el padre no podría cerrarla nunca.
+  //
+  // `abrir` ya descarta cualquier slug que no esté en ZONAS, así que un
+  // parámetro inventado o viejo simplemente no hace nada: la pantalla se ve
+  // igual que si hubieras entrado sin parámetro.
+  const [searchParams] = useSearchParams()
+  const zonaDeLaUrl = searchParams.get('zona')
+  const urlLeida = useRef(false)
+  useEffect(() => {
+    if (urlLeida.current) return
+    urlLeida.current = true
+    if (zonaDeLaUrl) abrir(zonaDeLaUrl)
+  }, [zonaDeLaUrl, abrir])
 
   const zona = zonaVista ? ZONAS[zonaVista] : null
 

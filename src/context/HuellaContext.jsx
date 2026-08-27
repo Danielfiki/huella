@@ -348,6 +348,10 @@ function dbEpisodioToApp(row) {
     estadoPadre:      row.estado_padre,
     fecha:            row.fecha,
     orientacionIA:    row.orientacion_ia    ?? null,
+    // Paso 8. Mientras la migracion 014 no este corrida la columna no existe y
+    // `row.orientacion_zona` llega undefined: el ?? null lo absorbe y la app
+    // se comporta igual que con un episodio viejo (sin enlace, sin error).
+    orientacionZona:  row.orientacion_zona  ?? null,
     emocion:          row.emocion           ?? null,
     descripcionLibre: row.descripcion_libre ?? null,
     reflexion:        row.reflexion         ?? null,
@@ -813,8 +817,29 @@ export function HuellaProvider({ children }) {
       dbFields.accion_rapida_bucket      = ar.bucket     ?? null
       dbFields.accion_rapida_generada_en = ar.generadaEn ?? null
     }
-    if (Object.keys(dbFields).length === 0) return
-    await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+    if (Object.keys(dbFields).length > 0) {
+      await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+    }
+
+    // `orientacion_zona` va en un UPDATE APARTE, y es a proposito.
+    //
+    // El codigo se despliega ANTES de correr la migracion 014, asi que hay una
+    // ventana en que la columna todavia no existe. Si el campo viajara en el
+    // mismo UPDATE que `orientacion_ia`, PostgREST rechazaria la fila entera y
+    // se perderia tambien el texto de la orientacion — justo lo que el padre
+    // acaba de leer. Y como updateEpisodio no propaga errores, se perderia en
+    // silencio. Separados, el texto se guarda siempre y la zona simplemente no
+    // se persiste hasta que la columna exista.
+    if (partial.orientacionZona !== undefined) {
+      const { error } = await supabase
+        .from('episodios')
+        .update({ orientacion_zona: partial.orientacionZona ?? null })
+        .eq('id', partial.id)
+        .eq('user_id', user.id)
+      if (error) {
+        console.warn('[updateEpisodio] orientacion_zona no se guardo (falta la migracion 014?):', error.message)
+      }
+    }
   }
 
   // ── Rasgos (motor de rasgos · pieza 3: guardado) ───────────────────────────

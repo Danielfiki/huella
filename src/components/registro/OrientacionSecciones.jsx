@@ -1,6 +1,7 @@
 import React from 'react'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { renderInline } from '../../utils/renderMarkdown'
+import EnlaceZona from './EnlaceZona'
 import styles from './OrientacionSecciones.module.css'
 
 // La orientación completa, ya desplegada, dentro de la pantalla de guardado.
@@ -44,7 +45,10 @@ function partirEnSecciones(texto) {
   return secciones.filter((s) => s.lineas.length > 0)
 }
 
-export default function OrientacionSecciones({ texto }) {
+// `zona` es opcional y puede no venir: episodios anteriores al paso 8, o
+// orientaciones donde la IA devolvio "ninguna". Sin zona esto se renderiza
+// exactamente igual que antes.
+export default function OrientacionSecciones({ texto, zona = null }) {
   const secciones = partirEnSecciones(texto)
   if (!secciones.length) return null
 
@@ -70,6 +74,11 @@ export default function OrientacionSecciones({ texto }) {
           })}
         </section>
       ))}
+
+      {/* El enlace cierra la orientacion y va ANTES del descargo: el descargo
+          es el pie de la pieza entera, no una seccion mas que el enlace pueda
+          empujar hacia abajo. */}
+      {zona && <EnlaceZona zona={zona} />}
 
       <p className={styles.disclaimer}>
         Esto se apoya en evidencia del desarrollo infantil. No es un diagnóstico.

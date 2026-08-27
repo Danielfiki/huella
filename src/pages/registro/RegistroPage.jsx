@@ -315,6 +315,9 @@ export default function RegistroPage() {
   // La orientación larga arranca plegada: lo que el padre necesita al terminar
   // es el alivio y un paso, no un informe. El resto está si lo quiere.
   const [orientacionAbierta, setOrientacionAbierta] = useState(false)
+  // Paso 8. La zona del cerebro que la IA marco para este episodio, o null si
+  // devolvio "ninguna" (no hay zona clara, o amerita mirada profesional).
+  const [zonaIA, setZonaIA] = useState(null)
 
   // shared fields
   const [tipo, setTipo] = useState('')
@@ -502,8 +505,11 @@ export default function RegistroPage() {
     setLoadingIA(true)
     setErrorOrientacion(false)
     setRespuestaIA('')
+    setZonaIA(null)
     try {
-      const texto = await analizarEpisodio({
+      // Desde el paso 8 esto devuelve { texto, zona }: el texto ya viene sin el
+      // marcador de zona, asi que es el mismo string de siempre.
+      const { texto, zona } = await analizarEpisodio({
         hijo: state.hijo,
         episodio: args.episodio,
         historialReciente: args.historial,
@@ -523,15 +529,17 @@ export default function RegistroPage() {
       }
 
       setRespuestaIA(texto)
+      setZonaIA(zona)
       if (args.episodioId) {
         // Solo persistimos cuando la orientación fue exitosa — nunca
         // se guarda un mensaje de error como si fuera la orientación.
-        updateEpisodio({ id: args.episodioId, orientacionIA: texto })
+        updateEpisodio({ id: args.episodioId, orientacionIA: texto, orientacionZona: zona })
       }
     } catch {
       // El mensaje específico va a consola via console.error de
       // anthropic.js; al usuario le mostramos un estado uniforme.
       setRespuestaIA('')
+      setZonaIA(null)
       setErrorOrientacion(true)
     } finally {
       setLoadingIA(false)
@@ -708,7 +716,7 @@ export default function RegistroPage() {
                     />
                   </span>
                 </button>
-                {orientacionAbierta && <OrientacionSecciones texto={resto} />}
+                {orientacionAbierta && <OrientacionSecciones texto={resto} zona={zonaIA} />}
               </section>
             )}
 

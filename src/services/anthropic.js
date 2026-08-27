@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase.js'
 import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
+import { separarZona } from '../utils/seccionesIA.js'
 
 // Timeout duro para cualquier llamada al backend de IA. Sin esto el
 // fetch puede quedar colgado indefinidamente y los loaders de la UI
@@ -1080,11 +1081,42 @@ Qué hacer ahora
 Qué evitar
 1. [cosa a evitar y por qué en 1 línea, específica para la edad]
 
-Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
+Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
 
-  return onTexto
-    ? llamarAPIStream(prompt, 1400, onTexto)
-    : llamarAPI(prompt, 1400)
+ÚLTIMA LÍNEA DE TU RESPUESTA, SIEMPRE. Después de todo lo anterior, en una línea suelta y aparte, escribe exactamente:
+Zona del cerebro: slug
+
+Donde slug es UNA sola de estas siete palabras, en minúscula, sin tilde y sin agregar nada más en esa línea:
+amigdala, cuando lo que explica el episodio es la alarma: rabia, miedo, rabietas, reacciones desbordadas, pelear o arrancar.
+frontal, cuando lo explica la corteza prefrontal: control de impulsos, esperar, planificar, tolerar un cambio de plan.
+hipocampo, cuando lo explica la memoria: recuerdos, anticipar algo que ya vivió, rutinas conocidas.
+cerebelo, cuando lo explica la coordinación: movimiento, torpeza motora, hábitos automatizados.
+tronco, cuando lo explica el tronco cerebral: sueño, hambre, cansancio, activación física del cuerpo.
+corteza, cuando lo explica el manto: lenguaje, comprensión social, imaginación, pensamiento.
+ninguna, en los dos casos que describen las reglas 1 y 2 de abajo.
+
+Reglas de esa línea, en orden de prioridad:
+1. Si el episodio amerita que lo vea un profesional, escribe ninguna. Sin excepción y sin explicar por qué.
+2. Si ninguna zona explica el episodio con claridad, o si dudas entre dos, escribe ninguna. Preferir ninguna es siempre correcto.
+3. Si una zona sí lo explica, elige la que más pesa en lo que escribiste en "Qué está pasando". Una sola, nunca dos.
+4. Esa línea es metadata del sistema y no forma parte de la orientación: no la anuncies, no la expliques y no la comentes en ninguna sección. Todo lo demás que escribiste arriba no cambia en nada por esta instrucción.`
+
+  // El marcador de zona se separa ACÁ, en el servicio, para que ni la pantalla
+  // ni la base de datos lo vean nunca. `texto` sale siempre limpio: es el
+  // mismo string que se persiste en `orientacion_ia` y que el informe PDF
+  // imprime crudo.
+  //
+  // En streaming el filtro se aplica también a cada pedazo: el marcador es lo
+  // último que escribe el modelo, así que sin esto se vería aparecer letra por
+  // letra al final de la orientación.
+  if (onTexto) {
+    const crudo = await llamarAPIStream(prompt, 1400, (parcial) => {
+      onTexto(separarZona(parcial).texto)
+    })
+    return separarZona(crudo)
+  }
+
+  return separarZona(await llamarAPI(prompt, 1400))
 }
 
 // teaser=true (plan free): genera SOLO la sección "Lo que está mejorando" con
