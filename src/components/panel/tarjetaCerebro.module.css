@@ -260,3 +260,32 @@
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
 }
+
+/* ── El enlace al Cerebro Huella ──
+   Vive al pie de la tarjeta y aparece en los CUATRO estados. Es la unica
+   entrada al cerebro 3D desde el Home, y va aca adentro en vez de en una card
+   propia porque esta tarjeta ya se llama "el cerebro de {hijo}": dos tarjetas
+   hablando del cerebro del mismo hijo en la misma pantalla serian la
+   duplicacion que la decision del 24 ago pidio evitar.
+   Es permanente y no se puede descartar. Una X lo convertiria en una tarea
+   pendiente, y si desapareciera tras la primera visita la pieza quedaria
+   inencontrable justo para quien vuelve semanas despues buscandola. */
+.enlaceCerebro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.enlaceCerebro:hover {
+  color: var(--color-primary-dark);
+}

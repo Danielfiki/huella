@@ -419,6 +419,7 @@ export default function PanelPage() {
         expandible={detalleDisponible}
         abierto={detalleAbierto}
         onToggle={() => setDetalleAbierto(v => !v)}
+        onIrAlCerebro={() => navigate('/cerebro')}
       >
         <div ref={detalleRef} className={styles.detalleInterno}>
           <CTAAskHuella onClick={handleAnalizarPatrones} loading={loadingAnalisis} />

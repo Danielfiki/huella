@@ -129,6 +129,7 @@ export function TarjetaCerebro({
   expandible = false,
   abierto = false,
   onToggle,
+  onIrAlCerebro,
   children,
 }) {
   const t = tokensMovimiento()
@@ -235,6 +236,15 @@ export function TarjetaCerebro({
           <p className={styles.destacadoTexto}>{educativo.titulo}</p>
           <p className={styles.hallazgo}>{educativo.frase}</p>
         </div>
+      )}
+
+      {/* La entrada al Cerebro Huella. Va al pie y en los cuatro estados: es
+          especialmente valiosa en "cero" y "pobre", donde la tarjeta tiene
+          poco que mostrar y esto le da al papá algo real que mirar. */}
+      {onIrAlCerebro && (
+        <button type="button" className={styles.enlaceCerebro} onClick={onIrAlCerebro}>
+          Conoce el cerebro de {nombreHijo} por dentro →
+        </button>
       )}
 
       <AnimatePresence initial={false}>

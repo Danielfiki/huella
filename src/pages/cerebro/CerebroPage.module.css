@@ -7,9 +7,22 @@
    scrollea, y con la franja, el slider y los chips debajo de la vitrina el
    contenido pasa del alto de pantalla en teléfonos chicos. Decision de
    Daniel del 26 ago 2026: que scrollee. */
+/* La cáscara de la RUTA /cerebro. El margen negativo cancela el padding del
+   .main del Layout y vive SOLO acá: dentro del tab de HijoPage el contenido
+   no debe salirse de su contenedor. */
 .page {
   margin: -20px -20px -8px;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+/* El contenido propiamente tal, el que comparten la ruta y el tab. Trae su
+   propio contexto flex porque la vitrina es `flex: 1` y necesita un padre
+   que se lo resuelva, esté donde esté montado. */
+.contenido {
+  flex: 1;
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
@@ -67,6 +80,17 @@
   background: var(--color-surface-alt);
   box-shadow: var(--cerebro-vitrina-sombra);
   touch-action: none;
+}
+
+/* En el tab de HijoPage arriba ya viven el retrato y la fila de tabs, así que
+   la vitrina cede alto para que la pieza entera se lea de una sola mirada.
+   La cuenta, con un iPhone de 390x844: el retrato mide 428px (su aspect-ratio
+   es 394/432 y ocupa todo el ancho) y los tabs ~45px, así que bajo la fila de
+   tabs quedan ~673px utiles. Con 56dvh la vitrina mas la franja, el slider,
+   los chips y el pie suman ~693px y el pie se cae por debajo del borde; con
+   48dvh suman ~625px y entra todo con holgura. */
+.vitrinaCompacta {
+  min-height: 48dvh;
 }
 
 /* Vineta corta y hairline: la vitrina flota, no arranca de golpe. Va encima

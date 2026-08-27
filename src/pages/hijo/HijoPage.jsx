@@ -7,6 +7,7 @@ import PropuestaRasgo, { COLOR_FAMILIA } from '../../components/hijo/PropuestaRa
 import RetratoSendero from '../../components/hijo/RetratoSendero'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
+import CerebroContenido from '../cerebro/CerebroContenido'
 
 // ── Helpers fecha (modo creación) ─────────────────────────────────────────
 
@@ -238,6 +239,13 @@ export default function HijoPage() {
         >
           Rutina diaria
         </button>
+        <button
+          role="tab"
+          className={[s.tab, tabActiva === 'cerebro' && s.on].filter(Boolean).join(' ')}
+          onClick={() => setSearchParams({ tab: 'cerebro' })}
+        >
+          Su cerebro
+        </button>
       </div>
 
       {tabActiva === 'perfil' && (
@@ -289,6 +297,10 @@ export default function HijoPage() {
       )}
 
       {tabActiva === 'rutina' && <RutinaDiaria />}
+
+      {/* El hogar canonico del Cerebro Huella. Va `compacto` porque aca arriba
+          ya viven el retrato y la fila de tabs. */}
+      {tabActiva === 'cerebro' && <CerebroContenido compacto />}
     </div>
   )
 }
