@@ -277,9 +277,17 @@
    en claro y 13,10:1 en oscuro, y la flecha 4,61:1 y 6,82:1. El punto indigo
    queda en 3,95:1 y 3,06:1, que alcanza porque es una vinieta decorativa y no
    texto — ademas late, asi que se hace ver. */
+/* El contenido va CENTRADO como un solo bloque: punto, texto y flecha juntos,
+   con el aire repartido parejo a los dos lados. Se probo dejar la flecha
+   clavada al extremo derecho, pero con el texto centrado el conjunto se ve
+   descentrado: la flecha pesa a la derecha sin nada que la equilibre a la
+   izquierda, y el texto queda centrado respecto de un espacio que no es el de
+   la fila. Yendo los tres juntos, el punto y la flecha quedan como los dos
+   extremos simetricos del bloque. */
 .ctaCerebro {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   width: 100%;
   margin-top: 14px;
@@ -289,7 +297,6 @@
   background: var(--color-surface-alt);
   color: var(--color-text);
   font-family: var(--font-family);
-  text-align: left;
   cursor: pointer;
 }
 
@@ -316,11 +323,15 @@
   50%      { opacity: 1;    transform: scale(1.15); }
 }
 
+/* Sin `flex: 1`: si el texto se estirara a todo el ancho, el bloque volveria
+   a quedar alineado a la izquierda por dentro y el centrado no se notaria.
+   El copy es largo y envuelve a dos lineas en un telefono, asi que las dos
+   van centradas entre si. */
 .ctaTexto {
-  flex: 1;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
+  text-align: center;
 }
 
 .ctaFlecha {
