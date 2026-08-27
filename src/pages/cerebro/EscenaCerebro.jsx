@@ -57,15 +57,13 @@ const ALARMA = new THREE.Color(ZONAS.amigdala.color)
 // el rango crece parejo, que era la condición del ajuste.
 const MARGEN = 0.95
 
-export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores, onDiag }) {
+export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores }) {
   const contRef = useRef(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(false)
 
   // Todo lo que cambia entra por refs, para que el efecto de abajo corra una
   // sola vez y la escena no se reinicie al mover el slider.
-  const diagRef = useRef(onDiag)
-  diagRef.current = onDiag
   const edadRef = useRef(edad)
   edadRef.current = edad
   const zonaRef = useRef(zonaAbierta)
@@ -82,51 +80,19 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores,
     let vivo = true
     let animId = null
 
-    // ── Diagnóstico (?diag=1) ────────────────────────────────────────────
-    // Solo recolecta y publica; no cambia nada del render.
-    const diag = {
-      pantalla: `${window.innerWidth}x${window.innerHeight}`,
-      dpr: window.devicePixelRatio,
-      canvasCss: '—',
-      canvasBuffer: '—',
-      gl: '—',
-      gpu: '—',
-      maxTextura: '—',
-      modelo: 'cargando…',
-      mallas: 0,
-      contextoPerdido: false,
-      fallo: '',
-    }
-    const publicar = () => { if (diagRef.current) diagRef.current({ ...diag }) }
-    publicar()
-
     const ren = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     ren.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     ren.setSize(cont.clientWidth, cont.clientHeight)
     cont.appendChild(ren.domElement)
 
-    // Lo que el dispositivo dice de sí mismo, para el panel de ?diag=1.
-    try {
-      const gl = ren.getContext()
-      const info = gl.getExtension('WEBGL_debug_renderer_info')
-      diag.gl = ren.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1'
-      diag.gpu = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '(oculto)'
-      diag.maxTextura = String(gl.getParameter(gl.MAX_TEXTURE_SIZE))
-      diag.canvasCss = `${cont.clientWidth}x${cont.clientHeight}`
-      diag.canvasBuffer = `${ren.domElement.width}x${ren.domElement.height}`
-    } catch (e) {
-      diag.fallo = 'contexto: ' + (e?.message ?? String(e))
-    }
-    // Si el navegador tira el contexto, el canvas queda en blanco SIN error:
-    // es justo el sintoma que estamos cazando, asi que se registra aparte.
+    // Si el navegador tira el contexto, el canvas queda en blanco SIN ningún
+    // error: es un fallo que no se nota, así que se deja registrado. El
+    // preventDefault es lo que permite que el contexto se pueda restaurar.
     const onCtxLost = (e) => {
       e.preventDefault()
-      diag.contextoPerdido = true
-      publicar()
       console.error('[cerebro] contexto WebGL perdido')
     }
     ren.domElement.addEventListener('webglcontextlost', onCtxLost)
-    publicar()
 
     const esc = new THREE.Scene()
     const cam = new THREE.PerspectiveCamera(42, cont.clientWidth / cont.clientHeight, 0.01, 50)
@@ -439,7 +405,6 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores,
     ren.domElement.addEventListener('pointermove', onMove)
     ren.domElement.addEventListener('pointerup', onUp)
 
-    const t0 = performance.now()
     const loader = new GLTFLoader()
     loader.setMeshoptDecoder(MeshoptDecoder)
     loader.load(
@@ -447,14 +412,11 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores,
       (gltf) => {
         if (!vivo) return
         grupo = gltf.scene
-        let conMaterial = 0
         grupo.traverse((o) => {
           if (!o.isMesh) return
-          diag.mallas++
           const slug = o.name || (o.parent && o.parent.name) || ''
           const z = ZONAS[slug]
           if (!z) return
-          conMaterial++
           const vidrio = slug === 'corteza'
           // Contra fondo claro las zonas internas necesitan más cuerpo: color
           // un punto más saturado, roughness baja para que capten la key, y un
@@ -488,11 +450,6 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores,
         encuadrar()
         aplicarEdad(edadRef.current, true)
         setCargando(false)
-        diag.modelo = `OK en ${Math.round(performance.now() - t0)}ms`
-        diag.mallas = `${diag.mallas} (${conMaterial} con color)`
-        diag.canvasCss = `${cont.clientWidth}x${cont.clientHeight}`
-        diag.canvasBuffer = `${ren.domElement.width}x${ren.domElement.height}`
-        publicar()
       },
       undefined,
       (err) => {
@@ -500,9 +457,6 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores,
         console.error('[cerebro] no se pudo cargar el modelo', err)
         setError(true)
         setCargando(false)
-        diag.modelo = 'FALLO'
-        diag.fallo = String(err?.message ?? err)
-        publicar()
       }
     )
 
