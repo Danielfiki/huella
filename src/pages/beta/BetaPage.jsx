@@ -82,7 +82,8 @@ Si te dice que no esta disponible, espera unos minutos y vuelve a entrar. Google
 
 3. Crea tu cuenta y activa tu acceso
 Abre la app y registrate con el mismo Gmail que me diste.
-Al entrar vas a quedar en la pantalla de inicio. Ahi busca el bloque que dice "¿Tienes un código de invitación?", pega el codigo que te mando por privado ahora y toca "Activar".
+Al entrar la app te va a pedir unos datos tuyos y de tu hijo o hija: completa eso primero.
+Despues, abajo a la derecha toca "Tú". Baja un poco y vas a encontrar el bloque que dice "¿Tienes un código de invitación?": pega ahi el codigo que te mando por privado ahora y toca "Activar".
 
 Eso es todo. Despues usala cuando pase algo con tu hijo o hija, sin apuro.
 
@@ -92,7 +93,7 @@ Si algo se traba, me escriben y lo vemos.`,
 
   codigo: `[nombre], tu codigo es: HUELLA-XX
 
-Lo activas dentro de la app: en la pantalla de inicio busca el bloque que dice "¿Tienes un código de invitación?", pega el codigo ahi y toca "Activar". Te deja el acceso completo listo.`,
+Lo activas dentro de la app: abajo a la derecha toca "Tú", baja hasta el bloque que dice "¿Tienes un código de invitación?", pega el codigo ahi y toca "Activar". Te deja el acceso completo listo.`,
 
   noInstalo: `Hola [nombre], ¿lograste instalarla? Si se trabó en algún paso me dices y lo vemos.`,
 
