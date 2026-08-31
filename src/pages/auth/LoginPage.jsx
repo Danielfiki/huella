@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../../components/ui/Logo'
@@ -16,10 +16,18 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/panel'
+
+  // Cierre del rescate del arranque (ver AuthContext). Si el rescate nos saco
+  // del limbo dando la sesion por perdida y la sesion real aparece un momento
+  // despues, entramos solos: el usuario no tiene que volver a escribir nada.
+  // Tambien cubre el caso comun de llegar a /login ya con sesion abierta.
+  useEffect(() => {
+    if (user) navigate(redirectTo, { replace: true })
+  }, [user, redirectTo, navigate])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')

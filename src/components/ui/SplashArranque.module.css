@@ -61,14 +61,54 @@
   color: var(--color-text-muted);
 }
 
+/* Failsafe del arranque: aparece SOLO si la app no estuvo lista a tiempo.
+   Sereno, sin alarma — un mensaje y una salida, con el mismo aire del bloque. */
+.rescate {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: aparecer 400ms ease-out;
+}
+
+.rescateTexto {
+  margin: 0;
+  max-width: 260px;
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.rescateBoton {
+  padding: 11px 24px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-on-mocha);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
 /* Latido idéntico al de los loaders de IA. */
 @keyframes latido {
   0%, 100% { transform: scale(1);    opacity: 1;    }
   50%      { transform: scale(1.06); opacity: 0.85; }
 }
 
+/* Entrada suave del failsafe: no debe irrumpir. */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* Reduced motion: logo estático, misma composición. El fade (solo opacidad)
    se conserva. */
 @media (prefers-reduced-motion: reduce) {
-  .beetle { animation: none; }
+  .beetle  { animation: none; }
+  .rescate { animation: none; }
 }
