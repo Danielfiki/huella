@@ -1,203 +1,285 @@
 /* OnboardingComposer.module.css
-   Estilos del corazón del onboarding (slide 3).
-   Vive dentro del .bottom de OnboardingBottomSlide cuando palette="encuentro". */
+   Acto B · el momento real.
+
+   🪤 DE DONDE VIENE ESTE ARCHIVO. La version anterior vivia sobre un gradiente
+   verde oscuro hardcodeado y mezclaba DOS sistemas de color incompatibles: el
+   fondo era fijo, pero el contenido usaba tokens que cambian con el tema. En
+   oscuro, la tarjeta de respuesta quedaba con fondo blanco fijo y texto
+   var(--color-text) — que en oscuro es crema. Contraste real: 1,16:1. Texto
+   invisible. Eso fue lo que reporto una tester ("los colores no se entienden").
+
+   Regla que deja este archivo: aca NO hay un solo hex ni rgba. Todo sale de
+   los tokens de index.css, asi que claro y oscuro funcionan de fabrica. */
+
+/* Contenedor del acto. La cabecera queda arriba y el bloque interactivo se
+   ancla abajo (margin-top:auto) — el contenido cerca del pulgar, que es lo
+   unico que se conserva del concepto visual anterior. */
+.acto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top, 0px), 28px) 24px
+           max(env(safe-area-inset-bottom, 0px), 28px);
+  min-height: 0;
+}
 
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
 }
 
-/* ── Composer (textarea) ───────────────────────────────────────── */
-.composer {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 16px;
-  padding: 14px 14px;
-  min-height: 110px;
+/* ── Cabecera del acto ──────────────────────────────────────────── */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.eyebrow {
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-eyebrow);
+  margin: 0;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(24px, 6.5vw, 30px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.hint {
   font-family: var(--font-family);
   font-size: 14px;
   line-height: 1.5;
-  color: #fff;
-  caret-color: #fff;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Campo de escritura ─────────────────────────────────────────── */
+.composer {
+  width: 100%;
+  min-height: 132px;
   resize: none;
+  padding: 14px 16px;
+  font-family: var(--font-family);
+  font-size: 16px;   /* 16px evita el zoom automatico de iOS al enfocar */
+  line-height: 1.55;
+  color: var(--color-text);
+  caret-color: var(--color-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   outline: none;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
+
 .composer::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-text-light);
   opacity: 1;
 }
-.composer:focus,
-.composerFocus {
-  border-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+
+.composerFocus,
+.composer:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-primary-sm);
 }
 
-/* ── Loading frame · frase rotatoria ───────────────────────────── */
+/* ── Estado de carga ────────────────────────────────────────────── */
 .loadFrame {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
-  padding: 22px 16px;
-  min-height: 110px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 14px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 26px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
+
 .ring {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.30);
-  border-top-color: #fff;
-  animation: onboardingComposerSpin 1.1s linear infinite;
+  border: 2px solid var(--color-primary-border);
+  border-top-color: var(--color-primary);
+  animation: composerSpin 900ms linear infinite;
 }
+
 .phrase {
   font-family: var(--font-heading);
+  font-size: 16px;
+  line-height: 1.45;
   font-style: italic;
-  font-size: 14px;
-  color: #fff;
-  opacity: 0.92;
   text-align: center;
-  line-height: 1.3;
-  letter-spacing: -0.005em;
-  text-wrap: balance;
+  color: var(--color-text-muted);
   margin: 0;
-  animation: onboardingComposerPhraseFade 380ms ease-out both;
+  animation: composerFadeIn 400ms ease-out;
 }
 
-@keyframes onboardingComposerSpin {
-  to { transform: rotate(360deg); }
-}
-@keyframes onboardingComposerPhraseFade {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 0.92; transform: translateY(0); }
-}
+.progressSpace { width: 100%; margin-top: 2px; }
 
-/* ── Spacing del ProgressBar dentro del loadFrame ──────────────── */
-.progressSpace {
-  margin-top: 6px;
-}
-
-/* ── Response card · fade-up al revelar ────────────────────────── */
+/* ── Tarjeta de respuesta ───────────────────────────────────────── */
+/* Fondo y texto salen los DOS de tokens, asi que se mueven juntos al cambiar
+   de tema. Ese era el defecto: antes el fondo era blanco fijo y solo el texto
+   cambiaba. */
 .respCard {
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 18px;
-  padding: 16px 16px 14px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: onboardingComposerRespReveal 600ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-@keyframes onboardingComposerRespReveal {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: none; }
+  gap: 12px;
+  animation: composerRise 420ms ease-out;
+  max-height: 46vh;
+  overflow-y: auto;
 }
 
 .respPara {
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   color: var(--color-text);
   margin: 0;
 }
 
 .quote {
-  border-left: 2px solid var(--color-accent-green);
-  padding: 4px 0 4px 12px;
-  margin: 0;
   font-family: var(--font-heading);
-  font-style: italic;
-  font-size: 13.5px;
+  font-size: 15px;
   line-height: 1.5;
+  font-style: italic;
   color: var(--color-text);
-  letter-spacing: -0.005em;
-}
-.author {
-  font-family: var(--font-family);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin-top: 6px;
-  display: block;
-}
-.marco {
-  font-family: var(--font-family);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--color-accent-green);
+  border-left: 2px solid var(--color-primary);
+  padding-left: 12px;
   margin: 0;
 }
 
-/* ── CTA propio del composer ───────────────────────────────────── */
+.author {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-style: normal;
+  color: var(--color-text-muted);
+}
+
+.marco {
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── CTA ────────────────────────────────────────────────────────── */
 .cta {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 52px;
+  gap: 10px;
+  width: 100%;
+  height: 54px;
   border-radius: 16px;
   font-family: var(--font-family);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  background: #fff;
-  color: var(--color-primary-dark);
+  /* Mismo boton primario que el acto A y que el Home. */
+  background: var(--gradient-cta-registrar);
+  color: var(--color-white);
   border: none;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.20);
+  box-shadow: var(--shadow-cta-pastilla);
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
 }
-.cta:active { transform: scale(0.97); }
-.cta:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.cta:active {
+  transform: scale(0.98);
+  background: var(--gradient-cta-registrar-presion);
+  box-shadow: var(--shadow-cta-pastilla-presion);
+}
+.cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 .spin {
-  width: 14px;
-  height: 14px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  animation: onboardingComposerSpin 0.9s linear infinite;
-  margin-right: 10px;
+  background: var(--color-white);
+  display: inline-block;
+  animation: composerPulse 1s ease-in-out infinite;
 }
 
-/* ── Skip inline ───────────────────────────────────────────────── */
 .skipInline {
   align-self: center;
   font-family: var(--font-family);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.74);
+  color: var(--color-text-muted);
   background: none;
   border: none;
-  padding: 6px 4px 0;
+  padding: 10px 6px;
+  cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgba(255, 255, 255, 0.36);
-  cursor: pointer;
+  text-decoration-color: var(--color-border);
+  transition: color 160ms ease;
+}
+.skipInline:hover { color: var(--color-text); }
+.skipInline:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error {
+  font-family: var(--font-family);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 0;
+}
+
+/* ── Animaciones ────────────────────────────────────────────────── */
+@keyframes composerSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes composerFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes composerRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes composerPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.1);  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring,
-  .spin { animation: none; }
+  .ring    { animation: none; }
+  .phrase  { animation: none; }
   .respCard { animation: none; }
-  .phrase { animation: none; opacity: 0.92; transform: none; }
-  .cta { transition: none; }
-  .composer { transition: none; }
+  .spin    { animation: none; opacity: 0.7; }
+  .cta     { transition: none; }
 }

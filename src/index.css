@@ -98,6 +98,11 @@
   --color-primary-border: #F0C8A0;
   --color-primary-tint: #FEE4D0;
   --color-primary-deep: #A84B28;
+  /* Volanta (eyebrow) sobre el fondo crema. NO usar --color-tangerine aca:
+     sobre --color-bg da 2,90:1, y una volanta es de 11px en mayusculas, o sea
+     texto chico que necesita 4,5:1. Este token conserva la identidad tangerine
+     y ademas se lee: 5,16:1 en claro, 7,93:1 en oscuro. */
+  --color-eyebrow: #A84B28;
   --color-success-bg: #EDF3DC;
   --color-celebration-start: #FEF0E4;
   --color-celebration-end: #FEE8D6;
@@ -508,6 +513,9 @@
     --color-primary-border: #4A2A08;
     --color-primary-tint: #3A1E08;
     --color-primary-deep: #EE9870;
+    /* En oscuro la volanta se aclara: el #A84B28 del claro da 3,26:1 contra el
+       fondo oscuro y no alcanza. Este valor llega a 7,93:1. */
+    --color-eyebrow: #EE9452;
     --color-success-bg: #1A2208;
     --color-celebration-start: #241808;
     --color-celebration-end: #2A1808;

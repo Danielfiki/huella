@@ -1,7 +1,10 @@
 /* OnboardingFormSlide.module.css
-   Slide 4 · entrada al producto, en modo conversacional.
+   Acto A · los datos, en modo conversacional.
    Una pregunta visible por paso, centrada vertical/horizontalmente, con fade.
-   Barra superior tangerine + Atrás + Saltar. CTA abajo. */
+   Barra superior tangerine + Atrás. CTA abajo.
+
+   Paleta: Mocha Mix, 100% tokens de index.css — cero hex, cero rgba. Claro y
+   oscuro salen de fábrica. */
 
 .slide {
   position: relative;
@@ -60,19 +63,15 @@
   flex: 1;
 }
 
-.topSkip {
+/* Espaciador que reemplaza al viejo "Saltar" (el acto A ya no es saltable).
+   Mismo ancho que tenia el boton, para que la barra de progreso siga
+   opticamente centrada entre el boton Atras y este borde. */
+.topSpacer {
   flex-shrink: 0;
-  font-family: var(--font-family);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: 8px 4px;
-  cursor: pointer;
-  transition: color 160ms ease;
+  display: block;
+  width: 44px;
+  height: 1px;
 }
-.topSkip:hover { color: var(--color-text); }
 
 /* ── Cuerpo conversacional ──────────────────────────────────────── */
 .form {
@@ -110,7 +109,10 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-tangerine);
+  /* --color-eyebrow, no --color-tangerine: sobre el crema el tangerine da
+     2,90:1 y esto es texto de 11px en mayusculas. El token nuevo conserva la
+     identidad y llega a 5,16:1 en claro y 7,93:1 en oscuro. */
+  color: var(--color-eyebrow);
 }
 
 .title {
@@ -171,7 +173,7 @@
   letter-spacing: -0.01em;
 }
 
-/* ── Chips grandes (para sexo e intenciones) ────────────────────── */
+/* ── Chips grandes (seleccion de genero) ────────────────────── */
 .bigChiprow {
   display: flex;
   flex-wrap: wrap;
@@ -198,8 +200,12 @@
 }
 .bigChipOn {
   background: var(--color-primary-bg);
-  color: var(--color-primary-dark);
-  border-color: var(--color-primary-border);
+  /* El seleccionado se reconoce por el fondo tintado y el borde, no por el
+     color de la letra: --color-primary-dark sobre --color-primary-bg daba
+     3,68:1 en claro. Con --color-text son 14,15:1 en claro y 14,69:1 en
+     oscuro, y el chip se sigue leyendo como activo. */
+  color: var(--color-text);
+  border-color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -235,7 +241,7 @@
 }
 .photoBtn:hover {
   border-color: var(--color-primary-border);
-  color: var(--color-primary-dark);
+  color: var(--color-eyebrow);
 }
 .photoBtn:active { transform: scale(0.98); }
 
@@ -270,7 +276,9 @@
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-primary-dark);
+  /* --color-eyebrow: --color-primary-dark sobre el crema da 3,96:1 y esto es
+     un enlace de 14px. Este token llega a 5,16:1 en claro y 7,93:1 en oscuro. */
+  color: var(--color-eyebrow);
   background: none;
   border: none;
   padding: 6px 10px;
@@ -328,16 +336,23 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-  color: #fff;
+  /* El MISMO boton primario del Home (BotonRegistrar). Antes era un gradiente
+     propio hacia --color-primary-light, cuyo extremo claro dejaba el texto
+     blanco en 2,33:1. Este es el gradiente oficial de la app: 3,05-4,35:1 y,
+     sobre todo, hace que el onboarding se vea como el primer dia DENTRO de
+     Huella y no como una pieza aparte. Ambos tokens son estables entre temas
+     a proposito (ver el comentario de --color-cta-disco en index.css). */
+  background: var(--gradient-cta-registrar);
+  color: var(--color-white);
   border: none;
-  box-shadow: var(--shadow-primary-sm);
+  box-shadow: var(--shadow-cta-pastilla);
   cursor: pointer;
   transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
 }
 .cta:active {
   transform: scale(0.98);
-  box-shadow: var(--shadow-primary-md);
+  background: var(--gradient-cta-registrar-presion);
+  box-shadow: var(--shadow-cta-pastilla-presion);
 }
 .cta:disabled {
   opacity: 0.45;

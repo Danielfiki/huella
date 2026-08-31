@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Plus, User } from 'lucide-react'
 import Onboarding from '../../pages/onboarding/Onboarding'
 import Logo from '../ui/Logo'
-import { persistirPerfilOnboarding, marcarOnboardingVisto } from '../../services/onboardingPersistor'
+import { persistirPerfilOnboarding } from '../../services/onboardingPersistor'
 import NotifBanner from '../NotifBanner'
 import { useHuella } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
@@ -85,14 +85,15 @@ export default function Layout() {
     state.hijos.length > 0 || (state.padreNombre || '').trim() !== ''
 
   // Latch local de cierre inmediato. NO decide quién es nuevo (eso lo hace
-  // `yaTieneCuenta`); solo silencia el onboarding apenas el usuario actúa:
-  //  - al saltarlo (sessionStorage: vuelve en una sesión nueva si sigue sin
-  //    datos, igual que antes);
-  //  - al completarlo, para puentear el instante entre el guardado y que
-  //    `reloadData` traiga el hijo recién creado (si no, reaparecería un frame).
-  const [onboardingCerrado, setOnboardingCerrado] = useState(
-    () => !!sessionStorage.getItem('huella.onboarding.dismissed')
-  )
+  // `yaTieneCuenta`): solo puentea el instante entre que el onboarding guarda
+  // y que `reloadData` trae el hijo recién creado. Sin él, el onboarding
+  // reaparecería por un frame.
+  //
+  // Ya no arranca leyendo sessionStorage: ese valor lo escribía el "Saltar",
+  // que se eliminó. Hoy el onboarding solo se cierra completándolo, y lo que
+  // lo mantiene cerrado para siempre es `yaTieneCuenta` (el hijo en la base),
+  // no el storage del dispositivo.
+  const [onboardingCerrado, setOnboardingCerrado] = useState(false)
 
   // Solo decidimos DESPUÉS de cargar la cuenta (`dataLoaded`): antes no sabemos
   // si tiene hijo y no debemos mostrarlo "por defecto". La guarda de modo
@@ -139,10 +140,6 @@ export default function Layout() {
             // Cierre inmediato mientras `reloadData` trae el hijo recién creado.
             // Tras el reload, `hijos.length > 0` lo mantiene cerrado para siempre,
             // sin importar el storage del dispositivo.
-            setOnboardingCerrado(true)
-          }}
-          onSkip={() => {
-            marcarOnboardingVisto()
             setOnboardingCerrado(true)
           }}
         />

@@ -1,5 +1,11 @@
 /* Onboarding.module.css
-   Shell del onboarding — full-bleed, track horizontal con 5 slides. */
+   Shell del onboarding — full-bleed, track horizontal con los actos.
+
+   Paleta: Mocha Mix, 100% tokens de index.css. Antes cada slide traia su
+   propio gradiente hardcodeado (noche/amanecer/encuentro/afirmacion) y el
+   onboarding no se parecia a ninguna otra pantalla de la app. Ahora el fondo
+   es el mismo crema del resto de Huella y responde al tema como todo lo
+   demas: es el primer dia DENTRO de la app, no un folleto. */
 
 .shell {
   position: fixed;
@@ -7,13 +13,13 @@
   /* z-index muy alto: el onboarding tiene que tapar todo el chrome del
      Layout (header mocha, main, bottom nav z-index:200) y cualquier
      modal abierto en background (MedallaDetalleModal 1000, etc.).
-     Es el contexto visual más alto de la app. */
+     Es el contexto visual mas alto de la app. */
   z-index: 9999;
   background: var(--color-bg);
+  color: var(--color-text);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -26,7 +32,7 @@
   will-change: transform;
 }
 
-.slide {
+.acto {
   flex: 0 0 100%;
   width: 100%;
   height: 100%;

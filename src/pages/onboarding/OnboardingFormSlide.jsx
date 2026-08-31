@@ -15,23 +15,28 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import styles from './OnboardingFormSlide.module.css';
 import ProgressBar from '../../components/ui/ProgressBar';
 
-// Set fijo de intenciones. Si producto agrega/quita: actualizar SOLO aquí.
-// Se eliminó "Las rabietas del día a día" (se pisaba con "Entender berrinches").
-const INTENCIONES = [
-  'Entender berrinches',
-  'Manejar pantallas',
-  'Comunicarme mejor',
-  'Sueño y rutinas',
-  'Solo explorar',
+// Codigos de genero. Son los MISMOS que guardan HijoPage.jsx y PerfilPage.jsx,
+// y los mismos que lee analizarEpisodio para elegir pronombres.
+//
+// 🪤 Antes aca vivian las etiquetas sueltas ('Niño'/'Niña'/'Otro') y viajaban
+// crudas hasta hijos.genero. La IA compara contra 'm'/'f'/'nb', asi que nunca
+// matcheaban: toda cuenta creada por el onboarding recibia orientacion en
+// generico ("niño/a", "él/ella") aunque el padre hubiera respondido la pregunta.
+const SEXOS = [
+  { valor: 'm',  label: 'Niño' },
+  { valor: 'f',  label: 'Niña' },
+  { valor: 'nb', label: 'Otro' },
 ];
-
-const SEXOS = ['Niño', 'Niña', 'Otro'];
 
 // Duración del fade entre pasos. Debe coincidir con la transition del CSS
 // (.stepWrap → opacity 200ms ease-out + transform 200ms ease-out).
 const STEP_FADE_MS = 200;
 
-const TOTAL_STEPS = 6;
+// 5 pasos: nombre del cuidador, nombre del hijo, nacimiento, genero y foto.
+// Se elimino el sexto ("¿Que te trae a Huella?"): era obligatorio para avanzar
+// y su respuesta se escribia en perfiles.intenciones, columna que ninguna
+// pantalla ni prompt lee jamas. Pedia un dato para no usarlo.
+const TOTAL_STEPS = 5;
 
 /**
  * Props
@@ -42,16 +47,15 @@ const TOTAL_STEPS = 6;
  *                          previos quedan invisibles aunque estén montados).
  *   perfil       objeto · forma definida en Onboarding.jsx EMPTY_PERFIL
  *   setPerfil    (patch) => void · merge superficial
- *   slideIndex   number (3)
- *   totalSlides  number (5)
- *   onTopSkip    () => void · cancela todo el onboarding
- *   onContinue   () => void · avanza al slide 5 (afirmación)
+ *   onContinue   () => void · avanza al acto B
+ *
+ * Sin `onTopSkip`: el acto A dejó de ser saltable (los datos del hijo son
+ * lo que hace funcionar la app).
  */
 export default function OnboardingFormSlide({
   active,
   perfil,
   setPerfil,
-  onTopSkip,
   onContinue,
 }) {
   const [step, setStep] = useState(0);
@@ -77,7 +81,6 @@ export default function OnboardingFormSlide({
       );
       case 3: return perfil.sexo != null;
       case 4: return true; // foto opcional
-      case 5: return perfil.intenciones.length > 0;
       default: return false;
     }
   })();
@@ -136,13 +139,6 @@ export default function OnboardingFormSlide({
   };
 
   // ─── Helpers de campos ──────────────────────────────────────────
-  const toggleIntencion = (label) => {
-    const next = perfil.intenciones.includes(label)
-      ? perfil.intenciones.filter((i) => i !== label)
-      : [...perfil.intenciones, label];
-    setPerfil({ intenciones: next });
-  };
-
   // Parsea 'YYYY-MM-DD' del <input type="date"> al shape { dia, mes, anio }
   // que el persistor espera. Si viene vacío, limpiamos los 3 campos.
   const onFechaChange = (raw) => {
@@ -252,18 +248,18 @@ export default function OnboardingFormSlide({
           role="radiogroup"
           aria-label="Sexo de tu hijo o hija"
         >
-          {SEXOS.map((s) => {
-            const selected = perfil.sexo === s;
+          {SEXOS.map(({ valor, label }) => {
+            const selected = perfil.sexo === valor;
             return (
               <button
-                key={s}
+                key={valor}
                 type="button"
                 role="radio"
                 aria-checked={selected}
                 className={`${styles.bigChip} ${selected ? styles.bigChipOn : ''}`}
-                onClick={() => setPerfil({ sexo: s })}
+                onClick={() => setPerfil({ sexo: valor })}
               >
-                {s}
+                {label}
               </button>
             );
           })}
@@ -329,33 +325,6 @@ export default function OnboardingFormSlide({
         </div>
       ),
     },
-    {
-      eyebrow: 'Qué te trae a Huella',
-      title: '¿Qué te trae a Huella?',
-      hint: 'Esto ayuda a Huella a entenderte mejor desde el principio.',
-      content: (
-        <div
-          className={styles.bigChiprow}
-          role="group"
-          aria-label="Qué te trae a Huella"
-        >
-          {INTENCIONES.map((i) => {
-            const selected = perfil.intenciones.includes(i);
-            return (
-              <button
-                key={i}
-                type="button"
-                aria-pressed={selected}
-                className={`${styles.bigChip} ${selected ? styles.bigChipOn : ''}`}
-                onClick={() => toggleIntencion(i)}
-              >
-                {i}
-              </button>
-            );
-          })}
-        </div>
-      ),
-    },
   ];
 
   const current = STEPS[step];
@@ -385,13 +354,12 @@ export default function OnboardingFormSlide({
             label={`Paso ${step + 1} de ${TOTAL_STEPS}`}
             className={styles.progress}
           />
-          <button
-            type="button"
-            className={styles.topSkip}
-            onClick={onTopSkip}
-          >
-            Saltar
-          </button>
+          {/* Sin "Saltar". El nombre y la fecha de nacimiento del hijo no son
+              un tramite: la edad alimenta el Cerebro Huella y todos los marcos
+              por edad. Saltarlos dejaba una cuenta a medias y el onboarding
+              reapareciendo cada sesion, porque `yaTieneCuenta` seguia en false.
+              El espaciador conserva el centrado de la barra de progreso. */}
+          <span className={styles.topSpacer} aria-hidden="true" />
         </div>
       </header>
 

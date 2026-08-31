@@ -28,13 +28,20 @@ const API_TIMEOUT_MS = 15000;
 
 /**
  * Props
- *   active        bool       · true cuando el slide está visible (para autofocus opcional)
- *   onSubmit      (texto: string | '') => void
- *                              · llamado al pulsar "Continuar" en el estado response/fallback.
- *                                Pasa el texto original (o '' si saltó).
- *   onSkipInline  () => void  · "Saltar este paso" — no persiste texto.
+ *   active        bool       · true cuando el acto está visible
+ *   submitting    bool       · el cierre del onboarding está guardando
+ *   saveError     bool       · el guardado falló; se puede reintentar
+ *   onSubmit      (texto: string | null) => void
+ *                              · cierra el onboarding con el texto escrito
+ *   onSkipInline  () => void  · "Saltar este paso" — cierra sin texto
  */
-export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
+export default function OnboardingComposer({
+  active,
+  submitting = false,
+  saveError = false,
+  onSubmit,
+  onSkipInline,
+}) {
   const [state, setState] = useState('idle'); // idle | typing | loading | response | fallback
   const [text, setText] = useState('');
   const [response, setResponse] = useState(null);
@@ -134,9 +141,13 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
 
   const isShowingResponse = state === 'response' || state === 'fallback';
 
-  // ─────────────────────────────── Render: response ───
+  // El contenido cambia por estado; la cabecera y el marco del acto son los
+  // mismos siempre. Antes cada estado devolvia su propio arbol y la cabecera
+  // la ponia el slide contenedor, que ya no existe.
+  let contenido;
+
   if (isShowingResponse) {
-    return (
+    contenido = (
       <div className={styles.wrap}>
         <article className={styles.respCard} aria-live="polite">
           {String(response.comprension)
@@ -157,26 +168,27 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
             <p className={styles.marco}>Marco · {response.marco}</p>
           )}
         </article>
+        {saveError && (
+          <p role="alert" className={styles.error}>
+            No pudimos guardar tus datos. Revisa tu conexión y vuelve a intentar.
+          </p>
+        )}
         <button
           type="button"
           className={styles.cta}
           onClick={() => onSubmit(text.trim())}
+          disabled={submitting}
+          aria-disabled={submitting || undefined}
         >
-          Continuar
+          {submitting && <span className={styles.spin} aria-hidden="true" />}
+          {submitting ? 'Guardando…' : 'Continuar'}
         </button>
       </div>
     );
-  }
-
-  // ─────────────────────────────── Render: loading ───
-  if (state === 'loading') {
-    return (
+  } else if (state === 'loading') {
+    contenido = (
       <div className={styles.wrap}>
-        <div
-          className={styles.loadFrame}
-          aria-live="polite"
-          aria-busy="true"
-        >
+        <div className={styles.loadFrame} aria-live="polite" aria-busy="true">
           <div className={styles.ring} aria-hidden="true" />
           <p key={phraseIndex} className={styles.phrase}>
             "{FRASES_ONBOARDING[phraseIndex]}"
@@ -184,53 +196,69 @@ export default function OnboardingComposer({ active, onSubmit, onSkipInline }) {
           <ProgressBar
             value={progress}
             phase={progressPhase === 'complete' ? 'complete' : 'loading'}
-            tone="onDark"
-            color="var(--color-accent-green)"
+            tone="onLight"
+            color="var(--color-primary)"
             className={styles.progressSpace}
           />
         </div>
-        <button
-          type="button"
-          className={styles.cta}
-          disabled
-          aria-disabled="true"
-        >
+        <button type="button" className={styles.cta} disabled aria-disabled="true">
           <span className={styles.spin} aria-hidden="true" />
           Procesando
         </button>
       </div>
     );
+  } else {
+    contenido = (
+      <div className={styles.wrap}>
+        <textarea
+          ref={textareaRef}
+          className={`${styles.composer} ${state === 'typing' ? styles.composerFocus : ''}`}
+          placeholder="Ej: Hoy gritó porque no quería bañarse..."
+          value={text}
+          onChange={handleChange}
+          rows={4}
+          maxLength={MAX_TEXT_LENGTH}
+          aria-label="Cuéntale a Huella algo que te haya pasado"
+        />
+        {saveError && (
+          <p role="alert" className={styles.error}>
+            No pudimos guardar tus datos. Revisa tu conexión y vuelve a intentar.
+          </p>
+        )}
+        <button
+          type="button"
+          className={styles.cta}
+          onClick={startLoading}
+          disabled={!canSubmit}
+          aria-disabled={!canSubmit || undefined}
+        >
+          Ver qué dice Huella
+        </button>
+        <button
+          type="button"
+          className={styles.skipInline}
+          onClick={onSkipInline}
+          disabled={submitting}
+        >
+          {submitting ? 'Guardando…' : 'Saltar este paso'}
+        </button>
+      </div>
+    );
   }
 
-  // ─────────────────────────────── Render: idle/typing ───
   return (
-    <div className={styles.wrap}>
-      <textarea
-        ref={textareaRef}
-        className={`${styles.composer} ${state === 'typing' ? styles.composerFocus : ''}`}
-        placeholder="Ej: Hoy mi hijo gritó porque no quería bañarse..."
-        value={text}
-        onChange={handleChange}
-        rows={4}
-        maxLength={MAX_TEXT_LENGTH}
-        aria-label="Cuéntale a Huella algo que te haya pasado"
-      />
-      <button
-        type="button"
-        className={styles.cta}
-        onClick={startLoading}
-        disabled={!canSubmit}
-        aria-disabled={!canSubmit || undefined}
-      >
-        Ver qué dice Huella
-      </button>
-      <button
-        type="button"
-        className={styles.skipInline}
-        onClick={onSkipInline}
-      >
-        Saltar este paso
-      </button>
-    </div>
+    <section className={styles.acto}>
+      <header className={styles.head}>
+        <p className={styles.eyebrow}>Tu primer momento</p>
+        <h1 className={styles.title}>Cuéntale a Huella algo que te haya pasado</h1>
+        {!isShowingResponse && state !== 'loading' && (
+          <p className={styles.hint}>
+            Cualquier cosa de estos días, como se la contarías a alguien. No hay
+            forma correcta de escribirlo.
+          </p>
+        )}
+      </header>
+      {contenido}
+    </section>
   );
 }

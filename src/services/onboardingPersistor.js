@@ -1,18 +1,19 @@
 // onboardingPersistor.js
-// Persiste el objeto `perfil` que entrega el Onboarding · Susurro al pulsar
-// "Empezar ahora" en el slide 5. Y expone un helper para marcar el onboarding
-// como visto cuando el padre/madre lo salta.
+// Persiste el objeto `perfil` que entrega el Onboarding al cerrar el acto B.
 //
 // Mapeo del objeto del componente (camelCase) al schema real (snake_case):
 //
 //   perfil.nombrePadre      → perfiles.nombre
-//   perfil.contextoInicial  → perfiles.contexto_inicial   (omitido si vacío/null)
-//   perfil.intenciones      → perfiles.intenciones        (text[])
 //
 //   perfil.nombreHijo       → hijos.nombre
 //   perfil.nacimiento       → hijos.fecha_nacimiento      ('YYYY-MM-DD' con padding)
-//   perfil.sexo             → hijos.genero                ('Niño' | 'Niña' | 'Otro')
+//   perfil.sexo             → hijos.genero                ('m' | 'f' | 'nb')
 //   perfil.fotoBlob         → hijos.avatar_url            (NULL si no vino foto)
+//
+// Ya NO se escriben `perfiles.intenciones` ni `perfiles.contexto_inicial`:
+// eran columnas de escritura muerta (ver el comentario del upsert más abajo).
+// `perfil.textoMomento` todavía no se persiste — pasa a ser el primer episodio
+// real del hijo en el bloque 3 del rediseño.
 //
 // El INSERT del hijo se hace vía la RPC `upsert_family_child` que ya existe
 // en producción y que también usa PerfilPage. Esa función SQL se encarga
@@ -27,10 +28,6 @@ import { supabase } from '../lib/supabase'
 // PerfilPage (src/pages/perfil/PerfilPage.jsx). Reutilizado acá para
 // mantener un solo lugar de fotos de hijos en Storage.
 const BUCKET_AVATARES = 'avatares'
-
-// Clave de sessionStorage para distinguir "vio el onboarding pero no completó"
-// (caso skip) de "nunca lo vio". Vive en session — al cerrar el tab vuelve.
-const STORAGE_KEY_DISMISSED = 'huella.onboarding.dismissed'
 
 /**
  * Padding cero a 2 dígitos: "5" → "05", "12" → "12", "" → "".
@@ -91,8 +88,7 @@ async function subirAvatarHijo(userId, hijoId, file) {
  *
  * Flujo:
  *   1. Obtiene el usuario autenticado desde Supabase.
- *   2. UPSERT en `perfiles` (PK = user_id): nombre + intenciones + contexto_inicial.
- *      `contexto_inicial` se omite del patch si viene null o string vacío.
+ *   2. UPSERT en `perfiles` (PK = user_id): solo el nombre.
  *   3. INSERT en `hijos` vía RPC `upsert_family_child` (sin foto todavía).
  *      Devuelve el UUID del hijo recién creado.
  *   4. Si vino `fotoBlob`, sube la foto al bucket `avatares` y luego hace un
@@ -155,24 +151,39 @@ export async function persistirPerfilOnboarding(perfil) {
     )
   }
 
+  // 🪤 Genero: la app entera guarda 'm' | 'f' | 'nb' (HijoPage, PerfilPage) y
+  // analizarEpisodio compara contra esos codigos para elegir pronombres. El
+  // onboarding, en cambio, mandaba las etiquetas crudas ('Niño'/'Niña'/'Otro'),
+  // que no matcheaban con nada: toda cuenta creada aca recibia orientacion en
+  // generico ("niño/a", "él/ella") aunque el padre hubiera respondido.
+  //
+  // El formulario ya manda los codigos. Esta funcion es la red por si vuelve a
+  // llegar una etiqueta (o un valor viejo desde otro camino).
+  const MAPA_GENERO = {
+    m: 'm', f: 'f', nb: 'nb',
+    'Niño': 'm', 'Niña': 'f', 'Otro': 'nb',
+  }
+  function normalizarGenero(valor) {
+    if (!valor) return null
+    return MAPA_GENERO[String(valor).trim()] ?? null
+  }
+
   // Normalizaciones defensivas.
   const nombrePadre = (perfil.nombrePadre || '').trim()
   const nombreHijo  = (perfil.nombreHijo  || '').trim()
-  const intenciones = Array.isArray(perfil.intenciones) ? perfil.intenciones : []
   const fechaNac    = componerFechaNacimiento(perfil.nacimiento)
-  const genero      = perfil.sexo || null
-  const contexto    = (perfil.contextoInicial || '').trim()
+  const genero      = normalizarGenero(perfil.sexo)
 
   // 2. UPSERT a `perfiles`. PK = user_id, así que onConflict apunta ahí.
-  //    `contexto_inicial` solo se incluye si vino con texto real (decisión
-  //    del bundle: no persistir string vacío para no contaminar el dato).
+  //
+  // Ya NO se escriben `intenciones` ni `contexto_inicial`. Las dos columnas
+  // eran de escritura muerta: se llenaban en cada onboarding y ninguna
+  // pantalla, prompt ni query las leía jamás — `loadUserData` ni siquiera las
+  // trae en su select de `perfiles`. Se dejó de pedir el dato (el paso de
+  // intenciones se eliminó) y se dejó de escribirlo.
   const perfilPatch = {
     user_id: user.id,
     nombre: nombrePadre || null,
-    intenciones,
-  }
-  if (contexto) {
-    perfilPatch.contexto_inicial = contexto
   }
   const { error: perfilErr } = await supabase
     .from('perfiles')
@@ -231,23 +242,3 @@ export async function persistirPerfilOnboarding(perfil) {
   return { userId: user.id, hijoId, avatarUrl }
 }
 
-/**
- * Marca que el padre/madre vio el onboarding y lo saltó (no lo completó).
- * Se persiste en sessionStorage para que en la misma sesión no vuelva a
- * mostrarse, pero al cerrar el tab vuelve. Decisión del bundle: el skip
- * no es un "completado" — solo silencia el flujo por la sesión actual.
- *
- * Es no-throw: si sessionStorage no está disponible (modo privado, Storage
- * deshabilitado), tragamos la excepción y seguimos.
- */
-export function marcarOnboardingVisto() {
-  try {
-    if (typeof window === 'undefined') return
-    window.sessionStorage.setItem(
-      STORAGE_KEY_DISMISSED,
-      new Date().toISOString()
-    )
-  } catch {
-    // sessionStorage no disponible — no rompemos el flujo de skip.
-  }
-}
