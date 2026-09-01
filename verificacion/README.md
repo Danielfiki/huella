@@ -19,16 +19,25 @@ Se compila una vez y se corren las suites que hagan falta:
 npx vite build --config verificacion/vite.config.mjs
 
 node verificacion/correr.mjs              # arranque -> 24 OK, 0 fallas
-node verificacion/correr-voz.mjs despues  # voz      -> 10 OK, 0 fallas
-node verificacion/correr-voz.mjs antes    # voz      ->  4 OK, 6 fallas (así debe ser)
+node verificacion/correr-voz.mjs despues     # voz -> 13 OK, 0 fallas
+node verificacion/correr-voz.mjs qa-fallado  # voz -> 10 OK, 3 fallas (así debe ser)
+node verificacion/correr-voz.mjs antes       # voz ->  5 OK, 8 fallas (así debe ser)
 ```
 
 ⚠️ El primer comando es **obligatorio**: genera `verificacion/dist/`, que está
 en `.gitignore` y por lo tanto no viene con el repo.
 
-La suite de voz recibe un argumento: `despues` corre el código de hoy y **tiene
-que dar 0 fallas**; `antes` corre la versión con el bug rescatada de git y
-**tiene que fallar**. Si `antes` pasa entera, la suite dejó de probar algo.
+La suite de voz recibe un argumento con la versión a correr. **`qa-fallado` es
+la importante:** es el fix `01ad956`, que pasó la suite de esa mañana y **falló
+en el Android real**. Pasa los 10 casos viejos y se cae en los 3 nuevos — o sea
+que la suite ahora prueba lo que antes no miraba. Si `antes` o `qa-fallado`
+pasan enteras, la suite dejó de probar algo.
+
+⚠️ **La lección de por qué existe `qa-fallado`:** la cinta original la escribió
+la misma cabeza que escribió el fix, así que le dio la razón. Cuando un fix
+descansa en un supuesto sobre un sistema externo (un motor de voz, una API, un
+navegador), **el test tiene que incluir al menos una cinta que ese supuesto NO
+cumpla**. Escribir la cinta hostil primero, no la amable.
 
 ## Qué prueba — arranque
 
@@ -82,6 +91,8 @@ dato de entrada (una **cinta**) y cada cinta es un navegador:
 | `cintaAndroid` | `continuous = true` ignorado (cierra tras **cada** frase) **+ decenas de parciales por frase** |
 | `cintaSafari` | Corta por silencio con el provisorio en vuelo, sin final |
 | `cintaMotorRoto` | Rebota para siempre sin capturar nada |
+| `cintaIndiceAvanza` | **Forma A del Android real:** cada parcial estrena índice (`0:0`, `0:1`, `0:2`…) |
+| `cintaSesionPorParcial` | **Forma B del Android real:** una sesión nueva por parcial (`0:0`, `1:0`, `2:0`…), y sin finales, así que también agota el techo |
 
 ⚠️ **La cinta de Android tiene que traer muchos parciales por frase.** El dato de
 producción mostró que entre el 12 y el 30 de agosto ningún relato se desbocó: la
@@ -109,8 +120,8 @@ En vez de eso:
   vuelve a disparar `onend`.
 - **`correr.mjs`** y **`correr-voz.mjs`** usan un **reloj virtual**: los "8
   segundos" se avanzan, no se esperan. Cada suite corre en menos de un segundo.
-- **`AuthContext.ANTES.jsx`** y **`VoiceTextarea.ANTES.jsx`** son las versiones
-  anteriores al fix, sacadas de git. **No son simulaciones del bug: son el
+- **`AuthContext.ANTES.jsx`**, **`VoiceTextarea.ANTES.jsx`** y
+  **`VoiceTextarea.QA-FALLADO.jsx`** son versiones anteriores, sacadas de git. **No son simulaciones del bug: son el
   código que lo tenía.** Por eso las suites demuestran el defecto, además de
   demostrar el arreglo — y eso es lo que prueba que no aprueban solas.
 
@@ -140,5 +151,6 @@ grep -c createClient verificacion/dist/entrada.mjs   # debe dar 0
 Y que la versión `antes` de voz siga fallando:
 
 ```bash
-node verificacion/correr-voz.mjs antes   # debe dar 6 fallas, no 0
+node verificacion/correr-voz.mjs antes        # debe dar 8 fallas, no 0
+node verificacion/correr-voz.mjs qa-fallado   # debe dar 3 fallas, no 0
 ```

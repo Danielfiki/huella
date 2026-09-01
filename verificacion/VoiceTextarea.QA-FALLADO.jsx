@@ -226,73 +226,16 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       // El final manda siempre: si existe, el parcial de esa misma clave es una
       // versión vieja de lo mismo y no debe aparecer además.
       const t = (finalesRef.current.get(k) ?? parcialesRef.current.get(k) ?? '').trim()
-      if (!t) continue
-
-      // ── EL PLEGADO POR PREFIJO ──────────────────────────────────────────
-      //
-      // Acá está la lección que costó un QA fallado en Android. Guardar por
-      // clave arregla los peldaños que el motor manda sobre la MISMA clave,
-      // pero el 1 sep el dispositivo real los mandó sobre claves distintas —
-      // ya sea porque el índice avanza con cada parcial, ya sea porque abre
-      // una sesión nueva por cada uno. Y ahí la escalera pasaba entera.
-      //
-      // La clave la decide el navegador y cambia entre motores. Lo que NO
-      // cambia es la forma del dato: un peldaño siempre EMPIEZA CON el
-      // anterior. Así que se pliega por esa propiedad y no por la clave, y
-      // deja de importar cómo numere los resultados el motor de turno.
-      const previo = trozos[trozos.length - 1]
-      if (previo) {
-        const a = normalizar(previo)
-        const b = normalizar(t)
-        // El nuevo continúa al anterior: se queda el nuevo, que trae más.
-        if (b.startsWith(a)) { trozos[trozos.length - 1] = t; continue }
-        // Llegó una versión más corta de lo mismo: se queda la que ya está.
-        if (a.startsWith(b)) continue
-      }
-      trozos.push(t)
+      if (t) trozos.push(t)
     }
 
     const relato = trozos.join(' ')
     return relato.length > MAX_CARACTERES ? relato.slice(0, MAX_CARACTERES) : relato
   }
 
-  // Para comparar peldaños hay que ignorar lo que el motor cambia entre una
-  // hipótesis y la siguiente: mayúsculas, espacios de más y la puntuación que
-  // va agregando al final ("hoy" -> "Hoy,"). Solo se usa para COMPARAR; el
-  // texto que se guarda es siempre el original.
-  function normalizar(t) {
-    return t
-      .toLowerCase()
-      .replace(/[.,;:!?¿¡]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-  }
-
   function hayParciales() {
     for (const t of parcialesRef.current.values()) if (t.trim()) return true
     return false
-  }
-
-  // Canario. El plegado por prefijo cubre las dos formas de escalera que
-  // conocemos, pero el motor de un teléfono que no tenemos puede inventar una
-  // tercera. Si el relato armado queda mucho más largo que la suma de sus
-  // pedazos más grandes, algo se está repitiendo — y queremos enterarnos por
-  // este aviso, no por el episodio de un tester tres semanas después.
-  //
-  // Solo avisa: no corta ni cambia nada. Cortar en base a una heurística sería
-  // peor que el problema.
-  function avisarSiHayEscalera() {
-    const pedazos = [...finalesRef.current.values(), ...parcialesRef.current.values()]
-    if (pedazos.length < 4) return
-    const masLargo = Math.max(...pedazos.map((t) => t.length))
-    const relato = armarRelato().length
-    if (masLargo > 0 && relato > masLargo * 4) {
-      logVoz('CANARIO: el relato parece una escalera', {
-        largoRelato: relato,
-        pedazoMasLargo: masLargo,
-        pedazos: pedazos.length,
-      })
-    }
   }
 
   // Called by rec.onend (after stop() + all pending onresult events have fired)
@@ -442,13 +385,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
 
     rec.onresult = (e) => {
       let huboFinal = false
-      let huboTexto = false
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i]
         const clave = `${sesionRef.current}:${i}`
         const texto = r[0].transcript
-        if (texto && texto.trim()) huboTexto = true
 
         if (r.isFinal) {
           huboFinal = true
@@ -462,33 +403,19 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
         }
       }
 
-      // Llegó texto: el motor está sano y el contador de reinicios vuelve a
-      // cero, porque solo debe atrapar rebotes SEGUIDOS SIN CAPTURAR NADA.
-      //
-      // Se resetea con CUALQUIER texto, no solo con un final: en el Android
-      // del QA del 1 sep el motor mandaba únicamente parciales, así que
-      // exigiendo un final el contador no bajaba nunca, el techo saltaba a los
-      // 9 rebotes y la grabación se apagaba sola con el cuidador hablando. Ese
-      // era el "se cortaba, muy corto" del reporte.
-      if (huboTexto) reiniciosRef.current = 0
-
+      // Llegó texto definitivo: el motor está sano. El contador de reinicios
+      // vuelve a cero porque solo debe atrapar rebotes SEGUIDOS SIN CAPTURAR
+      // NADA. Sin esto, hablar con pausas en Android agotaba el techo y la
+      // grabación se apagaba sola con el cuidador hablando.
       if (huboFinal) {
+        reiniciosRef.current = 0
         // Solo se loguean los finales: con interimResults activo, los
         // provisorios disparan decenas de eventos por frase y ahogarían la
         // consola.
-        //
-        // Se registra también la FORMA cruda del evento. Es lo que faltó para
-        // cerrar el QA del 1 sep: sin saber si el índice avanza o si se abre
-        // una sesión nueva por parcial, la causa quedó en conjetura y hubo que
-        // reproducirla a ciegas.
         logVoz('onresult final', {
           grabando: isRecordingRef.current,
           largoRelato: armarRelato().length,
-          resultIndex: e.resultIndex,
-          resultados: e.results.length,
-          sesion: sesionRef.current,
         })
-        avisarSiHayEscalera()
       }
 
       // Justo lo que la gracia estaba esperando: llegó la frase terminada, así

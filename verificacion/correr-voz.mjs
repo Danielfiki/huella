@@ -18,7 +18,7 @@
 
 import assert from 'node:assert/strict'
 import {
-  VoiceTextareaAntes, VoiceTextareaDespues, react, voz,
+  VoiceTextareaAntes, VoiceTextareaQaFallado, VoiceTextareaDespues, react, voz,
 } from './dist/entrada.mjs'
 
 // ── Reloj virtual ───────────────────────────────────────────────────────────
@@ -192,8 +192,18 @@ const RELATO = [
 ]
 const RELATO_LIMPIO = RELATO.join(' ')
 
-const version = process.argv[2] === 'antes' ? 'antes' : 'despues'
-const Componente = version === 'antes' ? VoiceTextareaAntes : VoiceTextareaDespues
+// Tres versiones, no dos:
+//   antes      -> el original, con el `+=` que sumaba la escalera
+//   qa-fallado -> el fix 01ad956, que aplastaba solo los peldanos de la MISMA
+//                 clave y por eso paso la suite pero fallo en el Android real
+//   despues    -> el codigo de hoy
+const VERSIONES = {
+  'antes':      VoiceTextareaAntes,
+  'qa-fallado': VoiceTextareaQaFallado,
+  'despues':    VoiceTextareaDespues,
+}
+const version = VERSIONES[process.argv[2]] ? process.argv[2] : 'despues'
+const Componente = VERSIONES[version]
 
 console.log(`\nVerificacion del dictado por voz — version: ${version.toUpperCase()}`)
 console.log(`relato dictado: ${RELATO_LIMPIO.length} caracteres, ${RELATO_LIMPIO.split(' ').length} palabras\n`)
@@ -219,6 +229,37 @@ await caso('A2 · el relato guardado es el que se dicto', async () => {
 await caso('A3 · ninguna frase aparece repetida', async () => {
   const t = escalera.texto ?? ''
   assert.ok(!/\b(\w+ \w+ \w+) \1\b/.test(t), `hay fragmentos repetidos: "${t.slice(0, 90)}..."`)
+})
+
+// ── A-BIS · LAS DOS FORMAS DEL DISPOSITIVO REAL ─────────────────────────────
+// Las que destapó el QA en Android del 1 sep. La versión `qa-fallado` pasa
+// todo lo de arriba y se cae acá: es exactamente lo que vio Daniel.
+console.log('\nA-bis · Las dos formas que destapo el Android real')
+
+const FRASE_QA = 'me gustaria decir que hoy hablando con ella se calmo'
+
+await caso('A4 · forma A: el indice avanza con cada parcial', async () => {
+  const r = await dictar(Componente, voz.cintaIndiceAvanza(FRASE_QA))
+  const largo = r.texto?.length ?? 0
+  console.log(`        dictado real ${FRASE_QA.length} chars -> guardado ${largo} chars (x${(largo / FRASE_QA.length).toFixed(1)})`)
+  assert.equal(r.texto, FRASE_QA, `quedo la escalera: "${(r.texto ?? '').slice(0, 80)}..."`)
+})
+
+await caso('A5 · forma B: una sesion nueva por cada parcial', async () => {
+  const r = await dictar(Componente, voz.cintaSesionPorParcial(FRASE_QA), { msGrabando: 40000 })
+  const largo = r.texto?.length ?? 0
+  console.log(`        dictado real ${FRASE_QA.length} chars -> guardado ${largo} chars (x${(largo / FRASE_QA.length).toFixed(1)})`)
+  assert.equal(r.texto, FRASE_QA, `quedo la escalera: "${(r.texto ?? '').slice(0, 80)}..."`)
+})
+
+await caso('A6 · forma B: un motor que solo manda parciales no agota el techo', async () => {
+  const r = await dictar(Componente, voz.cintaSesionPorParcial(FRASE_QA), { msGrabando: 40000 })
+  const porTecho = r.bitacora.filter((b) => b.que === 'start').length
+  console.log(`        sesiones abiertas: ${porTecho}`)
+  assert.ok(
+    (r.texto ?? '').includes('se calmo'),
+    'la grabacion se corto antes del final: el techo se agoto porque nunca llego un final'
+  )
 })
 
 // ── B · ANDROID: continuous=true no se respeta ──────────────────────────────
@@ -311,4 +352,4 @@ console.log()
 // En la version ANTES las fallas son la EVIDENCIA del bug, asi que salir con 1
 // seria mentir: lo que se pide es que falle. El codigo de salida solo manda en
 // la version DESPUES.
-process.exit(version === 'antes' ? 0 : (fallos.length ? 1 : 0))
+process.exit(version === 'despues' && fallos.length ? 1 : 0)

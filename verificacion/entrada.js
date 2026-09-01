@@ -15,3 +15,6 @@ export * as supa from './shim/supabase.js'
 export { default as VoiceTextareaDespues } from '../src/components/ui/VoiceTextarea.jsx'
 export { default as VoiceTextareaAntes } from './VoiceTextarea.ANTES.jsx'
 export * as voz from './shim/speech.js'
+// El fix 01ad956: paso la suite y fallo en el Android real. Se congela para que
+// la suite demuestre POR QUE fallo, no solo que ya no falla.
+export { default as VoiceTextareaQaFallado } from './VoiceTextarea.QA-FALLADO.jsx'

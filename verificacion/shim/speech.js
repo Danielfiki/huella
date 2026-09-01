@@ -211,3 +211,39 @@ export function cintaAndroidLarga(n) {
   const frases = Array.from({ length: n }, (_, i) => `frase numero ${i + 1}`)
   return { cinta: cintaAndroid(frases), frases }
 }
+
+// ── LAS DOS FORMAS QUE EL DISPOSITIVO REAL DESTAPO (QA fallado, 1 sep) ──────
+//
+// El fix `01ad956` guardaba cada resultado bajo la clave `sesion:indice` y
+// reemplazaba si la clave se repetia. Eso aplasta la escalera SOLO cuando los
+// peldanos caen en la MISMA clave — que es justo lo que modelaban las cintas de
+// arriba, porque las escribio la misma cabeza que escribio el fix.
+//
+// En el Android de verdad los peldanos caen en claves DISTINTAS, y ahi pasan
+// enteros. Hay dos formas de que eso ocurra, y estas cintas son cada una.
+// La leccion: el peldano no se reconoce por su clave —eso lo decide el
+// navegador— sino porque EMPIEZA CON el anterior.
+
+// FORMA A — el indice AVANZA con cada parcial. Una sola sesion, pero cada
+// parcial estrena indice en vez de revisar el anterior: claves 0:0, 0:1, 0:2...
+export function cintaIndiceAvanza(frase) {
+  const palabras = frase.split(' ')
+  return [palabras.map((_, i) => ({
+    ms: 100 + i * 80,
+    indice: i,
+    resultados: [{ texto: palabras.slice(0, i + 1).join(' '), final: false }],
+  }))]
+}
+
+// FORMA B — una SESION nueva por cada parcial. El motor cierra despues de cada
+// parcial y al reabrir re-reconoce la frase desde el principio: claves 0:0,
+// 1:0, 2:0... Ademas, como nunca manda un final, el contador de reinicios no se
+// reseteaba y el techo cortaba la grabacion: esta cinta reproduce los DOS
+// sintomas del reporte original a la vez.
+export function cintaSesionPorParcial(frase) {
+  const palabras = frase.split(' ')
+  return palabras.map((_, i) => ([
+    { ms: 100, indice: 0, resultados: [{ texto: palabras.slice(0, i + 1).join(' '), final: false }] },
+    { ms: 260, fin: true },
+  ]))
+}
