@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Trash2, Camera } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
@@ -33,6 +33,39 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   // (lazy en background con techo 10/sesión) y se actualiza cuando termina.
   const [accionRapidaActual, setAccionRapidaActual] = useState(episodio.accionRapida ?? null)
   const [regenerando, setRegenerando]               = useState(false)
+
+  // ── El relato dictado: recorte + "Ver relato completo" ────────────────
+  // `descripcionLibre` cambio de significado y la tarjeta no se entero. Hasta
+  // el registro conversacional era el textarea corto que el cuidador tipeaba
+  // a mano; desde entonces guarda la TRANSCRIPCION ENTERA del dictado, con
+  // todos los turnos pegados con doble salto de linea
+  // (RegistroPage.jsx:445 + RegistroConversacional.jsx:226). Sin recorte, la
+  // tarjeta se estiraba sin techo y tapaba todo lo demas.
+  //
+  // Se recorta SOLO al mostrar: el texto en la base queda completo, que es
+  // justamente lo que el comentario de RegistroPage pide no perder.
+  const [relatoOpen, setRelatoOpen] = useState(false)
+  const [relatoDesborda, setRelatoDesborda] = useState(false)
+  const relatoRef = useRef(null)
+
+  // El toggle aparece solo si de verdad hay texto escondido, y eso se mide:
+  // un umbral por cantidad de caracteres se equivoca con los relatos de
+  // lineas cortas, que son justo los que deja el dictado. Se vuelve a medir
+  // cuando terminan de cargar las fuentes, porque con la de respaldo el alto
+  // de linea no es el mismo y la primera medicion queda mintiendo.
+  //
+  // Depende solo del texto a proposito: si `relatoOpen` estuviera en las
+  // dependencias, al abrir se volveria a medir sin el recorte, daria "no
+  // desborda" y el boton para volver a cerrar desapareceria.
+  useLayoutEffect(() => {
+    const el = relatoRef.current
+    if (!el) { setRelatoDesborda(false); return }
+    const medir = () => setRelatoDesborda(el.scrollHeight > el.clientHeight + 1)
+    medir()
+    let vivo = true
+    document.fonts?.ready.then(() => { if (vivo) medir() })
+    return () => { vivo = false }
+  }, [episodio.descripcionLibre])
 
   const { user } = useAuth()
   const { state: huellaState, updateHitoFoto } = useHuella()
@@ -177,7 +210,24 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
         )}
 
         {episodio.descripcionLibre && (
-          <p className={styles.descLibre}>{episodio.descripcionLibre}</p>
+          <div className={styles.relatoWrap}>
+            <p
+              ref={relatoRef}
+              className={`${styles.descLibre} ${relatoOpen ? '' : styles.descLibreCorto}`}
+            >
+              {episodio.descripcionLibre}
+            </p>
+            {relatoDesborda && (
+              <button
+                type="button"
+                className={styles.relatoToggle}
+                onClick={() => setRelatoOpen((v) => !v)}
+                aria-expanded={relatoOpen}
+              >
+                {relatoOpen ? 'Ver menos' : 'Ver relato completo'}
+              </button>
+            )}
+          </div>
         )}
 
         <div className={styles.row3}>

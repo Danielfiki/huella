@@ -130,13 +130,57 @@
   opacity: 0.65;
 }
 
+/* ─── relato dictado (descripcion libre) ─── */
+/* La linea del borde pasa del parrafo a este envoltorio para que el toggle
+   quede dentro del mismo bloque: el "Ver relato completo" pertenece al
+   relato, no a la tarjeta. */
+.relatoWrap {
+  border-left: 2px solid var(--color-primary-light);
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
 .descLibre {
   font-size: 12px; line-height: 1.5;
   color: var(--color-text-muted);
   margin: 0;
-  border-left: 2px solid var(--color-primary-light);
-  padding-left: 8px;
   white-space: pre-wrap;
+  /* pre-wrap respeta los saltos del dictado, pero no parte una palabra
+     kilometrica: sin esto un pegote sin espacios estira la tarjeta a lo
+     ancho y saca la lista entera de cuadro. */
+  overflow-wrap: anywhere;
+}
+
+/* El recorte de la lista. Desde el registro conversacional este campo trae
+   la transcripcion entera del dictado, asi que sin techo la tarjeta crecia
+   sin fin. Tres lineas y no dos como .desc: el relato es la voz del
+   cuidador y merece un poco mas de aire, pero sigue cabiendo sin empujar
+   la orientacion ni los dots fuera de vista. */
+.descLibreCorto {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mismo gesto que "Ver orientacion" (.iaInline): boton en linea, sin caja,
+   que abre en el mismo lugar. Pero NO hereda su color: el verde de
+   .iaInline sobre el blanco de --color-surface da 2,68:1, y esto es letra
+   de 11px. --color-text-muted da 5,81:1 en claro y 6,23:1 en oscuro, y
+   ademas es el color del propio relato, asi que se lee como parte de el.
+   El subrayado carga la senal de "esto se toca", que el color muted solo
+   no alcanza a dar. */
+.relatoToggle {
+  padding: 0; background: transparent; border: none;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 
 /* ─── row3: pills + ia + dots ─── */

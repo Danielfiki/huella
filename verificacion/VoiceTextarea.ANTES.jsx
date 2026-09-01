@@ -44,33 +44,10 @@ const AVISO_SEGUNDOS = 20
 // función capturada) garantiza llamar a la versión viva.
 let grabadorActivo = null
 
-// El motor corta el reconocimiento por su cuenta tras un silencio. Lo
-// reiniciamos, pero con techo: si rebota una y otra vez es que quedó
+// Safari corta el reconocimiento por su cuenta tras un silencio. Lo
+// reiniciamos, pero con techo: si rebota una y otra vez es que el motor quedó
 // inservible y seguir intentando solo deja la UI mintiendo.
-//
-// OJO CON EL TECHO: cuenta reinicios SEGUIDOS SIN CAPTURAR NADA, no reinicios
-// totales. La diferencia importa porque en Chrome Android `continuous = true`
-// no se respeta: el motor cierra después de CADA frase, así que reiniciar es
-// el funcionamiento normal, no la excepción. Contando reinicios totales, ocho
-// pausas apagaban la grabación con el cuidador hablando — y eso es justo lo
-// que reportó la tester del 31 ago.
 const MAX_REINICIOS_SR = 8
-
-// Cuánto se espera antes de rearrancar. Un `start()` sincrónico dentro de
-// `onend` tira `InvalidStateError` en Chrome: el motor todavía no termina de
-// soltarse. Se rearranca con instancia nueva y con este respiro.
-const MS_ESPERA_REINICIO = 150
-// Cuántas veces se reintenta un `start()` que tropieza antes de rendirse. Antes
-// era cero: el primer tropiezo mataba la grabación entera.
-const MAX_INTENTOS_START = 3
-
-// Techo duro del relato. No existe dictado humano de 8.000 caracteres: a 150
-// palabras por minuto, los 2 minutos de tope dan unos 1.800. Esto no es un
-// límite de producto, es un cinturón de seguridad — si algún motor vuelve a
-// entregar los resultados de una forma que no previmos, el relato se corta acá
-// en vez de viajar entero a la IA. El 31 ago se fueron 77.685 caracteres de
-// basura a una llamada de Anthropic por no tener esto.
-const MAX_CARACTERES = 8000
 
 // Cuánto se espera el `onend` después de pedir stop() antes de dar por muerto
 // al motor y pasar a revisión igual.
@@ -127,29 +104,14 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   // curso, pero sigue siendo un motor vivo y hay que abortarlo (ver
   // `soltarMotor`).
   const recPendienteRef   = useRef(null)
-  // ── El relato se GUARDA POR CLAVE, nunca se concatena ─────────────────
-  //
-  // Este es el corazón del componente y la causa del bug del 31 ago. Antes el
-  // relato era un string al que se le sumaba cada resultado con `+=`. Eso es
-  // correcto solo si cada resultado es un pedazo NUEVO. Pero un motor de voz
-  // también reenvía el MISMO pedazo con más palabras a medida que entiende
-  // mejor: "momento", "momento de", "momento de ir"... Sumando, el relato
-  // termina siendo la escalera entera. Con 161 palabras dictadas eso da 77.685
-  // caracteres, que es exactamente lo que llegó a la base.
-  //
-  // La solución no es detectar y descontar duplicados —eso ya se intentó y era
-  // el parche que además se comía frases buenas—, sino que guardar deje de ser
-  // una suma. Cada resultado se guarda bajo la clave `sesion:indice`: si el
-  // motor reenvía ese mismo resultado con el texto crecido, REEMPLAZA en vez de
-  // sumar. Guardar pasa a ser idempotente y la escalera no se puede formar,
-  // dé lo que dé el navegador.
-  //
-  // La `sesion` va en la clave porque al reiniciar los índices vuelven a
-  // empezar en 0: sin ella, la primera frase de la sesión nueva pisaría a la
-  // primera de la anterior.
-  const finalesRef        = useRef(new Map())   // `sesion:indice` -> texto final
-  const parcialesRef      = useRef(new Map())   // `sesion:indice` -> texto en curso
-  const sesionRef         = useRef(0)
+  const transcriptRef     = useRef('')
+  // Última hipótesis del motor que todavía NO se marcó como final. Safari
+  // descarta lo provisorio al cerrar la sesión, así que sin esto la frase con
+  // que uno cierra el relato ("...fue muy complicado") se perdía siempre.
+  const interimRef        = useRef('')
+  // Lo provisorio que ya se sumó al ref. Si después llega su versión final, hay
+  // que sacar esta copia antes de agregarla: si no, la frase queda dos veces.
+  const interimCobradoRef = useRef('')
   const graciaTimeoutRef  = useRef(null)
   const enGraciaRef       = useRef(false)
   const isRecordingRef    = useRef(false)
@@ -205,37 +167,16 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     try { rec.abort() } catch { /* ya estaba muerto */ }
   }
 
-  // Arma el relato a partir de lo guardado, en el orden en que se dijo.
-  //
-  // `conParciales` incluye lo que el motor todavía no marcó como definitivo.
-  // Va en true en todos lados menos donde solo interesa saber si hubo avance:
-  // para el motor esa última frase nunca fue final, pero el cuidador la dijo
-  // igual y prefiere leerla imperfecta antes que no leerla.
-  function armarRelato(conParciales = true) {
-    const claves = new Set(finalesRef.current.keys())
-    if (conParciales) for (const k of parcialesRef.current.keys()) claves.add(k)
-
-    const orden = [...claves].sort((a, b) => {
-      const [sa, ia] = a.split(':').map(Number)
-      const [sb, ib] = b.split(':').map(Number)
-      return sa - sb || ia - ib
-    })
-
-    const trozos = []
-    for (const k of orden) {
-      // El final manda siempre: si existe, el parcial de esa misma clave es una
-      // versión vieja de lo mismo y no debe aparecer además.
-      const t = (finalesRef.current.get(k) ?? parcialesRef.current.get(k) ?? '').trim()
-      if (t) trozos.push(t)
-    }
-
-    const relato = trozos.join(' ')
-    return relato.length > MAX_CARACTERES ? relato.slice(0, MAX_CARACTERES) : relato
-  }
-
-  function hayParciales() {
-    for (const t of parcialesRef.current.values()) if (t.trim()) return true
-    return false
+  // Suma al relato lo que quedó como provisorio. Se llama al cerrar: para el
+  // motor esa frase nunca fue definitiva, pero el padre la dijo igual y prefiere
+  // leerla imperfecta antes que no leerla.
+  function cobrarInterim() {
+    const pendiente = interimRef.current.trim()
+    interimRef.current = ''
+    if (!pendiente) return
+    transcriptRef.current += (transcriptRef.current ? ' ' : '') + pendiente
+    interimCobradoRef.current = pendiente
+    logVoz('cobrarInterim: se rescata lo provisorio', { largo: pendiente.length })
   }
 
   // Called by rec.onend (after stop() + all pending onresult events have fired)
@@ -265,9 +206,11 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     // al motor para que mande la versión terminada. No se aplica si venimos de
     // la red de seguridad: ahí ya se esperaron 8 segundos y el motor no va a
     // reaccionar.
-    if (hayParciales() && via !== 'timeout' && !enGraciaRef.current) {
+    if (interimRef.current.trim() && via !== 'timeout' && !enGraciaRef.current) {
       enGraciaRef.current = true
-      logVoz(`finalizarRevision via ${via}: hay provisorio, se espera el final`)
+      logVoz(`finalizarRevision via ${via}: hay provisorio, se espera el final`, {
+        provisorio: interimRef.current.trim().length,
+      })
       setVoiceEstado('finalizando')
       graciaTimeoutRef.current = setTimeout(() => cerrarRevision('gracia-vencida'), MS_GRACIA_INTERIM)
       return
@@ -281,9 +224,9 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
   function cerrarRevision(via) {
     clearTimeout(graciaTimeoutRef.current)
     enGraciaRef.current = false
-    const relato = armarRelato()
-    logVoz(`cerrarRevision via ${via}`, { largoRelato: relato.length })
-    setTranscriptText(relato)
+    cobrarInterim()
+    logVoz(`cerrarRevision via ${via}`, { largoRef: transcriptRef.current.length })
+    setTranscriptText(transcriptRef.current.trim())
     setVoiceEstado('revisando')
   }
 
@@ -310,7 +253,7 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     logVoz('detenerGrabacion', {
       segundos: segundosRef.current,
       reinicios: reiniciosRef.current,
-      largoRelato: armarRelato().length,
+      largoRef: transcriptRef.current.length,
     })
     if (recRef.current) {
       // Transition to 'finalizando' while SR processes pending audio.
@@ -348,9 +291,9 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     clearTimeout(graciaTimeoutRef.current)
     enGraciaRef.current = false
     isRecordingRef.current = true
-    finalesRef.current = new Map()
-    parcialesRef.current = new Map()
-    sesionRef.current = 0
+    transcriptRef.current = ''
+    interimRef.current = ''
+    interimCobradoRef.current = ''
     segundosRef.current = 0
     reiniciosRef.current = 0
     setSegundos(0)
@@ -365,15 +308,8 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
       if (segundosRef.current >= MAX_SEGUNDOS) detenerRef.current?.()
     }, 1000)
 
-    arrancarMotor({ primero: true })
-  }
-
-  // Arma un motor nuevo con sus manejadores. Cada reinicio crea uno: reusar la
-  // misma instancia es lo que hace que Chrome tire `InvalidStateError` al
-  // rearrancar, porque el objeto todavía se está soltando.
-  function crearMotor() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return null
+    if (!SR) return
 
     const rec = new SR()
     rec.lang = 'es-CL'
@@ -382,40 +318,39 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
     // frase en curso: es la única forma de no perder lo último que se dijo
     // cuando la sesión se cierra antes de que el motor la marque como final.
     rec.interimResults = true
+    recRef.current = rec
 
     rec.onresult = (e) => {
+      let provisorio = ''
       let huboFinal = false
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i]
-        const clave = `${sesionRef.current}:${i}`
-        const texto = r[0].transcript
-
-        if (r.isFinal) {
-          huboFinal = true
-          // `set` y no `+=`: si este índice ya tenía algo, esto es la versión
-          // mejorada de lo mismo y tiene que reemplazarla. Acá se corta la
-          // escalera de raíz.
-          finalesRef.current.set(clave, texto)
-          parcialesRef.current.delete(clave)
-        } else {
-          parcialesRef.current.set(clave, texto)
+        if (!r.isFinal) {
+          // Lo provisorio se ACUMULA dentro del evento pero REEMPLAZA lo del
+          // evento anterior: mientras el motor refina una frase, cada evento
+          // reenvía la versión completa de lo mismo. Sumarlas duplicaría.
+          provisorio += r[0].transcript
+          continue
         }
+        huboFinal = true
+        // Llegó la versión buena de algo que ya habíamos rescatado a la fuerza:
+        // se saca la copia provisoria y queda solo la final.
+        if (interimCobradoRef.current && transcriptRef.current.endsWith(interimCobradoRef.current)) {
+          transcriptRef.current = transcriptRef.current
+            .slice(0, -interimCobradoRef.current.length)
+            .trimEnd()
+        }
+        interimCobradoRef.current = ''
+        transcriptRef.current += (transcriptRef.current ? ' ' : '') + r[0].transcript
       }
 
-      // Llegó texto definitivo: el motor está sano. El contador de reinicios
-      // vuelve a cero porque solo debe atrapar rebotes SEGUIDOS SIN CAPTURAR
-      // NADA. Sin esto, hablar con pausas en Android agotaba el techo y la
-      // grabación se apagaba sola con el cuidador hablando.
+      interimRef.current = provisorio.trim()
+
+      // Solo se loguean los finales: con interimResults activo, los provisorios
+      // disparan decenas de eventos por frase y ahogarían la consola.
       if (huboFinal) {
-        reiniciosRef.current = 0
-        // Solo se loguean los finales: con interimResults activo, los
-        // provisorios disparan decenas de eventos por frase y ahogarían la
-        // consola.
-        logVoz('onresult final', {
-          grabando: isRecordingRef.current,
-          largoRelato: armarRelato().length,
-        })
+        logVoz('onresult final', { grabando: isRecordingRef.current, largoRef: transcriptRef.current.length })
       }
 
       // Justo lo que la gracia estaba esperando: llegó la frase terminada, así
@@ -425,120 +360,81 @@ export default function VoiceTextarea({ value, onChange, onVoiceResult, placehol
         return
       }
 
-      // Llegó tarde: la red de seguridad ya nos pasó a revisión y el cuidador
-      // está leyendo la transcripción. Esto la completa en pantalla; si no,
-      // leería la mitad y confirmaría esa.
-      if (!isRecordingRef.current) setTranscriptText(armarRelato())
+      // Llegó tarde: la red de seguridad ya nos pasó a revisión y el padre está
+      // leyendo la transcripción. Esto la completa en pantalla; si no, leería
+      // la mitad y confirmaría esa.
+      if (!isRecordingRef.current) setTranscriptText(transcriptRef.current.trim())
     }
 
+    // onend fires after stop() + all pending onresult events — safe to read transcript here
     rec.onend = () => {
-      // Si seguimos grabando, este onend NO lo pedimos nosotros: el motor cortó
-      // por su cuenta tras un silencio. En Safari pasa cada tanto; en Chrome
-      // Android pasa DESPUÉS DE CADA FRASE, porque ahí `continuous = true` no
-      // se respeta. Así que reiniciar no es la excepción: es el funcionamiento
-      // normal, y todo lo que cuelgue de acá tiene que aguantarlo.
+      // Si seguimos grabando, este onend NO lo pedimos nosotros: Safari corta
+      // el reconocimiento por su cuenta tras un silencio. Con push-to-talk casi
+      // no pasaba porque las grabaciones duraban lo que el dedo aguantaba; con
+      // toggle duran mucho más y pasa seguido. Sin este reinicio quedaba un
+      // motor muerto con la UI mostrando las barras: de ahí en adelante no se
+      // capturaba una palabra más.
       if (isRecordingRef.current) {
+        // El corte también mata lo provisorio de esta sesión, así que se rescata
+        // antes de rearrancar: si no, cada rebote se come la frase que estaba en
+        // el aire justo cuando cortó.
+        cobrarInterim()
         reiniciosRef.current += 1
-        logVoz('onend: el motor cerro solo, reiniciando', {
-          reinicioSeguido: reiniciosRef.current,
+        logVoz('onend: Safari corto, reiniciando', {
+          reinicio: reiniciosRef.current,
           segundos: segundosRef.current,
-          largoRelato: armarRelato().length,
+          largoRef: transcriptRef.current.length,
         })
-
         if (reiniciosRef.current > MAX_REINICIOS_SR) {
-          // Se cierra DIRECTO, sin pasar por detenerGrabacion. Ese camino
-          // llamaba a stop() sobre un motor que ya estaba muerto, y un stop
-          // sobre un motor detenido no vuelve a disparar onend: el cuidador
-          // quedaba 8 segundos mirando "Procesando…" para nada.
-          isRecordingRef.current = false
-          if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
-          clearInterval(tickIntervalRef.current)
-          clearTimeout(endTimeoutRef.current)
-          recRef.current = null
-          cerrarRevision('techo-de-reinicios')
+          detenerRef.current?.()
           return
         }
-
-        // Sesión nueva: los índices del motor vuelven a empezar en 0, así que
-        // sin esto la primera frase de la sesión que viene pisaría a la
-        // primera de la que se acaba de cerrar.
-        sesionRef.current += 1
-        recRef.current = null
-        setTimeout(() => {
-          if (isRecordingRef.current) arrancarMotor({ primero: false })
-        }, MS_ESPERA_REINICIO)
+        try {
+          rec.start()
+        } catch {
+          // Ya está arrancando o el motor no acepta más: cerrar prolijo en vez
+          // de dejar al usuario hablándole a un micrófono que no escucha.
+          detenerRef.current?.()
+        }
         return
       }
       finalizarRevision('onend')
     }
 
     rec.onerror = (e) => {
-      logVoz('onerror', { error: e.error, largoRelato: armarRelato().length })
+      logVoz('onerror', { error: e.error, largoRef: transcriptRef.current.length })
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         mostrarError('Permiso de micrófono denegado. Habilítalo en la configuración del navegador.')
       }
-      // 'no-speech', 'network', 'audio-capture': igual llega onend → lo maneja
-      // el reinicio o finalizarRevision.
+      // 'no-speech', 'network', 'audio-capture': onend still fires → finalizarRevision handles it
     }
 
-    return rec
-  }
-
-  // Arranca un motor nuevo. Si `start()` tropieza, reintenta en vez de matar la
-  // grabación: antes el primer tropiezo la terminaba entera, y en Chrome ese
-  // tropiezo es común justo después de un reinicio.
-  function arrancarMotor({ primero, intento = 0 }) {
-    const rec = crearMotor()
-    if (!rec) {
-      if (primero) mostrarError('No se pudo acceder al micrófono en este navegador.')
-      return
-    }
-    recRef.current = rec
     try {
       rec.start()
     } catch {
-      recRef.current = null
-      if (intento + 1 < MAX_INTENTOS_START) {
-        logVoz('start tropezo, reintentando', { intento: intento + 1 })
-        setTimeout(() => {
-          if (isRecordingRef.current) arrancarMotor({ primero, intento: intento + 1 })
-        }, MS_ESPERA_REINICIO)
-        return
-      }
-      logVoz('start fallo definitivo', { intentos: intento + 1 })
-      if (primero) {
-        mostrarError('No se pudo acceder al micrófono en este navegador.')
-      } else {
-        isRecordingRef.current = false
-        if (grabadorActivo?.token === tokenRef.current) grabadorActivo = null
-        clearInterval(tickIntervalRef.current)
-        cerrarRevision('start-fallido')
-      }
+      mostrarError('No se pudo acceder al micrófono en este navegador.')
     }
   }
 
   function cancelarVoz() {
     soltarMotor()
-    finalesRef.current = new Map()
-    parcialesRef.current = new Map()
+    transcriptRef.current = ''
     setTranscriptText('')
     setVoiceEstado('idle')
   }
 
   function confirmarVoz() {
-    // Se arma desde lo guardado y no se manda `transcriptText`. El estado es
-    // una foto del último render; lo guardado es todo lo que se dictó. Cuando
-    // un resultado llega entre ese render y el toque de "Agregar" —que es lo
-    // que pasa con relatos largos— la foto se queda corta y esa diferencia era
-    // relato perdido.
-    const texto = armarRelato()
+    // Se manda el ref y no `transcriptText`. El estado es una foto del último
+    // render; el ref es todo lo que se dictó. Cuando un resultado llega entre
+    // ese render y el toque de "Agregar" —que es lo que pasa con relatos
+    // largos— la foto se queda corta y esa diferencia era relato perdido.
+    const texto = transcriptRef.current.trim()
     logVoz('confirmarVoz', { largoEnviado: texto.length, largoVisible: transcriptText.length })
     soltarMotor()
     if (texto && onVoiceResult) {
       onVoiceResult((prev) => prev ? prev.trim() + ' ' + texto : texto)
     }
-    finalesRef.current = new Map()
-    parcialesRef.current = new Map()
+    transcriptRef.current = ''
     setTranscriptText('')
     setVoiceEstado('idle')
   }

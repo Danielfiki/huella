@@ -2188,15 +2188,34 @@ emocion, contexto y cuandoPaso van en null si el relato no los menciona.`
 const TIPOS_VALIDOS  = ['rabieta', 'llanto', 'agresividad', 'miedo', 'sueño', 'oposicion', 'social', 'desconexion', 'otro']
 const CUANDO_VALIDOS = ['ahora', 'hora_antes', 'manana', 'tarde', 'ayer', 'custom']
 
+// Techo de lo que puede viajar a la IA como relato. Segunda línea de defensa:
+// `VoiceTextarea` ya corta en 8.000, pero esta función también recibe texto
+// tecleado y de cualquier otra ruta que se agregue después, así que el tope
+// vive además acá.
+//
+// De dónde salió: el 31 ago 2026 un dictado en Android entregó 77.685
+// caracteres de basura repetida y entraron enteros al prompt. Cortar es peor
+// que un relato completo, pero es muchísimo mejor que quemar una llamada de
+// Anthropic sobre un pegote — y con el saldo ya agotado una vez, el riesgo es
+// real.
+const MAX_CARACTERES_RELATO = 8000
+
 export async function extraerEpisodio({ transcripcion, hijo }) {
   const nombre = hijo?.nombre || 'su hijo/a'
   const edad   = hijo?.edad ?? '?'
+
+  const relato = (transcripcion || '').slice(0, MAX_CARACTERES_RELATO)
+  if ((transcripcion || '').length > MAX_CARACTERES_RELATO) {
+    console.warn(
+      `[huella] relato recortado antes de la IA: ${transcripcion.length} -> ${MAX_CARACTERES_RELATO} caracteres`
+    )
+  }
 
   const prompt = `El hijo se llama ${nombre} y tiene ${edad} años.
 
 Esto es lo que contó el padre o madre, transcrito de su voz:
 
-"${transcripcion}"`
+"${relato}"`
 
   const headers = { 'content-type': 'application/json' }
   if (supabase) {

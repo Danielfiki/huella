@@ -25,6 +25,35 @@ const interceptarSupabase = {
   },
 }
 
+// El VoiceTextarea arrastra dos cosas que no aportan nada a la prueba y si
+// romperian el build de Node: su CSS module y los iconos de lucide. Se cambian
+// por stubs. El CSS module devuelve un Proxy que responde cualquier clase con
+// su propio nombre, asi que `styles.loQueSea` nunca es undefined.
+const CSS_STUB = 'huella-stub-css'
+const LUCIDE_STUB = 'huella-stub-lucide'
+
+const stubs = {
+  name: 'stubs-de-verificacion',
+  enforce: 'pre',
+  resolveId(id) {
+    if (/\.module\.css$/.test(id)) return '\0' + CSS_STUB
+    if (id === 'lucide-react') return '\0' + LUCIDE_STUB
+    return null
+  },
+  load(id) {
+    if (id === '\0' + CSS_STUB) {
+      return 'export default new Proxy({}, { get: (_, k) => String(k) })'
+    }
+    if (id === '\0' + LUCIDE_STUB) {
+      // Cualquier icono que se pida devuelve un componente que no pinta nada.
+      return `const icono = () => null
+        export default new Proxy({}, { get: () => icono })
+        export const Mic = icono, Check = icono, X = icono, Square = icono`
+    }
+    return null
+  },
+}
+
 export default defineConfig({
   root: aqui,
   logLevel: 'warn',
@@ -35,7 +64,7 @@ export default defineConfig({
       react: path.resolve(aqui, 'shim/react.js'),
     },
   },
-  plugins: [interceptarSupabase],
+  plugins: [interceptarSupabase, stubs],
   build: {
     ssr: path.resolve(aqui, 'entrada.js'),
     outDir: path.resolve(aqui, 'dist'),

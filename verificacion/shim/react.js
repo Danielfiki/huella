@@ -13,6 +13,14 @@ let efectos = []          // por indice: { deps, limpieza }
 let cursorEfecto = 0
 let pendientes = []
 
+// Los refs viven POR INDICE y sobreviven a los re-renders, igual que en React
+// de verdad. Antes `useRef` devolvia un objeto nuevo en cada llamada, y con eso
+// el VoiceTextarea era imposible de probar: toda su maquinaria (el motor vivo,
+// el relato acumulado, el contador de reinicios) vive en refs, y se le borraba
+// entera en cada render.
+let refs = []
+let cursorRef = 0
+
 let registro = []
 let reloj = () => 0
 
@@ -21,10 +29,11 @@ export function __configurarReloj(f) { reloj = f }
 export function __reset() {
   estado = []; cursor = 0
   efectos = []; cursorEfecto = 0; pendientes = []
+  refs = []; cursorRef = 0
   registro = []
 }
 
-export function __empezarRender() { cursor = 0; cursorEfecto = 0 }
+export function __empezarRender() { cursor = 0; cursorEfecto = 0; cursorRef = 0 }
 export function __estado() { return estado }
 export function __registro() { return registro }
 
@@ -71,12 +80,18 @@ export function useEffect(fn, deps) {
   if (cambio) pendientes.push({ i, fn })
 }
 
-export function useRef(v) { return { current: v } }
+export function useRef(v) {
+  const i = cursorRef++
+  if (refs.length <= i) refs[i] = { current: v }
+  return refs[i]
+}
+export function useLayoutEffect(fn, deps) { return useEffect(fn, deps) }
 export function useMemo(f) { return f() }
 export function useCallback(f) { return f }
 export function useContext() { return null }
 export function createContext() { return { Provider: (props) => props } }
 
 export default {
-  useState, useEffect, useRef, useMemo, useCallback, useContext, createContext,
+  useState, useEffect, useRef, useLayoutEffect,
+  useMemo, useCallback, useContext, createContext,
 }

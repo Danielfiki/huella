@@ -8,3 +8,10 @@ export { default as SplashArranque } from '../src/components/ui/SplashArranque.j
 
 export * as react from './shim/react.js'
 export * as supa from './shim/supabase.js'
+
+// ── Voz ────────────────────────────────────────────────────────────────────
+// Los DOS VoiceTextarea reales: el de antes del fix de la escalera (rescatado
+// de git) y el de ahora. Mismo driver para los dos.
+export { default as VoiceTextareaDespues } from '../src/components/ui/VoiceTextarea.jsx'
+export { default as VoiceTextareaAntes } from './VoiceTextarea.ANTES.jsx'
+export * as voz from './shim/speech.js'
