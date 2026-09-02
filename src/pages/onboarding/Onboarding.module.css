@@ -44,3 +44,37 @@
 @media (prefers-reduced-motion: reduce) {
   .track { transition: none; }
 }
+
+/* ── Chip del modo ensayo (?onboarding=1) ────────────────────────────────────
+   Indicador permanente de que nada de lo que se escriba se va a guardar, y a
+   la vez la unica salida del flujo: el acto A no tiene "Saltar", asi que sin
+   este boton habria que completar los 5 pasos para poder salir del ensayo.
+
+   Vive sobre el track (z-index local) y respeta el notch. Colores, radio,
+   sombra y tipografia salen de los tokens de index.css, asi que el chip
+   cambia con el tema como el resto de la app. */
+.chipEnsayo {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index: 2;
+  padding: 5px 11px;
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-deep);
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  opacity: 0.92;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chipEnsayo:active {
+  opacity: 1;
+  transform: scale(0.97);
+}

@@ -25,10 +25,18 @@ const MAX_TEXT_LENGTH = 800;
 // (PROMPT_PRIMER_ENCUENTRO pesa ~2.3KB). El timeout original de 8000ms
 // hacía caer al fallback consistentemente por AbortError.
 const API_TIMEOUT_MS = 15000;
+// Carga simulada del modo ensayo. No imita el tiempo real de la API: solo dura
+// lo suficiente para que la pantalla de carga se alcance a ver en el QA.
+const ENSAYO_DELAY_MS = 1200;
 
 /**
  * Props
  *   active        bool       · true cuando el acto está visible
+ *   ensayo        bool       · modo ensayo: NO se llama a Anthropic. Se pinta
+ *                              FALLBACK_RESPONSE, que es contenido real de la
+ *                              app. Sirve para el QA visual y evita tanto el
+ *                              gasto de la llamada como la fila que el backend
+ *                              escribe en `api_llamadas` (api/anthropic.js).
  *   submitting    bool       · el cierre del onboarding está guardando
  *   saveError     bool       · el guardado falló; se puede reintentar
  *   onSubmit      (texto: string | null) => void
@@ -37,6 +45,7 @@ const API_TIMEOUT_MS = 15000;
  */
 export default function OnboardingComposer({
   active,
+  ensayo = false,
   submitting = false,
   saveError = false,
   onSubmit,
@@ -55,6 +64,8 @@ export default function OnboardingComposer({
   const [progressPhase, setProgressPhase] = useState('loading');
   const textareaRef = useRef(null);
   const abortRef = useRef(null);
+  // Timer de la carga simulada del ensayo. Se limpia al desmontar.
+  const ensayoTimerRef = useRef(null);
 
   const canSubmit =
     text.trim().length >= MIN_TEXT_LENGTH &&
@@ -72,6 +83,19 @@ export default function OnboardingComposer({
     if (!canSubmit) return;
     setState('loading');
     setPhraseIndex(Math.floor(Math.random() * FRASES_ONBOARDING.length));
+
+    // Modo ensayo: cero red. Dejamos correr el estado 'loading' un momento
+    // para que el QA alcance a ver la pantalla de carga (anillo, frases y
+    // barra de progreso son parte de lo que hay que revisar) y despues
+    // pintamos FALLBACK_RESPONSE por el mismo camino que el fallback real.
+    if (ensayo) {
+      const id = setTimeout(() => {
+        setResponse(FALLBACK_RESPONSE);
+        setState('fallback');
+      }, ENSAYO_DELAY_MS);
+      ensayoTimerRef.current = id;
+      return;
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -96,7 +120,7 @@ export default function OnboardingComposer({
       clearTimeout(timeoutId);
       abortRef.current = null;
     }
-  }, [canSubmit, text]);
+  }, [canSubmit, text, ensayo]);
 
   // Rotación de frase cada 2.5s mientras carga
   useEffect(() => {
@@ -136,8 +160,13 @@ export default function OnboardingComposer({
     return undefined;
   }, [state]);
 
-  // Cleanup al desmontar
-  useEffect(() => () => abortRef.current?.abort(), []);
+  // Cleanup al desmontar. El timer del ensayo se limpia igual que el abort:
+  // si se sale del flujo a mitad de la carga simulada, no queda un setState
+  // pendiente sobre un componente desmontado.
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    if (ensayoTimerRef.current) clearTimeout(ensayoTimerRef.current);
+  }, []);
 
   const isShowingResponse = state === 'response' || state === 'fallback';
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Home, Plus, User } from 'lucide-react'
 import Onboarding from '../../pages/onboarding/Onboarding'
 import Logo from '../ui/Logo'
@@ -95,16 +95,54 @@ export default function Layout() {
   // no el storage del dispositivo.
   const [onboardingCerrado, setOnboardingCerrado] = useState(false)
 
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // ── Modo ensayo · ?onboarding=1 ───────────────────────────────────────────
+  // QA visual del onboarding sin ensuciar la base. Abre el flujo completo
+  // aunque la cuenta ya esté armada, y NADA de lo que se escriba se persiste:
+  // el `onComplete` de más abajo corta ANTES de llamar a
+  // `persistirPerfilOnboarding`, así que las cuatro escrituras del flujo (el
+  // upload del avatar a Storage, el upsert a `perfiles` y los dos
+  // `upsert_family_child`) nunca llegan a ocurrir. El acto B tampoco llama a
+  // Anthropic: ver el prop `ensayo` de OnboardingComposer.
+  const ensayoParam =
+    new URLSearchParams(location.search).get('onboarding') === '1'
+
+  // Latch propio, separado de `onboardingCerrado` para no contaminar el flujo
+  // real. Se resetea cuando el param reaparece, así volver a entrar a
+  // ?onboarding=1 arranca de cero sin necesidad de recargar la página.
+  const [ensayoCerrado, setEnsayoCerrado] = useState(false)
+  useEffect(() => {
+    if (ensayoParam) setEnsayoCerrado(false)
+  }, [ensayoParam])
+
+  const ensayo = ensayoParam && !ensayoCerrado
+
+  // Salida del ensayo: apaga el latch y limpia SOLO el param `onboarding`,
+  // conservando los demás. Los datos reales de la cuenta nunca se tocaron.
+  const salirDelEnsayo = useCallback(() => {
+    setEnsayoCerrado(true)
+    const params = new URLSearchParams(location.search)
+    params.delete('onboarding')
+    const qs = params.toString()
+    navigate(`${location.pathname}${qs ? `?${qs}` : ''}`, { replace: true })
+  }, [location.search, location.pathname, navigate])
+
   // Solo decidimos DESPUÉS de cargar la cuenta (`dataLoaded`): antes no sabemos
   // si tiene hijo y no debemos mostrarlo "por defecto". La guarda de modo
   // pareja (`role === 'owner'`) se conserva en la propia condición.
+  //
+  // El ensayo puentea las tres guardas (cuenta ya armada, latch de cierre y
+  // rol de pareja) porque su razón de ser es justamente verse en una cuenta
+  // que YA está completa. Sin el param la expresión es la de antes, carácter
+  // por carácter.
   const showOnboarding =
-    dataLoaded &&
-    !yaTieneCuenta &&
-    !onboardingCerrado &&
-    (!family || family.role === 'owner')
-
-  const location = useLocation()
+    ensayo ||
+    (dataLoaded &&
+      !yaTieneCuenta &&
+      !onboardingCerrado &&
+      (!family || family.role === 'owner'))
 
   const prevIndexRef = useRef(null)
   const currentIndex = getNavIndex(location.pathname)
@@ -119,9 +157,18 @@ export default function Layout() {
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {!familyLoading && showOnboarding && (!family || family.role === 'owner') && (
+      {!familyLoading && showOnboarding && (ensayo || !family || family.role === 'owner') && (
         <Onboarding
+          ensayo={ensayo}
+          onSalirEnsayo={salirDelEnsayo}
           onComplete={async (perfil) => {
+            // Modo ensayo: cortamos ANTES del persistor. Ninguna escritura
+            // llega a Supabase y el `perfil` muere con el desmonte del
+            // componente — la cuenta real queda exactamente como estaba.
+            if (ensayo) {
+              salirDelEnsayo()
+              return
+            }
             try {
               await persistirPerfilOnboarding(perfil)
               // El perfil y el hijo ya quedaron en la base, pero el contexto

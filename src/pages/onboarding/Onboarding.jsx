@@ -41,9 +41,17 @@ const EMPTY_PERFIL = {
 
 /**
  * Props
- *   onComplete  (perfil) => Promise<void>  · se llama al cerrar el acto B
+ *   onComplete     (perfil) => Promise<void>  · se llama al cerrar el acto B
+ *   ensayo         bool  · modo ensayo (?onboarding=1): QA visual sin escribir
+ *                          NADA en la base. Lo decide el Layout, que ademas es
+ *                          quien no llama al persistor. Aca solo se usa para
+ *                          pintar el chip y para apagar la llamada a Anthropic
+ *                          del acto B.
+ *   onSalirEnsayo  () => void  · salida del ensayo desde el chip. Existe porque
+ *                          el acto A no tiene "Saltar": sin esto, para salir
+ *                          habria que completar los 5 pasos.
  */
-export default function Onboarding({ onComplete }) {
+export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }) {
   const [index, setIndex] = useState(0);
   const [perfil, setPerfil] = useState(EMPTY_PERFIL);
   // Bloqueo del cierre mientras `onComplete` corre (sube foto + upsert perfil +
@@ -87,6 +95,18 @@ export default function Onboarding({ onComplete }) {
 
   return (
     <div className={styles.shell} role="region" aria-label="Bienvenida a Huella">
+      {/* Chip de ensayo. Discreto pero siempre visible, para no dudar nunca en
+          que modo se esta. Toca para salir sin completar el flujo. */}
+      {ensayo && (
+        <button
+          type="button"
+          className={styles.chipEnsayo}
+          onClick={onSalirEnsayo}
+          title="Modo ensayo: nada se guarda. Toca para salir."
+        >
+          modo ensayo · salir
+        </button>
+      )}
       <div
         className={styles.track}
         style={{ transform: `translateX(-${index * 100}%)` }}
@@ -109,6 +129,7 @@ export default function Onboarding({ onComplete }) {
         <div className={styles.acto} aria-hidden={index !== 1}>
           <OnboardingComposer
             active={index === 1}
+            ensayo={ensayo}
             submitting={submitting}
             saveError={saveError}
             onSubmit={finish}
