@@ -14,6 +14,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import styles from './OnboardingFormSlide.module.css';
 import ProgressBar from '../../components/ui/ProgressBar';
+import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento';
 
 // Codigos de genero. Son los MISMOS que guardan HijoPage.jsx y PerfilPage.jsx,
 // y los mismos que lee analizarEpisodio para elegir pronombres.
@@ -224,15 +225,16 @@ export default function OnboardingFormSlide({
         : '¿Cuándo nació tu hijo o hija?',
       hint: null,
       content: (
-        <input
+        // Tres <select> en vez del <input type="date"> nativo: el calendario
+        // de Chrome Android abria en el mes actual y para un hijo de 3 anios
+        // eran ~36 toques al boton de mes anterior (QA del 2 sep 2026). El
+        // tope de "no futuro" que daba `max` ahora lo hace el componente
+        // filtrando meses y dias del anio en curso.
+        <SelectorFechaNacimiento
           key="step-2"
           ref={stepFieldRef}
-          type="date"
-          className={`${styles.input} ${styles.inputDate}`}
           value={fechaValor}
-          onChange={(e) => onFechaChange(e.target.value)}
-          max={new Date().toISOString().slice(0, 10)}
-          aria-label="Fecha de nacimiento"
+          onChange={onFechaChange}
         />
       ),
     },

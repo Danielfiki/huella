@@ -1,0 +1,91 @@
+/* SelectorFechaNacimiento.module.css
+   Tres <select> nativos en fila: Dia / Mes / Anio (orden chileno DD-MM-AAAA).
+
+   Paleta y medidas: los mismos tokens que el `.input` del onboarding, para
+   que el campo no se lea como una pieza ajena en medio del flujo. Cero hex:
+   todo sale de index.css y por eso responde solo al tema claro/oscuro.
+
+   No habia ningun <select> con estilo propio en la app (el unico vive en
+   /beta, que es herramienta interna), asi que este archivo fija el patron. */
+
+.fila {
+  display: grid;
+  /* El mes lleva nombre completo ("septiembre"), asi que pide mas ancho que
+     el dia y el anio, que son numeros. */
+  grid-template-columns: 1fr 1.5fr 1.1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.campo {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-height: 52px;
+  /* El padding derecho deja aire para la flecha del pseudo-elemento. */
+  padding: 14px 30px 14px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  /* 16px: bajo eso, iOS hace zoom automatico al abrir el selector. */
+  font-size: 16px;
+  line-height: 1.2;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* Placeholder ("Día" / "Mes" / "Año"): mismo gris que el ::placeholder de los
+   inputs de texto, para que se lea como "falta elegir" y no como un valor. */
+.select:invalid,
+.select:has(option[value=""]:checked) {
+  color: var(--color-text-light);
+}
+
+.select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-tint);
+}
+
+/* Flecha dibujada con bordes en vez de un SVG embebido: asi el color sale de
+   un token y cambia con el tema, cosa que un data-URI no permite. */
+.campo::after {
+  content: '';
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* Las opciones las pinta el sistema operativo, no la pagina. Fijamos fondo y
+   texto igual para que en Android el desplegable no salga blanco sobre blanco
+   cuando la app esta en modo oscuro. */
+.select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+@media (max-width: 340px) {
+  /* Pantallas muy angostas (iPhone SE): el mes en nombre completo ya no cabe
+     en una fila de tres, asi que el anio baja y ocupa el ancho entero. */
+  .fila {
+    grid-template-columns: 1fr 1.5fr;
+  }
+  .campo:last-child {
+    grid-column: 1 / -1;
+  }
+}
