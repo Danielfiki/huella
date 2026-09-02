@@ -231,6 +231,17 @@ export const MAPA_DIMENSIONES = {
 // autor sin citar literal. `seleccionarArticulacion` rota dentro del pool
 // para evitar repetición textual.
 //
+// REGLA DE ESCRITURA DEL POOL: las articulaciones se escriben en AFIRMATIVO.
+// Nada de "esto no es X, es Y" cuando la mitad negada nombra un juicio sobre
+// el niño o sobre quien cría (maldad, flojera, manipulación, patología,
+// debilidad, exageración, sobreproteger): nombrar la acusación la instala,
+// aunque venga negada. Tampoco absolutos sobre el desarrollo ("no puede",
+// "todavía no tiene"): esas capacidades existen parciales y frágiles, así que
+// se dice "le cuesta", "todavía verde", "se le suelta con presión".
+// Es la misma regla que el prompt del primer encuentro le exige al modelo, y
+// estas frases se muestran al lado de su respuesta: si el banco la rompe, la
+// regla no se sostiene.
+//
 // Pool ≥5 para los 10 autores más frecuentes (según el brief) + los 3 nuevos.
 // Pool ≥3 para el resto del MAPA. Si el modelo decide invocar un autor que
 // no está aquí (no debería, porque autor llega pre-elegido en el prompt),
@@ -242,7 +253,7 @@ export const AUTORES = {
     lente: 'Desarrollo cerebral',
     pool_articulaciones: [
       'el cerebro emocional ganó la pelea contra la parte racional — la corteza prefrontal aún está en construcción',
-      'a esta edad, pegar (o gritar, o tirarse al piso) es lenguaje, no maldad',
+      'a esta edad, pegar (o gritar, o tirarse al piso) es la forma que tiene de decir lo que todavía no le sale en palabras',
       'conectar primero, redirigir después — no al revés',
       'el cerebro se integra a través del vínculo, no a través de la consecuencia',
       'narrar lo ocurrido en calma, después del episodio, construye la integración que el momento no permitió',
@@ -252,7 +263,7 @@ export const AUTORES = {
     lente: 'Regulación primero',
     pool_articulaciones: [
       'regular el cuerpo primero, conversar después — el orden importa, no es opcional',
-      'un cerebro en alarma no puede aprender; primero hay que bajarle el ritmo',
+      'a un cerebro en alarma le entra muy poco; primero hay que bajarle el ritmo',
       'lo que parece desafío puede ser huella de estrés que no se descargó',
       'el ritmo, el movimiento y la presencia son intervención antes que cualquier palabra',
       'la pregunta correcta es "¿qué le pasó?", no "¿qué le pasa?"',
@@ -261,31 +272,31 @@ export const AUTORES = {
   'Ross Greene': {
     lente: 'Habilidad rezagada',
     pool_articulaciones: [
-      'los niños se portan bien cuando pueden — si no pueden, lo que falta es una habilidad, no voluntad',
-      'esto no es flojera ni falta de motivación, es una habilidad que todavía no aparece',
+      'los niños se portan bien cuando pueden — y cuando les cuesta, lo que está en juego es una habilidad todavía verde',
+      'esto es una habilidad que todavía le sale a ratos: con calma aparece, con presión se le suelta',
       'el plan B —resolver con él, no por él— es lo que enseña, no la consecuencia',
       'antes de pedirle que siga, preguntarle qué se le hizo difícil',
-      'la consecuencia durante la desregulación no enseña, solo asusta',
+      'la consecuencia durante la desregulación solo asusta; enseña recién cuando ya está calmado',
     ],
   },
   'Stuart Shanker': {
     lente: 'Autorregulación',
     pool_articulaciones: [
-      'esto no es mal comportamiento, es estrés acumulado pidiendo salida',
-      'la pregunta no es "por qué se porta mal", sino "qué le está sobrecargando"',
+      'esto es estrés acumulado pidiendo salida por donde puede',
+      'la pregunta que abre puertas es "qué le está sobrecargando"',
       'bajar el estrés en un dominio libera energía para los otros',
-      'el descontrol no se inhibe con voluntad, se descarga ayudándolo a regularse',
+      'lo que saca del descontrol es bajarle la carga, con calma y con cuerpo',
       'cinco fuentes de estrés se suman: cuerpo, emoción, cognición, social, prosocial',
     ],
   },
   'Gabor Maté': {
     lente: 'Mirar el contexto',
     pool_articulaciones: [
-      'el niño con más sensibilidad responde más fuerte al ambiente — no es maldad, es cableado',
+      'el niño con más sensibilidad responde más fuerte al ambiente — así viene cableado',
       'la pregunta es "¿qué le ha pasado?", no "¿qué le pasa?"',
       'tu propia regulación es la primera intervención disponible',
-      'el conflicto con el hijo activa heridas tuyas — verlas no es perderlo, es ganarlo',
-      'los síntomas hablan de un contexto, no de un defecto del niño',
+      'el conflicto con el hijo activa heridas tuyas — mirarlas de frente te lo acerca',
+      'los síntomas hablan del contexto en que el niño está viviendo',
     ],
   },
   'Faber & Mazlish': {
@@ -295,15 +306,15 @@ export const AUTORES = {
       'nombrar lo que está sintiendo, antes de cualquier consejo o corrección',
       'describir lo que ves, en vez de juzgar lo que el niño es',
       'las etiquetas —tímido, difícil, torpe— se convierten en identidad; evitarlas es regalo',
-      'darle palabras para la próxima vez no le da permiso, le da herramientas',
+      'darle palabras para la próxima vez le deja una herramienta en la mano',
     ],
   },
   'Janet Lansbury': {
     lente: 'Presencia respetuosa',
     pool_articulaciones: [
-      'el berrinche no se interrumpe, se acompaña',
+      'el berrinche se acompaña: te quedas al lado y dejas que pase',
       'tu presencia segura sin rescatar enseña que las emociones se manejan',
-      'no resolver, no distraer, no negociar — estar',
+      'basta con estar: presente, tranquilo, con todo el tiempo del mundo',
       'el juego del niño es trabajo serio; no se interrumpe sin necesidad',
       'un "no" desde la calma vale más que cien gritos',
     ],
@@ -311,11 +322,11 @@ export const AUTORES = {
   'Alan Wolfelt': {
     lente: 'Duelo infantil',
     pool_articulaciones: [
-      'el duelo no avanza en línea, vuelve en oleadas con cada recordatorio',
-      'no hace falta solucionar la pérdida, hace falta acompañarla',
+      'el duelo vuelve en oleadas, cada vez que algo se lo recuerda',
+      'la pérdida se acompaña, y con eso alcanza',
       'nombrar simple ("echas de menos a la abuela, ¿cierto?") es más útil que una explicación elaborada',
       'los rituales concretos anclan el duelo mejor que las palabras grandes',
-      'el cierre no es la meta — la convivencia con la ausencia, sí',
+      'lo que se busca es aprender a convivir con la ausencia, a su ritmo',
     ],
   },
   'Barry Prizant': {
@@ -323,19 +334,19 @@ export const AUTORES = {
     pool_articulaciones: [
       'lo que parece colapso fue acumulación sensorial que venía de antes',
       'para ese sistema, el supermercado es ruido, luz y gente todo al mismo tiempo',
-      'la conducta es estrategia de regulación, no problema a corregir',
-      'anticipar y dar pausas no es sobreproteger, es ajustar el ambiente',
+      'la conducta es la estrategia que encontró para regularse',
+      'anticipar y dar pausas es ajustar el ambiente a cómo procesa',
       'respetar cómo procesa el mundo es la intervención',
     ],
   },
   'Elaine Aron': {
     lente: 'Alta sensibilidad',
     pool_articulaciones: [
-      'una observación pequeña puede sentirse como un golpe grande — no es exageración',
-      'su sistema está cableado para reaccionar más; eso no es debilidad',
+      'una observación pequeña puede sentirse como un golpe grande — así de fuerte le llega',
+      'su sistema está cableado para reaccionar más; es su forma de estar en el mundo',
       'enseñarle a confiar en lo que siente es lo que necesita, no a minimizarlo',
       'la profundidad de procesamiento es fortaleza paralela a la reactividad',
-      'nombrar la sensibilidad como rasgo, no como problema, abre el camino',
+      'nombrar la sensibilidad como un rasgo suyo, dicho así, ya abre camino',
     ],
   },
   'John Gottman': {
@@ -366,14 +377,14 @@ export const AUTORES = {
     lente: 'Crianza consciente',
     pool_articulaciones: [
       'antes de corregir al hijo, preguntarse qué activa esto en uno mismo',
-      'el hijo no es proyecto de mejora — es un ser separado con su propio camino',
+      'el hijo es un ser separado, con su propio camino y su propio ritmo',
       'el conflicto con el hijo es invitación al crecimiento del propio padre/madre',
     ],
   },
   'Carlos González': {
     lente: 'Sueño con presencia',
     pool_articulaciones: [
-      'los despertares nocturnos son fisiología normal de la infancia, no patología',
+      'los despertares nocturnos son parte normal de cómo duerme un niño chico',
       'retirar la presión es la primera intervención, no agregarla',
       'el niño que "no come" generalmente come lo que necesita — la batalla la crea el adulto',
     ],
@@ -381,7 +392,7 @@ export const AUTORES = {
   'John Bowlby': {
     lente: 'Apego seguro',
     pool_articulaciones: [
-      'toda conducta del bebé es comunicación, nunca manipulación',
+      'toda conducta del bebé es comunicación: es la única forma que tiene de llamarte',
       'la sensibilidad consistente del cuidador construye el apego seguro',
       'la base segura habilita la exploración, no la frena',
     ],
@@ -398,14 +409,14 @@ export const AUTORES = {
     lente: 'Padre regulado',
     pool_articulaciones: [
       'tu regulación es condición previa de cualquier intervención eficaz',
-      'no puedes dar lo que no tienes — primero el oxígeno propio',
+      'para dar calma necesitas tener un poco tuya — el oxígeno propio va primero',
       'la conexión emocional diaria es la base que hace posible toda disciplina',
     ],
   },
   'Jane Nelsen': {
     lente: 'Firmeza amable',
     pool_articulaciones: [
-      'firmeza y amabilidad simultáneas no son contradictorias, son la combinación que funciona',
+      'firmeza y amabilidad al mismo tiempo son la combinación que funciona',
       'preguntar qué está aprendiendo el niño, no qué está sufriendo',
       'las consecuencias naturales enseñan más que las artificiales',
     ],
@@ -415,14 +426,14 @@ export const AUTORES = {
     pool_articulaciones: [
       'validar sin catastrofizar es la intervención central',
       'distinguir ansiedad funcional (útil) de ansiedad disfuncional (limita)',
-      'la adolescencia tiene transiciones predecibles que no son patología',
+      'la adolescencia tiene transiciones predecibles, propias de la edad',
     ],
   },
   'Laurence Steinberg': {
     lente: 'Cerebro adolescente',
     pool_articulaciones: [
       'cambiar el ambiente reduce el riesgo más que razonar con el adolescente',
-      'la presencia de pares amplifica la toma de riesgos — es neurobiología, no rebeldía',
+      'la presencia de pares amplifica la toma de riesgos — es neurobiología en acción',
       'el período 12-25 es plasticidad cerebral enorme, en ambas direcciones',
     ],
   },
