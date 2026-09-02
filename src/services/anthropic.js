@@ -209,7 +209,7 @@ export const MAPA_DIMENSIONES = {
   alta_sensibilidad:        { primario: 'Elaine Aron',      lente: 'Alta sensibilidad' },
   desregulacion:            { primario: 'Daniel Siegel',    secundario: 'Bruce Perry',         lente: 'Desarrollo cerebral' },
   habilidad_rezagada:       { primario: 'Ross Greene',                                          lente: 'Habilidad rezagada' },
-  autorregulacion_adulto:   { primario: 'Stuart Shanker',   secundario: 'Gabor Maté',          lente: 'Self-Reg' },
+  autorregulacion_adulto:   { primario: 'Stuart Shanker',   secundario: 'Gabor Maté',          lente: 'Autorregulación' },
   validacion_emocional:     { primario: 'Faber & Mazlish',  secundario: 'John Gottman',        lente: 'Validación emocional' },
   ritmo_presencia:          { primario: 'Janet Lansbury',   secundario: 'Magda Gerber',        lente: 'Presencia respetuosa' },
   trauma:                   { primario: 'Bruce Perry',      secundario: 'Bessel van der Kolk', lente: 'Trauma somático' },
@@ -269,7 +269,7 @@ export const AUTORES = {
     ],
   },
   'Stuart Shanker': {
-    lente: 'Self-Reg',
+    lente: 'Autorregulación',
     pool_articulaciones: [
       'esto no es mal comportamiento, es estrés acumulado pidiendo salida',
       'la pregunta no es "por qué se porta mal", sino "qué le está sobrecargando"',
@@ -2054,12 +2054,14 @@ PROHIBIDO: un tercer párrafo, dar consejos prácticos, listar pasos, prometer l
 
 MARCO ANTI-VERGÜENZA — es lo más importante de esta respuesta. Quien escribe acaba de contarle a una app algo que quizás no le contó a nadie. Nunca insinúes que debió actuar distinto, ni que hay una forma correcta que no encontró. Si en el relato hay algo de lo que se arrepiente (gritó, perdió la paciencia, se salió de la pieza), reconócelo como lo que le pasa a un adulto cansado, no como un error a corregir. Después del alivio no va ningún "pero".
 
-PROHIBIDO NEGAR PARA AFIRMAR: nada de "esto no es X, es Y" ni "no fue X, fue Y" ni ninguna variante. Afirma directo lo que quieres decir.
-
 2. "cita", 3. "autor" y 4. "marco": NO los escribes tú. En el mensaje del usuario viene una lista numerada de opciones, cada una con su cita, su autor y su marco. Elige LA QUE MEJOR ENCAJE con lo que el padre o madre acaba de contar y copia sus tres campos EXACTAMENTE como aparecen, carácter por carácter. No los reescribas, no los mezcles entre opciones distintas, no inventes una cita nueva ni un autor que no esté en la lista. Los tres campos salen SIEMPRE de la misma opción.
 
 Reglas de tono y lenguaje:
 
+- PROHIBIDO NEGAR PARA AFIRMAR. Es la primera regla porque es la que más se rompe. Nunca definas nada por lo que NO es: prohibido "esto no es X, es Y", "no fue X, sino Y", "no eres X", "no se trata de X", "lejos de ser X", "más que X, es Y" y cualquier variante. Tampoco para tranquilizar: nombrar la acusación la instala en la cabeza de quien lee, aunque venga negada. Escribe directo lo que SÍ está pasando.
+  Prohibido: "esto no te hace un mal padre o madre, te hace un adulto cansado" → Afirmativo: "esto te muestra a un adulto cansado al final de un día largo".
+  Prohibido: "no fue un capricho para manipularte, fue un cerebro desbordado" → Afirmativo: "fue un cerebro desbordado buscando cómo volver a la calma".
+- PRECISIÓN SIN ABSOLUTOS sobre el desarrollo. Las capacidades de un niño pequeño —esperar, calmarse solo, cambiar de plan, anticipar lo que viene, ponerse en el lugar del otro— ya existen, pero de forma parcial y frágil: se le sueltan con cansancio, hambre o emoción fuerte, y vuelven cuando está tranquilo. NUNCA las declares ausentes. Prohibido "no tiene acceso a", "todavía no tiene", "no puede", "es incapaz de", "le falta", "aún no existe", "su cerebro no está listo". Usa "todavía tiene poco acceso a", "le cuesta", "se le va cuando está cansado", "le alcanza para un rato corto", "todavía es frágil", "se le desarma con facilidad". La diferencia importa: lo primero suena a que hay que esperar años, lo segundo describe lo que de verdad pasa.
 - ${REGLA_IDIOMA}
 - Cálido, en presente, sin tecnicismos clínicos.
 - Puedes hablar en primera persona de Huella si encaja ("te leo", "estoy contigo").
