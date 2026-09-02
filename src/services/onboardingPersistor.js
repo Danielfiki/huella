@@ -57,19 +57,25 @@ function componerFechaNacimiento(nacimiento) {
 }
 
 /**
- * Sube el File del padre/madre al bucket `avatares` y devuelve el PATH del
- * objeto (`${userId}/${hijoId}.jpg`). El bucket es privado: la app firma la URL
- * al mostrar (HuellaContext), así que en la BD se guarda el path, no una URL.
+ * Sube una foto al bucket `avatares` y devuelve el PATH del objeto. El bucket
+ * es PRIVADO: la app firma la URL al mostrar (`firmarPath` en HuellaContext),
+ * así que en la BD se guarda el path, nunca una URL.
  *
- * Mismo formato de path que PerfilPage. El bucket es el mismo, así que si el
- * padre/madre vuelve a cambiar la foto desde Perfil más tarde, el upsert
- * sobreescribe limpiamente.
+ * Los dos avatares del onboarding pasan por acá, y el `path` es lo único que
+ * los distingue — los mismos dos formatos que ya usa PerfilPage, así que si
+ * después se cambia una foto desde Perfil, el upsert sobreescribe limpiamente:
  *
- * Si la subida falla, devuelve null en lugar de tirar: la foto es opcional,
- * no debe bloquear que el hijo quede creado.
+ *   hijo    → `${userId}/${hijoId}.jpg`   → va a `hijos.avatar_url`
+ *   adulto  → `${userId}/cuidador.jpg`    → va a `perfiles.avatar_url`
+ *
+ * (El docstring anterior decía "sube el File del padre/madre" describiendo la
+ * subida del HIJO. Estaba equivocado desde que se escribió; con dos fotos en
+ * juego, dejarlo así era una trampa.)
+ *
+ * Si la subida falla devuelve null en vez de tirar: las dos fotos son
+ * opcionales y ninguna debe bloquear que la cuenta quede creada.
  */
-async function subirAvatarHijo(userId, hijoId, file) {
-  const path = `${userId}/${hijoId}.jpg`
+async function subirAvatar(path, file) {
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_AVATARES)
     .upload(path, file, {
@@ -83,17 +89,32 @@ async function subirAvatarHijo(userId, hijoId, file) {
   return path
 }
 
+// ¿Es algo que se pueda subir? El paso 5 guarda Blobs ya comprimidos, pero un
+// File tambien es un Blob, asi que esto cubre los dos casos.
+const esImagen = (v) => v instanceof File || v instanceof Blob
+
 /**
  * Persiste el objeto `perfil` del onboarding en `perfiles` y `hijos`.
  *
  * Flujo:
  *   1. Obtiene el usuario autenticado desde Supabase.
- *   2. UPSERT en `perfiles` (PK = user_id): solo el nombre.
- *   3. INSERT en `hijos` vía RPC `upsert_family_child` (sin foto todavía).
+ *   2. Si vino `fotoPadreBlob`, sube la foto del adulto a
+ *      `avatares/{userId}/cuidador.jpg`.
+ *   3. UPSERT en `perfiles` (PK = user_id): el nombre y, si la subida del
+ *      paso 2 salió bien, `avatar_url`. Van juntos a propósito — es una sola
+ *      escritura, no dos.
+ *   4. INSERT en `hijos` vía RPC `upsert_family_child` (sin foto todavía).
  *      Devuelve el UUID del hijo recién creado.
- *   4. Si vino `fotoBlob`, sube la foto al bucket `avatares` y luego hace un
- *      segundo upsert del hijo con `avatar_url` poblada. Si la subida falla,
- *      el hijo igual queda creado (sin foto) y el onboarding no se rompe.
+ *   5. Si vino `fotoBlob`, sube la foto del hijo a
+ *      `avatares/{userId}/{hijoId}.jpg` y hace un segundo upsert del hijo con
+ *      `avatar_url` poblada. El path necesita el UUID, y por eso esta foto no
+ *      se puede subir antes del paso 4 como la del adulto.
+ *
+ * Las dos fotos son OPCIONALES y ninguna bloquea nada: si una subida falla, la
+ * cuenta igual queda creada sin esa foto y el onboarding no se rompe.
+ *
+ * NOTA — modo ensayo (?onboarding=1): esta función no llega a ejecutarse. El
+ * Layout corta antes de llamarla, así que en ensayo no se sube ninguna foto.
  *
  * Tira (Error) si:
  *   - No hay supabase configurado (env vars).
@@ -102,7 +123,7 @@ async function subirAvatarHijo(userId, hijoId, file) {
  *   - El RPC `upsert_family_child` falla o no devuelve un id.
  *
  * @param {Object} perfil   Forma definida en src/pages/onboarding/Onboarding.jsx EMPTY_PERFIL.
- * @returns {Promise<{ userId: string, hijoId: string | null, avatarUrl: string | null, redirectedToInvitation?: boolean }>}
+ * @returns {Promise<{ userId: string, hijoId: string | null, avatarUrl: string | null, avatarPadreUrl: string | null, redirectedToInvitation?: boolean }>}
  *   Cuando hay invitación pendiente, hijoId queda null y redirectedToInvitation:true.
  *   El service ya disparó window.location.assign('/invitar?token=xxx') en ese caso.
  */
@@ -141,6 +162,7 @@ export async function persistirPerfilOnboarding(perfil) {
         userId: user.id,
         hijoId: null,
         avatarUrl: null,
+        avatarPadreUrl: null,
         redirectedToInvitation: true,
       }
     }
@@ -181,9 +203,22 @@ export async function persistirPerfilOnboarding(perfil) {
   // pantalla, prompt ni query las leía jamás — `loadUserData` ni siquiera las
   // trae en su select de `perfiles`. Se dejó de pedir el dato (el paso de
   // intenciones se eliminó) y se dejó de escribirlo.
+  // Foto del adulto (opcional). Se sube primero para que su path viaje en el
+  // MISMO upsert de `perfiles` que el nombre: una sola escritura en vez de
+  // dos, y sin repetir la logica de `savePadreAvatar` (que vive en
+  // HuellaContext y no se puede importar desde un service). El `reloadData`
+  // que el Layout dispara al cerrar es el que la deja firmada en pantalla.
+  let avatarPadreUrl = null
+  if (esImagen(perfil.fotoPadreBlob)) {
+    avatarPadreUrl = await subirAvatar(`${user.id}/cuidador.jpg`, perfil.fotoPadreBlob)
+  }
+
   const perfilPatch = {
     user_id: user.id,
     nombre: nombrePadre || null,
+    // Solo se incluye si de verdad hay foto nueva: mandar null borraria una
+    // que ya existiera (caso raro, pero posible si el onboarding se reabre).
+    ...(avatarPadreUrl ? { avatar_url: avatarPadreUrl } : {}),
   }
   const { error: perfilErr } = await supabase
     .from('perfiles')
@@ -213,10 +248,8 @@ export async function persistirPerfilOnboarding(perfil) {
 
   // 4. Foto opcional. Si no vino, avatar_url queda en NULL.
   let avatarUrl = null
-  const esArchivo =
-    perfil.fotoBlob instanceof File || perfil.fotoBlob instanceof Blob
-  if (esArchivo) {
-    const subido = await subirAvatarHijo(user.id, hijoId, perfil.fotoBlob)
+  if (esImagen(perfil.fotoBlob)) {
+    const subido = await subirAvatar(`${user.id}/${hijoId}.jpg`, perfil.fotoBlob)
     if (subido) {
       avatarUrl = subido
       // Segundo upsert ahora con avatar_url. Si falla, dejamos pasar:
@@ -239,6 +272,6 @@ export async function persistirPerfilOnboarding(perfil) {
     }
   }
 
-  return { userId: user.id, hijoId, avatarUrl }
+  return { userId: user.id, hijoId, avatarUrl, avatarPadreUrl }
 }
 

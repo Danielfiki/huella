@@ -33,7 +33,11 @@ const EMPTY_PERFIL = {
   // hijos.genero, donde la IA nunca las reconocia: analizarEpisodio compara
   // contra 'm'/'f'/'nb' y caia siempre al generico "niño/a".
   sexo: null,
-  fotoBlob: null,    // File · opcional · el persistor lo sube y guarda hijos.avatar_url
+  // Blobs ya COMPRIMIDOS (400px) por el paso 5. Se comprimen al elegirlos, no
+  // al subirlos, para que la miniatura del slot muestre exactamente lo que va
+  // a quedar guardado. Los dos son opcionales.
+  fotoBlob:      null,  // el hijo   → avatares/{userId}/{hijoId}.jpg → hijos.avatar_url
+  fotoPadreBlob: null,  // el adulto → avatares/{userId}/cuidador.jpg → perfiles.avatar_url
   // Texto del acto B. Ya NO se persiste en perfiles.contexto_inicial (campo que
   // nadie leia nunca). En el bloque 3 pasa a ser el primer episodio real.
   textoMomento: null,

@@ -15,6 +15,9 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import styles from './OnboardingFormSlide.module.css';
 import ProgressBar from '../../components/ui/ProgressBar';
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento';
+// La copia local que tenian PerfilPage y NuevoPage no se replica aca: el
+// propio archivo de utils pide que quien lo toque importe esta.
+import comprimirImagen from '../../utils/comprimirImagen';
 
 // Codigos de genero. Son los MISMOS que guardan HijoPage.jsx y PerfilPage.jsx,
 // y los mismos que lee analizarEpisodio para elegir pronombres.
@@ -38,6 +41,58 @@ const STEP_FADE_MS = 200;
 // y su respuesta se escribia en perfiles.intenciones, columna que ninguna
 // pantalla ni prompt lee jamas. Pedia un dato para no usarlo.
 const TOTAL_STEPS = 5;
+
+// Lado maximo de las fotos que se suben. 400px es lo que ya usaba Perfil para
+// los avatares: son circulos chicos, no vale la pena subir la foto cruda de la
+// camara (varios MB) para mostrarla a 120px.
+const FOTO_MAX_PX = 400;
+
+// Object URL de un blob, revocado al cambiar o al desmontar. Vive aca y no en
+// utils porque solo el paso de las fotos lo necesita, y lo necesita dos veces.
+function usePreviewUrl(blob) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    if (!blob) {
+      setUrl(null);
+      return undefined;
+    }
+    const nuevo = URL.createObjectURL(blob);
+    setUrl(nuevo);
+    return () => URL.revokeObjectURL(nuevo);
+  }, [blob]);
+  return url;
+}
+
+/**
+ * Un slot de foto: circulo tocable que abre camara o galeria y muestra la
+ * miniatura una vez elegida. Los dos slots del paso 5 son el mismo componente,
+ * asi que la foto del hijo y la del adulto no se pueden desalinear.
+ */
+function SlotFoto({ inputRef, previewUrl, etiqueta, onArchivo }) {
+  const abrir = () => inputRef.current?.click();
+  return (
+    <div className={styles.photoSlot}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className={styles.fileHidden}
+        onChange={(e) => onArchivo(e.target.files?.[0] || null)}
+      />
+      <button
+        type="button"
+        className={previewUrl ? styles.photoPreviewBtn : styles.photoEmptyBtn}
+        onClick={abrir}
+        aria-label={previewUrl ? `Cambiar la foto de ${etiqueta}` : `Agregar la foto de ${etiqueta}`}
+      >
+        {previewUrl
+          ? <img src={previewUrl} alt="" className={styles.photoPreviewImg} />
+          : <span className={styles.photoIconPlus} aria-hidden="true">+</span>}
+      </button>
+      <span className={styles.photoLabel}>{etiqueta}</span>
+    </div>
+  );
+}
 
 /**
  * Props
@@ -64,6 +119,7 @@ export default function OnboardingFormSlide({
   const [phase, setPhase] = useState('in');
   const pendingStepRef = useRef(null);
   const fileRef = useRef(null);
+  const fileRefPadre = useRef(null);
   // Ref para el input/control del paso actual. Lo enfocamos manualmente
   // (no con autoFocus) y solo cuando el slide está activo en el shell —
   // si no, el browser hace scrollIntoView al input oculto fuera del
@@ -162,21 +218,27 @@ export default function OnboardingFormSlide({
   const nombrePadreLimpio = perfil.nombrePadre.trim();
   const nombreHijoLimpio = perfil.nombreHijo.trim();
 
-  // Preview de la foto del hijo. Generamos un object URL local del File
-  // (sin subir nada — el upload real lo hace el persistor al cerrar el
-  // onboarding) para mostrar avatar circular en vez del nombre del archivo.
-  // Revocamos el URL anterior cada vez que cambia el blob o al desmontar
-  // para no filtrar memoria.
-  const [fotoPreviewUrl, setFotoPreviewUrl] = useState(null);
-  useEffect(() => {
-    if (!perfil.fotoBlob) {
-      setFotoPreviewUrl(null);
-      return undefined;
+  // Preview local de cada foto. Generamos un object URL del blob (sin subir
+  // nada — el upload real lo hace el persistor al cerrar el onboarding) para
+  // mostrar el avatar circular en vez del nombre del archivo. Revocamos el URL
+  // anterior cada vez que cambia el blob y al desmontar, para no filtrar
+  // memoria. Un solo hook para los dos slots: antes esto existia una vez y
+  // duplicarlo era la via facil.
+  const fotoPreviewUrl      = usePreviewUrl(perfil.fotoBlob);
+  const fotoPadrePreviewUrl = usePreviewUrl(perfil.fotoPadreBlob);
+
+  // Comprime a 400px ANTES de guardar el blob en el estado, asi lo que se ve
+  // en el slot es exactamente lo que se va a subir. Si la imagen no se puede
+  // decodificar, comprimirImagen devuelve null y dejamos el slot vacio: la
+  // foto es opcional y no debe trabar el paso.
+  const elegirFoto = useCallback(async (clave, file) => {
+    if (!file) {
+      setPerfil({ [clave]: null });
+      return;
     }
-    const url = URL.createObjectURL(perfil.fotoBlob);
-    setFotoPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [perfil.fotoBlob]);
+    const blob = await comprimirImagen(file, FOTO_MAX_PX);
+    setPerfil({ [clave]: blob || null });
+  }, [setPerfil]);
 
   const STEPS = [
     {
@@ -269,61 +331,26 @@ export default function OnboardingFormSlide({
       ),
     },
     {
-      eyebrow: 'Foto · opcional',
-      title: nombreHijoLimpio
-        ? `¿Quieres agregar una foto de ${nombreHijoLimpio}?`
-        : '¿Quieres agregar una foto?',
-      hint: 'Te ayuda a sentir más cercana la app. Puedes saltarlo y agregarla después.',
+      eyebrow: 'Fotos · opcional',
+      title: 'Pongámosle cara a Huella',
+      hint: 'Las dos son opcionales y las puedes cambiar cuando quieras desde tu perfil.',
       content: (
-        <div className={styles.photoStack}>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className={styles.fileHidden}
-            onChange={(e) =>
-              setPerfil({ fotoBlob: e.target.files?.[0] || null })
-            }
+        /* Se elimino el "Saltar este paso": hacia exactamente lo mismo que
+           "Continuar" (los dos llamaban a goNext en el ultimo paso), y con dos
+           slots opcionales dos botones que hacen lo mismo solo confunden. */
+        <div className={styles.photoRow}>
+          <SlotFoto
+            inputRef={fileRef}
+            previewUrl={fotoPreviewUrl}
+            etiqueta={nombreHijoLimpio || 'Tu hijo o hija'}
+            onArchivo={(f) => elegirFoto('fotoBlob', f)}
           />
-          {fotoPreviewUrl ? (
-            <>
-              <button
-                type="button"
-                className={styles.photoPreviewBtn}
-                onClick={() => fileRef.current?.click()}
-                aria-label="Cambiar foto"
-              >
-                <img
-                  src={fotoPreviewUrl}
-                  alt=""
-                  className={styles.photoPreviewImg}
-                />
-              </button>
-              <button
-                type="button"
-                className={styles.photoChangeBtn}
-                onClick={() => fileRef.current?.click()}
-              >
-                Cambiar foto
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className={styles.photoBtn}
-              onClick={() => fileRef.current?.click()}
-            >
-              <span className={styles.photoIconPlus} aria-hidden="true">+</span>
-              Agregar foto
-            </button>
-          )}
-          <button
-            type="button"
-            className={styles.skipStep}
-            onClick={goNext}
-          >
-            Saltar este paso
-          </button>
+          <SlotFoto
+            inputRef={fileRefPadre}
+            previewUrl={fotoPadrePreviewUrl}
+            etiqueta="Tu foto"
+            onArchivo={(f) => elegirFoto('fotoPadreBlob', f)}
+          />
         </div>
       ),
     },

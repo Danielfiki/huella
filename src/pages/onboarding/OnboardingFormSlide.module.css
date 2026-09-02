@@ -210,44 +210,60 @@
 }
 
 /* ── Foto opcional ──────────────────────────────────────────────── */
-.photoStack {
+/* ── Paso 5 · los dos slots de foto ────────────────────────────────────────
+   Antes era UN solo slot (el del hijo) apilado en columna. Ahora son dos, el
+   del hijo y el del adulto, lado a lado y del mismo tamano: si uno fuera mas
+   grande, la pantalla estaria diciendo cual de las dos caras importa mas.
+
+   Medidas y colores heredados del slot que ya existia aca y del avatar de
+   Perfil, para que el paso no se sienta una pantalla ajena. Solo tokens. */
+
+.photoRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 22px;
+  width: 100%;
+}
+
+.photoSlot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .fileHidden {
   display: none;
 }
 
-.photoBtn {
+/* Slot vacio: el mismo borde punteado del boton "Agregar foto" viejo, pero
+   redondo, porque lo que va a llegar ahi es un avatar circular. */
+.photoEmptyBtn {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 56px;
-  padding: 0 22px;
-  border-radius: 16px;
   background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  font-family: var(--font-family);
-  font-size: 15px;
-  font-weight: 600;
+  border: 2px dashed var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease, transform 120ms ease;
-  min-width: 200px;
+  -webkit-tap-highlight-color: transparent;
 }
-.photoBtn:hover {
+.photoEmptyBtn:hover {
   border-color: var(--color-primary-border);
   color: var(--color-eyebrow);
 }
-.photoBtn:active { transform: scale(0.98); }
+.photoEmptyBtn:active { transform: scale(0.97); }
 
 .photoPreviewBtn {
-  width: 120px;
-  height: 120px;
+  width: 108px;
+  height: 108px;
   border-radius: 50%;
   padding: 0;
   border: 3px solid var(--color-primary-border);
@@ -256,6 +272,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-card-soft);
   transition: transform 120ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .photoPreviewBtn:hover {
   border-color: var(--color-primary);
@@ -272,52 +289,33 @@
   border-radius: 50%;
 }
 
-.photoChangeBtn {
+/* Nombre bajo cada circulo. Es lo unico que distingue un slot del otro, asi
+   que no puede quedar en gris debil: va en el mismo tono del cuerpo. */
+.photoLabel {
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  /* --color-eyebrow: --color-primary-dark sobre el crema da 3,96:1 y esto es
-     un enlace de 14px. Este token llega a 5,16:1 en claro y 7,93:1 en oscuro. */
-  color: var(--color-eyebrow);
-  background: none;
-  border: none;
-  padding: 6px 10px;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--color-primary-border);
-  transition: color 160ms ease;
-}
-.photoChangeBtn:hover {
-  color: var(--color-primary);
+  color: var(--color-text);
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .photoIconPlus {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 18px;
-  width: 18px;
-  text-align: center;
+  font-size: 30px;
+  line-height: 1;
   display: inline-block;
 }
 
-.skipStep {
-  font-family: var(--font-family);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: 8px 4px;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--color-border);
-  transition: color 160ms ease;
+@media (max-width: 340px) {
+  .photoRow { gap: 14px; }
+  .photoEmptyBtn,
+  .photoPreviewBtn { width: 92px; height: 92px; }
 }
-.skipStep:hover { color: var(--color-text); }
 
 /* ── CTA inferior ───────────────────────────────────────────────── */
 .ctaBar {
@@ -363,8 +361,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stepWrap { transition: none; }
-  .backBtn, .cta, .bigChip, .photoBtn, .photoPreviewBtn, .photoChangeBtn,
-  .input, .topSkip, .skipStep {
+  .backBtn, .cta, .bigChip, .input,
+  .photoEmptyBtn, .photoPreviewBtn {
     transition: none;
   }
 }
