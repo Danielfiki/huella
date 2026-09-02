@@ -157,33 +157,49 @@
   margin: 0;
 }
 
-.quote {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  line-height: 1.5;
-  font-style: italic;
-  color: var(--color-text);
+/* ── La idea del autor, bajo la comprension ────────────────────────────────
+   Antes esto era un <blockquote> con la frase entre comillas y firmada con el
+   nombre del autor. El problema: lo que sale del banco AUTORES son
+   articulaciones del enfoque de cada autor escritas en la voz de Huella, no
+   sus palabras textuales — entrecomillarlas fabricaba una cita falsa
+   atribuida a una persona real.
+
+   Ahora se lee como lo que es: una idea, con la firma "Autor · Lente" que ya
+   usa la Accion Rapida. Se fue la italica (marcaba cita) y se fue la linea
+   "Marco · ...", porque la lente ES el marco y en la firma quedaba repetido. */
+
+.idea {
   border-left: 2px solid var(--color-primary);
   padding-left: 12px;
   margin: 0;
 }
 
-.author {
-  display: block;
-  margin-top: 6px;
+.ideaTexto {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.firma {
+  margin: 6px 0 0;
   font-family: var(--font-family);
-  font-size: 13px;
-  font-style: normal;
+  font-size: 12px;
   color: var(--color-text-muted);
 }
 
-.marco {
-  font-family: var(--font-family);
-  font-size: 12px;
+.firmaAutor {
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--color-text);
+}
+
+.firmaSep {
+  color: var(--color-text-light);
+}
+
+.firmaLente {
   color: var(--color-text-muted);
-  margin: 0;
 }
 
 /* ── CTA ────────────────────────────────────────────────────────── */

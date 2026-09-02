@@ -30,6 +30,10 @@ const API_TIMEOUT_MS = 15000;
 // lo suficiente para que la pantalla de carga se alcance a ver en el QA.
 const ENSAYO_DELAY_MS = 1200;
 
+// El marco viaja en minusculas en el JSON; la firma lo muestra capitalizado,
+// como hace la Accion Rapida con la lente.
+const capitalizar = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
 /**
  * Props
  *   active        bool       · true cuando el acto está visible
@@ -192,16 +196,28 @@ export default function OnboardingComposer({
             .map((parrafo, i) => (
               <p key={i} className={styles.respPara}>{parrafo}</p>
             ))}
+          {/* SIN COMILLAS, a proposito. Lo que viene del banco AUTORES son
+              articulaciones del enfoque de cada autor escritas en la voz de
+              Huella, no citas textuales suyas. Entrecomillarlas y firmarlas
+              con su nombre convertia una parafrasis en una cita falsa
+              atribuida a una persona real. Se firma como en la Accion Rapida:
+              "Autor · Lente", que dice de donde viene la idea sin afirmar que
+              son sus palabras exactas. */}
           {response.cita && (
-            <blockquote className={styles.quote}>
-              "{response.cita}"
+            <div className={styles.idea}>
+              <p className={styles.ideaTexto}>{response.cita}</p>
               {response.autor && (
-                <cite className={styles.author}>— {response.autor}</cite>
+                <p className={styles.firma}>
+                  — <span className={styles.firmaAutor}>{response.autor}</span>
+                  {response.marco && (
+                    <>
+                      <span className={styles.firmaSep}> · </span>
+                      <span className={styles.firmaLente}>{capitalizar(response.marco)}</span>
+                    </>
+                  )}
+                </p>
               )}
-            </blockquote>
-          )}
-          {response.marco && (
-            <p className={styles.marco}>Marco · {response.marco}</p>
+            </div>
           )}
         </article>
         <p className={styles.promesa}>
