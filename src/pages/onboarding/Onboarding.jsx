@@ -66,11 +66,19 @@ const EMPTY_PERFIL = {
  *                          quien no llama al persistor. Aca solo se usa para
  *                          pintar el chip y para apagar la llamada a Anthropic
  *                          del acto B.
+ *   ensayoIA       bool  · variante ?onboarding=1&ia=1: ensayo igual de seco,
+ *                          pero el acto B SI llama a Anthropic con los datos
+ *                          del acto A. Solo cambia eso y el texto del chip.
  *   onSalirEnsayo  () => void  · salida del ensayo desde el chip. Existe porque
  *                          el acto A no tiene "Saltar": sin esto, para salir
  *                          habria que completar los 5 pasos.
  */
-export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }) {
+export default function Onboarding({
+  onComplete,
+  ensayo = false,
+  ensayoIA = false,
+  onSalirEnsayo,
+}) {
   const [index, setIndex] = useState(0);
   const [perfil, setPerfil] = useState(EMPTY_PERFIL);
   // Bloqueo del cierre mientras `onComplete` corre (sube foto + upsert perfil +
@@ -131,9 +139,13 @@ export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }
           type="button"
           className={styles.chipEnsayo}
           onClick={onSalirEnsayo}
-          title="Modo ensayo: nada se guarda. Toca para salir."
+          title={
+            ensayoIA
+              ? 'Modo ensayo con IA real: la respuesta viene de Anthropic, pero nada se guarda. Toca para salir.'
+              : 'Modo ensayo: nada se guarda. Toca para salir.'
+          }
         >
-          modo ensayo · salir
+          {ensayoIA ? 'modo ensayo · IA real · salir' : 'modo ensayo · salir'}
         </button>
       )}
       <div
@@ -160,6 +172,7 @@ export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }
             active={index === 1}
             hijo={hijoDelActoA}
             ensayo={ensayo}
+            ensayoIA={ensayoIA}
             submitting={submitting}
             saveError={saveError}
             onSubmit={finish}

@@ -46,6 +46,12 @@ const capitalizar = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
  *                              app. Sirve para el QA visual y evita tanto el
  *                              gasto de la llamada como la fila que el backend
  *                              escribe en `api_llamadas` (api/anthropic.js).
+ *   ensayoIA      bool       · variante ?onboarding=1&ia=1. Ensayo igual de
+ *                              seco para la base de la cuenta, pero el acto B
+ *                              SI llama a Anthropic con el hijo del acto A,
+ *                              para poder revisar la respuesta real. La unica
+ *                              escritura que reaparece es la fila de
+ *                              `api_llamadas`, que es solo el contador.
  *   submitting    bool       · el cierre del onboarding está guardando
  *   saveError     bool       · el guardado falló; se puede reintentar
  *   onSubmit      (texto: string | null) => void
@@ -56,6 +62,7 @@ export default function OnboardingComposer({
   active,
   hijo = null,
   ensayo = false,
+  ensayoIA = false,
   submitting = false,
   saveError = false,
   onSubmit,
@@ -98,7 +105,12 @@ export default function OnboardingComposer({
     // para que el QA alcance a ver la pantalla de carga (anillo, frases y
     // barra de progreso son parte de lo que hay que revisar) y despues
     // pintamos el fallback local por el mismo camino que el fallback real.
-    if (ensayo) {
+    //
+    // Con `ensayoIA` (?onboarding=1&ia=1) este atajo NO aplica: seguimos de
+    // largo al camino real de abajo, que llama a Anthropic con el hijo del
+    // acto A. Todo lo demas del ensayo sigue igual — el Layout es el que corta
+    // las escrituras, y eso no depende de esta rama.
+    if (ensayo && !ensayoIA) {
       const id = setTimeout(() => {
         setResponse(fallbackResponse(hijo?.nombre));
         setState('fallback');
@@ -131,7 +143,7 @@ export default function OnboardingComposer({
       clearTimeout(timeoutId);
       abortRef.current = null;
     }
-  }, [canSubmit, text, ensayo, hijo]);
+  }, [canSubmit, text, ensayo, ensayoIA, hijo]);
 
   // Rotación de frase cada 2.5s mientras carga
   useEffect(() => {

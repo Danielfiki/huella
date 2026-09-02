@@ -105,9 +105,25 @@ export default function Layout() {
   // `persistirPerfilOnboarding`, así que las cuatro escrituras del flujo (el
   // upload del avatar a Storage, el upsert a `perfiles` y los dos
   // `upsert_family_child`) nunca llegan a ocurrir. El acto B tampoco llama a
-  // Anthropic: ver el prop `ensayo` de OnboardingComposer.
+  // Anthropic, salvo en la variante con IA real de mas abajo: ver el prop
+  // `ensayo` de OnboardingComposer.
   const ensayoParam =
     new URLSearchParams(location.search).get('onboarding') === '1'
+
+  // ── Variante con IA real · ?onboarding=1&ia=1 ─────────────────────────────
+  // El mismo ensayo de siempre —cero escrituras de perfil, hijo y fotos, chip
+  // visible y salida limpia al Home— con UNA sola diferencia: el acto B llama
+  // de verdad a Anthropic con el nombre, la edad y el genero que se acaban de
+  // escribir en el acto A, en vez de pintar el fallback local. Sirve para
+  // revisar la respuesta REAL del modelo antes de soltarla a los testers.
+  //
+  // Lo unico que si queda escrito es la fila que el backend registra en
+  // `api_llamadas` (api/anthropic.js). Es solo el contador de uso, no dato de
+  // la cuenta: aceptable a cambio de poder ver la respuesta de verdad.
+  //
+  // `ia=1` por si solo no hace nada: sin `onboarding=1` no hay ensayo.
+  const iaRealParam =
+    new URLSearchParams(location.search).get('ia') === '1'
 
   // Latch propio, separado de `onboardingCerrado` para no contaminar el flujo
   // real. Se resetea cuando el param reaparece, así volver a entrar a
@@ -118,13 +134,16 @@ export default function Layout() {
   }, [ensayoParam])
 
   const ensayo = ensayoParam && !ensayoCerrado
+  const ensayoIA = ensayo && iaRealParam
 
-  // Salida del ensayo: apaga el latch y limpia SOLO el param `onboarding`,
-  // conservando los demás. Los datos reales de la cuenta nunca se tocaron.
+  // Salida del ensayo: apaga el latch y limpia los dos params del ensayo
+  // (`onboarding` e `ia`), conservando los demás. Los datos reales de la
+  // cuenta nunca se tocaron.
   const salirDelEnsayo = useCallback(() => {
     setEnsayoCerrado(true)
     const params = new URLSearchParams(location.search)
     params.delete('onboarding')
+    params.delete('ia')
     const qs = params.toString()
     navigate(`${location.pathname}${qs ? `?${qs}` : ''}`, { replace: true })
   }, [location.search, location.pathname, navigate])
@@ -160,6 +179,7 @@ export default function Layout() {
       {!familyLoading && showOnboarding && (ensayo || !family || family.role === 'owner') && (
         <Onboarding
           ensayo={ensayo}
+          ensayoIA={ensayoIA}
           onSalirEnsayo={salirDelEnsayo}
           onComplete={async (perfil) => {
             // Modo ensayo: cortamos ANTES del persistor. Ninguna escritura
