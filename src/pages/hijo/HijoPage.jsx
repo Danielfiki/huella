@@ -5,26 +5,14 @@ import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
 import PropuestaRasgo, { COLOR_FAMILIA } from '../../components/hijo/PropuestaRasgo'
 import RetratoSendero from '../../components/hijo/RetratoSendero'
+import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
 import s from './HijoPage.module.css'
 import RutinaDiaria from './RutinaDiaria'
 import CerebroContenido from '../cerebro/CerebroContenido'
 
-// ── Helpers fecha (modo creación) ─────────────────────────────────────────
-
-function isoToDisplay(iso) {
-  if (!iso || iso.length < 10) return ''
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function displayToIso(display) {
-  const digits = display.replace(/\D/g, '')
-  if (digits.length !== 8) return ''
-  const d = digits.slice(0, 2), m = digits.slice(2, 4), y = digits.slice(4, 8)
-  const date = new Date(`${y}-${m}-${d}`)
-  if (isNaN(date.getTime()) || date.getMonth() + 1 !== Number(m)) return ''
-  return `${y}-${m}-${d}`
-}
+// La fecha de nacimiento la maneja SelectorFechaNacimiento (tres selects),
+// que habla directo en 'YYYY-MM-DD'. Con eso se fueron isoToDisplay y
+// displayToIso, que vivian duplicados aca y en PerfilPage.
 
 // Las 4 familias del retrato (motor de rasgos · 4C), en orden fijo. `titulo`
 // es el nombre cálido (no el id técnico); `verbo` arma el mensaje anticipatorio
@@ -50,7 +38,6 @@ export default function HijoPage() {
   // Estados del formulario de creación (siempre declarados — regla de hooks)
   const [nombre, setNombre]               = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
-  const [fechaDisplay, setFechaDisplay]   = useState('')
   const [genero, setGenero]               = useState('')
   const [loadingCrear, setLoadingCrear]   = useState(false)
   const [errorCrear, setErrorCrear]       = useState('')
@@ -77,16 +64,6 @@ export default function HijoPage() {
   useEffect(() => {
     setRasgoPropuesto(null)
   }, [hijo?.id])
-
-  function handleFechaChange(e) {
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
-    let display = digits
-    if (digits.length > 4) display = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`
-    else if (digits.length > 2) display = `${digits.slice(0,2)}/${digits.slice(2)}`
-    setFechaDisplay(display)
-    const iso = displayToIso(display)
-    setFechaNacimiento(iso || (digits.length === 0 ? '' : fechaNacimiento))
-  }
 
   async function handleCrear(e) {
     e.preventDefault()
@@ -141,12 +118,10 @@ export default function HijoPage() {
 
             <div className={s.campo}>
               <label className={s.campoLabel}>Fecha de nacimiento</label>
-              <input
-                className={s.input}
-                value={fechaDisplay}
-                onChange={handleFechaChange}
-                placeholder="DD/MM/AAAA"
-                inputMode="numeric"
+              <SelectorFechaNacimiento
+                idPrefix="hijo-nuevo"
+                value={fechaNacimiento}
+                onChange={setFechaNacimiento}
               />
             </div>
 
