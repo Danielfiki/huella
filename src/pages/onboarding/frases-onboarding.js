@@ -22,26 +22,41 @@ export const FRASES_ONBOARDING = [
 ];
 
 /**
- * Respuesta de fallback si la API falla por cualquier motivo
- * (sin conexión, timeout, 5xx, parse error, payload incompleto).
+ * Respuesta de fallback si la API falla por cualquier motivo (sin conexion,
+ * timeout de 15s, 429 de limite diario, 5xx, parse error, payload
+ * incompleto) y tambien la que usa el MODO ENSAYO (?onboarding=1), donde no
+ * se llama a la red a proposito.
  *
- * Misma forma que el payload de éxito esperado:
- *   { comprension: string, cita: string, autor: string, marco: string }
+ * Es una FUNCION y no un objeto fijo desde el 2 sep 2026: ahora recibe el
+ * nombre del hijo o hija y lo interpola. El acto A ya lo pidio, asi que un
+ * fallback impersonal se notaba justo despues de una pantalla que si sabia
+ * como se llama.
+ *
+ * Misma forma que el payload de exito: { comprension, cita, autor, marco }.
  *
  * Reglas del fallback:
- *   - El usuario NUNCA debe percibir que algo falló.
- *   - La comprensión es cálida y suficientemente genérica para encajar con
- *     cualquier cosa que el padre/madre haya escrito (rabieta, sueño, comida,
- *     vínculo, etc.) — pero NO vacía.
- *   - La cita es real, atribuida correctamente. Janet Lansbury fue elegida
- *     porque su voz es transversal a la edad y al tipo de episodio.
- *   - El marco aplicado se nombra en minúsculas, breve, sin "marco de" ni
- *     citas internas.
+ *   - El usuario NUNCA debe percibir que algo fallo.
+ *   - La comprension es calida y lo bastante general para encajar con
+ *     cualquier cosa que el padre/madre haya escrito (rabieta, sueno,
+ *     comida, vinculo) — pero NO vacia.
+ *   - La cita sale del banco AUTORES, igual que en el camino de exito.
+ *   - El marco va en minusculas, breve, sin "marco de" ni comillas.
+ *
+ * @param {string} [nombre] Nombre del hijo o hija. Si no viene, se usa una
+ *                         redaccion neutra que no deja el hueco a la vista.
  */
-export const FALLBACK_RESPONSE = {
-  comprension:
-    'Te leo. A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío.\n\nEn Huella vas a entender por qué pasa cada episodio, y qué hacer con eso.',
-  cita: 'Los berrinches son el resultado de una inmadurez cerebral, no de una mala crianza.',
-  autor: 'Daniel Siegel',
-  marco: 'desarrollo cerebral',
-};
+export function fallbackResponse(nombre) {
+  const quien = (nombre || '').trim()
+  const sujeto = quien || 'tu hijo o hija'
+  return {
+    comprension:
+      `Te leo, y lo que cuentas es mucho más común de lo que parece desde adentro. ` +
+      `A la edad de ${sujeto}, el freno que permite parar a tiempo todavía se está ` +
+      `construyendo: no es algo que ya tenga y decida no usar.`,
+    // Textual del pool de Daniel Siegel en AUTORES (src/services/anthropic.js).
+    // Si esa entrada cambia, esta copia hay que actualizarla a mano.
+    cita: 'conectar primero, redirigir después — no al revés',
+    autor: 'Daniel Siegel',
+    marco: 'desarrollo cerebral',
+  }
+}

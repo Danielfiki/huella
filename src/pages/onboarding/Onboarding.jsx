@@ -17,12 +17,27 @@
 //   <Onboarding onComplete={(perfil) => …} />
 // y decide que hacer con el `perfil` (persistir en Supabase, recargar, etc).
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import styles from './Onboarding.module.css';
 import OnboardingFormSlide from './OnboardingFormSlide';
 import OnboardingComposer from './OnboardingComposer';
 
 const ACTO_COUNT = 2;
+
+// Anios cumplidos a partir de { dia, mes, anio }. Devuelve null si la fecha
+// esta incompleta o es invalida; `marcoEdad` ya cae a su marco de 4 anios
+// cuando recibe null, asi que el acto B nunca queda sin marco.
+function edadDesdeNacimiento(nacimiento) {
+  const { dia, mes, anio } = nacimiento || {};
+  if (!dia || !mes || !anio) return null;
+  const fecha = new Date(Number(anio), Number(mes) - 1, Number(dia));
+  if (isNaN(fecha.getTime())) return null;
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - fecha.getFullYear();
+  const m = hoy.getMonth() - fecha.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) edad--;
+  return edad >= 0 && edad < 130 ? edad : null;
+}
 
 const EMPTY_PERFIL = {
   nombrePadre: '',
@@ -69,6 +84,16 @@ export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }
   const goNext = useCallback(() => {
     setIndex(i => Math.min(i + 1, ACTO_COUNT - 1));
   }, []);
+
+  // Datos del hijo para el acto B. El hijo TODAVIA no existe en la base (se
+  // crea recien al cerrar el onboarding), asi que la edad se calcula aca desde
+  // el nacimiento que el acto A acaba de recolectar. Sin esto el primer
+  // encuentro respondia sin saber a quien le hablaba.
+  const hijoDelActoA = useMemo(() => ({
+    nombre: perfil.nombreHijo.trim() || null,
+    edad:   edadDesdeNacimiento(perfil.nacimiento),
+    genero: perfil.sexo,
+  }), [perfil.nombreHijo, perfil.nacimiento, perfil.sexo]);
 
   // Cierre del onboarding. Recibe el texto del acto B (o null si lo salto).
   const finish = useCallback(async (texto) => {
@@ -133,6 +158,7 @@ export default function Onboarding({ onComplete, ensayo = false, onSalirEnsayo }
         <div className={styles.acto} aria-hidden={index !== 1}>
           <OnboardingComposer
             active={index === 1}
+            hijo={hijoDelActoA}
             ensayo={ensayo}
             submitting={submitting}
             saveError={saveError}

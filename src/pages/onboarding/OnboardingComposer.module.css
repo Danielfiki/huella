@@ -283,3 +283,18 @@
   .spin    { animation: none; opacity: 0.7; }
   .cta     { transition: none; }
 }
+
+/* La promesa de la app. Antes el prompt obligaba al modelo a escribir esta
+   frase palabra por palabra dentro de "comprension": se comia la mitad del
+   presupuesto de 50 palabras y ademas dependia de que la copiara bien. Ahora
+   es texto de la UI, fuera de la tarjeta de la respuesta, para que se lea como
+   lo que es: la voz del producto, no la del acompanamiento. */
+.promesa {
+  font-family: var(--font-family);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+  padding: 0 6px;
+}

@@ -1954,26 +1954,85 @@ ${JSON.stringify({
 }
 
 // ── Onboarding · primer encuentro ─────────────────────────────────────────
-// Se usa en el slide 3 del Onboarding Susurro, donde el padre/madre escribe
-// algo que vivió y la IA le devuelve una respuesta cálida y validante.
+// Se usa en el acto B del onboarding, donde el padre/madre escribe algo que
+// vivió y la IA le devuelve una respuesta cálida y validante.
 //
 // Diferencias con el resto del archivo (intencionales):
 //
 //   1. NO usa `llamarAPI()` porque ese helper crea su propio AbortController
-//      con timeout interno de 75s — incompatible con el timeout de 8s y
+//      con timeout interno de 75s — incompatible con el timeout de 15s y
 //      el AbortController que el `OnboardingComposer` ya configuró. Acá
 //      hacemos fetch directo respetando el `signal` del caller.
 //
-//   2. NO usa `marcoEdad()` — en este punto del onboarding aún no hay datos
-//      del hijo (el formulario llega en el slide 4). Solo tenemos el texto
-//      crudo del padre/madre.
+//   2. SÍ usa `marcoEdad()`, desde el 2 sep 2026. Acá decía lo contrario
+//      ("en este punto del onboarding aún no hay datos del hijo"), y era el
+//      origen del bug: el acto del formulario es el A y corre ANTES de este,
+//      así que el nombre, la edad y el género ya están en memoria. La app los
+//      tenía y no se los pasaba al modelo.
 //
 //   3. Cualquier fallo (HTTP, parse, payload sin `comprension`) propaga
-//      excepción. Eso es lo que necesita el caller para caer al
-//      FALLBACK_RESPONSE de `frases-onboarding.js` y mostrarle al usuario
-//      una respuesta indistinguible — su primer encuentro nunca debe ver
-//      un mensaje de error técnico.
-const PROMPT_PRIMER_ENCUENTRO = `Eres Huella, una compañera de crianza basada en evidencia científica del desarrollo infantil. Un padre o madre acaba de escribirte por primera vez y te contó algo que vivió con su hijo o hija. No tienes ningún dato previo sobre el niño, ni edad, ni historial — solo este relato.
+//      excepción. Eso es lo que necesita el caller para caer al fallback de
+//      `frases-onboarding.js` y mostrarle al usuario una respuesta
+//      indistinguible — su primer encuentro nunca debe ver un mensaje de
+//      error técnico.
+// ──────────────────────────────────────────────────────────────────────
+// PRIMER ENCUENTRO — la respuesta del acto B del onboarding.
+//
+// Reescrito el 2 sep 2026. Antes era CIEGO: el system decia literalmente "No
+// tienes ningun dato previo sobre el nino, ni edad, ni historial", y el unico
+// input era el texto del padre. Pero el acto B corre DESPUES del acto A, o sea
+// que la app ya tiene nombre, fecha de nacimiento y genero — se los estabamos
+// escondiendo al modelo. Ademas la mitad de la respuesta era una frase fija
+// ("En Huella vas a entender...") que ahora vive en la UI, no en el prompt.
+//
+// La CITA ya no la inventa el modelo. Se le pasa un subconjunto del banco
+// AUTORES filtrado por edad y tiene que elegir UNA, textual. Despues, al
+// parsear, verificamos que la que devolvio este de verdad en la lista; si no,
+// la reemplazamos por una nuestra. La instruccion sola no basta.
+// ──────────────────────────────────────────────────────────────────────
+
+// Arma el subconjunto del banco que se le ofrece al modelo: recorre las
+// dimensiones del MAPA, toma el autor primario de cada una, descarta a los que
+// no corresponden a la edad (EDAD_MINIMA_AUTOR: Damour y Steinberg desde los
+// 12, Haidt y Twenge desde los 10, Wolfelt desde los 3) y saca una
+// articulacion del pool de cada uno.
+//
+// Devuelve entre 5 y 8 entradas de la forma { cita, autor, marco }, donde
+// marco es la lente del MAPA en minusculas — exactamente lo que la UI imprime
+// como "Marco · ...". Asi los tres campos salen SIEMPRE de la misma entrada.
+export function bancoPrimerEncuentro(edad, maximo = 7) {
+  const edadNum = parseInt(edad, 10) || 4
+  const vistos = new Set()
+  const entradas = []
+
+  for (const mapeo of Object.values(MAPA_DIMENSIONES)) {
+    const autor = mapeo.primario
+    if (!autor || vistos.has(autor)) continue
+
+    const minimo = EDAD_MINIMA_AUTOR[autor]
+    if (minimo != null && edadNum < minimo) continue
+
+    const cita = seleccionarArticulacion(autor)
+    if (!cita) continue
+
+    vistos.add(autor)
+    entradas.push({ cita, autor, marco: (mapeo.lente || '').toLowerCase() })
+  }
+
+  // Barajamos y cortamos, para que dos usuarios de la misma edad no reciban
+  // siempre las mismas opciones en el mismo orden.
+  for (let k = entradas.length - 1; k > 0; k--) {
+    const r = Math.floor(Math.random() * (k + 1))
+    const tmp = entradas[k]
+    entradas[k] = entradas[r]
+    entradas[r] = tmp
+  }
+  return entradas.slice(0, Math.max(5, Math.min(maximo, entradas.length)))
+}
+
+const PROMPT_PRIMER_ENCUENTRO = `Eres Huella, una compañera de crianza basada en evidencia científica del desarrollo infantil. Un padre o madre acaba de crear su cuenta y te está contando, por primera vez, algo que vivió con su hijo o hija. Es el primer momento que registra en la app.
+
+En el mensaje del usuario recibes el marco científico de la edad, los datos del hijo o hija (nombre, edad, género) y el relato tal cual lo escribió. Úsalos todos: no respondas como si no supieras quién es.
 
 Tu única tarea es responder con un objeto JSON con exactamente esta forma:
 
@@ -1983,60 +2042,72 @@ Sin texto antes ni después del JSON. Sin bloques de código markdown. Sin etiqu
 
 Contenido de cada campo:
 
-1. "comprension": RESPONDE EN EXACTAMENTE 2 PÁRRAFOS separados por una línea en blanco (\n\n). MÁXIMO 50 PALABRAS TOTALES — esta es regla dura, no sugerencia. Si tu primer borrador supera 50 palabras, recórtalo antes de devolverlo.
+1. "comprension": ENTRE 60 Y 90 PALABRAS, en EXACTAMENTE 2 PÁRRAFOS separados por una línea en blanco (\n\n).
 
-   PÁRRAFO 1 (máximo 30 palabras): empieza con "Te leo." seguido de un análisis científico muy breve — qué está pasando en el desarrollo del niño según el marco que aplicas (desarrollo cerebral, ventana de tolerancia, apego, corregulación, lo que corresponda al relato). En lenguaje humano, sin jerga clínica. Ejemplo de tono y largo: "Te leo. A esta edad, la corteza prefrontal de tu hijo aún está en construcción — por eso no puede frenar el impulso cuando algo lo desborda. El grito es desregulación, no desafío."
+   PÁRRAFO 1 — el alivio. Abre CITANDO entre comillas dobles un fragmento textual del relato, tal cual lo escribió, sin corregirlo ni parafrasearlo. Elige el fragmento donde se nota lo que le pesó. Después normaliza lo que hizo el niño o la niña para su edad, según el marco científico que recibiste, y suelta la culpa del padre o madre. Las comillas dobles marcan la cita del relato y no se usan para nada más en este párrafo.
 
-   PÁRRAFO 2: exactamente esta frase, sin modificarla, sin agregarle ni quitarle palabras: "En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso."
+   PÁRRAFO 2 — qué está pasando. Una o dos oraciones sobre el mecanismo de desarrollo específico de esa edad que explica lo que pasó. En lenguaje humano, sin jerga clínica.
 
-PROHIBIDO: agregar un tercer párrafo, dar consejos prácticos, listar pasos, diagnosticar al niño, juzgar al padre/madre, patologizar, sermonear, expandir más allá de las 50 palabras.
+   Menciona el nombre del hijo o hija AL MENOS UNA VEZ en la comprensión.
 
-2. "cita": una cita real, completa y atribuida a un autor reconocido del marco que decidas aplicar. Una sola oración. Sin comillas dobles internas (porque va dentro de JSON). Debe encajar con lo que el padre/madre escribió.
+PROHIBIDO: un tercer párrafo, dar consejos prácticos, listar pasos, prometer lo que la app va a hacer, diagnosticar, juzgar al padre o madre, patologizar, sermonear, felicitar, o pasarte de 90 palabras.
 
-3. "autor": nombre del autor de la cita. Ejemplos válidos: "Daniel Siegel", "Janet Lansbury", "Stuart Shanker", "Bruce Perry", "Ross Greene", "Laura Markham", "Becky Kennedy", "Gabor Maté", "Bessel van der Kolk", "Tina Payne Bryson", "Magda Gerber", "Harvey Karp", "Adele Faber".
+MARCO ANTI-VERGÜENZA — es lo más importante de esta respuesta. Quien escribe acaba de contarle a una app algo que quizás no le contó a nadie. Nunca insinúes que debió actuar distinto, ni que hay una forma correcta que no encontró. Si en el relato hay algo de lo que se arrepiente (gritó, perdió la paciencia, se salió de la pieza), reconócelo como lo que le pasa a un adulto cansado, no como un error a corregir. Después del alivio no va ningún "pero".
 
-4. "marco": el marco aplicado, en minúsculas, breve, de 1 a 4 palabras. Ejemplos: "ventana de tolerancia", "presencia", "corregulación", "apego seguro", "regulación emocional", "habilidad rezagada", "co-regulación", "reparación".
+PROHIBIDO NEGAR PARA AFIRMAR: nada de "esto no es X, es Y" ni "no fue X, fue Y" ni ninguna variante. Afirma directo lo que quieres decir.
+
+2. "cita", 3. "autor" y 4. "marco": NO los escribes tú. En el mensaje del usuario viene una lista numerada de opciones, cada una con su cita, su autor y su marco. Elige LA QUE MEJOR ENCAJE con lo que el padre o madre acaba de contar y copia sus tres campos EXACTAMENTE como aparecen, carácter por carácter. No los reescribas, no los mezcles entre opciones distintas, no inventes una cita nueva ni un autor que no esté en la lista. Los tres campos salen SIEMPRE de la misma opción.
 
 Reglas de tono y lenguaje:
 
 - ${REGLA_IDIOMA}
 - Cálido, en presente, sin tecnicismos clínicos.
-- Habla en primera persona de Huella si encaja ("te leo", "te entiendo", "estoy contigo").
-- Nunca uses términos diagnósticos hacia el niño (no decir "ansiedad clínica", "TDAH", "trastorno", "patológico").
-- Nunca pongas en duda lo que el padre/madre cuenta.
-- Esto es contacto, no acción — no sermonees, no listes pasos, no resuelvas el problema.`
+- Puedes hablar en primera persona de Huella si encaja ("te leo", "estoy contigo").
+- Nunca uses términos diagnósticos hacia el niño o la niña (no digas "ansiedad clínica", "TDAH", "trastorno", "patológico").
+- Nunca pongas en duda lo que el padre o madre te cuenta.
+- Esto es contacto, no acción: no resuelvas el problema.
+- Cuida la gramática y la sintaxis. Oraciones cortas y claras. Nunca dejes una frase incompleta.`
 
 /**
- * Llamada de "primer encuentro" del Onboarding Susurro (slide 3).
- * Toma el texto crudo que escribió el padre/madre y devuelve una respuesta
- * cálida y validante en formato JSON estructurado.
+ * Llamada de "primer encuentro" del acto B del onboarding.
  *
- * @param {string} texto                    Texto del padre/madre. Trim antes de pasar.
+ * @param {string} texto              Relato del padre/madre. Trim antes de pasar.
  * @param {Object} [opts]
- * @param {AbortSignal} [opts.signal]       Para cancelar el fetch (el Composer
- *                                          ya configura un timeout de 8s).
- * @returns {Promise<{
- *   comprension: string,   // 40-50 palabras · 3 partes (anclaje + análisis breve + cierre fijo)
- *   cita: string,          // cita real, 1 oración, sin comillas internas
- *   autor: string,         // ej. "Daniel Siegel"
- *   marco: string,         // marco en minúsculas · ej. "ventana de tolerancia"
- * }>}
+ * @param {Object} [opts.hijo]        { nombre, edad, genero } — el hijo TODAVIA
+ *                                    no existe en la base: viene del acto A.
+ * @param {AbortSignal} [opts.signal] El Composer configura 15s de timeout.
+ * @returns {Promise<{ comprension: string, cita: string, autor: string, marco: string }>}
  *
- * Tira si:
- *   - El fetch falla por red, abort o status != 2xx.
- *   - El body no es JSON parseable.
- *   - El payload no incluye `comprension`.
- *
- * El caller (OnboardingComposer) atrapa cualquier throw y cae al
- * FALLBACK_RESPONSE de `frases-onboarding.js` con la misma UI.
+ * Tira si el fetch falla, si el body no es JSON parseable, o si falta
+ * `comprension`. El caller (OnboardingComposer) atrapa cualquier throw y cae
+ * al fallback de `frases-onboarding.js`.
  */
-export async function requestPrimerEncuentro(texto, { signal } = {}) {
-  // PROMPT_PRIMER_ENCUENTRO viaja como `system` (no como user message) para
-  // que pise al SYSTEM_PROMPT clínico default del backend. Sin esto, el
-  // modelo respondía con el formato Huella ("Qué está pasando / Marco
-  // aplicado: ...") en vez del JSON que el onboarding necesita, y todo
-  // caía al FALLBACK_RESPONSE.
-  const prompt = `Texto del padre/madre:
+export async function requestPrimerEncuentro(texto, { hijo = null, signal } = {}) {
+  const marco = marcoEdad(hijo?.edad)
+
+  // Mismo bloque de genero que analizarEpisodio, palabra por palabra: si aca
+  // se escribiera distinto, el onboarding y el registro le hablarian al mismo
+  // hijo de dos formas.
+  const { genero, pronombre, articulo } = (() => {
+    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
+    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
+    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
+    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
+  })()
+
+  const banco = bancoPrimerEncuentro(hijo?.edad)
+  const listaBanco = banco
+    .map((e, k) => `${k + 1}. cita: "${e.cita}" | autor: "${e.autor}" | marco: "${e.marco}"`)
+    .join('\n')
+
+  const prompt = `${marco}
+
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad ?? '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+
+Opciones de cita, autor y marco. Elige UNA y copia sus tres campos tal cual:
+${listaBanco}
+
+Relato del padre/madre:
 
 "${texto}"`
 
@@ -2055,10 +2126,9 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
     headers,
     body: JSON.stringify({
       prompt,
-      // 200 tokens ≈ 130 palabras en español: holgura para la comprension
-      // de ~50 palabras + cita corta + autor + marco + estructura JSON,
-      // pero apretado para que el modelo no pueda expandirse a 80+ palabras.
-      max_tokens: 200,
+      // 500 tokens: la comprension paso de ~50 a 60-90 palabras y ahora carga
+      // el nombre y un fragmento textual del relato. Con 200 se cortaba.
+      max_tokens: 500,
       system: PROMPT_PRIMER_ENCUENTRO,
     }),
     signal,
@@ -2076,8 +2146,8 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
     .replace(/\s*```\s*$/i, '')
     .trim()
 
-  // Tolerante a texto antes/después del objeto: extrae el primer bloque
-  // que parezca JSON. Si tampoco hay match, JSON.parse va a tirar.
+  // Tolerante a texto antes/despues del objeto: extrae el primer bloque que
+  // parezca JSON. Si tampoco hay match, JSON.parse va a tirar.
   const match = raw.match(/\{[\s\S]*\}/)
   const parsed = JSON.parse(match ? match[0] : raw)
 
@@ -2085,11 +2155,20 @@ export async function requestPrimerEncuentro(texto, { signal } = {}) {
     throw new Error('payload-incompleto')
   }
 
+  // RED DURA CONTRA CITAS INVENTADAS. Pedirlo en el prompt no alcanza: aca
+  // comprobamos que la cita devuelta sea UNA DE LAS QUE LE PASAMOS. Si no
+  // calza — porque la reescribio, mezclo campos de dos opciones, o se la
+  // invento — descartamos sus tres campos y usamos una entrada nuestra
+  // completa. Nunca sale al aire una frase atribuida a un autor real que ese
+  // autor no dijo.
+  const elegida =
+    banco.find((e) => e.cita === String(parsed.cita || '').trim()) || banco[0] || null
+
   return {
     comprension: String(parsed.comprension || ''),
-    cita:        String(parsed.cita        || ''),
-    autor:       String(parsed.autor       || ''),
-    marco:       String(parsed.marco       || ''),
+    cita:        elegida ? elegida.cita  : '',
+    autor:       elegida ? elegida.autor : '',
+    marco:       elegida ? elegida.marco : '',
   }
 }
 

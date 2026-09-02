@@ -3,15 +3,16 @@
 // Maneja la máquina de estados local: idle → typing → loading → response | fallback.
 //
 // La llamada a la API se hace en `requestPrimerEncuentro()` (importada de ../../services/anthropic).
-// Si falla por cualquier motivo (sin conexión, timeout, 5xx, parse error), cae al
-// FALLBACK_RESPONSE en frases-onboarding.js. El usuario NUNCA ve un mensaje técnico
-// de error — es su primer encuentro con el producto.
+// Si falla por cualquier motivo (sin conexión, timeout de 15s, 429 de límite
+// diario, 5xx, parse error), cae al `fallbackResponse(nombre)` de
+// frases-onboarding.js. El usuario NUNCA ve un mensaje técnico de error — es su
+// primer encuentro con el producto.
 //
 // Path: src/pages/onboarding/OnboardingComposer.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './OnboardingComposer.module.css';
-import { FRASES_ONBOARDING, FALLBACK_RESPONSE } from './frases-onboarding';
+import { FRASES_ONBOARDING, fallbackResponse } from './frases-onboarding';
 import ProgressBar from '../../components/ui/ProgressBar';
 
 // El helper Anthropic vive en src/services/anthropic.js — contrato esperado en
@@ -32,8 +33,12 @@ const ENSAYO_DELAY_MS = 1200;
 /**
  * Props
  *   active        bool       · true cuando el acto está visible
+ *   hijo          object     · { nombre, edad, genero } del acto A. Viaja al
+ *                              prompt para que la respuesta hable de ESTE hijo
+ *                              por su nombre y con el marco de su edad. Antes
+ *                              el primer encuentro era ciego a proposito.
  *   ensayo        bool       · modo ensayo: NO se llama a Anthropic. Se pinta
- *                              FALLBACK_RESPONSE, que es contenido real de la
+ *                              el fallback local, que es contenido real de la
  *                              app. Sirve para el QA visual y evita tanto el
  *                              gasto de la llamada como la fila que el backend
  *                              escribe en `api_llamadas` (api/anthropic.js).
@@ -45,6 +50,7 @@ const ENSAYO_DELAY_MS = 1200;
  */
 export default function OnboardingComposer({
   active,
+  hijo = null,
   ensayo = false,
   submitting = false,
   saveError = false,
@@ -87,10 +93,10 @@ export default function OnboardingComposer({
     // Modo ensayo: cero red. Dejamos correr el estado 'loading' un momento
     // para que el QA alcance a ver la pantalla de carga (anillo, frases y
     // barra de progreso son parte de lo que hay que revisar) y despues
-    // pintamos FALLBACK_RESPONSE por el mismo camino que el fallback real.
+    // pintamos el fallback local por el mismo camino que el fallback real.
     if (ensayo) {
       const id = setTimeout(() => {
-        setResponse(FALLBACK_RESPONSE);
+        setResponse(fallbackResponse(hijo?.nombre));
         setState('fallback');
       }, ENSAYO_DELAY_MS);
       ensayoTimerRef.current = id;
@@ -103,6 +109,7 @@ export default function OnboardingComposer({
 
     try {
       const resp = await requestPrimerEncuentro(text.trim(), {
+        hijo,
         signal: controller.signal,
       });
       // Validación mínima del payload. Si falta cualquier campo crítico → fallback.
@@ -114,13 +121,13 @@ export default function OnboardingComposer({
       // futuros sin afectar UX (el usuario sigue viendo el fallback igual).
       console.error('[OnboardingComposer] requestPrimerEncuentro tiró:', err)
       // sin conexión / timeout / 5xx / parse — siempre fallback silencioso.
-      setResponse(FALLBACK_RESPONSE);
+      setResponse(fallbackResponse(hijo?.nombre));
       setState('fallback');
     } finally {
       clearTimeout(timeoutId);
       abortRef.current = null;
     }
-  }, [canSubmit, text, ensayo]);
+  }, [canSubmit, text, ensayo, hijo]);
 
   // Rotación de frase cada 2.5s mientras carga
   useEffect(() => {
@@ -197,6 +204,9 @@ export default function OnboardingComposer({
             <p className={styles.marco}>Marco · {response.marco}</p>
           )}
         </article>
+        <p className={styles.promesa}>
+          En Huella vas a entender por qué pasa cada episodio, y qué hacer con eso.
+        </p>
         {saveError && (
           <p role="alert" className={styles.error}>
             No pudimos guardar tus datos. Revisa tu conexión y vuelve a intentar.
