@@ -21,6 +21,11 @@ import styles from './OnboardingCierre.module.css';
 import { autoresParaCierre, TOTAL_AUTORES_CORPUS } from '../../services/anthropic';
 import OnboardingMarcaAgua from './OnboardingMarcaAgua';
 
+// "mas de 80" cuando el corpus tiene 82. Decena inferior, calculada: la frase
+// sigue siendo cierta aunque el corpus crezca de a uno, y salta sola a "mas
+// de 90" cuando toque.
+const N_REDONDO = Math.floor(TOTAL_AUTORES_CORPUS / 10) * 10;
+
 /**
  * Props
  *   active         bool   · el acto esta visible en el track
@@ -94,11 +99,11 @@ export default function OnboardingCierre({
           ))}
         </ul>
 
-        {/* N exacto del corpus completo (AUTORES_CORPUS en anthropic.js), no
-            solo del banco de la Accion Rapida: son 82 autores reales entre
-            el banco, los marcos por edad y los temas contemporaneos. */}
+        {/* Corpus completo (AUTORES_CORPUS en anthropic.js), no solo el banco
+            de la Accion Rapida: 82 autores reales entre el banco, los marcos
+            por edad y los temas contemporaneos, redondeados a la decena. */}
         <p className={styles.cuenta}>
-          Huella se apoya en el trabajo de {TOTAL_AUTORES_CORPUS} autores de ciencia del desarrollo.
+          Huella se apoya en el trabajo de más de {N_REDONDO} autores de ciencia del desarrollo.
         </p>
 
         {persistStatus === 'error' && (
