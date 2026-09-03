@@ -12,8 +12,10 @@
 //
 // Ya NO se escriben `perfiles.intenciones` ni `perfiles.contexto_inicial`:
 // eran columnas de escritura muerta (ver el comentario del upsert más abajo).
-// `perfil.textoMomento` todavía no se persiste — pasa a ser el primer episodio
-// real del hijo en el bloque 3 del rediseño.
+//
+//   perfil.textoMomento     → episodios (descripcion_libre) · el PRIMER episodio
+//                             real del hijo, con origen = 'onboarding'. Ver
+//                             `crearPrimerEpisodio` al final del archivo.
 //
 // El INSERT del hijo se hace vía la RPC `upsert_family_child` que ya existe
 // en producción y que también usa PerfilPage. Esa función SQL se encarga
@@ -23,6 +25,7 @@
 // Path: src/services/onboardingPersistor.js
 
 import { supabase } from '../lib/supabase'
+import { extraerEpisodio, analizarEpisodio } from './anthropic'
 
 // Bucket que ya existe en producción y se usa para avatares de hijos desde
 // PerfilPage (src/pages/perfil/PerfilPage.jsx). Reutilizado acá para
@@ -272,6 +275,159 @@ export async function persistirPerfilOnboarding(perfil) {
     }
   }
 
+  // 5. Bloque 3 del onboarding: el texto del acto B pasa a ser el primer
+  //    episodio real del hijo. Va DESPUES del hijo (necesita su id) y se
+  //    espera solo el INSERT: la orientacion corre en segundo plano y no
+  //    retrasa la llegada al Home. Cualquier fallo se traga adentro.
+  await crearPrimerEpisodio({
+    userId: user.id,
+    hijoId,
+    texto: perfil.textoMomento,
+    hijo: { nombre: nombreHijo || null, edad: edadDesdeFecha(fechaNac), genero },
+  })
+
   return { userId: user.id, hijoId, avatarUrl, avatarPadreUrl }
+}
+
+// ── Primer episodio (bloque 3) ────────────────────────────────────────────────
+
+// Intensidad cuando no hay quien la elija. El registro conversacional le pide
+// al padre que la marque despues de la extraccion; en el onboarding no hay
+// pantalla para eso, asi que el primer episodio entra al medio de la escala.
+const INTENSIDAD_POR_DEFECTO = 3
+
+// Anios cumplidos desde 'YYYY-MM-DD'. Misma cuenta que hace Onboarding.jsx
+// para el acto B; se repite aca porque un service no importa de pages.
+function edadDesdeFecha(iso) {
+  if (!iso) return null
+  const fecha = new Date(`${iso}T00:00:00`)
+  if (isNaN(fecha.getTime())) return null
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - fecha.getFullYear()
+  const m = hoy.getMonth() - fecha.getMonth()
+  if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) edad--
+  return edad >= 0 && edad < 130 ? edad : null
+}
+
+/**
+ * Crea el primer episodio del hijo con el texto del acto B y dispara la
+ * orientacion completa en segundo plano.
+ *
+ * Reglas (bloque 3):
+ *   - Si `texto` viene vacio (el padre toco "Saltar este paso") no se crea nada.
+ *   - NUNCA tira. El hijo y el perfil ya quedaron creados cuando esto corre, y
+ *     un fallo aca no puede hacer que el onboarding termine mal: se loguea y
+ *     se sigue. El padre no ve ningun error por esto.
+ *   - El modo ensayo no llega hasta aca: el Layout corta antes del persistor.
+ *
+ * Por que no se usa `addEpisodio` del HuellaContext: inserta con
+ * `state.hijoActivoId`, y el hijo recien creado todavia no esta en el contexto
+ * (llega con el `reloadData` que el Layout dispara al cerrar). Aca el INSERT
+ * es directo, con el `hijoId` que devolvio la RPC, igual que el resto de las
+ * escrituras de este archivo.
+ *
+ * Flujo:
+ *   1. `extraerEpisodio` saca tipo/emocion/contexto del relato, igual que el
+ *      registro conversacional. Si falla (429, red, parse) se cae a
+ *      tipo 'otro' sin emocion ni contexto: el relato es lo que no se pierde.
+ *   2. INSERT en `episodios` con hijo_id, fecha = ahora y el relato en
+ *      descripcion_libre. Se espera.
+ *   3. UPDATE aparte con origen = 'onboarding'. Si la columna todavia no
+ *      existe (migracion 015 pendiente) el UPDATE falla solo y se loguea: el
+ *      episodio ya esta creado y no pierde nada mas que la marca.
+ *   4. `analizarEpisodio` SIN await. Al terminar, escribe orientacion_ia y
+ *      orientacion_zona en dos UPDATEs separados (mismo patron que
+ *      updateEpisodio en HuellaContext y la migracion 014).
+ */
+async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
+  const relato = (texto || '').trim()
+  if (!relato || !hijoId || !supabase) return
+
+  try {
+    // 1. Extraccion. Si no se puede, el episodio igual se crea con lo minimo.
+    let extraido = null
+    try {
+      extraido = await extraerEpisodio({ transcripcion: relato, hijo })
+    } catch (err) {
+      console.warn('[onboardingPersistor] extraerEpisodio fallo, sigo con tipo "otro":', err)
+    }
+
+    const episodio = {
+      tipo:             extraido?.tipo || 'otro',
+      intensidad:       INTENSIDAD_POR_DEFECTO,
+      contexto:         extraido?.contexto || '',
+      gatillantes:      [],
+      estadoPadre:      '',
+      fecha:            new Date().toISOString(),
+      emocion:          extraido?.emocion?.especifica || null,
+      descripcionLibre: relato,
+    }
+
+    // 2. El INSERT. Es lo unico que se espera de este bloque.
+    const { data: inserted, error: insErr } = await supabase
+      .from('episodios')
+      .insert({
+        user_id:           userId,
+        hijo_id:           hijoId,
+        tipo:              episodio.tipo,
+        intensidad:        episodio.intensidad,
+        contexto:          episodio.contexto,
+        gatillantes:       episodio.gatillantes,
+        estado_padre:      episodio.estadoPadre,
+        fecha:             episodio.fecha,
+        emocion:           episodio.emocion,
+        descripcion_libre: episodio.descripcionLibre,
+      })
+      .select('id')
+      .single()
+    if (insErr || !inserted?.id) {
+      console.error('[onboardingPersistor] No se pudo crear el primer episodio:', insErr)
+      return
+    }
+    const episodioId = inserted.id
+
+    // 3. Marca de origen, en su propio UPDATE para tolerar que la columna
+    //    `origen` no exista todavia (el codigo se despliega antes del SQL).
+    supabase
+      .from('episodios')
+      .update({ origen: 'onboarding' })
+      .eq('id', episodioId)
+      .eq('user_id', userId)
+      .then(({ error }) => {
+        if (error) {
+          console.warn('[onboardingPersistor] origen no se guardo (falta la migracion 015?):', error.message)
+        }
+      })
+
+    // 4. Orientacion completa en segundo plano. Sin await: el Home no espera.
+    analizarEpisodio({ hijo, episodio, historialReciente: [], bloqueRutina: null })
+      .then(async ({ texto: orientacion, zona }) => {
+        if (!orientacion || !orientacion.trim()) return
+        const { error: oriErr } = await supabase
+          .from('episodios')
+          .update({ orientacion_ia: orientacion })
+          .eq('id', episodioId)
+          .eq('user_id', userId)
+        if (oriErr) {
+          console.error('[onboardingPersistor] No se pudo guardar la orientacion del primer episodio:', oriErr)
+          return
+        }
+        const { error: zonaErr } = await supabase
+          .from('episodios')
+          .update({ orientacion_zona: zona ?? null })
+          .eq('id', episodioId)
+          .eq('user_id', userId)
+        if (zonaErr) {
+          console.warn('[onboardingPersistor] orientacion_zona no se guardo (falta la migracion 014?):', zonaErr.message)
+        }
+      })
+      .catch((err) => {
+        // Igual que un episodio manual donde la IA fallo: queda guardado sin
+        // orientacion y el padre lo ve en el Home como cualquier otro.
+        console.error('[onboardingPersistor] analizarEpisodio del primer episodio fallo:', err)
+      })
+  } catch (err) {
+    console.error('[onboardingPersistor] crearPrimerEpisodio fallo:', err)
+  }
 }
 

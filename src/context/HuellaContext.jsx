@@ -357,6 +357,10 @@ function dbEpisodioToApp(row) {
     reflexion:        row.reflexion         ?? null,
     fotoUrl:          row.foto_url          ?? null,
     accionRapida,
+    // Bloque 3 del onboarding. 'onboarding' cuando el episodio nacio del acto
+    // B; null para los registrados a mano. Mientras la migracion 015 no este
+    // corrida la columna no existe y llega undefined: el ?? null lo absorbe.
+    origen:           row.origen            ?? null,
   }
 }
 

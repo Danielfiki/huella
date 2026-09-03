@@ -53,8 +53,9 @@ const EMPTY_PERFIL = {
   // a quedar guardado. Los dos son opcionales.
   fotoBlob:      null,  // el hijo   → avatares/{userId}/{hijoId}.jpg → hijos.avatar_url
   fotoPadreBlob: null,  // el adulto → avatares/{userId}/cuidador.jpg → perfiles.avatar_url
-  // Texto del acto B. Ya NO se persiste en perfiles.contexto_inicial (campo que
-  // nadie leia nunca). En el bloque 3 pasa a ser el primer episodio real.
+  // Texto del acto B. Es el PRIMER EPISODIO real del hijo: el persistor lo
+  // inserta en `episodios` con origen 'onboarding' y dispara la orientacion
+  // en segundo plano (bloque 3). null si el padre toco "Saltar este paso".
   textoMomento: null,
 };
 
