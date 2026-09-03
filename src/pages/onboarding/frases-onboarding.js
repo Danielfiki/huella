@@ -52,7 +52,7 @@ export function fallbackResponse(nombre) {
     comprension:
       `Te leo, y lo que cuentas es mucho más común de lo que parece desde adentro. ` +
       `A la edad de ${sujeto}, el freno que permite parar a tiempo todavía se está ` +
-      `construyendo: no es algo que ya tenga y decida no usar.`,
+      `construyendo: le funciona a ratos, y con la emoción encima se le suelta.`,
     // Textual del pool de Daniel Siegel en AUTORES (src/services/anthropic.js).
     // Si esa entrada cambia, esta copia hay que actualizarla a mano.
     cita: 'conectar primero, redirigir después — no al revés',
