@@ -103,7 +103,7 @@ export default function OnboardingCierre({
             de la Accion Rapida: 82 autores reales entre el banco, los marcos
             por edad y los temas contemporaneos, redondeados a la decena. */}
         <p className={styles.cuenta}>
-          Huella se apoya en el trabajo de más de {N_REDONDO} autores de ciencia del desarrollo.
+          Huella se apoya en el trabajo de más de {N_REDONDO} expertos en crianza y desarrollo infantil y juvenil.
         </p>
 
         {persistStatus === 'error' && (
