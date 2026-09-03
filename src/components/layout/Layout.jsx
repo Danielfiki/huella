@@ -190,7 +190,14 @@ export default function Layout() {
               return
             }
             try {
-              await persistirPerfilOnboarding(perfil)
+              await persistirPerfilOnboarding(perfil, {
+                // Bloque 3: el primer episodio se afina en segundo plano
+                // (extracción y luego orientación). Cada etapa que termina
+                // de escribir en la base pide un reload, así el Home pasa de
+                // "Otro" al tipo real y después muestra la orientación sin
+                // que nadie recargue la página.
+                onEpisodioActualizado: () => reloadData(),
+              })
               // El perfil y el hijo ya quedaron en la base, pero el contexto
               // sigue con los datos viejos de antes del onboarding. Recargamos
               // para que el Home muestre tu nombre y el del hijo recién creados

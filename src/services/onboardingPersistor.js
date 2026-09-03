@@ -126,11 +126,16 @@ const esImagen = (v) => v instanceof File || v instanceof Blob
  *   - El RPC `upsert_family_child` falla o no devuelve un id.
  *
  * @param {Object} perfil   Forma definida en src/pages/onboarding/Onboarding.jsx EMPTY_PERFIL.
+ * @param {Object} [opts]
+ * @param {() => void} [opts.onEpisodioActualizado]
+ *   Se llama cada vez que una etapa de fondo del primer episodio (extraccion,
+ *   orientacion) termina de escribir en la base. El Layout le pasa
+ *   `reloadData` para que el Home se refresque solo, sin recargar.
  * @returns {Promise<{ userId: string, hijoId: string | null, avatarUrl: string | null, avatarPadreUrl: string | null, redirectedToInvitation?: boolean }>}
  *   Cuando hay invitación pendiente, hijoId queda null y redirectedToInvitation:true.
  *   El service ya disparó window.location.assign('/invitar?token=xxx') en ese caso.
  */
-export async function persistirPerfilOnboarding(perfil) {
+export async function persistirPerfilOnboarding(perfil, { onEpisodioActualizado } = {}) {
   if (!supabase) {
     throw new Error('Supabase no está configurado.')
   }
@@ -284,6 +289,7 @@ export async function persistirPerfilOnboarding(perfil) {
     hijoId,
     texto: perfil.textoMomento,
     hijo: { nombre: nombreHijo || null, edad: edadDesdeFecha(fechaNac), genero },
+    onActualizado: onEpisodioActualizado,
   })
 
   return { userId: user.id, hijoId, avatarUrl, avatarPadreUrl }
@@ -340,10 +346,24 @@ function edadDesdeFecha(iso) {
  *      afinado (o el crudo si la extraccion fallo). Al terminar, escribe
  *      orientacion_ia y orientacion_zona en dos UPDATEs separados (mismo
  *      patron que updateEpisodio en HuellaContext y la migracion 014).
+ *
+ * `onActualizado` se dispara al cerrar cada una de las dos etapas de fondo
+ * (despues del UPDATE de la extraccion y despues del de la orientacion). El
+ * Layout le pasa `reloadData`: asi el Home muestra el tipo real y despues la
+ * orientacion sin que el padre tenga que recargar. Se llama solo si el UPDATE
+ * salio bien; si no, no hay nada nuevo que mostrar.
  */
-async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
+async function crearPrimerEpisodio({ userId, hijoId, texto, hijo, onActualizado }) {
   const relato = (texto || '').trim()
   if (!relato || !hijoId || !supabase) return
+
+  // Nunca deja que un fallo del refresco (que corre en el contexto de React,
+  // fuera de este service) se cuele en la cadena de fondo.
+  const avisar = () => {
+    try { onActualizado?.() } catch (err) {
+      console.warn('[onboardingPersistor] onActualizado tiro:', err)
+    }
+  }
 
   try {
     const episodio = {
@@ -412,6 +432,8 @@ async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
           .eq('user_id', userId)
         if (error) {
           console.warn('[onboardingPersistor] No se pudo afinar el primer episodio:', error.message)
+        } else {
+          avisar()
         }
         return afinado
       } catch (err) {
@@ -443,6 +465,9 @@ async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
         if (zonaErr) {
           console.warn('[onboardingPersistor] orientacion_zona no se guardo (falta la migracion 014?):', zonaErr.message)
         }
+        // La orientacion ya esta en la base (con o sin zona): que el Home la
+        // traiga.
+        avisar()
       })
       .catch((err) => {
         // Igual que un episodio manual donde la IA fallo: queda guardado sin
