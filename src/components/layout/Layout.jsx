@@ -94,6 +94,7 @@ export default function Layout() {
   // lo mantiene cerrado para siempre es `yaTieneCuenta` (el hijo en la base),
   // no el storage del dispositivo.
   const [onboardingCerrado, setOnboardingCerrado] = useState(false)
+  const [onboardingEnCurso, setOnboardingEnCurso] = useState(false)
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -158,10 +159,20 @@ export default function Layout() {
   // por carácter.
   const showOnboarding =
     ensayo ||
+    onboardingEnCurso ||
     (dataLoaded &&
       !yaTieneCuenta &&
       !onboardingCerrado &&
       (!family || family.role === 'owner'))
+
+  // Latch de "ya se está mostrando". Desde el acto C el guardado corre en
+  // segundo plano y su `reloadData` trae el hijo recién creado: sin este
+  // latch, `yaTieneCuenta` pasaría a true y el onboarding se desmontaría
+  // antes de que el padre alcance a tocar "Entrar a Huella". Se enciende la
+  // primera vez que el gate de arriba decide mostrarlo y lo apaga `onEntrar`.
+  useEffect(() => {
+    if (showOnboarding && !ensayo) setOnboardingEnCurso(true)
+  }, [showOnboarding, ensayo])
 
   const prevIndexRef = useRef(null)
   const currentIndex = getNavIndex(location.pathname)
@@ -185,10 +196,8 @@ export default function Layout() {
             // Modo ensayo: cortamos ANTES del persistor. Ninguna escritura
             // llega a Supabase y el `perfil` muere con el desmonte del
             // componente — la cuenta real queda exactamente como estaba.
-            if (ensayo) {
-              salirDelEnsayo()
-              return
-            }
+            // El acto C se muestra igual; la salida la hace `onEntrar`.
+            if (ensayo) return
             try {
               await persistirPerfilOnboarding(perfil, {
                 // Bloque 3: el primer episodio se afina en segundo plano
@@ -211,9 +220,20 @@ export default function Layout() {
               console.error('[Layout] persistirPerfilOnboarding falló:', err)
               throw err
             }
-            // Cierre inmediato mientras `reloadData` trae el hijo recién creado.
-            // Tras el reload, `hijos.length > 0` lo mantiene cerrado para siempre,
-            // sin importar el storage del dispositivo.
+            // Ya NO cerramos acá: el guardado corre mientras el padre lee el
+            // acto C, y el cierre lo hace `onEntrar` cuando toca "Entrar a
+            // Huella". Mientras tanto `onboardingEnCurso` lo mantiene montado
+            // aunque el `reloadData` de arriba ya haya traído el hijo.
+          }}
+          onEntrar={() => {
+            if (ensayo) {
+              salirDelEnsayo()
+              return
+            }
+            // Tras el reload, `hijos.length > 0` lo mantiene cerrado para
+            // siempre, sin importar el storage del dispositivo. El latch de
+            // cierre puentea el instante en que el reload todavía no llegó.
+            setOnboardingEnCurso(false)
             setOnboardingCerrado(true)
           }}
         />

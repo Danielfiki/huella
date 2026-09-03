@@ -2041,6 +2041,101 @@ export function bancoPrimerEncuentro(edad, maximo = 7) {
   return entradas.slice(0, Math.max(5, Math.min(maximo, entradas.length)))
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// ACTO C DEL ONBOARDING — "Lo que acabas de leer viene de aca".
+//
+// La pantalla de cierre muestra 5-6 autores del banco con su lente, como
+// sello de confianza antes de entrar al Home. Se eligen desde AUTORES (la
+// misma fuente de la Accion Rapida y del primer encuentro), no desde una
+// lista aparte, para que nunca se nombre a alguien que la app no usa.
+// ──────────────────────────────────────────────────────────────────────
+
+// Cuantos autores hay en el banco real. Es el N de la linea "Huella trabaja
+// con mas de N autores" del acto C: se calcula, no se escribe a mano, para
+// que no quede desactualizado cuando el banco crezca.
+export const TOTAL_AUTORES = Object.keys(AUTORES).length
+
+// Edad representativa de cada tramo de marcoEdad(). Sirve para preguntarle a
+// cada marco "¿a quien nombras?" sin duplicar la logica de tramos.
+const EDADES_POR_TRAMO = [1, 4, 8, 14]
+
+// Apellido con el que un autor del banco aparece en la prosa de marcoEdad().
+// 'Faber & Mazlish' → 'Mazlish', 'Bessel van der Kolk' → 'Kolk'.
+const apellidoDe = (autor) => autor.split(/\s*&\s*|\s+/).pop()
+
+// Autores que la Accion Rapida solo invoca cuando la dimension los pide
+// (duelo, neurodiversidad, alta sensibilidad). En una pantalla de bienvenida
+// generica no corresponden: le dirian "duelo" o "autismo" a un padre que
+// conto un berrinche. Se quedan fuera del cierre.
+const AUTORES_SOLO_POR_DIMENSION = new Set(['Alan Wolfelt', 'Barry Prizant', 'Elaine Aron'])
+
+// La parte de cada marco que es propia del tramo. TEMAS_CONTEMPORANEOS se
+// anexa a los cuatro marcos por igual, asi que nombra a los mismos autores
+// en todos: si contara, esos saldrian como "transversales" sin serlo.
+const marcoPropio = (edad) => marcoEdad(edad).replace(TEMAS_CONTEMPORANEOS, '')
+
+// En cuantos de los cuatro marcos aparece cada autor. Un autor que esta en
+// tres o cuatro es "transversal": sirve para cualquier edad. Se calcula una
+// sola vez al cargar el modulo.
+const TRANSVERSALIDAD = (() => {
+  const marcos = EDADES_POR_TRAMO.map(marcoPropio)
+  const conteo = {}
+  for (const autor of Object.keys(AUTORES)) {
+    const ap = apellidoDe(autor)
+    conteo[autor] = marcos.filter((m) => m.includes(ap)).length
+  }
+  return conteo
+})()
+
+/**
+ * Autores para la pantalla de cierre del onboarding.
+ *
+ * Con edad: primero los del banco que el marco de ESA edad nombra (en el
+ * orden del banco, que ya va de mas a menos frecuente), descartando a los
+ * que EDAD_MINIMA_AUTOR excluye. Si no alcanzan, se rellena con los mas
+ * transversales. Asi los nombres que ve el padre son los mismos que
+ * calibraron la respuesta que acaba de leer.
+ *
+ * Sin edad (null): los mas transversales, sin restriccion de edad, ordenados
+ * por en cuantos marcos aparecen y, a igual conteo, por el orden del banco.
+ *
+ * @returns {{ autor: string, lente: string }[]} entre 1 y `maximo` entradas.
+ */
+export function autoresParaCierre(edad, maximo = 6) {
+  const edadNum = edad == null || edad === '' ? null : parseInt(edad, 10)
+  const conEdad = edadNum != null && !isNaN(edadNum)
+  const todos = Object.keys(AUTORES)
+
+  const permitido = (autor) => {
+    if (AUTORES_SOLO_POR_DIMENSION.has(autor)) return false
+    const minimo = EDAD_MINIMA_AUTOR[autor]
+    if (minimo == null) return true
+    // Sin edad, los autores con piso etario no son transversales: fuera.
+    return conEdad ? edadNum >= minimo : false
+  }
+
+  const transversales = todos
+    .filter(permitido)
+    .map((autor, i) => ({ autor, i, peso: TRANSVERSALIDAD[autor] }))
+    .sort((a, b) => b.peso - a.peso || a.i - b.i)
+    .map((x) => x.autor)
+
+  let elegidos = []
+  if (conEdad) {
+    const marco = marcoPropio(edadNum)
+    elegidos = todos.filter((autor) => permitido(autor) && marco.includes(apellidoDe(autor)))
+  }
+  for (const autor of transversales) {
+    if (elegidos.length >= maximo) break
+    if (!elegidos.includes(autor)) elegidos.push(autor)
+  }
+
+  return elegidos.slice(0, maximo).map((autor) => ({
+    autor,
+    lente: AUTORES[autor]?.lente || '',
+  }))
+}
+
 const PROMPT_PRIMER_ENCUENTRO = `Eres Huella, una compañera de crianza basada en evidencia científica del desarrollo infantil. Un padre o madre acaba de crear su cuenta y te está contando, por primera vez, algo que vivió con su hijo o hija. Es el primer momento que registra en la app.
 
 En el mensaje del usuario recibes el marco científico de la edad, los datos del hijo o hija (nombre, edad, género) y el relato tal cual lo escribió. Úsalos todos: no respondas como si no supieras quién es.

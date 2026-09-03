@@ -9,20 +9,24 @@
 // Actos:
 //   A · DATOS    — OnboardingFormSlide, 5 pasos. Obligatorio, sin salida.
 //   B · MOMENTO  — OnboardingComposer. Saltable.
-//   (C · CIERRE  — pendiente, bloque 4)
+//   C · CIERRE   — OnboardingCierre. Los autores detras de lo leido y el
+//                  unico CTA "Entrar a Huella". Tapa la espera del guardado,
+//                  que arranca en segundo plano al salir del acto B.
 //
 // Path: src/pages/onboarding/Onboarding.jsx
 //
 // El parent (Layout) llama:
-//   <Onboarding onComplete={(perfil) => …} />
-// y decide que hacer con el `perfil` (persistir en Supabase, recargar, etc).
+//   <Onboarding onComplete={(perfil) => …} onEntrar={() => …} />
+// `onComplete` persiste el `perfil` (Supabase, reload) y `onEntrar` cierra el
+// onboarding cuando el padre toca "Entrar a Huella".
 
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import styles from './Onboarding.module.css';
 import OnboardingFormSlide from './OnboardingFormSlide';
 import OnboardingComposer from './OnboardingComposer';
+import OnboardingCierre from './OnboardingCierre';
 
-const ACTO_COUNT = 2;
+const ACTO_COUNT = 3;
 
 // Anios cumplidos a partir de { dia, mes, anio }. Devuelve null si la fecha
 // esta incompleta o es invalida; `marcoEdad` ya cae a su marco de 4 anios
@@ -61,7 +65,11 @@ const EMPTY_PERFIL = {
 
 /**
  * Props
- *   onComplete     (perfil) => Promise<void>  · se llama al cerrar el acto B
+ *   onComplete     (perfil) => Promise<void>  · se llama al salir del acto B,
+ *                          en segundo plano, mientras se muestra el acto C.
+ *                          Solo persiste: NO cierra el onboarding.
+ *   onEntrar       () => void  · cierra el onboarding. Lo dispara el CTA del
+ *                          acto C una vez que `onComplete` resolvio.
  *   ensayo         bool  · modo ensayo (?onboarding=1): QA visual sin escribir
  *                          NADA en la base. Lo decide el Layout, que ademas es
  *                          quien no llama al persistor. Aca solo se usa para
@@ -76,6 +84,7 @@ const EMPTY_PERFIL = {
  */
 export default function Onboarding({
   onComplete,
+  onEntrar,
   ensayo = false,
   ensayoIA = false,
   onSalirEnsayo,
@@ -85,10 +94,16 @@ export default function Onboarding({
   // Bloqueo del cierre mientras `onComplete` corre (sube foto + upsert perfil +
   // upsert hijo). El ref captura el estado sincronicamente — sin el, dos toques
   // muy rapidos entrarian antes de que React batchee el setState.
-  const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
-  // Aviso si el guardado falla. Deja reintentar en vez de quedar atascado.
-  const [saveError, setSaveError] = useState(false);
+  // Estado del guardado, que el acto C refleja en su CTA:
+  //   'idle'    → todavia no se lanzo (actos A y B)
+  //   'pending' → onComplete corriendo en segundo plano
+  //   'ok'      → guardado; "Entrar a Huella" cierra
+  //   'error'   → fallo; el acto C avisa y deja reintentar
+  const [persistStatus, setPersistStatus] = useState('idle');
+  // Texto del acto B, guardado aca para poder reintentar el cierre desde el
+  // acto C sin volver atras. null si el padre salto el acto B.
+  const [textoMomento, setTextoMomento] = useState(null);
 
   const goNext = useCallback(() => {
     setIndex(i => Math.min(i + 1, ACTO_COUNT - 1));
@@ -104,27 +119,34 @@ export default function Onboarding({
     genero: perfil.sexo,
   }), [perfil.nombreHijo, perfil.nacimiento, perfil.sexo]);
 
-  // Cierre del onboarding. Recibe el texto del acto B (o null si lo salto).
-  const finish = useCallback(async (texto) => {
+  // Guardado en segundo plano. Se lanza al ENTRAR al acto C, no al salir de
+  // el: el acto C existe justamente para tapar esta espera. `onComplete` ya no
+  // cierra el onboarding (eso lo hace `onEntrar`), solo persiste.
+  const lanzarGuardado = useCallback(async (texto) => {
     if (submittingRef.current) return; // anti doble-toque
     submittingRef.current = true;
-    setSubmitting(true);
-    setSaveError(false);
-    const limpio = texto && texto.trim() ? texto.trim() : null;
+    setPersistStatus('pending');
     try {
-      await onComplete({ ...perfil, textoMomento: limpio });
-      // El Layout apaga `showOnboarding` y desmonta este componente. No
-      // reseteamos `submitting`: el desmonte limpia el estado y el boton
-      // queda en "Guardando…" mientras corre la transicion, sin parpadeo.
+      await onComplete({ ...perfil, textoMomento: texto });
+      setPersistStatus('ok');
     } catch (err) {
-      // Si el guardado falla, `onComplete` re-lanza: dejamos reintentar y
-      // mostramos el aviso, en vez de cerrar sin haber guardado nada.
+      // Si el guardado falla, `onComplete` re-lanza: el acto C avisa y deja
+      // reintentar, en vez de entrar sin haber guardado nada.
       console.error('[Onboarding] onComplete tiro:', err);
+      setPersistStatus('error');
+    } finally {
       submittingRef.current = false;
-      setSubmitting(false);
-      setSaveError(true);
     }
   }, [onComplete, perfil]);
+
+  // Salida del acto B, con texto o con null (salto). Avanza al acto C y
+  // arranca el guardado en el mismo instante.
+  const irAlCierre = useCallback((texto) => {
+    const limpio = texto && texto.trim() ? texto.trim() : null;
+    setTextoMomento(limpio);
+    setIndex(2);
+    lanzarGuardado(limpio);
+  }, [lanzarGuardado]);
 
   // patchPerfil({ nombrePadre: 'Camila' }) → merge superficial
   const patchPerfil = useCallback((patch) => {
@@ -174,10 +196,22 @@ export default function Onboarding({
             hijo={hijoDelActoA}
             ensayo={ensayo}
             ensayoIA={ensayoIA}
-            submitting={submitting}
-            saveError={saveError}
-            onSubmit={finish}
-            onSkipInline={() => finish(null)}
+            onSubmit={irAlCierre}
+            onSkipInline={() => irAlCierre(null)}
+          />
+        </div>
+
+        {/* ── Acto C · Cierre de confianza ───────────────────────
+            Tapa la espera del guardado con los autores detras de lo que el
+            padre acaba de leer. Sin "Saltar": el unico CTA es entrar. */}
+        <div className={styles.acto} aria-hidden={index !== 2}>
+          <OnboardingCierre
+            active={index === 2}
+            hijo={hijoDelActoA}
+            saltoActoB={textoMomento == null}
+            persistStatus={persistStatus === 'idle' ? 'pending' : persistStatus}
+            onEntrar={onEntrar}
+            onReintentar={() => lanzarGuardado(textoMomento)}
           />
         </div>
       </div>
