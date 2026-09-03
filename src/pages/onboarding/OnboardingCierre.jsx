@@ -18,6 +18,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styles from './OnboardingCierre.module.css';
 import { autoresParaCierre, TOTAL_AUTORES } from '../../services/anthropic';
+import OnboardingMarcaAgua from './OnboardingMarcaAgua';
 
 // "mas de 20" cuando el banco tiene 23. Redondea hacia abajo a la decena para
 // que la frase siga siendo cierta aunque el banco crezca de a uno.
@@ -79,6 +80,7 @@ export default function OnboardingCierre({
 
   return (
     <section className={styles.acto} aria-hidden={!active}>
+      <OnboardingMarcaAgua variante="c" />
       <header className={styles.head}>
         <p className={styles.eyebrow}>Antes de entrar</p>
         <h1 className={styles.title}>Lo que acabas de leer viene de acá</h1>

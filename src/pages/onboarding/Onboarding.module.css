@@ -39,6 +39,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Cada acto es el marco de su marca de agua (absoluta, sangra fuera del
+     encuadre): sin esto el escarabajo se escaparia al acto vecino del track. */
+  position: relative;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

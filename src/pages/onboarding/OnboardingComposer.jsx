@@ -13,7 +13,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './OnboardingComposer.module.css';
 import { FRASES_ONBOARDING, fallbackResponse } from './frases-onboarding';
-import ProgressBar from '../../components/ui/ProgressBar';
+import OnboardingMarcaAgua from './OnboardingMarcaAgua';
 
 // El helper Anthropic vive en src/services/anthropic.js — contrato esperado en
 // el README del bundle, sección "API · primer encuentro".
@@ -74,11 +74,6 @@ export default function OnboardingComposer({
   const [phraseIndex, setPhraseIndex] = useState(() =>
     Math.floor(Math.random() * FRASES_ONBOARDING.length)
   );
-  // Progreso visual del loader (0 → 90 → 100). Acompaña los 15s del timeout
-  // para que el usuario sienta que el proceso avanza. `progressPhase` controla
-  // qué transición CSS se aplica (lenta durante loading, rápida al completar).
-  const [progress, setProgress] = useState(0);
-  const [progressPhase, setProgressPhase] = useState('loading');
   const textareaRef = useRef(null);
   const abortRef = useRef(null);
   // Timer de la carga simulada del ensayo. Se limpia al desmontar.
@@ -152,35 +147,6 @@ export default function OnboardingComposer({
       setPhraseIndex((i) => (i + 1) % FRASES_ONBOARDING.length);
     }, PHRASE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [state]);
-
-  // Progreso visual de la barra. Arranca en 0% al entrar a loading, sube
-  // hasta 90% en 14s con curva ease-out (rápido al inicio, lento al final)
-  // y NO llega a 100% durante el loading. Al recibir respuesta o fallback,
-  // completa de 90 a 100 en 200ms.
-  useEffect(() => {
-    if (state === 'loading') {
-      setProgressPhase('loading');
-      setProgress(0);
-      // Doble RAF: aseguramos que el browser pinte width:0 antes de cambiar
-      // a 90 — sin esto, React colapsa ambos sets en un solo render y la
-      // transición CSS no se dispara (no detecta cambio de width).
-      let raf2;
-      const raf1 = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(() => {
-          setProgress(90);
-        });
-      });
-      return () => {
-        cancelAnimationFrame(raf1);
-        if (raf2) cancelAnimationFrame(raf2);
-      };
-    }
-    if (state === 'response' || state === 'fallback') {
-      setProgressPhase('complete');
-      setProgress(100);
-    }
-    return undefined;
   }, [state]);
 
   // Cleanup al desmontar. El timer del ensayo se limpia igual que el abort:
@@ -257,16 +223,11 @@ export default function OnboardingComposer({
       <div className={styles.wrap}>
         <div className={styles.loadFrame} aria-live="polite" aria-busy="true">
           <div className={styles.ring} aria-hidden="true" />
+          {/* Sin barra de progreso (pasada visual del 3 sep 2026): la carga
+              se cuenta con el anillo y la frase, que es lo que el mockup deja. */}
           <p key={phraseIndex} className={styles.phrase}>
             "{FRASES_ONBOARDING[phraseIndex]}"
           </p>
-          <ProgressBar
-            value={progress}
-            phase={progressPhase === 'complete' ? 'complete' : 'loading'}
-            tone="onLight"
-            color="var(--color-primary)"
-            className={styles.progressSpace}
-          />
         </div>
         <button type="button" className={styles.cta} disabled aria-disabled="true">
           <span className={styles.spin} aria-hidden="true" />
@@ -315,6 +276,9 @@ export default function OnboardingComposer({
 
   return (
     <section className={styles.acto}>
+      {/* Escarabajo de fondo: lateral izquierdo mientras se escribe/carga
+          (b1), arriba a la derecha con la respuesta (b2). */}
+      <OnboardingMarcaAgua variante={isShowingResponse ? 'b2' : 'b1'} />
       <header className={styles.head}>
         <p className={styles.eyebrow}>Tu primer momento</p>
         <h1 className={styles.title}>Cuéntale a Huella algo que te haya pasado</h1>

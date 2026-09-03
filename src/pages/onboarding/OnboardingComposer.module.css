@@ -8,22 +8,31 @@
    var(--color-text) — que en oscuro es crema. Contraste real: 1,16:1. Texto
    invisible. Eso fue lo que reporto una tester ("los colores no se entienden").
 
+   Pasada visual del 3 sep 2026 (mockups de Claude Design): textarea mas alta
+   y redonda, tarjeta de respuesta radio lg con sombra md, idea en Fraunces
+   italica, lente como pill pistachio, CTA de 56px. Sin barra de progreso en
+   la carga.
+
    Regla que deja este archivo: aca NO hay un solo hex ni rgba. Todo sale de
    los tokens de index.css, asi que claro y oscuro funcionan de fabrica. */
 
 /* Contenedor del acto. La cabecera queda arriba y el bloque interactivo se
    ancla abajo (margin-top:auto) — el contenido cerca del pulgar, que es lo
-   unico que se conserva del concepto visual anterior. */
+   unico que se conserva del concepto visual anterior. `position: relative`
+   para enmarcar la marca de agua; cabecera y bloque van en z-index 1. */
 .acto {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: max(env(safe-area-inset-top, 0px), 28px) 24px
-           max(env(safe-area-inset-bottom, 0px), 28px);
+  padding: max(env(safe-area-inset-top, 0px), var(--space-8)) var(--space-6)
+           max(env(safe-area-inset-bottom, 0px), var(--space-7));
   min-height: 0;
 }
 
 .wrap {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -33,6 +42,8 @@
 
 /* ── Cabecera del acto ──────────────────────────────────────────── */
 .head {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -45,6 +56,8 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  /* Mismo criterio que el acto A: --color-eyebrow es "primary-dark en claro,
+     primary-light en oscuro" con el contraste que 11px en mayusculas pide. */
   color: var(--color-eyebrow);
   margin: 0;
 }
@@ -52,9 +65,9 @@
 .title {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: clamp(24px, 6.5vw, 30px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   text-wrap: balance;
   color: var(--color-text);
   margin: 0;
@@ -62,8 +75,9 @@
 
 .hint {
   font-family: var(--font-family);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
   color: var(--color-text-muted);
   margin: 0;
 }
@@ -71,17 +85,18 @@
 /* ── Campo de escritura ─────────────────────────────────────────── */
 .composer {
   width: 100%;
-  min-height: 132px;
+  min-height: 210px;
   resize: none;
-  padding: 14px 16px;
+  padding: 18px;
   font-family: var(--font-family);
-  font-size: 16px;   /* 16px evita el zoom automatico de iOS al enfocar */
+  font-size: 16px;   /* 16px evita el zoom automatico de iOS al enfocar; el
+                        mockup pide 15 y la diferencia no se nota, el zoom si */
   line-height: 1.55;
   color: var(--color-text);
   caret-color: var(--color-primary);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
   outline: none;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -94,7 +109,7 @@
 .composerFocus,
 .composer:focus {
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-primary-sm);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
 /* ── Estado de carga ────────────────────────────────────────────── */
@@ -106,7 +121,7 @@
   padding: 26px 18px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
 .ring {
@@ -129,8 +144,6 @@
   animation: composerFadeIn 400ms ease-out;
 }
 
-.progressSpace { width: 100%; margin-top: 2px; }
-
 /* ── Tarjeta de respuesta ───────────────────────────────────────── */
 /* Fondo y texto salen los DOS de tokens, asi que se mueven juntos al cambiar
    de tema. Ese era el defecto: antes el fondo era blanco fijo y solo el texto
@@ -138,12 +151,12 @@
 .respCard {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   animation: composerRise 420ms ease-out;
   max-height: 46vh;
   overflow-y: auto;
@@ -152,38 +165,39 @@
 .respPara {
   font-family: var(--font-family);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--color-text);
   margin: 0;
 }
 
 /* ── La idea del autor, bajo la comprension ────────────────────────────────
-   Antes esto era un <blockquote> con la frase entre comillas y firmada con el
-   nombre del autor. El problema: lo que sale del banco AUTORES son
-   articulaciones del enfoque de cada autor escritas en la voz de Huella, no
-   sus palabras textuales — entrecomillarlas fabricaba una cita falsa
-   atribuida a una persona real.
-
-   Ahora se lee como lo que es: una idea, con la firma "Autor · Lente" que ya
-   usa la Accion Rapida. Se fue la italica (marcaba cita) y se fue la linea
-   "Marco · ...", porque la lente ES el marco y en la firma quedaba repetido. */
+   Lo que sale del banco AUTORES son articulaciones del enfoque de cada autor
+   escritas en la voz de Huella, no sus palabras textuales: por eso va SIN
+   comillas y firmada "Autor · Lente" como la Accion Rapida. La italica
+   vuelve por pedido del mockup, pero como voz de la idea, no como cita —
+   las comillas siguen fuera. */
 
 .idea {
   border-left: 2px solid var(--color-primary);
-  padding-left: 12px;
+  padding-left: 14px;
   margin: 0;
 }
 
 .ideaTexto {
   font-family: var(--font-heading);
-  font-size: 15px;
-  line-height: 1.5;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.45;
   color: var(--color-text);
   margin: 0;
 }
 
 .firma {
-  margin: 6px 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 0;
   font-family: var(--font-family);
   font-size: 12px;
   color: var(--color-text-muted);
@@ -198,30 +212,40 @@
   color: var(--color-text-light);
 }
 
+/* La lente como pill pistachio: el detalle verde de la pantalla. */
 .firmaLente {
-  color: var(--color-text-muted);
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--color-leaf-bg);
+  border: 1px solid var(--color-accent-green);
+  color: var(--color-tag-green);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 /* ── CTA ────────────────────────────────────────────────────────── */
+/* 56px, radio lg, 16/700, sombra tangerine. Fondo --gradient-cta-registrar,
+   el mismo boton primario del acto A y del Home (ver nota alla). */
 .cta {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   width: 100%;
-  height: 54px;
-  border-radius: 16px;
+  height: 56px;
+  border-radius: var(--radius-lg);
   font-family: var(--font-family);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  /* Mismo boton primario que el acto A y que el Home. */
   background: var(--gradient-cta-registrar);
   color: var(--color-white);
   border: none;
-  box-shadow: var(--shadow-cta-pastilla);
+  box-shadow: var(--shadow-primary-md);
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
+  transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 .cta:active {
   transform: scale(0.98);
@@ -229,7 +253,8 @@
   box-shadow: var(--shadow-cta-pastilla-presion);
 }
 .cta:disabled {
-  opacity: 0.45;
+  background: var(--color-cta-disabled-bg);
+  color: var(--color-cta-disabled-text);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

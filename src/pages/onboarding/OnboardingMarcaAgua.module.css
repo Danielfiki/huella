@@ -1,0 +1,48 @@
+/* OnboardingMarcaAgua.module.css
+   Marca de agua del onboarding: el escarabajo solo, en mocha, casi invisible.
+
+   Caja de ~430x494 que sangra fuera del encuadre. Cada variante fija la
+   esquina y la rotacion que le toca a esa pantalla, siguiendo el ritmo del
+   mockup: A1 arriba-der, A2 abajo-izq, A3 arriba-izq, A4 abajo-der, A5
+   arriba-der, B1 lateral izq a media altura, B2 arriba-der, C abajo-izq.
+   Cero hex: color y opacidad salen de los tokens de index.css. */
+
+.marca {
+  position: absolute;
+  width: 430px;
+  height: 494px;
+  color: var(--color-accent-mocha);
+  opacity: var(--opacity-watermark);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.a1 { top: -140px; right: -150px; }
+.a2 { bottom: -160px; left: -170px; transform: rotate(-12deg); }
+.a3 { top: -150px; left: -160px; transform: rotate(9deg); }
+.a4 { bottom: -150px; right: -160px; transform: rotate(-7deg); }
+.a5 { top: -140px; right: -150px; transform: rotate(6deg); }
+
+/* Acto B: mas texto encima, asi que va mas suave. */
+.b1 {
+  top: 50%;
+  left: -230px;
+  transform: translateY(-50%) rotate(-10deg);
+  opacity: var(--opacity-watermark-soft);
+}
+.b2 {
+  top: -150px;
+  right: -150px;
+  transform: rotate(8deg);
+  opacity: var(--opacity-watermark-softer);
+}
+
+/* Acto C: cierra el ritmo volviendo abajo-izq, como A2 pero mas erguido. */
+.c { bottom: -150px; left: -160px; transform: rotate(5deg); }

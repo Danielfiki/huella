@@ -3,19 +3,22 @@
 
    Misma pantalla que el acto B, a proposito: contenedor, cabecera, tarjeta y
    CTA copian los valores de OnboardingComposer.module.css (surface + border +
-   radius-md + shadow-sm; firma "Autor · Lente" en heading 15px / body 12px).
+   radius-lg + shadow-md; nombre en heading 15px, lente como pill pistachio).
    Cero hex, cero rgba: todo sale de los tokens de index.css. */
 
 .acto {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: max(env(safe-area-inset-top, 0px), 28px) 24px
-           max(env(safe-area-inset-bottom, 0px), 28px);
+  padding: max(env(safe-area-inset-top, 0px), var(--space-8)) var(--space-6)
+           max(env(safe-area-inset-bottom, 0px), var(--space-7));
   min-height: 0;
 }
 
 .wrap {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -26,6 +29,8 @@
 
 /* ── Cabecera (identica al acto B) ─────────────────────────────── */
 .head {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -45,9 +50,9 @@
 .title {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: clamp(24px, 6.5vw, 30px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   text-wrap: balance;
   color: var(--color-text);
   margin: 0;
@@ -60,11 +65,11 @@
 .lista {
   list-style: none;
   margin: 0;
-  padding: 6px 18px;
+  padding: 8px 22px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   animation: cierreRise 420ms ease-out;
   max-height: 46vh;
   overflow-y: auto;
@@ -72,15 +77,16 @@
 
 .fila {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 4px;
   padding: 11px 0;
   border-bottom: 1px solid var(--color-border);
 }
 .fila:last-child { border-bottom: none; }
 
 /* Misma jerarquia que la firma del acto B: el nombre en heading y la lente
-   en cuerpo apagado. */
+   como pill pistachio. */
 .autor {
   font-family: var(--font-heading);
   font-size: 15px;
@@ -96,10 +102,16 @@
 }
 
 .lente {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--color-leaf-bg);
+  border: 1px solid var(--color-accent-green);
+  color: var(--color-tag-green);
   font-family: var(--font-family);
-  font-size: 12px;
-  line-height: 1.3;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 /* La cuenta del banco: misma voz de producto que .promesa del acto B. */
@@ -120,18 +132,18 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  height: 54px;
-  border-radius: 16px;
+  height: 56px;
+  border-radius: var(--radius-lg);
   font-family: var(--font-family);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.005em;
   background: var(--gradient-cta-registrar);
   color: var(--color-white);
   border: none;
-  box-shadow: var(--shadow-cta-pastilla);
+  box-shadow: var(--shadow-primary-md);
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
+  transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 .cta:active {
   transform: scale(0.98);
@@ -139,7 +151,8 @@
   box-shadow: var(--shadow-cta-pastilla-presion);
 }
 .cta:disabled {
-  opacity: 0.45;
+  background: var(--color-cta-disabled-bg);
+  color: var(--color-cta-disabled-text);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

@@ -28,12 +28,14 @@
   -moz-appearance: none;
   appearance: none;
   width: 100%;
-  min-height: 52px;
+  /* 56px, borde 1,5px y radio md: las mismas medidas del .input del
+     onboarding, que es donde este selector vive primero. */
+  min-height: 56px;
   /* El padding derecho deja aire para la flecha del pseudo-elemento. */
   padding: 14px 30px 14px 12px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-family: var(--font-family);
   /* 16px: bajo eso, iOS hace zoom automatico al abrir el selector. */
@@ -53,7 +55,7 @@
 
 .select:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
 /* Flecha dibujada con bordes en vez de un SVG embebido: asi el color sale de

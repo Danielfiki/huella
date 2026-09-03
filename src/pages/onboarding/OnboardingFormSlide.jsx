@@ -13,8 +13,8 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import styles from './OnboardingFormSlide.module.css';
-import ProgressBar from '../../components/ui/ProgressBar';
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento';
+import OnboardingMarcaAgua from './OnboardingMarcaAgua';
 // La copia local que tenian PerfilPage y NuevoPage no se replica aca: el
 // propio archivo de utils pide que quien lo toque importe esta.
 import comprimirImagen from '../../utils/comprimirImagen';
@@ -331,7 +331,11 @@ export default function OnboardingFormSlide({
       ),
     },
     {
-      eyebrow: 'Fotos · opcional',
+      // El "opcional" del eyebrow ahora es una pill strawberry al lado de
+      // la palabra, en vez de ir separado por " · ": mismas palabras, otra
+      // forma. Es el unico paso con pill.
+      eyebrow: 'Fotos',
+      pill: 'Opcional',
       title: 'Pongámosle cara a Huella',
       hint: 'Las dos son opcionales y las puedes cambiar cuando quieras desde tu perfil.',
       content: (
@@ -357,11 +361,13 @@ export default function OnboardingFormSlide({
   ];
 
   const current = STEPS[step];
-  const progressValue = ((step + 1) / TOTAL_STEPS) * 100;
   const ctaLabel = step === TOTAL_STEPS - 1 ? 'Continuar' : 'Continuar';
 
   return (
     <section className={styles.slide}>
+      {/* Escarabajo de fondo. La esquina rota con el paso (a1…a5). */}
+      <OnboardingMarcaAgua variante={`a${step + 1}`} />
+
       {/* ── Barra superior ─────────────────────────────────────── */}
       <header className={styles.topband}>
         <div className={styles.topbar}>
@@ -375,14 +381,26 @@ export default function OnboardingFormSlide({
           >
             <span aria-hidden="true">←</span>
           </button>
-          <ProgressBar
-            value={progressValue}
-            phase="determinate"
-            tone="onLight"
-            color="var(--color-tangerine)"
-            label={`Paso ${step + 1} de ${TOTAL_STEPS}`}
+          {/* Progreso en 5 segmentos, uno por paso. Los completados y el
+              actual van en tangerine; los pendientes en --color-border. Es
+              local a proposito: ProgressBar (continua) sigue sirviendo a las
+              otras tres pantallas que la usan. */}
+          <div
             className={styles.progress}
-          />
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={TOTAL_STEPS}
+            aria-valuenow={step + 1}
+            aria-label={`Paso ${step + 1} de ${TOTAL_STEPS}`}
+          >
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+              <span
+                key={i}
+                className={`${styles.segmento} ${i <= step ? styles.segmentoOn : ''}`}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
           {/* Sin "Saltar". El nombre y la fecha de nacimiento del hijo no son
               un tramite: la edad alimenta el Cerebro Huella y todos los marcos
               por edad. Saltarlos dejaba una cuenta a medias y el onboarding
@@ -398,7 +416,10 @@ export default function OnboardingFormSlide({
           className={`${styles.stepWrap} ${phase === 'out' ? styles.stepOut : styles.stepIn}`}
           key={step}
         >
-          <span className={styles.eyebrow}>{current.eyebrow}</span>
+          <span className={styles.eyebrow}>
+            {current.eyebrow}
+            {current.pill && <span className={styles.pill}>{current.pill}</span>}
+          </span>
           <h1 className={styles.title}>{current.title}</h1>
           {current.hint && <p className={styles.hint}>{current.hint}</p>}
           <div className={styles.fieldWrap}>{current.content}</div>

@@ -1,7 +1,12 @@
 /* OnboardingFormSlide.module.css
    Acto A · los datos, en modo conversacional.
    Una pregunta visible por paso, centrada vertical/horizontalmente, con fade.
-   Barra superior tangerine + Atrás. CTA abajo.
+   Progreso en 5 segmentos tangerine + Atrás arriba. CTA abajo.
+
+   Pasada visual del 3 sep 2026 (mockups de Claude Design): medidas y
+   jerarquia del mockup, sobre los tokens que ya existian. Tres choques de
+   contraste se resolvieron a favor del codigo (eyebrow, chip seleccionado,
+   gradiente del CTA); estan comentados donde corresponde.
 
    Paleta: Mocha Mix, 100% tokens de index.css — cero hex, cero rgba. Claro y
    oscuro salen de fábrica. */
@@ -18,13 +23,16 @@
 }
 
 /* ── Barra superior ──────────────────────────────────────────────── */
+/* Todo lo que no es la marca de agua va en z-index 1: el escarabajo queda
+   siempre detras, aunque sangre por debajo del texto. */
 .topband {
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
   padding:
     max(env(safe-area-inset-top, 0px), 14px)
     18px
-    14px;
-  background: var(--color-bg);
+    0;
 }
 
 .topbar {
@@ -59,8 +67,24 @@
   pointer-events: none;
 }
 
+/* Progreso segmentado: 5 tramos de 6px, radio 3px, separados 6px. Los
+   completados y el actual en tangerine; los pendientes en --color-border,
+   que en oscuro ya es el marron del mockup. Nada de gris. */
 .progress {
   flex: 1;
+  display: flex;
+  gap: 6px;
+}
+
+.segmento {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
+  transition: background 280ms ease;
+}
+.segmentoOn {
+  background: var(--color-primary);
 }
 
 /* Espaciador que reemplaza al viejo "Saltar" (el acto A ya no es saltable).
@@ -74,13 +98,17 @@
 }
 
 /* ── Cuerpo conversacional ──────────────────────────────────────── */
+/* Margenes laterales --space-6, titulo a --space-8 del nav, CTA a --space-7
+   del borde inferior. */
 .form {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   padding:
-    8px 24px
-    max(env(safe-area-inset-bottom, 0px), 22px);
+    var(--space-8) var(--space-6)
+    max(env(safe-area-inset-bottom, 0px), var(--space-7));
   overflow: hidden;
 }
 
@@ -89,7 +117,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   text-align: center;
   transition: opacity 200ms ease-out, transform 200ms ease-out;
   will-change: opacity, transform;
@@ -104,23 +132,42 @@
 }
 
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-family: var(--font-family);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  /* --color-eyebrow, no --color-tangerine: sobre el crema el tangerine da
-     2,90:1 y esto es texto de 11px en mayusculas. El token nuevo conserva la
-     identidad y llega a 5,16:1 en claro y 7,93:1 en oscuro. */
+  /* --color-eyebrow, no --color-primary-dark: es "primary-dark en claro /
+     primary-light en oscuro", que es lo que pide el mockup, pero con 5,16:1
+     sobre el crema en vez de 3,9:1. Texto de 11px en mayusculas no aguanta
+     menos. */
   color: var(--color-eyebrow);
+}
+
+/* Pill "Opcional" del paso de las fotos: strawberry, el color que manda en
+   esa pantalla. */
+.pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--color-strawberry-bg);
+  border: 1px solid var(--color-strawberry);
+  color: var(--color-strawberry-text);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
 }
 
 .title {
   font-family: var(--font-heading);
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
-  font-size: clamp(24px, 6.4vw, 30px);
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--color-text);
   margin: 0;
   text-wrap: balance;
@@ -128,7 +175,8 @@
 
 .hint {
   font-family: var(--font-family);
-  font-size: 13.5px;
+  font-size: 15px;
+  font-weight: 400;
   line-height: 1.55;
   color: var(--color-text-muted);
   margin: 0;
@@ -136,7 +184,7 @@
 }
 
 .fieldWrap {
-  margin-top: 14px;
+  margin-top: var(--space-7);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -144,15 +192,17 @@
 }
 
 /* ── Inputs ──────────────────────────────────────────────────────── */
+/* 56px, superficie, borde 1,5px, radio md. Foco: borde tangerine + halo de
+   3px del tint tangerine. */
 .input {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 14px 16px;
   font-family: var(--font-family);
   font-size: 16px;
   color: var(--color-text);
-  min-height: 52px;
+  min-height: 56px;
   outline: none;
   width: 100%;
   text-align: center;
@@ -163,7 +213,7 @@
 }
 .input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
 .inputDate {
@@ -182,17 +232,21 @@
 }
 
 .bigChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 24px;
   font-family: var(--font-family);
   font-size: 15px;
   font-weight: 600;
-  padding: 14px 22px;
-  border-radius: 999px;
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-border);
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease;
-  min-height: 50px;
 }
 .bigChip:active { transform: scale(0.97); }
 .bigChip:hover {
@@ -200,23 +254,29 @@
 }
 .bigChipOn {
   background: var(--color-primary-bg);
-  /* El seleccionado se reconoce por el fondo tintado y el borde, no por el
-     color de la letra: --color-primary-dark sobre --color-primary-bg daba
-     3,68:1 en claro. Con --color-text son 14,15:1 en claro y 14,69:1 en
-     oscuro, y el chip se sigue leyendo como activo. */
+  /* El seleccionado se reconoce por el fondo tintado, el borde y el punto,
+     no por el color de la letra: --color-primary-dark sobre
+     --color-primary-bg daba 3,68:1 en claro. Con --color-text son 14,15:1
+     en claro y 14,69:1 en oscuro, y el chip se sigue leyendo como activo. */
   color: var(--color-text);
   border-color: var(--color-primary);
   font-weight: 700;
 }
+/* El punto de 8px tangerine que marca al elegido. */
+.bigChipOn::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
 
-/* ── Foto opcional ──────────────────────────────────────────────── */
 /* ── Paso 5 · los dos slots de foto ────────────────────────────────────────
-   Antes era UN solo slot (el del hijo) apilado en columna. Ahora son dos, el
-   del hijo y el del adulto, lado a lado y del mismo tamano: si uno fuera mas
+   Dos slots del mismo tamano, el del hijo y el del adulto: si uno fuera mas
    grande, la pantalla estaria diciendo cual de las dos caras importa mas.
-
-   Medidas y colores heredados del slot que ya existia aca y del avatar de
-   Perfil, para que el paso no se sienta una pantalla ajena. Solo tokens. */
+   Aca manda el strawberry: borde punteado y tint del mismo color en los dos
+   circulos. Solo tokens. */
 
 .photoRow {
   display: flex;
@@ -238,36 +298,33 @@
   display: none;
 }
 
-/* Slot vacio: el mismo borde punteado del boton "Agregar foto" viejo, pero
-   redondo, porque lo que va a llegar ahi es un avatar circular. */
 .photoEmptyBtn {
-  width: 108px;
-  height: 108px;
+  width: 136px;
+  height: 136px;
   border-radius: 50%;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-surface);
-  border: 2px dashed var(--color-border);
-  color: var(--color-text-muted);
+  background: var(--color-strawberry-bg);
+  border: 2px dashed var(--color-strawberry);
+  color: var(--color-strawberry-text);
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease, transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 .photoEmptyBtn:hover {
-  border-color: var(--color-primary-border);
-  color: var(--color-eyebrow);
+  border-color: var(--color-strawberry-text);
 }
 .photoEmptyBtn:active { transform: scale(0.97); }
 
 .photoPreviewBtn {
-  width: 108px;
-  height: 108px;
+  width: 136px;
+  height: 136px;
   border-radius: 50%;
   padding: 0;
-  border: 3px solid var(--color-primary-border);
-  background: var(--color-surface);
+  border: 3px solid var(--color-strawberry);
+  background: var(--color-strawberry-bg);
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-card-soft);
@@ -275,7 +332,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .photoPreviewBtn:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-strawberry-text);
 }
 .photoPreviewBtn:active {
   transform: scale(0.97);
@@ -297,7 +354,7 @@
   font-weight: 600;
   color: var(--color-text);
   text-align: center;
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -306,7 +363,7 @@
 .photoIconPlus {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1;
   display: inline-block;
 }
@@ -314,7 +371,7 @@
 @media (max-width: 340px) {
   .photoRow { gap: 14px; }
   .photoEmptyBtn,
-  .photoPreviewBtn { width: 92px; height: 92px; }
+  .photoPreviewBtn { width: 112px; height: 112px; }
 }
 
 /* ── CTA inferior ───────────────────────────────────────────────── */
@@ -323,37 +380,39 @@
   padding-top: 18px;
 }
 
+/* 56px, radio lg, 16/700, sombra tangerine. El fondo sigue siendo
+   --gradient-cta-registrar, el MISMO boton primario del Home: el mockup
+   pedia tangerine plano, pero el gradiente oficial es el que ya tiene el
+   contraste revisado (3,05-4,35:1) y hace que el onboarding se vea como el
+   primer dia DENTRO de Huella. */
 .cta {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 54px;
-  border-radius: 16px;
+  height: 56px;
+  border-radius: var(--radius-lg);
   font-family: var(--font-family);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  /* El MISMO boton primario del Home (BotonRegistrar). Antes era un gradiente
-     propio hacia --color-primary-light, cuyo extremo claro dejaba el texto
-     blanco en 2,33:1. Este es el gradiente oficial de la app: 3,05-4,35:1 y,
-     sobre todo, hace que el onboarding se vea como el primer dia DENTRO de
-     Huella y no como una pieza aparte. Ambos tokens son estables entre temas
-     a proposito (ver el comentario de --color-cta-disco en index.css). */
   background: var(--gradient-cta-registrar);
   color: var(--color-white);
   border: none;
-  box-shadow: var(--shadow-cta-pastilla);
+  box-shadow: var(--shadow-primary-md);
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease, box-shadow 160ms ease;
+  transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 .cta:active {
   transform: scale(0.98);
   background: var(--gradient-cta-registrar-presion);
   box-shadow: var(--shadow-cta-pastilla-presion);
 }
+/* Deshabilitado: tangerine claro, texto blanco al 80%, sin sombra. En oscuro
+   el token cae al tangerine al 35%. */
 .cta:disabled {
-  opacity: 0.45;
+  background: var(--color-cta-disabled-bg);
+  color: var(--color-cta-disabled-text);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -361,7 +420,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stepWrap { transition: none; }
-  .backBtn, .cta, .bigChip, .input,
+  .backBtn, .cta, .bigChip, .input, .segmento,
   .photoEmptyBtn, .photoPreviewBtn {
     transition: none;
   }

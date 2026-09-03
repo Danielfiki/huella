@@ -124,6 +124,33 @@
   --color-accent-lavender: #CAC0E0;
   --color-accent-yellow: #F0DFA0;
   --color-strawberry: #E8756A;
+  /* Tint strawberry para superficies (slot de foto del onboarding, pill
+     "Opcional"). Existe para no reusar --color-danger-bg, que es rojo de
+     error: aca la fresa es acento, no alarma. */
+  --color-strawberry-bg: #FDEDEB;
+  /* Texto/icono strawberry sobre ese tint. --color-strawberry-dark no cambia
+     en oscuro (es gama del album), asi que este si tiene su override. */
+  --color-strawberry-text: var(--color-strawberry-dark);
+
+  /* ── Onboarding · marca de agua y CTA deshabilitado ── */
+  /* Escarabajo mono detras del contenido. 7% en claro, 8% en oscuro; las
+     dos variantes suaves son las del acto B (composer y respuesta), donde
+     hay mas texto encima. */
+  --opacity-watermark:        0.07;
+  --opacity-watermark-soft:   0.06;
+  --opacity-watermark-softer: 0.05;
+  /* CTA sin habilitar: tangerine claro con el texto blanco al 80%, sin
+     sombra. En oscuro el tangerine claro no existe como color plano, asi que
+     es el tangerine al 35%. */
+  --color-cta-disabled-bg:   var(--color-primary-border);
+  --color-cta-disabled-text: rgba(255, 255, 255, 0.8);
+
+  /* ── Espaciado · escala minima (onboarding) ── */
+  /* Primeros pasos de una escala de spacing. Solo los tres que usa el
+     onboarding; se amplia cuando otra pantalla lo pida. */
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
 
   /* ── Leaf green (gráficos/botones) ── */
   --color-leaf-bg: #EFF4DC;
@@ -524,6 +551,10 @@
     --color-danger-text: #F87A70;
     --color-accent-green: #8FA840;
     --color-accent-mocha: #9B7B6A;
+    --color-strawberry-bg: #2E1A18;
+    --color-strawberry-text: #F09D95;
+    --opacity-watermark: 0.08;
+    --color-cta-disabled-bg: rgba(238, 148, 82, 0.35);
     /* Mismo crema que en claro: el header es mocha también en oscuro, así que
        el logo no debe oscurecerse. */
     --color-on-mocha: #FAF3EC;
