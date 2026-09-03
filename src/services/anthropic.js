@@ -2050,10 +2050,41 @@ export function bancoPrimerEncuentro(edad, maximo = 7) {
 // lista aparte, para que nunca se nombre a alguien que la app no usa.
 // ──────────────────────────────────────────────────────────────────────
 
-// Cuantos autores hay en el banco real. Es el N de la linea "Huella trabaja
-// con mas de N autores" del acto C: se calcula, no se escribe a mano, para
-// que no quede desactualizado cuando el banco crezca.
-export const TOTAL_AUTORES = Object.keys(AUTORES).length
+// Indice del CORPUS completo: cada autor o investigador real, distinto, que
+// nombra algun texto de calibracion de este archivo (banco AUTORES, los
+// cuatro marcos de marcoEdad, TEMAS_CONTEMPORANEOS y la lista cerrada de
+// autores validos de los patrones). Deduplicado (Dan Siegel = Daniel Siegel,
+// Faber & Mazlish = dos personas), sin titulos de libros ni organizaciones.
+//
+// Es el N de la linea "Huella se apoya en el trabajo de N autores" del acto
+// C. Vive como lista y no como conteo automatico porque un regex sobre la
+// prosa confunde titulos con nombres ("Whole-Brain Child" parece persona);
+// el conteo sale de `.length`, nunca se escribe a mano. Si un marco suma o
+// quita un autor, esta lista se toca en el mismo commit — contado el 3 sep
+// 2026 sobre el corpus entero: 82.
+export const AUTORES_CORPUS = [
+  'Adele Diamond', 'Adele Faber', 'Alan Kazdin', 'Alan Wolfelt', 'Alfie Kohn',
+  'Allan Schore', 'Andrew Meltzoff', 'Anthony Wolf', 'Anya Kamenetz',
+  'Barbara Coloroso', 'Barry Prizant', 'Becky Kennedy', 'T. Berry Brazelton',
+  'Bessel van der Kolk', 'Brené Brown', 'Bruce Perry', 'Carl Pickhardt',
+  'Carlos González', 'Charles Super', 'Christine Gross-Loh', 'Dan Hughes',
+  'Dan Peters', 'Daniel Siegel', 'Diana Baumrind', 'Ed Tronick',
+  'Edward Hallowell', 'Elaine Aron', 'Elaine Mazlish', 'Ellyn Satter',
+  'Erik Erikson', 'Gabor Maté', 'Gordon Neufeld', 'Haim Ginott', 'Harvey Karp',
+  'Henry Cloud', 'Jane Nelsen', 'Janet Lansbury', 'Jean Piaget', 'Jean Twenge',
+  'Jerome Kagan', 'John Bowlby', 'John Gottman', 'John Townsend',
+  'Jon Kabat-Zinn', 'Jonathan Haidt', 'Katja Rowell', 'Kenneth Ginsburg',
+  'Laura Markham', 'Laurence Steinberg', 'Lawrence Cohen', 'Lev Vygotsky',
+  'Lisa Damour', 'Lynn Lyons', 'Magda Gerber', 'Mark Wolynn', 'Mary Ainsworth',
+  'Mary Hartzell', 'Megan Gunnar', 'Michael Bradley', 'Michael Kahn',
+  'Michael Rich', 'Mona Delahooke', 'Nancy Samalin', 'Patricia Kuhl',
+  'Peter Levine', 'Rachel Busman', 'Resmaa Menakem', 'Ross Greene',
+  'Russell Barkley', 'Sara Harkness', 'Selma Fraiberg', 'Shefali Tsabary',
+  'Stanley Greenspan', 'Stanley Turecki', 'Stephen Bank', 'Stephen Porges',
+  'Stuart Shanker', 'Tamar Chansky', 'Temple Grandin', 'Thomas Brown',
+  'Tina Payne Bryson', 'Yalda Uhls',
+]
+export const TOTAL_AUTORES_CORPUS = AUTORES_CORPUS.length
 
 // Edad representativa de cada tramo de marcoEdad(). Sirve para preguntarle a
 // cada marco "¿a quien nombras?" sin duplicar la logica de tramos.

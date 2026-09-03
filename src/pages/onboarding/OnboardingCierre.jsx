@@ -4,7 +4,8 @@
 //
 // Muestra de donde viene lo que el padre acaba de leer: 5-6 autores del banco
 // AUTORES con su lente, priorizando los que aplican a la edad del hijo del
-// acto A, y la cuenta real del banco. Un solo CTA: "Entrar a Huella". Sin
+// acto A, y la cuenta exacta del corpus completo (AUTORES_CORPUS). Un solo
+// CTA: "Entrar a Huella". Sin
 // "Saltar": esta pantalla no pide nada, solo tapa la espera del guardado.
 //
 // El persistor ya esta corriendo cuando este acto aparece (lo dispara
@@ -17,12 +18,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import styles from './OnboardingCierre.module.css';
-import { autoresParaCierre, TOTAL_AUTORES } from '../../services/anthropic';
+import { autoresParaCierre, TOTAL_AUTORES_CORPUS } from '../../services/anthropic';
 import OnboardingMarcaAgua from './OnboardingMarcaAgua';
-
-// "mas de 20" cuando el banco tiene 23. Redondea hacia abajo a la decena para
-// que la frase siga siendo cierta aunque el banco crezca de a uno.
-const N_REDONDO = Math.floor(TOTAL_AUTORES / 10) * 10;
 
 /**
  * Props
@@ -97,8 +94,11 @@ export default function OnboardingCierre({
           ))}
         </ul>
 
+        {/* N exacto del corpus completo (AUTORES_CORPUS en anthropic.js), no
+            solo del banco de la Accion Rapida: son 82 autores reales entre
+            el banco, los marcos por edad y los temas contemporaneos. */}
         <p className={styles.cuenta}>
-          Huella trabaja con más de {N_REDONDO} autores de ciencia del desarrollo.
+          Huella se apoya en el trabajo de {TOTAL_AUTORES_CORPUS} autores de ciencia del desarrollo.
         </p>
 
         {persistStatus === 'error' && (
