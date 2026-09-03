@@ -327,43 +327,37 @@ function edadDesdeFecha(iso) {
  * escrituras de este archivo.
  *
  * Flujo:
- *   1. `extraerEpisodio` saca tipo/emocion/contexto del relato, igual que el
- *      registro conversacional. Si falla (429, red, parse) se cae a
- *      tipo 'otro' sin emocion ni contexto: el relato es lo que no se pierde.
- *   2. INSERT en `episodios` con hijo_id, fecha = ahora y el relato en
- *      descripcion_libre. Se espera.
- *   3. UPDATE aparte con origen = 'onboarding'. Si la columna todavia no
+ *   1. INSERT al tiro en `episodios` con hijo_id, fecha = ahora, el relato en
+ *      descripcion_libre, tipo 'otro' e intensidad 3. Es lo UNICO que se
+ *      espera: cero segundos extra para el padre.
+ *   2. UPDATE aparte con origen = 'onboarding'. Si la columna todavia no
  *      existe (migracion 015 pendiente) el UPDATE falla solo y se loguea: el
  *      episodio ya esta creado y no pierde nada mas que la marca.
- *   4. `analizarEpisodio` SIN await. Al terminar, escribe orientacion_ia y
- *      orientacion_zona en dos UPDATEs separados (mismo patron que
- *      updateEpisodio en HuellaContext y la migracion 014).
+ *   3. En segundo plano, `extraerEpisodio` saca tipo/emocion/contexto del
+ *      relato, igual que el registro conversacional, y los escribe con un
+ *      UPDATE. Si falla (429, red, parse) el episodio se queda en 'otro'.
+ *   4. Encadenada a la anterior, `analizarEpisodio` con el episodio ya
+ *      afinado (o el crudo si la extraccion fallo). Al terminar, escribe
+ *      orientacion_ia y orientacion_zona en dos UPDATEs separados (mismo
+ *      patron que updateEpisodio en HuellaContext y la migracion 014).
  */
 async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
   const relato = (texto || '').trim()
   if (!relato || !hijoId || !supabase) return
 
   try {
-    // 1. Extraccion. Si no se puede, el episodio igual se crea con lo minimo.
-    let extraido = null
-    try {
-      extraido = await extraerEpisodio({ transcripcion: relato, hijo })
-    } catch (err) {
-      console.warn('[onboardingPersistor] extraerEpisodio fallo, sigo con tipo "otro":', err)
-    }
-
     const episodio = {
-      tipo:             extraido?.tipo || 'otro',
+      tipo:             'otro',
       intensidad:       INTENSIDAD_POR_DEFECTO,
-      contexto:         extraido?.contexto || '',
+      contexto:         '',
       gatillantes:      [],
       estadoPadre:      '',
       fecha:            new Date().toISOString(),
-      emocion:          extraido?.emocion?.especifica || null,
+      emocion:          null,
       descripcionLibre: relato,
     }
 
-    // 2. El INSERT. Es lo unico que se espera de este bloque.
+    // 1. El INSERT. Es lo unico que se espera de este bloque.
     const { data: inserted, error: insErr } = await supabase
       .from('episodios')
       .insert({
@@ -386,7 +380,7 @@ async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
     }
     const episodioId = inserted.id
 
-    // 3. Marca de origen, en su propio UPDATE para tolerar que la columna
+    // 2. Marca de origen, en su propio UPDATE para tolerar que la columna
     //    `origen` no exista todavia (el codigo se despliega antes del SQL).
     supabase
       .from('episodios')
@@ -399,8 +393,37 @@ async function crearPrimerEpisodio({ userId, hijoId, texto, hijo }) {
         }
       })
 
-    // 4. Orientacion completa en segundo plano. Sin await: el Home no espera.
-    analizarEpisodio({ hijo, episodio, historialReciente: [], bloqueRutina: null })
+    // 3. Extraccion en segundo plano. Afina tipo/emocion/contexto sobre el
+    //    episodio ya creado. Devuelve el episodio (afinado o crudo) para que
+    //    la orientacion, que viene encadenada, trabaje con el mejor dato.
+    const afinar = async () => {
+      try {
+        const extraido = await extraerEpisodio({ transcripcion: relato, hijo })
+        const afinado = {
+          ...episodio,
+          tipo:     extraido?.tipo || 'otro',
+          contexto: extraido?.contexto || '',
+          emocion:  extraido?.emocion?.especifica || null,
+        }
+        const { error } = await supabase
+          .from('episodios')
+          .update({ tipo: afinado.tipo, contexto: afinado.contexto, emocion: afinado.emocion })
+          .eq('id', episodioId)
+          .eq('user_id', userId)
+        if (error) {
+          console.warn('[onboardingPersistor] No se pudo afinar el primer episodio:', error.message)
+        }
+        return afinado
+      } catch (err) {
+        console.warn('[onboardingPersistor] extraerEpisodio fallo, el episodio queda en "otro":', err)
+        return episodio
+      }
+    }
+
+    // 4. Orientacion completa, encadenada a la extraccion. Sin await: el Home
+    //    no espera ni por la una ni por la otra.
+    afinar()
+      .then((ep) => analizarEpisodio({ hijo, episodio: ep, historialReciente: [], bloqueRutina: null }))
       .then(async ({ texto: orientacion, zona }) => {
         if (!orientacion || !orientacion.trim()) return
         const { error: oriErr } = await supabase
