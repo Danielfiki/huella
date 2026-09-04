@@ -4,7 +4,8 @@
    Caja de ~430x494 que sangra fuera del encuadre. Cada variante fija la
    esquina y la rotacion que le toca a esa pantalla, siguiendo el ritmo del
    mockup: A1 arriba-der, A2 abajo-izq, A3 arriba-izq, A4 abajo-der, A5
-   arriba-der, B1 lateral izq a media altura, B2 arriba-der, C abajo-izq.
+   arriba-der, B1 lateral izq a media altura, B2 arriba-der, C arriba-der
+   bajo el titulo (en el hueco sobre la tarjeta).
    Cero hex: color y opacidad salen de los tokens de index.css. */
 
 .marca {
@@ -44,5 +45,9 @@
   opacity: var(--opacity-watermark-softer);
 }
 
-/* Acto C: cierra el ritmo volviendo abajo-izq, como A2 pero mas erguido. */
-.c { bottom: -150px; left: -160px; transform: rotate(5deg); }
+/* Acto C: arriba-der, en el hueco que queda entre el titulo y la tarjeta de
+   autores (la tarjeta y el CTA van pegados abajo con margin-top: auto). Antes
+   iba abajo-izq y quedaba casi entera detras de la tarjeta. Medido en 390x844
+   con titulo de 3 lineas: la cabeza arranca ~13px bajo el titulo y solo la
+   parte baja del cuerpo pasa detras de la tarjeta; nada se cruza con texto. */
+.c { top: 120px; right: -200px; transform: rotate(-20deg); }

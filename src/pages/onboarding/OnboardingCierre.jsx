@@ -2,10 +2,11 @@
 // Acto C · cierre de confianza. Entre la respuesta del acto B (o su "Saltar")
 // y la llegada al Home.
 //
-// Muestra de donde viene lo que el padre acaba de leer: 5-6 autores del banco
-// AUTORES con su lente, priorizando los que aplican a la edad del hijo del
-// acto A, y la cuenta exacta del corpus completo (AUTORES_CORPUS). Un solo
-// CTA: "Entrar a Huella". Sin
+// Muestra las voces detras de Huella en la etapa del hijo: 5-6 autores del
+// banco AUTORES con su lente, priorizando los que aplican a la edad del acto
+// A, y la cuenta exacta del corpus completo (AUTORES_CORPUS). El titulo NO
+// atribuye el texto del acto B a estos autores (son una muestra del corpus,
+// no la fuente de esa respuesta). Un solo CTA: "Entrar a Huella". Sin
 // "Saltar": esta pantalla no pide nada, solo tapa la espera del guardado.
 //
 // El persistor ya esta corriendo cuando este acto aparece (lo dispara
@@ -80,12 +81,21 @@ export default function OnboardingCierre({
     : esperando ? 'Guardando…'
     : 'Entrar a Huella';
 
+  // El titulo ya no atribuye el texto del acto B a estos 6 autores (son una
+  // muestra del corpus, elegida por la edad del acto A). Nombra la etapa del
+  // hijo, con su nombre. El acto A no deja avanzar sin nombre, asi que el
+  // fallback solo cubre un estado imposible sin romper la frase.
+  const quien = (hijo?.nombre || '').trim();
+  const titulo = quien
+    ? `Las voces detrás de Huella en la etapa de ${quien}`
+    : 'Las voces detrás de Huella en esta etapa';
+
   return (
     <section className={styles.acto} aria-hidden={!active}>
       <OnboardingMarcaAgua variante="c" />
       <header className={styles.head}>
         <p className={styles.eyebrow}>Antes de entrar</p>
-        <h1 className={styles.title}>Lo que acabas de leer viene de acá</h1>
+        <h1 className={styles.title}>{titulo}</h1>
       </header>
 
       <div className={styles.wrap}>
