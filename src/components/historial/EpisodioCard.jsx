@@ -324,7 +324,15 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
       )}
 
       {hasIA && iaOpen && (
-        <OrientacionIA orientacion={episodio.orientacionIA} onClose={() => setIaOpen(false)} />
+        <OrientacionIA
+          orientacion={episodio.orientacionIA}
+          onClose={() => setIaOpen(false)}
+          // El episodio crudo del contexto (no el normalizado del Historial):
+          // trae `contexto`, `emocion` y la Acción Rápida tal cual se guardaron,
+          // que es lo que `marcoDelEpisodio` necesita para derivar el lente.
+          episodio={huellaState.episodios.find((e) => e.id === episodio.id) ?? episodio}
+          hijo={huellaState.hijo}
+        />
       )}
     </article>
   )

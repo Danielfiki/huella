@@ -637,6 +637,37 @@ function seleccionarAutor({ dimension, edad, ultimoAutorUsado }) {
   return compatibles[0]
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// marcoDelEpisodio — el lente con que Huella miró un episodio, SIEMPRE.
+//
+// Determinístico y sin IA: la orientación larga no pide marco (el prompt de
+// analizarEpisodio lo prohíbe desde el 27 ago 2026) y nunca se guardó en una
+// columna, así que el marco de un episodio se DERIVA de lo que ya existe:
+//   1. El autor y la dimensión que eligió la Acción Rápida para ese mismo
+//      episodio (`accion_rapida_autor` / `accion_rapida_dimension`), ya
+//      validados contra MAPA_DIMENSIONES y la edad.
+//   2. Si no hay Acción Rápida (el primer episodio del onboarding, o una
+//      llamada que falló), se infiere la dimensión con la misma heurística
+//      de cliente y se elige autor con las mismas reglas, sin anti-repetición.
+// Un autor guardado que no esté en el banco AUTORES se descarta y se cae al
+// camino 2: el marco nunca nombra a alguien que Huella no conozca.
+// Devuelve { autor, lente } siempre: el default del mapa es 'desregulacion'.
+// Framing honesto para la UI: es el lente con que se miró el episodio, no
+// "el autor que escribió esta orientación".
+// ──────────────────────────────────────────────────────────────────────
+export function marcoDelEpisodio({ episodio, hijo }) {
+  const autorGuardado = episodio?.accionRapida?.autor ?? null
+  const dimGuardada   = episodio?.accionRapida?.dimension ?? null
+  const dimension = MAPA_DIMENSIONES[dimGuardada]
+    ? dimGuardada
+    : inferirDimensionCentral({ episodio: episodio || {}, hijo })
+  const autor = AUTORES[autorGuardado]
+    ? autorGuardado
+    : seleccionarAutor({ dimension, edad: hijo?.edad, ultimoAutorUsado: null })
+  const lente = AUTORES[autor]?.lente || MAPA_DIMENSIONES[dimension]?.lente || MAPA_DIMENSIONES.desregulacion.lente
+  return { autor, lente }
+}
+
 // Devuelve una articulación al azar del pool del autor. Si el autor no está
 // en AUTORES (no debería pasar si autor viene de seleccionarAutor → MAPA),
 // devolvemos null y la 3ra parte de la acción se construye solo con la lente.

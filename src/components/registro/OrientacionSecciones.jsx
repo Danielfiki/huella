@@ -2,6 +2,8 @@ import React from 'react'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { renderInline } from '../../utils/renderMarkdown'
 import EnlaceZona from './EnlaceZona'
+import PieCientifico from '../patron/PieCientifico'
+import { marcoDelEpisodio } from '../../services/anthropic'
 import styles from './OrientacionSecciones.module.css'
 
 // La orientación completa, ya desplegada, dentro de la pantalla de guardado.
@@ -23,18 +25,18 @@ import styles from './OrientacionSecciones.module.css'
 const TONOS = [styles.puntoMocha, styles.puntoVerde, styles.puntoNeutro]
 
 // Letra chica que a veces escribe el MODELO al final de la orientación, y que
-// esta pantalla ya pone por su cuenta (el `.disclaimer` de más abajo). Sin este
-// filtro el mismo descargo se lee dos veces seguidas: una dentro del texto y
-// otra fuera. Está documentado en `PieCientifico.jsx` — "en los episodios esta
-// misma frase la escribe el modelo (va pedida en el prompt)".
+// esta pantalla ya pone por su cuenta (el `PieCientifico` de más abajo). Sin
+// este filtro el mismo descargo se lee dos veces seguidas: una dentro del
+// texto y otra fuera.
 //
-// El prompt ya dejó de pedirla, así que esto cubre dos casos que el prompt no
-// alcanza: los episodios generados antes del arreglo, y que el modelo la
-// escriba igual por inercia del marco científico.
+// El prompt ya dejó de pedirla (la prohíbe desde el 27 ago 2026), así que esto
+// cubre dos casos que el prompt no alcanza: los episodios generados antes del
+// arreglo, y que el modelo la escriba igual por inercia del marco científico.
 //
-// También descarta la línea de "Marco aplicado": en episodios no se pide (es un
-// campo de patrones), pero si el modelo la agrega sola es letra chica académica
-// que debe quedar DESPUÉS del enlace, no empujarlo hacia abajo.
+// También descarta la línea de "Marco aplicado" que el modelo escribía por
+// inercia. Desde el 4 sep 2026 el marco de un episodio NO sale del texto: lo
+// deriva `marcoDelEpisodio` en cliente y lo pinta el pie, así que una línea
+// del modelo sería, además de redundante, una segunda versión del mismo dato.
 function esLetraChicaDelModelo(linea) {
   const l = (linea || '').normalize('NFC').trim().toLowerCase()
   if (!l) return false
@@ -76,9 +78,16 @@ function partirEnSecciones(texto) {
 // `zona` es opcional y puede no venir: episodios anteriores al paso 8, o
 // orientaciones donde la IA devolvio "ninguna". Sin zona esto se renderiza
 // exactamente igual que antes.
-export default function OrientacionSecciones({ texto, zona = null }) {
+//
+// `episodio` e `hijo` alimentan el pie: `marcoDelEpisodio` deriva el lente
+// (autor + enfoque) desde la Acción Rápida ya guardada, o lo infiere en
+// cliente si no la hay. Siempre devuelve algo, así que el pie siempre lleva
+// marco: no depende del modelo ni de una columna.
+export default function OrientacionSecciones({ texto, zona = null, episodio = null, hijo = null }) {
   const secciones = partirEnSecciones(texto)
   if (!secciones.length) return null
+
+  const { autor, lente } = marcoDelEpisodio({ episodio, hijo })
 
   return (
     <div className={styles.cuerpo}>
@@ -110,9 +119,11 @@ export default function OrientacionSecciones({ texto, zona = null }) {
           cuando el enlace aparecía camuflado debajo de ellas. */}
       {zona && <EnlaceZona zona={zona} />}
 
-      <p className={styles.disclaimer}>
-        Esto se apoya en evidencia del desarrollo infantil. No es un diagnóstico.
-      </p>
+      {/* Mismo pie que las salidas de patrón (descargo + marco en una línea,
+          mismo componente y mismo estilo). "Lente" y no "Marco" porque acá el
+          dato se deriva en cliente: es el lente con que Huella miró el
+          episodio, no el autor que escribió el texto. */}
+      <PieCientifico marco={`${autor} · ${lente}`} etiqueta="Lente" />
     </div>
   )
 }

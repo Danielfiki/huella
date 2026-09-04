@@ -716,7 +716,17 @@ export default function RegistroPage() {
                     />
                   </span>
                 </button>
-                {orientacionAbierta && <OrientacionSecciones texto={resto} zona={zonaIA} />}
+                {/* El episodio se busca en el contexto por id: ahí ya llegó la
+                    Acción Rápida (autor y dimensión) que el pie usa para el
+                    lente. Si todavía no llegó, el pie lo infiere igual. */}
+                {orientacionAbierta && (
+                  <OrientacionSecciones
+                    texto={resto}
+                    zona={zonaIA}
+                    episodio={state.episodios.find((e) => e.id === episodioId) ?? reintentoRef.current?.episodio ?? null}
+                    hijo={state.hijo}
+                  />
+                )}
               </section>
             )}
 

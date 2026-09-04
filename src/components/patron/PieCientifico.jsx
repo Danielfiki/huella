@@ -1,9 +1,11 @@
 import React from 'react'
 import styles from './PieCientifico.module.css'
 
-// Descargo fijo: lo pone el componente, NUNCA la IA. En los episodios esta misma
-// frase la escribe el modelo (va pedida en el prompt); acá la hardcodeamos para
-// que no dependa de que el JSON la traiga.
+// Descargo fijo: lo pone el componente, NUNCA la IA. En los episodios tampoco
+// la escribe el modelo: el prompt de analizarEpisodio la PROHÍBE desde el 27
+// ago 2026 y OrientacionSecciones filtra cualquier resto por inercia. Este
+// mismo componente es el pie de las dos salidas (patrones y episodios), así
+// que el descargo y el formato del marco viven en un solo lugar.
 // Versión corta. La larga ("Esta orientación se basa en evidencia del desarrollo
 // infantil y no constituye un diagnóstico clínico") decía lo mismo en el doble de
 // palabras. Esta es EXACTAMENTE la que ya usa el pie de la orientación del
@@ -26,11 +28,18 @@ const DESCARGO =
  * Si no queda ninguna línea que mostrar, no renderiza nada — ni el div ni el
  * separador, para no dejar un borde suelto sin contenido.
  *
+ * `etiqueta` es la palabra que precede al marco. En patrones es "Marco" (el
+ * modelo nombra al autor cuyo enfoque guió esa orientación, regla dura del
+ * prompt). En episodios es "Lente": ahí el marco se deriva en cliente
+ * (`marcoDelEpisodio`) y es el lente con que Huella miró el episodio, no el
+ * autor que escribió el texto. Misma línea, mismo estilo, palabra honesta.
+ *
  * @param {Object} props
- * @param {string} [props.marco] - Valor de `orientacion_ia.marco_aplicado`.
+ * @param {string} [props.marco] - Valor de `orientacion_ia.marco_aplicado`, o el "Autor · Lente" derivado.
  * @param {boolean} [props.sinDescargo=false] - Oculta la línea del descargo.
+ * @param {string} [props.etiqueta='Marco'] - Palabra que precede al marco.
  */
-export default function PieCientifico({ marco, sinDescargo = false }) {
+export default function PieCientifico({ marco, sinDescargo = false, etiqueta = 'Marco' }) {
   const marcoLimpio = typeof marco === 'string' ? marco.trim() : ''
 
   if (sinDescargo && !marcoLimpio) return null
@@ -44,7 +53,7 @@ export default function PieCientifico({ marco, sinDescargo = false }) {
       <p className={styles.linea}>
         {!sinDescargo && DESCARGO}
         {!sinDescargo && marcoLimpio && ' '}
-        {marcoLimpio && `Marco: ${marcoLimpio}`}
+        {marcoLimpio && `${etiqueta}: ${marcoLimpio}`}
       </p>
     </div>
   )
