@@ -33,22 +33,55 @@ function getNavIndex(pathname) {
   return NAV_PATHS.findIndex((p) => pathname.startsWith(p))
 }
 
+// La animacion de entrada se QUITA cuando termina. No es cosmetico: las tres
+// clases animadas usan `animation-fill-mode: both`, y Chrome trata a un
+// elemento con animacion terminada-pero-rellena como si siguiera animando.
+// Con `fadeIn` eso deja al wrapper con un stacking context propio aunque la
+// opacidad ya sea 1; con `slideIn` queda `transform: translateX(0)`, que
+// ademas lo vuelve containing block de los `position: fixed`. Resultado: todo
+// bottom sheet u overlay fixed que viva dentro de una pagina (la rutina, las
+// medallas, la hoja de estrategias...) queda atrapado debajo de la barra de
+// navegacion, que se pinta encima y tapa el boton de guardar. Se vio en
+// Android real en /hijo?tab=rutina (4 sep 2026).
+//
+// Al terminar la animacion, `pageLlegado` reemplaza a la clase animada: sin
+// animation, sin transform, opacidad 1. La entrada se ve identica y la pagina
+// queda en el contexto raiz, donde su z-index vale de verdad. Las capas que ya
+// se portalean a document.body (UpgradeModal, CerrarPatronModal, el Cerebro y
+// la capa post-guardado) no dependen de esto y siguen igual.
+//
+// El reset al cambiar de ruta es automatico: el Layout monta este componente
+// con `key={location.key}`, asi que cada pantalla nueva arranca con `llegado`
+// en false y vuelve a animar.
 function PageTransition({ children, direction }) {
   const [ready, setReady] = useState(false)
+  const [llegado, setLlegado] = useState(false)
   useEffect(() => {
     const raf = requestAnimationFrame(() => setReady(true))
     return () => cancelAnimationFrame(raf)
   }, [])
 
   let animClass = ''
-  if (ready) {
+  if (llegado) {
+    animClass = styles.pageLlegado
+  } else if (ready) {
     if (direction === 'forward')   animClass = styles.pageSlideRight
     else if (direction === 'backward') animClass = styles.pageSlideLeft
     else                           animClass = styles.pageVisible
   }
 
+  // `animationend` burbujea: cualquier animacion de un hijo (un loader, el
+  // pulso de un chip) llegaria aca. Solo cuenta la del propio wrapper.
+  const handleAnimationEnd = (e) => {
+    if (e.target !== e.currentTarget) return
+    setLlegado(true)
+  }
+
   return (
-    <div className={`${styles.pageWrap}${animClass ? ` ${animClass}` : ''}`}>
+    <div
+      className={`${styles.pageWrap}${animClass ? ` ${animClass}` : ''}`}
+      onAnimationEnd={handleAnimationEnd}
+    >
       {children}
     </div>
   )

@@ -98,6 +98,17 @@
   animation: fadeIn 320ms ease both;
 }
 
+/* Estado "llegado": reemplaza a las tres clases animadas cuando termina la
+   entrada (ver PageTransition en Layout.jsx). Sin animation ni transform, el
+   wrapper deja de ser stacking context y containing block, y los overlays
+   `position: fixed` de la pagina vuelven a valer contra la ventana completa
+   y por encima de la barra de navegacion. */
+.pageLlegado {
+  opacity: 1;
+  animation: none;
+  transform: none;
+}
+
 /* B3 · con 3 pestañas en vez de 5, un `flex: 1` puro le da a cada item un
    tercio del ancho, y el fondo del item activo pasa de ser una pastilla a ser
    un bloque de 140px. Se acota el ancho de cada item y se reparte el espacio
