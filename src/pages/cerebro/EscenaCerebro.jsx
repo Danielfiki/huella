@@ -405,7 +405,12 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     const onMove = (e) => {
       // Solo cuenta como interacción si ESE puntero está apoyado.
       if (!punteros.has(e.pointerId)) return
-      if (Math.hypot(e.clientX - x0, e.clientY - y0) > 9) movio = true
+      // 12px y no 9: un dedo real en Android se mueve bastante más que en
+      // iPhone durante un tap. Con 9 se descartaban taps legítimos —medido en
+      // el harness: un tap con 13px de recorrido caía como arrastre—, y el
+      // margen sigue siendo chico frente a un giro de verdad, que recorre
+      // decenas de píxeles.
+      if (Math.hypot(e.clientX - x0, e.clientY - y0) > 12) movio = true
       despertar()
     }
     // Un gesto puede terminar sin `pointerup`: el sistema lo cancela, o el
@@ -428,11 +433,28 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
         .filter((h) => h.object.isMesh && h.object.userData.slug)
       if (hit.length && onTapRef.current) onTapRef.current(hit[0].object.userData.slug)
     }
+    // Un tap táctil produce DOS activaciones: el `pointerup` de acá arriba y,
+    // después, un `click` sintético que el navegador fabrica desde el mismo
+    // gesto. En Chrome Android ese click se resuelve contra el árbol del
+    // momento en que se dispara, y para entonces el tap ya abrió la tarjeta:
+    // el velo (fixed, inset 0, `pointer-events: auto` apenas abre) está justo
+    // encima del punto donde estaba el dedo, así que el click le llega a él y
+    // su `onClick={cerrar}` cierra la tarjeta en el mismo gesto que la abrió.
+    // Efecto visible: tocar una zona no hace nada —ni siquiera se ilumina el
+    // chip, que depende de `abierta`—. En iPhone no pasa porque Safari le
+    // asigna a ese click el destino del toque inicial, o sea el canvas.
+    // Los chips no sufren esto: son botones, reciben UN click y listo.
+    //
+    // Se suprime el click en su origen. Nada del canvas lo necesita, y así el
+    // velo conserva intacto su comportamiento para los clicks de verdad.
+    // Reproducido y verificado con toque emulado de Android a 390px.
+    const onTouchEnd = (e) => { e.preventDefault() }
     ren.domElement.addEventListener('pointerdown', onDown)
     ren.domElement.addEventListener('pointermove', onMove)
     ren.domElement.addEventListener('pointerup', onUp)
     ren.domElement.addEventListener('pointercancel', onCancel)
     ren.domElement.addEventListener('lostpointercapture', onCancel)
+    ren.domElement.addEventListener('touchend', onTouchEnd, { passive: false })
 
     const loader = new GLTFLoader()
     loader.setMeshoptDecoder(MeshoptDecoder)
@@ -612,6 +634,7 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
       ren.domElement.removeEventListener('pointerup', onUp)
       ren.domElement.removeEventListener('pointercancel', onCancel)
       ren.domElement.removeEventListener('lostpointercapture', onCancel)
+      ren.domElement.removeEventListener('touchend', onTouchEnd)
       ctr.dispose()
       // La silueta COMPARTE la geometría de la corteza, así que hay que llevar
       // la cuenta de lo ya liberado: dispose() dos veces sobre la misma
