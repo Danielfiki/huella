@@ -1422,7 +1422,7 @@ Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intent
 // dramatizó. Acompañar al adulto NO es calificar al niño: el hijo entra por
 // su nombre y como contexto, nunca como sujeto de la frase.
 // ──────────────────────────────────────────────────────────────────────
-const SYSTEM_RESPUESTA_REFLEXION = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir lo que una madre o padre escribió sobre CÓMO SE SINTIÓ en un momento con su hijo o hija. Tu única tarea es acompañar ese sentimiento en 1 o 2 frases, máximo 45 palabras.
+const SYSTEM_RESPUESTA_REFLEXION = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir lo que una madre o padre escribió sobre CÓMO SE SINTIÓ en un momento con su hijo o hija. Tu única tarea es acompañar ese sentimiento en 1 o 2 frases, máximo 55 palabras.
 Reglas duras:
 - Acompaña, no evalúes. Prohibido felicitar, corregir, aconsejar, sugerir que haga algo distinto, diagnosticar o interpretar al hijo.
 - Ofrece UNA sola perspectiva sobre lo que siente, no una lista.
@@ -1432,7 +1432,25 @@ Reglas duras:
 - Tuteo neutro (tienes, puedes, sientes). Nunca voseo. Sin emojis, sin markdown, sin comillas, sin citar autores, sin firmar.
 - Puedes nombrar al hijo por su nombre; no hables de su desarrollo ni de sus rasgos.
 - Nunca califiques al hijo ni repitas adjetivos sobre él (agresiva, difícil, intensa). Habla de lo que el padre sintió, no de cómo es o estuvo el hijo. El hijo aparece solo por su nombre, como contexto, nunca como sujeto de la frase.
-- Sin dramatizar: nada de "duele y descoloca", "especialmente cuando". Sobrio y concreto.`
+- Sin dramatizar: nada de "duele y descoloca", "especialmente cuando". Sobrio y concreto.
+- Si hay reflexiones anteriores y ves un hilo (un sentimiento o una frase que se repite, o un cambio claro respecto de antes), nómbralo de forma concreta: cuántas veces, en qué tipo de momentos. Ese hilo es lo más valioso que puedes devolver.
+- Si no hay hilo claro, no lo inventes: responde solo al momento presente.
+- La primera reflexión del padre nunca recibe referencia al pasado.`
+
+// Fecha en la lengua en que un padre la diría, no en formato. El modelo la
+// necesita para poder decir "las últimas tres semanas" en vez de listar
+// fechas, que es justo lo que hace útil al hilo.
+function fechaRelativa(fecha) {
+  const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000)
+  if (dias <= 0) return 'hoy'
+  if (dias === 1) return 'ayer'
+  if (dias < 7) return `hace ${dias} días`
+  const semanas = Math.floor(dias / 7)
+  if (semanas === 1) return 'hace 1 semana'
+  if (dias < 60) return `hace ${semanas} semanas`
+  const meses = Math.floor(dias / 30)
+  return meses === 1 ? 'hace 1 mes' : `hace ${meses} meses`
+}
 
 /**
  * Devuelve 1-2 frases que acompañan lo que el padre escribió en la reflexión.
@@ -1444,18 +1462,61 @@ Reglas duras:
  * Quien llama decide CUÁNDO: se genera una sola vez por episodio (ver el
  * candado de `reflexion_respuesta` en RegistroPage y EpisodioCard).
  */
-export async function generarRespuestaReflexion({ hijo, episodio, texto }) {
+export async function generarRespuestaReflexion({
+  hijo,
+  episodio,
+  texto,
+  episodios = [],
+  userId = null,
+  excluirId = null,
+}) {
   const limpio = (texto || '').trim()
   if (!limpio) return ''
 
   const nombre = hijo?.nombre || 'su hijo/a'
   const ficha = `Momento con ${nombre} — tipo: ${episodio?.tipo || 'no especificado'}, intensidad: ${episodio?.intensidad ?? '?'}/5.`
 
+  // Memoria (pieza 2b). Sin esto cada reflexión se leía como la primera, y lo
+  // que un padre necesita ver es el hilo: que lleva tres semanas sintiendo lo
+  // mismo, o que esta vez sonó distinto.
+  //
+  // 🔒 EL FILTRO POR AUTOR NO ES OPCIONAL. `state.episodios` trae los
+  // episodios de TODA LA FAMILIA (el contexto los pide con
+  // `in('user_id', partnerIds)`), y la reflexión es lo único de la app que es
+  // privado de quien la escribe — el campo dice "esto es solo para ti". Sin
+  // este filtro, a un padre le llegarían de vuelta las reflexiones íntimas de
+  // su pareja. Si no hay `userId`, no se manda memoria: mejor sin hilo que
+  // con el hilo de otra persona.
+  const anteriores = !userId
+    ? []
+    : episodios
+        .filter((e) =>
+          e?.userId === userId &&
+          e?.id !== excluirId &&
+          (e?.reflexion || '').trim()
+        )
+        // El contexto ya los trae por fecha descendente, pero se ordena acá
+        // igual: esta función no puede depender de cómo venga la lista.
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+        .slice(0, 5)
+
+  const bloqueMemoria = anteriores.length
+    ? `\n\nReflexiones anteriores de este padre (más reciente primero):\n` +
+      anteriores
+        .map((e) => {
+          const t = (e.reflexion || '').trim()
+          const recortado = t.length > 200 ? `${t.slice(0, 200)}…` : t
+          return `- ${fechaRelativa(e.fecha)} · ${e.tipo || 'momento'}: "${recortado}"`
+        })
+        .join('\n')
+    : ''
+
   const prompt = `${ficha}
 Esto escribió la madre o el padre sobre cómo se sintió:
-"${limpio}"`
+"${limpio}"${bloqueMemoria}`
 
-  return llamarAPI(prompt, 120, {
+  // 160 y no 120: el hilo necesita una frase más que la respuesta pelada.
+  return llamarAPI(prompt, 160, {
     system: SYSTEM_RESPUESTA_REFLEXION,
     model: 'claude-haiku-4-5',
   })

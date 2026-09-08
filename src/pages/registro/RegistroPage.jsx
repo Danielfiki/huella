@@ -6,6 +6,7 @@ import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio, generarRespuestaReflexion } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
+import { useAuth } from '../../context/AuthContext'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
@@ -309,6 +310,9 @@ function TipoSelector({ tipo, setTipo, tipoOtroTexto, setTipoOtroTexto, bigEmoji
 
 export default function RegistroPage() {
   const { state, addEpisodio, updateEpisodio, actualizarUltimoAutorIa, isPro } = useHuella()
+  // Solo para la memoria de la micro-respuesta: distingue sus reflexiones de
+  // las de la pareja, que también viven en `state.episodios`.
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [vista, setVista] = useState('conversacional')
@@ -580,6 +584,12 @@ export default function RegistroPage() {
         hijo: state.hijo,
         episodio: { tipo, intensidad },
         texto,
+        // Memoria: sus propias reflexiones anteriores. Se excluye el episodio
+        // recién creado, que además todavía no tiene la reflexión en el
+        // contexto. `userId` deja fuera las de la pareja.
+        episodios: state.episodios,
+        userId: user?.id ?? null,
+        excluirId: episodioId,
       })
       if (texto2) {
         setRespuestaReflexion(texto2)

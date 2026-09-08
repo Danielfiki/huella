@@ -177,6 +177,11 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
         hijo: huellaState.hijo,
         episodio: { tipo: episodio.tipo, intensidad: episodio.nivel },
         texto,
+        // Memoria: sus propias reflexiones anteriores. `userId` es lo que
+        // impide que se mezclen las de la pareja (ver el filtro en el servicio).
+        episodios: huellaState.episodios,
+        userId: user?.id ?? null,
+        excluirId: episodio.id,
       })
       if (respuesta) {
         setRespuestaActual(respuesta)
