@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
 const DAILY_LIMIT = 20
+
+// Modelos que el cliente puede pedir, y NADA MAS. La lista blanca no es
+// ceremonia: el body lo arma el navegador, así que sin ella cualquiera con un
+// token de sesión válido podría pedir el modelo que quisiera y facturárselo a
+// la cuenta. Lo que no esté acá cae al de siempre, en silencio.
+//
+// Haiku entró con la micro-respuesta del "¿cómo te sentiste tú?": son 1 o 2
+// frases, no necesita el modelo grande, y cuesta un tercio.
+const MODELOS_PERMITIDOS = ['claude-sonnet-4-6', 'claude-haiku-4-5']
+const MODELO_POR_DEFECTO = 'claude-sonnet-4-6'
 const OWNER_ID = '04ddd97a-e674-4e59-8f37-78cb38d46090'
 
 async function verificarRateLimit(token) {
@@ -242,10 +252,14 @@ export default async function handler(req, res) {
     })
   }
 
-  const { prompt, max_tokens = 700, system, stream = false } = req.body
+  const { prompt, max_tokens = 700, system, stream = false, model } = req.body
   if (!prompt) {
     return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
+
+  // Un modelo fuera de la lista blanca no es error: cae al de siempre. Así una
+  // versión vieja del cliente, o una pedida mal escrita, sigue funcionando.
+  const modelo = MODELOS_PERMITIDOS.includes(model) ? model : MODELO_POR_DEFECTO
 
   let response
   try {
@@ -257,7 +271,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: modelo,
         max_tokens,
         // Si el caller manda su propio `system` en el body, lo usa.
         // Si no, cae al SYSTEM_PROMPT clínico default de Huella.

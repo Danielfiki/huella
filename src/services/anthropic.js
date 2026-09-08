@@ -108,7 +108,14 @@ async function llamarAPIStream(prompt, max_tokens, onTexto) {
   return texto.trim()
 }
 
-async function llamarAPI(prompt, max_tokens) {
+// `opciones` es aditivo y opcional: las 15 llamadas que ya existían siguen
+// pasando solo (prompt, max_tokens) y se comportan igual que siempre.
+//   · system → reemplaza el SYSTEM_PROMPT clínico del backend. Para una
+//     respuesta de dos frases, mandar los ~6.700 tokens del clínico es
+//     desproporcionado.
+//   · model  → el backend solo acepta los de su lista blanca; cualquier otro
+//     cae al de siempre.
+async function llamarAPI(prompt, max_tokens, opciones = {}) {
   const headers = { 'content-type': 'application/json' }
 
   if (supabase) {
@@ -126,7 +133,12 @@ async function llamarAPI(prompt, max_tokens) {
     response = await fetch('/api/anthropic', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ prompt, max_tokens }),
+      body: JSON.stringify({
+        prompt,
+        max_tokens,
+        ...(opciones.system ? { system: opciones.system } : {}),
+        ...(opciones.model  ? { model:  opciones.model  } : {}),
+      }),
       signal: controller.signal,
     })
   } catch (err) {
@@ -1384,6 +1396,60 @@ Cómo está el padre/madre ahora: ${checkin.estadoPadre || 'no especificado'}
 Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intentó el padre/madre, conecta la acción con el resultado que observó, y valida su esfuerzo. Sin consejos nuevos. Sin diagnósticos. Habla en segunda persona al padre/madre. Tono cálido y concreto. No uses listas ni títulos.`
 
   return llamarAPI(prompt, 250)
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// MICRO-RESPUESTA AL "¿CÓMO TE SENTISTE TÚ?"
+//
+// El campo de la reflexión es lo ÚNICO de la app que es solo del padre, y
+// hasta ahora caía al vacío: escribía cómo se sintió y no recibía nada.
+//
+// Esta respuesta acompaña ese sentimiento y nada más. La regla dura es el
+// marco anti-vergüenza: el padre acaba de admitir algo incómodo —que gritó,
+// que no pudo más—, y si la respuesta lo corrige, lo felicita o le aconseja,
+// deja de escribir para siempre y se pierde el campo entero. Por eso el
+// system prohíbe explícitamente consejos, elogios y diagnósticos.
+//
+// System propio y corto a propósito: el clínico del backend son ~6.700
+// tokens de andamiaje sobre desarrollo infantil, que acá no aplica —no se
+// está interpretando al hijo, se está acompañando al adulto— y además
+// empujaría justo hacia el consejo que esto tiene prohibido.
+// ──────────────────────────────────────────────────────────────────────
+const SYSTEM_RESPUESTA_REFLEXION = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir lo que una madre o padre escribió sobre CÓMO SE SINTIÓ en un momento con su hijo o hija. Tu única tarea es acompañar ese sentimiento en 1 o 2 frases, máximo 45 palabras.
+Reglas duras:
+- Acompaña, no evalúes. Prohibido felicitar, corregir, aconsejar, sugerir que haga algo distinto, diagnosticar o interpretar al hijo.
+- Ofrece UNA sola perspectiva sobre lo que siente, no una lista.
+- Nunca digas que lo hizo bien ni mal. Nunca uses "deberías", "intenta", "la próxima vez", "recuerda que".
+- Si el sentimiento es positivo, acompáñalo con la misma sobriedad, sin exagerar.
+- Si escribió muy poco (una palabra), responde igual en una frase, sin pedir más.
+- Tuteo neutro (tienes, puedes, sientes). Nunca voseo. Sin emojis, sin markdown, sin comillas, sin citar autores, sin firmar.
+- Puedes nombrar al hijo por su nombre; no hables de su desarrollo ni de sus rasgos.`
+
+/**
+ * Devuelve 1-2 frases que acompañan lo que el padre escribió en la reflexión.
+ *
+ * Haiku y no el modelo grande: son dos frases con un system corto, así que
+ * cuesta un tercio y responde antes. `max_tokens` 120 alcanza de sobra para
+ * 45 palabras y le pone techo al gasto.
+ *
+ * Quien llama decide CUÁNDO: se genera una sola vez por episodio (ver el
+ * candado de `reflexion_respuesta` en RegistroPage y EpisodioCard).
+ */
+export async function generarRespuestaReflexion({ hijo, episodio, texto }) {
+  const limpio = (texto || '').trim()
+  if (!limpio) return ''
+
+  const nombre = hijo?.nombre || 'su hijo/a'
+  const ficha = `Momento con ${nombre} — tipo: ${episodio?.tipo || 'no especificado'}, intensidad: ${episodio?.intensidad ?? '?'}/5.`
+
+  const prompt = `${ficha}
+Esto escribió la madre o el padre sobre cómo se sintió:
+"${limpio}"`
+
+  return llamarAPI(prompt, 120, {
+    system: SYSTEM_RESPUESTA_REFLEXION,
+    model: 'claude-haiku-4-5',
+  })
 }
 
 export async function analizarReflexionesCuidador(reflexiones) {

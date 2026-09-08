@@ -355,6 +355,10 @@ function dbEpisodioToApp(row) {
     emocion:          row.emocion           ?? null,
     descripcionLibre: row.descripcion_libre ?? null,
     reflexion:        row.reflexion         ?? null,
+    // Pieza 2. Mientras la migracion 016 no este corrida la columna no existe
+    // y `row.reflexion_respuesta` llega undefined: el ?? null lo absorbe y el
+    // episodio se ve como uno viejo, sin respuesta y sin error.
+    reflexionRespuesta: row.reflexion_respuesta ?? null,
     fotoUrl:          row.foto_url          ?? null,
     accionRapida,
     // Bloque 3 del onboarding. 'onboarding' cuando el episodio nacio del acto
@@ -842,6 +846,22 @@ export function HuellaProvider({ children }) {
         .eq('user_id', user.id)
       if (error) {
         console.warn('[updateEpisodio] orientacion_zona no se guardo (falta la migracion 014?):', error.message)
+      }
+    }
+
+    // `reflexion_respuesta` va en un UPDATE APARTE por la MISMA razon que
+    // `orientacion_zona`, y aca importa todavia mas: si viajara junto a
+    // `reflexion` y la columna faltara, PostgREST rechazaria la fila entera y
+    // se perderia LO QUE EL PADRE ESCRIBIO. La respuesta de la IA es un extra;
+    // su texto no. Separados, el texto se guarda siempre.
+    if (partial.reflexionRespuesta !== undefined) {
+      const { error } = await supabase
+        .from('episodios')
+        .update({ reflexion_respuesta: partial.reflexionRespuesta ?? null })
+        .eq('id', partial.id)
+        .eq('user_id', user.id)
+      if (error) {
+        console.warn('[updateEpisodio] reflexion_respuesta no se guardo (falta la migracion 016?):', error.message)
       }
     }
   }

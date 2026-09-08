@@ -1047,6 +1047,28 @@
   color: var(--color-tag-green);
 }
 
+/* La micro-respuesta a la reflexión del padre. Deliberadamente callada: es
+   acompañamiento, no una tarjeta de contenido. Sin fondo ni borde, en
+   itálica, separada por una línea fina — el mismo peso visual que el pie
+   científico de la orientación. */
+.gRespuestaCargando,
+.gRespuesta {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  line-height: 1.55;
+  font-style: italic;
+}
+
+.gRespuestaCargando {
+  color: var(--color-text-light);
+}
+
+.gRespuesta {
+  color: var(--color-text-muted);
+}
+
 /* ── 8 · Salidas ── */
 
 .gSalidas {

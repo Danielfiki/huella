@@ -9,7 +9,7 @@ import OrientacionIA from './OrientacionIA'
 import AccionRapida from './AccionRapida'
 import { pillClassFor, emoTileClass } from './helpers'
 import { canModify } from '../../utils/authorDisplay'
-import { bucketTiempo } from '../../services/anthropic'
+import { bucketTiempo, generarRespuestaReflexion } from '../../services/anthropic'
 import Escarabajo from '../ui/Escarabajo'
 import colaRegeneracion from '../../utils/colaRegeneracionAccionRapida'
 import styles from './EpisodioCard.module.css'
@@ -23,6 +23,12 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   const [confirmando, setConfirmando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [reflexion, setReflexion] = useState(episodio.reflexion ?? '')
+  // Pieza 2. Se hidrata con lo que ya está en la base, así la respuesta sigue
+  // ahí al reabrir el episodio. El ref evita repetir la llamada dentro de una
+  // misma sesión, antes de que el estado alcance a reflejarse.
+  const [respuestaActual, setRespuestaActual] = useState(episodio.reflexionRespuesta ?? null)
+  const [cargandoRespuesta, setCargandoRespuesta] = useState(false)
+  const respuestaPedida = useRef(false)
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
   const timerRef = useRef(null)
@@ -148,6 +154,7 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
 
   async function handleGuardarReflexion() {
     if (!onUpdate) return
+    const texto = (reflexion || '').trim()
     setGuardando(true)
     try {
       await onUpdate({ id: episodio.id, reflexion: reflexion || null })
@@ -156,6 +163,29 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
       timerRef.current = setTimeout(() => setGuardado(false), 2500)
     } finally {
       setGuardando(false)
+    }
+
+    // Micro-respuesta: una sola vez por episodio. El candado es la propia
+    // columna, así que un episodio que ya tiene respuesta —o al que ya se le
+    // pidió en esta sesión— no vuelve a llamar a la IA. Si el padre corrige su
+    // texto, el texto nuevo se guarda pero la respuesta se queda como está.
+    if (!texto || respuestaActual || respuestaPedida.current) return
+    respuestaPedida.current = true
+    setCargandoRespuesta(true)
+    try {
+      const respuesta = await generarRespuestaReflexion({
+        hijo: huellaState.hijo,
+        episodio: { tipo: episodio.tipo, intensidad: episodio.nivel },
+        texto,
+      })
+      if (respuesta) {
+        setRespuestaActual(respuesta)
+        onUpdate({ id: episodio.id, reflexionRespuesta: respuesta })
+      }
+    } catch {
+      // Si falla, no aparece nada: su texto ya quedó guardado.
+    } finally {
+      setCargandoRespuesta(false)
     }
   }
 
@@ -302,6 +332,14 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
                   </button>
                 )}
               </div>
+            )}
+            {cargandoRespuesta && (
+              <p className={styles.reflexionRespuestaCargando}>
+                Huella está leyendo lo que escribiste…
+              </p>
+            )}
+            {!cargandoRespuesta && respuestaActual && (
+              <p className={styles.reflexionRespuesta}>{respuestaActual}</p>
             )}
           </div>
         )}

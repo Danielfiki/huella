@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { X, ChevronDown, Clock, BookOpen, ArrowRight } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
-import { analizarEpisodio, generarAccionInmediata, extraerEpisodio } from '../../services/anthropic'
+import { analizarEpisodio, generarAccionInmediata, extraerEpisodio, generarRespuestaReflexion } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
@@ -351,6 +351,13 @@ export default function RegistroPage() {
   const [reflexion, setReflexion] = useState('')
   const [guardandoReflexion, setGuardandoReflexion] = useState(false)
   const [reflexionGuardada, setReflexionGuardada] = useState(false)
+  // Pieza 2: la micro-respuesta a lo que el padre escribió de sí mismo.
+  // `respuestaReflexion` es el texto; el ref es el CANDADO que la deja en una
+  // sola generación por episodio. Va en ref y no en estado porque se consulta
+  // dentro del handler, donde un estado recién puesto todavía no se ve.
+  const [respuestaReflexion, setRespuestaReflexion] = useState('')
+  const [cargandoRespuesta, setCargandoRespuesta] = useState(false)
+  const respuestaPedida = useRef(false)
   // Guardamos los args de la última llamada IA para poder reintentar sin
   // depender de los inputs del form (que el papá podría haber cambiado).
   const reintentoRef = useRef(null)
@@ -548,14 +555,44 @@ export default function RegistroPage() {
 
   async function handleGuardarReflexion() {
     if (!episodioId || !reflexion.trim()) return
+    const texto = reflexion.trim()
     setGuardandoReflexion(true)
     try {
-      await updateEpisodio({ id: episodioId, reflexion: reflexion.trim() })
+      await updateEpisodio({ id: episodioId, reflexion: texto })
       setReflexionGuardada(true)
     } catch {
       // reflexion is non-critical, fail silently
     } finally {
       setGuardandoReflexion(false)
+    }
+
+    // La micro-respuesta va DESPUÉS y aparte: el texto del padre ya quedó
+    // guardado pase lo que pase con la IA. Una sola vez por episodio —si
+    // corrige su texto, el texto nuevo se guarda pero la respuesta no se
+    // regenera—. Sin ese candado, cada corrección gastaría una llamada de la
+    // cuota diaria (20 por usuario) y reescribir se volvería la forma de
+    // pedir otra respuesta.
+    if (respuestaPedida.current) return
+    respuestaPedida.current = true
+    setCargandoRespuesta(true)
+    try {
+      const texto2 = await generarRespuestaReflexion({
+        hijo: state.hijo,
+        episodio: { tipo, intensidad },
+        texto,
+      })
+      if (texto2) {
+        setRespuestaReflexion(texto2)
+        // En UPDATE aparte: si la columna faltara, se pierde la respuesta y
+        // nunca lo que el padre escribió (ver updateEpisodio).
+        updateEpisodio({ id: episodioId, reflexionRespuesta: texto2 })
+      }
+    } catch {
+      // Si falla, no aparece nada. Es un extra: el texto ya está guardado y
+      // un mensaje de error acá solo le diría al padre que algo salió mal
+      // justo después de contar cómo se sintió.
+    } finally {
+      setCargandoRespuesta(false)
     }
   }
 
@@ -757,6 +794,19 @@ export default function RegistroPage() {
                   )
                 }
               </div>
+
+              {/* La micro-respuesta. Acompaña lo que el padre escribió de sí
+                  mismo; no aconseja ni evalúa (ver el system de
+                  generarRespuestaReflexion). Si la IA falla no se dibuja
+                  nada: su texto ya quedó guardado. */}
+              {cargandoRespuesta && (
+                <p className={styles.gRespuestaCargando}>
+                  Huella está leyendo lo que escribiste…
+                </p>
+              )}
+              {!cargandoRespuesta && respuestaReflexion && (
+                <p className={styles.gRespuesta}>{respuestaReflexion}</p>
+              )}
             </section>
           </div>
 

@@ -101,6 +101,7 @@ export default function HistorialPage() {
         emocion: ep.emocion ?? null,
         descripcionLibre: ep.descripcionLibre ?? null,
         reflexion: ep.reflexion ?? null,
+        reflexionRespuesta: ep.reflexionRespuesta ?? null,
         fotoUrl: ep.fotoUrl ?? null,
         userId: ep.userId ?? null,
         accionRapida: ep.accionRapida ?? null,
