@@ -109,14 +109,21 @@ export default function CerebroContenido({ compacto = false }) {
   // La inicial es el respaldo cuando el hijo no tiene foto.
   const inicialHijo = (hijo?.nombre || '').trim().charAt(0).toUpperCase()
 
-  // Posición horizontal del marcador, alineada con el CENTRO DE LA PERILLA y
-  // no con el ancho del riel. La perilla no recorre el ancho completo: su
-  // centro va de `ancho/2` a `total - ancho/2`, así que un porcentaje pelado
-  // se desvía hasta media perilla en los extremos (12px en 0 y en 18 años).
-  // La corrección es la de siempre para inputs de rango, y hace que a la
-  // misma edad el marcador quede exactamente bajo la perilla.
+  // Posición horizontal del marcador. Dos correcciones, y las dos importan:
+  //
+  //   1. Va en la MISMA GRILLA que la perilla, o sea contra la edad
+  //      REDONDEADA. Con la edad exacta el marcador quedaba ~5px corrido de
+  //      la perilla al volver (ella en el entero, él en el decimal) y eso se
+  //      leía como un defecto, no como precisión. Redondeando, cuando el
+  //      slider está en la edad del hijo los dos coinciden al píxel. Lo que
+  //      NO se redondea es lo que el marcador restaura al tocarlo: ahí vuelve
+  //      `edadDelHijo` entera, con sus meses.
+  //   2. Se corrige el ancho de la perilla, que no recorre el ancho completo
+  //      del riel: su centro va de `ancho/2` a `total - ancho/2`, así que un
+  //      porcentaje pelado se desvía hasta media perilla en los extremos
+  //      (12px en 0 y en 18 años).
   const ANCHO_PERILLA = 24
-  const posMarcador = (edadDelHijo / EDAD_MAX) * 100
+  const posMarcador = (Math.round(edadDelHijo) / EDAD_MAX) * 100
 
   const [edad, setEdad] = useState(edadDelHijo)
 
