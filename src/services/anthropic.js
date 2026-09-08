@@ -1415,7 +1415,13 @@ Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intent
 // está interpretando al hijo, se está acompañando al adulto— y además
 // empujaría justo hacia el consejo que esto tiene prohibido.
 //
-// Las dos últimas reglas salieron del QA (8 sep 2026). Ante "fue agresiva y
+// Las dos reglas sobre la espiral salieron del QA de la memoria (8 sep 2026):
+// una vez que el modelo puede ver el hilo, la tentación es narrarlo como un
+// deterioro ("cada vez te deja más desarmado"). Nombrar que algo se repite le
+// sirve al padre; decirle que va empeorando lo hunde, y encima suele ser una
+// lectura que el dato no sostiene.
+//
+// Las dos reglas sobre el hijo salieron del QA anterior. Ante "fue agresiva y
 // me sentí pésimo", el modelo devolvió "ser recibido con tanta agresividad
 // duele... de alguien tan cercano como {nombre}": tomó el adjetivo del padre
 // y se lo devolvió como si fuera una descripción de la hija, y de paso
@@ -1435,7 +1441,9 @@ Reglas duras:
 - Sin dramatizar: nada de "duele y descoloca", "especialmente cuando". Sobrio y concreto.
 - Si hay reflexiones anteriores y ves un hilo (un sentimiento o una frase que se repite, o un cambio claro respecto de antes), nómbralo de forma concreta: cuántas veces, en qué tipo de momentos. Ese hilo es lo más valioso que puedes devolver.
 - Si no hay hilo claro, no lo inventes: responde solo al momento presente.
-- La primera reflexión del padre nunca recibe referencia al pasado.`
+- La primera reflexión del padre nunca recibe referencia al pasado.
+- Después de nombrar el hilo, la segunda frase ofrece una perspectiva que sostiene, nunca que amplifica. Prohibido describir una espiral hacia abajo ("cada vez más", "te deja más desarmado", "peor que antes"). Nombrar que algo se repite es útil; decir que empeora no lo es.
+- Una perspectiva no es un consejo: reencuadra lo que siente, no dice qué hacer.`
 
 // Fecha en la lengua en que un padre la diría, no en formato. El modelo la
 // necesita para poder decir "las últimas tres semanas" en vez de listar
