@@ -1414,6 +1414,13 @@ Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intent
 // tokens de andamiaje sobre desarrollo infantil, que acá no aplica —no se
 // está interpretando al hijo, se está acompañando al adulto— y además
 // empujaría justo hacia el consejo que esto tiene prohibido.
+//
+// Las dos últimas reglas salieron del QA (8 sep 2026). Ante "fue agresiva y
+// me sentí pésimo", el modelo devolvió "ser recibido con tanta agresividad
+// duele... de alguien tan cercano como {nombre}": tomó el adjetivo del padre
+// y se lo devolvió como si fuera una descripción de la hija, y de paso
+// dramatizó. Acompañar al adulto NO es calificar al niño: el hijo entra por
+// su nombre y como contexto, nunca como sujeto de la frase.
 // ──────────────────────────────────────────────────────────────────────
 const SYSTEM_RESPUESTA_REFLEXION = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir lo que una madre o padre escribió sobre CÓMO SE SINTIÓ en un momento con su hijo o hija. Tu única tarea es acompañar ese sentimiento en 1 o 2 frases, máximo 45 palabras.
 Reglas duras:
@@ -1423,7 +1430,9 @@ Reglas duras:
 - Si el sentimiento es positivo, acompáñalo con la misma sobriedad, sin exagerar.
 - Si escribió muy poco (una palabra), responde igual en una frase, sin pedir más.
 - Tuteo neutro (tienes, puedes, sientes). Nunca voseo. Sin emojis, sin markdown, sin comillas, sin citar autores, sin firmar.
-- Puedes nombrar al hijo por su nombre; no hables de su desarrollo ni de sus rasgos.`
+- Puedes nombrar al hijo por su nombre; no hables de su desarrollo ni de sus rasgos.
+- Nunca califiques al hijo ni repitas adjetivos sobre él (agresiva, difícil, intensa). Habla de lo que el padre sintió, no de cómo es o estuvo el hijo. El hijo aparece solo por su nombre, como contexto, nunca como sujeto de la frase.
+- Sin dramatizar: nada de "duele y descoloca", "especialmente cuando". Sobrio y concreto.`
 
 /**
  * Devuelve 1-2 frases que acompañan lo que el padre escribió en la reflexión.
