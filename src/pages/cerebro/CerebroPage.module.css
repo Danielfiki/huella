@@ -339,16 +339,22 @@
 /* El tick: la línea que baja del riel al círculo, como el pin de una línea de
    tiempo. Sin ella la foto se leía suelta, flotando bajo la barra sin
    conexión con la edad que marca.
-   Arranca DENTRO del riel (top negativo) a propósito: como el marcador va
-   bajo la perilla en el apilado, el tramo que se solapa queda tapado por el
-   riel y la línea parece nacer de su borde inferior, sin costura. */
+
+   Nace EXACTAMENTE en el borde inferior del riel, nunca dentro ni por encima.
+   La primera versión arrancaba dentro del riel, confiando en que el riel lo
+   taparía por z-index; en Android eso no se cumplió y la rayita asomaba sobre
+   la línea cuando la perilla estaba lejos. La cuenta, con el riel de 5px
+   centrado en un input de 26px: el borde inferior cae a 15,5px del tope del
+   input, o sea a -8,5px del tope del botón (que va en `top: 24px`). Se
+   redondea a -8 para quedar SIEMPRE por debajo, y el alto (14px) es lo que
+   falta para llegar al borde superior del círculo. */
 .marcador::before {
   content: '';
   position: absolute;
-  top: -14px;
+  top: -8px;
   left: 50%;
   width: 2px;
-  height: 20px;
+  height: 14px;
   transform: translateX(-50%);
   background: var(--cerebro-indigo);
   border-radius: 1px;
