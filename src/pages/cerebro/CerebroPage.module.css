@@ -229,7 +229,17 @@
 /* ── El slider de edad ── */
 .controles {
   flex: none;
-  padding: 12px 18px 6px;
+  /* El 20 de abajo (antes 6) es el aire entre el marcador de la edad real y
+     la fila de chips. El alto del marcador en sí lo reserva `.riel`. */
+  padding: 12px 18px 20px;
+}
+
+/* Contenedor del riel. Existe solo para que el marcador se posicione contra
+   el ancho del slider, y para reservarle alto: el marcador es absoluto, así
+   que sin este padding se le echaría encima a los chips. */
+.riel {
+  position: relative;
+  padding-bottom: 34px;
 }
 
 .edadFila {
@@ -259,6 +269,12 @@
   width: 100%;
   height: 26px;
   background: transparent;
+  /* Posicionado a propósito: es lo que le permite ganarle al marcador en el
+     apilado. Cuando la perilla y el marcador coinciden en la misma edad, la
+     perilla queda arriba —es la que el padre está moviendo— y el marcador
+     asoma abajo. */
+  position: relative;
+  z-index: 1;
 }
 
 /* El relleno del riel se corta en --pos, que la escribe el JSX con la
@@ -298,6 +314,70 @@
   border: 2.5px solid var(--cerebro-indigo);
   border-radius: 50%;
   background: var(--cerebro-superficie);
+}
+
+/* ── El marcador de la edad real del hijo ──
+   La foto del hijo colgando bajo el riel, en su edad exacta, y el camino de
+   vuelta a esa edad. El círculo mide 28px, pero el botón mide 40 para que el
+   área de toque cumpla el mínimo cómodo en teléfono. */
+.marcador {
+  position: absolute;
+  top: 24px;
+  width: 40px;
+  height: 40px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  /* Debajo de la perilla: ver el z-index de `.slider`. */
+  z-index: 0;
+}
+
+/* El círculo. Foto e inicial comparten borde, sombra y tamaño para que sean
+   la misma pieza con distinto relleno. El borde índigo y la sombra son los
+   mismos de la perilla: el marcador es de la familia del control, no un
+   adorno suelto. */
+.marcadorFoto,
+.marcadorInicial {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--cerebro-indigo);
+  box-shadow: var(--cerebro-sombra-perilla);
+  background: var(--cerebro-superficie);
+}
+
+.marcadorFoto {
+  display: block;
+  object-fit: cover;
+}
+
+/* Fondo FIJO con texto FIJO, nunca uno de cada familia: los dos tokens son de
+   los que no cambian en oscuro, así que la inicial se lee igual en los dos
+   modos. Es la regla que salió del bug de contraste del 26 ago. */
+.marcadorInicial {
+  display: grid;
+  place-items: center;
+  background: var(--cerebro-vainilla);
+  color: var(--cerebro-tinta);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.marcador:active .marcadorFoto,
+.marcador:active .marcadorInicial {
+  transform: scale(0.92);
+}
+
+.marcador:focus-visible {
+  outline: 2px solid var(--cerebro-indigo);
+  outline-offset: 2px;
+  border-radius: 50%;
 }
 
 /* ── Los chips de zona ── */

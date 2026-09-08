@@ -95,6 +95,29 @@ export default function CerebroContenido({ compacto = false }) {
     return EDAD_POR_DEFECTO
   }, [hijo?.fechaNacimiento, hijo?.edad])
 
+  // ¿Hay una edad REAL de dónde agarrarse? Si el hijo todavía no cargó, o no
+  // tiene ni fecha ni edad guardada, `edadDelHijo` cae al respaldo de 4 años,
+  // que no es la edad de nadie: ahí el marcador no se dibuja, porque estaría
+  // apuntando a una edad inventada y ofreciendo volver a ella.
+  const hayEdadReal = useMemo(
+    () =>
+      calcularEdadDecimal(hijo?.fechaNacimiento) != null ||
+      typeof hijo?.edad === 'number',
+    [hijo?.fechaNacimiento, hijo?.edad]
+  )
+
+  // La inicial es el respaldo cuando el hijo no tiene foto.
+  const inicialHijo = (hijo?.nombre || '').trim().charAt(0).toUpperCase()
+
+  // Posición horizontal del marcador, alineada con el CENTRO DE LA PERILLA y
+  // no con el ancho del riel. La perilla no recorre el ancho completo: su
+  // centro va de `ancho/2` a `total - ancho/2`, así que un porcentaje pelado
+  // se desvía hasta media perilla en los extremos (12px en 0 y en 18 años).
+  // La corrección es la de siempre para inputs de rango, y hace que a la
+  // misma edad el marcador quede exactamente bajo la perilla.
+  const ANCHO_PERILLA = 24
+  const posMarcador = (edadDelHijo / EDAD_MAX) * 100
+
   const [edad, setEdad] = useState(edadDelHijo)
 
   // `state.hijo` es null en el primer render mientras cargan los datos, así
@@ -222,20 +245,62 @@ export default function CerebroContenido({ compacto = false }) {
             los dos redondeados quedan siempre alineados, y como el riel no
             tiene números el redondeo del pulgar es invisible. El cerebro y el
             rótulo siguen usando la edad exacta, que es el punto del paso 5. */}
-        <input
-          type="range"
-          className={styles.slider}
-          min={EDAD_MIN}
-          max={EDAD_MAX}
-          step="1"
-          value={Math.round(edad)}
-          onChange={(e) => {
-            tocado.current = true
-            setEdad(+e.target.value)
-          }}
-          style={{ '--pos': `${(Math.round(edad) / EDAD_MAX) * 100}%` }}
-          aria-label="Edad del hijo"
-        />
+        <div className={styles.riel}>
+          <input
+            type="range"
+            className={styles.slider}
+            min={EDAD_MIN}
+            max={EDAD_MAX}
+            step="1"
+            value={Math.round(edad)}
+            onChange={(e) => {
+              tocado.current = true
+              setEdad(+e.target.value)
+            }}
+            style={{ '--pos': `${(Math.round(edad) / EDAD_MAX) * 100}%` }}
+            aria-label="Edad del hijo"
+          />
+
+          {/* El marcador: la foto del hijo colgando bajo el riel, en su edad
+              exacta. Nace del feedback de Diego (H-02): la barra se movía a
+              años enteros y la edad real —2 años y 3 meses— se perdía sin
+              camino de vuelta, porque el decimal solo vivía en `edad` y el
+              `onChange` lo pisaba con un entero.
+
+              El marcador es ese camino de vuelta, y además la referencia
+              visual de dónde está el hijo en la barra. Al tocarlo se
+              restaura `edadDelHijo` completa y se baja `tocado`, así el
+              rótulo vuelve a decir los meses (ver `rotuloEdad`).
+
+              Va DEBAJO del riel y no encima: arriba está la fila "Edad", y
+              cuando la perilla coincide con la edad real las dos piezas se
+              pisarían justo en el caso más común, que es entrar a la
+              pantalla. */}
+          {hayEdadReal && (
+            <button
+              type="button"
+              className={styles.marcador}
+              style={{
+                left: `calc(${posMarcador}% + ${
+                  (0.5 - posMarcador / 100) * ANCHO_PERILLA
+                }px)`,
+              }}
+              onClick={() => {
+                tocado.current = false
+                setEdad(edadDelHijo)
+              }}
+              aria-label={`Volver a la edad de ${hijo?.nombre || 'tu hijo/a'}`}
+            >
+              {hijo?.avatarUrl ? (
+                <img src={hijo.avatarUrl} alt="" className={styles.marcadorFoto} />
+              ) : (
+                <span className={styles.marcadorInicial} aria-hidden="true">
+                  {inicialHijo}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={styles.zonasWrap}>
