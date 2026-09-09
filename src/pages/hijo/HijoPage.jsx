@@ -46,24 +46,32 @@ export default function HijoPage() {
   // Se fija UN candidato al entrar a la pantalla y NO se reemplaza aunque el
   // papa lo resuelva: al confirmar/descartar la card desaparece y el resto de
   // los candidatos espera a la proxima visita (no se siente a "examen").
-  const [rasgoPropuesto, setRasgoPropuesto] = useState(null)
+  //
+  // El candidato fijado viaja JUNTO al hijo al que pertenece. Antes eran dos
+  // efectos —uno fijaba el candidato y otro lo reiniciaba a null al cambiar de
+  // hijo activo— y se pisaban: cuando terminaba la carga, `hijo` pasaba de null
+  // al hijo real y eso disparaba LOS DOS en el mismo commit, en orden de
+  // declaracion. El primero fijaba el candidato, el segundo lo borraba. El
+  // valor neto iba de null a null, asi que React no volvia a renderizar y el
+  // primero no corria nunca mas: ninguna de sus dependencias habia cambiado.
+  // Resultado: la card NUNCA se mostro, a nadie, desde que se escribio (9
+  // candidatos vivos y 0 resueltos en 24 testers). Guardar el hijoId adentro
+  // deja un solo efecto y elimina la carrera.
+  const [propuesto, setPropuesto] = useState({ hijoId: null, rasgo: null })
 
-  // Fija el candidato UNA sola vez (cuando los rasgos terminan de cargar). La
-  // guarda "solo si esta en null" evita que salte al siguiente tras resolver.
+  // Fija el candidato una sola vez POR HIJO. Si ya hay uno fijado para este
+  // hijo no se reemplaza (asi al resolverlo no salta el siguiente); al cambiar
+  // de hijo el hijoId guardado deja de coincidir y se busca de nuevo.
   useEffect(() => {
-    if (rasgoPropuesto !== null) return
     if (!hijo) return
-    const candidato = (rasgos || []).find(
-      (r) => r.estado === 'candidato' && r.hijoId === hijo.id
-    )
-    if (candidato) setRasgoPropuesto(candidato)
-  }, [rasgos, hijo?.id, rasgoPropuesto])
-
-  // Al cambiar de hijo activo, reinicia para que la nueva pantalla fije su
-  // propio candidato.
-  useEffect(() => {
-    setRasgoPropuesto(null)
-  }, [hijo?.id])
+    setPropuesto((prev) => {
+      if (prev.hijoId === hijo.id) return prev
+      const candidato = (rasgos || []).find(
+        (r) => r.estado === 'candidato' && r.hijoId === hijo.id
+      )
+      return candidato ? { hijoId: hijo.id, rasgo: candidato } : prev
+    })
+  }, [rasgos, hijo?.id])
 
   async function handleCrear(e) {
     e.preventDefault()
@@ -177,8 +185,8 @@ export default function HijoPage() {
   // El candidato fijado para esta visita se busca en el estado vivo. La card
   // solo se muestra mientras ese rasgo siga siendo 'candidato'; al resolverlo
   // (confirmado/descartado) se oculta y NO aparece otro en esta visita.
-  const rasgoVivo = rasgoPropuesto
-    ? (rasgos || []).find((r) => r.id === rasgoPropuesto.id)
+  const rasgoVivo = propuesto.rasgo
+    ? (rasgos || []).find((r) => r.id === propuesto.rasgo.id)
     : null
   const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
 
