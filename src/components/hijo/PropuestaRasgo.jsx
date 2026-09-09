@@ -55,7 +55,7 @@ export default function PropuestaRasgo({ rasgo, nombreHijo, onConfirmar, onDesca
           className={s.btnPrimario}
           onClick={() => onConfirmar?.(rasgo.id)}
         >
-          Si, lo reconozco
+          Sí, lo reconozco
         </button>
         <button
           type="button"
