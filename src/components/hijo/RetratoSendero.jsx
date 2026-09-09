@@ -15,12 +15,24 @@ const CANVAS_W = 394
 const CANVAS_H = 432
 
 // Molde fijo del camino (spline Catmull-Rom ya resuelta a beziers en el handoff).
-const PATH_D = 'M 168 292 C 158.3 296.3, 127.7 326.7, 110 318 C 92.3 309.3, 66.3 261.7, 62 240 C 57.7 218.3, 85.7 206.0, 84 188 C 82.3 170.0, 50.7 149.3, 52 132 C 53.3 114.7, 82.3 97.3, 92 84 C 101.7 70.7, 97.8 56.0, 110 52 C 122.2 48.0, 150.5 57.3, 165 60 C 179.5 62.7, 185.8 68.3, 197 68 C 208.2 67.7, 216.8 60.0, 232 58 C 247.2 56.0, 273.3 49.7, 288 56 C 302.7 62.3, 318.0 80.3, 320 96 C 322.0 111.7, 296.0 133.3, 300 150 C 304.0 166.7, 343.0 181.0, 344 196 C 345.0 211.0, 308.0 224.7, 306 240 C 304.0 255.3, 338.0 276.0, 332 288 C 326.0 300.0, 287.7 311.0, 270 312 C 252.3 313.0, 233.3 297.0, 226 294'
+//
+// El camino NACE centrado bajo la foto: 197 es el centro exacto del lienzo
+// (el medallon va de x 122 a x 272) y 250 deja 25px de aire bajo el borde
+// inferior de la foto, que termina en y 225. Antes arrancaba en 168,292 —
+// corrido a la izquierda y mas abajo—, y con 0 rasgos el caminante quedaba
+// flotando sin ancla.
+//
+// Solo se re-ajusto el PRIMER bezier. Su segundo control (127.7, 326.7) queda
+// INTACTO, que es lo que fija la tangente de llegada a 110,318: por eso el
+// empalme con el segundo tramo no tiene quiebre y los otros 16 tramos no se
+// tocaron. El primer control pasa a 168,272.7 (un tercio de la cuerda nueva),
+// para que la salida sea suave.
+const PATH_D = 'M 197 250 C 168 272.7, 127.7 326.7, 110 318 C 92.3 309.3, 66.3 261.7, 62 240 C 57.7 218.3, 85.7 206.0, 84 188 C 82.3 170.0, 50.7 149.3, 52 132 C 53.3 114.7, 82.3 97.3, 92 84 C 101.7 70.7, 97.8 56.0, 110 52 C 122.2 48.0, 150.5 57.3, 165 60 C 179.5 62.7, 185.8 68.3, 197 68 C 208.2 67.7, 216.8 60.0, 232 58 C 247.2 56.0, 273.3 49.7, 288 56 C 302.7 62.3, 318.0 80.3, 320 96 C 322.0 111.7, 296.0 133.3, 300 150 C 304.0 166.7, 343.0 181.0, 344 196 C 345.0 211.0, 308.0 224.7, 306 240 C 304.0 255.3, 338.0 276.0, 332 288 C 326.0 300.0, 287.7 311.0, 270 312 C 252.3 313.0, 233.3 297.0, 226 294'
 
 // Waypoints en orden de recorrido (18). Hitos = índices 1,4,7,10,13,16
 // (1 hito cada 2 rasgos confirmados).
 const WAYPOINTS = [
-  [168, 292], [110, 318], [62, 240], [84, 188], [52, 132], [92, 84],
+  [197, 250], [110, 318], [62, 240], [84, 188], [52, 132], [92, 84],
   [110, 52], [165, 60], [197, 68], [232, 58], [288, 56], [320, 96],
   [300, 150], [344, 196], [306, 240], [332, 288], [270, 312], [226, 294],
 ]
@@ -57,7 +69,15 @@ export default function RetratoSendero({ nombre, avatarUrl, rasgosConfirmados, r
     const p1 = path.getPointAtLength(recorrido)
     const p0 = path.getPointAtLength(Math.max(0, recorrido - 1))
     // Tangente (dirección de avance) + 90°: orienta el escarabajo "caminando".
-    const ang = (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI + 90
+    //
+    // Con 0 rasgos no hay tramo recorrido: los dos puntos caen en el mismo
+    // lugar, atan2(0,0) da 0 y la fórmula lo dejaba en 90° — el caminante de
+    // lado, sin dirección. En reposo se dibuja con rotación 0, mirando hacia
+    // la foto. Al confirmar el primer rasgo, la transición de `.bicho`
+    // (left/top/transform, 1.2s) lleva posición y giro sin salto.
+    const ang = recorrido > 0
+      ? (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI + 90
+      : 0
 
     const medidor = document.createElementNS(SVG_NS, 'path')
     const nodos = WAYPOINTS.map((_, i) => {
