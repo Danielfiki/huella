@@ -312,6 +312,48 @@ function dbRasgoToApp(row) {
   }
 }
 
+// ── Gatillo del motor de rasgos ───────────────────────────────────────────
+// Antes la deteccion corria con `total % 5 === 0`, o sea SOLO si el conteo
+// caia justo en un multiplo. Si brincaba de 4 a 6 —un borrado, o momentos
+// registrados desde otro dispositivo con el estado local viejo— ese tramo no
+// corria NUNCA y el hijo se quedaba sin rasgos nuevos hasta el multiplo
+// siguiente. Ahora se compara contra el ultimo total analizado, guardado por
+// hijo en localStorage: corre cuando el hijo CRUZO un tramo nuevo de 5
+// momentos, aunque el salto se haya comido el multiplo exacto.
+//
+// El marcador es por dispositivo a proposito: no amerita una columna ni una
+// migracion, y el peor caso es una deteccion de mas en un telefono nuevo. El
+// guardado ya deduplica por familia + titulo y fusiona evidencia, asi que una
+// corrida extra no duplica filas ni hace retroceder ningun estado.
+const TRAMO_RASGOS = 5
+
+function claveTramoRasgos(hijoId) {
+  return `huella_rasgos_ultimo_total_${hijoId}`
+}
+
+function leerUltimoTotalRasgos(hijoId) {
+  try {
+    const crudo = localStorage.getItem(claveTramoRasgos(hijoId))
+    if (crudo == null) return null
+    const n = Number.parseInt(crudo, 10)
+    return Number.isFinite(n) && n >= 0 ? n : null
+  } catch { return null }
+}
+
+function marcarUltimoTotalRasgos(hijoId, total) {
+  try { localStorage.setItem(claveTramoRasgos(hijoId), String(total)) } catch {}
+}
+
+// Decide si toca correr la deteccion con `total` momentos (episodios + hitos).
+// Sin marcador previo (dispositivo nuevo) corre apenas hay 5 o mas: es una
+// sola vez por dispositivo y deja el marcador puesto.
+function debeDetectarRasgos(hijoId, total) {
+  if (!hijoId || total < TRAMO_RASGOS) return false
+  const ultimo = leerUltimoTotalRasgos(hijoId)
+  if (ultimo == null) return true
+  return Math.floor(total / TRAMO_RASGOS) > Math.floor(ultimo / TRAMO_RASGOS)
+}
+
 function dbHijoToApp(row) {
   return {
     id:              row.id,
@@ -767,15 +809,19 @@ export function HuellaProvider({ children }) {
     // Motor de rasgos — enganche fire-and-forget. Reusa el refetch que ya
     // hicimos (episodiosApp, shape de app) y suma los hitos del hijo activo
     // desde state.hitos (last-known, ya filtrado al hijo activo; sin refetch
-    // extra aca). El gatillo cuenta TODO junto: episodios + hitos, cada 5
-    // registros totales corre la deteccion. Igual patron que
+    // extra aca). El gatillo cuenta TODO junto: episodios + hitos, y corre
+    // cuando el hijo cruza un tramo nuevo de 5 (ver debeDetectarRasgos; antes
+    // era un multiplo exacto y se saltaba tramos). Igual patron que
     // generarAccionInmediata: sin await, errores tragados, NUNCA bloquea ni
     // rompe el guardado. La IA detecta y se persiste en silencio como 'candidato'.
     if (episodiosApp) {
       const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
       const hitosHijo = (state.hitos || []).filter(h => h.hijo_id === state.hijoActivoId)
       const total = episodiosApp.length + hitosHijo.length
-      if (hijoActivo && total > 0 && total % 5 === 0) {
+      if (hijoActivo && debeDetectarRasgos(state.hijoActivoId, total)) {
+        // El marcador se pone ANTES de disparar: si el papa guarda dos momentos
+        // seguidos, el segundo no vuelve a llamar a la IA por el mismo tramo.
+        marcarUltimoTotalRasgos(state.hijoActivoId, total)
         detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp, hitos: hitosHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
@@ -1050,16 +1096,19 @@ export function HuellaProvider({ children }) {
     if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
 
     // Motor de rasgos — mismo enganche fire-and-forget que en addEpisodio. El
-    // gatillo cuenta episodios + hitos del hijo activo: cada 5 registros
-    // totales corre la deteccion. Los hitos salen del refetch fresco (data);
-    // los episodios del hijo activo de state.episodios (last-known, ya filtrado
-    // al hijo activo). Sin await, errores tragados, NUNCA bloquea el guardado.
+    // gatillo cuenta episodios + hitos del hijo activo y corre cuando el hijo
+    // cruza un tramo nuevo de 5 (ver debeDetectarRasgos). Los hitos salen del
+    // refetch fresco (data); los episodios del hijo activo de state.episodios
+    // (last-known, ya filtrado al hijo activo). Sin await, errores tragados,
+    // NUNCA bloquea el guardado.
     if (data) {
       const hijoActivo = state.hijos.find(h => h.id === state.hijoActivoId) ?? null
       const hitosHijo = data
       const episodiosHijo = state.episodios || []
       const total = episodiosHijo.length + hitosHijo.length
-      if (hijoActivo && total > 0 && total % 5 === 0) {
+      if (hijoActivo && debeDetectarRasgos(state.hijoActivoId, total)) {
+        // Marcador antes de disparar, mismo motivo que en addEpisodio.
+        marcarUltimoTotalRasgos(state.hijoActivoId, total)
         detectarRasgos({ hijo: hijoActivo, episodios: episodiosHijo, hitos: hitosHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
