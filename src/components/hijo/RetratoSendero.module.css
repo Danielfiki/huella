@@ -153,7 +153,11 @@
 .bicho {
   position: absolute;
   z-index: 3;
-  width: 18.27%;    /* 72 / 394 */
+  /* 60 y no 72: con 72 el caminante se montaba sobre la foto al pasar por el
+     arco de arriba, porque su radio (36) era mayor que el aire que dejaba el
+     corredor entre la foto y el techo del lienzo. Con radio 30 el camino puede
+     rodearla con holgura pareja por los tres lados. */
+  width: 15.23%;    /* 60 / 394 */
   color: var(--color-on-mocha);
   filter: drop-shadow(0 8px 16px rgba(42, 26, 14, 0.45));
   transition: left 1.2s ease, top 1.2s ease, transform 1.2s ease;

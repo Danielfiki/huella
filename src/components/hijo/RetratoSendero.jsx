@@ -17,24 +17,37 @@ const CANVAS_H = 432
 // Molde fijo del camino (spline Catmull-Rom ya resuelta a beziers en el handoff).
 //
 // El camino NACE centrado bajo la foto: 197 es el centro exacto del lienzo
-// (el medallon va de x 122 a x 272) y 250 deja 25px de aire bajo el borde
-// inferior de la foto, que termina en y 225. Antes arrancaba en 168,292 —
-// corrido a la izquierda y mas abajo—, y con 0 rasgos el caminante quedaba
-// flotando sin ancla.
+// (el medallon va de x 122 a x 272) y 265 deja 40px de aire bajo el borde
+// inferior de la foto, que termina en y 225. Del primer bezier solo cambia el
+// arranque y su primer control (168,282.7, un tercio de la cuerda); el segundo
+// control (127.7, 326.7) queda INTACTO, que es lo que fija la tangente de
+// llegada a 110,318, asi que el empalme con el segundo tramo no tiene quiebre.
 //
-// Solo se re-ajusto el PRIMER bezier. Su segundo control (127.7, 326.7) queda
-// INTACTO, que es lo que fija la tangente de llegada a 110,318: por eso el
-// empalme con el segundo tramo no tiene quiebre y los otros 16 tramos no se
-// tocaron. El primer control pasa a 168,272.7 (un tercio de la cuerda nueva),
-// para que la salida sea suave.
-const PATH_D = 'M 197 250 C 168 272.7, 127.7 326.7, 110 318 C 92.3 309.3, 66.3 261.7, 62 240 C 57.7 218.3, 85.7 206.0, 84 188 C 82.3 170.0, 50.7 149.3, 52 132 C 53.3 114.7, 82.3 97.3, 92 84 C 101.7 70.7, 97.8 56.0, 110 52 C 122.2 48.0, 150.5 57.3, 165 60 C 179.5 62.7, 185.8 68.3, 197 68 C 208.2 67.7, 216.8 60.0, 232 58 C 247.2 56.0, 273.3 49.7, 288 56 C 302.7 62.3, 318.0 80.3, 320 96 C 322.0 111.7, 296.0 133.3, 300 150 C 304.0 166.7, 343.0 181.0, 344 196 C 345.0 211.0, 308.0 224.7, 306 240 C 304.0 255.3, 338.0 276.0, 332 288 C 326.0 300.0, 287.7 311.0, 270 312 C 252.3 313.0, 233.3 297.0, 226 294'
+// EL CAMINO RODEA LA FOTO SIN TOCARLA, y la medida que manda es el CAMINANTE,
+// no el trazo. El path nunca cruzaba el circulo, pero pasaba a 82 del centro
+// mientras el escarabajo media 72 de ancho: su borde entraba 27px en la foto.
+// Con el caminante en 60 (radio 30) el camino necesita 105 del centro — 75 de
+// la foto mas 30 del bicho — y el arco de arriba y el codo de la derecha se
+// empujaron radialmente hasta ~112, conservando su angulo:
+//   wp7  165,60  -> 159,44     wp8  197,68  -> 197,38
+//   wp9  232,58  -> 237,45     wp12 300,150 -> 309,150
+// Los otros 14 waypoints no se movieron y la serpiente conserva su forma. Los
+// controles de los beziers vecinos se recalcularon con la misma formula
+// Catmull-Rom del handoff (C1 = P1 + (P2-P0)/6, C2 = P2 - (P3-P1)/6), asi que
+// las tangentes siguen siendo las que corresponden.
+//
+// Verificado con harness en Chrome sobre el path real: acercamiento minimo a
+// la foto 111.1 (holgura 6.1 para el bicho), borde del bicho a 8.0 del filo
+// del lienzo, y 7.2 de holgura contra la caja del gear. Margenes parejos por
+// los tres lados.
+const PATH_D = 'M 197 265 C 168 282.7, 127.7 326.7, 110 318 C 92.3 309.3, 66.3 261.7, 62 240 C 57.7 218.3, 85.7 206.0, 84 188 C 82.3 170.0, 50.7 149.3, 52 132 C 53.3 114.7, 82.3 97.3, 92 84 C 101.7 70.7, 98.8 58.7, 110 52 C 121.2 45.3, 144.5 46.3, 159 44 C 173.5 41.7, 184.0 37.8, 197 38 C 210.0 38.2, 221.8 42.0, 237 45 C 252.2 48.0, 274.2 47.5, 288 56 C 301.8 64.5, 316.5 80.3, 320 96 C 323.5 111.7, 305.0 133.3, 309 150 C 313.0 166.7, 344.5 181.0, 344 196 C 343.5 211.0, 308.0 224.7, 306 240 C 304.0 255.3, 338.0 276.0, 332 288 C 326.0 300.0, 287.7 311.0, 270 312 C 252.3 313.0, 233.3 297.0, 226 294'
 
 // Waypoints en orden de recorrido (18). Hitos = índices 1,4,7,10,13,16
 // (1 hito cada 2 rasgos confirmados).
 const WAYPOINTS = [
-  [197, 250], [110, 318], [62, 240], [84, 188], [52, 132], [92, 84],
-  [110, 52], [165, 60], [197, 68], [232, 58], [288, 56], [320, 96],
-  [300, 150], [344, 196], [306, 240], [332, 288], [270, 312], [226, 294],
+  [197, 265], [110, 318], [62, 240], [84, 188], [52, 132], [92, 84],
+  [110, 52], [159, 44], [197, 38], [237, 45], [288, 56], [320, 96],
+  [309, 150], [344, 196], [306, 240], [332, 288], [270, 312], [226, 294],
 ]
 const HITOS = new Set([1, 4, 7, 10, 13, 16])
 
