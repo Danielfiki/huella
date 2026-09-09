@@ -237,6 +237,7 @@ export default function HijoPage() {
             <PropuestaRasgo
               rasgo={rasgoVivo}
               nombreHijo={hijo.nombre}
+              hijo={hijo}
               onConfirmar={confirmarRasgo}
               onDescartar={descartarRasgo}
             />

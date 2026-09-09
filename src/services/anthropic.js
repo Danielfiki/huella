@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase.js'
 import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 import { separarZona } from '../utils/seccionesIA.js'
+import { palabrasGenero } from '../utils/genero.js'
 
 // Timeout duro para cualquier llamada al backend de IA. Sin esto el
 // fetch puede quedar colgado indefinidamente y los loaders de la UI
@@ -847,12 +848,10 @@ export async function generarAccionInmediata({ hijo, episodio, ultimoAutorUsado 
   const lente         = AUTORES[autor]?.lente || MAPA_DIMENSIONES[dimension]?.lente || ''
   const calibracion   = calibracionEdadCompacta(hijo?.edad)
 
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   // 2. Voz del prompt según el bucket. Cada bucket tiene una apertura modelo
   //    distinta para que la primera frase no se repita entre versiones del
@@ -1096,12 +1095,10 @@ export async function analizarEpisodio({ hijo, episodio, historialReciente = [],
     ? `\n- Momento de la rutina diaria: "${bloqueRutina.nombre}" (${bloqueRutina.hora})${bloqueRutina.esMomentoRiesgo ? ' — marcado por los padres como momento de riesgo' : ''}${bloqueRutina.nota ? `. Nota: ${bloqueRutina.nota}` : ''}`
     : ''
 
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const prompt = `${marco}
 
@@ -1185,12 +1182,10 @@ export async function interpretarPatrones({ hijo, episodios, teaser = false }) {
   }
 
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const resumen = episodios.slice(0, 20).map(e =>
     `${new Date(e.fecha).toLocaleDateString('es-CL')}: ${e.tipo} (intensidad ${e.intensidad}/5, gatillantes: ${e.gatillantes?.join(', ') || 'ninguno'})`
@@ -1250,12 +1245,10 @@ Esta orientación se basa en evidencia del desarrollo infantil y no constituye u
 
 export async function celebrarHito({ hijo, hito }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const prompt = `${marco}
 
@@ -1272,12 +1265,10 @@ Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado
 
 export async function generarTareas({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const prompt = `${marco}
 
@@ -1307,12 +1298,10 @@ Reglas por tarea: máximo 90 caracteres, verbo de acción concreto, realizable e
 
 export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const hace7 = new Date()
   hace7.setDate(hace7.getDate() - 7)
@@ -1356,12 +1345,10 @@ Solo esas 2 oraciones. Sin títulos. Sin explicaciones extra.`
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const prompt = `${marco}
 
@@ -1377,12 +1364,9 @@ Responde SOLO con JSON puro, sin bloques de código markdown, sin \`\`\`json, si
 }
 
 export async function generarReflexionCheckin({ hijo, episodio, checkin }) {
-  const genero = (() => {
-    if (hijo?.genero === 'f')  return 'niña'
-    if (hijo?.genero === 'm')  return 'niño'
-    if (hijo?.genero === 'nb') return 'niñe'
-    return 'niño/a'
-  })()
+  // Esta funcion solo necesita el sustantivo; sale del mismo helper. Devuelve
+  // exactamente las cuatro palabras que tenia la tabla inline.
+  const { sustantivo: genero } = palabrasGenero(hijo)
 
   const evolucionTexto = { mejoro: 'mejoró', igual: 'se mantuvo igual', empero: 'empeoró' }
 
@@ -1598,12 +1582,10 @@ desarrollo:
 export async function generarEstrategiaDesdeContexto({ texto_libre, hijo, edad_hijo }) {
   const edad = edad_hijo ?? hijo?.edad
   const marco = marcoEdad(edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const prompt = `${marco}
 
@@ -1642,12 +1624,10 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adi
 // ════════════════════════════════════════════════════════════════════
 export async function analizarPatron({ descripcion, desde_cuando, frecuencia, interferencia, ya_intentado, hijo }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const desdeTexto  = { siempre: 'Siempre ha sido así, nunca lo dejó', reciente: 'Empezó hace poco', regresion: 'Ya lo había dejado y volvió' }
   const frecTexto   = { diario: 'Todos los días', semanal: 'Varias veces por semana', ocasional: 'De vez en cuando' }
@@ -1746,12 +1726,10 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto ant
  */
 export async function analizarCierreCiclo({ hijo, ciclo, notas_bitacora = [], episodios_vinculados = [] }) {
   const marco = marcoEdad(hijo?.edad)
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const diasReales = ciclo.fecha_cierre && ciclo.fecha_inicio
     ? Math.round((new Date(ciclo.fecha_cierre) - new Date(ciclo.fecha_inicio)) / (1000 * 60 * 60 * 24))
@@ -2402,12 +2380,10 @@ export async function requestPrimerEncuentro(texto, { hijo = null, signal } = {}
   // Mismo bloque de genero que analizarEpisodio, palabra por palabra: si aca
   // se escribiera distinto, el onboarding y el registro le hablarian al mismo
   // hijo de dos formas.
-  const { genero, pronombre, articulo } = (() => {
-    if (hijo?.genero === 'f')  return { genero: 'niña',  pronombre: 'ella',  articulo: 'la' }
-    if (hijo?.genero === 'm')  return { genero: 'niño',  pronombre: 'él',    articulo: 'lo' }
-    if (hijo?.genero === 'nb') return { genero: 'niñe',  pronombre: 'elle',  articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'él/ella', articulo: 'lo/la' }
-  })()
+  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
+  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
+  // lo nombran las plantillas del prompt.
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
 
   const banco = bancoPrimerEncuentro(hijo?.edad)
   const listaBanco = banco

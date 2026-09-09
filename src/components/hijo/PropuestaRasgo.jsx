@@ -1,5 +1,6 @@
 import React from 'react'
 import Escarabajo from '../ui/Escarabajo'
+import { palabrasGenero } from '../../utils/genero'
 import s from './PropuestaRasgo.module.css'
 
 // Colores por familia (solo para el dot). Vienen del diseno aprobado de la
@@ -22,14 +23,26 @@ export const COLOR_FAMILIA = {
  *
  * @param {Object}   rasgo         Rasgo en shape de app (id, familia, titulo, evidenciaCount...).
  * @param {string}   nombreHijo    Nombre del hijo/a para el encabezado.
+ * @param {Object}   hijo          Hijo en shape de app; solo se lee su genero.
  * @param {Function} onConfirmar   Se llama con rasgo.id al confirmar.
  * @param {Function} onDescartar   Se llama con rasgo.id al descartar.
  */
-export default function PropuestaRasgo({ rasgo, nombreHijo, onConfirmar, onDescartar }) {
+export default function PropuestaRasgo({ rasgo, nombreHijo, hijo, onConfirmar, onDescartar }) {
   if (!rasgo) return null
 
   const colorDot = COLOR_FAMILIA[rasgo.familia] ?? 'var(--color-text-muted)'
   const nombre = nombreHijo || 'tu hijo/a'
+
+  // Descartar en la voz del hijo/a. Con genero no binario o sin genero
+  // guardado NO se fuerza un pronombre: la frase se reformula para no nombrar
+  // a nadie ("no lo veo asi"), que dice lo mismo sin inventarle un pronombre
+  // al nino. Por eso aca no sirve el `pronombre` del helper para los cuatro
+  // casos y se decide por `codigo`.
+  const { codigo } = palabrasGenero(hijo)
+  const textoDescartar =
+    codigo === 'm' ? 'Esto no lo veo en él'
+    : codigo === 'f' ? 'Esto no lo veo en ella'
+    : 'Esto no lo veo así'
 
   return (
     <article className={s.card}>
@@ -62,7 +75,7 @@ export default function PropuestaRasgo({ rasgo, nombreHijo, onConfirmar, onDesca
           className={s.btnSecundario}
           onClick={() => onDescartar?.(rasgo.id)}
         >
-          Esto no lo veo en el
+          {textoDescartar}
         </button>
       </div>
     </article>
