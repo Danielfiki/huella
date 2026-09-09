@@ -1,6 +1,7 @@
 import React, { useRef, useState, useLayoutEffect } from 'react'
 import { Settings } from 'lucide-react'
 import Escarabajo from '../ui/Escarabajo'
+import Logo from '../ui/Logo'
 import s from './RetratoSendero.module.css'
 
 // Retrato "El Sendero" (motor de rasgos · 4B). Diseño final del handoff de
@@ -74,6 +75,13 @@ export default function RetratoSendero({ nombre, avatarUrl, rasgosConfirmados, r
 
   return (
     <header className={s.hero}>
+      {/* Marca de agua: el mismo escarabajo del logo (sin wordmark), sangrando
+          por la esquina inferior derecha. Va detras de TODO (z-index 0) y no
+          recibe eventos; el hero recorta lo que sobresale con su overflow. */}
+      <span className={s.marcaAgua} aria-hidden="true">
+        <Logo soloSimbolo className={s.marcaAguaSvg} />
+      </span>
+
       <button className={s.ajustes} onClick={onAjustes} aria-label="Ajustes de perfil">
         <Settings size={18} />
       </button>

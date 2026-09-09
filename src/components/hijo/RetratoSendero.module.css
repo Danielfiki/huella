@@ -12,6 +12,29 @@
   background: radial-gradient(120% 100% at 50% 32%, #B08E7B 0%, var(--color-accent-mocha) 52%, #7E5F50 100%);
 }
 
+/* Marca de agua del hero: el escarabajo del logo (soloSimbolo, sin wordmark)
+   sangrando por la esquina inferior derecha, detras de todo lo demas — el
+   lienzo va en z-index 1, el medallon en 2, el caminante en 3 y la tuerca en
+   5. El crema es --color-on-mocha, que vale el MISMO hex en claro y en oscuro,
+   asi que la marca se ve igual en los dos modos sin necesitar override.
+   La caja 176x192 respeta la proporcion del viewBox del simbolo (282x308), asi
+   que el escarabajo no se deforma. */
+.marcaAgua {
+  position: absolute;
+  right: -44px;
+  bottom: -52px;
+  width: 176px;
+  height: 192px;
+  z-index: 0;
+  opacity: 0.11;
+  color: var(--color-on-mocha);
+  pointer-events: none;
+}
+.marcaAguaSvg {
+  width: 100%; height: 100%;
+  display: block;
+}
+
 .ajustes {
   position: absolute;
   top: 16px; right: 16px;
