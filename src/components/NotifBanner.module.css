@@ -1,65 +1,97 @@
+/* ════════════════════════════════════════════════════════════════
+   NotifBanner · invitación a activar el aviso diario (pieza 7)
+   Handoff de Design, 9 sep 2026. Reemplaza el banner celeste, que
+   estaba en un azul ajeno a la paleta Mocha Mix.
+   Todos los valores salen de tokens de src/index.css.
+   ════════════════════════════════════════════════════════════════ */
+
 .banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, var(--color-info-bg) 0%, var(--color-info-bg-end) 100%);
-  border: 1.5px solid var(--color-info-border);
-  border-radius: var(--radius-md);
-  margin-bottom: 4px;
-  animation: bannerIn 0.5s ease both;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 20px 28px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-primary-border);
+  /* radius-card-lg del handoff no existe como token; el equivalente real
+     en src/index.css es --radius-lg (20px). */
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    135deg,
+    var(--color-surface) 0%,
+    var(--color-celebration-start) 100%
+  );
+  box-shadow: var(--shadow-card-soft);
 }
 
-@keyframes bannerIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to   { opacity: 1; transform: translateY(0); }
+.icono {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--color-primary-bg);
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+}
+.iconoSvg {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
-.icon {
-  color: var(--color-info);
-  flex-shrink: 0;
+.titulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--color-text);
 }
 
 .texto {
-  flex: 1;
+  margin: 4px 0 0;
+  font-family: var(--font-family);
   font-size: 13px;
-  color: var(--color-text);
-  line-height: 1.4;
-  margin: 0;
+  line-height: 1.5;
+  color: var(--color-text-muted);
 }
 
 .btns {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+  gap: 8px;
+  margin-top: 14px;
 }
 
+/* Alto visual 40, área de toque 44: el padding vertical de 2px arriba y
+   abajo agranda el blanco activo sin mover el dibujo del botón. */
 .btnActivar {
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--color-info);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
+  min-height: 44px;
+  padding: 2px 20px;
   border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
+  border-radius: 12px;
   font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-white);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
+  box-shadow: var(--shadow-card-soft);
+  cursor: pointer;
+  transition: transform 120ms ease;
 }
-.btnActivar:hover { background: var(--color-info-hover); }
-.btnActivar:disabled { opacity: 0.6; cursor: default; }
+.btnActivar:active { transform: scale(0.97); }
+.btnActivar:disabled { opacity: 0.6; }
 
 .btnDismiss {
-  background: none;
+  min-height: 44px;
+  padding: 2px 12px;
   border: none;
+  background: none;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-mocha);
   cursor: pointer;
-  color: var(--color-text-light);
-  padding: 3px;
-  display: flex;
-  align-items: center;
-  border-radius: 50%;
-  transition: color 0.15s;
 }
-.btnDismiss:hover { color: var(--color-text-muted); }
