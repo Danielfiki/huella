@@ -99,8 +99,9 @@ function SkeletonLoader() {
 }
 
 export default function Layout() {
-  const { state, dataLoading, dataLoaded, reloadData } = useHuella()
+  const { state, dataLoading, dataLoaded, reloadData, setHijoActivo } = useHuella()
   const { family, familyLoading } = useFamily()
+
 
   // Medalla ganada y todavía sin ver → puntito terracota en la pestaña "Tú",
   // el mismo patrón visual del puntito de la campana en el Home. Las medallas
@@ -131,6 +132,31 @@ export default function Layout() {
 
   const location = useLocation()
   const navigate = useNavigate()
+
+  // ── Deep link `?hijo=<id>` · pieza 7 ──────────────────────────────────────
+  // Los avisos push abren la pantalla con EL hijo del que hablan ya
+  // seleccionado. Sin esto el papá aterriza en el hijo activo anterior y el
+  // mensaje pierde sentido: "¿Cómo amaneció Pipa?" llevándolo al registro de
+  // otro hijo.
+  //
+  // Vive acá y no en cada pantalla porque el parámetro sirve para las cuatro
+  // rutas que los avisos usan (registro, hijo, checkin y estrategias): un solo
+  // lugar las cubre todas.
+  //
+  // Solo cambia si el id existe entre los hijos de la familia y no es el que
+  // ya está activo, así que un enlace viejo con un hijo borrado no hace nada.
+  // Después limpia el parámetro para que recargar o compartir el enlace no
+  // vuelva a forzar el cambio.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const pedido = params.get('hijo')
+    if (!pedido) return
+    const existe = (state.hijos || []).some((h) => h.id === pedido)
+    if (existe && pedido !== state.hijoActivoId) setHijoActivo(pedido)
+    params.delete('hijo')
+    const qs = params.toString()
+    navigate(location.pathname + (qs ? `?${qs}` : ''), { replace: true })
+  }, [location.search, state.hijos, state.hijoActivoId])
 
   // ── Modo ensayo · ?onboarding=1 ───────────────────────────────────────────
   // QA visual del onboarding sin ensuciar la base. Abre el flujo completo
