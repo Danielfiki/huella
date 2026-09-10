@@ -34,10 +34,47 @@ webpush.setVapidDetails(
 const DIAS_SIN_ABRIR = 7
 
 // Banco de frases por tramo de edad para el mensaje 6. Mismos tramos que
-// `marcoEdad` en el cliente. PENDIENTE DE APROBACION DE DANIEL: mientras este
-// vacio, la regla 6 no dispara y el usuario inactivo cae en la 5, que es el
-// comportamiento de siempre y no rompe nada.
-const BANCO_ETAPA = {}
+// `marcoEdad` en el cliente. Salen del corpus que la app ya usa —Bowlby,
+// Porges, Tronick y Brazelton en los tramos chicos; Siegel y Greene en el
+// medio; Steinberg y Damour en adolescencia— reescritas en voz de Huella y
+// SIN nombrar autor: es un aviso, no una clase.
+//
+// 🔴 NINGUNA FRASE ASUME EL GENERO DEL HIJO. No se usa el helper de genero a
+// proposito: el texto se escribe neutro de entrada, que es mas simple que
+// conjugar en tiempo de envio y no puede fallar si el genero esta vacio —hoy
+// es un paso opcional del onboarding—. Por eso "calmarse por su cuenta" y no
+// "calmarse solo", y "cuando hay cansancio o hambre de por medio" y no
+// "cuando esta cansado".
+//
+// Se dicen "rabietas", nunca "berrinches": es la palabra que la app usa en
+// todas partes.
+const BANCO_ETAPA = {
+  '0-2': [
+    'Todavía no puede calmarse por su cuenta. Tu voz es literalmente su sistema de calma.',
+    'Cuando algo se pone difícil después de semanas buenas, casi siempre viene un salto. El retroceso es la señal.',
+    'Nada de lo que hace es manipulación. Todo es comunicación, con lo poco que tiene.',
+  ],
+  '3-5': [
+    'La parte del cerebro que frena los impulsos recién se está construyendo. No es que no quiera: aún no puede.',
+    'La rabieta no es un plan. Es un sistema nervioso pasado de vueltas.',
+    'Reparar después de un mal rato importa más que no haber tenido el mal rato.',
+  ],
+  '6-8': [
+    'A esta edad empieza a compararse con los demás. Lo que le dices sobre quién es pesa el doble.',
+    'Ya puede esperar, pero le cuesta mucho más cuando hay cansancio o hambre de por medio.',
+    'Los problemas de conducta suelen ser una habilidad que le falta, no ganas de desafiarte.',
+  ],
+  '9-12': [
+    'Empieza a necesitar privacidad. No es que se aleje de ti: está armando su propio espacio.',
+    'La opinión de sus pares empieza a competir con la tuya. Es esperable, y no significa que te pierda.',
+    'Puede razonar bien y aun así perder el control. Lo segundo no borra lo primero.',
+  ],
+  '13+': [
+    'Su reloj biológico se corrió de verdad. Trasnochar no es rebeldía, es su cerebro.',
+    'Busca riesgo porque el acelerador madura antes que el freno. Sabe el peligro y aun así lo toma.',
+    'Necesita que estés cerca sin invadir. La puerta abierta vale más que la conversación forzada.',
+  ],
+}
 
 // Tramo de edad al que pertenece un hijo. Espeja los cortes de `marcoEdad`.
 function tramoEdad(edad) {
@@ -129,7 +166,8 @@ function elegirMensaje(ctx) {
         url:   `/hijo?tab=cerebro&hijo=${hijoReciente.id}`,
       }
     }
-    // Sin banco aprobado cae a la 5, que tampoco le reclama nada.
+    // Sin frase para ese tramo (edad sin guardar) cae a la 5, que tampoco le
+    // reclama nada.
   }
 
   // 5. La pregunta abierta del dia. SIN condicion de ausencia: es el default.
