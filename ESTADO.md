@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: miércoles 9 septiembre 2026 — 🏆 **LOS PRIMEROS RASGOS CONFIRMADOS DE TODA LA BASE.** Daniel confirmó los 2 candidatos de Pipa y el hero marca **"2 de 12"**, después de meses con el motor detectando y nadie pudiendo resolver nada. 🔴 **La causa de los 0 confirmados era un BUG, no un problema de diseño ni de volumen: la card de propuesta NUNCA se renderizó, a nadie, por una carrera de dos efectos en `HijoPage`** (uno fijaba el candidato, el otro lo reiniciaba en el mismo commit; el valor neto iba de null a null y React no volvía a renderizar). Reproducido con harness en Chrome y arreglado (`6f69ac1`). ❌ **La pieza 3 (motor + hitos) SALIÓ DE LA COLA: su premisa era falsa** — el motor ya leía hitos desde que se escribió, y 28 de 70 rasgos tienen evidencia de hito. **La lección del día: medir antes de construir.** ✅ **El hero del retrato quedó terminado**: marca de agua del escarabajo, el caminante parte centrado bajo la foto mirando hacia ella, y **el sendero rodea la foto sin tocarla** (el que la invadía era el caminante, no el trazo: bajó de 72 a 60px y cuatro waypoints se empujaron hacia afuera). 🔎 **Hallazgo de paso: 12 mapeos de género duplicados en `anthropic.js`, unificados en `src/utils/genero.js`.** **10 commits, todos desplegados y verificados en el bundle. QA de Daniel en Android aprobado para todo.** 🔴 **Google Play: la solicitud de producción sigue EN REVISIÓN desde el 8 sep 9:28, sin respuesta. NO subir versión nueva a Play** (el código y `huella.lat` siguen libres). **Próximo:** 📊 **el viernes 12 sep medir cuántos de los 9 candidatos de testers se resolvieron** — ese número decide la pieza 3.5; después, la pieza 4 (retrato del padre).*
+*Última actualización: miércoles 9 septiembre 2026 — 🏆 **LOS PRIMEROS RASGOS CONFIRMADOS DE TODA LA BASE.** Daniel confirmó los 2 candidatos de Pipa y el hero marca **"2 de 12"**, después de meses con el motor detectando y nadie pudiendo resolver nada. 🔴 **La causa de los 0 confirmados era un BUG, no un problema de diseño ni de volumen: la card de propuesta NUNCA se renderizó, a nadie, por una carrera de dos efectos en `HijoPage`** (uno fijaba el candidato, el otro lo reiniciaba en el mismo commit; el valor neto iba de null a null y React no volvía a renderizar). Reproducido con harness en Chrome y arreglado (`6f69ac1`). ❌ **La pieza 3 (motor + hitos) SALIÓ DE LA COLA: su premisa era falsa** — el motor ya leía hitos desde que se escribió, y 28 de 70 rasgos tienen evidencia de hito. **La lección del día: medir antes de construir.** ✅ **El hero del retrato quedó terminado**: marca de agua del escarabajo, el caminante parte centrado bajo la foto mirando hacia ella, y **el sendero rodea la foto sin tocarla** (el que la invadía era el caminante, no el trazo: bajó de 72 a 60px y cuatro waypoints se empujaron hacia afuera). 🔎 **Hallazgo de paso: 12 mapeos de género duplicados en `anthropic.js`, unificados en `src/utils/genero.js`.** 🪝 **SEGUNDA PARTE DEL DÍA: ARRANCÓ LA PIEZA 7, "recordar sin reclamar", y ya está DESPLEGADA.** Se empezó midiendo: **las 9 de la mañana concentran el 17% de los registros** —la hora más alta, y justo la que el cron ya usaba—, con **dos ventanas, 9-10 y 22-23**, y **solo 2 usuarios de horario consistente**, que es la razón de que la hora la elija cada papá. **12 usuarios tienen push activo.** El aviso pasa a **uno al día a la hora que el papá elige** (default 9) con **selector por prioridad de valor**: rasgo candidato, checkin, resumen semanal (hueco de la pieza 4), plan, y la pregunta abierta como default. Si lleva **más de 7 días sin abrir NO se baja la frecuencia**: se le cuenta algo de la etapa de su hijo. 🔴 **Ningún mensaje dice ni insinúa "no has registrado"** — se eliminó el que se disparaba por ausencia y el del plan que preguntaba si había hecho las tareas. **Migración 018 corrida**, `ultima_actividad` viva, y **3 bugs arreglados**: el aviso decía "tu hijo/a" en familias con más de un hijo (`maybeSingle`), mezclaba episodios entre hermanos, y abría la pantalla sin seleccionar a nadie. 🔴 **Regla de voz nueva en `CLAUDE.md`: nada puede sonar a IA** —prohibido "no es X, es Y", paralelismos, frases de póster, "literalmente", remates ingeniosos y regla de tres— nacida de que las 15 frases del banco había que reescribirlas enteras. ⛔ **Vercel es Hobby y no admite cron por hora**, así que el paso 5 mueve el job a **Supabase con `pg_cron` + `pg_net`** (disponibles, no instaladas) con el secreto en **Vault**. **15 commits en el día, todos desplegados.** 🔴 **Google Play: la solicitud de producción sigue EN REVISIÓN desde el 8 sep 9:28, sin respuesta. NO subir versión nueva a Play** (el código y `huella.lat` siguen libres). ⏭️ **MAÑANA A LAS 9 EL CRON MANDA LOS MENSAJES NUEVOS: primera prueba real, y es lo primero que hay que mirar.***
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -74,6 +74,13 @@
 
 **Deuda visual — Fase 6**
 - ⬜ **GRADIENTE DEL HERO DE HijoPage CON HEX HARDCODEADOS** — desde **9 sep 2026** — `RetratoSendero.module.css`, la regla `.hero`. El degradado radial usa **`#B08E7B` y `#7E5F50` sin token**; solo el paso del medio sale de `--color-accent-mocha`. Va contra la regla inmutable del sistema de diseño. Se detectó al implementar la marca de agua y **NO se tocó a propósito**: cambiarlo altera el fondo del retrato entero y necesita su propio QA visual en claro y oscuro. Al arreglarlo, los dos hex entran como tokens nuevos en `src/index.css` con su override de oscuro.
+
+**Pieza 7 — pendientes propios**
+- ⬜ **VERIFICAR EL DIÁLOGO DE PERMISO EN ANDROID 13+** — desde **9 sep 2026** — en el **celular de Igna, que es el dispositivo de QA**. El permiso `POST_NOTIFICATIONS` está declarado en el manifest fuente y en el fusionado, con `targetSdkVersion` 36 y `enableNotifications` en true, así que **en el papel está resuelto**. Falta ver el diálogo del sistema aparecer de verdad al abrir la app. Si no aparece, no importa qué tan buenos sean los mensajes.
+- ⬜ **REVISAR LOS TÉRMINOS DEL PLAN HOBBY DE VERCEL CUANDO HAYA INGRESOS** — desde **9 sep 2026**. Hobby es **para uso no comercial**. Hoy la app no cobra, así que no hay problema; **el día que entre el primer peso hay que mirar esto**, y de paso el plan pago resolvería solo el cron por hora que ahora se resuelve con `pg_cron`.
+
+**Android / TWA**
+- ⬜ **`twa-manifest.json` DESFASADO DEL BUILD, Y EL AAB LOCAL ESTÁ VIEJO** — desde **9 sep 2026**, **menor, revisar al recompilar**. En `C:\Users\dundu\OneDrive\Desktop\huella-twa` (el proyecto de Bubblewrap vive **fuera** del repo): `twa-manifest.json` declara **`appVersionCode` 3** mientras `app/build.gradle` ya está en **`versionCode` 4**, así que el archivo de configuración de Bubblewrap quedó atrás del build real. Además el **`app-release-bundle.aab` local es del 22 jul**, o sea **anterior a la v4 que Play aprobó el 24 ago**. Ninguna de las dos rompe nada hoy, pero **hay que alinearlas antes de generar el próximo AAB** (la subida que obliga el SDK 36 en producción). ✅ **De la misma revisión salió algo bueno:** `POST_NOTIFICATIONS` está declarado en el manifest fuente **y** en el fusionado que va al AAB, con `targetSdkVersion` 36 y `enableNotifications` en true — o sea que **el permiso de Android 13+ para la pieza 7 ya está resuelto y no hay que tocar el proyecto Android**. Falta solo verlo pedir el permiso en un teléfono real con Android 13 o más.
 
 **Limpieza**
 - ⬜ **ARCHIVOS SIN TRACKEAR EN LA RAÍZ DEL REPO** — desde **9 sep 2026**, **no urgente**. Arrastrados de sesiones anteriores: las 5 capturas de la ficha de Play Store, los SVG y PNG de logo e ícono, el feature graphic, la ficha en PDF, `SPEC-ALGO-QUE-SE-REPITE.md`, `diff_estrategias.txt` y `supabase/consultas/qa_invitar.sql`. **Decidir uno por uno qué se commitea, qué se mueve a una carpeta de assets y qué se borra**, y de paso ver qué corresponde agregar al `.gitignore`. Ninguno afecta al build.
@@ -495,11 +502,44 @@ De 70 rasgos: **61 emergentes, 9 candidatos, 0 confirmados y 0 descartados.** No
 - Botón secundario, por género: **`m` → "Esto no lo veo en él"** · **`f` → "en ella"** · **`nb` o sin dato → "Esto no lo veo así"**. El tercer caso **no usa el pronombre del helper a propósito**: forzar uno sería inventárselo al niño, y la frase se reformula para no nombrar a nadie.
 - 🔎 **El hallazgo:** el mapeo de género estaba repetido **DOCE veces** en `anthropic.js` —once con la tabla completa y una corta en `generarReflexionCheckin`—, ninguna compartida. Ahora vive una sola vez en **`src/utils/genero.js`** (`palabrasGenero(hijo)` → `{ codigo, sustantivo, pronombre, articulo }`). **Las cuatro palabras son idénticas a las de antes**, incluida la forma doble de respaldo: es una mudanza, no un cambio de tono. Verificado: 0 mapeos inline, 12 usos del helper.
 
-### 📋 Los 10 commits
+### 6. 🪝 PIEZA 7 — "RECORDAR SIN RECLAMAR": ARRANCÓ Y YA ESTÁ DESPLEGADA (`e3baf3f` + `ec8e892` + `778686b` + `d43e017` + `7d73924`)
 
-`9484026` gatillo por tramo · `72bac32` migración 017 · `006d709` estado (pieza 3) · `6f69ac1` **la carrera de efectos** · `ccd05f1` estado (causa real) · `802dd8b` marca de agua · `0d801f5` caminante centrado · `67d0dbe` tilde · `7da2dbf` helper de género · `8ad0bc1` el sendero rodea la foto.
+**El hueco de retención más grande de la app.** El momento pasa, el papá se pierde en lo cotidiano y a la noche ya no registró. Se arrancó por donde correspondía: **midiendo**.
 
-**Todos verificados en el bundle de producción** con firmas literales que sobreviven la minificación (la clave de `localStorage`, el path del sendero, las tres variantes del copy, el ancho del caminante en el CSS).
+**📊 La medición (episodios + hitos, hora de Chile, sin hijos de prueba):**
+- **Las 9 de la mañana concentran el 17% de los registros** — la hora más alta, y **coincide con la hora a la que ya corría el cron**. El default no se puso a ojo.
+- **Dos ventanas claras: 9-10 y 22-23.** La mañana y el después de acostar.
+- **Solo 2 usuarios tienen horario consistente** (dispersión menor a 2 horas). El resto registra a cualquier hora, así que **una hora fija para todos no sirve**: de ahí que la hora la elija cada uno.
+- **12 usuarios con push activo**, sobre 14 suscripciones (alguien tiene dos dispositivos).
+
+**🎯 La decisión de producto (Daniel):**
+- **UN push al día como máximo**, a la **hora que elige el papá** (default 9).
+- El contenido se elige por **prioridad de VALOR**, no de urgencia: **rasgo candidato sin resolver > checkin tras episodio intenso > resumen semanal del domingo (hueco, llega con la pieza 4) > plan activo > pregunta abierta del día**.
+- Si lleva **más de 7 días sin abrir, NO se baja la frecuencia**: cambia el contenido a algo de valor sobre la etapa del hijo, sin pedirle que registre. **Alguien que no entra hace una semana es a quien menos hay que cobrarle.**
+- 🔴 **REGLA DURA: ningún mensaje dice ni insinúa "no has registrado".** Cero rachas, cero contadores, cero días transcurridos en el texto.
+
+**✅ Lo que ya está en producción:**
+- **Migración 018 corrida y verificada** (`e3baf3f`): `perfiles.hora_aviso` (smallint 0-23, default 9, con CHECK e índice) y `perfiles.ultima_actividad`.
+- **`ultima_actividad` escrita desde el cliente** (`ec8e892`), **máximo una vez al día**, con el freno en `localStorage` guardando la fecha local de Chile. Usa UPDATE y no upsert, para no crear un perfil a medias.
+- **El selector por prioridad y los 5 mensajes** (`778686b`). **Se eliminó el mensaje que se disparaba por 3+ días sin registrar**: su copy era limpio pero existía solo por la ausencia. Y **el del plan decía "¿Revisaste las tareas de esta semana?", que es pasar lista** — ahora informa y ofrece. La pregunta abierta tiene **dos variantes según la hora elegida**: antes de las 14 pregunta cómo amaneció, después cómo estuvo el día.
+- **El banco de contenido por etapa** (`d43e017`), 15 frases, 3 por tramo de edad, con rotación determinista por hijo y día (sin tabla de historial). **Reescrito entero el mismo día** (`7d73924`) porque **sonaba a IA**.
+- 🐛 **TRES BUGS ARREGLADOS, todos del mismo tipo: el aviso no sabía de qué hijo hablaba.** La consulta de hijos usaba `maybeSingle()` y con dos hijos o más devolvía null, así que **el mensaje terminaba diciendo "tu hijo/a" justo en las familias más activas**. Los episodios se pedían sin filtrar por hijo. Y el aviso abría la pantalla sin seleccionar a nadie: ahora la URL lleva `?hijo=<id>` y **el Layout lo aplica una sola vez para las cuatro rutas** que los avisos usan.
+
+**🔴 REGLA DE VOZ NUEVA EN `CLAUDE.md`, y aplica a TODO el copy de Huella.** Las 15 frases del banco las escribió Claude y estaban infectadas de tics de IA: *"no es que no quiera: aún no puede"*, *"no es rebeldía, es su cerebro"*, *"el acelerador madura antes que el freno"*, *"literalmente"*. Quedó prohibido: la fórmula **"no es X, es Y"**, los **paralelismos**, las **frases de póster**, **"literalmente"**, los **remates ingeniosos** y la **regla de tres**. La voz es **una amiga que sabe de crianza hablándole a un papá cansado**. Antes de dar por bueno un copy nuevo, leerlo en voz alta.
+
+**⛔ EL CRON POR HORA NO PUEDE IR EN VERCEL: el plan es Hobby y solo admite cron diario, sin precisión de hora.** Por eso el **paso 5** cambia de casa: el job pasa a **Supabase con `pg_cron` + `pg_net`** (verificadas: **`pg_cron` 1.6.4 y `pg_net` 0.20.0 disponibles, no instaladas**), llamando al endpoint cada hora con el `CRON_SECRET` **guardado en Vault** —no escrito en `cron.job`, que es legible—, y **el cron de `vercel.json` se elimina**. **El filtro por `hora_aviso` se dejó FUERA del código a propósito**: con el cron de Vercel a las 12 UTC, en horario de invierno de Chile son las 8 y no las 9, así que el filtro no calzaría con el default y media parte del año no se enviaría nada.
+
+**⬜ Lo que falta del paso 5:** el **selector de hora en Cuenta** y el **banner de activar push** (hoy en celeste genérico, ajeno a la paleta) **pasan por Design antes de tocarse**.
+
+**⏭️ MAÑANA A LAS 9 EL CRON MANDA LOS MENSAJES NUEVOS: primera prueba real en manos de testers.**
+
+### 📋 Los 15 commits
+
+**Motor de rasgos y retrato:** `9484026` gatillo por tramo · `72bac32` migración 017 · `006d709` estado (pieza 3) · `6f69ac1` **la carrera de efectos** · `ccd05f1` estado (causa real) · `802dd8b` marca de agua · `0d801f5` caminante centrado · `67d0dbe` tilde · `7da2dbf` helper de género · `8ad0bc1` el sendero rodea la foto · `5af7242` cierre parcial.
+
+**Pieza 7:** `e3baf3f` migración 018 · `ec8e892` última actividad · `778686b` selector por prioridad · `d43e017` banco de etapa · `7d73924` **voz humana**.
+
+**Verificación en producción, y una lección de método.** Los cambios de cliente se verificaron en el bundle con firmas literales que sobreviven la minificación (la clave de `localStorage`, el path del sendero, las tres variantes del copy, el ancho del caminante en el CSS, el `?hijo=` del deep link). ⚠️ **Dos trampas que costaron tiempo y conviene no repetir:** (1) **los nombres de función NO sobreviven** —`debeDetectarRasgos` da cero coincidencias aunque el código esté— así que la firma tiene que ser una **cadena de texto**; (2) **el minificador convierte las comillas en backticks**, o sea que se busca `` get(`hijo`) `` y no `get("hijo")`. Y **el endpoint de push NO es verificable desde afuera**: es una función serverless, su código nunca llega al navegador, y este último commit ni siquiera cambió el hash del bundle porque no tocó `src/`. **La única prueba real de los mensajes es verlos llegar.**
 
 ### 🗑️ Descartado a propósito
 
@@ -507,10 +547,12 @@ De 70 rasgos: **61 emergentes, 9 candidatos, 0 confirmados y 0 descartados.** No
 
 ### ⏭️ Próximo
 
-1. 📊 **EN 3 DÍAS (viernes 12 sep): medir cuántos de los 9 candidatos de testers se resolvieron.** Ese número, y no una opinión de diseño, decide si hace falta subir la card al Home (pieza 3.5).
-2. **Frente 1:** esperar la respuesta de Google, buscándola en Play Console.
-3. **Onboarding:** queda la pasada con cuenta nueva de verdad.
-4. **Cola:** sigue la **pieza 4, el retrato del padre**.
+1. 🪝 **MAÑANA 10 SEP A LAS 9: el cron manda los mensajes nuevos.** Primera prueba real en manos de testers. **Es lo primero que hay que mirar al abrir la sesión.**
+2. 📊 **EN 3 DÍAS (viernes 12 sep): medir cuántos de los 9 candidatos de testers se resolvieron.** Ese número, y no una opinión de diseño, decide si hace falta subir la card al Home (pieza 3.5).
+3. **Pieza 7 · paso 5:** el job de `pg_cron` con el secreto en Vault, quitar el cron de `vercel.json`, y el selector de hora en Cuenta. **Los dos pedazos visuales esperan specs de Design.**
+4. **Frente 1:** esperar la respuesta de Google, buscándola en Play Console.
+5. **Onboarding:** queda la pasada con cuenta nueva de verdad.
+6. **Cola:** sigue la **pieza 4, el retrato del padre**.
 
 ---
 
