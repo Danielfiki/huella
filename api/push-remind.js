@@ -42,37 +42,39 @@ const DIAS_SIN_ABRIR = 7
 // 🔴 NINGUNA FRASE ASUME EL GENERO DEL HIJO. No se usa el helper de genero a
 // proposito: el texto se escribe neutro de entrada, que es mas simple que
 // conjugar en tiempo de envio y no puede fallar si el genero esta vacio —hoy
-// es un paso opcional del onboarding—. Por eso "calmarse por su cuenta" y no
-// "calmarse solo", y "cuando hay cansancio o hambre de por medio" y no
-// "cuando esta cansado".
+// es un paso opcional del onboarding—.
 //
 // Se dicen "rabietas", nunca "berrinches": es la palabra que la app usa en
 // todas partes.
+//
+// 🔴 Y NO PUEDEN SONAR A IA. Es una amiga que sabe de crianza hablandole a un
+// papa cansado: sin "no es X, es Y", sin paralelismos, sin frases de poster,
+// sin remates ingeniosos, sin regla de tres. Ver la regla de voz en CLAUDE.md.
 const BANCO_ETAPA = {
   '0-2': [
-    'Todavía no puede calmarse por su cuenta. Tu voz es literalmente su sistema de calma.',
-    'Cuando algo se pone difícil después de semanas buenas, casi siempre viene un salto. El retroceso es la señal.',
-    'Nada de lo que hace es manipulación. Todo es comunicación, con lo poco que tiene.',
+    'A esta edad todavía no sabe calmarse sin ti. Tu voz hace ese trabajo por ahora.',
+    'Si andaba bien y de repente se puso difícil, ojo: muchas veces está a punto de dar un salto.',
+    'Con lo poco que tiene para expresarse, llorar y protestar es su forma de contarte algo.',
   ],
   '3-5': [
-    'La parte del cerebro que frena los impulsos recién se está construyendo. No es que no quiera: aún no puede.',
-    'La rabieta no es un plan. Es un sistema nervioso pasado de vueltas.',
-    'Reparar después de un mal rato importa más que no haber tenido el mal rato.',
+    'La parte del cerebro que frena los impulsos todavía está en obra. Por eso cuesta tanto que pare cuando se lo pides.',
+    'En plena rabieta el cuerpo va más rápido que la cabeza. Primero calma, después conversación.',
+    'Un mal rato con reparación después vale más que un día perfecto. Volver a acercarse es lo que queda.',
   ],
   '6-8': [
-    'A esta edad empieza a compararse con los demás. Lo que le dices sobre quién es pesa el doble.',
-    'Ya puede esperar, pero le cuesta mucho más cuando hay cansancio o hambre de por medio.',
-    'Los problemas de conducta suelen ser una habilidad que le falta, no ganas de desafiarte.',
+    'Ya se compara con los demás y escucha mucho lo que tú dices sobre cómo es. Ahí pesa cada palabra.',
+    'Puede esperar bastante bien, hasta que aparece el cansancio o el hambre. Ahí se le acaba todo.',
+    'Cuando se porta mal, muchas veces le falta una habilidad, no ganas de hacerte la vida difícil.',
   ],
   '9-12': [
-    'Empieza a necesitar privacidad. No es que se aleje de ti: está armando su propio espacio.',
-    'La opinión de sus pares empieza a competir con la tuya. Es esperable, y no significa que te pierda.',
-    'Puede razonar bien y aun así perder el control. Lo segundo no borra lo primero.',
+    'Empieza a pedir espacio propio. Eso no es alejarse de ti, es armar su rincón.',
+    'Los amigos empiezan a pesar tanto como tú. Es normal, y tú sigues ahí.',
+    'Puede razonar como grande y perder el control como chico, en el mismo día.',
   ],
   '13+': [
-    'Su reloj biológico se corrió de verdad. Trasnochar no es rebeldía, es su cerebro.',
-    'Busca riesgo porque el acelerador madura antes que el freno. Sabe el peligro y aun así lo toma.',
-    'Necesita que estés cerca sin invadir. La puerta abierta vale más que la conversación forzada.',
+    'Su reloj interno se corrió de verdad. Le cuesta dormirse temprano aunque quiera.',
+    'El cerebro adolescente tiene el acelerador listo antes que el freno. Sabe que es riesgoso y lo hace igual.',
+    'Necesita que estés cerca sin encima. Una puerta abierta rinde más que una conversación forzada.',
   ],
 }
 

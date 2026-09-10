@@ -41,6 +41,25 @@ Cuando implementes un diseño que viene de un handoff bundle de Claude Design:
 - El handoff es la fuente de verdad para ese cambio específico
 - Si el handoff referencia tokens nuevos, agrégalos a `src/index.css` correctamente (con override de dark mode)
 
+### Regla de voz — NADA PUEDE SONAR A IA
+
+Aplica a **todo** el copy de Huella: interfaz, notificaciones push, prompts que le escriben al cuidador, correos, textos del onboarding. No es una preferencia de estilo, es la voz del producto.
+
+**La voz es una amiga que sabe de crianza hablándole a un papá cansado.** Directa, concreta, sin pose.
+
+**PROHIBIDO:**
+
+- La fórmula **"No es X, es Y"** en cualquiera de sus variantes ("no es que no quiera: aún no puede", "no es rebeldía, es su cerebro").
+- **Paralelismos y antítesis armadas** ("el acelerador madura antes que el freno", "lo segundo no borra lo primero").
+- **Frases de póster**: la sentencia cerrada que suena a cita motivacional.
+- La palabra **"literalmente"**.
+- **Remates ingeniosos** al final de la frase, el giro que busca aplauso.
+- La **regla de tres** (enumerar tres cosas por cadencia, no por contenido).
+
+**Cómo se escribe en cambio:** frases que un adulto le diría a otro en la cocina. Se permite empezar con "ojo", "si andaba bien", "cuando se porta mal". Se permite que una frase quede sin remate. Se prefiere el ejemplo concreto sobre la formulación elegante.
+
+**Antes de dar por bueno cualquier copy nuevo, léelo en voz alta.** Si suena a frase de LinkedIn, a coach o a IA, se reescribe.
+
 ### Regla de voz (campos de relato)
 
 Todo campo de escritura libre de tipo **relato o narrativa** (donde el cuidador cuenta algo con sus palabras) debe usar el componente `VoiceTextarea` para permitir dictado por voz. Los campos de **dato corto** (nombres, palabras sueltas, ej. "¿Quién estuvo presente?") quedan como `input`/`textarea` plano. Varios `VoiceTextarea` pueden convivir en una misma pantalla sin conflicto: son independientes y el modelo push-to-talk serializa el uso. Hoy tienen voz: el relato del episodio (rápido y detallado), el avance, el contexto del detallado y la reflexión del resultado.
