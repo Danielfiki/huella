@@ -312,6 +312,49 @@ function dbRasgoToApp(row) {
   }
 }
 
+// ── Ultima actividad (pieza 7 · "recordar sin reclamar") ──────────────────
+// Marca cuando el cuidador abrio la app. El aviso diario la lee para cambiar
+// el CONTENIDO cuando lleva dias sin entrar —algo de valor sobre la etapa del
+// hijo, en vez de pedirle que registre—. NUNCA para bajar la frecuencia del
+// aviso, y NUNCA para reclamarle nada: la regla dura de la pieza es que
+// ningun mensaje diga ni insinue "no has registrado".
+//
+// Se escribe como MAXIMO UNA VEZ AL DIA. Sin ese freno seria un UPDATE por
+// cada montaje del provider —cambio de hijo activo, de pareja, cada recarga—,
+// o sea decenas de writes diarios por usuario para un dato cuya resolucion
+// util es el dia.
+//
+// El freno guarda en localStorage la fecha LOCAL DE CHILE ya escrita, que es
+// la misma zona con la que el cron decide a quien avisar. Si el almacenamiento
+// falla (modo privado) se escribe igual: un write de mas cuesta menos que
+// perder el dato.
+function fechaChileHoy() {
+  // 'en-CA' entrega YYYY-MM-DD, que se compara como texto sin ambiguedad.
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })
+}
+
+async function marcarUltimaActividad(userId) {
+  if (!userId || !supabase) return
+  const clave = `huella_ultima_actividad_${userId}`
+  const hoy = fechaChileHoy()
+  try {
+    if (localStorage.getItem(clave) === hoy) return
+  } catch { /* sin storage: se escribe igual */ }
+
+  // UPDATE y no upsert a proposito: si la fila de perfil todavia no existe, no
+  // hay que crearla a medias (quedaria con el nombre del cuidador en null). El
+  // perfil nace en el onboarding; hasta entonces este dato no hace falta.
+  const { error } = await supabase
+    .from('perfiles')
+    .update({ ultima_actividad: new Date().toISOString() })
+    .eq('user_id', userId)
+  if (error) {
+    console.warn('[actividad] no se pudo marcar:', error.message)
+    return
+  }
+  try { localStorage.setItem(clave, hoy) } catch {}
+}
+
 // ── Gatillo del motor de rasgos ───────────────────────────────────────────
 // Antes la deteccion corria con `total % 5 === 0`, o sea SOLO si el conteo
 // caia justo en un multiplo. Si brincaba de 4 a 6 —un borrado, o momentos
@@ -530,6 +573,10 @@ export function HuellaProvider({ children }) {
     }
     if (familyLoading) return
     loadUserData(user.id, family)
+    // Pieza 7: deja constancia de la visita del dia. Fire-and-forget, con su
+    // propio freno diario; no se espera, no bloquea la carga y si falla solo
+    // loguea.
+    marcarUltimaActividad(user.id)
   }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
   function getPartnerIds(currentFamily) {
