@@ -201,11 +201,43 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
+  // Hora LOCAL DE CHILE de esta corrida. Se calcula con Intl y no restando
+  // horas a mano, porque Chile cambia de huso dos veces al anio y hacerlo a
+  // mano significa que medio anio los avisos salen corridos.
+  const partes = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'America/Santiago',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date())
+  const horaLocal = parseInt(partes.find((p) => p.type === 'hour').value, 10)
+  // El job corre en :00 y :30, pero puede arrancar unos segundos tarde. Se
+  // redondea al bloque de media hora para que un disparo a las 9:00:07 siga
+  // contando como el bloque de las 9:00.
+  const minutoLocal =
+    parseInt(partes.find((p) => p.type === 'minute').value, 10) < 30 ? 0 : 30
+
+  // EL FILTRO VA EN LA CONSULTA, no en el bucle. El job corre 48 veces al dia:
+  // traer las 14 suscripciones cada vez y descartarlas en JavaScript seria
+  // hacer 48 veces el trabajo para mandar un punado de avisos.
+  const { data: destinatarios } = await supabase
+    .from('perfiles')
+    .select('user_id')
+    .eq('hora_aviso', horaLocal)
+    .eq('minuto_aviso', minutoLocal)
+
+  if (!destinatarios?.length) {
+    return res.json({ sent: 0, total: 0, hora: `${horaLocal}:${minutoLocal}` })
+  }
+
   const { data: subs } = await supabase
     .from('push_subscriptions')
     .select('user_id, endpoint, p256dh, auth')
+    .in('user_id', destinatarios.map((d) => d.user_id))
 
-  if (!subs?.length) return res.json({ sent: 0, total: 0 })
+  if (!subs?.length) {
+    return res.json({ sent: 0, total: 0, hora: `${horaLocal}:${minutoLocal}` })
+  }
 
   const now = new Date()
   const hoyDia = Math.floor(now.getTime() / 864e5)
@@ -311,5 +343,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.json({ sent, total: subs.length })
+  return res.json({ sent, total: subs.length, hora: `${horaLocal}:${minutoLocal}` })
 }

@@ -1,11 +1,8 @@
 {
   "rewrites": [
-    { "source": "/((?!\\.well-known/).*)", "destination": "/index.html" }
-  ],
-  "crons": [
     {
-      "path": "/api/push-remind",
-      "schedule": "0 12 * * *"
+      "source": "/((?!\\.well-known/).*)",
+      "destination": "/index.html"
     }
   ]
 }
