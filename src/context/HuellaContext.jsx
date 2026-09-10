@@ -68,6 +68,9 @@ const initialState = {
   // que hijos.avatarUrl. Null = todavia usa la inicial del nombre.
   padreAvatarUrl:       null,
   plan:                 null,
+  // Pieza 7: hora del aviso diario (0-23) y su minuto. Default 9:00.
+  horaAviso:            9,
+  minutoAviso:          0,
   sugerenciaEstrategia: null,
 }
 
@@ -209,6 +212,8 @@ function reducer(state, action) {
 
     case 'SET_PADRE_NOMBRE':
       return { ...state, padreNombre: action.payload }
+    case 'SET_HORA_AVISO':
+      return { ...state, horaAviso: action.payload.hora, minutoAviso: action.payload.minuto }
 
     case 'SET_PADRE_AVATAR':
       return { ...state, padreAvatarUrl: action.payload }
@@ -640,7 +645,7 @@ export function HuellaProvider({ children }) {
       // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
       const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('perfiles').select('nombre, avatar_url, plan, plan_beta_hasta').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre, avatar_url, plan, plan_beta_hasta, hora_aviso, minuto_aviso').eq('user_id', userId).maybeSingle(),
       ])
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
@@ -716,6 +721,8 @@ export function HuellaProvider({ children }) {
           padreAvatarUrl: padreAvatarF,
           plan:        perfilRes.data?.plan   ?? null,
           plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
+          horaAviso:   perfilRes.data?.hora_aviso   ?? 9,
+          minutoAviso: perfilRes.data?.minuto_aviso ?? 0,
         },
       })
     } catch (e) {
@@ -1547,6 +1554,27 @@ export function HuellaProvider({ children }) {
     return map
   }, [user?.id, state.padreNombre, family?.partner?.id, family?.partner?.nombre])
 
+  // Pieza 7 · guarda la hora del aviso diario. Se llama al tocar el chip, sin
+  // botón de guardar: es una preferencia de un tap y pedirle confirmación
+  // sobraría. Optimista, porque el chip tiene que responder al instante; si la
+  // escritura falla, vuelve al valor anterior y el padre ve que no quedó.
+  //
+  // La hora y el minuto viajan juntos: 21:30 es una de las tres opciones y no
+  // cabe en una columna de horas sola.
+  async function guardarHoraAviso(hora, minuto = 0) {
+    if (!user || !supabase) return
+    const previa = { hora: state.horaAviso, minuto: state.minutoAviso }
+    dispatch({ type: 'SET_HORA_AVISO', payload: { hora, minuto } })
+    const { error } = await supabase
+      .from('perfiles')
+      .update({ hora_aviso: hora, minuto_aviso: minuto })
+      .eq('user_id', user.id)
+    if (error) {
+      console.warn('[aviso] no se pudo guardar la hora:', error.message)
+      dispatch({ type: 'SET_HORA_AVISO', payload: { hora: previa.hora, minuto: previa.minuto } })
+    }
+  }
+
   async function savePadreNombre(nombre) {
     if (!user) return
     dispatch({ type: 'SET_PADRE_NOMBRE', payload: nombre })
@@ -1681,6 +1709,7 @@ export function HuellaProvider({ children }) {
       vincularEstrategiaAPatron,
       cerrarPatron,
       savePadreNombre,
+      guardarHoraAviso,
       savePadreAvatar,
       canjearCodigoBeta,
       isPro,

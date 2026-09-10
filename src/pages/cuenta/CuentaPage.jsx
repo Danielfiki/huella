@@ -9,6 +9,15 @@ import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
 import styles from './CuentaPage.module.css'
 
+// Las tres horas del aviso diario (pieza 7). Las dos primeras salen de la
+// medicion: 9-10 y 22-23 son las ventanas reales de registro. El minuto viaja
+// aparte porque 21:30 no cabe en una columna de horas enteras.
+const HORAS_AVISO = [
+  { label: 'Mañana', hora: 9,  minuto: 0,  hora_texto: '9:00'  },
+  { label: 'Tarde',  hora: 14, minuto: 0,  hora_texto: '14:00' },
+  { label: 'Noche',  hora: 21, minuto: 30, hora_texto: '21:30' },
+]
+
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
 const BENEFICIOS = [
   {
@@ -52,7 +61,7 @@ const TODO_PRO = [
 ]
 
 export default function CuentaPage() {
-  const { isPro, isAdmin, reloadData } = useHuella()
+  const { state, isPro, isAdmin, reloadData, guardarHoraAviso } = useHuella()
   const navigate = useNavigate()
   const [verTodo, setVerTodo] = useState(false)
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
@@ -322,6 +331,39 @@ export default function CuentaPage() {
            instante en que isPro() pasa a true. ── */}
       <div style={{ marginTop: '16px' }}>
         <CanjeCodigoBeta />
+      </div>
+
+      {/* ── Tu aviso diario · pieza 7 ────────────────────────────────────
+           Tres horas fijas, no un reloj libre: son las dos ventanas que la
+           medición mostró (9-10 y 22-23) más la tarde. Elegir entre tres es
+           un tap; un selector de hora libre es una decisión.
+
+           Sin botón de guardar: el tap ES el guardado. Pedirle confirmación
+           a una preferencia de un toque sobra.
+
+           Va ANTES del bloque de Notificaciones a propósito: primero se
+           decide cuándo, después se administra el permiso. ── */}
+      <p className={styles.avisoEyebrow}>TU AVISO DIARIO</p>
+      <div className={styles.avisoCard}>
+        <div className={styles.avisoChips} role="radiogroup" aria-label="Hora del aviso diario">
+          {HORAS_AVISO.map((o) => {
+            const activo = state.horaAviso === o.hora && state.minutoAviso === o.minuto
+            return (
+              <button
+                key={o.label}
+                type="button"
+                role="radio"
+                aria-checked={activo}
+                className={`${styles.avisoChip} ${activo ? styles.avisoChipOn : ''}`}
+                onClick={() => guardarHoraAviso(o.hora, o.minuto)}
+              >
+                <span className={styles.avisoChipLabel}>{o.label}</span>
+                <span className={styles.avisoChipHora}>{o.hora_texto}</span>
+              </button>
+            )
+          })}
+        </div>
+        <p className={styles.avisoNota}>Una vez al día, nunca más.</p>
       </div>
 
       {/* ── Notificaciones — control permanente de push, independiente del
