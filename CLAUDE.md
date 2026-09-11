@@ -16,6 +16,20 @@ Huella es una app de crianza con IA en español latinoamericano que ayuda a padr
 - Deploy: Vercel (auto-deploy en `git push origin main`)
 - Idioma: código en inglés, copy de UI 100% en español latinoamericano natural (no traducido)
 
+## Regla de base de datos — GRANTS por columna en `perfiles`
+
+`public.perfiles` tiene **GRANT por columna en lista blanca**, desde el fix de seguridad del 29 jun 2026 que cerró el hueco de auto-otorgarse Pro. Solo las columnas explícitamente otorgadas se pueden escribir desde el cliente.
+
+**Toda migración que agregue una columna de `perfiles` escribible desde el cliente DEBE incluir su grant:**
+
+```sql
+GRANT UPDATE (<columna>) ON public.perfiles TO authenticated;
+```
+
+**La RLS no cubre esto.** La policy `own_data` es `FOR ALL` y protege **filas**, no columnas. Una columna nueva NO queda cubierta sola. ⚠️ **El comentario de la migración 010 que dice lo contrario está equivocado**, y es el que hizo caer a la 018 y a la 019: el selector de hora del aviso diario estuvo guardando en el vacío hasta el 11 sep 2026.
+
+**Cómo se ve cuando falta:** PostgREST devuelve 403 sobre esa columna. Y si el `update` del cliente no pide `.select()`, ni siquiera se entera: un update que afecta 0 filas le parece éxito.
+
 ## Sistema de diseño — REGLAS INMUTABLES
 
 La fuente única de verdad del diseño es `src/index.css`. Todos los colores, tipografías, sombras, radios y demás tokens viven ahí como CSS variables.

@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: miércoles 9 septiembre 2026 — 🏆 **LOS PRIMEROS RASGOS CONFIRMADOS DE TODA LA BASE.** Daniel confirmó los 2 candidatos de Pipa y el hero marca **"2 de 12"**, después de meses con el motor detectando y nadie pudiendo resolver nada. 🔴 **La causa de los 0 confirmados era un BUG, no un problema de diseño ni de volumen: la card de propuesta NUNCA se renderizó, a nadie, por una carrera de dos efectos en `HijoPage`** (uno fijaba el candidato, el otro lo reiniciaba en el mismo commit; el valor neto iba de null a null y React no volvía a renderizar). Reproducido con harness en Chrome y arreglado (`6f69ac1`). ❌ **La pieza 3 (motor + hitos) SALIÓ DE LA COLA: su premisa era falsa** — el motor ya leía hitos desde que se escribió, y 28 de 70 rasgos tienen evidencia de hito. **La lección del día: medir antes de construir.** ✅ **El hero del retrato quedó terminado**: marca de agua del escarabajo, el caminante parte centrado bajo la foto mirando hacia ella, y **el sendero rodea la foto sin tocarla** (el que la invadía era el caminante, no el trazo: bajó de 72 a 60px y cuatro waypoints se empujaron hacia afuera). 🔎 **Hallazgo de paso: 12 mapeos de género duplicados en `anthropic.js`, unificados en `src/utils/genero.js`.** 🪝 **SEGUNDA PARTE DEL DÍA: ARRANCÓ LA PIEZA 7, "recordar sin reclamar", y ya está DESPLEGADA.** Se empezó midiendo: **las 9 de la mañana concentran el 17% de los registros** —la hora más alta, y justo la que el cron ya usaba—, con **dos ventanas, 9-10 y 22-23**, y **solo 2 usuarios de horario consistente**, que es la razón de que la hora la elija cada papá. **12 usuarios tienen push activo.** El aviso pasa a **uno al día a la hora que el papá elige** (default 9) con **selector por prioridad de valor**: rasgo candidato, checkin, resumen semanal (hueco de la pieza 4), plan, y la pregunta abierta como default. Si lleva **más de 7 días sin abrir NO se baja la frecuencia**: se le cuenta algo de la etapa de su hijo. 🔴 **Ningún mensaje dice ni insinúa "no has registrado"** — se eliminó el que se disparaba por ausencia y el del plan que preguntaba si había hecho las tareas. **Migración 018 corrida**, `ultima_actividad` viva, y **3 bugs arreglados**: el aviso decía "tu hijo/a" en familias con más de un hijo (`maybeSingle`), mezclaba episodios entre hermanos, y abría la pantalla sin seleccionar a nadie. 🔴 **Regla de voz nueva en `CLAUDE.md`: nada puede sonar a IA** —prohibido "no es X, es Y", paralelismos, frases de póster, "literalmente", remates ingeniosos y regla de tres— nacida de que las 15 frases del banco había que reescribirlas enteras. ⛔ **Vercel es Hobby y no admite cron por hora**, así que el paso 5 mueve el job a **Supabase con `pg_cron` + `pg_net`** (disponibles, no instaladas) con el secreto en **Vault**. **15 commits en el día, todos desplegados.** 🔴 **Google Play: la solicitud de producción sigue EN REVISIÓN desde el 8 sep 9:28, sin respuesta. NO subir versión nueva a Play** (el código y `huella.lat` siguen libres). ⏭️ **MAÑANA A LAS 9 EL CRON MANDA LOS MENSAJES NUEVOS: primera prueba real, y es lo primero que hay que mirar.***
+*Última actualización: jueves 11 septiembre 2026 — ✅ **LA PIEZA 7 QUEDÓ CERRADA Y FUNCIONANDO DE PUNTA A PUNTA.** El cron se mudó a Supabase (`push-remind-huella`, cada media hora, corridas `succeeded` y 200 del endpoint), Daniel dejó su aviso en las 14:00 y **el push le llegó a esa hora**. 🔴 **El selector de hora no guardaba, y la causa era un `GRANT` que faltaba desde junio:** `public.perfiles` tiene permisos de escritura por columna en lista blanca desde el fix de seguridad del 29 jun, y las migraciones 018 y 019 crearon las columnas sin otorgarlos. **La RLS estaba bien y no tenía nada que ver.** La medida de cuánto llevaba muerto: **los 32 perfiles seguían en 9:00, porque nadie pudo cambiarlo nunca.** De ahí salió una regla nueva en `CLAUDE.md`. 🔑 **`CRON_SECRET` rotado** — Vercel no deja leer una variable de tipo Secret, así que se generó valor nuevo para los dos lados y hubo que redesplegar. 📱 **Play Console NO rechazó la solicitud:** dos de los tres requisitos están cumplidos y **falta solo tiempo, el botón se habilita alrededor del 25 sep**. 🟢 **Se levanta la restricción de no subir versiones a Play.** 🔴 **CRÍTICO: los testers tienen que USAR la app estos 14 días o la próxima solicitud se cae igual.** 📣 **Daniel mandó los WhatsApp**, al grupo y uno a uno a los 5 con candidato sin resolver. ⏭️ **Al retomar: QA del commit `b955624`** (el banner que vuelve a los 7 días), **sin pushear**.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,9 +10,43 @@
 
 ---
 
+## 🔴 LO PRIMERO AL RETOMAR — el QA del banner de notificaciones
+
+**Hay 1 commit HECHO Y SIN PUSHEAR:** `b955624` — `NotifBanner` que vuelve a aparecer cada 7 días, con tope de 3 veces y el caso `denied` separado. **No se pushea hasta que Daniel haga el QA.**
+
+**Por qué se tocó:** el banner aparecía una sola vez en la vida del papá. Si tocaba "Ahora no", se guardaba un `'1'` en `localStorage` que no caducaba nunca y no se le volvía a ofrecer jamás. **12 de 24 testers quedaron ahí.**
+
+⚠️ **PASO 0, Y SIN ESTO NO FUNCIONA NINGUNA DE LAS PRUEBAS.** Daniel tiene el permiso de notificaciones concedido, y esa comprobación va **antes** que la de `localStorage` (`if (permission === 'granted') return null`), así que el banner no le va a salir por mucho que toque el storage. Hay que poner el permiso de `huella.lat` en **Preguntar**: candado de la barra de direcciones → Notificaciones → Preguntar. **Ojo:** eso bota la suscripción push de ese navegador, y se recupera activando de nuevo al final del QA.
+
+Con el permiso ya en "Preguntar", en la consola del navegador en `huella.lat`:
+
+**Prueba 1 — el banner DEBE aparecer:**
+```js
+localStorage.setItem('huella_notif_banner_dismissed', JSON.stringify({ fecha: new Date(Date.now() - 8*864e5).toISOString(), veces: 1 }))
+```
+Recargar.
+
+**Prueba 2 — NO debe aparecer:** lo mismo de arriba pero con `veces: 3`. Recargar.
+
+**Prueba 3 — la migración del valor viejo:**
+```js
+localStorage.setItem('huella_notif_banner_dismissed', '1')
+```
+Recargar. El banner **no** debe salir, porque ese valor cuenta como un descarte recién hecho. Y el valor guardado tiene que quedar **migrado a JSON**, con la fecha de hoy y `veces: 1`. Se revisa con `localStorage.getItem('huella_notif_banner_dismissed')`.
+
+👀 **Nadie ha visto nunca el banner rediseñado de Design**, así que el QA visual va en la misma pasada: claro y oscuro.
+
+---
+
 ## PENDIENTES (cola viva)
 
 *Única fuente de pendientes del proyecto. **Regla de proceso:** al cerrar cada sesión, lo que quede diferido ENTRA aquí; lo que se complete SALE. Formato por línea: **qué** — desde cuándo — por qué se difirió.*
+
+**Pieza 7 — lo que quedó abierto (11 sep 2026)**
+- ⬜ **MOVER EL BLOQUE "TU AVISO DIARIO" Y LA TARJETA DE NOTIFICACIONES DE `CuentaPage` A `PerfilPage`** — desde **11 sep 2026** — **Síntoma en una frase: hoy el papá tiene que entrar por "Gestionar plan" para cambiar la hora de su recordatorio; debería estar en "Tú", bajo la tarjeta del nombre.** Los dos bloques viven en `/cuenta`, que es la página del plan. Lugar equivocado para una preferencia personal.
+- ⬜ **`guardarHoraAviso` no pide `.select()`** (`src/context/HuellaContext.jsx:1564`) — desde **11 sep 2026** — un `update` que afecta 0 filas le parece éxito, y **por eso el bug del `GRANT` estuvo invisible todo este tiempo**. Agregar `.select()` y tratar 0 filas como error. Aplica igual a `marcarUltimaActividad`, que tiene la misma forma.
+- ⬜ **Pieza 3.5 — medir cuántos candidatos se resolvieron** tras los WhatsApp del 11 sep — desde **11 sep 2026**.
+- ⬜ **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver** — desde **11 sep 2026** — revisar si el motor está proponiendo de más.
 
 **Onboarding (QA que falta)**
 - ✅ **ONBOARDING — PASADA EN ANDROID REAL: QA APROBADO por Daniel (4 sep 2026).** A5 con sus dos slots de foto y el acto C con sus 6 filas caben sin scroll en 390px. De la pasada salieron **dos ajustes al acto C, ya en producción (`d30db3c`)**: el título dejó de atribuirle el texto del acto B a los 6 autores y pasó a *"Las voces detrás de Huella en la etapa de {nombre}"*, y la marca de agua se movió de abajo-izquierda a arriba-derecha, donde se ve en vez de quedar tapada por la tarjeta. Detalle en el bloque del 6 sep.
@@ -24,7 +58,7 @@
 
 **🎯 COLA PRIORIZADA PARA DESPUÉS DE LA RE-POSTULACIÓN (~10 sep) — anotada el 8 sep 2026, EN ESTE ORDEN**
 
-*🟢 **DESBLOQUEADA el 8 sep 2026**: la re-postulación a producción se envió esa mañana, dos días antes de lo previsto, así que estos cinco ya se pueden arrancar. **Única restricción mientras Google revisa: no subir una versión nueva a Play** (ni tocar el canal cerrado) hasta que llegue la respuesta. Desarrollar y desplegar en `huella.lat` no tiene traba. Van **en este orden**; dos salen de **feedback de testers reales** (Diego, `H-02`, y Seba), que es la razón por la que suben la cola.*
+*🟢 **DESBLOQUEADA el 8 sep 2026**: la re-postulación a producción se envió esa mañana, dos días antes de lo previsto, así que estos cinco ya se pueden arrancar. 🟢 **RESTRICCIÓN LEVANTADA EL 11 SEP 2026: ya se pueden subir versiones a Play.** Ya no hay solicitud en revisión. Desarrollar y desplegar en `huella.lat` no tiene traba. Van **en este orden**; dos salen de **feedback de testers reales** (Diego, `H-02`, y Seba), que es la razón por la que suben la cola.*
 
 1. ✅ **CEREBRO — LA BARRA DE EDAD NO VUELVE A LA EDAD DEL HIJO — CERRADA CON QA el 8 sep 2026** (`7104044` + `bd8b989` + `af0d611`): la foto del hijo cuelga bajo el riel en su edad, alineada al píxel con la perilla y unida por un tick, y tocarla restaura la edad decimal con sus meses. Detalle en el bloque del 8 sep. — **feedback de Diego (`H-02`)**. **Síntoma en una frase: hoy mueves la barra, salta a edades cerradas y ya no hay cómo volver a la edad exacta del hijo (ej. 2 años 3 meses); debería poder volver siempre.** Hoy el slider parte bien —en la edad real con precisión de mes, eso quedó cerrado en el paso 5— pero una vez que se mueve, esa edad **se pierde**. **Qué se hace:** un **marcador con la foto de perfil del hijo** sobre la barra, puesto en su edad exacta; **tocarlo devuelve ahí**. Es la referencia visual de "acá está tu hijo/a" y a la vez el camino de vuelta. Se difiere por el Frente 1, no por dudas de diseño.
 
@@ -303,7 +337,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 - ✅ **Fase 1 — el retrato que madura:** COMPLETA, en producción.
 - ✅ **Fase 2 — la revelación incompleta (pista honesta):** COMPLETA, en producción (Capas 1, 2 y 3).
-- 🟡 **Fase 3 — la notificación noble:** 🔗 **lo que falta es la pieza 7 de la cola, "RECORDAR SIN RECLAMAR".** Pipeline Web Push **ENCENDIDO y verificado end-to-end en iPhone real (6 jul 2026)** + copy de re-enganche reescrito sin culpa + **control permanente de Notificaciones en Cuenta RESUELTO** (commit `8dc1b22`). Falta **más contenido/triggers nobles**. Es **lo que MÁS mueve la retención real**.
+- ✅ **Fase 3 — la notificación noble: COMPLETA el 11 sep 2026, con la pieza 7 "RECORDAR SIN RECLAMAR".** Un aviso al día **a la hora que elige cada papá** (9:00, 14:00 o 21:30), con el contenido elegido por prioridad de valor y **sin una sola frase que reclame**. Job de `pg_cron` en Supabase verificado, y el push de Daniel llegó a las 14:00 que puso. Falta seguir sumando contenido y triggers nobles. **Es lo que MÁS mueve la retención.**
 - ⬜ **Fase 4 — el loop de la pareja:** PENDIENTE.
 
 ---
@@ -312,7 +346,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-### 🥇 FRENTE 1 — GOOGLE PLAY: 🚀 **RE-POSTULACIÓN A PRODUCCIÓN ENVIADA EL 8 SEP 2026, 9:28 — EN REVISIÓN**
+### 🥇 FRENTE 1 — GOOGLE PLAY: ⏳ **NO RECHAZADA. FALTA SOLO TIEMPO — EL BOTÓN SE HABILITA ALREDEDOR DEL 25 SEP 2026**
 
 **🎯 SE ENVIÓ, Y DOS DÍAS ANTES DE LO PREVISTO (la fecha objetivo era ~10 sep).**
 
@@ -321,7 +355,11 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - 📝 **Las respuestas del formulario se actualizaron con evidencia de ESTA ronda**, no con la del intento rechazado en agosto: los **13 activos**, los **bugs corregidos** (el bottom sheet de la rutina que quedaba bajo la barra, y el tap al modelo 3D del Cerebro) y la **pasada del onboarding en Android**.
 - ⏳ **Respuesta esperada por correo en 7 días o menos.** ⚠️ **Y la regla que ya vale dos veces: la señal de Google se busca en Play Console, no en la bandeja de entrada** (la aprobación de la v3 y la de la v4 nunca llegaron por correo).
 
-🔴 **MIENTRAS ESTÁ EN REVISIÓN, NO SE TOCA NADA DE PLAY:** ni el canal cerrado, ni subir una versión nueva. **El código de la app sigue igual de libre** —se puede seguir desarrollando y desplegando en `huella.lat`—; lo congelado es **Play Console**, hasta que Google responda.
+⏳ **ESTADO AL 11 SEP 2026 — revisado ese día a las 5:01.** La solicitud **NO fue rechazada**. Los dos primeros requisitos ya están tachados: **versión de prueba cerrada publicada** y **12 testers aceptados**. El tercero es el reloj: **14 días más de prueba cerrada contados desde esa revisión**, así que el botón de postular se habilita **alrededor del 25 sep**.
+
+🟢 **SE LEVANTA LA RESTRICCIÓN DE NO SUBIR VERSIONES A PLAY.** Ya no hay nada en revisión, y el canal cerrado vuelve a estar disponible.
+
+🔴 **CRÍTICO, Y ES LO ÚNICO QUE PUEDE TUMBAR LA PRÓXIMA SOLICITUD: los testers tienen que USAR la app durante estos 14 días.** Testers inscritos y quietos ya hicieron caer el intento de agosto. Sostener la actividad es el trabajo de acá al 25.
 
 **Lo que sigue debajo es el historial de cómo se llegó acá.**
 
@@ -460,7 +498,74 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — miércoles 9 septiembre 2026 — **Los PRIMEROS RASGOS CONFIRMADOS de toda la base: la card de propuesta llevaba desde siempre sin renderizarse, y era un bug de 3 líneas**
+## Cerrado HOY — jueves 11 septiembre 2026 — **La pieza 7 quedó funcionando de punta a punta, y lo que la tenía muerta era un `GRANT` que faltaba desde junio**
+
+**🎯 El cron se mudó a Supabase, el selector de hora por fin guarda, y el aviso de Daniel llegó a las 14:00. Play Console no rechazó nada: lo que falta es que pasen los días.**
+
+### 1. ✅ PIEZA 7 CERRADA Y FUNCIONANDO
+
+**Migración 019 aplicada en la base y verificada.** `perfiles.hora_aviso` con default 9 y `perfiles.minuto_aviso` con default 0, las dos `NOT NULL`.
+
+**Push de los 3 commits a main** (`563630d` → `86f5cf6`): `0d8a910` el banner, `1a6ed8e` el selector de hora, `86f5cf6` el cron. Ahí murió el cron de `vercel.json`, tal como estaba planeado.
+
+**Job de `pg_cron` creado en Supabase:** `push-remind-huella`, schedule `0,30 * * * *`, activo. `pg_cron` 1.6.4 y `pg_net` 0.20.0 quedaron instaladas.
+
+**🔑 `CRON_SECRET` ROTADO — y conviene anotar por qué, porque va a volver a pasar.** Vercel no deja leer el valor de una variable de tipo Secret una vez guardada, así que no había forma de copiar el que ya estaba a Vault. Se generó uno nuevo y quedó igual en los dos lados: Vercel (Production and Preview) y Vault (`cron_secret_push`). **Hubo que redesplegar** para que la función tomara el valor nuevo.
+
+**Cron verificado en producción:** las corridas salen `succeeded` cada media hora, el endpoint responde **200**, y la hora de Chile se calcula bien (18:00 UTC = 15:00 en Chile).
+
+### 2. 🔴 EL BUG DEL SELECTOR: FALTABA EL `GRANT` DE COLUMNA
+
+**Síntoma: tocabas un chip, se pintaba, y al recargar volvía a "Mañana 9:00".**
+
+**Causa raíz.** `public.perfiles` tiene permisos de escritura **por columna, en lista blanca**, desde el fix de seguridad del **29 jun** (el que cerró el hueco de auto-otorgarse Pro). Las migraciones **018 y 019 crearon las columnas y nunca otorgaron permiso sobre ellas**, así que el cliente no podía escribirlas.
+
+**La RLS estaba bien y no tenía nada que ver.** `own_data` es `FOR ALL` con `auth.uid() = user_id`, y protege **filas**. Los permisos de columna son otra capa, más abajo.
+
+**Aplicado en el SQL Editor:**
+```sql
+GRANT UPDATE (hora_aviso, minuto_aviso) ON public.perfiles TO authenticated;
+```
+
+**La medida de cuánto llevaba muerto:** los **32 perfiles** de la base seguían en 9:00. Nadie pudo cambiar la hora nunca, desde que el selector existe.
+
+⚠️ **De acá salió una regla nueva en `CLAUDE.md`**: toda migración que agregue una columna de `perfiles` escribible desde el cliente tiene que traer su `GRANT`. El comentario de la migración 010 que dice que la RLS cubre las columnas nuevas está equivocado, y es el que hizo caer a la 018 y a la 019.
+
+### 3. ✅ QA DEL SELECTOR — APROBADO
+
+Persiste en claro y oscuro en desktop, y persiste en **Android 13** (celular de Igna). Daniel dejó su aviso en las **14:00** y el push le llegó a esa hora: la cadena quedó verificada de punta a punta, del chip al teléfono.
+
+### 4. 📱 PLAY CONSOLE — NO HUBO RECHAZO, FALTA TIEMPO
+
+- La solicitud de producción **no fue rechazada**. Revisado el **11 sep a las 5:01**.
+- **Dos de los tres requisitos están cumplidos:** versión de prueba cerrada publicada, y 12 testers aceptados.
+- Falta el tercero, que es el reloj: **14 días más de prueba cerrada** contados desde esa revisión. El botón se habilita **alrededor del 25 sep**.
+- 🟢 **Se levanta la restricción de no subir versiones a Play.** Ya no hay solicitud en revisión.
+- 🔴 **CRÍTICO: los testers tienen que usar la app durante estos 14 días o la próxima solicitud se cae igual.** Es exactamente lo que tumbó el intento de agosto.
+
+### 5. 📣 TESTERS — SALIÓ EL WHATSAPP
+
+Daniel mandó los mensajes el **11 sep**: al grupo (primera tanda) y **uno a uno a los 5 que tienen un candidato sin resolver**.
+
+| Tester | Hijo | Candidatos sin resolver |
+|---|---|---|
+| Cecilia | León | 1 |
+| Krishna | Sofía | 7 |
+| María | Agustina | 2 |
+| Pauli | Nahuel | 1 |
+| Valentina Ramírez | Juan Pablo | 2 |
+
+👀 **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver.** Hay que revisar si el motor está proponiendo de más; ese número no se parece a ningún otro de la tabla.
+
+### 6. ⏭️ LO QUE QUEDA PARA LA PRÓXIMA
+
+**Primero, el QA del commit `b955624`** (`NotifBanner` con reaparición cada 7 días, tope de 3 veces, caso `denied` aparte). **Sin pushear.** Las tres pruebas y el paso previo del permiso están arriba, en "LO PRIMERO AL RETOMAR".
+
+**Y en la cola quedaron:** mover "TU AVISO DIARIO" de `/cuenta` a `PerfilPage`, agregarle `.select()` a `guardarHoraAviso` para que un update de 0 filas deje de parecer éxito, y medir cuántos candidatos se resolvieron tras los WhatsApp de hoy.
+
+---
+
+## Sesión miércoles 9 septiembre 2026 — **Los PRIMEROS RASGOS CONFIRMADOS de toda la base: la card de propuesta llevaba desde siempre sin renderizarse, y era un bug de 3 líneas**
 
 **🎯 Una pieza que salió de la cola porque su premisa era falsa, el bug que de verdad tenía trabado al motor de rasgos, y el hero del retrato terminado. 10 commits, todos desplegados y verificados en el bundle de producción. QA de Daniel en Android APROBADO para todo.**
 
