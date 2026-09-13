@@ -21,7 +21,7 @@ export default defineConfig(async ({ mode }) => {
               req.on('error', reject)
             })
             const body = JSON.parse(raw || '{}')
-            const mockReq = { method: req.method, body }
+            const mockReq = { method: req.method, headers: req.headers, body }
             const mockRes = {
               _status: 200,
               status(code) { this._status = code; return this },
