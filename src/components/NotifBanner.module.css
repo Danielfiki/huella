@@ -11,8 +11,10 @@
   gap: 14px;
   align-items: start;
   padding: 20px 28px;
-  /* Misma separacion que el Home usa entre tarjetas apiladas. */
-  margin-bottom: var(--space-4);
+  /* Un escalon mas que la separacion entre tarjetas del Home (16px). Contra
+     la foto del hero de HijoPage, con la campana y el engranaje pegados a su
+     borde, 16px se veian apretados. */
+  margin-bottom: var(--space-6);
   border: 1px solid var(--color-primary-border);
   /* radius-card-lg del handoff no existe como token; el equivalente real
      en src/index.css es --radius-lg (20px). */
