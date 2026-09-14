@@ -2094,13 +2094,39 @@ ${JSON.stringify({
   momentos,
 }, null, 2)}`
 
-  const raw = await llamarAPI(prompt, 2000)
+  // DEBUG TEMPORAL (15 sep) — se revierte con el resto de la prueba.
+  console.info('[rasgos][debug] ANTES del fetch:', {
+    rasgos_ya_registrados: yaRegistrados.length,
+    momentos: momentos.length,
+    prompt_chars: prompt.length,
+    max_tokens_respuesta: 2000,
+  })
+
+  let raw
+  try {
+    raw = await llamarAPI(prompt, 2000)
+  } catch (err) {
+    console.error('[rasgos][debug] llamarAPI TIRO:', err?.code, err?.status, err?.message)
+    throw err
+  }
+
+  console.info('[rasgos][debug] DESPUES del fetch:', {
+    chars: raw.length,
+    empieza: raw.slice(0, 200),
+    termina: raw.slice(-200),
+  })
 
   const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) return { rasgos: [], refuerza: [] }
+  if (!match) {
+    console.error('[rasgos][debug] CORTE 1: la respuesta no trae ningun objeto JSON')
+    return { rasgos: [], refuerza: [] }
+  }
   try {
     const parsed = JSON.parse(match[0])
-    if (!parsed || !Array.isArray(parsed.rasgos)) return { rasgos: [], refuerza: [] }
+    if (!parsed || !Array.isArray(parsed.rasgos)) {
+      console.error('[rasgos][debug] CORTE 2: el JSON parseo pero no trae array "rasgos". Claves:', parsed ? Object.keys(parsed) : parsed)
+      return { rasgos: [], refuerza: [] }
+    }
     // Resuelve cada id de evidencia a { tipo, id } según de dónde salió
     // (episodio o hito); descarta ids que no estén entre los momentos enviados.
     // Luego filtra por validez: familia permitida, >=3 items de evidencia, y
@@ -2157,7 +2183,12 @@ ${JSON.stringify({
     console.info('[rasgos][debug] parseado:', { rasgos: validos, refuerza })
 
     return { rasgos: validos, refuerza }
-  } catch {
+  } catch (err) {
+    // Hasta hoy este catch devolvia [] sin decir nada. Si la respuesta viene
+    // truncada —se corta al llegar a max_tokens— es exactamente aca donde el
+    // motor se apagaba en silencio.
+    console.error('[rasgos][debug] CORTE 3: JSON.parse fallo:', err?.message)
+    console.error('[rasgos][debug] ultimos 300 chars de lo que intento parsear:', match[0].slice(-300))
     return { rasgos: [], refuerza: [] }
   }
 }
