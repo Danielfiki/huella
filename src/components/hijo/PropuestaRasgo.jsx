@@ -56,11 +56,12 @@ export default function PropuestaRasgo({ rasgo, nombreHijo, hijo, onConfirmar, o
 
   return (
     <article className={`${s.card} ${s[`card_${familia}`]}`}>
-      <div className={s.tile} aria-hidden="true">
-        <Escarabajo className={s.bicho} />
+      <div className={s.head}>
+        <div className={s.tile} aria-hidden="true">
+          <Escarabajo className={s.bicho} />
+        </div>
+        <p className={s.intro}>Huella notó algo en {nombre}</p>
       </div>
-
-      <p className={s.intro}>Huella notó algo en {nombre}</p>
 
       <h3 className={s.titulo}>
         <span className={s.dot} aria-hidden="true" />

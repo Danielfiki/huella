@@ -33,16 +33,23 @@
    propia, que accent-light no tiene. */
 .card_mueve      { --fam-bg: var(--color-pill-tangerine-bg); --fam-tinta: var(--color-pill-tangerine-text); }
 .card_cuesta     { --fam-bg: var(--color-primary-bg);        --fam-tinta: var(--color-primary-deep); }
-.card_fortalezas { --fam-bg: var(--color-pistacho-bg);       --fam-tinta: var(--color-tag-green); }
-.card_calma      { --fam-bg: var(--color-success-bg);        --fam-tinta: var(--color-tag-green); }
+.card_fortalezas { --fam-bg: var(--color-pistacho-bg);       --fam-tinta: var(--color-pistacho-tinta); }
+.card_calma      { --fam-bg: var(--color-success-bg);        --fam-tinta: var(--color-pistacho-tinta); }
 
 /* ─── Cuadrado del escarabajo · el color invertido de la familia ─── */
+/* El cuadrado y la linea de intro van en UNA fila, centrados entre si
+   (mockup de Design). Apilados quedaban como dos bloques sueltos. */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .tile {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
-  align-self: flex-start;
   background: var(--fam-tinta);
   color: var(--fam-bg);
   display: grid;

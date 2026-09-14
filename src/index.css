@@ -118,6 +118,11 @@
      fondo dejaria un verde brillante en modo oscuro. El oscuro es el mismo
      que --color-leaf-border, que es el verde profundo de la paleta. */
   --color-pistacho-bg: #B0C870;
+  /* Tinta para las dos familias pistacho de la card de candidato. Es el verde
+     MAS CLARO del tono de la paleta (H 83, S 67%) que todavia da 4.5:1 sobre
+     el pistacho pleno: un paso mas claro cae a 4.42 y deja de pasar.
+     --color-tag-green no servia, daba 2.68:1 sobre ese fondo. */
+  --color-pistacho-tinta: #3B5511;
   --color-accent-green: #8FA840;
   --color-accent-mocha: #9B7B6A;
   /* Crema estable para contenido SOBRE el header mocha (ej. el logo). NO
@@ -572,6 +577,7 @@
     --color-leaf-bg: #162206;
     --color-leaf-border: #2A4010;
     --color-pistacho-bg: #2A4010;
+    --color-pistacho-tinta: #B0C870;
     --color-bg-chart-green: #141A06;
     --color-coral-bg: #2E1008;
     --color-amber: #FBBF24;
