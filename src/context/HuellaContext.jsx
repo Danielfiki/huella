@@ -349,12 +349,18 @@ async function marcarUltimaActividad(userId) {
   // UPDATE y no upsert a proposito: si la fila de perfil todavia no existe, no
   // hay que crearla a medias (quedaria con el nombre del cuidador en null). El
   // perfil nace en el onboarding; hasta entonces este dato no hace falta.
-  const { error } = await supabase
+  // Mismo caso que guardarHoraAviso: sin .select(), cero filas afectadas se
+  // ve igual que un exito. Aca ademas importa el freno: si no se guardo, NO
+  // se escribe la marca del dia en localStorage, asi se reintenta en la
+  // proxima apertura en vez de darlo por hecho hasta manana.
+  const { data, error } = await supabase
     .from('perfiles')
     .update({ ultima_actividad: new Date().toISOString() })
     .eq('user_id', userId)
-  if (error) {
-    console.warn('[actividad] no se pudo marcar:', error.message)
+    .select('ultima_actividad')
+  if (error || !data?.length) {
+    const motivo = error?.message ?? 'el update no afecto ninguna fila'
+    console.warn('[actividad] no se pudo marcar:', motivo)
     return
   }
   try { localStorage.setItem(clave, hoy) } catch {}
@@ -1565,12 +1571,19 @@ export function HuellaProvider({ children }) {
     if (!user || !supabase) return
     const previa = { hora: state.horaAviso, minuto: state.minutoAviso }
     dispatch({ type: 'SET_HORA_AVISO', payload: { hora, minuto } })
-    const { error } = await supabase
+    // El .select() NO es decorativo: sin el, un update que no toca ninguna
+    // fila devuelve error null y parece exito. Asi estuvo roto el selector
+    // durante dias en septiembre —faltaba el GRANT de columna y PostgREST
+    // respondia sin tocar nada—, y desde aca se veia todo bien. Con .select()
+    // la respuesta trae las filas afectadas: si viene vacia, no se guardo.
+    const { data, error } = await supabase
       .from('perfiles')
       .update({ hora_aviso: hora, minuto_aviso: minuto })
       .eq('user_id', user.id)
-    if (error) {
-      console.warn('[aviso] no se pudo guardar la hora:', error.message)
+      .select('hora_aviso, minuto_aviso')
+    if (error || !data?.length) {
+      const motivo = error?.message ?? 'el update no afecto ninguna fila'
+      console.warn('[aviso] no se pudo guardar la hora:', motivo)
       dispatch({ type: 'SET_HORA_AVISO', payload: { hora: previa.hora, minuto: previa.minuto } })
     }
   }
