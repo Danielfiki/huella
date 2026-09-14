@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import Card from '../../components/ui/Card'
-import PropuestaRasgo, { COLOR_FAMILIA } from '../../components/hijo/PropuestaRasgo'
+// La card de propuesta se mudo al Home (PanelPage) el 14 sep: era lo unico
+// que Huella le pide al papa y aca vivia detras de una pestana. De este
+// modulo solo queda el mapa de colores por familia, que usa la ficha de las
+// 4 familias mas abajo.
+import { COLOR_FAMILIA } from '../../components/hijo/PropuestaRasgo'
 import RetratoSendero from '../../components/hijo/RetratoSendero'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
 import s from './HijoPage.module.css'
@@ -28,7 +32,7 @@ const FAMILIAS = [
 // ── Componente ────────────────────────────────────────────────────────────
 
 export default function HijoPage() {
-  const { state, setHijo, confirmarRasgo, descartarRasgo } = useHuella()
+  const { state, setHijo } = useHuella()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { hijo, episodios, hitos, rasgos } = state
@@ -41,37 +45,6 @@ export default function HijoPage() {
   const [genero, setGenero]               = useState('')
   const [loadingCrear, setLoadingCrear]   = useState(false)
   const [errorCrear, setErrorCrear]       = useState('')
-
-  // Card de propuesta de rasgo (motor de rasgos · 4A) — "uno por sesion".
-  // Se fija UN candidato al entrar a la pantalla y NO se reemplaza aunque el
-  // papa lo resuelva: al confirmar/descartar la card desaparece y el resto de
-  // los candidatos espera a la proxima visita (no se siente a "examen").
-  //
-  // El candidato fijado viaja JUNTO al hijo al que pertenece. Antes eran dos
-  // efectos —uno fijaba el candidato y otro lo reiniciaba a null al cambiar de
-  // hijo activo— y se pisaban: cuando terminaba la carga, `hijo` pasaba de null
-  // al hijo real y eso disparaba LOS DOS en el mismo commit, en orden de
-  // declaracion. El primero fijaba el candidato, el segundo lo borraba. El
-  // valor neto iba de null a null, asi que React no volvia a renderizar y el
-  // primero no corria nunca mas: ninguna de sus dependencias habia cambiado.
-  // Resultado: la card NUNCA se mostro, a nadie, desde que se escribio (9
-  // candidatos vivos y 0 resueltos en 24 testers). Guardar el hijoId adentro
-  // deja un solo efecto y elimina la carrera.
-  const [propuesto, setPropuesto] = useState({ hijoId: null, rasgo: null })
-
-  // Fija el candidato una sola vez POR HIJO. Si ya hay uno fijado para este
-  // hijo no se reemplaza (asi al resolverlo no salta el siguiente); al cambiar
-  // de hijo el hijoId guardado deja de coincidir y se busca de nuevo.
-  useEffect(() => {
-    if (!hijo) return
-    setPropuesto((prev) => {
-      if (prev.hijoId === hijo.id) return prev
-      const candidato = (rasgos || []).find(
-        (r) => r.estado === 'candidato' && r.hijoId === hijo.id
-      )
-      return candidato ? { hijoId: hijo.id, rasgo: candidato } : prev
-    })
-  }, [rasgos, hijo?.id])
 
   async function handleCrear(e) {
     e.preventDefault()
@@ -182,14 +155,6 @@ export default function HijoPage() {
   // ── Modo retrato (Refugio) ────────────────────────────────────────────────
   const tabActiva = searchParams.get('tab') ?? 'perfil'
 
-  // El candidato fijado para esta visita se busca en el estado vivo. La card
-  // solo se muestra mientras ese rasgo siga siendo 'candidato'; al resolverlo
-  // (confirmado/descartado) se oculta y NO aparece otro en esta visita.
-  const rasgoVivo = propuesto.rasgo
-    ? (rasgos || []).find((r) => r.id === propuesto.rasgo.id)
-    : null
-  const mostrarPropuesta = !!rasgoVivo && rasgoVivo.estado === 'candidato'
-
   // Rasgos confirmados del hijo activo: alimentan el retrato (conteo) y la
   // ficha de las 4 familias.
   const confirmados = (rasgos || []).filter(
@@ -233,15 +198,6 @@ export default function HijoPage() {
 
       {tabActiva === 'perfil' && (
         <div className={s.body}>
-          {mostrarPropuesta && (
-            <PropuestaRasgo
-              rasgo={rasgoVivo}
-              nombreHijo={hijo.nombre}
-              hijo={hijo}
-              onConfirmar={confirmarRasgo}
-              onDescartar={descartarRasgo}
-            />
-          )}
           {FAMILIAS.map((fam) => {
             const items = confirmados.filter((r) => r.familia === fam.id)
             return (

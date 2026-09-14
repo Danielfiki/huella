@@ -8,6 +8,7 @@ import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
+import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
 import { TarjetaCerebro, calcularEstadoCerebro } from '../../components/panel/TarjetaCerebro'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
 import { PuertaHuella, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
@@ -143,7 +144,7 @@ function useNarrativaIntensidad(episodios, nombre) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, dispatch, setHijoActivo, isPro } = useHuella()
+  const { state, dispatch, setHijoActivo, isPro, confirmarRasgo, descartarRasgo } = useHuella()
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState('')
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
@@ -155,17 +156,35 @@ export default function PanelPage() {
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
 
-  // Motor de rasgos · 4D. El aviso de rasgo nuevo (candidato o emergente) ya no
-  // es una card propia: es el badge de la puerta "Su huella".
-  const rasgoCandidato = (rasgos || []).some(
-    (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
-  )
+  // Motor de rasgos · el candidato que se le propone al papa.
+  //
+  // DERIVADO DEL ESTADO, NUNCA FIJADO EN UN EFECTO. La version anterior vivia
+  // en HijoPage y guardaba el candidato en un useState que un efecto llenaba.
+  // Eran dos efectos que se pisaban —uno fijaba, otro reiniciaba a null en el
+  // mismo commit— y el valor neto iba de null a null, asi que React no volvia
+  // a renderizar y la card NO SE MOSTRO NUNCA, a nadie. Derivarlo en el render
+  // hace esa carrera imposible: no hay estado intermedio que sincronizar.
+  //
+  // Se propone el mas antiguo. Al resolverlo, el rasgo deja de estar en
+  // 'candidato', este calculo corre de nuevo y entra el siguiente solo. Si no
+  // queda ninguno, la card desaparece.
+  const candidato = useMemo(() => {
+    const suyos = (rasgos || []).filter(
+      (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
+    )
+    suyos.sort((a, b) => String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')))
+    return suyos[0] ?? null
+  }, [rasgos, hijo?.id])
+
+  // El badge "Algo nuevo" de la puerta se enciende SOLO con candidato. Antes
+  // tambien lo prendia un emergente, que es un rasgo que el papa no puede
+  // responder: con 61 emergentes contra 9 candidatos en la base, el badge
+  // estaba encendido casi siempre por algo que no se podia accionar.
+  const rasgoCandidato = !!candidato
+
   const rasgosConfirmadosCount = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo?.id
   ).length
-  const hayEmergente = (rasgos || []).some(
-    (r) => r.estado === 'emergente' && r.hijoId === hijo?.id
-  )
   const userName = padreNombre || user?.email?.split('@')[0] || 'tú'
 
   // Consejo del día: vive en la campana de la cabecera. Visible solo si hay
@@ -407,6 +426,20 @@ export default function PanelPage() {
         </div>
       )}
 
+      {/* ── Lo unico que Huella le pide al papa ──
+           Va arriba de la tarjeta central a proposito: es la unica pregunta
+           de la app y tiene que verse al abrir, sin bajar ni entrar a nada.
+           Antes vivia en una pestana de HijoPage y casi nadie la respondia. ── */}
+      {candidato && (
+        <PropuestaRasgo
+          rasgo={candidato}
+          nombreHijo={nombreHijo}
+          hijo={hijo}
+          onConfirmar={confirmarRasgo}
+          onDescartar={descartarRasgo}
+        />
+      )}
+
       {/* ── Tarjeta central: la semana interpretada ── */}
       <TarjetaCerebro
         nombreHijo={nombreHijo}
@@ -448,7 +481,7 @@ export default function PanelPage() {
             nombreHijo={nombreHijo}
             fotoHijo={hijo?.avatarUrl ?? null}
             confirmados={rasgosConfirmadosCount}
-            hayNovedad={rasgoCandidato || hayEmergente}
+            hayNovedad={rasgoCandidato}
             onClick={() => navigate('/hijo')}
           />
         </TarjetaEntrada>

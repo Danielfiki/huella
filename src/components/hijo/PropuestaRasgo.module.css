@@ -7,7 +7,8 @@
   background: var(--color-surface);
   border: 1.5px solid var(--color-primary-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  /* Mismo sistema que las puertas del Home, donde ahora vive la card. */
+  box-shadow: var(--shadow-card-soft);
   padding: 18px;
   display: flex;
   flex-direction: column;
