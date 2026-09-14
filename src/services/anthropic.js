@@ -2149,6 +2149,13 @@ ${JSON.stringify({
       })
       .filter(Boolean)
 
+    // DEBUG TEMPORAL (15 sep) — se revierte cuando cierre la prueba del motor
+    // con memoria. Sin esto no hay forma de ver que devolvio el modelo: ni el
+    // servicio ni el guardado registran nada cuando las dos listas vienen
+    // vacias.
+    console.info('[rasgos][debug] crudo:', raw)
+    console.info('[rasgos][debug] parseado:', { rasgos: validos, refuerza })
+
     return { rasgos: validos, refuerza }
   } catch {
     return { rasgos: [], refuerza: [] }

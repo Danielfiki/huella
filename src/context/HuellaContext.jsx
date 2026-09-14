@@ -883,6 +883,8 @@ export function HuellaProvider({ children }) {
         // seguidos, el segundo no vuelve a llamar a la IA por el mismo tramo.
         marcarUltimoTotalRasgos(state.hijoActivoId, total)
         const rasgosDelHijo = (state.rasgos || []).filter(r => r.hijoId === state.hijoActivoId)
+        // DEBUG TEMPORAL (15 sep) — se revierte con el resto de la prueba.
+        console.info('[rasgos][debug] enviados al modelo:', rasgosDelHijo.length, 'rasgos existentes')
         detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp, hitos: hitosHijo, rasgosExistentes: rasgosDelHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
