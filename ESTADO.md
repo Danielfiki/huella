@@ -1108,15 +1108,6 @@ Corre con `node verificacion/correr-voz.mjs despues` (0 fallas) y `... antes` (6
 
 ## 📌 REGLAS DE TRABAJO (duras, desde el 1 sep 2026)
 
-### Piezas visuales: Design primero, con contexto real
-
-**Toda pieza visual pasa por Design ANTES que por Code**, y Design tiene que recibir el **contexto real**: dónde vive la pieza, qué hay arriba y abajo, con qué convive en la pantalla.
-
-**Cuando Design entrega algo aprobado, a Code se le piden cambios puntuales, no direcciones nuevas.**
-
-**De dónde sale:** el 14 sep la card de candidato pasó por **cuatro iteraciones visuales** —neutra, sistema de EpisodioCard, color de familia entero, y el ajuste de paleta— porque la dirección no estaba cerrada antes de empezar a escribir CSS. Cada vuelta fue trabajo perdido, y la pieza igual terminó sin cumplir el estándar.
-
-
 **1. NINGÚN BUG SE DECLARA CERRADO SIN QA EN ANDROID.**
 El bug de voz se dio por **cerrado el 11 ago** (saga `c4c3ac4` → `fa756c2`) con **QA solo en iPhone**. Por eso pasaron estos dos: el iPhone tapaba el defecto y el 100% del daño estaba del otro lado. Claro **y** oscuro, iPhone **y** Android. Sin excepción.
 

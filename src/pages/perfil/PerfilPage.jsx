@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus, UserCircle, Sparkles, ArrowRight } from 'lucide-react'
+import { LogOut, User, Mail, Baby, CheckCircle, Heart, Camera, Users, Copy, Check, X, Plus, UserCircle, Sparkles, ArrowRight, Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdad } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -16,6 +17,15 @@ import styles from './PerfilPage.module.css'
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
 // directo en 'YYYY-MM-DD', que es lo que ya guardaba el estado. Estaban
 // duplicados caracter por caracter en HijoPage.
+
+// Las tres horas del aviso diario (pieza 7). Las dos primeras salen de la
+// medicion: 9-10 y 22-23 son las ventanas reales de registro. El minuto viaja
+// aparte porque 21:30 no cabe en una columna de horas enteras.
+const HORAS_AVISO = [
+  { label: 'Mañana', hora: 9,  minuto: 0,  hora_texto: '9:00'  },
+  { label: 'Tarde',  hora: 14, minuto: 0,  hora_texto: '14:00' },
+  { label: 'Noche',  hora: 21, minuto: 30, hora_texto: '21:30' },
+]
 
 async function compressImage(file, maxSize = 400) {
   return new Promise((resolve) => {
@@ -40,7 +50,18 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading } = useHuella()
+  const { state, setHijo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading, guardarHoraAviso } = useHuella()
+
+  // Control permanente de notificaciones push. Reutiliza el MISMO hook que el
+  // NotifBanner (permission/isSupported/requestPermission); no duplica la logica
+  // de suscripcion. Da un camino a activar push aunque el banner se haya
+  // descartado (su X vuelve a los 7 dias, pero con tope de 3).
+  const {
+    permission: notifPermission,
+    isSupported: notifSoportado,
+    requestPermission: pedirNotif,
+  } = usePushNotifications()
+  const [notifCargando, setNotifCargando] = useState(false)
   const { family, pendingInvitation, familyLoading, invitePartner, cancelInvitation, disconnectPartner } = useFamily()
   const navigate = useNavigate()
   const avatarInputRef = useRef(null)
@@ -264,6 +285,16 @@ export default function PerfilPage() {
     setTimeout(() => padreInputRef.current?.focus(), 350)
   }
 
+  async function handleActivarNotif() {
+    if (notifCargando) return
+    setNotifCargando(true)
+    try {
+      await pedirNotif()
+    } finally {
+      setNotifCargando(false)
+    }
+  }
+
   return (
     <div className={styles.page}>
       <h2 className={styles.titulo}>Perfil</h2>
@@ -344,6 +375,90 @@ export default function PerfilPage() {
           </Button>
         </form>
       </Card>
+
+      {/* ── Tu aviso diario · pieza 7 ────────────────────────────────────
+           Llego desde CuentaPage el 15 sep: vivia en la pagina del plan, o sea
+           que el papa tenia que entrar por "Gestionar plan" para cambiar la
+           hora de su recordatorio.
+
+           Tres horas fijas, no un reloj libre: son las dos ventanas que la
+           medición mostró (9-10 y 22-23) más la tarde. Elegir entre tres es
+           un tap; un selector de hora libre es una decisión.
+
+           Sin botón de guardar: el tap ES el guardado. Pedirle confirmación
+           a una preferencia de un toque sobra.
+
+           Va ANTES del bloque de Notificaciones a propósito: primero se
+           decide cuándo, después se administra el permiso. ── */}
+      <p className={styles.avisoEyebrow}>TU AVISO DIARIO</p>
+      <div className={styles.avisoCard}>
+        <div className={styles.avisoChips} role="radiogroup" aria-label="Hora del aviso diario">
+          {HORAS_AVISO.map((o) => {
+            const activo = state.horaAviso === o.hora && state.minutoAviso === o.minuto
+            return (
+              <button
+                key={o.label}
+                type="button"
+                role="radio"
+                aria-checked={activo}
+                className={`${styles.avisoChip} ${activo ? styles.avisoChipOn : ''}`}
+                onClick={() => guardarHoraAviso(o.hora, o.minuto)}
+              >
+                <span className={styles.avisoChipLabel}>{o.label}</span>
+                <span className={styles.avisoChipHora}>{o.hora_texto}</span>
+              </button>
+            )
+          })}
+        </div>
+        <p className={styles.avisoNota}>Una vez al día, nunca más.</p>
+      </div>
+
+      {/* ── Notificaciones — control permanente de push, independiente del
+           NotifBanner efímero. Visible para todos (Pro y gratuito). ── */}
+      <section className={styles.beneficios}>
+        <div className={styles.beneficioCard}>
+          <div className={styles.beneficioIcon}>
+            <Bell size={20} />
+          </div>
+          <div>
+            <h2 className={styles.beneficioTitulo}>Notificaciones</h2>
+            {!notifSoportado ? (
+              <p className={styles.beneficioDesc}>
+                Este dispositivo no admite notificaciones aquí. En iPhone, agrega Huella a la pantalla
+                de inicio y ábrela desde el ícono.
+              </p>
+            ) : notifPermission === 'granted' ? (
+              <>
+                <p className={styles.beneficioDesc}>
+                  Recibirás los recordatorios y check-ins de Huella en este dispositivo.
+                </p>
+                <p className={styles.notifActivo}>
+                  <Check size={16} />
+                  Notificaciones activadas
+                </p>
+              </>
+            ) : notifPermission === 'denied' ? (
+              <p className={styles.beneficioDesc}>
+                Bloqueaste las notificaciones. Para volver a activarlas, permítelas desde los ajustes
+                de tu teléfono o navegador.
+              </p>
+            ) : (
+              <>
+                <p className={styles.beneficioDesc}>
+                  Activa recordatorios y check-ins suaves para no perder el hilo con tu hijo.
+                </p>
+                <button
+                  className={styles.notifBtn}
+                  onClick={handleActivarNotif}
+                  disabled={notifCargando}
+                >
+                  {notifCargando ? 'Activando…' : 'Activar notificaciones'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* ── Huella Pro ───────────────────────────────── */}
       <Card className={styles.proCard}>

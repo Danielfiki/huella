@@ -11,6 +11,14 @@ Huella es una app de crianza con IA en español latinoamericano que ayuda a padr
 ## Minimalismo y elegancia (regla permanente)
 Huella se rediseno entera para no abrumar. Ese principio filtra toda propuesta ANTES que lo tecnico. Cada card, texto, badge, paso o ajuste se justifica por que el papa lo necesita AHORA, con lo menos posible que leer, para un papa cansado a las 11 de la noche que resuelve con un toque. Si algo se puede resolver sacando en vez de agregando, se saca. Nunca convertir una interaccion en fila o secuencia. Aplica a chat, Code y Design. Cuando una propuesta suma elementos a una pantalla, se dice explicitamente por que pasa este filtro; si no pasa, no entra.
 
+## Piezas visuales: Design primero, con contexto real
+
+**Toda pieza visual pasa por Design ANTES que por Code**, y Design tiene que recibir el **contexto real**: dónde vive la pieza, qué hay arriba y abajo, con qué convive en la pantalla.
+
+**Cuando Design entrega algo aprobado, a Code se le piden cambios puntuales, no direcciones nuevas.**
+
+**De dónde sale:** el 14 sep la card de candidato pasó por **cuatro iteraciones visuales** —neutra, sistema de EpisodioCard, color de familia entero, y el ajuste de paleta— porque la dirección no estaba cerrada antes de empezar a escribir CSS. Cada vuelta fue trabajo perdido, y la pieza igual terminó sin cumplir el estándar.
+
 ## Stack técnico
 
 - Frontend: React + Vite
