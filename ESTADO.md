@@ -25,7 +25,6 @@
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
 - ⬜ **9 `update` más en `HuellaContext.jsx` sin `.select()`** — desde **14 sep 2026** — revisar **caso a caso**, porque cada uno necesita su propio criterio al fallar: unos son optimistas y revierten, otros lanzan, otros no tienen nada que revertir. Están en `actualizarUltimoAutorIa`, `updateEpisodio` (3), `guardarRasgosDetectados`, `updateHitoFoto`, `updateEstrategia`, `marcarP` y `updateRutina`.
 - ⬜ **EL PAYLOAD DEL MOTOR DE RASGOS CRECE SIN TECHO** — desde **15 sep 2026** — hoy van **102 rasgos** de La brava en cada llamada, y ese número solo sube. Los 4000 tokens alcanzan ahora; volver a chocar es cuestión de tiempo. **Decidir techo o filtro antes de que no alcance:** mandar solo los activos y dejar fuera los descartados viejos, mandar título y estado sin nada más, o poner un tope de cuántos viajan. La diferencia con antes es que ahora el warn avisa.
-- ⬜ **LIMPIAR LOS DUPLICADOS QUE YA EXISTEN** — desde **15 sep 2026** — la memoria del motor evita los nuevos, pero no borra los viejos. **Krishna tiene 6 y Valentina 4.** Se limpian con SQL dejando **el más antiguo por patrón**, que es el que acumuló la evidencia.
 - ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava`: 27 candidatos** — desde **11 sep 2026**, replanteado el **15 sep** — **ya NO es un bug del motor**, que se arregló hoy y dejó de reproponer lo que ya propuso. Lo que queda es **limpieza de datos de prueba**: borrar los duplicados o resetear el perfil.
 
@@ -571,6 +570,8 @@ Las dos piden ahora `.select()` de las columnas que escriben y tratan la respues
 - **`MAX_CANDIDATOS_ABIERTOS = 3`.** Con 3 candidatos sin responder el motor deja de insertar nuevos, pero sigue reforzando. Un candidato por visita, así que más de 3 en cola es una fila, no una pregunta.
 
 **✅ Probado en La brava:** los confirmados reforzados pasaron de **34 a 44**, **un emergente graduó** a candidato, y **cero inserts nuevos**. El tope hizo exactamente lo suyo.
+
+**✅ Y los duplicados que ya existían quedaron limpios.** La memoria evita los nuevos pero no borra los viejos, así que se hizo a mano en Supabase: borrados `d3a755fe` (Krishna, "separación" repetida) y `7bbbae85` (Valentina, "transiciones" repetida). Se dejó **el más antiguo de cada patrón**, que es el que acumuló la evidencia. **Krishna queda con 5 candidatos y Valentina con 3.**
 
 ### 10. 🔴 EL MOTOR SE APAGABA EN SILENCIO Y NADIE LO SABÍA
 
