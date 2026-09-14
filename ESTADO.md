@@ -23,7 +23,7 @@
 *Única fuente de pendientes del proyecto. **Regla de proceso:** al cerrar cada sesión, lo que quede diferido ENTRA aquí; lo que se complete SALE. Formato por línea: **qué** — desde cuándo — por qué se difirió.*
 
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
-- ⬜ **`guardarHoraAviso` no pide `.select()`** (`src/context/HuellaContext.jsx:1564`) — desde **11 sep 2026** — un `update` que afecta 0 filas le parece éxito, y **por eso el bug del `GRANT` estuvo invisible todo este tiempo**. Agregar `.select()` y tratar 0 filas como error. Aplica igual a `marcarUltimaActividad`, que tiene la misma forma.
+- ⬜ **9 `update` más en `HuellaContext.jsx` sin `.select()`** — desde **14 sep 2026** — revisar **caso a caso**, porque cada uno necesita su propio criterio al fallar: unos son optimistas y revierten, otros lanzan, otros no tienen nada que revertir. Están en `actualizarUltimoAutorIa`, `updateEpisodio` (3), `guardarRasgosDetectados`, `updateHitoFoto`, `updateEstrategia`, `marcarP` y `updateRutina`.
 - ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver** — desde **11 sep 2026** — revisar si el motor está proponiendo de más.
 
@@ -547,7 +547,15 @@ Regla permanente, y filtra **antes** que lo técnico. Cada card, texto, badge, p
 
 **Daniel la pusheó porque mejora lo que había, no porque esté bien.** Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa.
 
-### 8. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
+### 8. ✅ UN `UPDATE` DE 0 FILAS DEJA DE PARECER ÉXITO
+
+`guardarHoraAviso` y `marcarUltimaActividad` pedían su `update` **sin `.select()`**, así que no sabían cuántas filas habían tocado. Supabase devuelve `error: null` cuando el update no alcanza ninguna fila, y las dos trataban ese caso como éxito. **Así estuvo roto el selector de hora durante días**: faltaba el `GRANT` de columna, PostgREST respondía sin tocar nada, y desde el cliente se veía todo bien.
+
+Las dos piden ahora `.select()` de las columnas que escriben y tratan la respuesta vacía igual que un error. `guardarHoraAviso` revierte el chip; `marcarUltimaActividad` **no escribe la marca del día en `localStorage`**, así el intento se repite en la próxima apertura. Pusheado en `a3d15df`.
+
+⬜ **Pendiente nuevo, ya medido: quedan 9 `update` más en `HuellaContext.jsx` sin `.select()`.** No 12, que era la estimación: se contaron uno por uno. Van a la cola para revisarse caso a caso.
+
+### 9. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
 
 **La card pasó por cuatro iteraciones visuales**: neutra, con el sistema de `EpisodioCard`, con el color de familia entero, y el ajuste de paleta. Ninguna vuelta fue por un error de implementación. Todas fueron porque **la dirección de diseño no estaba cerrada antes de empezar a escribir CSS**.
 
