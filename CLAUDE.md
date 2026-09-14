@@ -30,6 +30,16 @@ GRANT UPDATE (<columna>) ON public.perfiles TO authenticated;
 
 **Cómo se ve cuando falta:** PostgREST devuelve 403 sobre esa columna. Y si el `update` del cliente no pide `.select()`, ni siquiera se entera: un update que afecta 0 filas le parece éxito.
 
+## Regla de verificación — cómo comprobar que un cambio llegó a producción
+
+**Buscar strings y claves de objeto, nunca nombres de función ni de constante.** La minificación renombra todo lo local: `MAX_VECES` se vuelve `ko`, `tocaOfrecer` se vuelve `No`. Buscar esos nombres en un bundle desplegado siempre da cero, y ese cero no significa que el código no esté.
+
+**Lo que sí sobrevive:** los strings literales (`'huella_notif_banner_dismissed'`) y las claves de objeto (`fecha`, `veces`), porque el minificador no las puede tocar sin romper el programa.
+
+**Un cambio de solo CSS se verifica en el `.css` desplegado, no en el `.js`.** Y ojo con el nombre del archivo: los módulos CSS generan clases con el número de línea dentro (`_banner_xveeg_8`), así que agregar un comentario cambia el hash del CSS **y** el del JS, aunque no se haya tocado una línea de JavaScript.
+
+**El orden de la verificación:** primero que el hash del bundle haya cambiado respecto al de antes del push, y recién después buscar el contenido. Un hash igual significa que el deploy no entró, y cualquier prueba contra ese bundle es un falso positivo. Pasó el 13 sep: el primer QA del banner se hizo contra el bundle viejo y dio un resultado inventado.
+
 ## Sistema de diseño — REGLAS INMUTABLES
 
 La fuente única de verdad del diseño es `src/index.css`. Todos los colores, tipografías, sombras, radios y demás tokens viven ahí como CSS variables.

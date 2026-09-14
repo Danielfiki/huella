@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: jueves 11 septiembre 2026 — ✅ **LA PIEZA 7 QUEDÓ CERRADA Y FUNCIONANDO DE PUNTA A PUNTA.** El cron se mudó a Supabase (`push-remind-huella`, cada media hora, corridas `succeeded` y 200 del endpoint), Daniel dejó su aviso en las 14:00 y **el push le llegó a esa hora**. 🔴 **El selector de hora no guardaba, y la causa era un `GRANT` que faltaba desde junio:** `public.perfiles` tiene permisos de escritura por columna en lista blanca desde el fix de seguridad del 29 jun, y las migraciones 018 y 019 crearon las columnas sin otorgarlos. **La RLS estaba bien y no tenía nada que ver.** La medida de cuánto llevaba muerto: **los 32 perfiles seguían en 9:00, porque nadie pudo cambiarlo nunca.** De ahí salió una regla nueva en `CLAUDE.md`. 🔑 **`CRON_SECRET` rotado** — Vercel no deja leer una variable de tipo Secret, así que se generó valor nuevo para los dos lados y hubo que redesplegar. 📱 **Play Console NO rechazó la solicitud:** dos de los tres requisitos están cumplidos y **falta solo tiempo, el botón se habilita alrededor del 25 sep**. 🟢 **Se levanta la restricción de no subir versiones a Play.** 🔴 **CRÍTICO: los testers tienen que USAR la app estos 14 días o la próxima solicitud se cae igual.** 📣 **Daniel mandó los WhatsApp**, al grupo y uno a uno a los 5 con candidato sin resolver. ⏭️ **Al retomar: QA del commit `b955624`** (el banner que vuelve a los 7 días), **sin pushear**.*
+*Última actualización: domingo 13 septiembre 2026 — ✅ **EL BANNER QUE VUELVE QUEDÓ EN PRODUCCIÓN.** QA aprobado en `localhost` con las tres pruebas, y **5 commits pusheados y verificados en el bundle de producción**. 🔴 **APARECIÓ UN SEGUNDO `GRANT` FALTANTE: `ultima_actividad`**, la otra columna de la migración 018. El `PATCH` daba 403, así que **el mensaje 6 del push —el de más de 7 días sin abrir la app— no se habría disparado nunca**. Aplicado y verificado: **8 columnas con `UPDATE`**. La regla del 11 sep era correcta pero incompleta: hay que revisar TODAS las columnas de cada migración desde el 29 jun, no solo las que toca la pantalla que se está haciendo. ⚠️ **Y una lección de método: el primer QA del banner fue un FALSO POSITIVO** porque se probó contra `huella.lat` con el commit sin pushear, o sea contra el bundle viejo. De ahí sale una regla nueva en `CLAUDE.md` sobre cómo verificar un deploy. 🛠️ **El servidor de desarrollo ya no se cae** (se cayó 4 veces seguidas; el middleware de la IA armaba el request sin `headers`). 🔔 **Daniel tiene push activo de nuevo**, suscripción del 14 sep 00:00 UTC. 🎨 **El aire bajo el banner subió a `--space-6` (24px)**, aprobado viéndolo en `localhost`. ⏭️ **Al retomar: pieza 3.5**, medir cuántos candidatos se resolvieron tras los WhatsApp del 11 sep.*
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,31 +10,21 @@
 
 ---
 
-## 🔴 LO PRIMERO AL RETOMAR — el QA del banner de notificaciones
+## 🔴 LO PRIMERO AL RETOMAR — pieza 3.5, medir los candidatos
 
-**Hay 1 commit HECHO Y SIN PUSHEAR:** `b955624` — `NotifBanner` que vuelve a aparecer cada 7 días, con tope de 3 veces y el caso `denied` separado. **No se pushea hasta que Daniel haga el QA.**
+**Medir cuántos de los candidatos sin resolver se resolvieron tras los WhatsApp del 11 sep.** Los cinco que recibieron mensaje uno a uno:
 
-**Por qué se tocó:** el banner aparecía una sola vez en la vida del papá. Si tocaba "Ahora no", se guardaba un `'1'` en `localStorage` que no caducaba nunca y no se le volvía a ofrecer jamás. **12 de 24 testers quedaron ahí.**
+| Tester | Hijo | Candidatos al 11 sep |
+|---|---|---|
+| Cecilia | León | 1 |
+| Krishna | Sofía | 7 |
+| María | Agustina | 2 |
+| Pauli | Nahuel | 1 |
+| Valentina Ramírez | Juan Pablo | 2 |
 
-⚠️ **PASO 0, Y SIN ESTO NO FUNCIONA NINGUNA DE LAS PRUEBAS.** Daniel tiene el permiso de notificaciones concedido, y esa comprobación va **antes** que la de `localStorage` (`if (permission === 'granted') return null`), así que el banner no le va a salir por mucho que toque el storage. Hay que poner el permiso de `huella.lat` en **Preguntar**: candado de la barra de direcciones → Notificaciones → Preguntar. **Ojo:** eso bota la suscripción push de ese navegador, y se recupera activando de nuevo al final del QA.
+Es la primera medición real de si empujar por WhatsApp mueve la aguja de los rasgos confirmados. Antes del 9 sep no había ninguno confirmado en toda la base, y hoy hay 2, los de Pipa.
 
-Con el permiso ya en "Preguntar", en la consola del navegador en `huella.lat`:
-
-**Prueba 1 — el banner DEBE aparecer:**
-```js
-localStorage.setItem('huella_notif_banner_dismissed', JSON.stringify({ fecha: new Date(Date.now() - 8*864e5).toISOString(), veces: 1 }))
-```
-Recargar.
-
-**Prueba 2 — NO debe aparecer:** lo mismo de arriba pero con `veces: 3`. Recargar.
-
-**Prueba 3 — la migración del valor viejo:**
-```js
-localStorage.setItem('huella_notif_banner_dismissed', '1')
-```
-Recargar. El banner **no** debe salir, porque ese valor cuenta como un descarte recién hecho. Y el valor guardado tiene que quedar **migrado a JSON**, con la fecha de hoy y `veces: 1`. Se revisa con `localStorage.getItem('huella_notif_banner_dismissed')`.
-
-👀 **Nadie ha visto nunca el banner rediseñado de Design**, así que el QA visual va en la misma pasada: claro y oscuro.
+🟢 **No queda nada sin pushear.** La sesión del 13 sep cerró con todo en `main` y verificado en el bundle de producción.
 
 ---
 
@@ -498,7 +488,75 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — jueves 11 septiembre 2026 — **La pieza 7 quedó funcionando de punta a punta, y lo que la tenía muerta era un `GRANT` que faltaba desde junio**
+## Cerrado HOY — domingo 13 septiembre 2026 — **El banner que vuelve quedó en producción, y apareció un SEGUNDO `GRANT` faltante que tenía muerto un mensaje del push**
+
+**🎯 Cinco commits a `main`, todos verificados en el bundle de producción. Y una lección de método: el primer QA dio por bueno un resultado que salía del bundle viejo.**
+
+### 1. ✅ QA DEL NOTIFBANNER — LAS TRES PRUEBAS PASADAS
+
+Se corrió en `localhost`, con el servidor de desarrollo. Las tres pasaron:
+
+- **Reaparece a los 7 días.** Con `veces: 1` y fecha de hace 8 días, el banner sale.
+- **El tope de 3 funciona.** Con `veces: 3` no sale, por muchos días que hayan pasado.
+- **La migración del valor viejo funciona.** Un `'1'` no muestra el banner y queda convertido a JSON con la fecha de hoy y `veces: 1`.
+
+🔴 **EL PRIMER QA FUE UN FALSO POSITIVO, Y ESTO ES LO QUE HAY QUE NO REPETIR.** Se probó contra `huella.lat` cuando el commit **no estaba pusheado**, así que el sitio servía el bundle viejo. Ese código compara el valor guardado contra el string `'1'` y muestra el banner con **cualquier** otro valor, sin mirar fecha ni veces. Por eso la prueba del tope "falló" y la de los 7 días "pasó": las dos estaban midiendo lo mismo, que era nada. Se detectó comparando el nombre del bundle desplegado, que seguía siendo el de dos días antes.
+
+### 2. 🚀 TODO PUSHEADO Y VERIFICADO
+
+| Commit | Qué |
+|---|---|
+| `b955624` | `NotifBanner` que vuelve a los 7 días, tope 3, `denied` aparte |
+| `e17e05f` | Cierre del 11 sep en `ESTADO.md` + la regla de los `GRANT` en `CLAUDE.md` |
+| `8946cbc` | Fix del servidor de desarrollo (`mockReq` con `headers`) |
+| `6253d1c` | El margen del banner sale de un token (`--space-4`, 16px) |
+| `fb8d46f` | El aire bajo el banner sube a `--space-6` (24px) |
+
+Verificado en el bundle de producción: el string `huella_notif_banner_dismissed` y la lógica del tope están en el JS, y `._banner_xveeg_8{margin-bottom:var(--space-6)}` con `--space-6:24px` está en el CSS.
+
+### 3. 🔴 SEGUNDO `GRANT` FALTANTE: `ultima_actividad`
+
+**La migración 018 creó dos columnas y ninguna llevaba permiso.** El 11 sep se arregló `hora_aviso` y `minuto_aviso`; hoy apareció la tercera. El `PATCH` a `ultima_actividad` devolvía **403**.
+
+**Aplicado:**
+```sql
+GRANT UPDATE (ultima_actividad) ON public.perfiles TO authenticated;
+```
+
+**Verificado: 8 columnas con `UPDATE`** para `authenticated`.
+
+⚠️ **Lo que esto tenía roto sin que nadie lo viera:** `ultima_actividad` es la columna que el aviso diario lee para saber si el cuidador lleva días sin abrir la app. Nunca se escribía, así que **el mensaje 6 del push —el de más de 7 días sin entrar, el que cuenta algo de la etapa del hijo en vez de reclamar— no se habría disparado jamás.** La pieza 7 se dio por cerrada el 11 sep con ese camino muerto.
+
+**Y el patrón ya va dos veces.** La regla de `CLAUDE.md` que nació el 11 sep era correcta y estaba incompleta: no bastaba con revisar las columnas que el selector escribía, había que revisar **todas** las que agregó cada migración desde el 29 jun.
+
+### 4. ✅ DANIEL TIENE PUSH ACTIVO DE NUEVO
+
+El QA obligó a poner el permiso de notificaciones en "Preguntar", y eso botó su suscripción. Quedó reactivada: fila nueva en `push_subscriptions` del **14 sep 00:00 UTC**.
+
+### 5. ✅ EL SERVIDOR DE DESARROLLO YA NO SE CAE
+
+Se cayó **cuatro veces seguidas** antes de encontrarlo. El middleware que emula el endpoint de la IA armaba el request con solo `method` y `body`, y `api/anthropic.js` busca el token en `req.headers.authorization`. Eso reventaba dentro de un middleware `async` sin `try/catch`, o sea un rechazo no capturado, y Node mataba el proceso. El log iba en **rejection id 103**: la pestaña abierta reintentaba sin parar.
+
+Arreglado en `8946cbc` con una línea:
+```js
+const mockReq = { method: req.method, headers: req.headers, body }
+```
+
+Verificado después: el mismo POST que antes mataba el servidor ahora responde 400 y el servidor sigue en pie.
+
+### 6. 🎛️ DECISIONES DEL DÍA
+
+- **El banner vuelve a los 7 días, hasta 3 veces.** Y vive en `localStorage`, no en la base, **porque el permiso de push es por dispositivo y no por cuenta**: una marca por cuenta silenciaría el banner en un teléfono donde el papá nunca lo vio.
+- **Con `denied` no vuelve nunca.** El navegador ya no pregunta, así que insistir no lleva a ninguna parte. Ese camino se retoma desde los ajustes del teléfono.
+- **El aire bajo el banner: `--space-6`, 24px.** Aprobado por Daniel viéndolo en `localhost`. Los 16px del Home se veían apretados contra la foto del hero de `HijoPage`, que es una masa oscura con la campana y el engranaje pegados a su borde.
+
+### 7. 📌 REGLA NUEVA EN `CLAUDE.md`
+
+Cómo verificar que un cambio llegó a producción: buscar strings y claves de objeto, nunca nombres de función ni constantes, porque la minificación los renombra. Y los cambios de solo CSS se verifican en el `.css` desplegado. Detalle en `CLAUDE.md`.
+
+---
+
+## Sesión jueves 11 septiembre 2026 — **La pieza 7 quedó funcionando de punta a punta, y lo que la tenía muerta era un `GRANT` que faltaba desde junio**
 
 **🎯 El cron se mudó a Supabase, el selector de hora por fin guarda, y el aviso de Daniel llegó a las 14:00. Play Console no rechazó nada: lo que falta es que pasen los días.**
 
