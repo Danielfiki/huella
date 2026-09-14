@@ -8,15 +8,8 @@ Huella es una app de crianza con IA en español latinoamericano que ayuda a padr
 - **GitHub:** github.com/Danielfiki/huella
 - **Owner:** Daniel — primera experiencia construyendo apps, no es developer profesional
 
-## Principios de producto
-
-### Huella no abruma
-
-Cada pantalla muestra lo mínimo que el papá necesita en ese momento, con lo menos posible que leer.
-
-Antes de agregar cualquier card, texto, badge o paso, se justifica **por qué el papá lo necesita AHORA**. Si no hay respuesta, no entra.
-
-Se diseña para un papá cansado a las 11 de la noche: **con un toque y sin leer.**
+## Minimalismo y elegancia (regla permanente)
+Huella se rediseno entera para no abrumar. Ese principio filtra toda propuesta ANTES que lo tecnico. Cada card, texto, badge, paso o ajuste se justifica por que el papa lo necesita AHORA, con lo menos posible que leer, para un papa cansado a las 11 de la noche que resuelve con un toque. Si algo se puede resolver sacando en vez de agregando, se saca. Nunca convertir una interaccion en fila o secuencia. Aplica a chat, Code y Design. Cuando una propuesta suma elementos a una pantalla, se dice explicitamente por que pasa este filtro; si no pasa, no entra.
 
 ## Stack técnico
 
