@@ -22,10 +22,14 @@
   gap: 12px;
 }
 
+/* Las cuatro son calidas. El lavanda y el azul salieron el 14 sep: son
+   frios y el Home es calido, asi que desentonaban con el resto de la
+   pantalla. `cuesta` toma el mocha apagado de las pildoras de emocion y
+   `calma` el dorado. */
 .card_tangerine { --fam-bg: var(--color-pill-tangerine-bg); --fam-tinta: var(--color-pill-tangerine-text); }
 .card_green     { --fam-bg: var(--color-pill-green-bg);     --fam-tinta: var(--color-pill-green-text); }
-.card_lavender  { --fam-bg: var(--color-pill-lavender-bg);  --fam-tinta: var(--color-pill-lavender-text); }
-.card_blue      { --fam-bg: var(--color-pill-blue-bg);      --fam-tinta: var(--color-pill-blue-text); }
+.card_mocha     { --fam-bg: var(--color-pill-emocion-bg);   --fam-tinta: var(--color-pill-emocion-text); }
+.card_gold      { --fam-bg: var(--color-pill-gold-bg);      --fam-tinta: var(--color-pill-gold-text); }
 
 /* ─── Cuadrado del escarabajo · el color invertido de la familia ─── */
 .tile {

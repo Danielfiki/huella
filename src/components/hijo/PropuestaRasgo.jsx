@@ -19,13 +19,15 @@ export const COLOR_FAMILIA = {
 }
 
 // De que pildora del sistema saca cada familia su par de fondo y tinta.
-// El mockup aprobado el 14 sep dejo `cuesta` en lavanda, que es la regla de
-// diseno de siempre —cuesta jamas en rojo—, y movio `calma` al azul.
+// Las cuatro son calidas: el lavanda y el azul que traia el mockup salieron
+// el 14 sep por frios, que en un Home calido se notaba. `cuesta` queda en el
+// mocha apagado de las pildoras de emocion, que ademas respeta la regla de
+// siempre de no pintarlo en rojo para no estigmatizar.
 const PILL_FAMILIA = {
   mueve:      'tangerine',
   fortalezas: 'green',
-  cuesta:     'lavender',
-  calma:      'blue',
+  cuesta:     'mocha',
+  calma:      'gold',
 }
 
 /**
