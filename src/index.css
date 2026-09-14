@@ -146,8 +146,10 @@
   --color-cta-disabled-text: rgba(255, 255, 255, 0.8);
 
   /* ── Espaciado · escala minima (onboarding) ── */
-  /* Primeros pasos de una escala de spacing. Solo los tres que usa el
-     onboarding; se amplia cuando otra pantalla lo pida. */
+  /* Primeros pasos de una escala de spacing. Se amplia cuando otra pantalla
+     lo pida: --space-4 entro el 13 sep para la separacion entre tarjetas
+     apiladas, que es la que usa el Home y ahora tambien el NotifBanner. */
+  --space-4: 16px;
   --space-6: 24px;
   --space-7: 28px;
   --space-8: 32px;
