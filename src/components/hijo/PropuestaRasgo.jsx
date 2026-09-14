@@ -18,17 +18,10 @@ export const COLOR_FAMILIA = {
   calma:      '#9B7B6A', // mocha
 }
 
-// De que pildora del sistema saca cada familia su par de fondo y tinta.
-// Las cuatro son calidas: el lavanda y el azul que traia el mockup salieron
-// el 14 sep por frios, que en un Home calido se notaba. `cuesta` queda en el
-// mocha apagado de las pildoras de emocion, que ademas respeta la regla de
-// siempre de no pintarlo en rojo para no estigmatizar.
-const PILL_FAMILIA = {
-  mueve:      'tangerine',
-  fortalezas: 'green',
-  cuesta:     'mocha',
-  calma:      'gold',
-}
+// Las 4 familias que la card sabe pintar. Cada una tiene su clase en el
+// module.css, que define el par --fam-bg / --fam-tinta con tokens del
+// sistema: tangerine y pistacho, cada uno pleno y suave.
+const FAMILIAS_CARD = ['mueve', 'cuesta', 'fortalezas', 'calma']
 
 /**
  * Card de propuesta de rasgo. Huella propone UN rasgo candidato y el papa/mama
@@ -45,9 +38,10 @@ export default function PropuestaRasgo({ rasgo, nombreHijo, hijo, onConfirmar, o
   if (!rasgo) return null
 
   const nombre = nombreHijo || 'tu hijo/a'
-  // Una familia desconocida no rompe la card: cae al tangerine de la marca,
-  // igual que hace el historial con un gatillante que no reconoce.
-  const pill = PILL_FAMILIA[rasgo.familia] ?? 'tangerine'
+  // Una familia desconocida no rompe la card: cae a `mueve`, el tangerine
+  // pleno de la marca, igual que hace el historial con un gatillante que no
+  // reconoce.
+  const familia = FAMILIAS_CARD.includes(rasgo.familia) ? rasgo.familia : 'mueve'
 
   // Descartar en la voz del hijo/a. Con genero no binario o sin genero
   // guardado NO se fuerza un pronombre: la frase se reformula para no nombrar
@@ -61,7 +55,7 @@ export default function PropuestaRasgo({ rasgo, nombreHijo, hijo, onConfirmar, o
     : 'Esto no lo veo así'
 
   return (
-    <article className={`${s.card} ${s[`card_${pill}`]}`}>
+    <article className={`${s.card} ${s[`card_${familia}`]}`}>
       <div className={s.tile} aria-hidden="true">
         <Escarabajo className={s.bicho} />
       </div>

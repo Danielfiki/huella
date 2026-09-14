@@ -113,6 +113,11 @@
   /* ── Acentos ── */
   --color-accent: #8FA840;
   --color-accent-light: #B0C870;
+  /* Pistacho PLENO como fondo. Mismo valor que --color-accent-light en claro,
+     pero token propio porque accent-light NO tiene version oscura: usarlo de
+     fondo dejaria un verde brillante en modo oscuro. El oscuro es el mismo
+     que --color-leaf-border, que es el verde profundo de la paleta. */
+  --color-pistacho-bg: #B0C870;
   --color-accent-green: #8FA840;
   --color-accent-mocha: #9B7B6A;
   /* Crema estable para contenido SOBRE el header mocha (ej. el logo). NO
@@ -213,6 +218,7 @@
   --radius-md: 16px;
   --radius-lg: 20px;
   --radius-xl: 28px;
+  --radius-btn: 12px;
   --radius-cta: 22px;
 
   /* ── Sombras ── */
@@ -565,6 +571,7 @@
     --color-accent-yellow: #4A4018;
     --color-leaf-bg: #162206;
     --color-leaf-border: #2A4010;
+    --color-pistacho-bg: #2A4010;
     --color-bg-chart-green: #141A06;
     --color-coral-bg: #2E1008;
     --color-amber: #FBBF24;

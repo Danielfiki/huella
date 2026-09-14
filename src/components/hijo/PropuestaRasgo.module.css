@@ -22,14 +22,19 @@
   gap: 12px;
 }
 
-/* Las cuatro son calidas. El lavanda y el azul salieron el 14 sep: son
-   frios y el Home es calido, asi que desentonaban con el resto de la
-   pantalla. `cuesta` toma el mocha apagado de las pildoras de emocion y
-   `calma` el dorado. */
-.card_tangerine { --fam-bg: var(--color-pill-tangerine-bg); --fam-tinta: var(--color-pill-tangerine-text); }
-.card_green     { --fam-bg: var(--color-pill-green-bg);     --fam-tinta: var(--color-pill-green-text); }
-.card_mocha     { --fam-bg: var(--color-pill-emocion-bg);   --fam-tinta: var(--color-pill-emocion-text); }
-.card_gold      { --fam-bg: var(--color-pill-gold-bg);      --fam-tinta: var(--color-pill-gold-text); }
+/* Dos colores, dos intensidades. El tangerine y el pistacho son los dos
+   acentos de Mocha Mix, y cada uno viene pleno y suave: el pleno para la
+   familia que empuja (lo que lo mueve, sus fortalezas) y el suave para la
+   que sostiene (lo que le cuesta, lo que lo calma). Todo calido; el lavanda
+   y el azul salieron el 14 sep por frios.
+
+   El pistacho pleno usa --color-pistacho-bg, que nacio para esto: es el
+   mismo valor que --color-accent-light en claro, pero con version oscura
+   propia, que accent-light no tiene. */
+.card_mueve      { --fam-bg: var(--color-pill-tangerine-bg); --fam-tinta: var(--color-pill-tangerine-text); }
+.card_cuesta     { --fam-bg: var(--color-primary-bg);        --fam-tinta: var(--color-primary-deep); }
+.card_fortalezas { --fam-bg: var(--color-pistacho-bg);       --fam-tinta: var(--color-tag-green); }
+.card_calma      { --fam-bg: var(--color-success-bg);        --fam-tinta: var(--color-tag-green); }
 
 /* ─── Cuadrado del escarabajo · el color invertido de la familia ─── */
 .tile {
@@ -109,7 +114,7 @@
   width: 100%;
   padding: 12px 16px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-btn);
   background: var(--fam-tinta);
   color: var(--fam-bg);
   font-family: var(--font-family);
@@ -125,7 +130,7 @@
   width: 100%;
   padding: 12px 16px;
   border: 1.5px solid var(--fam-tinta);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-btn);
   background: transparent;
   color: var(--fam-tinta);
   font-family: var(--font-family);
