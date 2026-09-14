@@ -23,7 +23,6 @@
 *Única fuente de pendientes del proyecto. **Regla de proceso:** al cerrar cada sesión, lo que quede diferido ENTRA aquí; lo que se complete SALE. Formato por línea: **qué** — desde cuándo — por qué se difirió.*
 
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
-- ⬜ **MOVER EL BLOQUE "TU AVISO DIARIO" Y LA TARJETA DE NOTIFICACIONES DE `CuentaPage` A `PerfilPage`** — desde **11 sep 2026** — **Síntoma en una frase: hoy el papá tiene que entrar por "Gestionar plan" para cambiar la hora de su recordatorio; debería estar en "Tú", bajo la tarjeta del nombre.** Los dos bloques viven en `/cuenta`, que es la página del plan. Lugar equivocado para una preferencia personal.
 - ⬜ **`guardarHoraAviso` no pide `.select()`** (`src/context/HuellaContext.jsx:1564`) — desde **11 sep 2026** — un `update` que afecta 0 filas le parece éxito, y **por eso el bug del `GRANT` estuvo invisible todo este tiempo**. Agregar `.select()` y tratar 0 filas como error. Aplica igual a `marcarUltimaActividad`, que tiene la misma forma.
 - ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver** — desde **11 sep 2026** — revisar si el motor está proponiendo de más.
@@ -511,7 +510,15 @@ Resultado de los cinco mensajes uno a uno del 11 sep:
 - **Uno por visita.** Al responder, la card se va y el siguiente espera a que el papá vuelva a abrir la app. Encadenar siete preguntas seguidas —Krishna tiene siete— se siente a examen.
 - **El badge "Algo nuevo" se enciende solo con candidato.** Antes también lo prendía un emergente, que el papá no puede responder: con 61 emergentes contra 9 candidatos, el badge estaba encendido casi siempre por algo que no se podía accionar.
 
-### 4. 🎨 LA CARD TOMA EL COLOR DE SU FAMILIA
+### 4. ✅ EL AVISO DIARIO Y LAS NOTIFICACIONES SE MUDARON A PERFIL
+
+Los dos bloques vivían en `/cuenta`, la página del plan, así que **el papá tenía que entrar por "Gestionar plan" para cambiar la hora de su recordatorio.** Ahora están en "Tú", debajo de la tarjeta del nombre y antes de Huella Pro.
+
+Mismo componente, mismo copy y mismo CSS: solo cambió dónde se monta. **QA aprobado en `localhost` y pusheado** (`acfdec8`).
+
+De `CuentaPage` salió todo lo que los sostenía, no solo el JSX: la constante de las horas, el hook de push con su estado, el handler y `guardarHoraAviso`. Las clases `.beneficio*` se copiaron en vez de moverse, porque la página del plan las sigue usando para su lista de Pro.
+
+### 5. 🎨 LA CARD TOMA EL COLOR DE SU FAMILIA
 
 Dos colores, dos intensidades. El color no decora: dice de qué familia es el rasgo.
 
@@ -532,15 +539,15 @@ Dos colores, dos intensidades. El color no decora: dice de qué familia es el ra
 - `--color-pistacho-tinta` — claro `#3B5511`, oscuro `#B0C870`. El verde **más claro** del tono de la paleta que da 4.5:1 sobre el pistacho pleno; un paso más claro cae a 4.42.
 - `--radius-btn` — 12px. La escala de radios no tenía ese peldaño.
 
-### 5. 📌 REGLA NUEVA EN `CLAUDE.md` — MINIMALISMO Y ELEGANCIA
+### 6. 📌 REGLA NUEVA EN `CLAUDE.md` — MINIMALISMO Y ELEGANCIA
 
 Regla permanente, y filtra **antes** que lo técnico. Cada card, texto, badge, paso o ajuste se justifica por qué el papá lo necesita AHORA. Si algo se resuelve sacando en vez de agregando, se saca. Aplica a chat, Code y Design. Texto completo en `CLAUDE.md`.
 
-### 6. ⚠️ DEUDA ABIERTA — LA CARD NO CUMPLE EL ESTÁNDAR VISUAL
+### 7. ⚠️ DEUDA ABIERTA — LA CARD NO CUMPLE EL ESTÁNDAR VISUAL
 
 **Daniel la pusheó porque mejora lo que había, no porque esté bien.** Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa.
 
-### 7. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
+### 8. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
 
 **La card pasó por cuatro iteraciones visuales**: neutra, con el sistema de `EpisodioCard`, con el color de familia entero, y el ajuste de paleta. Ninguna vuelta fue por un error de implementación. Todas fueron porque **la dirección de diseño no estaba cerrada antes de empezar a escribir CSS**.
 
