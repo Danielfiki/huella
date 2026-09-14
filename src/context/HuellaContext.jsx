@@ -882,10 +882,12 @@ export function HuellaProvider({ children }) {
         // El marcador se pone ANTES de disparar: si el papa guarda dos momentos
         // seguidos, el segundo no vuelve a llamar a la IA por el mismo tramo.
         marcarUltimoTotalRasgos(state.hijoActivoId, total)
-        detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp, hitos: hitosHijo })
+        const rasgosDelHijo = (state.rasgos || []).filter(r => r.hijoId === state.hijoActivoId)
+        detectarRasgos({ hijo: hijoActivo, episodios: episodiosApp, hitos: hitosHijo, rasgosExistentes: rasgosDelHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
             rasgosDetectados: resultado.rasgos,
+            refuerza: resultado.refuerza,
             episodios: episodiosApp,
             hitos: hitosHijo,
           }))
@@ -977,6 +979,12 @@ export function HuellaProvider({ children }) {
   // Normaliza un titulo SOLO para comparar en el dedup: trim, minuscula y sin
   // tildes. No altera el titulo que se guarda; es unicamente para detectar si
   // un rasgo detectado ya existe en la tabla.
+  // Un candidato por visita: mas de 3 en cola es una fila, no una pregunta.
+  // Con el tope alcanzado el motor deja de INSERTAR rasgos nuevos, pero sigue
+  // reforzando los que ya existen: la evidencia se acumula igual, solo que sin
+  // crecer la cola.
+  const MAX_CANDIDATOS_ABIERTOS = 3
+
   function normalizarTitulo(t) {
     return (t || '')
       .trim()
@@ -997,10 +1005,12 @@ export function HuellaProvider({ children }) {
   // deduplica contra los rasgos del hijo y, si el rasgo ya existe, fusiona
   // evidencia en vez de duplicar la fila. NUNCA propaga errores: solo loguea
   // (no debe romper el guardado del momento).
-  async function guardarRasgosDetectados({ hijoId, rasgosDetectados, episodios, hitos }) {
+  async function guardarRasgosDetectados({ hijoId, rasgosDetectados, refuerza, episodios, hitos }) {
     try {
       if (!user || !supabase || !hijoId) return
-      if (!Array.isArray(rasgosDetectados) || rasgosDetectados.length === 0) return
+      const nuevos = Array.isArray(rasgosDetectados) ? rasgosDetectados : []
+      const aReforzar = Array.isArray(refuerza) ? refuerza : []
+      if (nuevos.length === 0 && aReforzar.length === 0) return
 
       // Mapa id -> { tipo, fecha } cubriendo episodios Y hitos, para resolver
       // cada item de evidencia ({ tipo, id }) a { tipo, id, fecha }.
@@ -1021,7 +1031,74 @@ export function HuellaProvider({ children }) {
         .eq('hijo_id', hijoId)
       const existentes = existentesRaw ?? []
 
-      for (const rasgo of rasgosDetectados) {
+      // Tope de la cola. Se cuenta ANTES de insertar nada, sobre la foto que
+      // trae la base: si ya hay 3 candidatos sin responder, los patrones nuevos
+      // de esta tanda no entran. No se pierden del todo, porque los momentos
+      // que los respaldan siguen ahi y el motor los vuelve a ver cuando el papa
+      // baje la cola.
+      const candidatosAbiertos = existentes.filter((r) => r.estado === 'candidato').length
+      const colaLlena = candidatosAbiertos >= MAX_CANDIDATOS_ABIERTOS
+      if (colaLlena && nuevos.length > 0) {
+        console.info(`[rasgos] cola llena (${candidatosAbiertos} candidatos): no se insertan ${nuevos.length} rasgos nuevos`)
+      }
+
+      // ── Refuerzo: el modelo reconocio un patron que YA existe ──
+      // Suma al array de evidencia los momentos nuevos que lo respaldan, sin
+      // duplicar los que ya estaban, y recalcula el contador desde el largo del
+      // array. Esa es la razon de que el refuerzo traiga sus momentos y no solo
+      // el id del rasgo: si solo subiera el contador, quedaria desalineado del
+      // array y la graduacion de emergente a candidato —que mira el array— no
+      // funcionaria nunca.
+      //
+      // Un descartado no se refuerza jamas: el papa ya dijo que no lo ve.
+      for (const ref of aReforzar) {
+        const previo = existentes.find((r) => r.id === ref?.id)
+        if (!previo || previo.estado === 'descartado') continue
+
+        const nuevaEvidencia = (ref.evidencia || [])
+          .map((ev) => {
+            const id = ev?.id
+            const info = id != null ? infoPorId.get(id) : null
+            return info ? { tipo: info.tipo, id, fecha: info.fecha } : null
+          })
+          .filter(Boolean)
+        if (nuevaEvidencia.length === 0) continue
+
+        const previaEvidencia = Array.isArray(previo.evidencia) ? previo.evidencia : []
+        const idsPresentes = new Set(previaEvidencia.map(idDe))
+        const fusion = [
+          ...previaEvidencia,
+          ...nuevaEvidencia.filter((x) => !idsPresentes.has(idDe(x))),
+        ]
+        // Nada nuevo que sumar: el modelo repitio momentos que el rasgo ya
+        // tenia. No se escribe para no mover updated_at por nada.
+        if (fusion.length === previaEvidencia.length) continue
+
+        // Misma regla de graduacion que la fusion por titulo: solo emergente
+        // sube a candidato, y solo al llegar a 3 momentos. Confirmado y
+        // descartado nunca revierten.
+        const estadoNuevo =
+          previo.estado === 'emergente' && fusion.length >= 3
+            ? 'candidato'
+            : previo.estado
+
+        const { data, error } = await supabase
+          .from('rasgos')
+          .update({
+            estado:          estadoNuevo,
+            evidencia:       fusion,
+            evidencia_count: fusion.length,
+            updated_at:      new Date().toISOString(),
+          })
+          .eq('id', previo.id)
+          .eq('user_id', user.id)
+          .select('id')
+        if (error || !data?.length) {
+          console.warn('[rasgos] refuerzo fallo:', error?.message ?? 'el update no afecto ninguna fila')
+        }
+      }
+
+      for (const rasgo of nuevos) {
         if (!rasgo || !rasgo.familia || !rasgo.titulo) continue
 
         // a) Evidencia: resuelve cada item { tipo, id } a { tipo, id, fecha }
@@ -1041,6 +1118,12 @@ export function HuellaProvider({ children }) {
         const previo = existentes.find(
           (r) => r.familia === rasgo.familia && normalizarTitulo(r.titulo) === tituloNorm
         )
+
+        if (!previo && colaLlena) {
+          // Patron nuevo con la cola llena: no entra. El dedup por titulo se
+          // evalua igual mas arriba, asi que un repetido exacto sigue fusionando.
+          continue
+        }
 
         if (!previo) {
           // c) No existe -> INSERT nuevo. El estado lo decide el flag esEmergente
@@ -1169,10 +1252,12 @@ export function HuellaProvider({ children }) {
       if (hijoActivo && debeDetectarRasgos(state.hijoActivoId, total)) {
         // Marcador antes de disparar, mismo motivo que en addEpisodio.
         marcarUltimoTotalRasgos(state.hijoActivoId, total)
-        detectarRasgos({ hijo: hijoActivo, episodios: episodiosHijo, hitos: hitosHijo })
+        const rasgosDelHijo = (state.rasgos || []).filter(r => r.hijoId === state.hijoActivoId)
+        detectarRasgos({ hijo: hijoActivo, episodios: episodiosHijo, hitos: hitosHijo, rasgosExistentes: rasgosDelHijo })
           .then(resultado => guardarRasgosDetectados({
             hijoId: state.hijoActivoId,
             rasgosDetectados: resultado.rasgos,
+            refuerza: resultado.refuerza,
             episodios: episodiosHijo,
             hitos: hitosHijo,
           }))

@@ -2006,8 +2006,9 @@ Reglas duras:
 3. "evidencia": lista con los ids de los momentos que respaldan el rasgo (al menos 1 id real tomado de los datos entregados, sea de episodios o de hitos; incluye TODOS los ids que de verdad lo respalden).
 4. "confianza": numero entre 0 y 1 segun la fuerza de la evidencia (1 momento ~0.4; 2 momentos coherentes ~0.55; 3 momentos ~0.7; 5 o mas concentrados ~0.85).
 5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
-6. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
-7. ${REGLA_IDIOMA}
+6. MEMORIA. Los rasgos en "rasgos_ya_registrados" YA EXISTEN. NUNCA propongas uno que describa el mismo patrón, aunque lo redactes distinto: si el patrón que ves coincide con uno existente, NO lo pongas en "rasgos"; devuélvelo en "refuerza" con su id y con los ids de los momentos de esta tanda que lo respaldan. Los que tienen estado "descartado" el padre o madre ya dijo que no los ve en su hijo: esos NO se vuelven a proponer NI a reforzar, se ignoran por completo.
+7. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
+8. ${REGLA_IDIOMA}
 
 Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este shape exacto:
 {
@@ -2018,13 +2019,21 @@ Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este sh
       "evidencia": ["<id>", "<id>", "<id>"],
       "confianza": 0.0
     }
+  ],
+  "refuerza": [
+    {
+      "id": "<id de rasgos_ya_registrados>",
+      "evidencia": ["<id de momento>", "<id de momento>"]
+    }
   ]
-}`
+}
+
+"rasgos" lleva SOLO los patrones nuevos. "refuerza" lleva los rasgos ya registrados que los momentos de esta tanda vuelven a respaldar: cada uno con su id y con los ids de los momentos que lo respaldan, igual que el campo "evidencia" de un rasgo nuevo. Si no hay nada que reforzar, devuelve "refuerza": [].`
 
 // Decisión de diseño (confirmada con Daniel): un mismo momento (episodio o
 // hito) PUEDE respaldar varios rasgos — relación muchos-a-muchos, se permite
 // solape de evidencia entre rasgos. Lo resuelve guardarRasgosDetectados.
-export async function detectarRasgos({ hijo, episodios, hitos }) {
+export async function detectarRasgos({ hijo, episodios, hitos, rasgosExistentes }) {
   const FAMILIAS_VALIDAS = ['mueve', 'fortalezas', 'cuesta', 'calma']
 
   // Los episodios llegan en shape de app (camelCase, vía dbEpisodioToApp):
@@ -2062,6 +2071,15 @@ export async function detectarRasgos({ hijo, episodios, hitos }) {
 
   const momentos = [...episodiosCompactados, ...hitosCompactados]
 
+  // La memoria del motor. Sin esto cada corrida miraba los momentos desde cero
+  // y volvia a describir los MISMOS patrones con otra redaccion: La brava
+  // acumulo 26 candidatos que eran 4 rasgos repetidos, uno por corrida. Van
+  // TODOS los estados, incluido descartado: si el papa ya dijo que no lo ve,
+  // el modelo tiene que saberlo para no volver a preguntarlo.
+  const yaRegistrados = (rasgosExistentes || [])
+    .filter((r) => r && r.id && r.titulo)
+    .map((r) => ({ id: r.id, familia: r.familia, titulo: r.titulo, estado: r.estado }))
+
   const prompt = `${PROMPT_DETECTAR_RASGOS}
 
 Datos a analizar:
@@ -2072,16 +2090,17 @@ ${JSON.stringify({
     total_episodios: (episodios || []).length,
     total_hitos: (hitos || []).length,
   },
+  rasgos_ya_registrados: yaRegistrados,
   momentos,
 }, null, 2)}`
 
   const raw = await llamarAPI(prompt, 2000)
 
   const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) return { rasgos: [] }
+  if (!match) return { rasgos: [], refuerza: [] }
   try {
     const parsed = JSON.parse(match[0])
-    if (!parsed || !Array.isArray(parsed.rasgos)) return { rasgos: [] }
+    if (!parsed || !Array.isArray(parsed.rasgos)) return { rasgos: [], refuerza: [] }
     // Resuelve cada id de evidencia a { tipo, id } según de dónde salió
     // (episodio o hito); descarta ids que no estén entre los momentos enviados.
     // Luego filtra por validez: familia permitida, >=3 items de evidencia, y
@@ -2111,9 +2130,28 @@ ${JSON.stringify({
         if (r.confianza != null && (typeof r.confianza !== 'number' || r.confianza < 0 || r.confianza > 1)) return false
         return true
       })
-    return { rasgos: validos }
+    // Refuerzo: mismo tratamiento que un rasgo nuevo, pero apuntando a uno que
+    // ya existe. Se valida el id contra los rasgos que se le mandaron (si el
+    // modelo inventa uno, se cae aca) y la evidencia contra los momentos de
+    // esta tanda. Un refuerzo sin evidencia real no sirve: no hay nada que
+    // sumarle al rasgo, asi que se descarta.
+    const idsValidos = new Set(yaRegistrados.map((r) => r.id))
+    const refuerza = (Array.isArray(parsed.refuerza) ? parsed.refuerza : [])
+      .map((r) => {
+        if (!r || !idsValidos.has(r.id)) return null
+        const evidencia = (Array.isArray(r.evidencia) ? r.evidencia : [])
+          .map((id) => {
+            const tipo = tipoPorId.get(id)
+            return tipo ? { tipo, id } : null
+          })
+          .filter(Boolean)
+        return evidencia.length > 0 ? { id: r.id, evidencia } : null
+      })
+      .filter(Boolean)
+
+    return { rasgos: validos, refuerza }
   } catch {
-    return { rasgos: [] }
+    return { rasgos: [], refuerza: [] }
   }
 }
 
