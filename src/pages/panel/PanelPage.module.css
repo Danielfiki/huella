@@ -38,6 +38,10 @@
 }
 .selectorHijos::-webkit-scrollbar { display: none; }
 
+/* Los chips salieron del naranja el 14 sep. El tangerine queda reservado
+   para "Registrar un momento", que es la unica accion de la pantalla: si
+   varias cosas gritan en el mismo color, ninguna manda. El hijo activo se
+   marca por contraste, con la tinta del sistema como fondo. */
 .selectorChip {
   flex-shrink: 0;
   padding: 6px 14px;
@@ -45,21 +49,23 @@
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
-  background: var(--color-surface-alt);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
   transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 .selectorChip:hover {
-  border-color: var(--color-primary-light);
-  color: var(--color-text);
+  border-color: var(--color-text-light);
 }
 .selectorChipActivo {
-  background: var(--color-primary-bg);
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
+  background: var(--color-text);
+  border-color: transparent;
+  color: var(--color-bg);
+}
+.selectorChipActivo:hover {
+  border-color: transparent;
 }
 
 .selectorAddBtn {
@@ -67,17 +73,16 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-surface-alt);
+  background: transparent;
   border: 1.5px dashed var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  transition: border-color 0.12s, color 0.12s;
 }
 .selectorAddBtn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-primary-bg);
+  border-color: var(--color-text-light);
+  color: var(--color-text);
 }

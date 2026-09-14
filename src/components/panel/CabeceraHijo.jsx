@@ -18,12 +18,15 @@ import styles from './cabeceraHijo.module.css'
 
 const MS_ROTACION = 7000
 
-function saludoPorHora(fecha, nombre) {
+// Devuelve SOLO el tramo de la hora. El nombre del papa se pinta aparte
+// (mockup del 14 sep: va en --color-primary-deep), asi que tiene que salir en
+// su propio elemento. El texto que se lee es el mismo de siempre.
+function saludoPorHora(fecha) {
   const h = fecha.getHours()
-  if (h < 6)  return `Hola, ${nombre}`
-  if (h < 12) return `Buenos días, ${nombre}`
-  if (h < 19) return `Buenas tardes, ${nombre}`
-  return `Buenas noches, ${nombre}`
+  if (h < 6)  return 'Hola'
+  if (h < 12) return 'Buenos días'
+  if (h < 19) return 'Buenas tardes'
+  return 'Buenas noches'
 }
 
 export function CabeceraHijo({
@@ -55,7 +58,7 @@ export function CabeceraHijo({
   // Si la lista se acorta (se borró un hito con foto) el índice puede quedar
   // apuntando fuera del array.
   const actual = fotos.length > 0 ? fotos[indice % fotos.length] : null
-  const saludo = saludoPorHora(fecha, padreNombre)
+  const saludo = saludoPorHora(fecha)
   const inicialPadre = (padreNombre || '').trim().charAt(0).toUpperCase() || '·'
 
   return (
@@ -118,7 +121,9 @@ export function CabeceraHijo({
           </button>
         </div>
 
-        <h1 className={styles.saludo}>{saludo}</h1>
+        <h1 className={styles.saludo}>
+          {saludo}, <span className={styles.saludoNombre}>{padreNombre}</span>
+        </h1>
       </div>
     </header>
   )

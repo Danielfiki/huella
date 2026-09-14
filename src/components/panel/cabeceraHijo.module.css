@@ -140,3 +140,10 @@
   color: var(--color-text);
   pointer-events: none;
 }
+
+/* El nombre del papa, lo unico del saludo que lleva color (mockup 14 sep).
+   --color-primary-deep y no --color-primary: el deep es el tangerine oscuro,
+   que es el que aguanta leerse sobre la zona clara del degradado. */
+.saludoNombre {
+  color: var(--color-primary-deep);
+}
