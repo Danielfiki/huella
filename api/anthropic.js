@@ -384,5 +384,8 @@ export default async function handler(req, res) {
   }
 
   const data = await response.json()
-  return res.status(200).json({ text: data.content[0].text })
+  // stop_reason viaja al cliente para que pueda distinguir una respuesta
+  // completa de una cortada por max_tokens. Sin esto una respuesta truncada
+  // llega como JSON invalido y no hay forma de saber por que.
+  return res.status(200).json({ text: data.content[0].text, stop_reason: data.stop_reason ?? null })
 }

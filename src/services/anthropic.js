@@ -177,7 +177,11 @@ async function llamarAPI(prompt, max_tokens, opciones = {}) {
   }
 
   const text = body?.text ?? ''
-  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+  const limpio = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+  // Por defecto devuelve el string pelado, como siempre: ningun caller de la
+  // app cambia. Con opciones.conMeta devuelve ademas el stop_reason, que es lo
+  // unico que distingue una respuesta completa de una cortada por max_tokens.
+  return opciones.conMeta ? { texto: limpio, stopReason: body?.stop_reason ?? null } : limpio
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -2094,37 +2098,27 @@ ${JSON.stringify({
   momentos,
 }, null, 2)}`
 
-  // DEBUG TEMPORAL (15 sep) — se revierte con el resto de la prueba.
-  console.info('[rasgos][debug] ANTES del fetch:', {
-    rasgos_ya_registrados: yaRegistrados.length,
-    momentos: momentos.length,
-    prompt_chars: prompt.length,
-    max_tokens_respuesta: 2000,
-  })
+  // 4000 y no 2000: con muchos rasgos ya registrados la respuesta tiene que
+  // listar los refuerzos ademas de los rasgos nuevos, y a 2000 se cortaba a
+  // media llave. El 15 sep, con 102 rasgos en el payload, la respuesta llego
+  // truncada a 3662 caracteres y JSON.parse murio en un catch mudo: el motor
+  // llevaba corridas apagandose sin decir nada.
+  const { texto: raw, stopReason } = await llamarAPI(prompt, 4000, { conMeta: true })
 
-  let raw
-  try {
-    raw = await llamarAPI(prompt, 2000)
-  } catch (err) {
-    console.error('[rasgos][debug] llamarAPI TIRO:', err?.code, err?.status, err?.message)
-    throw err
+  // La senal directa de truncamiento, antes de que el parseo falle.
+  if (stopReason === 'max_tokens') {
+    console.warn('[rasgos] respuesta truncada: el modelo llego al tope de tokens. Rasgos registrados:', yaRegistrados.length)
   }
-
-  console.info('[rasgos][debug] DESPUES del fetch:', {
-    chars: raw.length,
-    empieza: raw.slice(0, 200),
-    termina: raw.slice(-200),
-  })
 
   const match = raw.match(/\{[\s\S]*\}/)
   if (!match) {
-    console.error('[rasgos][debug] CORTE 1: la respuesta no trae ningun objeto JSON')
+    console.warn('[rasgos] la respuesta del modelo no trae ningun objeto JSON')
     return { rasgos: [], refuerza: [] }
   }
   try {
     const parsed = JSON.parse(match[0])
     if (!parsed || !Array.isArray(parsed.rasgos)) {
-      console.error('[rasgos][debug] CORTE 2: el JSON parseo pero no trae array "rasgos". Claves:', parsed ? Object.keys(parsed) : parsed)
+      console.warn('[rasgos] el JSON del modelo no trae un array "rasgos"')
       return { rasgos: [], refuerza: [] }
     }
     // Resuelve cada id de evidencia a { tipo, id } según de dónde salió
@@ -2175,20 +2169,14 @@ ${JSON.stringify({
       })
       .filter(Boolean)
 
-    // DEBUG TEMPORAL (15 sep) — se revierte cuando cierre la prueba del motor
-    // con memoria. Sin esto no hay forma de ver que devolvio el modelo: ni el
-    // servicio ni el guardado registran nada cuando las dos listas vienen
-    // vacias.
-    console.info('[rasgos][debug] crudo:', raw)
-    console.info('[rasgos][debug] parseado:', { rasgos: validos, refuerza })
-
     return { rasgos: validos, refuerza }
   } catch (err) {
     // Hasta hoy este catch devolvia [] sin decir nada. Si la respuesta viene
     // truncada —se corta al llegar a max_tokens— es exactamente aca donde el
     // motor se apagaba en silencio.
-    console.error('[rasgos][debug] CORTE 3: JSON.parse fallo:', err?.message)
-    console.error('[rasgos][debug] ultimos 300 chars de lo que intento parsear:', match[0].slice(-300))
+    // Casi siempre es una respuesta truncada. El warn de stopReason de arriba
+    // ya lo dijo; este cubre el resto de los JSON invalidos.
+    console.warn('[rasgos] no se pudo parsear la respuesta del modelo:', err?.message)
     return { rasgos: [], refuerza: [] }
   }
 }
