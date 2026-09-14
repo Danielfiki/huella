@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: domingo 13 septiembre 2026 — ✅ **EL BANNER QUE VUELVE QUEDÓ EN PRODUCCIÓN.** QA aprobado en `localhost` con las tres pruebas, y **5 commits pusheados y verificados en el bundle de producción**. 🔴 **APARECIÓ UN SEGUNDO `GRANT` FALTANTE: `ultima_actividad`**, la otra columna de la migración 018. El `PATCH` daba 403, así que **el mensaje 6 del push —el de más de 7 días sin abrir la app— no se habría disparado nunca**. Aplicado y verificado: **8 columnas con `UPDATE`**. La regla del 11 sep era correcta pero incompleta: hay que revisar TODAS las columnas de cada migración desde el 29 jun, no solo las que toca la pantalla que se está haciendo. ⚠️ **Y una lección de método: el primer QA del banner fue un FALSO POSITIVO** porque se probó contra `huella.lat` con el commit sin pushear, o sea contra el bundle viejo. De ahí sale una regla nueva en `CLAUDE.md` sobre cómo verificar un deploy. 🛠️ **El servidor de desarrollo ya no se cae** (se cayó 4 veces seguidas; el middleware de la IA armaba el request sin `headers`). 🔔 **Daniel tiene push activo de nuevo**, suscripción del 14 sep 00:00 UTC. 🎨 **El aire bajo el banner subió a `--space-6` (24px)**, aprobado viéndolo en `localhost`. ⏭️ **Al retomar: pieza 3.5**, medir cuántos candidatos se resolvieron tras los WhatsApp del 11 sep.*
+*Última actualización: lunes 14 septiembre 2026 — ✅ **LA PREGUNTA DE HUELLA SE MUDÓ AL HOME.** La card de candidato salió de una pestaña de `HijoPage` y quedó en lo primero que el papá ve, **uno por visita** y con el candidato **derivado del estado**, sin el efecto que la dejó invisible durante meses. El badge "Algo nuevo" se enciende **solo con candidato**. 📊 **La pieza 3.5 se midió y el WhatsApp mueve poco: 1 de 5 resolvió algo, y resolvió 1 de 7.** Valentina registró pero no tocó ninguna card; Cecilia, María y Pauli no entraron. Esa medición es la que justifica la mudanza. 🎨 **La card toma el color de su familia**: tangerine y pistacho, cada uno pleno y suave, con las 8 combinaciones pasando AA. Los chips salieron del naranja y el nombre del papá va en `--color-primary-deep`, para que el tangerine quede solo en "Registrar un momento". **Tres tokens nuevos:** `--color-pistacho-bg`, `--color-pistacho-tinta` y `--radius-btn`. ✅ **Grants de `perfiles` auditados: no falta ninguno.** 📌 **Regla nueva en `CLAUDE.md`: minimalismo y elegancia**, que filtra antes que lo técnico. ⚠️ **DEUDA: Daniel pusheó la card porque mejora lo anterior, pero NO cumple su estándar visual.** Queda pendiente una pasada de diseño con dirección cerrada. 🔴 **La lección del día es de proceso: 4 iteraciones visuales por no cerrar la dirección antes de escribir CSS.** ⏭️ **El 16: reescribirle a Cecilia, María y Pauli.**
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,21 +10,11 @@
 
 ---
 
-## 🔴 LO PRIMERO AL RETOMAR — pieza 3.5, medir los candidatos
+## 🔴 LO PRIMERO AL RETOMAR — la pasada de diseño de la card
 
-**Medir cuántos de los candidatos sin resolver se resolvieron tras los WhatsApp del 11 sep.** Los cinco que recibieron mensaje uno a uno:
+⚠️ **DEUDA ABIERTA, y es de diseño, no de código.** La card de candidato está en producción porque mejora lo que había, pero **NO cumple el estándar visual de Daniel**. Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa: que Design entregue la pieza completa y Code la implemente de una vez.
 
-| Tester | Hijo | Candidatos al 11 sep |
-|---|---|---|
-| Cecilia | León | 1 |
-| Krishna | Sofía | 7 |
-| María | Agustina | 2 |
-| Pauli | Nahuel | 1 |
-| Valentina Ramírez | Juan Pablo | 2 |
-
-Es la primera medición real de si empujar por WhatsApp mueve la aguja de los rasgos confirmados. Antes del 9 sep no había ninguno confirmado en toda la base, y hoy hay 2, los de Pipa.
-
-🟢 **No queda nada sin pushear.** La sesión del 13 sep cerró con todo en `main` y verificado en el bundle de producción.
+**El 16 de septiembre: reescribirle a Cecilia, María y Pauli.** Son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 
 ---
 
@@ -35,7 +25,7 @@ Es la primera medición real de si empujar por WhatsApp mueve la aguja de los ra
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
 - ⬜ **MOVER EL BLOQUE "TU AVISO DIARIO" Y LA TARJETA DE NOTIFICACIONES DE `CuentaPage` A `PerfilPage`** — desde **11 sep 2026** — **Síntoma en una frase: hoy el papá tiene que entrar por "Gestionar plan" para cambiar la hora de su recordatorio; debería estar en "Tú", bajo la tarjeta del nombre.** Los dos bloques viven en `/cuenta`, que es la página del plan. Lugar equivocado para una preferencia personal.
 - ⬜ **`guardarHoraAviso` no pide `.select()`** (`src/context/HuellaContext.jsx:1564`) — desde **11 sep 2026** — un `update` que afecta 0 filas le parece éxito, y **por eso el bug del `GRANT` estuvo invisible todo este tiempo**. Agregar `.select()` y tratar 0 filas como error. Aplica igual a `marcarUltimaActividad`, que tiene la misma forma.
-- ⬜ **Pieza 3.5 — medir cuántos candidatos se resolvieron** tras los WhatsApp del 11 sep — desde **11 sep 2026**.
+- ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver** — desde **11 sep 2026** — revisar si el motor está proponiendo de más.
 
 **Onboarding (QA que falta)**
@@ -488,7 +478,77 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — domingo 13 septiembre 2026 — **El banner que vuelve quedó en producción, y apareció un SEGUNDO `GRANT` faltante que tenía muerto un mensaje del push**
+## Cerrado HOY — lunes 14 septiembre 2026 — **La pregunta de Huella se mudó al Home, y la lección del día fue de proceso: cuatro vueltas visuales por no cerrar la dirección antes**
+
+**🎯 La card de candidato salió de una pestaña escondida y quedó en lo primero que el papá ve. Está en producción, y Daniel la pusheó sabiendo que todavía no cumple su estándar.**
+
+### 1. ✅ GRANTS DE `perfiles` — AUDITADOS Y LIMPIOS
+
+Se revisaron todas las columnas contra los permisos vigentes, después de los dos `GRANT` faltantes del 11 y el 13. **No falta ninguno más.** El patrón que se repitió dos veces queda cerrado.
+
+### 2. 📊 PIEZA 3.5 — MEDIDA. EL WHATSAPP MUEVE POCO
+
+Resultado de los cinco mensajes uno a uno del 11 sep:
+
+| Tester | Hijo | Antes | Qué pasó |
+|---|---|---|---|
+| Krishna | Sofía | 7 candidatos | **1 confirmado** |
+| Valentina Ramírez | Juan Pablo | 2 candidatos | Registró y subió a **4**, ninguno resuelto |
+| Cecilia | León | 1 candidato | Sin actividad |
+| María | Agustina | 2 candidatos | Sin actividad |
+| Pauli | Nahuel | 1 candidato | Sin actividad |
+
+**Uno de cinco resolvió algo, y resolvió uno de siete.** Tres no entraron. Valentina sí entró y registró, pero la card no la movió: le aparecieron dos candidatos más y no tocó ninguno.
+
+🪝 **Esa medición es la que justifica mudar la card al Home.** Si la pregunta vive detrás de una pestaña, ni un WhatsApp directo alcanza.
+
+⏭️ **Reescribirle a Cecilia, María y Pauli el 16 de septiembre.**
+
+### 3. ✅ LA CARD DE CANDIDATO SE MUDÓ AL HOME
+
+- Vive **en un solo lugar**: salió de `HijoPage` con su estado y su efecto, y entró al Home entre el selector de hijos y la tarjeta central, arriba del botón de registrar.
+- **El candidato se deriva del estado**, sin `useState` ni efecto. Eso hace imposible la carrera de dos efectos que la dejó invisible para todos hasta el 9 sep.
+- **Uno por visita.** Al responder, la card se va y el siguiente espera a que el papá vuelva a abrir la app. Encadenar siete preguntas seguidas —Krishna tiene siete— se siente a examen.
+- **El badge "Algo nuevo" se enciende solo con candidato.** Antes también lo prendía un emergente, que el papá no puede responder: con 61 emergentes contra 9 candidatos, el badge estaba encendido casi siempre por algo que no se podía accionar.
+
+### 4. 🎨 LA CARD TOMA EL COLOR DE SU FAMILIA
+
+Dos colores, dos intensidades. El color no decora: dice de qué familia es el rasgo.
+
+| Familia | Fondo | Tinta | Contraste claro / oscuro |
+|---|---|---|---|
+| mueve (tangerine pleno) | `pill-tangerine-bg` | `pill-tangerine-text` | 6.96 / 9.47 |
+| cuesta (tangerine suave) | `primary-bg` | `primary-deep` | 4.79 / 7.59 |
+| fortalezas (pistacho pleno) | `pistacho-bg` | `pistacho-tinta` | 4.55 / 6.17 |
+| calma (pistacho suave) | `success-bg` | `pistacho-tinta` | 7.40 / 8.89 |
+
+**Las 8 combinaciones pasan AA para texto normal.** Las dos del pistacho no pasaban con el `tag-green` original: fortalezas daba 2.68.
+
+**Los chips de hijos salieron del naranja** —activo en `--color-text` con texto `--color-bg`— y **el nombre del papá en el saludo va en `--color-primary-deep`**. El porqué es el mismo: el tangerine queda reservado para "Registrar un momento", que es la única acción de la pantalla.
+
+**Tokens nuevos, los tres en `src/index.css` con su override oscuro donde corresponde:**
+
+- `--color-pistacho-bg` — claro `#B0C870`, oscuro `#2A4010`. El pistacho pleno de la paleta como fondo. `--color-accent-light` no servía porque no tiene versión oscura.
+- `--color-pistacho-tinta` — claro `#3B5511`, oscuro `#B0C870`. El verde **más claro** del tono de la paleta que da 4.5:1 sobre el pistacho pleno; un paso más claro cae a 4.42.
+- `--radius-btn` — 12px. La escala de radios no tenía ese peldaño.
+
+### 5. 📌 REGLA NUEVA EN `CLAUDE.md` — MINIMALISMO Y ELEGANCIA
+
+Regla permanente, y filtra **antes** que lo técnico. Cada card, texto, badge, paso o ajuste se justifica por qué el papá lo necesita AHORA. Si algo se resuelve sacando en vez de agregando, se saca. Aplica a chat, Code y Design. Texto completo en `CLAUDE.md`.
+
+### 6. ⚠️ DEUDA ABIERTA — LA CARD NO CUMPLE EL ESTÁNDAR VISUAL
+
+**Daniel la pusheó porque mejora lo que había, no porque esté bien.** Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa.
+
+### 7. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
+
+**La card pasó por cuatro iteraciones visuales**: neutra, con el sistema de `EpisodioCard`, con el color de familia entero, y el ajuste de paleta. Ninguna vuelta fue por un error de implementación. Todas fueron porque **la dirección de diseño no estaba cerrada antes de empezar a escribir CSS**.
+
+**Regla nueva, ya en `ESTADO.md`:** toda pieza visual pasa por Design **antes** que por Code, y Design recibe el contexto real de la pantalla. Cuando Design entrega algo aprobado, a Code se le piden cambios puntuales, no direcciones nuevas.
+
+---
+
+## Sesión domingo 13 septiembre 2026 — **El banner que vuelve quedó en producción, y apareció un SEGUNDO `GRANT` faltante que tenía muerto un mensaje del push**
 
 **🎯 Cinco commits a `main`, todos verificados en el bundle de producción. Y una lección de método: el primer QA dio por bueno un resultado que salía del bundle viejo.**
 
@@ -1047,6 +1107,15 @@ Corre con `node verificacion/correr-voz.mjs despues` (0 fallas) y `... antes` (6
 ---
 
 ## 📌 REGLAS DE TRABAJO (duras, desde el 1 sep 2026)
+
+### Piezas visuales: Design primero, con contexto real
+
+**Toda pieza visual pasa por Design ANTES que por Code**, y Design tiene que recibir el **contexto real**: dónde vive la pieza, qué hay arriba y abajo, con qué convive en la pantalla.
+
+**Cuando Design entrega algo aprobado, a Code se le piden cambios puntuales, no direcciones nuevas.**
+
+**De dónde sale:** el 14 sep la card de candidato pasó por **cuatro iteraciones visuales** —neutra, sistema de EpisodioCard, color de familia entero, y el ajuste de paleta— porque la dirección no estaba cerrada antes de empezar a escribir CSS. Cada vuelta fue trabajo perdido, y la pieza igual terminó sin cumplir el estándar.
+
 
 **1. NINGÚN BUG SE DECLARA CERRADO SIN QA EN ANDROID.**
 El bug de voz se dio por **cerrado el 11 ago** (saga `c4c3ac4` → `fa756c2`) con **QA solo en iPhone**. Por eso pasaron estos dos: el iPhone tapaba el defecto y el 100% del daño estaba del otro lado. Claro **y** oscuro, iPhone **y** Android. Sin excepción.
