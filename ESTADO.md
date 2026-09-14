@@ -24,6 +24,8 @@
 
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
 - ⬜ **9 `update` más en `HuellaContext.jsx` sin `.select()`** — desde **14 sep 2026** — revisar **caso a caso**, porque cada uno necesita su propio criterio al fallar: unos son optimistas y revierten, otros lanzan, otros no tienen nada que revertir. Están en `actualizarUltimoAutorIa`, `updateEpisodio` (3), `guardarRasgosDetectados`, `updateHitoFoto`, `updateEstrategia`, `marcarP` y `updateRutina`.
+- ⬜ **EL PAYLOAD DEL MOTOR DE RASGOS CRECE SIN TECHO** — desde **15 sep 2026** — hoy van **102 rasgos** de La brava en cada llamada, y ese número solo sube. Los 4000 tokens alcanzan ahora; volver a chocar es cuestión de tiempo. **Decidir techo o filtro antes de que no alcance:** mandar solo los activos y dejar fuera los descartados viejos, mandar título y estado sin nada más, o poner un tope de cuántos viajan. La diferencia con antes es que ahora el warn avisa.
+- ⬜ **LIMPIAR LOS DUPLICADOS QUE YA EXISTEN** — desde **15 sep 2026** — la memoria del motor evita los nuevos, pero no borra los viejos. **Krishna tiene 6 y Valentina 4.** Se limpian con SQL dejando **el más antiguo por patrón**, que es el que acumuló la evidencia.
 - ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava` (perfil de prueba) tiene 28 candidatos sin resolver** — desde **11 sep 2026** — revisar si el motor está proponiendo de más.
 
@@ -555,7 +557,40 @@ Las dos piden ahora `.select()` de las columnas que escriben y tratan la respues
 
 ⬜ **Pendiente nuevo, ya medido: quedan 9 `update` más en `HuellaContext.jsx` sin `.select()`.** No 12, que era la estimación: se contaron uno por uno. Van a la cola para revisarse caso a caso.
 
-### 9. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
+### 9. 🧠 EL MOTOR DE RASGOS AHORA TIENE MEMORIA
+
+**Síntoma: el motor volvía a proponer lo que ya había propuesto, con otra redacción y en cada corrida.** La brava acumuló 26 candidatos que eran 4 rasgos repetidos, uno por corrida (12, 13 y 17 ago, y 9 sep). Con la card ya en el Home, eso era hacerle la misma pregunta cuatro veces.
+
+**La causa:** el motor era **sin memoria por diseño**. No recibía los rasgos existentes, el prompt no decía nada sobre no repetir, y el único filtro comparaba títulos **carácter por carácter**. Un modelo no repite una frase palabra por palabra entre llamadas separadas por semanas, así que ese filtro casi nunca acertaba.
+
+**Lo que se hizo:**
+
+- `detectarRasgos` recibe los rasgos del hijo y los manda bajo `rasgos_ya_registrados`, con **todos los estados**. Los descartados incluidos: si el papá ya dijo que no lo ve, el modelo tiene que saberlo.
+- Regla dura nueva en el prompt: no proponer un patrón que ya existe aunque se redacte distinto; devolverlo en `refuerza`. **Los descartados no se reproponen ni se refuerzan.**
+- `refuerza` viaja como `{ id, evidencia: [ids de momento] }`. Al guardar, esos momentos se suman al array de evidencia sin duplicar, y el contador se recalcula desde el largo del array. Por eso trae sus momentos: subir solo el contador lo habría desalineado, y la graduación de emergente a candidato mira el array.
+- **`MAX_CANDIDATOS_ABIERTOS = 3`.** Con 3 candidatos sin responder el motor deja de insertar nuevos, pero sigue reforzando. Un candidato por visita, así que más de 3 en cola es una fila, no una pregunta.
+
+**✅ Probado en La brava:** los confirmados reforzados pasaron de **34 a 44**, **un emergente graduó** a candidato, y **cero inserts nuevos**. El tope hizo exactamente lo suyo.
+
+### 10. 🔴 EL MOTOR SE APAGABA EN SILENCIO Y NADIE LO SABÍA
+
+Persiguiendo por qué la primera prueba no movió nada, apareció algo peor que el bug original.
+
+**`detectarRasgos` tenía tres salidas mudas**, todas devolviendo listas vacías sin escribir una línea: respuesta sin objeto JSON, JSON sin array `rasgos`, y un `catch` pelado alrededor del parseo. Del otro lado, el guardado cortaba en seco con las dos listas vacías. **El motor podía fallar corrida tras corrida sin dejar rastro.**
+
+**La causa concreta:** con 102 rasgos en el payload, la respuesta del modelo **se truncaba a los 2000 tokens**. Llegaba cortada a 3662 caracteres, con el array `refuerza` sin cerrar, y `JSON.parse` moría en el catch mudo.
+
+**Arreglado:** `max_tokens` a **4000**; `stop_reason` viaja de la API al cliente y **avisa con un warn permanente** si vuelve a truncarse, antes de que el parseo falle; y las tres salidas mudas pasaron a `console.warn` permanentes.
+
+### 11. 🛠️ EL DEV SERVER DEJÓ DE CAERSE, POR SEGUNDA VEZ
+
+El middleware que emula el endpoint de IA armaba un `res` falso con solo `status` y `json`. El handler real usa **cinco** métodos: los otros tres son de streaming. Cualquier llamada con `stream: true` tiraba `res.setHeader is not a function` dentro de un middleware `async` sin `try/catch`, y Node mataba el proceso.
+
+**El efecto se veía mucho peor de lo que era.** Registrar un momento dispara tres llamadas a la IA; la de streaming mataba el server y las otras dos se cortaban con conexión reseteada. Parecían tres bugs y era uno.
+
+Ahora el mock delega en el `res` real y el handler va envuelto en `try/catch`: una excepción devuelve 500 y se anota, pero ya no se lleva el servidor.
+
+### 12. 🔴 LA LECCIÓN DEL DÍA, Y ES DE PROCESO
 
 **La card pasó por cuatro iteraciones visuales**: neutra, con el sistema de `EpisodioCard`, con el color de familia entero, y el ajuste de paleta. Ninguna vuelta fue por un error de implementación. Todas fueron porque **la dirección de diseño no estaba cerrada antes de empezar a escribir CSS**.
 
