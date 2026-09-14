@@ -21,6 +21,24 @@ import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import styles from './PanelPage.module.css'
 
+// UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
+// va y el siguiente candidato espera a que vuelva a abrir la app. Encadenar
+// tres seguidas se siente a examen, y esta es la unica pregunta que Huella le
+// hace: si cansa, deja de responderla.
+//
+// Vive en el modulo y no en el componente a proposito. En el componente se
+// perderia al navegar, porque cada cambio de ruta desmonta el Home, y el papa
+// veria la siguiente card solo por haber ido a registrar y vuelto. Aca
+// sobrevive a la navegacion y se limpia sola cuando la app se carga de nuevo.
+//
+// Guarda hijoId y no rasgoId: si el papa cambia de hijo, la card del otro si
+// se muestra.
+//
+// No es estado de React y no dispara render por si solo, y no hace falta:
+// cambiarEstadoRasgo despacha el estado nuevo de forma optimista, o sea
+// sincronica, asi que el render que viene detras ya lee este Set lleno.
+const hijosRespondidosEstaVisita = new Set()
+
 // ── Home · Bloque B2 del rediseño ────────────────────────────────────────────
 //
 // El Home dejó de ser un dashboard de secciones: ahora es LA PÁGINA DEL HIJO.
@@ -165,9 +183,9 @@ export default function PanelPage() {
   // a renderizar y la card NO SE MOSTRO NUNCA, a nadie. Derivarlo en el render
   // hace esa carrera imposible: no hay estado intermedio que sincronizar.
   //
-  // Se propone el mas antiguo. Al resolverlo, el rasgo deja de estar en
-  // 'candidato', este calculo corre de nuevo y entra el siguiente solo. Si no
-  // queda ninguno, la card desaparece.
+  // Se propone el mas antiguo en estado candidato del hijo activo. Al
+  // resolverlo la card desaparece y el siguiente NO entra en esta visita: lo
+  // frena hijosRespondidosEstaVisita, arriba.
   const candidato = useMemo(() => {
     const suyos = (rasgos || []).filter(
       (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
@@ -181,6 +199,20 @@ export default function PanelPage() {
   // responder: con 61 emergentes contra 9 candidatos en la base, el badge
   // estaba encendido casi siempre por algo que no se podia accionar.
   const rasgoCandidato = !!candidato
+
+  // El badge de la puerta sigue encendido aunque el papa ya haya respondido
+  // hoy: ahi adentro TODAVIA hay algo nuevo. Lo que se guarda para la proxima
+  // visita es la pregunta, no el aviso.
+  const candidatoVisible =
+    hijo && hijosRespondidosEstaVisita.has(hijo.id) ? null : candidato
+
+  // Marca el hijo como respondido ANTES de disparar la accion. Si la escritura
+  // falla, cambiarEstadoRasgo revierte el rasgo a candidato y vuelve a salir
+  // la proxima vez que abra.
+  function responderCandidato(accion, rasgoId) {
+    if (hijo) hijosRespondidosEstaVisita.add(hijo.id)
+    return accion(rasgoId)
+  }
 
   const rasgosConfirmadosCount = (rasgos || []).filter(
     (r) => r.estado === 'confirmado' && r.hijoId === hijo?.id
@@ -430,13 +462,13 @@ export default function PanelPage() {
            Va arriba de la tarjeta central a proposito: es la unica pregunta
            de la app y tiene que verse al abrir, sin bajar ni entrar a nada.
            Antes vivia en una pestana de HijoPage y casi nadie la respondia. ── */}
-      {candidato && (
+      {candidatoVisible && (
         <PropuestaRasgo
-          rasgo={candidato}
+          rasgo={candidatoVisible}
           nombreHijo={nombreHijo}
           hijo={hijo}
-          onConfirmar={confirmarRasgo}
-          onDescartar={descartarRasgo}
+          onConfirmar={(id) => responderCandidato(confirmarRasgo, id)}
+          onDescartar={(id) => responderCandidato(descartarRasgo, id)}
         />
       )}
 

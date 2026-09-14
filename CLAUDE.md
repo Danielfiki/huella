@@ -8,6 +8,16 @@ Huella es una app de crianza con IA en español latinoamericano que ayuda a padr
 - **GitHub:** github.com/Danielfiki/huella
 - **Owner:** Daniel — primera experiencia construyendo apps, no es developer profesional
 
+## Principios de producto
+
+### Huella no abruma
+
+Cada pantalla muestra lo mínimo que el papá necesita en ese momento, con lo menos posible que leer.
+
+Antes de agregar cualquier card, texto, badge o paso, se justifica **por qué el papá lo necesita AHORA**. Si no hay respuesta, no entra.
+
+Se diseña para un papá cansado a las 11 de la noche: **con un toque y sin leer.**
+
 ## Stack técnico
 
 - Frontend: React + Vite
