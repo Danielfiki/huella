@@ -49,6 +49,8 @@ GRANT UPDATE (<columna>) ON public.perfiles TO authenticated;
 
 **Un cambio de solo CSS se verifica en el `.css` desplegado, no en el `.js`.** Y ojo con el nombre del archivo: los módulos CSS generan clases con el número de línea dentro (`_banner_xveeg_8`), así que agregar un comentario cambia el hash del CSS **y** el del JS, aunque no se haya tocado una línea de JavaScript.
 
+**El string se busca en TODOS los chunks que declara el index, no solo en `index-*.js`.** El código está repartido: el servicio de IA, por ejemplo, vive en `loader-*.js`. Buscar solo en el bundle principal da un cero que no significa nada. El 15 sep `rasgos_ya_registrados` dio cero en `index-*.js` y estaba tres veces en `loader-*.js`.
+
 **El orden de la verificación:** primero que el hash del bundle haya cambiado respecto al de antes del push, y recién después buscar el contenido. Un hash igual significa que el deploy no entró, y cualquier prueba contra ese bundle es un falso positivo. Pasó el 13 sep: el primer QA del banner se hizo contra el bundle viejo y dio un resultado inventado.
 
 ## Sistema de diseño — REGLAS INMUTABLES
