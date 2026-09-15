@@ -94,6 +94,7 @@ export default function NuevoPage() {
       }
       const inserted = await addHito(hito)
       const huboFotoEnSubmit = Boolean(fotoFile)
+      let fotoFallo = false
       if (fotoFile && inserted?.id && user) {
         try {
           const blob = await compressImage(fotoFile)
@@ -101,18 +102,22 @@ export default function NuevoPage() {
           const { error: uploadError } = await supabase.storage
             .from('momentos')
             .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-          if (!uploadError) {
-            // Bucket privado: se guarda el PATH; el contexto firma para mostrar.
-            await updateHitoFoto(inserted.id, path)
-          }
-        } catch { /* foto is non-fatal */ }
+          if (uploadError) throw new Error(uploadError.message)
+          // Bucket privado: se guarda el PATH; el contexto firma para mostrar.
+          await updateHitoFoto(inserted.id, path)
+        } catch {
+          // El avance quedo guardado; la foto no. No se corta el flujo: la vista
+          // 'guardado' muestra "Enmarca este momento" con el error de siempre,
+          // y ahi mismo se puede volver a subir.
+          fotoFallo = true
+        }
       }
-      // El bloque "Enmarca este momento" en la vista 'guardado' solo
-      // se muestra si el papá NO subió foto en el form principal.
+      // El bloque "Enmarca este momento" en la vista 'guardado' se muestra si
+      // el papá NO subió foto en el form principal, o si la subió y falló.
       setHitoGuardadoId(inserted?.id ?? null)
-      setHitoGuardadoSinFoto(!huboFotoEnSubmit && Boolean(inserted?.id))
+      setHitoGuardadoSinFoto((!huboFotoEnSubmit || fotoFallo) && Boolean(inserted?.id))
       setFotoEnmarcaUrl(null)
-      setErrorFotoEnmarca('')
+      setErrorFotoEnmarca(fotoFallo ? 'No se pudo subir la foto. Intenta de nuevo.' : '')
       setVista('guardado')
     } catch (e) {
       setError('No se pudo guardar: ' + e.message)

@@ -1306,7 +1306,20 @@ export function HuellaProvider({ children }) {
     if (!user) return
     // A la BD va el PATH (bucket privado); la lista se firma para mostrar.
     const path = resolverPath(fotoUrl, 'momentos')
-    await supabase.from('hitos').update({ foto_url: path }).eq('id', hitoId).eq('user_id', user.id)
+    // Mismo criterio que updateEpisodio y updateRutina: con .select() un update
+    // que no toca ninguna fila deja de parecer exito. Si no se guardo, se lanza
+    // y no se refresca la lista: la foto aparece solo cuando la base confirmo.
+    const { data: tocadas, error } = await supabase
+      .from('hitos')
+      .update({ foto_url: path })
+      .eq('id', hitoId)
+      .eq('user_id', user.id)
+      .select('id')
+    if (error || !tocadas?.length) {
+      const motivo = error?.message ?? 'el update no afecto ninguna fila'
+      console.warn('[updateHitoFoto] no se guardo:', motivo)
+      throw new Error(motivo)
+    }
     const { data } = await supabase
       .from('hitos').select('*')
       .in('user_id', getPartnerIds())
