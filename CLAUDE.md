@@ -118,6 +118,22 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 2. **Síntoma en una frase antes de modificar.** Antes de cambiar nada, escribe el síntoma así: *"hoy se ve X / debería verse Y"*. Si no se puede formular esa frase, **NO es un bug accionable — se pausa** (no se toca el código).
 3. **Nada se commitea ni se pushea hasta que Daniel apruebe el QA visual.** Compilar (`npm run build`) y dejar el cambio listo está bien; `git commit` / `git push` solo después de que Daniel revise en la app y dé el OK.
 
+## PRECISION Y ESTANDAR (obligatorio en cada respuesta)
+
+1. ANUNCIA ANTES DE ACTUAR. Antes de cada bloque de acciones, una linea: que vas a hacer, en que archivo, y que esperas ver al terminar. Nunca ejecutes en silencio.
+
+2. TERMINADO = EVIDENCIA. No digas "listo", "hecho" ni "deberia funcionar". Termina siempre pegando la prueba: output de grep, resultado del SELECT, string encontrado en el bundle, o captura del error. Sin prueba, la tarea sigue abierta.
+
+3. LEER ANTES DE TOCAR. Todo cambio de codigo parte con un paso de solo lectura que muestra lo que existe hoy. No edites lo que no mostraste primero.
+
+4. PIENSA DOS VECES ANTES DE RECOMENDAR. Toda recomendacion lleva: (a) que otras opciones descartaste y por que, (b) que puede romperse, (c) como se verifica. Una recomendacion sin esos tres puntos no se entrega.
+
+5. DOS INTENTOS Y PARAS. Si algo falla dos veces, no hagas un tercer intento. Para, lista todas las causas posibles con evidencia, y propone el camino mas corto.
+
+6. ESTANDAR DE PRODUCTO. Antes de proponer cualquier cosa que el papa vea (card, texto, badge, paso), responde por escrito: por que lo necesita AHORA, un papa cansado a las 11pm, con un toque. Si no pasa, no se propone. Si se resuelve sacando, se saca.
+
+7. CIERRE DE SESION. Antes de terminar, actualiza ESTADO.md con UN bloque "Cerrado HOY" y lo pendiente. Sin esto no cierras.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual
