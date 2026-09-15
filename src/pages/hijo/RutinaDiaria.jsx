@@ -13,24 +13,35 @@ export default function RutinaDiaria() {
 
   const [modal, setModal]           = useState(null) // null | { modo, id?, hora, nombre, nota, esMomentoRiesgo }
   const [guardando, setGuardando]   = useState(false)
+  // Si guardar la edicion falla, el modal queda abierto con el aviso de reintento.
+  const [errorGuardar, setErrorGuardar] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
 
   const sorted = [...rutinas].sort((a, b) => a.hora.localeCompare(b.hora))
 
   function abrirNuevo() {
+    setErrorGuardar(false)
     setModal({ modo: 'nuevo', hora: '08:00', nombre: '', nota: '', esMomentoRiesgo: false })
   }
 
   function abrirEditar(r) {
+    setErrorGuardar(false)
     setModal({ modo: 'editar', id: r.id, hora: r.hora, nombre: r.nombre, nota: r.nota || '', esMomentoRiesgo: r.esMomentoRiesgo })
   }
 
-  function cerrar() { setModal(null) }
+  function cerrar() { setModal(null); setErrorGuardar(false) }
+
+  // Cualquier cambio del papa en el modal borra el aviso de "No se guardó".
+  function cambiar(parche) {
+    setModal((m) => ({ ...m, ...parche }))
+    setErrorGuardar(false)
+  }
 
   async function handleGuardar(e) {
-    e.preventDefault()
+    e?.preventDefault() // el reintento lo llama sin evento
     if (!modal.nombre.trim() || !modal.hora) return
     setGuardando(true)
+    setErrorGuardar(false)
     try {
       if (modal.modo === 'nuevo') {
         await addRutina({
@@ -52,6 +63,9 @@ export default function RutinaDiaria() {
       setModal(null)
     } catch (err) {
       console.error(err)
+      // Crear o editar: el modal no se cierra y ofrece reintento. Lo que el
+      // papa escribio sigue ahi.
+      setErrorGuardar(true)
     } finally {
       setGuardando(false)
     }
@@ -136,7 +150,7 @@ export default function RutinaDiaria() {
                   type="time"
                   className={styles.input}
                   value={modal.hora}
-                  onChange={(e) => setModal((m) => ({ ...m, hora: e.target.value }))}
+                  onChange={(e) => cambiar({ hora: e.target.value })}
                   required
                 />
               </div>
@@ -148,7 +162,7 @@ export default function RutinaDiaria() {
                 <input
                   className={styles.input}
                   value={modal.nombre}
-                  onChange={(e) => setModal((m) => ({ ...m, nombre: e.target.value }))}
+                  onChange={(e) => cambiar({ nombre: e.target.value })}
                   placeholder="ej: Llegada del colegio, Hora de dormir"
                   autoFocus
                   required
@@ -162,7 +176,7 @@ export default function RutinaDiaria() {
                 <textarea
                   className={styles.textarea}
                   value={modal.nota}
-                  onChange={(e) => setModal((m) => ({ ...m, nota: e.target.value }))}
+                  onChange={(e) => cambiar({ nota: e.target.value })}
                   placeholder="ej: Suele estar cansado, momento de tensión frecuente"
                   rows={2}
                 />
@@ -173,7 +187,7 @@ export default function RutinaDiaria() {
                 <button
                   type="button"
                   className={`${styles.toggleBtn} ${modal.esMomentoRiesgo ? styles.toggleBtnRiesgo : ''}`}
-                  onClick={() => setModal((m) => ({ ...m, esMomentoRiesgo: !m.esMomentoRiesgo }))}
+                  onClick={() => cambiar({ esMomentoRiesgo: !modal.esMomentoRiesgo })}
                 >
                   {modal.esMomentoRiesgo ? '⚠ Sí, momento de riesgo' : 'No, momento de calma'}
                 </button>
@@ -188,6 +202,15 @@ export default function RutinaDiaria() {
               >
                 {modal.modo === 'nuevo' ? 'Agregar bloque' : 'Guardar cambios'}
               </Button>
+              {errorGuardar && !guardando && (
+                <button
+                  type="button"
+                  className={`${styles.campoOpcional} ${styles.reintentar}`}
+                  onClick={() => handleGuardar()}
+                >
+                  No se guardó. Toca para reintentar.
+                </button>
+              )}
             </form>
           </div>
         </div>

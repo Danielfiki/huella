@@ -1583,13 +1583,26 @@ export function HuellaProvider({ children }) {
 
   async function updateRutina(partial) {
     if (!user || !supabase) return
-    dispatch({ type: 'UPDATE_RUTINA', payload: partial })
     const dbFields = {}
     if (partial.hora            !== undefined) dbFields.hora              = partial.hora
     if (partial.nombre          !== undefined) dbFields.nombre            = partial.nombre
     if (partial.nota            !== undefined) dbFields.nota              = partial.nota
     if (partial.esMomentoRiesgo !== undefined) dbFields.es_momento_riesgo = partial.esMomentoRiesgo
-    await supabase.from('rutinas').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+    // Mismo criterio que updateEpisodio: con .select() un update que no toca
+    // ninguna fila deja de parecer exito. Si no se guardo, se lanza y la lista
+    // no se toca: recien se actualiza cuando la base confirma.
+    const { data, error } = await supabase
+      .from('rutinas')
+      .update(dbFields)
+      .eq('id', partial.id)
+      .eq('user_id', user.id)
+      .select('id')
+    if (error || !data?.length) {
+      const motivo = error?.message ?? 'el update no afecto ninguna fila'
+      console.warn('[updateRutina] no se guardo:', motivo)
+      throw new Error(motivo)
+    }
+    dispatch({ type: 'UPDATE_RUTINA', payload: partial })
   }
 
   async function deleteRutina(id) {
