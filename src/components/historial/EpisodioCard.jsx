@@ -31,6 +31,7 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   const respuestaPedida = useRef(false)
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
+  const [errorGuardado, setErrorGuardado] = useState(false)
   const timerRef = useRef(null)
 
   // ── Acción Rápida v1.2 ────────────────────────────────────────────────
@@ -156,11 +157,17 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
     if (!onUpdate) return
     const texto = (reflexion || '').trim()
     setGuardando(true)
+    setErrorGuardado(false)
     try {
       await onUpdate({ id: episodio.id, reflexion: reflexion || null })
       clearTimeout(timerRef.current)
       setGuardado(true)
       timerRef.current = setTimeout(() => setGuardado(false), 2500)
+    } catch {
+      // Su texto se queda en el textarea y el pie ofrece reintentar. Sin
+      // micro-respuesta: no se le responde a algo que no quedo guardado.
+      setErrorGuardado(true)
+      return
     } finally {
       setGuardando(false)
     }
@@ -321,12 +328,20 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
               placeholder="Mi reflexión sobre este momento…"
               value={reflexion}
               rows={reflexion ? 2 : 1}
-              onChange={(e) => { setReflexion(e.target.value); setGuardado(false) }}
+              onChange={(e) => { setReflexion(e.target.value); setGuardado(false); setErrorGuardado(false) }}
             />
             {(reflexionDirty || guardado) && (
               <div className={styles.reflexionActions}>
                 {guardado ? (
                   <span className={styles.reflexionOk}>✓ Guardado</span>
+                ) : errorGuardado ? (
+                  <button
+                    type="button"
+                    className={`${styles.reflexionOk} ${styles.reflexionReintentar}`}
+                    onClick={handleGuardarReflexion}
+                  >
+                    No se guardó. Toca para reintentar.
+                  </button>
                 ) : (
                   <button
                     className={styles.reflexionBtn}

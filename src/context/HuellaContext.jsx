@@ -920,7 +920,6 @@ export function HuellaProvider({ children }) {
 
   async function updateEpisodio(partial) {
     if (!user || !supabase) return
-    dispatch({ type: 'UPDATE_EPISODIO', payload: partial })
     const dbFields = {}
     if (partial.orientacionIA !== undefined) dbFields.orientacion_ia = partial.orientacionIA
     if (partial.reflexion     !== undefined) dbFields.reflexion      = partial.reflexion
@@ -938,8 +937,23 @@ export function HuellaProvider({ children }) {
       dbFields.accion_rapida_generada_en = ar.generadaEn ?? null
     }
     if (Object.keys(dbFields).length > 0) {
-      await supabase.from('episodios').update(dbFields).eq('id', partial.id).eq('user_id', user.id)
+      // Con .select(): sin el, un update que no toca ninguna fila devuelve
+      // error null y parece exito. Si no se guardo, se lanza para que la
+      // pantalla no diga "Guardado", y el estado local no se toca: recien se
+      // actualiza cuando la base confirma.
+      const { data, error } = await supabase
+        .from('episodios')
+        .update(dbFields)
+        .eq('id', partial.id)
+        .eq('user_id', user.id)
+        .select('id')
+      if (error || !data?.length) {
+        const motivo = error?.message ?? 'el update no afecto ninguna fila'
+        console.warn('[updateEpisodio] no se guardo:', motivo)
+        throw new Error(motivo)
+      }
     }
+    dispatch({ type: 'UPDATE_EPISODIO', payload: partial })
 
     // `orientacion_zona` va en un UPDATE APARTE, y es a proposito.
     //
@@ -947,8 +961,8 @@ export function HuellaProvider({ children }) {
     // ventana en que la columna todavia no existe. Si el campo viajara en el
     // mismo UPDATE que `orientacion_ia`, PostgREST rechazaria la fila entera y
     // se perderia tambien el texto de la orientacion — justo lo que el padre
-    // acaba de leer. Y como updateEpisodio no propaga errores, se perderia en
-    // silencio. Separados, el texto se guarda siempre y la zona simplemente no
+    // acaba de leer, por una columna que es un extra. Separados, el texto se
+    // guarda siempre y la zona simplemente no
     // se persiste hasta que la columna exista.
     if (partial.orientacionZona !== undefined) {
       const { error } = await supabase

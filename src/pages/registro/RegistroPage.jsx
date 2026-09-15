@@ -355,6 +355,7 @@ export default function RegistroPage() {
   const [reflexion, setReflexion] = useState('')
   const [guardandoReflexion, setGuardandoReflexion] = useState(false)
   const [reflexionGuardada, setReflexionGuardada] = useState(false)
+  const [errorReflexion, setErrorReflexion] = useState(false)
   // Pieza 2: la micro-respuesta a lo que el padre escribió de sí mismo.
   // `respuestaReflexion` es el texto; el ref es el CANDADO que la deja en una
   // sola generación por episodio. Va en ref y no en estado porque se consulta
@@ -544,7 +545,10 @@ export default function RegistroPage() {
       if (args.episodioId) {
         // Solo persistimos cuando la orientación fue exitosa — nunca
         // se guarda un mensaje de error como si fuera la orientación.
+        // Sin await: la orientacion ya esta en pantalla. Si no se guarda, se
+        // avisa en consola y el padre sigue leyendo.
         updateEpisodio({ id: args.episodioId, orientacionIA: texto, orientacionZona: zona })
+          .catch((err) => console.warn('[RegistroPage] no se guardo la orientacion:', err.message))
       }
     } catch {
       // El mensaje específico va a consola via console.error de
@@ -561,11 +565,15 @@ export default function RegistroPage() {
     if (!episodioId || !reflexion.trim()) return
     const texto = reflexion.trim()
     setGuardandoReflexion(true)
+    setErrorReflexion(false)
     try {
       await updateEpisodio({ id: episodioId, reflexion: texto })
       setReflexionGuardada(true)
     } catch {
-      // reflexion is non-critical, fail silently
+      // Su texto se queda en pantalla y el pie ofrece reintentar. Sin
+      // micro-respuesta: no se le responde a algo que no quedo guardado.
+      setErrorReflexion(true)
+      return
     } finally {
       setGuardandoReflexion(false)
     }
@@ -785,13 +793,23 @@ export default function RegistroPage() {
               </div>
               <VoiceTextarea
                 value={reflexion}
-                onChange={(v) => { setReflexion(v); setReflexionGuardada(false) }}
-                onVoiceResult={(updater) => { setReflexion(updater); setReflexionGuardada(false) }}
+                onChange={(v) => { setReflexion(v); setReflexionGuardada(false); setErrorReflexion(false) }}
+                onVoiceResult={(updater) => { setReflexion(updater); setReflexionGuardada(false); setErrorReflexion(false) }}
                 placeholder="Escribe si quieres — esto es solo para ti."
               />
               <div className={styles.gWellFooter}>
                 {reflexionGuardada
                   ? <span className={styles.gGuardadaMsg}>✓ Guardado</span>
+                  : errorReflexion
+                  ? (
+                    <button
+                      type="button"
+                      className={`${styles.gGuardadaMsg} ${styles.gReintentarReflexion}`}
+                      onClick={handleGuardarReflexion}
+                    >
+                      No se guardó. Toca para reintentar.
+                    </button>
+                  )
                   : (
                     <button
                       className={styles.gGuardarReflexion}
