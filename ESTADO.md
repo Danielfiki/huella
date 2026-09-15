@@ -1,6 +1,6 @@
 # ESTADO.md — Proyecto Huella
 
-*Última actualización: lunes 14 septiembre 2026 — ✅ **LA PREGUNTA DE HUELLA SE MUDÓ AL HOME.** La card de candidato salió de una pestaña de `HijoPage` y quedó en lo primero que el papá ve, **uno por visita** y con el candidato **derivado del estado**, sin el efecto que la dejó invisible durante meses. El badge "Algo nuevo" se enciende **solo con candidato**. 📊 **La pieza 3.5 se midió y el WhatsApp mueve poco: 1 de 5 resolvió algo, y resolvió 1 de 7.** Valentina registró pero no tocó ninguna card; Cecilia, María y Pauli no entraron. Esa medición es la que justifica la mudanza. 🎨 **La card toma el color de su familia**: tangerine y pistacho, cada uno pleno y suave, con las 8 combinaciones pasando AA. Los chips salieron del naranja y el nombre del papá va en `--color-primary-deep`, para que el tangerine quede solo en "Registrar un momento". **Tres tokens nuevos:** `--color-pistacho-bg`, `--color-pistacho-tinta` y `--radius-btn`. ✅ **Grants de `perfiles` auditados: no falta ninguno.** 📌 **Regla nueva en `CLAUDE.md`: minimalismo y elegancia**, que filtra antes que lo técnico. ⚠️ **DEUDA: Daniel pusheó la card porque mejora lo anterior, pero NO cumple su estándar visual.** Queda pendiente una pasada de diseño con dirección cerrada. 🔴 **La lección del día es de proceso: 4 iteraciones visuales por no cerrar la dirección antes de escribir CSS.** ⏭️ **El 16: reescribirle a Cecilia, María y Pauli.**
+*Última actualización: martes 15 septiembre 2026 — ✅ **TRES GUARDADOS DEJARON DE DECIR "GUARDADO" CUANDO LA BASE NO GUARDÓ.** La reflexión (EpisodioCard y RegistroPage), el modal de rutinas (crear y editar) y la foto de un avance ahora piden `.select()`, y si el `update` falla o toca 0 filas el papá ve el aviso y puede reintentar sin perder lo que escribió. Los tres en producción, con la prueba de fallo hecha por Code. ✅ **La micro-respuesta a la reflexión dejó de colar voseo:** su prompt no llevaba `REGLA_IDIOMA`, ya la lleva. 🗂️ **Los otros 6 `update` sin `.select()` se dejan:** ninguno le hace perder algo al papá, y uno es código muerto. 📌 **`CLAUDE.md` suma la sección PRECISIÓN Y ESTÁNDAR** (7 reglas). ⏭️ **Miércoles 16: reescribirle a Cecilia, María y Pauli.** ⚠️ **Sigue abierta la pasada de diseño de la card de candidato.**
 
 > El histórico de sesiones anteriores (3292 líneas) quedó congelado en `git HEAD`. Si en alguna próxima sesión necesitas recuperarlo:
 > ```
@@ -10,11 +10,11 @@
 
 ---
 
-## 🔴 LO PRIMERO AL RETOMAR — la pasada de diseño de la card
+## 🔴 LO PRIMERO AL RETOMAR — el WhatsApp del miércoles 16, y después la pasada de diseño de la card
 
-⚠️ **DEUDA ABIERTA, y es de diseño, no de código.** La card de candidato está en producción porque mejora lo que había, pero **NO cumple el estándar visual de Daniel**. Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa: que Design entregue la pieza completa y Code la implemente de una vez.
+**1. Miércoles 16 de septiembre: reescribirle a Cecilia, María y Pauli.** Son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 
-**El 16 de septiembre: reescribirle a Cecilia, María y Pauli.** Son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
+**2. La pasada de diseño de la card de candidato.** ⚠️ **DEUDA ABIERTA, y es de diseño.** La card está en producción porque mejora lo que había, pero **NO cumple el estándar visual de Daniel**. Queda pendiente **una pasada de diseño con dirección cerrada**, no iterativa: que Design entregue la pieza completa y Code la implemente de una vez.
 
 ---
 
@@ -22,11 +22,17 @@
 
 *Única fuente de pendientes del proyecto. **Regla de proceso:** al cerrar cada sesión, lo que quede diferido ENTRA aquí; lo que se complete SALE. Formato por línea: **qué** — desde cuándo — por qué se difirió.*
 
+**Lo primero, en este orden**
+- ⬜ **Reescribirle a Cecilia, María y Pauli el miércoles 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
+- ⬜ **Pasada de diseño de la card de candidato, con dirección cerrada** — desde **14 sep 2026** — está en producción porque mejora lo que había, pero no cumple el estándar visual de Daniel. Design entrega la pieza completa, con el contexto real del Home, y Code la implementa de una vez.
+
 **Pieza 7 — lo que quedó abierto (11 sep 2026)**
-- ⬜ **9 `update` más en `HuellaContext.jsx` sin `.select()`** — desde **14 sep 2026** — revisar **caso a caso**, porque cada uno necesita su propio criterio al fallar: unos son optimistas y revierten, otros lanzan, otros no tienen nada que revertir. Están en `actualizarUltimoAutorIa`, `updateEpisodio` (3), `guardarRasgosDetectados`, `updateHitoFoto`, `updateEstrategia`, `marcarP` y `updateRutina`.
 - ⬜ **EL PAYLOAD DEL MOTOR DE RASGOS CRECE SIN TECHO** — desde **15 sep 2026** — hoy van **102 rasgos** de La brava en cada llamada, y ese número solo sube. Los 4000 tokens alcanzan ahora; volver a chocar es cuestión de tiempo. **Decidir techo o filtro antes de que no alcance:** mandar solo los activos y dejar fuera los descartados viejos, mandar título y estado sin nada más, o poner un tope de cuántos viajan. La diferencia con antes es que ahora el warn avisa.
-- ⬜ **Reescribirle a Cecilia, María y Pauli el 16 sep** — desde **14 sep 2026** — son las tres que no tuvieron ninguna actividad tras el WhatsApp del 11.
 - ⬜ **`La brava`: 27 candidatos** — desde **11 sep 2026**, replanteado el **15 sep** — **ya NO es un bug del motor**, que se arregló hoy y dejó de reproponer lo que ya propuso. Lo que queda es **limpieza de datos de prueba**: borrar los duplicados o resetear el perfil.
+- ⬜ **Respuesta con voseo ya guardada en un episodio de `La brava`** — desde **15 sep 2026** — la micro-respuesta dijo "no tenés una brújula" antes del arreglo del prompt (`d106b9f`). Se genera una sola vez por episodio, así que no se corrige sola. **Se limpia al resetear La brava.**
+
+**Regla de trabajo**
+- 📌 **La prueba de fallo la hace Code, con el medio más simple, tope 10 minutos. Daniel nunca usa DevTools** — desde **15 sep 2026** — así se probaron la 941, la 1578 y la 1295: arnés temporal fuera del repo, id inexistente para forzar 0 filas, evidencia pegada en el chat y todo lo temporal borrado al terminar.
 
 **Onboarding (QA que falta)**
 - ✅ **ONBOARDING — PASADA EN ANDROID REAL: QA APROBADO por Daniel (4 sep 2026).** A5 con sus dos slots de foto y el acto C con sus 6 filas caben sin scroll en 390px. De la pasada salieron **dos ajustes al acto C, ya en producción (`d30db3c`)**: el título dejó de atribuirle el texto del acto B a los 6 autores y pasó a *"Las voces detrás de Huella en la etapa de {nombre}"*, y la marca de agua se movió de abajo-izquierda a arriba-derecha, donde se ve en vez de quedar tapada por la tarjeta. Detalle en el bloque del 6 sep.
@@ -478,7 +484,57 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — lunes 14 septiembre 2026 — **La pregunta de Huella se mudó al Home, y la lección del día fue de proceso: cuatro vueltas visuales por no cerrar la dirección antes**
+## Cerrado HOY — martes 15 septiembre 2026 — **Tres guardados dejaron de decir "Guardado" cuando la base no guardó, y la micro-respuesta dejó de colar voseo**
+
+**🎯 La reflexión, la rutina y la foto de un avance ahora verifican que la base escribió. Si no escribió, el papá lo ve y puede reintentar sin perder lo suyo. Los tres en producción, con la prueba de fallo hecha por Code.**
+
+### 1. 📌 `CLAUDE.md` — SECCIÓN "PRECISIÓN Y ESTÁNDAR" (`d36bbe7`)
+
+Siete reglas obligatorias en cada respuesta: anunciar antes de actuar, terminado = evidencia, leer antes de tocar, recomendar con opciones descartadas + qué puede romperse + cómo se verifica, dos intentos y se para, estándar de producto, y cierre de sesión con `ESTADO.md`.
+
+### 2. ✅ LA 941 — `updateEpisodio` VERIFICA LA ESCRITURA (`2b6e099`, en producción)
+
+**Síntoma:** el papá escribía su reflexión, veía "✓ Guardado" y la base podía no haberla guardado.
+
+`updateEpisodio` pide `.select('id')` y lanza si hay error o toca 0 filas. El estado local se actualiza **recién cuando la base confirma**. En **EpisodioCard** y **RegistroPage**, en el lugar del "✓ Guardado" aparece **"No se guardó. Toca para reintentar."** en `--color-danger-text`. Tocarlo reintenta con el mismo texto, el texto del papá nunca se borra y la micro-respuesta no se pide hasta que guarde. La orientación de RegistroPage ganó un `.catch` para que el error nuevo no quede suelto.
+
+### 3. ✅ LA 1578 — `updateRutina` VERIFICA LA ESCRITURA (`a48ebc0`, en producción)
+
+Mismo patrón en el contexto. En el modal de rutina, si falla **el modal no se cierra**: bajo el botón aparece "No se guardó. Toca para reintentar." con el texto chico del modal (`campoOpcional`) en `--color-danger-text`. Tocarlo reintenta y editar cualquier campo lo borra. **Aplica a crear y a editar.**
+
+### 4. ✅ LA 1295 — `updateHitoFoto` VERIFICA LA ESCRITURA (`bc907f2`, en producción)
+
+`.select('id')` y lanza. Si no guardó, la lista no se refresca, así que la foto no aparece como guardada. **La cámara de EpisodioCard y Enmarca no necesitaron cambios:** sus errores rojos de siempre (`.fotoError`, `.enmarcarError`) cubrieron el fallo en cuanto el contexto empezó a lanzar. **El formulario principal de NuevoPage** tragaba el error sin aviso: ahora, si la foto falla, la vista "¡Avance registrado!" muestra el bloque Enmarca con su error de siempre, y ahí mismo se vuelve a subir. Sin textos ni estilos nuevos.
+
+### 5. ✅ LA MICRO-RESPUESTA DEJÓ DE COLAR VOSEO (`d106b9f`, en producción)
+
+**Síntoma:** a un papá le respondió "no tenés una brújula". **Causa:** `generarRespuestaReflexion` manda su propio `system`, y el backend usa ese en vez del suyo, así que no le llegaba `REGLA_IDIOMA` ni la regla de idioma del servidor. Solo tenía una línea de tuteo sin ejemplos, y corre en Haiku. Se agregó `- ${REGLA_IDIOMA}` al prompt, dejando la línea de tuteo. Orientación, Acción Rápida y motor de rasgos ya la recibían. **La respuesta con voseo que ya quedó guardada no se corrige sola** (anotada en la cola).
+
+### 6. 🗂️ DECISIÓN — LOS 6 `UPDATE` RESTANTES SIN `.select()` SE DEJAN
+
+De los 9 anotados el 14 sep se arreglaron los tres que podían hacerle perder algo al papá. Los otros seis quedan como están, porque ninguno le hace perder nada suyo. Números de línea de `HuellaContext.jsx` del 15 sep, antes de los arreglos:
+
+| Línea | Función | Por qué se deja |
+|---|---|---|
+| 825 | `actualizarUltimoAutorIa` | Dato interno para no repetir autor en la Acción Rápida |
+| 956 | `updateEpisodio` (zona) | Extra, va separado a propósito para no arrastrar el texto |
+| 972 | `updateEpisodio` (respuesta de IA) | Extra, va separado a propósito para no arrastrar la reflexión |
+| 1170 | `guardarRasgosDetectados` | Corre de fondo y vuelve a leer la base al terminar |
+| 1508 | `updateEstrategia` | **Código muerto**: nadie la llama |
+| 1538 | `marcarP4Visto` | Lo peor que pasa es que el modal P4 vuelva a salir |
+
+### 7. 🧪 CÓMO SE PROBÓ CADA FALLO
+
+Daniel no usa DevTools, así que la prueba de fallo la hizo Code: un arnés temporal **fuera del repo** (jsdom + Vite en modo SSR) que monta el contexto y la pantalla reales contra Supabase real, reemplaza solo `useAuth` y `useFamily`, y usa un id que no existe para forzar 0 filas. En los tres casos Supabase respondió `HTTP 200` con `[]`, la pantalla mostró el aviso y el reintento mandó el mismo `update`. En la 1295 se simuló además la subida al bucket y `addHito`, para llegar a `updateHitoFoto` sin crear filas. El arnés se borró al terminar y `git diff --stat` quedó sin cambios temporales.
+
+### 8. ✅ VERIFICADO EN EL BUNDLE DE `huella.lat`
+
+- **Deploy de la 1578 y la 1295** (`index-CiXkWVxX.js`): "No se guardó. Toca para reintentar." aparece **3 veces** (reflexión de RegistroPage, reflexión de EpisodioCard y modal de rutinas) y `[updateHitoFoto] no se guardo` **1 vez**. En el CSS, `.reintentar` con `--color-danger-text`.
+- **Deploy del voseo** (`loader-DyH9C-C7.js` + `index-Ba1bMdVq.js`): el prompt de la micro-respuesta tiene `- ${J}` justo después de la línea de tuteo, y `J` es el texto de `REGLA_IDIOMA`, definido una sola vez en ese chunk.
+
+---
+
+## Sesión lunes 14 septiembre 2026 — **La pregunta de Huella se mudó al Home, y la lección del día fue de proceso: cuatro vueltas visuales por no cerrar la dirección antes**
 
 **🎯 La card de candidato salió de una pestaña escondida y quedó en lo primero que el papá ve. Está en producción, y Daniel la pusheó sabiendo que todavía no cumple su estándar.**
 
