@@ -25,7 +25,8 @@ create table if not exists public.episodios (
   emocion           text,
   orientacion_ia    text,
   descripcion_libre text,
-  fecha             timestamptz default now()
+  fecha             timestamptz default now(),
+  created_at        timestamptz default now()
 );
 
 create table if not exists public.hitos (
@@ -33,7 +34,8 @@ create table if not exists public.hitos (
   user_id     uuid references auth.users(id) on delete cascade not null,
   categoria   text not null,
   descripcion text not null,
-  fecha       timestamptz default now()
+  fecha       timestamptz default now(),
+  created_at  timestamptz default now()
 );
 
 create table if not exists public.estrategias (
