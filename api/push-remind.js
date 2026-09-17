@@ -18,6 +18,7 @@ webpush.setVapidDetails(
 //   4. Plan activo esta semana                           -> se lo recuerda sin pasar lista
 //   5. Pregunta abierta del dia                          -> el default
 //   6. Lleva 7+ dias sin abrir                           -> algo de valor, sin pedirle nada
+//   *. Hay un momento con relato de hace 2-30 dias      -> se le devuelve lo que EL escribio
 //
 // 🔴 REGLA DURA, no negociable: NINGUN mensaje dice ni insinua "no has
 // registrado". Cero rachas, cero contadores, cero dias transcurridos en el
@@ -112,20 +113,56 @@ function frasePorEtapa(hijoId, edad, dia) {
   return frases[(semilla + dia) % frases.length]
 }
 
+// Tope de largo del titulo de un rasgo para que quepa en el cuerpo del aviso.
+// Mas largo que esto se corta solo en la barra de Android y el papa lee una
+// frase partida, asi que se prefiere el cuerpo generico de siempre.
+const MAX_TITULO_RASGO = 70
+
+// Cuantas palabras del relato se le devuelven en el aviso de "ultimo momento".
+// Ocho alcanzan para que reconozca lo que escribio sin que el aviso sea un
+// parrafo.
+const PALABRAS_EXTRACTO = 8
+
+// Ventana del aviso de "ultimo momento", en dias. Desde 2 para no repetirle
+// algo que anoto ayer; hasta 30 porque mas atras "como sigue" ya no calza.
+const MOMENTO_DIAS_MIN = 2
+const MOMENTO_DIAS_MAX = 30
+
+// Sube SOLO la primera letra. El titulo del rasgo abre el cuerpo del aviso,
+// asi que va capitalizado aunque en la base se haya guardado en minuscula.
+function mayusculaInicial(s) {
+  if (!s) return s
+  return s.charAt(0).toLocaleUpperCase('es') + s.slice(1)
+}
+
+// Las primeras `n` palabras del relato, sin el signo de puntuacion final para
+// que no quede pegado a los puntos suspensivos.
+function primerasPalabras(texto, n) {
+  const limpio = (texto || '').replace(/\s+/g, ' ').trim()
+  if (!limpio) return null
+  const corte = limpio.split(' ').slice(0, n).join(' ')
+  return corte.replace(/[.,;:!?…]+$/, '') || null
+}
+
 // ── El selector ──────────────────────────────────────────────────────────
 // Devuelve el primer mensaje que aplica, o null si no hay nada que decir.
 // Recibe TODO ya resuelto: no consulta la base, asi es facil de leer y de
 // probar. Cada rama nombra a SU hijo (el del dato que la disparo), nunca al
 // primero de la lista.
 function elegirMensaje(ctx) {
-  const { rasgo, episodioIntenso, estrategia, hijoReciente, horaAviso, diasSinAbrir, hoyDia } = ctx
+  const { rasgo, episodioIntenso, estrategia, ultimoMomento, hijoReciente, horaAviso, diasSinAbrir, hoyDia } = ctx
 
   // 1. Un rasgo esperando confirmacion. Va primero porque es lo unico que
   //    SOLO el cuidador puede resolver: la IA propone, el papa decide.
   if (rasgo?.hijoNombre) {
+    // El titulo dice QUE se repite. Sin el, el aviso obliga a entrar para
+    // saber de que se trata. Con el, el papa ya puede ir pensandolo.
+    const titulo = (rasgo.titulo || '').trim().replace(/\.+$/, '')
     return {
       title: `Huella notó algo en ${rasgo.hijoNombre}`,
-      body:  `Algo se repite en ${rasgo.hijoNombre}. ¿Tú también lo ves?`,
+      body:  titulo && titulo.length <= MAX_TITULO_RASGO
+        ? `${mayusculaInicial(titulo)}. ¿Lo ves igual?`
+        : `Algo se repite en ${rasgo.hijoNombre}. ¿Tú también lo ves?`,
       url:   `/hijo?hijo=${rasgo.hijoId}`,
     }
   }
@@ -170,6 +207,23 @@ function elegirMensaje(ctx) {
     }
     // Sin frase para ese tramo (edad sin guardar) cae a la 5, que tampoco le
     // reclama nada.
+  }
+
+  // *. El ultimo momento con relato. Va DESPUES de la 6 y ANTES del default
+  //    porque no pregunta de cero: le devuelve al papa algo que EL escribio.
+  //
+  //    🔴 No cuenta dias sin entrar ni dice "no has registrado". El "hace N
+  //    dias" es la edad DEL MOMENTO, que es un dato del hijo, no una factura
+  //    por lo que el papa no hizo.
+  if (ultimoMomento?.hijoNombre) {
+    const extracto = primerasPalabras(ultimoMomento.texto, PALABRAS_EXTRACTO)
+    if (extracto) {
+      return {
+        title: ultimoMomento.hijoNombre,
+        body:  `Hace ${ultimoMomento.dias} días anotaste: ${extracto}… ¿Cómo sigue?`,
+        url:   `/registro?hijo=${ultimoMomento.hijoId}`,
+      }
+    }
   }
 
   // 5. La pregunta abierta del dia. SIN condicion de ausencia: es el default.
@@ -246,12 +300,14 @@ export default async function handler(req, res) {
   for (const sub of subs) {
     const userId = sub.user_id
 
-    const cutoff7d = new Date(now.getTime() - 7 * 864e5).toISOString()
+    // La ventana larga es SOLO para el aviso de "ultimo momento". El resto de
+    // las reglas sigue mirando 7 dias; ver el filtro de `episodios7d` abajo.
+    const cutoff30d = new Date(now.getTime() - MOMENTO_DIAS_MAX * 864e5).toISOString()
 
     // TODOS los hijos, no `maybeSingle()`. Con dos hijos o mas, maybeSingle
     // devolvia null y el mensaje terminaba diciendo "tu hijo/a": el aviso
     // dejaba de nombrar a nadie justo en las familias mas activas.
-    const [{ data: hijos }, { data: rasgos }, { data: episodios }, { data: estrategias }, { data: perfil }] =
+    const [{ data: hijos }, { data: rasgos }, { data: episodios }, { data: hitos }, { data: estrategias }, { data: perfil }] =
       await Promise.all([
         supabase
           .from('hijos')
@@ -266,11 +322,18 @@ export default async function handler(req, res) {
           .limit(1),
         supabase
           .from('episodios')
-          .select('id, hijo_id, fecha, intensidad')
+          .select('id, hijo_id, fecha, intensidad, descripcion_libre')
           .eq('user_id', userId)
-          .gte('fecha', cutoff7d)
+          .gte('fecha', cutoff30d)
           .order('fecha', { ascending: false })
-          .limit(20),
+          .limit(50),
+        supabase
+          .from('hitos')
+          .select('id, hijo_id, fecha, descripcion')
+          .eq('user_id', userId)
+          .gte('fecha', cutoff30d)
+          .order('fecha', { ascending: false })
+          .limit(50),
         supabase
           .from('estrategias')
           .select('hijo_id, habilidad, semana_actual')
@@ -306,20 +369,46 @@ export default async function handler(req, res) {
 
     // El hijo de la pregunta abierta: el del episodio mas reciente, y si no
     // hay ninguno, el unico o el primero de la lista.
+    //
+    // ⚠️ Se filtra a 7 dias A PROPOSITO. La consulta ahora trae 30 para el
+    // aviso de "ultimo momento"; sin este filtro, ampliar la ventana habria
+    // cambiado a que hijo nombran las reglas 5 y 6 en familias con dos o mas
+    // hijos, que no es lo que se pidio.
+    const limite7d = now.getTime() - 7 * 864e5
+    const episodios7d = (episodios ?? []).filter(
+      (e) => new Date(e.fecha).getTime() >= limite7d
+    )
     const hijoReciente =
-      (episodios?.[0] && porId.get(episodios[0].hijo_id)) || hijos[0]
+      (episodios7d[0] && porId.get(episodios7d[0].hijo_id)) || hijos[0]
+
+    // El momento con relato mas reciente dentro de la ventana, venga de
+    // episodios o de hitos: los dos son "momentos" y el papa no distingue.
+    const momRow = [
+      ...(episodios ?? []).map((e) => ({ hijoId: e.hijo_id, fecha: e.fecha, texto: e.descripcion_libre })),
+      ...(hitos ?? []).map((h) => ({ hijoId: h.hijo_id, fecha: h.fecha, texto: h.descripcion })),
+    ]
+      .filter((m) => m.hijoId && m.texto && m.texto.trim())
+      .map((m) => ({ ...m, dias: Math.floor((now - new Date(m.fecha)) / 864e5) }))
+      .filter((m) => m.dias >= MOMENTO_DIAS_MIN && m.dias <= MOMENTO_DIAS_MAX)
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]
+    const hijoMomento = momRow ? porId.get(momRow.hijoId) : null
 
     const diasSinAbrir = perfil?.ultima_actividad
       ? Math.floor((now - new Date(perfil.ultima_actividad)) / 864e5)
       : null
 
     const notification = elegirMensaje({
-      rasgo: hijoRasgo ? { hijoId: hijoRasgo.id, hijoNombre: hijoRasgo.nombre } : null,
+      rasgo: hijoRasgo
+        ? { hijoId: hijoRasgo.id, hijoNombre: hijoRasgo.nombre, titulo: rasgoRow.titulo }
+        : null,
       episodioIntenso: hijoEp
         ? { id: epRow.id, hijoId: hijoEp.id, hijoNombre: hijoEp.nombre }
         : null,
       estrategia: hijoEst
         ? { hijoId: hijoEst.id, hijoNombre: hijoEst.nombre, habilidad: estRow.habilidad }
+        : null,
+      ultimoMomento: hijoMomento
+        ? { hijoId: hijoMomento.id, hijoNombre: hijoMomento.nombre, texto: momRow.texto, dias: momRow.dias }
         : null,
       hijoReciente,
       horaAviso: perfil?.hora_aviso,
