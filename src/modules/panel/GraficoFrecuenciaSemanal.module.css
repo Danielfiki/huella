@@ -60,7 +60,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-bg);
   border-radius: 7px;
   padding: 6px 8px;
   display: flex;

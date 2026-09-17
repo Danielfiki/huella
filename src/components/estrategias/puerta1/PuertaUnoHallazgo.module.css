@@ -158,7 +158,7 @@
   width: 100%;
   padding: 13px 16px;
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-bg);
   border: none;
   border-radius: var(--radius-md, 16px);
   font-family: var(--font-family);

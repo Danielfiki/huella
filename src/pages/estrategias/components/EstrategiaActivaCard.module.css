@@ -125,8 +125,12 @@
 .cta {
   width: 100%;
   padding: 14px 18px;
+  /* Barra invertida: el fondo es el color de la tinta y el texto el del fondo.
+     Los dos tokens se dan vuelta juntos en oscuro, asi que el par queda
+     siempre contrastado. Con `#fff` fijo, en oscuro quedaba crema sobre
+     blanco (1,16:1) y el pie era ilegible. */
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-bg);
   border: none;
   font-family: var(--font-family);
   font-size: 14px; font-weight: 700;
