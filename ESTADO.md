@@ -99,14 +99,32 @@
 - ⬜ **Título de la push muestra "from Huella"** — **6 jul** — default del sistema, no se está seteando.
 - ⬜ **Rediseño visual del `UpgradeModal`** y **pulir la promesa central** + reverse trial largo — sin fecha, marca.
 - ⬜ **Cortar la línea 3 de `ESTADO.md`** — **4 ago** — ~69 mil caracteres en una sola línea. Requiere sesión propia.
+- ⬜ **`TooltipAyuda` y `GraficoFrecuenciaSemanal` son código muerto** — **17 sep** — no los importa nadie (grep fuera de su propio archivo = vacío), Vite los saca del build y su CSS no llega a producción. Ya tienen el arreglo de modo oscuro aplicado por si se usan. **Decide Daniel: borrar o dejar.**
 
 ### Sale de la cola
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
 
-### Aparcadas (no borrar)
+### Roadmap (decidido, con disparador)
 
-Cerebro Fase C · Patrones Vivos bloque 6 · loop de tareas de estrategia · loop de la pareja (Fase 4) · registro por WhatsApp · Huella del año (resumen anual imprimible) · compromiso elegido en el onboarding (después del ítem 3) · iOS nativo · `claude-sonnet-5` · prompt caching fase 2 · encuesta de salida en Tally · separar la bandeja `contacto@` · consent screen de Google OAuth · registrante del dominio · Gmail en `PerfilPage.jsx:193`.
+*No están aparcadas: están decididas y esperando algo concreto. Una línea cada una: **qué** — **qué tiene que pasar para que entre**.*
+
+- **Huella para familias neurodivergentes** — sesión de alcance. **Disparador (Google + Cerebro estable) cumplido en lo esencial.** Sección completa en el bloque del 29 ago; el paso 1 sigue siendo aprender de una familia real, no escribir código.
+- **Cerebro Fase C** — cuando cierren los pendientes del Cerebro (ítems 21-24).
+- **Patrones Vivos bloque 6** — cuando haya suficientes patrones confirmados en la base para que el bloque tenga qué mostrar.
+- **Loop de tareas de estrategia** — cuando un tester complete un ciclo de 4 semanas entero.
+- **Loop de la pareja (Fase 4)** — cuando haya una segunda familia con los dos cuidadores activos.
+- **Registro por WhatsApp** — cuando el registro dentro de la app deje de ser el cuello de botella.
+- **Huella del año (resumen anual imprimible)** — diciembre, o cuando una familia acumule 12 meses de registros.
+- **Compromiso elegido en el onboarding** — después del ítem 3 (la push).
+- **iOS nativo** — después de que Android esté estable en producción.
+- **`claude-sonnet-5`** — cuando se revise el costo de la API (está en deuda).
+- **Prompt caching fase 2** — junto con la auditoría de costo de la API.
+- **Encuesta de salida en Tally** — cuando el primer tester se dé de baja.
+- **Separar la bandeja `contacto@`** — cuando el volumen de correo lo pida.
+- **Consent screen de Google OAuth** — antes de salir de beta cerrada.
+- **Registrante del dominio** — trámite, sin bloqueo técnico.
+- **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 
 ---
 
@@ -321,7 +339,66 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — miércoles 16 septiembre 2026 — **Día sin código de producto: la cola se compactó a la octava parte, los momentos ya guardan cuándo se registraron, y tres "comportamientos" resultaron ser valores por defecto**
+## Cerrado HOY — jueves 17 septiembre 2026 — **Dos cosas llegaron a producción y una tercera quedó lista por debajo: la notificación dejó de preguntar en abstracto, el modo oscuro dejó de tener texto invisible, y el avance ya tiene con qué responder aunque todavía no se vea**
+
+**🎯 La beta tiene los 12 de Google, pero el número que importa es otro: 8 cuentas registraron una sola vez y no volvieron.** Ese es el problema que ordena lo que sigue, y es exactamente lo que las dos piezas de hoy intentan mover.
+
+### 1. 📊 La foto de la beta
+
+- **9 testers activos** en los últimos 7 días.
+- **12 en 14 días** — se cumple el mínimo de Google.
+- **8 cuentas con un solo registro que nunca volvieron.** No es un problema de captación: entran, prueban una vez y la app no les devuelve nada que los traiga de vuelta.
+
+### 2. ✅ EN PRODUCCIÓN — la notificación cita algo concreto del hijo (commit `4e91f69`)
+
+Ítem 3, paso 1. Antes el aviso preguntaba en abstracto; ahora nombra algo que el papá reconoce.
+
+- **Rama del candidato:** el cuerpo cita el **título del rasgo**, que ya se traía de la base (`push-remind.js:262`) y se descartaba antes de llegar al selector. Sobre 70 caracteres cae al cuerpo genérico de siempre.
+- **Rama nueva "último momento":** si hay un episodio o un hito **con relato de hace 2 a 30 días**, el aviso le devuelve sus propias palabras. Va entre la regla de 7+ días sin abrir y el default.
+- Para eso la consulta de episodios pasó de 7 a 30 días y se agregó la de hitos. **El cálculo de `hijoReciente` se filtró a 7 días a propósito**, para que ampliar la ventana no cambiara a qué hijo nombran las reglas 5 y 6 en familias con dos o más hijos.
+- 🔴 Ningún texto cuenta días sin entrar ni dice "no has registrado".
+
+**⬜ FALTA EL QA: Daniel tiene que verla llegar al celular.** El aviso quedó puesto en **Tarde, 14:00** para provocarla.
+**⬜ Paso 2 pendiente:** el default de hora pasa de 9:00 a **21:30**.
+
+### 3. ✅ EN PRODUCCIÓN — modo oscuro, texto invisible (commit `7710814`) · **QA de Daniel APROBADO**
+
+Reportado por un tester con captura, Android modo oscuro: el pie de las cards de Estrategias era ilegible.
+
+**La causa:** el fondo usaba `var(--color-text)`, que **se da vuelta en oscuro**, y el texto era `#fff` fijo, que no. En oscuro quedaba **crema sobre blanco: 1,16:1**. El texto pasó a `var(--color-bg)`, que se invierte junto con el fondo → **15,25:1 en claro y 15,97:1 en oscuro**.
+
+**Eran 6 lugares, no 1.** El barrido encontró el mismo patrón en `PuertaUnoHallazgo`, `FiltroChips`, `TooltipAyuda`, `GraficoFrecuenciaSemanal`, `SelectorHabilidades` y `EstrategiaActivaCard`. No fue invención: `PanelPage.module.css:63` ya lo hacía bien y el arreglo se alineó con ese patrón.
+
+### 4. 🪦 Hallazgo: dos componentes son código muerto
+
+Al verificar el deploy aparecieron solo 4 de los 6 arreglos en el CSS publicado. La causa no era el deploy: **`TooltipAyuda` y `GraficoFrecuenciaSemanal` no los importa nadie** (grep fuera de su propio archivo = vacío), así que Vite los saca del build y su CSS nunca se publica. El arreglo quedó igual, por si algún día se usan. **Decide Daniel: borrarlos o dejarlos.**
+
+### 5. 🧱 Ítem 8, paso 1 — la base de la respuesta al avance, SIN UI todavía
+
+Hoy el cuidador registra un avance y no recibe nada (`NuevoPage.jsx:84-121`: guarda, sube foto, cambia de vista; cero llamadas a la IA).
+
+Quedó escrito, compilado y **sin tocar `NuevoPage`**:
+
+- **`generarRespuestaHito` + `SYSTEM_RESPUESTA_HITO`** en `anthropic.js`. Hermana de la micro-respuesta de la reflexión, pero **prompt propio y no compartible**: aquel acompaña lo que sintió el adulto y prohíbe hablar del desarrollo del hijo; este habla del hijo. Haiku, `max_tokens` 160, `REGLA_IDIOMA` heredada.
+- **`updateHitoRespuesta`** en `HuellaContext.jsx`, calcado de `updateHitoFoto`: con `.select()`, y si el update no toca ninguna fila lanza en vez de aparentar éxito.
+- **Migración `021_hitos_respuesta_ia.sql`** escrita. Sin GRANT, y confirmado leyendo el código: `updateHitoFoto` escribe `foto_url` con un update directo y funciona en producción, o sea que `hitos` tiene GRANT a nivel de tabla, no lista blanca (la lista blanca es de `perfiles`).
+- **No hizo falta mapeo:** `dbHitoToApp` no existe, los hitos viajan crudos desde `select('*')`, así que `respuesta_ia` llega sola.
+
+**⬜ LA MIGRACIÓN 021 NO SE HA CORRIDO. La corre Daniel al abrir la próxima sesión.**
+
+**⬜ Decisión abierta: el tope de palabras.** Las tres salidas del arnés dieron **46, 49 y 34** contra un tope declarado de 45. **Opción recomendada: declarar 40** en el prompt y dejar que se pase hasta ~50 — los modelos no cuentan palabras de forma fiable, así que el número funciona como presión, no como límite. El riesgo es que comprimir empuje a la frase de póster.
+
+**🪤 El arnés cazó un fallo real y quedó arreglado:** con la lista de rasgos vacía, el modelo **se inventaba uno** ("va con lo que ya viste: independencia"), o sea le atribuía al cuidador un rasgo que nunca confirmó. Callar el caso vacío no bastaba: ahora el user prompt dice en voz alta que no hay rasgos y que la fórmula está prohibida.
+
+### 🔜 La próxima sesión, en orden
+
+1. **Daniel corre la migración 021** (el SQL está listo para copiar en el archivo de la migración).
+2. **Paso 2:** mostrar la respuesta en la vista **"¡Momento guardado!"** de `NuevoPage` — con estado de carga, y **sin bloquear el guardado**: el avance tiene que estar en la base antes de llamar a la IA.
+3. **QA con un avance real**, no con casos inventados.
+
+---
+
+## Sesión miércoles 16 sep 2026 — **Día sin código de producto: la cola se compactó a la octava parte, los momentos ya guardan cuándo se registraron, y tres "comportamientos" resultaron ser valores por defecto**
 
 **🎯 Nada de lo que se midió hoy confirmó lo que creíamos. Los 23 candidatos de La brava no eran un bug del motor, el pico de las 9 de la mañana no era un hábito, y la push no tenía 3 reglas sino 5. La sesión fue de leer y corregir el registro, no de construir.**
 

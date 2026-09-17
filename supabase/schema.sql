@@ -88,6 +88,9 @@ alter table public.hijos      add column if not exists ultimo_autor_ia    text;
 alter table public.estrategias add column if not exists tareas           jsonb default '{}'::jsonb;
 alter table public.estrategias add column if not exists checkins         jsonb default '{}'::jsonb;
 alter table public.hitos      add column if not exists foto_url          text;
+-- Micro-respuesta de Huella al avance (migración 021). Haiku, un disparo por
+-- hito: la propia columna es el candado. NULL = todavía no se generó.
+alter table public.hitos      add column if not exists respuesta_ia      text;
 
 -- ── Row Level Security ────────────────────────────────────────
 alter table public.hijos         enable row level security;

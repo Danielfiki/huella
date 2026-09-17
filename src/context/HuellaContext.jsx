@@ -1328,6 +1328,32 @@ export function HuellaProvider({ children }) {
     if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
   }
 
+  // Guarda la micro-respuesta de Huella al avance (columna `respuesta_ia`,
+  // migración 021). Mismo contrato que updateHitoFoto: con .select() un update
+  // que no toca ninguna fila deja de parecer exito, y si no se guardo se lanza
+  // para que quien llama pueda reintentar en vez de mostrar un texto que la
+  // base nunca aceptó.
+  async function updateHitoRespuesta(hitoId, texto) {
+    if (!user) return
+    const { data: tocadas, error } = await supabase
+      .from('hitos')
+      .update({ respuesta_ia: texto ?? null })
+      .eq('id', hitoId)
+      .eq('user_id', user.id)
+      .select('id')
+    if (error || !tocadas?.length) {
+      const motivo = error?.message ?? 'el update no afecto ninguna fila'
+      console.warn('[updateHitoRespuesta] no se guardo:', motivo)
+      throw new Error(motivo)
+    }
+    const { data } = await supabase
+      .from('hitos').select('*')
+      .in('user_id', getPartnerIds())
+      .eq('hijo_id', state.hijoActivoId)
+      .order('fecha', { ascending: false })
+    if (data) dispatch({ type: 'SET_HITOS', payload: await firmarCampo(data, 'foto_url', 'momentos') })
+  }
+
   // ── Estrategias ───────────────────────────────────────────────────────────
 
   // Helper compartido — crea una estrategia (modelo de ciclos) de forma
@@ -1832,6 +1858,7 @@ export function HuellaProvider({ children }) {
       addHito,
       deleteHito,
       updateHitoFoto,
+      updateHitoRespuesta,
       addEstrategia,
       crearEstrategiaConCiclo,
       crearPlanDesdeTexto,

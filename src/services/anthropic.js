@@ -1519,6 +1519,84 @@ Esto escribió la madre o el padre sobre cómo se sintió:
   })
 }
 
+// ── Micro-respuesta al avance (hito) ──────────────────────────────────────
+//
+// Hermana de SYSTEM_RESPUESTA_REFLEXION, pero NO es la misma y no se pueden
+// compartir. Aquel prompt acompaña lo que sintió el ADULTO y tiene prohibido
+// hablar del desarrollo del hijo; este habla del HIJO, que es justo lo
+// contrario. Reusar el de la reflexión daba respuestas frías y fuera de lugar.
+//
+// 🔴 EL RIESGO DE ESTE PROMPT ES FELICITAR. Un avance invita a "¡qué gran
+// logro!", que es exactamente la frase de poster que la regla de voz prohibe.
+// Por eso la lista de prohibiciones es larga y explicita: es lo unico que
+// separa una respuesta util de una que suena a IA.
+const SYSTEM_RESPUESTA_HITO = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir un avance que una madre o padre registró sobre su hijo o hija. Devuelve DOS frases, máximo 45 palabras en total, en tuteo neutro y sin exclamaciones.
+
+FRASE 1 — qué dice este avance de quién está siendo el niño o niña. Concreta: nombra lo que hizo y la capacidad que asoma ahí. Si te paso rasgos ya confirmados de ese hijo y uno conecta de verdad con este avance, nómbralo exactamente así: "va con lo que ya viste: <rasgo en minúscula>". Si ninguno conecta, no fuerces la conexión y no menciones los rasgos.
+
+FRASE 2 — UNA sola cosa que el papá o la mamá puede hacer esta semana para darle más espacio a eso. Calibrada a la edad que te paso, concreta y pequeña: algo que quepa en un día normal.
+
+PROHIBIDO:
+- "qué gran logro", "esto demuestra", "está listo para".
+- Felicitar al adulto.
+- Evaluar contra la edad ("a esta edad ya…", "es lo esperable").
+- Comparar con otros niños.
+- Listas, viñetas, o consejos en plural: es UNA cosa, no tres.
+- Frases de póster: la sentencia cerrada que suena a cita motivacional.
+- La fórmula "no es X, es Y" en cualquier variante.
+- Emojis, markdown, comillas, citar autores, firmar.
+
+Voz de amiga que sabe de crianza hablándole a un papá cansado, no de informe.
+
+DOS LÍMITES QUE NO SE NEGOCIAN, revísalos antes de responder:
+1. 45 PALABRAS EN TOTAL entre las dos frases. Cuéntalas. Si te pasaste, recorta hasta que quepan: es mejor una frase corta que una completa.
+2. La fórmula "va con lo que ya viste" SOLO puede aparecer si te pasé una lista de rasgos confirmados Y usas uno de esa lista, tal como está escrito ahí. Si no te pasé ninguno, esa fórmula está PROHIBIDA y no puedes nombrar ningún rasgo: decirle que "ya vio" algo que nunca confirmó es inventarle un recuerdo.
+${REGLA_IDIOMA}`
+
+/**
+ * Devuelve dos frases sobre el avance que el cuidador acaba de registrar.
+ *
+ * Haiku y no el modelo grande, por la misma razón que la reflexión: son dos
+ * frases con un system corto. `max_tokens` 160 le pone techo al gasto y
+ * alcanza de sobra para 45 palabras.
+ *
+ * Quien llama decide CUÁNDO: se genera una sola vez por hito, y el candado es
+ * la columna `hitos.respuesta_ia` (migración 021).
+ */
+export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] }) {
+  const descripcion = (hito?.descripcion || '').trim()
+  if (!descripcion) return ''
+
+  const nombre = hijo?.nombre || 'su hijo/a'
+  const edad = hijo?.edad ?? null
+
+  // Máximo 5: más que eso no aporta y engorda el payload de cada llamada, que
+  // ya es un pendiente abierto del motor de rasgos.
+  const titulos = (rasgosConfirmados || [])
+    .map((r) => (typeof r === 'string' ? r : r?.titulo))
+    .map((t) => (t || '').trim())
+    .filter(Boolean)
+    .slice(0, 5)
+
+  // El caso SIN rasgos se dice en voz alta. Callarlo no basta: con la lista
+  // vacía el modelo se inventaba uno ("va con lo que ya viste: independencia")
+  // y le atribuía al cuidador un rasgo que nunca confirmó.
+  const bloqueRasgos = titulos.length
+    ? `\nRasgos ya confirmados de ${nombre} (úsalos SOLO si uno conecta de verdad):\n` +
+      titulos.map((t) => `- ${t}`).join('\n')
+    : `\nNo hay ningún rasgo confirmado de ${nombre}. NO uses la fórmula "va con lo que ya viste" ni nombres ningún rasgo.`
+
+  const prompt = `Avance de ${nombre}${edad != null ? `, ${edad} años` : ''}.
+Categoría: ${hito?.categoria || 'sin categoría'}.
+Esto escribió la madre o el padre:
+"${descripcion}"${bloqueRasgos}`
+
+  return llamarAPI(prompt, 160, {
+    system: SYSTEM_RESPUESTA_HITO,
+    model: 'claude-haiku-4-5',
+  })
+}
+
 export async function analizarReflexionesCuidador(reflexiones) {
   const lista = reflexiones
     .map((r, i) => `${i + 1}. (${r.tipoEpisodio}, ${r.fecha}): "${r.texto}"`)
