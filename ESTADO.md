@@ -375,12 +375,7 @@ También entró: tope de **40 palabras** (bajó de 45) y la prohibición de **ag
 
 ### 4. 🎯 DECISIÓN DE PRODUCTO (Daniel, 18 sep) — las categorías del avance pasan a ser las LENTES DEL RETRATO
 
-**Hoy hay tres vocabularios sueltos para lo positivo** y ninguno se habla con el otro:
-- el catálogo de registro (`NuevoPage.jsx:40-47`),
-- una copia literal para mostrar (`HistorialPage.jsx:30-37`),
-- y las etiquetas escritas **a mano en prosa** dentro del prompt del motor (`anthropic.js:2097`).
-
-Además la categoría **viaja al motor pero el prompt nunca la nombra** (`anthropic.js:2165` la manda; `PROMPT_DETECTAR_RASGOS` solo instruye sobre `origen`). Es contexto suelto que nadie lee.
+Hoy el vocabulario de lo positivo está repartido y nadie lo manda (el detalle, con archivo y línea, en la sección 5).
 
 **La decisión: un solo vocabulario para lo positivo**, el mismo en registro, respuesta, álbum y análisis semanal. **8 chips en dos columnas**, agrupadas por la familia del retrato:
 
@@ -393,9 +388,31 @@ Además la categoría **viaja al motor pero el prompt nunca la nombra** (`anthro
 
 **La chip elegida viaja al motor como señal de familia.** Deja de ser una etiqueta decorativa: le dice al motor a qué familia del retrato apunta ese avance.
 
-⚠️ **Trampa conocida al implementar:** `frustration` está en inglés mientras los otros cinco ids son español, y **es un valor ya guardado en la base**. Renombrarlo no es cambiar una constante: obliga a migrar filas existentes.
+### 5. 🔎 Los tres hallazgos que muerden al cambiar las chips
 
-### 5. 📋 Reglas nuevas en `CLAUDE.md` (sección PRECISION Y ESTANDAR)
+Salieron al leer el catálogo para el brief. **Son la lista de chequeo del cambio**, no comentarios sueltos: cualquiera de los tres, ignorado, deja el cambio a medias y en silencio.
+
+**a) El catálogo está duplicado, no importado — hay que tocar TRES lugares.**
+
+| Dónde | Qué es |
+|---|---|
+| `NuevoPage.jsx:40-47` | `CATEGORIAS`, array de 6. El que se usa para **registrar** |
+| `HistorialPage.jsx:30-37` | `CATEGORIAS_HITO`, objeto con los **mismos 6 pares**. El que se usa para **mostrar** |
+| `anthropic.js:2097` | Las etiquetas **escritas a mano en prosa** dentro de `PROMPT_DETECTAR_RASGOS`: *"un avance positivo (se calmó solo, mostró empatía, pidió disculpas, toleró un 'no' u otro logro)"* |
+
+Ninguno importa del otro. Si Design cambia una etiqueta y solo se toca uno, el registro y el Historial empiezan a decir cosas distintas del mismo avance, **sin que nada falle**. El tercero es el peor: es prosa, no una constante, así que ningún grep de `CATEGORIAS` lo encuentra.
+
+**b) `frustration` está en inglés y ya tiene filas guardadas — es migración de datos, no un rename.**
+
+Los otros cinco ids son español (`autorregulacion`, `empatia`, `disculpa`, `social`, `otro`); `frustration` no. Es un **valor guardado en `hitos.categoria`**, así que cambiarlo obliga a un `update` sobre las filas existentes. Si se cambia solo la constante, los avances viejos quedan con una categoría que ya no existe en el catálogo y **dejan de mostrar etiqueta**.
+
+**c) El motor recibe `hitos.categoria` pero el prompt no la instruye — hoy es contexto muerto.**
+
+`anthropic.js:2165` la manda en el payload (`categoria: h.categoria || null`), junto a `origen`, `id`, `fecha` y `descripcion`. Pero `PROMPT_DETECTAR_RASGOS` **no nombra el campo en ninguna parte**: lo único que instruye es `origen` (líneas 2095-2098), para distinguir episodio de hito. El modelo la tiene delante y nadie le pide nada con ella.
+
+**Esto es justo lo que la decisión de las chips quiere cambiar.** Que la chip "viaje al motor como señal de familia" no sale gratis de mandar el dato —ya se manda— sino de **escribirlo en el prompt**. Sin eso, el cambio de chips es cosmético.
+
+### 6. 📋 Reglas nuevas en `CLAUDE.md` (sección PRECISION Y ESTANDAR)
 
 - **8. Daniel no corre comandos ni abre pestañas.** Code levanta el servidor y entrega la URL exacta, ya confirmada con un 200. Misma familia que la regla de DevTools: la prueba la monta Code, Daniel solo mira.
 - **9. Los datos de prueba van en La brava, con texto dado por Claude.** Nunca en un hijo real ni en Pascual, y el ejemplo lo entrega Claude listo para pegar, para que el resultado se pueda comparar entre pasadas.
