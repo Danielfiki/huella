@@ -134,6 +134,10 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 
 7. CIERRE DE SESION. Antes de terminar, actualiza ESTADO.md con UN bloque "Cerrado HOY" y lo pendiente. Sin esto no cierras.
 
+8. DANIEL NO CORRE COMANDOS NI ABRE PESTANAS (18 sep 2026). Daniel no ejecuta nada en la terminal ni navega buscando una pantalla. Code levanta el servidor que haga falta, en segundo plano, y entrega la URL EXACTA que hay que abrir, ya confirmada con un 200. Si para ver algo hacen falta pasos dentro de la app, Code los escribe en orden, uno por linea. Nunca se le pide a Daniel que corra un comando, que instale algo ni que "revise si funciona". Misma familia que la regla de DevTools: la prueba la monta Code, Daniel solo mira.
+
+9. LOS DATOS DE PRUEBA VAN EN LA BRAVA, CON TEXTO DADO POR CLAUDE (18 sep 2026). Todo registro de prueba se hace en el perfil La brava, nunca en un hijo real de un tester ni en Pascual. Y el texto lo entrega Claude ya escrito y listo para pegar: no se le pide a Daniel que invente un ejemplo. Asi el resultado se puede comparar entre pasadas, y la basura de prueba queda concentrada en un solo perfil que ya esta marcado para reset.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual

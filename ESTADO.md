@@ -35,18 +35,21 @@
 ### Bloque 1 — Retención (decisiones del 16 sep 2026)
 
 3. ⬜ **Medir en Supabase: hora a la que registran los testers + retención por cohorte D1/D7/D30** — **16 sep** — **bloquea al resto del bloque**: sin ese dato no se calibra nada de lo que sigue.
-4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. **Default de hora pasa de 9:00 a 21:30.** Espera el ítem 3.
+4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. **Default de hora pasa de 9:00 a 21:30.** Espera el ítem 3. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. Lo que queda de este ítem es el paso 2.
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
 6. ⬜ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — reusa el copy de re-enganche sin culpa. `ultima_actividad` ya se escribe.
 7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. **(a)** umbral de 2 evidencias en días distintos para `fortalezas`, `mueve` y `calma`; **(b)** la card alterna familias, nunca dos "cuesta" seguidos si hay positivo listo; **(c)** slug semántico estable para que un rasgo no sea tres; **(d)** badge "Algo nuevo" solo con candidato. **Antes: reset de La brava** (23 candidatos, duplicados, voseo guardado, "13 de 12 rasgos").
 8. ⬜ **Análisis semanal — recortarlo** — **16 sep** — ya existe como card del Home. 3 líneas visibles (qué mejoró con dato / qué mirar / un paso), texto largo bajo plegable cerrado, "Marco aplicado" al pie como Lente, prompt con voz de amiga y no de informe. Push del domingo con la primera línea. **Métrica: se abre o no.**
-9. ⬜ **Respuesta inmediata al hito** — **16 sep** — al guardar un avance, 2 líneas (qué dice de él + una práctica por edad), Haiku, misma calibración que la micro-respuesta de la reflexión. Sin esperar al motor. Orientación larga solo si conecta con un rasgo ya visto.
+9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). **Lo que queda: el paso 3**, que es el nuevo catálogo de 8 chips agrupadas por familia (ver el ítem 16) y el QA con avances reales de varios testers. El diseño de las dos pantallas va a una pasada de Design aparte.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
 11. ⬜ **Álbum "Sus avances"** — **16 sep** — cuarto tab en `HijoPage` junto a "Su cerebro", solo hitos con foto o texto. **Code mide primero si 4 tabs caben en 390px.** Vacío: una línea + botón naranjo a registrar avance con foto; nunca "aún no tienes". Hogar natural del ítem 5.
 12. ⬜ **Card de candidato — pasada de Design** — desde **14 sep** — va **después del ítem 7**, para diseñar sobre la card correcta. El rasgo como frase sobre quién está siendo el hijo.
 13. ⬜ **Decisión de copy de Daniel: "Lo que le cuesta" → "Lo que le cuesta hoy"** — **16 sep**.
 14. ⬜ **Pieza 6 — Cerebro, "qué puedes hacer en esta etapa"** — desde **8 sep** — 2-3 prácticas por edad en cada tarjeta de zona, mismo corpus que el ítem 9. Feedback de Diego (`H-02`).
 15. ⬜ **Métrica del giro** — **16 sep** — proporción positivos/total por tester nuevo y % de candidatos positivos mostrados. **Medir en 3 semanas.**
+
+16. ⬜ **Las categorías del avance pasan a ser las lentes del retrato — 8 chips en dos columnas** — **18 sep** — decisión de producto tomada (detalle y tabla completa: bloque del 18 sep). Hoy el vocabulario de lo positivo vive **tres veces sin hablarse**: `NuevoPage.jsx:40-47`, `HistorialPage.jsx:30-37` y en prosa dentro del prompt del motor (`anthropic.js:2097`). La chip elegida tiene que **viajar al motor como señal de familia** — hoy la categoría se manda (`anthropic.js:2165`) pero el prompt nunca la nombra. ⚠️ `frustration` está en inglés y **ya está guardado en la base**: renombrarlo obliga a migrar filas. **Va después del brief de Design.**
+17. ⬜ **Brief para Claude Design — las dos pantallas del avance (registro + guardado) con las 8 chips** — **18 sep** — necesita **capturas reales a 390px**, que Daniel toma desde el Android con el dev server en `--host` (no hay playwright/puppeteer, y la vista guardado no es una URL).
 
 ### Bloque 3 — Plataforma y riesgo en producción
 
@@ -339,7 +342,77 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — jueves 17 septiembre 2026 — **Dos cosas llegaron a producción y una tercera quedó lista por debajo: la notificación dejó de preguntar en abstracto, el modo oscuro dejó de tener texto invisible, y el avance ya tiene con qué responder aunque todavía no se vea**
+## Cerrado HOY — viernes 18 septiembre 2026 — **El avance ya responde, y de ahí salió la decisión de producto del día: las categorías del avance dejan de ser una lista suelta y pasan a ser las lentes del retrato**
+
+**🎯 Lo importante de hoy no es el código, es la decisión.** El ítem 8 quedó funcionando y con QA aprobado, pero al mirar el catálogo de categorías para el brief apareció que hay **tres vocabularios distintos para lo positivo** (registro, motor, álbum) y ninguno se habla con el otro. La decisión de Daniel los unifica.
+
+### 1. ✅ Migración 021 corrida
+
+`hitos.respuesta_ia` existe en producción. La corrió Daniel al abrir la sesión. Con eso el candado del ítem 8 (una respuesta por hito, la propia columna es el candado) quedó operativo.
+
+### 2. ✅ Ítem 3 paso 1 CERRADO — la notificación llegó
+
+**QA de Daniel OK: le llegó al celular ayer a las 14:00**, en la hora que se había puesto para provocarla. La pieza que salió el 17 (`4e91f69`) quedó verificada de punta a punta, no solo desplegada.
+
+**⬜ Paso 2 sigue pendiente:** el default de hora pasa de 9:00 a **21:30**.
+
+### 3. ✅ Ítem 8 paso 2 — la respuesta inmediata al avance, con QA aprobado
+
+Commit **`fc8beb1`**. Al guardar un avance, Huella responde dos frases: qué dice ese avance de quién está siendo el hijo, y una cosa concreta para esta semana.
+
+- La llamada arranca apenas `addHito` devuelve, **sin `await`** y en paralelo con la subida de foto. El guardado y los dos botones nunca se bloquean.
+- Candado por **id de hito**, no booleano: se pueden registrar varios avances seguidos sin salir de la pantalla.
+- Solo rasgos **confirmados** del hijo activo, máximo 5. Los candidatos no entran: el papá todavía no dijo que los ve.
+
+**Dos cosas que el QA de Daniel encontró y quedaron arregladas:**
+
+- 🪤 **Salía con las etiquetas literales "Frase 1:" / "Frase 2:".** Atacado por los dos lados: límite 3 del system prompt, más una red de seguridad por regex. **La primera versión de la regex tenía dos bugs propios**, que salieron al probarla antes de entregarla: dejaba los asteriscos sueltos de `**Frase 1:**` (la negrita cierra DESPUÉS de los dos puntos) y pegaba las frases al comerse el salto de línea. Por eso el orden es: aplastar saltos → quitar etiqueta reemplazando por UN espacio → aplastar de nuevo.
+- 🎨 **Se veía como letra chica en itálica.** Pasó a `celebracionSub`, la clase del subtítulo de su propia card. La carga mantiene la clase de `EpisodioCard`. Ningún estilo nuevo.
+
+También entró: tope de **40 palabras** (bajó de 45) y la prohibición de **agregar circunstancias que el padre no escribió**.
+
+**Sin push.**
+
+### 4. 🎯 DECISIÓN DE PRODUCTO (Daniel, 18 sep) — las categorías del avance pasan a ser las LENTES DEL RETRATO
+
+**Hoy hay tres vocabularios sueltos para lo positivo** y ninguno se habla con el otro:
+- el catálogo de registro (`NuevoPage.jsx:40-47`),
+- una copia literal para mostrar (`HistorialPage.jsx:30-37`),
+- y las etiquetas escritas **a mano en prosa** dentro del prompt del motor (`anthropic.js:2097`).
+
+Además la categoría **viaja al motor pero el prompt nunca la nombra** (`anthropic.js:2165` la manda; `PROMPT_DETECTAR_RASGOS` solo instruye sobre `origen`). Es contexto suelto que nadie lee.
+
+**La decisión: un solo vocabulario para lo positivo**, el mismo en registro, respuesta, álbum y análisis semanal. **8 chips en dos columnas**, agrupadas por la familia del retrato:
+
+| Familia | Chips |
+|---|---|
+| **Lo que lo mueve** | "Se interesó por algo" · "Se atrevió a algo nuevo" |
+| **Sus fortalezas** | "Cuidó a alguien" · "Lo hizo solo" · "Jugó con otros" |
+| **Lo que lo calma** | "Se calmó solo" · "Esperó o aceptó un no" |
+| — | "Otro avance" |
+
+**La chip elegida viaja al motor como señal de familia.** Deja de ser una etiqueta decorativa: le dice al motor a qué familia del retrato apunta ese avance.
+
+⚠️ **Trampa conocida al implementar:** `frustration` está en inglés mientras los otros cinco ids son español, y **es un valor ya guardado en la base**. Renombrarlo no es cambiar una constante: obliga a migrar filas existentes.
+
+### 5. 📋 Reglas nuevas en `CLAUDE.md` (sección PRECISION Y ESTANDAR)
+
+- **8. Daniel no corre comandos ni abre pestañas.** Code levanta el servidor y entrega la URL exacta, ya confirmada con un 200. Misma familia que la regla de DevTools: la prueba la monta Code, Daniel solo mira.
+- **9. Los datos de prueba van en La brava, con texto dado por Claude.** Nunca en un hijo real ni en Pascual, y el ejemplo lo entrega Claude listo para pegar, para que el resultado se pueda comparar entre pasadas.
+
+### 🔜 La próxima sesión, en orden
+
+1. **Brief para Claude Design** con las dos pantallas del avance (registro + guardado) y las 8 chips. **Con capturas reales** — hoy no se pudieron tomar (ver abajo).
+2. **Code cambia el catálogo de categorías y el mapeo a familia**, en los tres lugares donde vive hoy.
+3. **Push de los commits acumulados** (`98cff51` y `fc8beb1`) con el OK de Daniel.
+
+### 🚧 Lo que no se pudo hacer hoy
+
+**Las capturas de las dos pantallas del avance.** No hay `playwright` ni `puppeteer` instalados, y la vista `guardado` no es una URL: exige sesión iniciada, elegir hijo, escribir un avance y guardarlo. Las toma Daniel. **Camino recomendado para los 390px sin DevTools:** levantar el dev server con `--host` y abrirlo desde el Android en el mismo WiFi — viewport real, captura con el botón del teléfono.
+
+---
+
+## Sesión jueves 17 sep 2026 — **Dos cosas llegaron a producción y una tercera quedó lista por debajo: la notificación dejó de preguntar en abstracto, el modo oscuro dejó de tener texto invisible, y el avance ya tiene con qué responder aunque todavía no se vea**
 
 **🎯 La beta tiene los 12 de Google, pero el número que importa es otro: 8 cuentas registraron una sola vez y no volvieron.** Ese es el problema que ordena lo que sigue, y es exactamente lo que las dos piezas de hoy intentan mover.
 
