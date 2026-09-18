@@ -1530,7 +1530,7 @@ Esto escribió la madre o el padre sobre cómo se sintió:
 // logro!", que es exactamente la frase de poster que la regla de voz prohibe.
 // Por eso la lista de prohibiciones es larga y explicita: es lo unico que
 // separa una respuesta util de una que suena a IA.
-const SYSTEM_RESPUESTA_HITO = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir un avance que una madre o padre registró sobre su hijo o hija. Devuelve DOS frases, máximo 45 palabras en total, en tuteo neutro y sin exclamaciones.
+const SYSTEM_RESPUESTA_HITO = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir un avance que una madre o padre registró sobre su hijo o hija. Devuelve DOS frases, máximo 40 palabras en total, en tuteo neutro y sin exclamaciones.
 
 FRASE 1 — qué dice este avance de quién está siendo el niño o niña. Concreta: nombra lo que hizo y la capacidad que asoma ahí. Si te paso rasgos ya confirmados de ese hijo y uno conecta de verdad con este avance, nómbralo exactamente así: "va con lo que ya viste: <rasgo en minúscula>". Si ninguno conecta, no fuerces la conexión y no menciones los rasgos.
 
@@ -1545,12 +1545,14 @@ PROHIBIDO:
 - Frases de póster: la sentencia cerrada que suena a cita motivacional.
 - La fórmula "no es X, es Y" en cualquier variante.
 - Emojis, markdown, comillas, citar autores, firmar.
+- No agregues circunstancias, lugares ni detalles que el padre no escribió (ej. si no dijo "a oscuras", no lo digas). Trabaja solo con lo que está en el avance.
 
 Voz de amiga que sabe de crianza hablándole a un papá cansado, no de informe.
 
-DOS LÍMITES QUE NO SE NEGOCIAN, revísalos antes de responder:
-1. 45 PALABRAS EN TOTAL entre las dos frases. Cuéntalas. Si te pasaste, recorta hasta que quepan: es mejor una frase corta que una completa.
+TRES LÍMITES QUE NO SE NEGOCIAN, revísalos antes de responder:
+1. 40 PALABRAS EN TOTAL entre las dos frases. Cuéntalas. Si te pasaste, recorta hasta que quepan: es mejor una frase corta que una completa.
 2. La fórmula "va con lo que ya viste" SOLO puede aparecer si te pasé una lista de rasgos confirmados Y usas uno de esa lista, tal como está escrito ahí. Si no te pasé ninguno, esa fórmula está PROHIBIDA y no puedes nombrar ningún rasgo: decirle que "ya vio" algo que nunca confirmó es inventarle un recuerdo.
+3. Responde solo con el texto de las dos frases seguidas, en un párrafo. Sin etiquetas, sin "Frase 1", sin numerar, sin comillas alrededor.
 ${REGLA_IDIOMA}`
 
 /**
@@ -1591,10 +1593,28 @@ Categoría: ${hito?.categoria || 'sin categoría'}.
 Esto escribió la madre o el padre:
 "${descripcion}"${bloqueRasgos}`
 
-  return llamarAPI(prompt, 160, {
+  const bruto = await llamarAPI(prompt, 160, {
     system: SYSTEM_RESPUESTA_HITO,
     model: 'claude-haiku-4-5',
   })
+
+  // Red de seguridad. El límite 3 del system ya lo prohíbe, pero el modelo
+  // devolvía "Frase 1: … Frase 2: …" con las etiquetas literales y el papá las
+  // leía en pantalla. Se quitan igual por si vuelve a colarse.
+  //
+  // Tres detalles que se ven obvios y no lo son:
+  // - Los saltos de línea se aplastan PRIMERO. Al revés, el `\s*` final de la
+  //   etiqueta se come el salto que separaba las dos frases y quedan pegadas
+  //   ("se durmió solo.Esta semana…").
+  // - La etiqueta se reemplaza por UN ESPACIO, no por nada, por lo mismo.
+  // - Los `\*{0,2}` van a los DOS lados del signo: el modelo la escribe
+  //   "**Frase 1:**", con la negrita cerrando después de los dos puntos, y con
+  //   el asterisco solo por delante quedaban dos sueltos en la pantalla.
+  return (bruto || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\*{0,2}\s*frase\s*\d+\s*\*{0,2}\s*[:.–—-]\s*\*{0,2}\s*/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export async function analizarReflexionesCuidador(reflexiones) {

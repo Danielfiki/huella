@@ -7,7 +7,16 @@ import { supabase } from '../../lib/supabase'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
+import { generarRespuestaHito } from '../../services/anthropic'
 import styles from './NuevoPage.module.css'
+// Solo para el ESTADO DE CARGA de la micro-respuesta, que es el mismo que en
+// EpisodioCard ("Huella está leyendo lo que escribiste…"). Se importa el módulo
+// en vez de copiar la regla: dos copias se separan con el tiempo y terminan
+// siendo dos estilos para la misma cosa. El CSS ya viaja en el bundle
+// principal, así que importarlo acá no agrega peso.
+// La RESPUESTA ya no usa este módulo: va con `celebracionSub`, la clase del
+// subtítulo de su propia card, porque en itálica de 11,5px no se leía.
+import epStyles from '../../components/historial/EpisodioCard.module.css'
 
 async function compressImage(file, maxSize = 1200) {
   return new Promise((resolve) => {
@@ -40,7 +49,7 @@ const CATEGORIAS = [
 export default function NuevoPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { state, addHito, updateHitoFoto } = useHuella()
+  const { state, addHito, updateHitoFoto, updateHitoRespuesta } = useHuella()
   const { user } = useAuth()
   // Permite saltar la vista 'elegir' cuando el caller ya sabe qué
   // quiere registrar. Hoy lo usa el botón "+ Registrar" del header de
@@ -66,6 +75,15 @@ export default function NuevoPage() {
   const [fotoEnmarcaUrl, setFotoEnmarcaUrl] = useState(null)
   const enmarcaInputRef = useRef(null)
 
+  // Micro-respuesta de Huella al avance (ítem 8). El candado guarda el ID del
+  // hito al que YA se le pidió: un solo disparo por hito, aunque el componente
+  // se vuelva a renderizar. Mismo criterio que `respuestaPedida` en
+  // EpisodioCard, pero con el id en vez de un booleano, porque acá se pueden
+  // registrar varios avances seguidos sin salir de la pantalla.
+  const [respuestaHito, setRespuestaHito] = useState(null)
+  const [cargandoRespuesta, setCargandoRespuesta] = useState(false)
+  const respuestaPedidaRef = useRef(null)
+
   function handleFotoChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -81,10 +99,46 @@ export default function NuevoPage() {
     setFotoPreviewUrl('')
   }
 
+  // Pide la micro-respuesta y la guarda. NUNCA se espera con await desde
+  // handleGuardar: el avance ya está en la base cuando esto arranca, así que
+  // si la IA tarda o falla, el guardado y los dos botones siguen intactos.
+  async function pedirRespuestaHito(inserted) {
+    setCargandoRespuesta(true)
+    try {
+      // Solo los rasgos CONFIRMADOS del hijo activo, máximo 5. Los candidatos
+      // no entran: el papá todavía no dijo que los ve, y la respuesta no puede
+      // darlos por ciertos.
+      const rasgosConfirmados = (state.rasgos || [])
+        .filter((r) => r.hijoId === state.hijoActivoId && r.estado === 'confirmado')
+        .slice(0, 5)
+
+      const texto = await generarRespuestaHito({
+        hijo: state.hijo,
+        hito: { categoria: inserted.categoria, descripcion: inserted.descripcion },
+        rasgosConfirmados,
+      })
+      if (!texto) return
+
+      // Se muestra primero y se guarda después, a propósito: si la escritura
+      // falla, el papá igual recibe lo que la IA ya respondió. Lo que se pierde
+      // es que quede en el álbum, no la respuesta de ahora.
+      setRespuestaHito(texto)
+      await updateHitoRespuesta(inserted.id, texto)
+    } catch (e) {
+      // No se muestra nada. El avance ya quedó guardado, que es lo que importa.
+      console.warn('[NuevoPage] la respuesta al avance no se pudo generar o guardar:', e?.message ?? e)
+    } finally {
+      setCargandoRespuesta(false)
+    }
+  }
+
   async function handleGuardar() {
     if (!descripcion.trim()) return
     setLoading(true)
     setError('')
+    // Limpia lo del avance anterior: se pueden registrar varios seguidos.
+    setRespuestaHito(null)
+    setCargandoRespuesta(false)
     try {
       const hito = {
         id: Date.now().toString(),
@@ -93,6 +147,14 @@ export default function NuevoPage() {
         fecha: new Date().toISOString(),
       }
       const inserted = await addHito(hito)
+
+      // Arranca acá, ANTES de la foto y sin await: las dos cosas corren en
+      // paralelo y ninguna espera a la otra. El candado es el id del hito.
+      if (inserted?.id && respuestaPedidaRef.current !== inserted.id) {
+        respuestaPedidaRef.current = inserted.id
+        pedirRespuestaHito(inserted)
+      }
+
       const huboFotoEnSubmit = Boolean(fotoFile)
       let fotoFallo = false
       if (fotoFile && inserted?.id && user) {
@@ -233,6 +295,20 @@ export default function NuevoPage() {
             <p className={styles.celebracionSub}>
               Cada logro pequeño cuenta. Lo tienes guardado en tu historial de avances.
             </p>
+
+            {/* La micro-respuesta de Huella al avance. Va DENTRO de esta card y
+                no en una propia: es acompañamiento, no una tarjeta más.
+                La carga reusa la clase de EpisodioCard; la respuesta usa
+                `celebracionSub`, la misma del subtítulo de arriba. Ninguna de
+                las dos define un estilo nuevo. */}
+            {cargandoRespuesta && (
+              <p className={epStyles.reflexionRespuestaCargando}>
+                Huella está leyendo lo que escribiste…
+              </p>
+            )}
+            {!cargandoRespuesta && respuestaHito && (
+              <p className={styles.celebracionSub}>{respuestaHito}</p>
+            )}
           </div>
 
           {/* Bloque "Enmarca este momento": solo si NO se subió foto
