@@ -342,7 +342,61 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — viernes 18 septiembre 2026 — **El avance ya responde, y de ahí salió la decisión de producto del día: las categorías del avance dejan de ser una lista suelta y pasan a ser las lentes del retrato**
+## Cerrado HOY — sábado 19 septiembre 2026 — **Las lentes del avance: de 6 categorías sueltas a 12 que hablan el idioma del retrato, y las dos pantallas del avance rehechas**
+
+**🎯 Lo de hoy fue vocabulario y pantallas.** El catálogo de categorías del avance dejó de vivir en tres lugares sin hablarse y pasó a un solo archivo, con las 12 lentes agrupadas en las familias del retrato. Esa lente ahora viaja al motor como señal de qué está mirando el papá. Y las dos pantallas del avance se rehicieron enteras.
+
+### 1. ✅ En producción desde la mañana: la respuesta inmediata al avance (paso 2)
+
+Los 4 commits locales del 18 se pushearon (`4e91f69..6a4307e`). Verificado en el bundle desplegado: el string `Huella está leyendo lo que escribiste` aparece 3 veces en `index-BFIzzPPA.js`, una de ellas junto a `celebracionSub`, que era la de `NuevoPage`.
+
+### 2. ✅ Migración 022 corrida, y los tokens de familia
+
+**50 avances migrados** y la columna quedó nullable: 24 a `null` (eran `otro`), 10 a `cuido` (`empatia` + `disculpa`), 7 a `jugo_con_otros`, 5 a `acepto_un_no`, 4 a `se_calmo`.
+
+⚠️ **`hitos.categoria` era `NOT NULL`**, así que la migración tuvo que abrir la columna antes de mandar `otro` a NULL. De ahí salió el orden obligatorio **022 → código**, que se cumplió.
+
+**Cuatro tokens `--color-familia-*` nuevos en `index.css`**, pensados como tinta y con override de oscuro. Antes eran hex a mano en `PropuestaRasgo.jsx`, y los puntos del tab Perfil se quedaban con el color del modo claro. Se probó reusar los acentos con el mismo valor y no sirve: `--color-accent-blue` en oscuro es un navy de fondo que como punto daba **1.56:1**. Ahora los cuatro dan ~7.4:1.
+
+### 3. ✅ El catálogo, el motor y los escritores de `categoria`
+
+- **`src/constants/catalogoAvance.js`**: las 12 lentes (4 por familia), sus 3 grupos y los placeholders. **No hay lente "otro"**: sin elección, la columna queda en NULL.
+- **El motor usa la lente como señal de familia.** `PROMPT_DETECTAR_RASGOS` recibe la tabla lente→familia armada desde el catálogo, con la instrucción de pesarla fuerte sin inventar rasgos a partir de ella sola.
+- **`celebrarHito` borrada**: estaba exportada y no la llamaba nadie.
+- **`EstrategiaDetailPage` guarda `null`**: escribía `categoria: 'otro'` al cerrar un plan, y habría reintroducido de a una las filas que la 022 acababa de limpiar.
+
+### 4. ✅ Pantalla 1 del avance
+
+Marco **"Escríbelo como pasó, con tus palabras."**, placeholder rotativo de `PLACEHOLDERS_AVANCE`, y **pestañas por familia + grilla 2×2** con las clases de las pestañas de `HijoPage`. La selección sobrevive al cambio de pestaña, y la pestaña que la guarda lo avisa con su punto de 10px.
+
+**Descartado en el camino:** chips en flujo con `flex-wrap` (se leía desordenado) y filas deslizables por familia (la cuarta lente quedaba fuera de pantalla: fricción).
+
+**Copy descartado:** "Cualquier cosa que te hizo pensar: mira, eso lo hizo.", "Algo que hizo y te gustó ver. Grande o chico.", "por chico que sea".
+
+### 5. ✅ Card "Un avance" del selector
+
+Bajada nueva: **"Un momento en que lo viste crecer."** La vieja nombraba categorías que ya no existen.
+
+### 6. ✅ Pantalla 2 (guardado) — QA de Daniel aprobado
+
+Foto del avance o avatar del hijo en un círculo de 96px, con el escarabajo posado en el borde **latiendo mientras Huella lee** y quieto al llegar la respuesta. Debajo, la chip de la lente elegida. La respuesta pasa a **dos niveles**: línea 1 (qué asomó, ≤12 palabras) en Fraunces, línea 2 (la acción de la semana, ≤22) en cuerpo gris. `generarRespuestaHito` devuelve `{ linea1, linea2 }` y en la base se guardan unidas por el salto.
+
+Salieron: la estrella, el subtítulo "Cada logro pequeño cuenta…", "Categoría (opcional)", la chip "Otro" y los emojis.
+
+### 7. 📌 Principios nuevos de Daniel
+
+- **Nada de pantallas de solo texto.** Una pantalla que el papá mira lleva foto o avatar, algo que se mueva, y respuestas cortas.
+- **El copy de avances habla del hijo, no del papá.**
+
+### ⏭️ Pendiente
+
+1. ⬜ **QA de las dos pantallas en Android real** (celular de Igna) **y en modo oscuro**.
+2. ⬜ **Medir de verdad si las 3 pestañas caben en 390px.** Hoy es una estimación: no hay playwright ni puppeteer, así que no se pudo abrir la pantalla y medir. Por eso el punto de familia va solo en la pestaña activa y en la que guarda la selección.
+3. ⬜ **Código muerto sin decisión: `TooltipAyuda` y `GraficoFrecuenciaSemanal`.**
+
+---
+
+## Sesión viernes 18 septiembre 2026 — **El avance ya responde, y de ahí salió la decisión de producto del día: las categorías del avance dejan de ser una lista suelta y pasan a ser las lentes del retrato**
 
 **🎯 Lo importante de hoy no es el código, es la decisión.** El ítem 8 quedó funcionando y con QA aprobado, pero al mirar el catálogo de categorías para el brief apareció que hay **tres vocabularios distintos para lo positivo** (registro, motor, álbum) y ninguno se habla con el otro. La decisión de Daniel los unifica.
 
