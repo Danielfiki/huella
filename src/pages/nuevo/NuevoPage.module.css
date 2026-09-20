@@ -154,29 +154,6 @@
 
 /* categorías como casillas sobrias (grilla 2 columnas, superficie cuidada) */
 .catSeccion { display: flex; flex-direction: column; }
-.catChips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.catChip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-alt);
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-size: 13px;
-  color: var(--color-text);
-  text-align: left;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.catChip:hover { border-color: var(--color-primary-light); }
-.catChipActiva {
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg);
-  color: var(--color-primary-dark);
-}
-
 /* botón pill tangerine (override local de Button.primary sin tocar el global;
    doble clase para ganar especificidad sobre .primary). */
 .guardarPill.guardarPill {
@@ -214,34 +191,6 @@
 
 /* ── Guardado (Refugio) ── */
 .guardadoContainer { display: flex; flex-direction: column; gap: 16px; }
-
-/* celebración elevada */
-.celebracionCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
-  padding: 32px 24px;
-  border-radius: 26px;
-  background: var(--color-celebration-start);
-  box-shadow: var(--shadow-md);
-}
-.celebracionEstrella { font-size: 60px; line-height: 1; margin: 0; }
-.celebracionTitulo {
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0;
-}
-.celebracionSub {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.6;
-  margin: 0;
-  max-width: 280px;
-}
 
 .verHitosBtn {
   align-self: center;
@@ -307,4 +256,265 @@
   color: var(--color-primary);
   font-family: var(--font-family);
   background: none; border: none; cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LAS DOS PANTALLAS DEL AVANCE — 19 sep 2026
+   Todo sale de tokens de index.css. Ni un hex.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Pantalla 1 · el marco bajo el titulo ──
+   Baja el liston de lo que cuenta como avance. Va suelto sobre el suelo
+   calido, no dentro de una card: es una acotacion, no contenido. */
+.marcoLinea {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  text-align: center;
+  margin: -6px 0 16px;
+}
+
+/* ── Pantalla 1 · pestañas de familia + grilla ──
+   Reemplazan a las tres filas deslizables. Con scroll horizontal la cuarta
+   lente de cada familia quedaba fuera de pantalla, y lo que no se ve no se
+   elige. Con pestañas se ven las 4 de la familia que el papa esta mirando.
+
+   Las clases .tab y .on vienen ENTERAS de HijoPage.module.css: misma
+   tipografia (13.5px/600, muted) y mismo subrayado de 2px en el activo. Aca
+   solo se ajusta la caja de la barra. */
+.tabsAvance {
+  display: flex;
+  /* gap 14 y no los 20 de HijoPage, y sin su padding lateral de 22: con esos
+     valores las tres etiquetas mas su punto se pasaban de 390px y la barra
+     arrancaba a comprimirse. La tipografia y el subrayado no se tocan, que es
+     lo que hace que se lean como las mismas pestañas. */
+  gap: 14px;
+  padding: 0;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* La etiqueta nunca se parte: una pestaña de dos lineas deja de leerse como
+   pestaña. */
+.tabAvance {
+  white-space: nowrap;
+}
+
+/* El punto de la pestaña. 8px en la activa; 10px en la que guarda la
+   seleccion, que es la señal de "elegiste algo aca dentro". */
+.tabPunto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tabPuntoMarcado {
+  width: 10px;
+  height: 10px;
+}
+
+/* Las 4 lentes, dos por fila. 1fr y no auto: las chips miden lo mismo aunque
+   sus textos no, que es lo que hace que la grilla se lea como grilla. Las
+   alturas se emparejan solas porque los items de una fila se estiran. */
+.lentesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+/* El punto de familia. El color entra inline como var(--color-familia-*),
+   porque un CSS module no puede armar el nombre del token en tiempo de
+   ejecucion. Sin fallback a proposito: si el token no existiera, se quiere
+   ver el hueco, no un gris que disimule el error. */
+.grupoPunto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Ajustes sobre la chip del Historial para que funcione como celda de grilla.
+   El radio, el borde y el invertido de la seleccionada vienen de
+   FiltroChips.module.css sin tocar; lo que cambia es la caja.
+
+   El white-space: normal es necesario: la chip del Historial trae nowrap, y
+   con el "Dijo algo que te sorprendio" de fortalezas la celda se desbordaba.
+   Aca una etiqueta larga puede partirse en dos lineas y la fila entera se
+   empareja sola. */
+.chipAvance {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  text-align: center;
+  justify-content: center;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* ── Pantalla 2 · el canvas ──
+   El gradiente del alivio en toda la vista, el mismo que envuelve la voz de
+   Huella en el guardado del episodio. Gana al radial del refugio por orden
+   de cascada: las dos clases van juntas en el mismo elemento. */
+.gaCanvas {
+  background: var(--gradient-alivio-canvas);
+}
+
+.gaSello {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+/* EL CIRCULO. Lo primero que se ve es la cara del momento: la foto del avance
+   o el hijo. El borde crema lo despega del canvas y la sombra lo levanta. */
+.gaCirculo {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 3px solid var(--color-surface);
+  box-shadow: var(--shadow-card-soft);
+  background: var(--color-surface-alt);
+  flex-shrink: 0;
+}
+
+.gaCirculoFoto {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Sin foto ni avatar: la inicial, como en el Home. Nunca un circulo vacio. */
+.gaCirculoInicial {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+/* El escarabajo se POSA en el borde inferior derecho del circulo. Anclado por
+   ALTO con ancho auto, para no deformar el viewBox (1.0923:1). */
+.gaBicho {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  height: 28px;
+  width: auto;
+  display: block;
+  color: var(--color-primary-dark);
+  transform-origin: center;
+}
+
+/* Late SOLO mientras Huella lee. Mismos valores que el latido del splash
+   (scale 1 a 1.06, opacidad 0.85, 1.6s). Se redefine aca y no se importa
+   porque los @keyframes de un CSS module se renombran al compilar: el nombre
+   del splash no existe fuera de su modulo. */
+.gaBichoLatiendo {
+  animation: latidoAvance 1.6s ease-in-out infinite;
+}
+
+@keyframes latidoAvance {
+  0%, 100% { transform: scale(1);    opacity: 1;    }
+  50%      { transform: scale(1.06); opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gaBichoLatiendo { animation: none; }
+}
+
+/* La lente elegida, devuelta tal como se ve en el formulario: el invertido del
+   sistema. El punto de familia va delante, como en el rotulo de su fila. */
+.gaLente {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-text);
+  color: var(--color-bg);
+  white-space: nowrap;
+}
+
+.gaTitulo {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Pantalla 2 · la voz ──
+   Alineada a la izquierda: se lee como alguien hablando, no como un cartel.
+   El bloque cuelga del mismo ancho de la columna, sin card. */
+.gaVoz {
+  display: flex;
+  flex-direction: column;
+  margin-top: 22px;
+}
+
+/* El eyebrow viene entero de RegistroPage (tamano, tracking, mayusculas,
+   mocha). Lo unico que cambia es la alineacion: alla va centrado bajo el
+   escarabajo grande, aca encabeza un bloque de texto a la izquierda. */
+.gaFirma {
+  text-align: left;
+}
+
+/* Nivel 1: lo que asomo ahi. Es LA frase de la pantalla, asi que va en
+   Fraunces y con peso: se lee antes que nada. */
+.gaRespuesta {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  color: var(--color-text);
+  text-align: left;
+  margin: 12px 0 0;
+}
+
+/* Nivel 2: la accion de la semana. Cuerpo, chica y en el gris de apoyo — es
+   lo que se hace DESPUES de entender lo de arriba, no compite con ello. */
+.gaAccion {
+  font-family: var(--font-family);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  text-align: left;
+  margin: 8px 0 0;
+}
+
+/* Mientras Huella lee. Ocupa el lugar de la respuesta para que lo de abajo no
+   salte cuando llega el texto. */
+.gaCargando {
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  text-align: left;
+  margin: 12px 0 0;
+}
+
+/* ── Pantalla 2 · salida principal en mocha ──
+   Mismo par que el header global: fondo --color-accent-mocha y tinta
+   --color-on-mocha. Doble clase para ganarle a .primary de Button, igual que
+   hace .guardarPill. */
+.gaVolver.gaVolver {
+  background: var(--color-accent-mocha);
+  color: var(--color-on-mocha);
+  border-color: var(--color-accent-mocha);
 }

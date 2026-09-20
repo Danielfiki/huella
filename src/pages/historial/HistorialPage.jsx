@@ -11,6 +11,7 @@ import PatronCard from '../../components/patron/PatronCard'
 import { groupEpisodios } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
+import { LENTE_POR_ID } from '../../constants/catalogoAvance'
 import styles from './HistorialPage.module.css'
 
 const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
@@ -25,15 +26,6 @@ const TIPOS = {
   desconexion: { label: 'Se cerró / no respondía',          emoji: '🔇' },
   oposicion:   { label: 'Oposición / no coopera',           emoji: '🚫' },
   otro:        { label: 'Otro',                             emoji: '📝' },
-}
-
-const CATEGORIAS_HITO = {
-  autorregulacion: { label: 'Se calmó solo',   emoji: '🌱' },
-  empatia:         { label: 'Mostró empatía',  emoji: '💛' },
-  disculpa:        { label: 'Pidió disculpas', emoji: '🤝' },
-  frustration:     { label: 'Toleró un "no"',  emoji: '💪' },
-  social:          { label: 'Avance social',   emoji: '👫' },
-  otro:            { label: 'Otro avance',     emoji: '⭐' },
 }
 
 const SECTION_TITLES = new Set([
@@ -113,12 +105,21 @@ export default function HistorialPage() {
   const hitosNorm = useMemo(
     () =>
       hitos.map((h) => {
-        const cat = CATEGORIAS_HITO[h.categoria] || { label: h.categoria || 'Avance', emoji: '⭐' }
+        // `categoria` puede venir en NULL: el padre guardó el avance sin elegir
+        // lente. Ahí la card va con el neutro "Avance" —provisorio, hasta que
+        // Design cierre la card— en vez de quedar con el título vacío. Si llega
+        // un valor que no está en el catálogo (una fila anterior a la migración
+        // 022) se muestra el id crudo, que es feo pero honesto, en vez de
+        // romper la lista.
+        const lente = h.categoria ? LENTE_POR_ID[h.categoria] : null
+        const tituloLente = lente?.label ?? h.categoria ?? 'Avance'
         return {
           id: h.id,
           fecha: h.fecha,
-          emoji: cat.emoji,
-          titulo: cat.label,
+          // Mismo emoji para todos los avances: el catálogo ya no trae uno por
+          // lente, porque la identidad visual de las 12 la define Design.
+          emoji: '⭐',
+          titulo: tituloLente,
           descripcion: h.descripcion || null,
           tipo: 'logro',
           nivel: null,

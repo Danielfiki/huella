@@ -133,6 +133,34 @@
   --color-accent-orange: #E8956D;
   --color-accent-lavender: #CAC0E0;
   --color-accent-yellow: #F0DFA0;
+
+  /* ── Las 4 familias del retrato ──
+     Color de TINTA de cada familia: el punto de 9px del tab Perfil de
+     HijoPage, y cualquier rotulo que en adelante quiera nombrar una familia.
+     NO son colores de fondo.
+
+     Existen desde el 19 sep 2026. Antes eran cuatro hex escritos a mano dentro
+     de PropuestaRasgo.jsx, que es justo lo que este archivo prohibe, y ademas
+     dejaba los puntos con el color del modo claro cuando la app estaba en
+     oscuro.
+
+     Se probo reusar los tokens de acento que tenian el mismo valor
+     (--color-primary, --color-accent-green, --color-accent-mocha,
+     --color-accent-blue) y no sirve: --color-accent-blue en oscuro es #2A3E52,
+     un navy pensado como FONDO, que como punto sobre la card oscura da 1.56:1
+     y desaparece. De ahi que las familias tengan sus propios tokens.
+
+     Los valores en claro son exactamente los mismos hex de antes: en modo
+     claro no cambia nada de aspecto. Los de oscuro conservan el tono y la
+     saturacion de su familia y solo suben la luminosidad, hasta ~7.4:1 contra
+     --color-surface oscuro (#221A10). Los cuatro quedan parejos a proposito:
+     ningun punto pesa mas que otro.
+
+     Regla del diseno que se mantiene: `cuesta` jamas en rojo. */
+  --color-familia-mueve:      #E56E26;  /* tangerine · 3.19:1 sobre card clara */
+  --color-familia-fortalezas: #8FA840;  /* verde     · 2.68:1 */
+  --color-familia-calma:      #9B7B6A;  /* mocha     · 3.86:1 */
+  --color-familia-cuesta:     #6C8EF5;  /* azul      · 3.08:1 — jamas rojo */
   --color-strawberry: #E8756A;
   /* Tint strawberry para superficies (slot de foto del onboarding, pill
      "Opcional"). Existe para no reusar --color-danger-bg, que es rojo de
@@ -574,6 +602,15 @@
     --color-accent-blue: #2A3E52;
     --color-accent-lavender: #3A3058;
     --color-accent-yellow: #4A4018;
+
+    /* Las 4 familias, version oscura. Mismo tono y misma saturacion que en
+       claro, solo mas luminosidad, para que sigan reconociendose como la misma
+       familia. Los cuatro dan ~7.4:1 sobre --color-surface (#221A10).
+       `mueve` reusa el valor del --color-primary oscuro, que ya existia. */
+    --color-familia-mueve:      #EE9452;  /* 7.35:1 */
+    --color-familia-fortalezas: #9AB545;  /* 7.41:1 */
+    --color-familia-calma:      #BBA69A;  /* 7.39:1 */
+    --color-familia-cuesta:     #8DA8F7;  /* 7.42:1 */
     --color-leaf-bg: #162206;
     --color-leaf-border: #2A4010;
     --color-pistacho-bg: #2A4010;

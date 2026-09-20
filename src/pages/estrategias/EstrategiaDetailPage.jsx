@@ -188,7 +188,11 @@ export default function EstrategiaDetailPage() {
         try {
           await addHito({
             id: Date.now().toString(),
-            categoria: 'otro',
+            // Sin lente: este avance no lo eligio el papa desde las chips, lo
+            // genera el cierre del plan. Era 'otro', que dejo de existir como
+            // lente el 19 sep 2026 — la migracion 022 mando esas filas a NULL
+            // y esta linea las volvia a crear de a una.
+            categoria: null,
             descripcion: `Plan completado: "${plan.habilidad_nombre || plan.habilidad}" (${dur} semanas). Reflexión final: ${reflexion.trim()}`,
             fecha: new Date().toISOString(),
           });

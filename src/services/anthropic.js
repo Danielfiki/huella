@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase.js'
 import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 import { separarZona } from '../utils/seccionesIA.js'
 import { palabrasGenero } from '../utils/genero.js'
+import { LENTES_AVANCE, LENTE_POR_ID } from '../constants/catalogoAvance.js'
 
 // Timeout duro para cualquier llamada al backend de IA. Sin esto el
 // fetch puede quedar colgado indefinidamente y los loaders de la UI
@@ -1247,26 +1248,6 @@ Esta orientación se basa en evidencia del desarrollo infantil y no constituye u
   return llamarAPI(prompt, 2500)
 }
 
-export async function celebrarHito({ hijo, hito }) {
-  const marco = marcoEdad(hijo?.edad)
-  // Mismas palabras de siempre; ahora salen del helper compartido en vez de
-  // repetir la tabla inline. `sustantivo` se renombra a `genero` aca porque asi
-  // lo nombran las plantillas del prompt.
-  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
-
-  const prompt = `${marco}
-
-Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
-
-El padre/madre acaba de registrar este avance positivo:
-- Tipo: ${hito.categoria}
-- Descripción: ${hito.descripcion || '(sin descripción)'}
-
-Responde con exactamente 2 oraciones cálidas y concretas. Valida el significado de este momento para el desarrollo del niño en esta etapa específica, explicando brevemente por qué este tipo de avance importa neurológicamente o conductualmente a esta edad según el marco científico anterior. Habla en segunda persona al padre/madre. No uses listas ni títulos. No incluyas disclaimer ni marco aplicado. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
-
-  return llamarAPI(prompt, 180)
-}
-
 export async function generarTareas({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
   // Mismas palabras de siempre; ahora salen del helper compartido en vez de
@@ -1530,11 +1511,11 @@ Esto escribió la madre o el padre sobre cómo se sintió:
 // logro!", que es exactamente la frase de poster que la regla de voz prohibe.
 // Por eso la lista de prohibiciones es larga y explicita: es lo unico que
 // separa una respuesta util de una que suena a IA.
-const SYSTEM_RESPUESTA_HITO = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir un avance que una madre o padre registró sobre su hijo o hija. Devuelve DOS frases, máximo 40 palabras en total, en tuteo neutro y sin exclamaciones.
+const SYSTEM_RESPUESTA_HITO = `Eres Huella, una app que acompaña a madres y padres. Acabas de recibir un avance que una madre o padre registró sobre su hijo o hija. Devuelve DOS LÍNEAS separadas por un salto de línea, en tuteo neutro y sin exclamaciones.
 
-FRASE 1 — qué dice este avance de quién está siendo el niño o niña. Concreta: nombra lo que hizo y la capacidad que asoma ahí. Si te paso rasgos ya confirmados de ese hijo y uno conecta de verdad con este avance, nómbralo exactamente así: "va con lo que ya viste: <rasgo en minúscula>". Si ninguno conecta, no fuerces la conexión y no menciones los rasgos.
+LÍNEA 1 — qué asomó ahí. MÁXIMO 12 PALABRAS. Nombra la capacidad que se ve en lo que hizo. NO empieces con "Esta semana" ni con ninguna referencia temporal. NO uses el nombre del hijo: ya está en la pantalla. Si te paso rasgos ya confirmados de ese hijo y uno conecta de verdad con este avance, puedes nombrarlo exactamente así: "va con lo que ya viste: <rasgo en minúscula>". Si ninguno conecta, no fuerces la conexión y no menciones los rasgos.
 
-FRASE 2 — UNA sola cosa que el papá o la mamá puede hacer esta semana para darle más espacio a eso. Calibrada a la edad que te paso, concreta y pequeña: algo que quepa en un día normal.
+LÍNEA 2 — UNA sola cosa concreta que el papá o la mamá puede hacer esta semana para darle más espacio a eso. MÁXIMO 22 PALABRAS. EMPIEZA CON UN VERBO. Calibrada a la edad que te paso, pequeña: algo que quepa en un día normal.
 
 PROHIBIDO:
 - "qué gran logro", "esto demuestra", "está listo para".
@@ -1550,13 +1531,17 @@ PROHIBIDO:
 Voz de amiga que sabe de crianza hablándole a un papá cansado, no de informe.
 
 TRES LÍMITES QUE NO SE NEGOCIAN, revísalos antes de responder:
-1. 40 PALABRAS EN TOTAL entre las dos frases. Cuéntalas. Si te pasaste, recorta hasta que quepan: es mejor una frase corta que una completa.
+1. 12 PALABRAS la línea 1, 22 PALABRAS la línea 2, y 35 EN TOTAL. Cuéntalas. Si te pasaste, recorta hasta que quepan: es mejor una línea corta que una completa.
 2. La fórmula "va con lo que ya viste" SOLO puede aparecer si te pasé una lista de rasgos confirmados Y usas uno de esa lista, tal como está escrito ahí. Si no te pasé ninguno, esa fórmula está PROHIBIDA y no puedes nombrar ningún rasgo: decirle que "ya vio" algo que nunca confirmó es inventarle un recuerdo.
-3. Responde solo con el texto de las dos frases seguidas, en un párrafo. Sin etiquetas, sin "Frase 1", sin numerar, sin comillas alrededor.
+3. Responde SOLO con las dos líneas, separadas por UN salto de línea. Sin etiquetas, sin "Frase 1", sin numerar, sin viñetas, sin comillas alrededor, sin línea en blanco entre las dos. LAS DOS LÍNEAS TERMINAN CON PUNTO.
 ${REGLA_IDIOMA}`
 
 /**
- * Devuelve dos frases sobre el avance que el cuidador acaba de registrar.
+ * Devuelve { linea1, linea2 } sobre el avance que el cuidador acaba de
+ * registrar. Son DOS NIVELES, no dos frases seguidas: la 1 es lo que asomó y
+ * se lee grande en Fraunces; la 2 es la acción de la semana y va chica debajo.
+ * Por eso el salto de línea del modelo hay que preservarlo — el limpiador de
+ * antes lo aplastaba junto con el resto de los espacios.
  *
  * Haiku y no el modelo grande, por la misma razón que la reflexión: son dos
  * frases con un system corto. `max_tokens` 160 le pone techo al gasto y
@@ -1567,7 +1552,7 @@ ${REGLA_IDIOMA}`
  */
 export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] }) {
   const descripcion = (hito?.descripcion || '').trim()
-  if (!descripcion) return ''
+  if (!descripcion) return { linea1: '', linea2: null }
 
   const nombre = hijo?.nombre || 'su hijo/a'
   const edad = hijo?.edad ?? null
@@ -1588,8 +1573,17 @@ export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] 
       titulos.map((t) => `- ${t}`).join('\n')
     : `\nNo hay ningún rasgo confirmado de ${nombre}. NO uses la fórmula "va con lo que ya viste" ni nombres ningún rasgo.`
 
+  // La chip que eligió el padre viaja con su familia del retrato. Es la señal
+  // más limpia de qué está mirando él, y mandar el id crudo ("acepto_un_no")
+  // no se la daba al modelo. Sin lente (categoria NULL) se dice que no eligió,
+  // en vez de callarlo: el silencio el modelo lo rellena solo.
+  const lente = LENTE_POR_ID[hito?.categoria]
+  const lineaLente = lente?.familia
+    ? `El padre lo anotó como ${lente.label}, familia ${lente.familia}.`
+    : 'El padre no eligió categoría para este avance.'
+
   const prompt = `Avance de ${nombre}${edad != null ? `, ${edad} años` : ''}.
-Categoría: ${hito?.categoria || 'sin categoría'}.
+${lineaLente}
 Esto escribió la madre o el padre:
 "${descripcion}"${bloqueRasgos}`
 
@@ -1602,19 +1596,32 @@ Esto escribió la madre o el padre:
   // devolvía "Frase 1: … Frase 2: …" con las etiquetas literales y el papá las
   // leía en pantalla. Se quitan igual por si vuelve a colarse.
   //
-  // Tres detalles que se ven obvios y no lo son:
-  // - Los saltos de línea se aplastan PRIMERO. Al revés, el `\s*` final de la
-  //   etiqueta se come el salto que separaba las dos frases y quedan pegadas
-  //   ("se durmió solo.Esta semana…").
-  // - La etiqueta se reemplaza por UN ESPACIO, no por nada, por lo mismo.
-  // - Los `\*{0,2}` van a los DOS lados del signo: el modelo la escribe
-  //   "**Frase 1:**", con la negrita cerrando después de los dos puntos, y con
-  //   el asterisco solo por delante quedaban dos sueltos en la pantalla.
-  return (bruto || '')
-    .replace(/\s+/g, ' ')
+  // OJO con el orden, que cambió el 19 sep: el salto de línea AHORA ES DATO
+  // —es lo que separa los dos niveles— así que ya no se puede aplastar todo
+  // con un `\s+`. Se colapsa solo el espacio HORIZONTAL, y los saltos se
+  // normalizan aparte.
+  //
+  // Los `\*{0,2}` van a los DOS lados del signo: el modelo escribe
+  // "**Frase 1:**", con la negrita cerrando después de los dos puntos, y con
+  // el asterisco solo por delante quedaban dos sueltos en la pantalla.
+  const limpio = (bruto || '')
+    // Espacio horizontal repetido, sin tocar los saltos.
+    .replace(/[^\S\n]+/g, ' ')
+    // Etiquetas "Frase 1:", viñetas y numeraciones al principio de cada línea.
     .replace(/\*{0,2}\s*frase\s*\d+\s*\*{0,2}\s*[:.–—-]\s*\*{0,2}\s*/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+    .replace(/^\s*[-•*]\s+/gm, '')
+    // Varios saltos seguidos (la línea en blanco que a veces mete) son uno.
+    .replace(/\n{2,}/g, '\n')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+
+  // Si el modelo mandó todo en una línea, no se inventa un corte: la 1 se
+  // queda con todo y la 2 queda en null. La pantalla sabe no pintar nada.
+  return {
+    linea1: limpio[0] || '',
+    linea2: limpio.length > 1 ? limpio.slice(1).join(' ') : null,
+  }
 }
 
 export async function analizarReflexionesCuidador(reflexiones) {
@@ -2090,11 +2097,22 @@ ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.le
 // de registro (eso son las piezas 2 y 3). Devuelve { rasgos: [...] }.
 // ════════════════════════════════════════════════════════════════════
 
+// La tabla lente→familia sale del catálogo, no se escribe a mano: si mañana
+// se agrega o se renombra una lente, este texto se entera solo. Las 12 lentes
+// declaran familia; la ausencia de lente se guarda como NULL y se le explica
+// al modelo aparte.
+const TABLA_LENTES_AVANCE = LENTES_AVANCE
+  .map((lente) => `  - "${lente.id}" (${lente.label}) → familia "${lente.familia}"`)
+  .join('\n')
+
 const PROMPT_DETECTAR_RASGOS = `Eres Huella, una compañera de crianza cálida basada en evidencia del desarrollo infantil. NO eres clínica y NO diagnosticas. Tu rol es PROPONER, con humildad, rasgos que podrían describir a este niño a partir de lo que su padre o madre registró. El padre/madre es el verdadero experto en su hijo: tú ofreces una mirada extra, nunca una sentencia.
 
 La materia prima son los momentos que el padre o madre registró sobre su hijo. Cada momento trae un campo "origen":
 - "episodio": un momento difícil (rabieta, llanto, miedo, oposición u otro momento complicado).
-- "hito": un avance positivo (se calmó solo, mostró empatía, pidió disculpas, toleró un "no" u otro logro).
+- "hito": un avance positivo que el padre o madre registró. Cada hito puede traer un campo "categoria" con la lente que eligió el propio padre al guardarlo:
+${TABLA_LENTES_AVANCE}
+Si "categoria" viene en null, el padre no eligió ninguna lente, y de eso no hay nada que deducir.
+Cuando un hito SÍ trae "categoria", esa familia la eligió el padre mirando a su hijo: pésala como señal FUERTE para esa familia. Pero NO inventes un rasgo a partir de la categoría sola — la evidencia sigue siendo el texto del momento. Si el texto no respalda ningún rasgo, la categoría por sí sola no alcanza para proponer uno.
 Usa AMBOS tipos de momentos para construir el retrato. Las familias positivas o neutras (mueve, fortalezas, calma) se nutren sobre todo de los avances; la familia "cuesta" se nutre sobre todo de los episodios difíciles, pero cualquier momento puede aportar a cualquier familia si la respalda.
 
 Tu tarea: detectar rasgos del niño y clasificarlos en EXACTAMENTE estas 4 familias (usa el id tal cual en el campo "familia"):

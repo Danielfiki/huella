@@ -3,19 +3,34 @@ import Escarabajo from '../ui/Escarabajo'
 import { palabrasGenero } from '../../utils/genero'
 import s from './PropuestaRasgo.module.css'
 
-// Colores por familia, en hex plano. Vienen del diseno aprobado de la Fase 1
-// "el retrato que madura". Esta card YA NO los usa: desde el 14 sep toma
-// entera el color de su familia con el par fondo/texto de las pildoras del
-// sistema, que trae su version clara y oscura resuelta.
+// Colores por familia. Vienen del diseno aprobado de la Fase 1 "el retrato que
+// madura". Esta card YA NO los usa: desde el 14 sep toma entera el color de su
+// familia con el par fondo/texto de las pildoras del sistema, que trae su
+// version clara y oscura resuelta.
 //
-// El mapa se mantiene porque lo consume la ficha de las 4 familias del
-// retrato en HijoPage, que los pinta como punto de color.
-// Regla del diseno: `cuesta` jamas en rojo (lavanda), para no estigmatizar.
+// El mapa se mantiene porque lo consume la ficha de las 4 familias del retrato
+// en HijoPage, que los pinta como punto de color.
+//
+// Desde el 19 sep 2026 son TOKENS, no hex planos. Eran cuatro hex escritos a
+// mano aca, que es justo lo que el sistema de diseno prohibe, y ademas dejaba
+// los puntos congelados en el color del modo claro cuando la app estaba en
+// oscuro.
+//
+// Los tokens son propios de las familias y viven en index.css con su override
+// de oscuro. NO se reusan los acentos que tenian el mismo valor: el peor caso
+// era --color-accent-blue, que en oscuro es un navy de FONDO (#2A3E52) y como
+// punto daba 1.56:1.
+//
+// En modo claro no cambia nada de aspecto: los valores son los mismos de
+// siempre. Se usan como valor de un style inline, donde var() es valido igual
+// que en una hoja de estilos.
+//
+// Regla del diseno: `cuesta` jamas en rojo, para no estigmatizar.
 export const COLOR_FAMILIA = {
-  mueve:      '#E56E26', // naranja
-  fortalezas: '#8FA840', // verde
-  cuesta:     '#6C8EF5', // lavanda — jamas rojo
-  calma:      '#9B7B6A', // mocha
+  mueve:      'var(--color-familia-mueve)',       // tangerine
+  fortalezas: 'var(--color-familia-fortalezas)',  // verde
+  cuesta:     'var(--color-familia-cuesta)',      // azul — jamas rojo
+  calma:      'var(--color-familia-calma)',       // mocha
 }
 
 // Las 4 familias que la card sabe pintar. Cada una tiene su clase en el

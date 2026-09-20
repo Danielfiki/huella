@@ -32,7 +32,9 @@ create table if not exists public.episodios (
 create table if not exists public.hitos (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid references auth.users(id) on delete cascade not null,
-  categoria   text not null,
+  -- NULLABLE desde la migración 022: NULL = el padre guardó el avance sin
+  -- elegir lente. Antes era NOT NULL y el código mandaba 'otro' para rellenar.
+  categoria   text,
   descripcion text not null,
   fecha       timestamptz default now(),
   created_at  timestamptz default now()
@@ -91,6 +93,34 @@ alter table public.hitos      add column if not exists foto_url          text;
 -- Micro-respuesta de Huella al avance (migración 021). Haiku, un disparo por
 -- hito: la propia columna es el candado. NULL = todavía no se generó.
 alter table public.hitos      add column if not exists respuesta_ia      text;
+
+-- `hitos.categoria` pasa a ser NULLABLE (migración 022, 19 sep 2026). Acá va
+-- también como alter idempotente, porque el `create table if not exists` de
+-- arriba no toca una tabla que ya existe.
+alter table public.hitos      alter column categoria drop not null;
+
+-- Valores válidos de `hitos.categoria` — las 12 lentes del retrato, 4 por
+-- familia, con la familia que cada una declara. La fuente única en el código
+-- es `src/constants/catalogoAvance.js`; esto es su copia legible desde la
+-- base, para no tener que venir al repo a saber qué se puede guardar.
+--   se_intereso     Se interesó por algo        → mueve
+--   se_atrevio      Se atrevió a algo nuevo     → mueve
+--   creo_algo       Creó o inventó algo         → mueve
+--   logro_cuerpo    Logró algo con el cuerpo    → mueve
+--   cuido           Cuidó a alguien             → fortalezas
+--   lo_hizo_solo    Lo hizo solo                → fortalezas
+--   jugo_con_otros  Jugó con otros              → fortalezas
+--   dijo_algo       Dijo algo que te sorprendió → fortalezas
+--   se_calmo        Se calmó solo               → calma
+--   acepto_un_no    Esperó o aceptó un no       → calma
+--   pidio_ayuda     Pidió ayuda                 → calma
+--   humor           Se lo tomó con humor        → calma
+--   NULL            el padre no eligió lente    → sin familia
+-- `cuesta` no tiene lentes: un avance nunca es algo que le cuesta.
+-- Los valores viejos (autorregulacion, empatia, disculpa, frustration,
+-- social, otro) ya no se escriben; la 022 migró las filas que los tenían.
+-- Sin CHECK a propósito: un CHECK acá obliga a una migración de esquema cada
+-- vez que Design mueve una lente, y la lista ya está validada en el cliente.
 
 -- ── Row Level Security ────────────────────────────────────────
 alter table public.hijos         enable row level security;
