@@ -5,6 +5,7 @@ import CardPlegable from '../ui/CardPlegable'
 import PieCientifico from '../patron/PieCientifico'
 import BarrasSemana, { contarMomentosPorDia } from './BarrasSemana'
 import GuiaPrimerosPasos from './GuiaPrimerosPasos'
+import MomentosEnNumeros from './MomentosEnNumeros'
 import { esLetraChicaDelModelo } from '../registro/OrientacionSecciones'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../../services/anthropic'
@@ -16,7 +17,8 @@ import styles from './AnalisisSemanalCard.module.css'
 //
 //   nueva      menos de 3 momentos en total → la guía de primeros pasos
 //   lista      ya hay análisis de esta semana → barras + Mejoró, y al abrir
-//              Mirar, Un paso, el análisis completo y el pie
+//              Mirar, Un paso, sus momentos en números, el análisis completo
+//              y el pie
 //   generando  3+ momentos esta semana y el análisis se está escribiendo
 //   sin        lo demás → barras, y si faltan momentos en la semana, una línea
 //
@@ -192,6 +194,8 @@ function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrateg
       onToggle={() => setCardAbierta((v) => !v)}
     >
       <div className={styles.bloque}>{resto.map(fila)}</div>
+
+      <MomentosEnNumeros className={styles.plegable} />
 
       {filas.length > 0 && (
         <CardPlegable

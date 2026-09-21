@@ -314,6 +314,7 @@ export default function PanelPage() {
         <TarjetaEntrada delay={0.06}>
           <PuertaCerebro
             ahora={fraseCerebro}
+            edad={edadCerebro}
             onClick={() => navigate('/cerebro')}
           />
         </TarjetaEntrada>

@@ -63,7 +63,13 @@ const MARGEN = 0.95
 // nunca en medio de un gesto, así que es una operación segura.
 const ESTADO_REPOSO = -1
 
-export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores }) {
+// `loop` (opcional, solo lo usa la página de grabación /cerebro-loop, que existe
+// únicamente en desarrollo): { fase, fondo, onCanvas }. Con él la escena deja
+// de responder al dedo, apaga la deriva de OrbitControls y gira el MODELO sobre
+// su eje vertical con la fase que le da la página (0 a 1 = una vuelta), así la
+// velocidad es exacta y no depende de los cuadros por segundo. `fondo` pinta
+// el canvas sólido: uno transparente se graba en negro.
+export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores, loop }) {
   const contRef = useRef(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(false)
@@ -78,6 +84,8 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
   onTapRef.current = onTapZona
   const medidoresRef = useRef(medidores)
   medidoresRef.current = medidores
+  const loopRef = useRef(loop)
+  loopRef.current = loop
 
   useEffect(() => {
     const cont = contRef.current
@@ -90,6 +98,8 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     ren.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     ren.setSize(cont.clientWidth, cont.clientHeight)
     cont.appendChild(ren.domElement)
+    if (loopRef.current?.fondo) ren.setClearColor(new THREE.Color(loopRef.current.fondo), 1)
+    loopRef.current?.onCanvas?.(ren.domElement)
 
     // Si el navegador tira el contexto, el canvas queda en blanco SIN ningún
     // error: es un fallo que no se nota, así que se deja registrado. El
@@ -114,6 +124,10 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     ctr.zoomSpeed = 0.9
     ctr.autoRotate = true
     ctr.autoRotateSpeed = 0.45
+    if (loopRef.current) {
+      ctr.autoRotate = false
+      ctr.enabled = false
+    }
 
     // ── Luces ────────────────────────────────────────────────────────────
     // Iluminación para vitrina CLARA: contra fondo claro el volumen no lo
@@ -391,7 +405,7 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
     const despertar = () => {
       ctr.autoRotate = false
       clearTimeout(quieto)
-      quieto = setTimeout(() => { ctr.autoRotate = true }, 3200)
+      quieto = setTimeout(() => { if (!loopRef.current) ctr.autoRotate = true }, 3200)
     }
     const soltar = (e) => { punteros.delete(e.pointerId) }
 
@@ -537,6 +551,7 @@ export default function EscenaCerebro({ edad, zonaAbierta, onTapZona, medidores 
       const p = vis.pfn
 
       if (grupo) grupo.scale.setScalar(vis.escala)
+      if (grupo && loopRef.current) grupo.rotation.y = loopRef.current.fase() * Math.PI * 2
 
       // La prefrontal: SIEMPRE sólida, como las demás zonas.
       //   color:     gris de obra → índigo, con arranque lento

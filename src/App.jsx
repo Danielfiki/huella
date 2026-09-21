@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { lazy, Suspense, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { FamilyProvider } from './context/FamilyContext'
@@ -29,6 +29,10 @@ import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
 import BetaPage from './pages/beta/BetaPage'
 import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
+
+// Página para grabar el loop del cerebro de la puerta "Su cerebro". Solo en
+// desarrollo: en producción import.meta.env.DEV es false y el import se va.
+const CerebroLoopPage = import.meta.env.DEV ? lazy(() => import('./pages/cerebro/CerebroLoopPage')) : null
 
 class PageErrorBoundary extends React.Component {
   constructor(props) {
@@ -153,6 +157,9 @@ export default function App() {
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
+              {CerebroLoopPage && (
+                <Route path="/cerebro-loop" element={<Suspense fallback={null}><CerebroLoopPage /></Suspense>} />
+              )}
               {/* Tablero privado de la beta. Fuera del Layout (sin barra de
                   navegación), detrás de login. Solo se llega escribiendo /beta. */}
               <Route path="/beta"     element={<ProtectedRoute><PageErrorBoundary><BetaPage /></PageErrorBoundary></ProtectedRoute>} />

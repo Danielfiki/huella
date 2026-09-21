@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
 import { ZONAS, AHORA, porTope } from './contenidoCerebro'
-import MomentosEnNumeros from './MomentosEnNumeros'
 import styles from './CerebroPage.module.css'
 
 // El Cerebro Huella sin cáscara de página: vitrina, franja, slider, chips y
@@ -338,8 +337,6 @@ export default function CerebroContenido({ compacto = false }) {
         </div>
         <div className={`${styles.zonasFade} ${hayMasChips ? styles.zonasFadeOn : ''}`} />
       </div>
-
-      <MomentosEnNumeros />
 
       <p className={styles.pie}>
         Este modelo es un mapa anatómico adulto: te sirve para ubicarte, no representa

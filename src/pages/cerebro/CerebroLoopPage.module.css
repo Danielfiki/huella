@@ -1,0 +1,44 @@
+/* Página de grabación (solo desarrollo). El cuadro es exactamente lo que se
+   graba; todo lo demás queda afuera. */
+.pagina {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.cuadro {
+  position: relative;
+  background: var(--color-bg);
+  flex-shrink: 0;
+}
+
+.controles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.boton {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton:disabled { opacity: 0.5; cursor: default; }
+
+.aviso {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}

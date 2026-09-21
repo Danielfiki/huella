@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { ChevronRight, BookOpen } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Escarabajo from '../ui/Escarabajo'
@@ -10,7 +10,7 @@ import {
 } from '../motion/MotionPrimitives'
 import styles from './puertas.module.css'
 
-// Las tres puertas del Home. Tarjetas compactas: dato visual y cero párrafos.
+// Las cuatro puertas del Home. Tarjetas compactas: dato visual y cero párrafos.
 // Cada una lleva a una sección y muestra lo justo para dar ganas de entrar.
 //
 // "Su huella" absorbe el rol de AnticipoRetratoCard (incluido el aviso de
@@ -110,16 +110,67 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
 }
 
 // ── Su cerebro ─────────────────────────────────────────────────────────────
-// Reemplaza el CTA "Mira su cerebro por dentro" de la vieja tarjeta del
-// cerebro. El avatar es el mismo punto índigo que latía en ese CTA; el dato
-// es la frase "Ahora mismo" de su edad (contenidoCerebro), en una línea.
+// Card ancha con el cerebro en movimiento: un loop pregrabado del 3D (ida y
+// vuelta, mudo) a la izquierda, "Su cerebro" y la frase "Ahora mismo" de su
+// edad a la derecha. Abre /cerebro, donde vive el modelo de verdad.
+//
+// El video solo corre mientras la card se ve: fuera de pantalla se pausa. Con
+// movimiento reducido no se reproduce nunca y queda el poster. Por eso no
+// lleva `autoPlay`: lo arranca el observador, que es el que sabe si se ve.
+//
+// Un video por tramo de edad, grabados en /cerebro-loop: una vuelta exacta que
+// empalma consigo misma (loop directo, sin ida y vuelta). La edad es decimal
+// (4,5 años es mediano): chico hasta 4, mediano hasta 8, grande de ahí en
+// adelante. Sin edad conocida va el mediano, que es el del medio del rango.
+const VIDEO_POR_TRAMO = [
+  [4,        'cerebro-chico'],    // tramos 1, 2 y 4 de AHORA
+  [8,        'cerebro-mediano'],  // tramos 6 y 8
+  [Infinity, 'cerebro-grande'],   // tramos 11, 14 y 18
+]
 
-export function PuertaCerebro({ ahora, onClick }) {
+function videoCerebro(edad) {
+  const nombre = edad == null
+    ? 'cerebro-mediano'
+    : VIDEO_POR_TRAMO.find(([tope]) => edad <= tope)[1]
+  return `/videos/cerebro/${nombre}`
+}
+
+export function PuertaCerebro({ ahora, edad, onClick }) {
+  const ref = useRef(null)
+  const reducido = useMovimientoReducido()
+  const base = videoCerebro(edad)
+
+  useEffect(() => {
+    const video = ref.current
+    if (!video) return undefined
+    if (reducido || typeof IntersectionObserver === 'undefined') {
+      video.pause()
+      return undefined
+    }
+    const obs = new IntersectionObserver(([entrada]) => {
+      if (entrada.isIntersecting) video.play().catch(() => {})
+      else video.pause()
+    }, { threshold: 0.25 })
+    obs.observe(video)
+    return () => { obs.disconnect(); video.pause() }
+  }, [reducido])
+
   return (
     <Puerta onClick={onClick} ariaLabel="Su cerebro">
-      <span className={styles.avatar}>
-        <span className={styles.puntoCerebro} aria-hidden="true" />
-      </span>
+      <video
+        ref={ref}
+        className={styles.videoCerebro}
+        poster={`${base}-poster.png`}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        <source src={`${base}.webm`} type="video/webm" />
+        <source src={`${base}.mp4`} type="video/mp4" />
+      </video>
       <span className={styles.centro}>
         <span className={styles.etiqueta}>Su cerebro</span>
         <span className={styles.frase}>{ahora}</span>

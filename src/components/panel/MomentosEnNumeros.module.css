@@ -1,7 +1,3 @@
-/* Mismo borde y sombra que el plegable del episodio (CardPlegable), con aire
-   arriba para separarse de los chips de zonas. */
-.card { margin-top: 20px; }
-
 /* Los tres gráficos, como en el detalle de la vieja tarjeta del cerebro. */
 .detalle {
   display: flex;

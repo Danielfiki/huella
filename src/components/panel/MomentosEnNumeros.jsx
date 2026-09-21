@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react'
 import { useHuella } from '../../context/HuellaContext'
-import CardPlegable from '../../components/ui/CardPlegable'
-import { ChartFrecuencia } from '../../components/panel/ChartFrecuencia'
-import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
-import { ChartGatillos } from '../../components/panel/ChartGatillos'
+import CardPlegable from '../ui/CardPlegable'
+import { ChartFrecuencia } from './ChartFrecuencia'
+import { ChartIntensidad } from './ChartIntensidad'
+import { ChartGatillos } from './ChartGatillos'
 import styles from './MomentosEnNumeros.module.css'
 
 // "Sus momentos en números": los tres gráficos que vivían plegados en la
 // tarjeta del cerebro del Home (frecuencia de la semana, intensidad y los
-// gatillantes del mes). Se mudaron al final del cerebro cuando el Home quedó
-// en tres bloques. Plegado y cerrado, y solo con 3+ episodios, igual que antes.
+// gatillantes del mes). Viven dentro de la card "Esta semana" abierta, entre
+// "Un paso" y el análisis completo. Plegado y cerrado, y solo con 3+
+// episodios, igual que antes. `className` lo pone quien lo aloja.
 //
 // Todo lo de abajo (emojis, días, narrativas y cálculos) se trajo tal cual
 // desde PanelPage. Las narrativas eran también la frase de la semana del Home;
@@ -114,7 +115,7 @@ function useNarrativaIntensidad(episodios, nombre) {
   }, [episodios, nombre])
 }
 
-export default function MomentosEnNumeros() {
+export default function MomentosEnNumeros({ className = '' }) {
   const { state } = useHuella()
   const episodios = state.episodios || []
   const estrategias = state.estrategias || []
@@ -169,7 +170,7 @@ export default function MomentosEnNumeros() {
   if (episodios.length < 3) return null
 
   return (
-    <CardPlegable titulo="Sus momentos en números" className={styles.card}>
+    <CardPlegable titulo="Sus momentos en números" className={className}>
       <div className={styles.detalle}>
         <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
         <ChartIntensidad data={intData} caption={narrativaIntensidad} />

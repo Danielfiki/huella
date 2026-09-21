@@ -9,3 +9,6 @@ supabase/.temp/
 # Mensajes de commit temporales (PowerShell/bash mueren con unicode en
 # here-docs, asi que escribimos a archivo y pasamos con `git commit -F`).
 .commit-msg.tmp
+
+# Videos originales sin procesar (los loops van a public/videos/cerebro)
+videos-originales/
