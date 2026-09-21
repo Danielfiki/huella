@@ -39,7 +39,7 @@
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
 6. ⬜ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — reusa el copy de re-enganche sin culpa. `ultima_actividad` ya se escribe.
 7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). **Queda:** **(c)** identidad del rasgo, medir primero con La brava limpia; y el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
-8. ⬜ **Análisis semanal — recortarlo** — **16 sep** — ya existe como card del Home. 3 líneas visibles (qué mejoró con dato / qué mirar / un paso), texto largo bajo plegable cerrado, "Marco aplicado" al pie como Lente, prompt con voz de amiga y no de informe. Push del domingo con la primera línea. **Métrica: se abre o no.**
+8. ⬜ **Análisis semanal** — **16 sep** — ✅ **Fase 1 en producción el 21 sep** (detalle: bloque del 21 sep): se genera solo, se guarda, tres líneas automáticas y análisis completo bajo demanda. **Queda la fase 2:** push del domingo con "Mejoró". **Métrica: se abre o no** (ya se puede medir, porque ahora se guarda).
 9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). **Lo que queda: el paso 3**, que es el nuevo catálogo de 8 chips agrupadas por familia (ver el ítem 16) y el QA con avances reales de varios testers. El diseño de las dos pantallas va a una pasada de Design aparte.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
 11. ⬜ **Álbum "Sus avances"** — **16 sep** — cuarto tab en `HijoPage` junto a "Su cerebro", solo hitos con foto o texto. **Code mide primero si 4 tabs caben en 390px.** Vacío: una línea + botón naranjo a registrar avance con foto; nunca "aún no tienes". Hogar natural del ítem 5.
@@ -342,7 +342,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — domingo 21 septiembre 2026 — **Motor de rasgos: lo positivo ya llega a candidato, y La brava quedó limpia**
+## Cerrado HOY — domingo 21 septiembre 2026 — **Motor de rasgos: lo positivo ya llega a candidato · análisis semanal en producción · Home en tres bloques · cerebro en movimiento**
 
 **🎯 Lo positivo por fin llega a la card.** Con La brava recién reseteada, el motor corrió y lo primero que propuso fue un rasgo de `mueve` ("Se queda absorta observando el mundo pequeño…") con 2 momentos de días distintos. QA de Daniel aprobado en localhost.
 
@@ -366,10 +366,37 @@ El marcador del último total analizado (por hijo, en `localStorage`) quedaba m�
 ### 6. 🪤 Hallazgo: el login desde localhost caía en huella.lat
 Por eso los primeros QA del día no mostraron ningún arreglo: Daniel estaba en producción. El código ya usa `window.location.origin`; lo que faltaba es **`http://localhost:5173/**` en Supabase → Authentication → URL Configuration → Redirect URLs** (lo agrega Daniel). Sin eso, Supabase rechaza la vuelta a localhost y manda al Site URL. Entrar con correo y contraseña no tiene el problema.
 
+### 7. ✅ Análisis semanal (ítem 8, fase 1) — EN PRODUCCIÓN
+- **Se genera solo** al abrir el Home cuando el hijo tiene **3+ momentos en los últimos 7 días**, una vez por semana (lunes en hora de Chile). Se guarda en `analisis_semanal` (**migraciones 023 y 024 corridas**). RLS `family_data`; grants por columna: se lee y se crea, y solo se actualizan `texto_completo` y `marco`.
+- **Dos llamadas.** La automática trae solo las tres líneas (**Mejoró / Qué mirar / Un paso**, máx. 30 palabras cada una, 350 tokens) y la ven Free y Pro. La larga (Lo que merece atención / Posibles causas / Próximos pasos, bajo 220 palabras) se pide **solo cuando un papá Pro abre "Leer el análisis completo"**, recibe las tres líneas para no contradecirlas y queda guardada. En Free, abrir el plegable muestra el candado y no llama a nada.
+- **Card "Esta semana"** (`AnalisisSemanalCard`), cuatro estados: **guía de primeros pasos** (menos de 3 momentos en total) / **generando** ("Huella está leyendo la semana…") / **sin análisis** (barras + "Cuando haya tres momentos en la semana, Huella la lee.") / **con análisis** (barras + Mejoró cerrada; abierta: Mirar, Un paso, Sus momentos en números, análisis completo y pie con el marco). **Las barras de 7 días cuentan episodios y avances**, por día en hora de Chile.
+- **Pendiente fase 2:** la notificación del domingo con "Mejoró".
+
+### 8. ✅ Home reordenado en tres bloques
+**Candidato → Registrar → Esta semana → puertas Su huella · Su cerebro · Momentos · Acompañando.** `TarjetaCerebro` y su detalle **eliminados**. **"Sus momentos en números"** (frecuencia, intensidad y top 3 de gatillantes) vive dentro de "Esta semana" abierta. `bancoEducativo.js` **deja de montarse** (pendiente que lo absorba la matriz del cerebro). La frase de la semana ("la semana más suave…") desapareció del Home; sus dos narrativas siguen como pie de los gráficos. `CardPlegable` quedó como componente reusable (lo usan el episodio y el análisis). Se borraron `AnalisisIA` y `CTAAskHuella`.
+
+### 9. ✅ Puerta "Su cerebro" con el cerebro en movimiento
+Card ancha: video en loop (96px, `--radius-md`) + "Su cerebro" + la frase "Ahora mismo" de su edad. **Un video por tramo de edad** (chico hasta 4 / mediano hasta 8 / grande de 9 en adelante), grabados desde **`/cerebro-loop`, ruta que solo existe en desarrollo** (una vuelta exacta cada 6 s, loop directo que empalma consigo mismo). Los 3 videos pesan **menos de 230 KB** (mp4 + webm + poster). Solo corre mientras la card se ve (IntersectionObserver); con movimiento reducido queda el poster. Los originales viven en `videos-originales/` (ignorado por git) y `ffmpeg-static` se instaló fuera del proyecto.
+
+### 10. 📌 Principios nuevos de Daniel
+- **No gastar IA en lo que nadie abre.** Lo automático es corto; lo largo, bajo demanda.
+- **El Home responde tres preguntas:** qué hay para mí hoy, cómo va su semana, adónde voy.
+
+### 11. 🪤 Lecciones del día
+- **Un `git add` con una ruta que ya no existe no agrega NADA**, y el commit sale igual con lo que ya estaba preparado. Pasó con `MomentosEnNumeros` después de un `git mv`: se corrigió con `--amend` antes del push.
+- **MediaRecorder graba con cuadros por segundo variables.** Forzar 30 fps al convertir mete cuadros repetidos (el tramo chico quedó con 30); se codifica conservando los tiempos originales.
+
 ### ⏭️ Pendiente
 1. ⬜ **Ítem 7 (c) — identidad del rasgo.** Hoy dos rasgos son el mismo solo si coinciden familia y título normalizado. **Medir primero con La brava limpia** si la memoria del motor (existe desde el 9 sep, después de los duplicados viejos) ya evita el "le cuesta soltar…" ×3. Si vuelve a duplicar: clave estable que devuelva el modelo.
 2. ⬜ **El denominador "de 12"** está escrito a mano en 4 lugares (`HijoPage.jsx:171`, `Puertas.jsx:84`, `:99`, `:102`) y el conteo no tiene techo. **Pasa por Design.**
 3. ⬜ **Agregar `http://localhost:5173/**` a las Redirect URLs de Supabase** (Daniel).
+4. ⬜ **QA en Android real (celular de Igna)** del Home reordenado, la card "Esta semana" y el video del cerebro.
+5. ⬜ **iPhone con ahorro de batería:** Safari no reproduce videos automáticos, así que la puerta "Su cerebro" muestra el poster. Verificar que se vea bien así.
+6. ⬜ **La brava está guardada como niño** (`genero = 'm'`). Cambiarla a niña si se quiere QA del texto en femenino.
+7. ⬜ **La línea "Cuando haya tres momentos en la semana, Huella la lee."** se muestra siempre que la semana tenga menos de 3 momentos, también con 0 o 1, y ahí la frase no calza. Decidir copy por caso o una línea que no cuente.
+8. ⬜ **El segundo papá de la familia no puede guardar el análisis completo** que generó el otro: la RLS `family_data` solo deja escribir filas propias. Lo lee igual, pero cada vez le sale "No quedó guardado" y se vuelve a generar. Decisión pendiente.
+9. ⬜ **Regla "no agregues circunstancias ni detalles que no estén en los momentos"** en el análisis completo: agregada al prompt, **sin probar contra la IA**.
+10. ⬜ **Fase 2 del análisis semanal:** notificación del domingo con "Mejoró".
 
 ---
 
