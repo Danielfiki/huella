@@ -6,6 +6,7 @@ import { generarAccionInmediata, detectarRasgos, generarEstrategiaDesdeContexto 
 import { retryAsync, esErrorIAReintentable } from '../utils/retryAsync'
 import { HABILIDADES_CATALOGO } from '../pages/estrategias/helpers'
 import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
+import { cumpleUmbral } from '../utils/umbralRasgos'
 
 const HuellaContext = createContext(null)
 
@@ -405,7 +406,10 @@ function debeDetectarRasgos(hijoId, total) {
   if (!hijoId || total < TRAMO_RASGOS) return false
   const ultimo = leerUltimoTotalRasgos(hijoId)
   if (ultimo == null) return true
-  return Math.floor(total / TRAMO_RASGOS) > Math.floor(ultimo / TRAMO_RASGOS)
+  // Un marcador mayor que el total pasa despues de un reset o al borrar
+  // momentos: sin esto el hijo no volvia a cruzar un tramo nunca. Se parte de 0.
+  const base = ultimo > total ? 0 : ultimo
+  return Math.floor(total / TRAMO_RASGOS) > Math.floor(base / TRAMO_RASGOS)
 }
 
 function dbHijoToApp(row) {
@@ -1093,10 +1097,10 @@ export function HuellaProvider({ children }) {
         if (fusion.length === previaEvidencia.length) continue
 
         // Misma regla de graduacion que la fusion por titulo: solo emergente
-        // sube a candidato, y solo al llegar a 3 momentos. Confirmado y
-        // descartado nunca revierten.
+        // sube a candidato, y solo al cumplir el umbral de su familia.
+        // Confirmado y descartado nunca revierten.
         const estadoNuevo =
-          previo.estado === 'emergente' && fusion.length >= 3
+          previo.estado === 'emergente' && cumpleUmbral(previo.familia, fusion)
             ? 'candidato'
             : previo.estado
 
@@ -1145,8 +1149,9 @@ export function HuellaProvider({ children }) {
 
         if (!previo) {
           // c) No existe -> INSERT nuevo. El estado lo decide el flag esEmergente
-          //    que entrega el motor (detectarRasgos): 1-2 momentos = 'emergente',
-          //    3 o mas = 'candidato'. Antes no se pasaba estado y todo caia al
+          //    que entrega el motor (detectarRasgos): bajo el umbral de su
+          //    familia = 'emergente', sobre el umbral = 'candidato'
+          //    (umbralRasgos.js). Antes no se pasaba estado y todo caia al
           //    default 'candidato' de la tabla; ahora se setea explicito.
           const { error } = await supabase.from('rasgos').insert({
             user_id:         user.id,
@@ -1172,11 +1177,12 @@ export function HuellaProvider({ children }) {
             ...evidencia.filter((x) => !idsPresentes.has(idDe(x))),
           ]
           // Graduacion emergente -> candidato: SOLO si el previo era 'emergente'
-          //    Y la evidencia fusionada ya llega a 3 momentos. En cualquier otro
-          //    caso se mantiene el estado previo, por lo que confirmado y
-          //    descartado NUNCA revierten y un candidato no retrocede.
+          //    Y la evidencia fusionada ya cumple el umbral de su familia. En
+          //    cualquier otro caso se mantiene el estado previo, por lo que
+          //    confirmado y descartado NUNCA revierten y un candidato no
+          //    retrocede.
           const estadoNuevo =
-            previo.estado === 'emergente' && fusion.length >= 3
+            previo.estado === 'emergente' && cumpleUmbral(previo.familia, fusion)
               ? 'candidato'
               : previo.estado
           const { error } = await supabase

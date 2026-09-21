@@ -123,6 +123,7 @@ export function TarjetaCerebro({
   estado,
   edadHijo,
   totalEpisodios,
+  totalMomentos = totalEpisodios,
   episodiosSemana,
   frecData,
   frase,
@@ -135,8 +136,8 @@ export function TarjetaCerebro({
   const t = tokensMovimiento()
   const reducido = useMovimientoReducido()
   const educativo = estado === 'pobre' ? contenidoEducativo(edadHijo, nombreHijo) : null
-  const pasosHechos = PASOS.filter((p) => p.hecho(totalEpisodios)).length
-  const pasoActual = PASOS.findIndex((p) => !p.hecho(totalEpisodios))
+  const pasosHechos = PASOS.filter((p) => p.hecho(totalMomentos)).length
+  const pasoActual = PASOS.findIndex((p) => !p.hecho(totalMomentos))
 
   const encabezado = `Esta semana en el cerebro de ${nombreHijo}`
 
@@ -188,7 +189,7 @@ export function TarjetaCerebro({
           <Segmentos total={3} encendidos={pasosHechos} />
           <ul className={styles.pasos}>
             {PASOS.map((paso, i) => {
-              const hecho = paso.hecho(totalEpisodios)
+              const hecho = paso.hecho(totalMomentos)
               const actual = i === pasoActual
               return (
                 <li key={i} className={styles.paso}>

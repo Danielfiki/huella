@@ -19,6 +19,7 @@ import { ChartGatillos } from '../../components/panel/ChartGatillos'
 import { AnalisisIA } from '../../components/panel/AnalisisIA'
 import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
+import { esFamiliaPositiva } from '../../utils/umbralRasgos'
 import styles from './PanelPage.module.css'
 
 // UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
@@ -186,11 +187,24 @@ export default function PanelPage() {
   // Se propone el mas antiguo en estado candidato del hijo activo. Al
   // resolverlo la card desaparece y el siguiente NO entra en esta visita: lo
   // frena hijosRespondidosEstaVisita, arriba.
+  //
+  // Si lo ultimo que respondio el papa fue un "cuesta", va primero un positivo.
+  // El 16 sep lo positivo no llegaba a candidato y la card solo preguntaba lo dificil.
   const candidato = useMemo(() => {
-    const suyos = (rasgos || []).filter(
-      (r) => r.estado === 'candidato' && r.hijoId === hijo?.id
-    )
-    suyos.sort((a, b) => String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')))
+    const delHijo = (rasgos || []).filter((r) => r.hijoId === hijo?.id)
+    const porFecha = (campo) => (a, b) => String(a[campo] ?? '').localeCompare(String(b[campo] ?? ''))
+
+    const suyos = delHijo.filter((r) => r.estado === 'candidato')
+    suyos.sort(porFecha('createdAt'))
+
+    const respondidos = delHijo.filter((r) => r.estado === 'confirmado' || r.estado === 'descartado')
+    respondidos.sort(porFecha('updatedAt'))
+    const ultimo = respondidos[respondidos.length - 1]
+
+    if (ultimo?.familia === 'cuesta') {
+      const positivo = suyos.find((r) => esFamiliaPositiva(r.familia))
+      if (positivo) return positivo
+    }
     return suyos[0] ?? null
   }, [rasgos, hijo?.id])
 
@@ -342,6 +356,10 @@ export default function PanelPage() {
     totalEpisodios: episodios.length,
     episodiosSemana: weekData.episodes,
   })
+  // Un momento es un episodio o un avance, igual que en el Historial. Lo usan
+  // la puerta Momentos y los primeros pasos; los graficos y el cupo free
+  // siguen contando solo episodios.
+  const totalMomentos = episodios.length + hitos.length
   const fraseHallazgo = narrativaFrecuencia || narrativaIntensidad
   const detalleDisponible = episodios.length >= 3
 
@@ -478,6 +496,7 @@ export default function PanelPage() {
         estado={estadoCerebro}
         edadHijo={hijo?.edad ?? null}
         totalEpisodios={episodios.length}
+        totalMomentos={totalMomentos}
         episodiosSemana={weekData.episodes}
         frecData={frecData}
         frase={fraseHallazgo}
@@ -520,7 +539,7 @@ export default function PanelPage() {
 
         <TarjetaEntrada delay={0.06}>
           <PuertaMomentos
-            total={episodios.length}
+            total={totalMomentos}
             ultimos={episodios}
             fotoAvance={fotoUltimoAvance}
             onClick={() => navigate('/historial')}

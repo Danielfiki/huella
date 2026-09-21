@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase.js'
 import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 import { separarZona } from '../utils/seccionesIA.js'
 import { palabrasGenero } from '../utils/genero.js'
+import { cumpleUmbral } from '../utils/umbralRasgos.js'
 import { LENTES_AVANCE, LENTE_POR_ID } from '../constants/catalogoAvance.js'
 
 // Timeout duro para cualquier llamada al backend de IA. Sin esto el
@@ -2190,6 +2191,10 @@ export async function detectarRasgos({ hijo, episodios, hitos, rasgosExistentes 
   for (const e of episodiosCompactados) tipoPorId.set(e.id, 'episodio')
   for (const h of hitosCompactados) tipoPorId.set(h.id, 'hito')
 
+  // Mapa id -> fecha: el umbral de las familias positivas pide dias distintos.
+  const fechaPorId = new Map()
+  for (const m of [...episodiosCompactados, ...hitosCompactados]) fechaPorId.set(m.id, m.fecha)
+
   const momentos = [...episodiosCompactados, ...hitosCompactados]
 
   // La memoria del motor. Sin esto cada corrida miraba los momentos desde cero
@@ -2251,11 +2256,13 @@ ${JSON.stringify({
             return tipo ? { tipo, id } : null
           })
           .filter(Boolean)
-        // Clasificacion por CONTEO, no por etiqueta del modelo: 1-2 momentos =
-        // patron emergente (aun sin evidencia suficiente para proponerlo como
-        // rasgo confirmable); 3 o mas = candidato, como hasta hoy. El guardado
-        // leera este flag en el paso siguiente; aca NO se escribe en la tabla.
-        const esEmergente = evidencia.length < 3
+        // Clasificacion por CONTEO, no por etiqueta del modelo: bajo el umbral
+        // = patron emergente (aun sin evidencia suficiente para proponerlo como
+        // rasgo confirmable); sobre el umbral = candidato. El umbral depende de
+        // la familia (ver umbralRasgos.js). El guardado leera este flag en el
+        // paso siguiente; aca NO se escribe en la tabla.
+        const conFecha = evidencia.map((ev) => ({ ...ev, fecha: fechaPorId.get(ev.id) }))
+        const esEmergente = !cumpleUmbral(r.familia, conFecha)
         return { ...r, evidencia, esEmergente }
       })
       .filter((r) => {
