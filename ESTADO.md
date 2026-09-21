@@ -386,6 +386,9 @@ Card ancha: video en loop (96px, `--radius-md`) + "Su cerebro" + la frase "Ahora
 - **Un `git add` con una ruta que ya no existe no agrega NADA**, y el commit sale igual con lo que ya estaba preparado. Pasó con `MomentosEnNumeros` después de un `git mv`: se corrigió con `--amend` antes del push.
 - **MediaRecorder graba con cuadros por segundo variables.** Forzar 30 fps al convertir mete cuadros repetidos (el tramo chico quedó con 30); se codifica conservando los tiempos originales.
 
+### 12. ✅ Fix: el video de "Su cerebro" arranca en la primera carga
+Al abrir la app quedaba en el poster y solo giraba al volver al Home desde otra pantalla: se llamaba play() una vez y el rechazo se tragaba. Ahora `controlVideoLoop.js` reintenta al entrar en pantalla, al tener datos (`loadeddata`/`canplay`) y con el primer toque en la página; recrea el observador y llama `load()` si cambia el tramo, y deja `muted` como atributo. QA de Daniel aprobado.
+
 ### ⏭️ Pendiente
 1. ⬜ **Ítem 7 (c) — identidad del rasgo.** Hoy dos rasgos son el mismo solo si coinciden familia y título normalizado. **Medir primero con La brava limpia** si la memoria del motor (existe desde el 9 sep, después de los duplicados viejos) ya evita el "le cuesta soltar…" ×3. Si vuelve a duplicar: clave estable que devuelva el modelo.
 2. ⬜ **El denominador "de 12"** está escrito a mano en 4 lugares (`HijoPage.jsx:171`, `Puertas.jsx:84`, `:99`, `:102`) y el conteo no tiene techo. **Pasa por Design.**
