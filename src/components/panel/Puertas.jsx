@@ -109,6 +109,25 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
   )
 }
 
+// ── Su cerebro ─────────────────────────────────────────────────────────────
+// Reemplaza el CTA "Mira su cerebro por dentro" de la vieja tarjeta del
+// cerebro. El avatar es el mismo punto índigo que latía en ese CTA; el dato
+// es la frase "Ahora mismo" de su edad (contenidoCerebro), en una línea.
+
+export function PuertaCerebro({ ahora, onClick }) {
+  return (
+    <Puerta onClick={onClick} ariaLabel="Su cerebro">
+      <span className={styles.avatar}>
+        <span className={styles.puntoCerebro} aria-hidden="true" />
+      </span>
+      <span className={styles.centro}>
+        <span className={styles.etiqueta}>Su cerebro</span>
+        <span className={styles.frase}>{ahora}</span>
+      </span>
+    </Puerta>
+  )
+}
+
 // ── Momentos ───────────────────────────────────────────────────────────────
 
 export function PuertaMomentos({ total, ultimos, fotoAvance, onClick }) {

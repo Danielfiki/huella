@@ -3,11 +3,22 @@ import { Lock } from 'lucide-react'
 import Escarabajo from '../ui/Escarabajo'
 import CardPlegable from '../ui/CardPlegable'
 import PieCientifico from '../patron/PieCientifico'
+import BarrasSemana, { contarMomentosPorDia } from './BarrasSemana'
+import GuiaPrimerosPasos from './GuiaPrimerosPasos'
 import { esLetraChicaDelModelo } from '../registro/OrientacionSecciones'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
+import { momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../../services/anthropic'
 import styles from './AnalisisSemanalCard.module.css'
 
-// Card del análisis semanal en el Home, arriba de la tarjeta del cerebro.
+// La card "Esta semana" del Home. Es la única lectura de la semana: absorbió
+// las barras de 7 días de la vieja tarjeta del cerebro y su guía de primeros
+// pasos. Cuatro estados, en este orden de prioridad:
+//
+//   nueva      menos de 3 momentos en total → la guía de primeros pasos
+//   lista      ya hay análisis de esta semana → barras + Mejoró, y al abrir
+//              Mirar, Un paso, el análisis completo y el pie
+//   generando  3+ momentos esta semana y el análisis se está escribiendo
+//   sin        lo demás → barras, y si faltan momentos en la semana, una línea
 //
 // Las tres líneas las genera y guarda HuellaContext al abrir el Home, una vez
 // por semana, y las ve todo el mundo. Lo largo NO viene hecho: se pide la
@@ -44,7 +55,72 @@ function partirEnSecciones(texto) {
   return secciones
 }
 
-export default function AnalisisSemanalCard({ analisis, bloqueado, onUpgrade, onVerEstrategias, onPedirCompleto }) {
+function Cabecera() {
+  return (
+    <span className={styles.cabecera}>
+      <Escarabajo className={styles.bicho} />
+      <span className={styles.eyebrow}>Huella · Esta semana</span>
+    </span>
+  )
+}
+
+export default function AnalisisSemanalCard({
+  analisis,
+  generando,
+  episodios,
+  hitos,
+  nombreHijo,
+  bloqueado,
+  onUpgrade,
+  onVerEstrategias,
+  onPedirCompleto,
+}) {
+  const totalMomentos = (episodios?.length ?? 0) + (hitos?.length ?? 0)
+  const semana = momentosDeLaSemana({ episodios, hitos })
+  const momentosSemana = semana.episodios.length + semana.hitos.length
+  const barras = contarMomentosPorDia(episodios, hitos)
+
+  if (totalMomentos < MIN_MOMENTOS_ANALISIS) {
+    return (
+      <section className={styles.simple}>
+        <Cabecera />
+        <GuiaPrimerosPasos nombreHijo={nombreHijo} totalMomentos={totalMomentos} />
+      </section>
+    )
+  }
+
+  if (analisis) {
+    return (
+      <CardConAnalisis
+        analisis={analisis}
+        barras={barras}
+        bloqueado={bloqueado}
+        onUpgrade={onUpgrade}
+        onVerEstrategias={onVerEstrategias}
+        onPedirCompleto={onPedirCompleto}
+      />
+    )
+  }
+
+  const faltanEnLaSemana = momentosSemana < MIN_MOMENTOS_ANALISIS
+  return (
+    <section className={styles.simple}>
+      <Cabecera />
+      {generando && !faltanEnLaSemana ? (
+        <p className={`${styles.cargando} ${styles.despuesCabecera}`}>Huella está leyendo la semana…</p>
+      ) : (
+        <div className={styles.despuesCabecera}>
+          <BarrasSemana data={barras} />
+          {faltanEnLaSemana && (
+            <p className={styles.lineaSin}>Cuando haya tres momentos en la semana, Huella la lee.</p>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrategias, onPedirCompleto }) {
   const [cardAbierta, setCardAbierta] = useState(false)
   const [abierto, setAbierto] = useState(false)
   const [cargando, setCargando] = useState(false)
@@ -100,18 +176,18 @@ export default function AnalisisSemanalCard({ analisis, bloqueado, onUpgrade, on
     </div>
   ) : null
 
-  // Cerrada por defecto y sin recordar: en el Home se ve la cabecera y
-  // "Mejoró", nada más. Lo demás espera a que el papá lo pida.
+  // Cerrada por defecto y sin recordar: en el Home se ven la cabecera, las
+  // barras y "Mejoró", nada más. Lo demás espera a que el papá lo pida.
   return (
     <CardPlegable
       className={styles.card}
-      cabecera={
-        <span className={styles.cabecera}>
-          <Escarabajo className={styles.bicho} />
-          <span className={styles.eyebrow}>Huella · Esta semana</span>
-        </span>
+      cabecera={<Cabecera />}
+      resumen={
+        <div className={`${styles.bloque} ${styles.resumen}`}>
+          <BarrasSemana data={barras} />
+          {fila(mejoro)}
+        </div>
       }
-      resumen={secciones[mejoro.titulo]?.length ? <div className={`${styles.bloque} ${styles.resumen}`}>{fila(mejoro)}</div> : null}
       abierto={cardAbierta}
       onToggle={() => setCardAbierta((v) => !v)}
     >

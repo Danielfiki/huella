@@ -1,3 +1,5 @@
+// NO SE MONTA desde el 21 sep 2026: la tarjeta central del Home se fue; queda pendiente que lo absorba la matriz del cerebro.
+//
 // Banco educativo por edad — LOCAL, sin llamada a IA.
 //
 // Alimenta el estado "semana pobre" de la tarjeta central del Home: la cuenta

@@ -1,0 +1,100 @@
+/* Movido tal cual desde tarjetaCerebro.module.css (estado "primeros"). */
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* ── Dato numérico grande ── */
+
+.filaDato {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.numeroGrande {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-primary);
+}
+
+.numeroLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ── Barra de segmentos ── */
+
+.segmentos {
+  display: flex;
+  gap: 5px;
+}
+.segmento {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  transform-origin: left center;
+  display: block;
+}
+.segmentoOn { background: var(--color-accent-green); }
+
+/* ── Primeros pasos ── */
+
+.pasos {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 2px 0 0;
+  padding: 0;
+}
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.marcaHecha,
+.marcaActual,
+.marcaPend {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.marcaHecha {
+  background: var(--color-accent-green);
+  color: var(--color-white);
+  font-size: 12px;
+  font-weight: 700;
+}
+.marcaActual {
+  background: var(--color-accent-mocha);
+  color: var(--color-on-mocha);
+}
+.marcaActualIcon { width: 90%; height: 90%; display: block; }
+.marcaPend {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+}
+.pasoTexto {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.pasoTextoHecho {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+/* ── Semana rica ── */

@@ -2,22 +2,19 @@ import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useHuella } from '../../context/HuellaContext'
+import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
-import { TarjetaCerebro, calcularEstadoCerebro } from '../../components/panel/TarjetaCerebro'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
-import { PuertaHuella, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
-import { ChartFrecuencia } from '../../components/panel/ChartFrecuencia'
-import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
-import { ChartGatillos } from '../../components/panel/ChartGatillos'
+import { PuertaHuella, PuertaCerebro, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
 import AnalisisSemanalCard from '../../components/panel/AnalisisSemanalCard'
 import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
+import { AHORA, porTope } from '../cerebro/contenidoCerebro'
 import styles from './PanelPage.module.css'
 
 // UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
@@ -41,11 +38,12 @@ const hijosRespondidosEstaVisita = new Set()
 // ── Home · Bloque B2 del rediseño ────────────────────────────────────────────
 //
 // El Home dejó de ser un dashboard de secciones: ahora es LA PÁGINA DEL HIJO.
-// De arriba a abajo: su cara, una tarjeta que interpreta la semana, UNA acción,
-// y tres puertas compactas.
+// Tres bloques, de arriba a abajo: (A) su cara, la propuesta de rasgo si hay
+// y UNA acción; (B) la card "Esta semana", única lectura de la semana; (C)
+// cuatro puertas compactas: Su huella, Su cerebro, Momentos, Acompañando.
 //
-// Regla de texto (dura): ningún párrafo visible de entrada. Los gráficos y el
-// análisis IA no se borraron — viven dentro de la tarjeta central, colapsados.
+// Regla de texto (dura): ningún párrafo visible de entrada. Los gráficos se
+// mudaron al final de la pantalla del cerebro ("Sus momentos en números").
 //
 // Lo que se fue de acá: Hero de doble avatar, CTAPrimary con subtexto,
 // CTAAskHuella suelto, SectionEyebrows, ResumenSemanal como tarjeta aparte,
@@ -53,109 +51,11 @@ const hijosRespondidosEstaVisita = new Set()
 // último avance y la de estrategia activa (su dato vive en las puertas), y
 // CanjeCodigoBeta, que se mudó a Perfil.
 
-// ── Emoji mapping for free-form trigger labels ──────────────────────────────
-
-const GATILLANTE_EMOJIS = {
-  comida: '🍽️', hambre: '🍽️', comer: '🍽️', almuerzo: '🍽️', desayuno: '🍽️',
-  sueño: '😴', dormir: '😴', cansancio: '😴', siesta: '😴',
-  escuela: '🏫', colegio: '🏫', tarea: '📚', jardín: '🏫',
-  hermano: '👫', hermanos: '👫', hermana: '👧',
-  pantallas: '📱', televisión: '📺', tele: '📺', celular: '📱', tablet: '📱',
-  rutina: '🔄', transición: '🚪', cambio: '🔄',
-  aburrimiento: '😑', juego: '🎮',
-  dolor: '💊', enfermedad: '🤒',
-  baño: '🚿', ducha: '🚿',
-  salida: '🚪', llegada: '🚪',
-  visita: '👥', social: '👥',
-}
-
-const DIAS_LABEL = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
-
 // Cuántas fotos entran en la rotación de la cabecera y cuántos momentos
 // dibujan la mini-timeline de la puerta "Momentos".
 const MAX_FOTOS_CABECERA = 5
 const DIAS_PATRON_NUEVO = 3
 const CUPO_AVISO_DESDE = 3   // quedan 3 o menos → aparece el chip
-
-// ── Computaciones de narrativas ───────────────────────────────────────────────
-//
-// Estas dos son la ÚNICA frase que muestra la tarjeta central en estado "rica".
-// No hay prompt de IA detrás: se arman acá, locales. Por eso la voz de la
-// tarjeta (ver el bloque LA VOZ en TarjetaCerebro.jsx) se cumple o se rompe
-// justo acá.
-//
-// Las condiciones siguen midiendo lo mismo que siempre — promedios, semanas
-// comparadas, tasas antes/después de la estrategia. Lo que cambió es que ese
-// cálculo ya NO se dice en voz alta: la frase habla del niño por su nombre y
-// no muestra ni una cifra. El dato duro ya está en el número grande y en las
-// barras; la frase es la lectura, no el reporte.
-
-function useNarrativaFrecuencia(episodios, estrategias, nombre) {
-  return useMemo(() => {
-    if (episodios.length < 3) return null
-    const now = new Date()
-    const monday = new Date(now)
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-    monday.setHours(0, 0, 0, 0)
-    const weeks = Array.from({ length: 6 }, (_, i) => {
-      const start = new Date(monday); start.setDate(monday.getDate() - (5 - i) * 7)
-      const end = new Date(start); end.setDate(start.getDate() + 7)
-      return { start, end }
-    })
-    const counts = weeks.map(w =>
-      episodios.filter(e => { const f = new Date(e.fecha); return f >= w.start && f < w.end }).length
-    )
-    const current = counts[5]
-    const prev5 = counts.slice(0, 5)
-    const prevWeek = counts[4]
-    const avg5 = prev5.reduce((s, c) => s + c, 0) / 5
-    const hasHistory = prev5.some(c => c > 0)
-
-    const estActiva = estrategias.find(e => e.fechaInicio)
-    if (estActiva) {
-      const inicio = new Date(estActiva.fechaInicio)
-      const diasDesde = (Date.now() - inicio) / 864e5
-      if (diasDesde >= 14) {
-        const antes = episodios.filter(e => new Date(e.fecha) < inicio)
-        const despues = episodios.filter(e => new Date(e.fecha) >= inicio)
-        if (antes.length >= 3 && despues.length >= 3) {
-          const tasaAntes = antes.length / Math.max((inicio - new Date(antes.at(-1).fecha)) / 864e5, 1)
-          const tasaDespues = despues.length / diasDesde
-          if (tasaDespues < tasaAntes * 0.65) {
-            return `Desde que empezaste, ${nombre} viene teniendo semanas más livianas.`
-          }
-        }
-      }
-    }
-
-    if (current === 0) return `Una semana tranquila para ${nombre}.`
-    if (hasHistory && prev5.every(c => c === 0 || current < c)) return `La semana más suave de ${nombre} en un buen rato.`
-    if (prevWeek > 0 && current <= prevWeek * 0.6) {
-      return `${nombre} tuvo una semana más liviana que la anterior.`
-    }
-    if (avg5 > 0 && current < avg5 * 0.85) return `La semana de ${nombre} vino más calmada de lo habitual.`
-    if (avg5 > 0 && current > avg5 * 1.2) return `Esta semana pesó más para ${nombre}.`
-    if (prevWeek > 0 && current > prevWeek) {
-      return `${nombre} está teniendo más momentos que la semana pasada.`
-    }
-    return `La semana de ${nombre} va parecida a las anteriores.`
-  }, [episodios, estrategias, nombre])
-}
-
-function useNarrativaIntensidad(episodios, nombre) {
-  return useMemo(() => {
-    const data = [...episodios].reverse().slice(-20)
-    if (data.length < 4) return null
-    const half = Math.floor(data.length / 2)
-    const avg = arr => arr.reduce((s, e) => s + e.intensidad, 0) / arr.length
-    const firstAvg = avg(data.slice(0, half))
-    const secondAvg = avg(data.slice(-half))
-    const delta = secondAvg - firstAvg
-    if (delta <= -0.4) return `Los momentos de ${nombre} vienen más suaves.`
-    if (delta >= 0.5)  return `Los momentos de ${nombre} vienen llegando más fuertes.`
-    return `${nombre} viene sosteniendo un ritmo parejo.`
-  }, [episodios, nombre])
-}
 
 // ── Página principal ──────────────────────────────────────────────────────────
 
@@ -165,7 +65,6 @@ export default function PanelPage() {
   const navigate = useNavigate()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeCopy, setUpgradeCopy] = useState(null)
-  const [detalleAbierto, setDetalleAbierto] = useState(false)
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
@@ -270,90 +169,9 @@ export default function PanelPage() {
     [patronesAbiertos]
   )
 
-  // ── Datos de la semana ───────────────────────────────────────────────────
-
-  const weekData = useMemo(() => {
-    const now = new Date()
-    const hace7  = new Date(now); hace7.setDate(now.getDate() - 7)
-    const hace14 = new Date(now); hace14.setDate(now.getDate() - 14)
-
-    const thisWeekEps = episodios.filter(e => new Date(e.fecha) >= hace7)
-    const prevWeekEps = episodios.filter(e => { const f = new Date(e.fecha); return f >= hace14 && f < hace7 })
-
-    const episodes     = thisWeekEps.length
-    const prevEpisodes = prevWeekEps.length
-
-    const intensityAvg = episodes > 0
-      ? thisWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / episodes
-      : 0
-    const prevIntensityAvg = prevEpisodes > 0
-      ? prevWeekEps.reduce((s, e) => s + (e.intensidad || 0), 0) / prevEpisodes
-      : 0
-
-    return {
-      episodes,
-      prevEpisodes,
-      intensityAvg,
-      intensityDelta: intensityAvg - prevIntensityAvg,
-    }
-  }, [episodios])
-
-  // ── Datos para gráficos ──────────────────────────────────────────────────
-
-  const frecData = useMemo(() => {
-    const now = new Date()
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(now); d.setDate(now.getDate() - (6 - i)); d.setHours(0, 0, 0, 0)
-      const next = new Date(d); next.setDate(d.getDate() + 1)
-      const dayIdx = (d.getDay() + 6) % 7
-      return {
-        day: DIAS_LABEL[dayIdx],
-        count: episodios.filter(e => { const f = new Date(e.fecha); return f >= d && f < next }).length,
-      }
-    })
-  }, [episodios])
-
-  const intData = useMemo(() => {
-    const now = new Date()
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(now); d.setDate(now.getDate() - (6 - i)); d.setHours(0, 0, 0, 0)
-      const next = new Date(d); next.setDate(d.getDate() + 1)
-      const dayIdx = (d.getDay() + 6) % 7
-      const dayEps = episodios.filter(e => { const f = new Date(e.fecha); return f >= d && f < next })
-      const avg = dayEps.length > 0 ? dayEps.reduce((s, e) => s + (e.intensidad || 0), 0) / dayEps.length : 0
-      return { day: DIAS_LABEL[dayIdx], value: avg }
-    })
-  }, [episodios])
-
-  const gatillosTop3 = useMemo(() => {
-    const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30)
-    const counts = {}
-    for (const ep of episodios.filter(e => new Date(e.fecha) >= hace30)) {
-      for (const g of ep.gatillantes || []) counts[g] = (counts[g] || 0) + 1
-    }
-    const BG = ['pill-emocion-bg', 'leaf-bg', 'info-bg']
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([label, count], i) => ({
-        emoji: GATILLANTE_EMOJIS[label.toLowerCase()] || '⭐',
-        label,
-        count,
-        bgToken: BG[i],
-      }))
-  }, [episodios])
-
-  const narrativaFrecuencia = useNarrativaFrecuencia(episodios, estrategias, nombreHijo)
-  const narrativaIntensidad = useNarrativaIntensidad(episodios, nombreHijo)
-
-  // Estado de la tarjeta central y la ÚNICA frase que muestra.
-  const estadoCerebro = calcularEstadoCerebro({
-    totalEpisodios: episodios.length,
-    episodiosSemana: weekData.episodes,
-  })
   // Un momento es un episodio o un avance, igual que en el Historial. Lo usan
-  // la puerta Momentos y los primeros pasos; los graficos y el cupo free
-  // siguen contando solo episodios.
+  // la puerta Momentos y la card "Esta semana"; el cupo free sigue contando
+  // solo episodios.
   const totalMomentos = episodios.length + hitos.length
 
   // Análisis semanal guardado (lo genera HuellaContext al cargar). Se compara
@@ -361,8 +179,14 @@ export default function PanelPage() {
   // mientras se generaba.
   const analisisSemanal =
     state.analisisSemanal?.hijo_id === hijo?.id ? state.analisisSemanal : null
-  const fraseHallazgo = narrativaFrecuencia || narrativaIntensidad
-  const detalleDisponible = episodios.length >= 3
+
+  // Dato de la puerta "Su cerebro": la frase "Ahora mismo" de su edad, la
+  // misma de la pantalla del cerebro. Sin fecha ni edad guardada no se inventa
+  // una edad: va la invitación que tenía el viejo CTA.
+  const edadCerebro = calcularEdadDecimal(hijo?.fechaNacimiento) ?? (typeof hijo?.edad === 'number' ? hijo.edad : null)
+  const fraseCerebro = edadCerebro != null
+    ? porTope(AHORA, edadCerebro)
+    : 'Tócalo, gíralo, velo crecer'
 
   // Chip de cupo del plan free: solo cuando de verdad queda poco.
   const cupoRestante = MAX_EPISODIOS_FREE - episodios.length
@@ -456,42 +280,25 @@ export default function PanelPage() {
         />
       )}
 
-      {/* ── Análisis semanal: solo si ya hay uno guardado para esta semana ── */}
-      {analisisSemanal && (
+      {/* ── La única acción ── */}
+      <BotonRegistrar onClick={() => navigate('/nuevo')} avisoCupo={avisoCupo} />
+
+      {/* ── Esta semana: la única lectura de la semana. Guía si la cuenta es
+           nueva, barras siempre, y el análisis cuando lo hay. ── */}
+      {hijo && (
         <AnalisisSemanalCard
-          key={analisisSemanal.id}
+          key={analisisSemanal?.id ?? 'sin-analisis'}
           analisis={analisisSemanal}
+          generando={state.analisisGenerando === hijo.id}
+          episodios={episodios}
+          hitos={hitos}
+          nombreHijo={nombreHijo}
           bloqueado={!isPro()}
           onUpgrade={abrirUpgradeAnalisis}
           onVerEstrategias={() => navigate('/estrategias')}
           onPedirCompleto={completarAnalisisSemanal}
         />
       )}
-
-      {/* ── Tarjeta central: la semana interpretada ── */}
-      <TarjetaCerebro
-        nombreHijo={nombreHijo}
-        estado={estadoCerebro}
-        edadHijo={hijo?.edad ?? null}
-        totalEpisodios={episodios.length}
-        totalMomentos={totalMomentos}
-        episodiosSemana={weekData.episodes}
-        frecData={frecData}
-        frase={fraseHallazgo}
-        expandible={detalleDisponible}
-        abierto={detalleAbierto}
-        onToggle={() => setDetalleAbierto(v => !v)}
-        onIrAlCerebro={() => navigate('/cerebro')}
-      >
-        <div className={styles.detalleInterno}>
-          <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
-          <ChartIntensidad data={intData} caption={narrativaIntensidad} />
-          {gatillosTop3.length > 0 && <ChartGatillos data={gatillosTop3} />}
-        </div>
-      </TarjetaCerebro>
-
-      {/* ── La única acción ── */}
-      <BotonRegistrar onClick={() => navigate('/nuevo')} avisoCupo={avisoCupo} />
 
       {/* ── Puertas ── */}
       <div className={styles.puertas}>
@@ -504,8 +311,14 @@ export default function PanelPage() {
             onClick={() => navigate('/hijo')}
           />
         </TarjetaEntrada>
-
         <TarjetaEntrada delay={0.06}>
+          <PuertaCerebro
+            ahora={fraseCerebro}
+            onClick={() => navigate('/cerebro')}
+          />
+        </TarjetaEntrada>
+
+        <TarjetaEntrada delay={0.12}>
           <PuertaMomentos
             total={totalMomentos}
             ultimos={episodios}
@@ -523,7 +336,7 @@ export default function PanelPage() {
             dura: patrones, estrategias y motor de rasgos son cosas separadas).
             Cada chip abre la lectura de SU patrón y el "+N" abre Momentos
             filtrado, que es donde se ven todos. */}
-        <TarjetaEntrada delay={0.12}>
+        <TarjetaEntrada delay={0.18}>
           <PuertaAcompanando
             nombreHijo={nombreHijo}
             plan={estrategiaActiva ?? null}

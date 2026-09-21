@@ -79,6 +79,9 @@ const initialState = {
   // Chile), o null si todavía no existe. Trae hijo_id: quien la muestre tiene
   // que compararlo con el hijo activo.
   analisisSemanal:      null,
+  // Id del hijo cuyo análisis se está generando ahora, o null. La card
+  // "Esta semana" lo usa para mostrar "Huella está leyendo la semana…".
+  analisisGenerando:    null,
 }
 
 function syncHijo(state) {
@@ -151,6 +154,13 @@ function reducer(state, action) {
 
     case 'SET_ANALISIS_SEMANAL':
       return { ...state, analisisSemanal: action.payload }
+
+    case 'INICIO_ANALISIS_GENERANDO':
+      return { ...state, analisisGenerando: action.payload }
+
+    // Solo apaga si sigue siendo el mismo hijo: otro pudo haber empezado después.
+    case 'FIN_ANALISIS_GENERANDO':
+      return state.analisisGenerando === action.payload ? { ...state, analisisGenerando: null } : state
 
     case 'ADD_PATRON':
       return { ...state, patrones: [action.payload, ...state.patrones] }
@@ -704,6 +714,7 @@ export function HuellaProvider({ children }) {
   // hijo y semana, hay 3 o más momentos en los últimos 7 días y no se intentó
   // ya en esta carga. Fire-and-forget: no bloquea la carga y nunca lanza.
   async function asegurarAnalisisSemanal({ hijo, episodios, hitos, existente }) {
+    let generando = false
     try {
       // existente: fila = ya hay análisis; undefined = no se pudo leer.
       if (!user || !supabase || !hijo?.id || existente !== null) return
@@ -717,6 +728,8 @@ export function HuellaProvider({ children }) {
       // Se marca ANTES de llamar a la IA: la llamada tarda y otra carga del
       // mismo hijo en ese rato no tiene que disparar una segunda.
       analisisIntentadosRef.current.add(clave)
+      generando = true
+      dispatch({ type: 'INICIO_ANALISIS_GENERANDO', payload: hijo.id })
 
       const texto = await generarAnalisisSemanal({ hijo, episodios, hitos })
       // Sin la primera sección la card no tiene qué mostrar: no se guarda.
@@ -746,6 +759,8 @@ export function HuellaProvider({ children }) {
       }
     } catch (err) {
       console.warn('[analisis] fallo generacion:', err)
+    } finally {
+      if (generando) dispatch({ type: 'FIN_ANALISIS_GENERANDO', payload: hijo.id })
     }
   }
 

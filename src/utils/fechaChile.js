@@ -32,3 +32,18 @@ export function lunesSemanaChile(fecha = new Date()) {
   base.setUTCDate(base.getUTCDate() - desdeLunes)
   return base.toISOString().slice(0, 10)
 }
+
+const DIAS_CORTOS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá']
+
+// Los últimos `n` días calendario en Chile, del más antiguo a hoy:
+// [{ fecha: '2026-09-15', dia: 'Ma' }, …]. Mismo calendario neutro que
+// lunesSemanaChile para restar días sin que el huso se meta.
+export function ultimosDiasChile(n = 7, ahora = new Date()) {
+  const hoy = diaChile(ahora)
+  if (!hoy) return []
+  const [y, m, d] = hoy.split('-').map(Number)
+  return Array.from({ length: n }, (_, i) => {
+    const x = new Date(Date.UTC(y, m - 1, d - (n - 1 - i)))
+    return { fecha: x.toISOString().slice(0, 10), dia: DIAS_CORTOS[x.getUTCDay()] }
+  })
+}

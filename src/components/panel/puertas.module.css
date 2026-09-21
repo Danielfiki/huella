@@ -270,3 +270,33 @@
   color: var(--color-primary-deep);
 }
 .chipPatron:active { transform: scale(0.96); }
+
+/* ── Su cerebro ──
+   El punto índigo que latía en el CTA del cerebro de la vieja tarjeta
+   central. Los keyframes se repiten porque los módulos los scopean. */
+.puntoCerebro {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cerebro-indigo);
+  animation: latirCerebro 2.2s ease-in-out infinite;
+}
+@keyframes latirCerebro {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .puntoCerebro { animation: none; }
+}
+
+/* La frase "Ahora mismo" de su edad: una línea, y lo que no cabe se corta. */
+.frase {
+  display: block;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
