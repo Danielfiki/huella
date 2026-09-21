@@ -38,7 +38,7 @@
 4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. **Default de hora pasa de 9:00 a 21:30.** Espera el ítem 3. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. Lo que queda de este ítem es el paso 2.
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
 6. ⬜ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — reusa el copy de re-enganche sin culpa. `ultima_actividad` ya se escribe.
-7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. **(a)** umbral de 2 evidencias en días distintos para `fortalezas`, `mueve` y `calma`; **(b)** la card alterna familias, nunca dos "cuesta" seguidos si hay positivo listo; **(c)** slug semántico estable para que un rasgo no sea tres; **(d)** badge "Algo nuevo" solo con candidato. **Antes: reset de La brava** (23 candidatos, duplicados, voseo guardado, "13 de 12 rasgos").
+7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). **Queda:** **(c)** identidad del rasgo, medir primero con La brava limpia; y el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
 8. ⬜ **Análisis semanal — recortarlo** — **16 sep** — ya existe como card del Home. 3 líneas visibles (qué mejoró con dato / qué mirar / un paso), texto largo bajo plegable cerrado, "Marco aplicado" al pie como Lente, prompt con voz de amiga y no de informe. Push del domingo con la primera línea. **Métrica: se abre o no.**
 9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). **Lo que queda: el paso 3**, que es el nuevo catálogo de 8 chips agrupadas por familia (ver el ítem 16) y el QA con avances reales de varios testers. El diseño de las dos pantallas va a una pasada de Design aparte.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
@@ -53,7 +53,6 @@
 
 ### Bloque 3 — Plataforma y riesgo en producción
 
-16. ⬜ **Verificación de desarrolladores de Play, plazo 30 sep** — desde **21 ago** — trámite de Daniel, no toca código. Producción ~25 sep.
 17. ⬜ **Diálogo de permiso de notificaciones en Android 13+** — desde **9 sep** — en el celular de Igna. En el manifest está resuelto; falta verlo aparecer.
 18. ⬜ **QA 2 del paso 8 del Cerebro** — desde **27 ago** — está en producción sin terminar de probar: el marcador de zona **no debe salir en el PDF**, episodio viejo sin error, slug inválido se ignora. (detalle: bloque del 27 ago)
 19. ⬜ **Techo o filtro del payload del motor** — desde **15 sep** — 102 rasgos de La brava por llamada y solo sube. Hoy alcanza y el warn avisa.
@@ -107,6 +106,7 @@
 ### Sale de la cola
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
+- ✅ **Verificación de desarrolladores de Play** — **cumplida al 21 sep 2026**.
 
 ### Roadmap (decidido, con disparador)
 
@@ -342,7 +342,38 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — sábado 19 septiembre 2026 — **Las lentes del avance: de 6 categorías sueltas a 12 que hablan el idioma del retrato, y las dos pantallas del avance rehechas**
+## Cerrado HOY — domingo 21 septiembre 2026 — **Motor de rasgos: lo positivo ya llega a candidato, y La brava quedó limpia**
+
+**🎯 Lo positivo por fin llega a la card.** Con La brava recién reseteada, el motor corrió y lo primero que propuso fue un rasgo de `mueve` ("Se queda absorta observando el mundo pequeño…") con 2 momentos de días distintos. QA de Daniel aprobado en localhost.
+
+### 1. ✅ Verificación de desarrolladores de Play: cumplida
+Sale de la cola.
+
+### 2. ✅ La brava reseteada con `supabase/consultas/reset_hijo.sql`
+Script nuevo, en tres pasos: conteo antes, borrado de nieto a hijo dentro de una transacción, y conteo después. Conserva la fila de `hijos` y no toca `perfiles`. Si el nombre calza con 0 o con más de 1 hijo, se aborta sin borrar. Resultado en producción: hijos 1, todo lo demás 0. **Las fotos del bucket `momentos` no se borran.** Existe porque el reset de Pascual fue SQL improvisado y dejó 11 huérfanos.
+
+### 3. ✅ Ítem 7 (motor de rasgos) — (a), (b) y (d) cerrados
+- **Umbral por familia.** `mueve`, `fortalezas` y `calma` pasan a candidato con 2 momentos de **días distintos, en hora de Chile** (`Intl`, mismo criterio que `push-remind.js`). `cuesta` sigue en 3. La regla vive en una sola función, `cumpleUmbral` (`src/utils/umbralRasgos.js`), que usan los tres lugares que antes tenían su `>= 3` a mano: la clasificación en `anthropic.js` y las dos fusiones de `guardarRasgosDetectados`. Acepta la evidencia nueva `{tipo,id,fecha}` y la vieja `{episodio_id,fecha}`. Arnés con 6 casos, todos OK, incluido 22:30 del día 1 y 01:00 del día 2 (en UTC caen el mismo día). ⚠️ Un positivo con 3 momentos del mismo día ahora queda emergente; antes subía.
+- **La card alterna familia.** Si lo último que respondió el papá fue un `cuesta`, sale primero el positivo más antiguo; si no hay, el más antiguo sin filtro. "Uno por visita" sigue igual.
+- **El badge "Algo nuevo" ya estaba bien** (`PanelPage.jsx:197-201`), no se tocó.
+
+### 4. ✅ La puerta Momentos y la guía de primeros pasos cuentan avances
+Contaban solo episodios, y con 2 episodios + 3 avances el Home decía "2 registrados" mientras el Historial decía 5. Ahora cuentan episodios + avances, igual que el Historial. Los gráficos, el cupo Free y el estado de la tarjeta del cerebro siguen contando solo episodios.
+
+### 5. ✅ El gatillo del motor se reinicia después de un reset
+El marcador del último total analizado (por hijo, en `localStorage`) quedaba más alto que el total real después de un reset o de borrar momentos, y el hijo no volvía a cruzar un tramo nunca. Ahora, si el marcador supera el total, se parte de 0.
+
+### 6. 🪤 Hallazgo: el login desde localhost caía en huella.lat
+Por eso los primeros QA del día no mostraron ningún arreglo: Daniel estaba en producción. El código ya usa `window.location.origin`; lo que faltaba es **`http://localhost:5173/**` en Supabase → Authentication → URL Configuration → Redirect URLs** (lo agrega Daniel). Sin eso, Supabase rechaza la vuelta a localhost y manda al Site URL. Entrar con correo y contraseña no tiene el problema.
+
+### ⏭️ Pendiente
+1. ⬜ **Ítem 7 (c) — identidad del rasgo.** Hoy dos rasgos son el mismo solo si coinciden familia y título normalizado. **Medir primero con La brava limpia** si la memoria del motor (existe desde el 9 sep, después de los duplicados viejos) ya evita el "le cuesta soltar…" ×3. Si vuelve a duplicar: clave estable que devuelva el modelo.
+2. ⬜ **El denominador "de 12"** está escrito a mano en 4 lugares (`HijoPage.jsx:171`, `Puertas.jsx:84`, `:99`, `:102`) y el conteo no tiene techo. **Pasa por Design.**
+3. ⬜ **Agregar `http://localhost:5173/**` a las Redirect URLs de Supabase** (Daniel).
+
+---
+
+## Sesión sábado 19 sep 2026 — **Las lentes del avance: de 6 categorías sueltas a 12 que hablan el idioma del retrato, y las dos pantallas del avance rehechas**
 
 **🎯 Lo de hoy fue vocabulario y pantallas.** El catálogo de categorías del avance dejó de vivir en tres lugares sin hablarse y pasó a un solo archivo, con las 12 lentes agrupadas en las familias del retrato. Esa lente ahora viaja al motor como señal de qué está mirando el papá. Y las dos pantallas del avance se rehicieron enteras.
 
