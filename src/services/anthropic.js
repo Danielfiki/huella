@@ -1249,6 +1249,146 @@ Esta orientación se basa en evidencia del desarrollo infantil y no constituye u
   return llamarAPI(prompt, 2500)
 }
 
+// ── Análisis semanal ─────────────────────────────────────────────────────
+// Hermano de interpretarPatrones, que sigue vivo para el informe PDF (mira
+// todo el historial). Este mira SOLO los últimos 7 días y suma los avances.
+//
+// Son DOS llamadas, y es a propósito:
+//   1. generarAnalisisSemanal — las tres líneas (Mejoró / Qué mirar / Un
+//      paso). Se genera sola al abrir el Home y la ven Free y Pro. Es corta
+//      y barata porque corre para todos, cada semana, lo lean o no.
+//   2. generarAnalisisCompleto — lo largo. Solo cuando un papá Pro toca
+//      "Leer el análisis completo". Recibe las tres líneas para no
+//      contradecirlas.
+// Las dos se guardan en analisis_semanal (lo hace HuellaContext): la 1 en
+// `texto`, la 2 en `texto_completo`, y el marco teórico de la 2 en `marco`.
+//
+// El cierre de dos líneas (descargo + "Marco aplicado") lo escribe igual el
+// modelo en las dos, porque lo exige el system prompt del servidor; la card
+// lo saca del cuerpo.
+export const MIN_MOMENTOS_ANALISIS = 3
+const DIAS_ANALISIS = 7
+
+export function momentosDeLaSemana({ episodios, hitos, ahora = new Date() }) {
+  const desde = new Date(ahora).getTime() - DIAS_ANALISIS * 86400000
+  const enRango = (f) => { const t = new Date(f).getTime(); return Number.isFinite(t) && t >= desde }
+  return {
+    episodios: (episodios || []).filter((e) => enRango(e.fecha)),
+    hitos:     (hitos || []).filter((h) => enRango(h.fecha)),
+  }
+}
+
+// Lo que comparten las dos llamadas: el marco por edad, quién es el hijo y lo
+// que se registró en la semana. Null si no hay momentos suficientes.
+function datosDeLaSemana({ hijo, episodios, hitos }) {
+  const semana = momentosDeLaSemana({ episodios, hitos })
+  if (semana.episodios.length + semana.hitos.length < MIN_MOMENTOS_ANALISIS) return null
+
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
+  const nombre = hijo?.nombre || 'sin nombre'
+  const dia = (f) => new Date(f).toLocaleDateString('es-CL', { timeZone: 'America/Santiago', weekday: 'long', day: 'numeric', month: 'numeric' })
+
+  const lineasEpisodios = semana.episodios.slice(0, 20).map((e) => {
+    const relato = e.descripcionLibre ? ` Relato: "${e.descripcionLibre.slice(0, 300)}"` : ''
+    return `- ${dia(e.fecha)}: ${e.tipo} (intensidad ${e.intensidad}/5, gatillantes: ${e.gatillantes?.join(', ') || 'ninguno'}).${relato}`
+  })
+  const lineasHitos = semana.hitos.slice(0, 20).map((h) => {
+    const lente = LENTE_POR_ID[h.categoria]
+    const etiqueta = lente ? ` [${lente.label} · familia ${lente.familia}]` : ''
+    return `- ${dia(h.fecha)}${etiqueta}: "${(h.descripcion || '').slice(0, 300)}"`
+  })
+
+  const cabecera = `${marcoEdad(hijo?.edad)}
+
+Nombre: ${nombre}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+
+Esto es lo que su mamá o papá registró en los últimos 7 días.
+
+Momentos difíciles:
+${lineasEpisodios.length ? lineasEpisodios.join('\n') : '- ninguno esta semana'}
+
+Avances:
+${lineasHitos.length ? lineasHitos.join('\n') : '- ninguno esta semana'}`
+
+  const voz = `VOZ: una amiga que sabe de crianza hablándole a un papá cansado. Frases que un adulto le diría a otro en la cocina. Nada de informe ni de coach.
+PROHIBIDO:
+- Exclamaciones.
+- La fórmula "no es X, es Y" en cualquier variante, también "no son X sino Y".
+- Frases de póster y remates ingeniosos al final de la frase.
+- La palabra "literalmente".
+- Enumerar tres cosas por ritmo.
+- Felicitar al adulto o evaluar a ${nombre} contra su edad ("a esta edad ya…", "a esta edad todavía…").
+- Inventar detalles que el papá no escribió.
+
+GÉNERO: cada vez que hables de ${nombre}, usa "${genero}", "${pronombre}" y "${articulo}". Nunca el masculino por defecto.
+
+FORMATO OBLIGATORIO: PROHIBIDO usar #, ##, ###, **, *, -, _ ni ningún símbolo de markdown. Cada título va en su propia línea, EXACTAMENTE como está escrito, sin dos puntos al final y sin variarlo: el sistema detecta esos strings exactos. Separa las secciones con una línea en blanco.`
+
+  return { cabecera, voz }
+}
+
+export async function generarAnalisisSemanal({ hijo, episodios, hitos }) {
+  const datos = datosDeLaSemana({ hijo, episodios, hitos })
+  if (!datos) return null
+
+  const prompt = `${datos.cabecera}
+
+Escribe la lectura de esta semana en TRES secciones, en este orden, y nada más.
+
+Mejoró
+[UNA frase, máximo 30 palabras. Algo que mejoró, con el dato cuando exista: menos intensidad, menos veces, o un avance concreto de los que te pasé, contado con lo que el papá escribió. Si nada mejoró, di qué se mantuvo estable. Nunca la dejes vacía.]
+
+Qué mirar
+[UNA frase, máximo 30 palabras. Lo que conviene observar los próximos días, anclado en algo que pasó esta semana.]
+
+Un paso
+[UNA frase, máximo 30 palabras, que EMPIEZA CON UN VERBO. Una sola cosa concreta que quepa en un día normal.]
+
+Cuenta las palabras de cada sección: si pasa de 30, recórtala. Una frase cada una, que termina con punto. No agregues ninguna otra sección.
+
+${datos.voz}
+
+Cierra con las dos líneas finales de siempre (descargo y "Marco aplicado"), cada una en su propia línea.
+
+${REGLA_IDIOMA}`
+
+  return llamarAPI(prompt, 350)
+}
+
+export async function generarAnalisisCompleto({ hijo, episodios, hitos, tresLineas }) {
+  const datos = datosDeLaSemana({ hijo, episodios, hitos })
+  if (!datos) return null
+
+  const prompt = `${datos.cabecera}
+
+El papá ya leyó esta lectura corta de la semana. Tu análisis la profundiza y NO puede contradecirla:
+
+${(tresLineas || '').trim()}
+
+Escribe el análisis completo en TRES secciones, en este orden, y nada más. No repitas las tres líneas de arriba.
+
+Lo que merece atención
+[máximo 70 palabras. El patrón que conviene mirar y por qué importa ahora, o "Sin patrones de alerta por ahora" y en una frase por qué.]
+
+Posibles causas
+[máximo 70 palabras. Hipótesis que salen de lo que se registró, dichas con prudencia.]
+
+Próximos pasos sugeridos
+[1 o 2 ítems numerados con 1. y 2., cada uno de máximo 25 palabras, que empiezan con un verbo.]
+
+TOPES QUE NO SE NEGOCIAN: cada sección máximo 70 palabras, Próximos pasos máximo 2 ítems de 25 palabras, y el total de las tres secciones bajo 220 palabras. Cuéntalas antes de responder; si te pasaste, recorta.
+
+No agregues circunstancias ni detalles que no estén en los momentos (ej. si nadie dijo que estaba descansada, no lo digas).
+
+${datos.voz}
+
+Cierra con las dos líneas finales de siempre (descargo y "Marco aplicado"), cada una en su propia línea.
+
+${REGLA_IDIOMA}`
+
+  return llamarAPI(prompt, 900)
+}
+
 export async function generarTareas({ hijo, habilidad, descripcion }) {
   const marco = marcoEdad(hijo?.edad)
   // Mismas palabras de siempre; ahora salen del helper compartido en vez de

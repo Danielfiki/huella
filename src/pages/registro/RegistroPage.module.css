@@ -914,73 +914,7 @@
   100% { background-position: -120% 0; }
 }
 
-/* ── 6 · Orientación completa ── */
-
-.gCardPlegable {
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-
-.gPlegableHead {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 16px 20px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-family);
-}
-.gPlegableHead:active { transform: none; }
-
-/* Lavanda = ciencia. Es el mismo significado que el punto de la firma. */
-.gChipLibro {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  background: var(--color-accent-lavender);
-  color: var(--color-pill-lavender-text);
-  display: grid;
-  place-items: center;
-}
-
-.gPlegableTextos {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-.gPlegableTitulo {
-  font-family: var(--font-heading);
-  font-size: 14.5px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-.gPlegableSub {
-  font-size: 11px;
-  line-height: 1.35;
-  color: var(--color-text-muted);
-}
-
-.gChevronDisco {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--color-surface-alt);
-  color: var(--color-text-muted);
-  display: grid;
-  place-items: center;
-}
-.gChevron { transition: transform var(--motion-rapida) var(--motion-ease-estandar); }
-.gChevronAbierto { transform: rotate(180deg); }
+/* ── 6 · Orientación completa: vive en components/ui/CardPlegable ── */
 
 /* ── 7 · Reflexión ──
    Hundida: sin sombra y sin borde. Es lo único de la pantalla que no viene de
@@ -1164,7 +1098,6 @@
 .gVolver:hover { color: var(--color-text); }
 
 @media (prefers-reduced-motion: reduce) {
-  .gChevron    { transition: none; }
   .gSkLine     { animation: none; background: var(--color-surface-alt); }
   /* El barrido global de index.css ya la apagaría; se declara igual, explícita,
      como en el splash: un latido es exactamente lo que esta preferencia existe

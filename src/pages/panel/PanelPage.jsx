@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella } from '../../context/HuellaContext'
-import { interpretarPatrones, detectarPatronesEstructurado } from '../../services/anthropic'
 import ConsejoDelDiaModal from '../../components/ui/ConsejoDelDiaModal'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
@@ -12,11 +11,10 @@ import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
 import { TarjetaCerebro, calcularEstadoCerebro } from '../../components/panel/TarjetaCerebro'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
 import { PuertaHuella, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
-import { CTAAskHuella } from '../../components/panel/CTAAskHuella'
 import { ChartFrecuencia } from '../../components/panel/ChartFrecuencia'
 import { ChartIntensidad } from '../../components/panel/ChartIntensidad'
 import { ChartGatillos } from '../../components/panel/ChartGatillos'
-import { AnalisisIA } from '../../components/panel/AnalisisIA'
+import AnalisisSemanalCard from '../../components/panel/AnalisisSemanalCard'
 import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
@@ -163,14 +161,11 @@ function useNarrativaIntensidad(episodios, nombre) {
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, dispatch, setHijoActivo, isPro, confirmarRasgo, descartarRasgo } = useHuella()
+  const { state, setHijoActivo, isPro, confirmarRasgo, descartarRasgo, completarAnalisisSemanal } = useHuella()
   const navigate = useNavigate()
-  const [analisis, setAnalisis] = useState('')
-  const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeCopy, setUpgradeCopy] = useState(null)
   const [detalleAbierto, setDetalleAbierto] = useState(false)
-  const detalleRef = useRef(null)
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
@@ -360,6 +355,12 @@ export default function PanelPage() {
   // la puerta Momentos y los primeros pasos; los graficos y el cupo free
   // siguen contando solo episodios.
   const totalMomentos = episodios.length + hitos.length
+
+  // Análisis semanal guardado (lo genera HuellaContext al cargar). Se compara
+  // el hijo porque el guardado puede ser de otro hijo si el papá cambió
+  // mientras se generaba.
+  const analisisSemanal =
+    state.analisisSemanal?.hijo_id === hijo?.id ? state.analisisSemanal : null
   const fraseHallazgo = narrativaFrecuencia || narrativaIntensidad
   const detalleDisponible = episodios.length >= 3
 
@@ -370,41 +371,6 @@ export default function PanelPage() {
         ? `Te quedan ${cupoRestante} momento${cupoRestante === 1 ? '' : 's'} del plan gratuito`
         : `Llegaste a los ${MAX_EPISODIOS_FREE} momentos del plan gratuito`)
     : null
-
-  // ── Scroll al detalle cuando arranca el análisis ─────────────────────────
-
-  useEffect(() => {
-    if (loadingAnalisis) {
-      setTimeout(() => {
-        detalleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 150)
-    }
-  }, [loadingAnalisis])
-
-  async function handleAnalizarPatrones() {
-    if (loadingAnalisis) return
-    setDetalleAbierto(true)
-    setLoadingAnalisis(true)
-    try {
-      if (!isPro()) {
-        // Free: gate real. Solo la primera sección (teaser); el resto es Pro y
-        // ni siquiera se genera.
-        const texto = await interpretarPatrones({ hijo, episodios, teaser: true })
-        setAnalisis(texto)
-      } else {
-        const [texto, interpretacion] = await Promise.all([
-          interpretarPatrones({ hijo, episodios }),
-          detectarPatronesEstructurado({ hijo_id: hijo?.id, hijo_edad: hijo?.edad, episodios }),
-        ])
-        setAnalisis(texto)
-        dispatch({ type: 'SET_SUGERENCIA_ESTRATEGIA', payload: interpretacion })
-      }
-    } catch (e) {
-      setAnalisis('Error al conectar con la IA: ' + e.message)
-    } finally {
-      setLoadingAnalisis(false)
-    }
-  }
 
   // Abre el UpgradeModal con el copy del gate de análisis de patrones.
   function abrirUpgradeAnalisis() {
@@ -490,6 +456,18 @@ export default function PanelPage() {
         />
       )}
 
+      {/* ── Análisis semanal: solo si ya hay uno guardado para esta semana ── */}
+      {analisisSemanal && (
+        <AnalisisSemanalCard
+          key={analisisSemanal.id}
+          analisis={analisisSemanal}
+          bloqueado={!isPro()}
+          onUpgrade={abrirUpgradeAnalisis}
+          onVerEstrategias={() => navigate('/estrategias')}
+          onPedirCompleto={completarAnalisisSemanal}
+        />
+      )}
+
       {/* ── Tarjeta central: la semana interpretada ── */}
       <TarjetaCerebro
         nombreHijo={nombreHijo}
@@ -505,20 +483,10 @@ export default function PanelPage() {
         onToggle={() => setDetalleAbierto(v => !v)}
         onIrAlCerebro={() => navigate('/cerebro')}
       >
-        <div ref={detalleRef} className={styles.detalleInterno}>
-          <CTAAskHuella onClick={handleAnalizarPatrones} loading={loadingAnalisis} />
+        <div className={styles.detalleInterno}>
           <ChartFrecuencia data={frecData} peakCaption={narrativaFrecuencia} />
           <ChartIntensidad data={intData} caption={narrativaIntensidad} />
           {gatillosTop3.length > 0 && <ChartGatillos data={gatillosTop3} />}
-          <AnalisisIA
-            loading={loadingAnalisis}
-            texto={analisis}
-            bloqueado={!isPro()}
-            onAnalizar={handleAnalizarPatrones}
-            onUpgrade={abrirUpgradeAnalisis}
-            onAccept={() => navigate('/estrategias', { state: { sugerencia_precocida: state.sugerenciaEstrategia } })}
-            onDismiss={() => setAnalisis('')}
-          />
         </div>
       </TarjetaCerebro>
 

@@ -37,7 +37,7 @@ const TONOS = [styles.puntoMocha, styles.puntoVerde, styles.puntoNeutro]
 // inercia. Desde el 4 sep 2026 el marco de un episodio NO sale del texto: lo
 // deriva `marcoDelEpisodio` en cliente y lo pinta el pie, así que una línea
 // del modelo sería, además de redundante, una segunda versión del mismo dato.
-function esLetraChicaDelModelo(linea) {
+export function esLetraChicaDelModelo(linea) {
   const l = (linea || '').normalize('NFC').trim().toLowerCase()
   if (!l) return false
 

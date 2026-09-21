@@ -1,0 +1,179 @@
+/* Card del análisis semanal. Es un CardPlegable: blanca, borde neutro y sombra
+   suave, como las puertas del Home. La protagonista por temperatura sigue
+   siendo la tarjeta del cerebro, que va justo debajo.
+   Doble clase para ganarle a .card de CardPlegable sin depender del orden en
+   que se cargan los dos módulos. */
+.card.card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-soft);
+}
+
+/* ── Cabecera: escarabajo real + eyebrow de la firma de la orientación ── */
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bicho {
+  height: 26px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  color: var(--color-primary-deep);
+}
+/* Mismo trazo que .gEyebrowVoz de RegistroPage ("huella te lee"). */
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-mocha);
+}
+
+/* ── Las tres líneas ──
+   Misma letra y tamaño para las tres: ninguna grita más que otra. Lo que
+   ordena la lectura es el rótulo con su punto. */
+.bloque {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* "Mejoró" vive en el resumen (se ve con la card cerrada); le deja aire abajo
+   para que la card cerrada no termine pegada al texto. */
+.resumen { padding-bottom: 16px; }
+
+.fila {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.filaCabeza {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.puntoMejoro { background: var(--color-familia-fortalezas); }
+.puntoMirar  { background: var(--color-familia-calma); }
+.puntoPaso   { background: var(--color-primary); }
+
+.rotulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.textoFila {
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ── Plegable "Leer el análisis completo" ──
+   Vive dentro de esta card: sin borde ni sombra propios, separado por una
+   línea, para no dibujar una caja dentro de otra. */
+.plegable.plegable {
+  margin-top: 16px;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.pieBloque {
+  padding: 0 20px 14px;
+}
+
+.cuerpo {
+  padding: 0 20px 16px;
+}
+
+/* Títulos y párrafos: los mismos que pintaba AnalisisIA. */
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 12px 0 2px;
+  letter-spacing: -0.005em;
+}
+.bodyLine {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin: 0 0 4px;
+}
+
+/* ── Candado Free (el mismo de AnalisisIA) ── */
+.locked {
+  margin: 0 20px 16px;
+  padding: 14px;
+  border: 1px dashed var(--color-primary-border);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lockedRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-light);
+}
+.lockIcon { flex-shrink: 0; color: var(--color-text-light); }
+
+.btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: var(--radius-btn);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  border: none;
+}
+.locked .btn { margin-top: 6px; }
+.btn:active { opacity: 0.8; }
+.primary { background: var(--color-primary-dark); color: var(--color-white); }
+
+/* ── Mientras Huella genera lo largo ──
+   Mismo trato que .gaCargando de la respuesta al avance (NuevoPage). */
+.cargando {
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Error de la IA o del guardado: una línea, sin alarma. */
+.aviso {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 12px 0 0;
+}
+.enlace {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+  cursor: pointer;
+}

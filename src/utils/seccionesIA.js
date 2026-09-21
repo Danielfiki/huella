@@ -3,11 +3,17 @@
 // como en la orientación del episodio (analizarEpisodio). El front los detecta
 // para darles jerarquía visual (título de sección en Fraunces).
 //
-// Fuente única compartida entre AnalisisIA (Home) y RespuestaIA (resultado del
+// Fuente única compartida entre AnalisisSemanalCard (Home) y RespuestaIA (resultado del
 // episodio) para que las dos listas no se desincronicen. Los strings deben
 // calzar EXACTO con los que produce src/services/anthropic.js.
 
+// Las tres primeras son las líneas cortas del análisis semanal. "Qué mirar" y
+// no "Mirar" a secas: una palabra sola en su línea podría ser un párrafo de la
+// orientación del episodio y se pintaría como título. La card muestra "Mirar".
 export const SECTION_TITLES = new Set([
+  'Mejoró',
+  'Qué mirar',
+  'Un paso',
   'Alivio',
   'Lo que está mejorando',
   'Lo que merece atención',
@@ -41,6 +47,14 @@ export function esTituloSeccion(linea) {
 // conservando la capitalización original. Usar cuando esTituloSeccion dio true.
 export function tituloSeccionLimpio(linea) {
   return limpiarTitulo(linea)
+}
+
+// Saca el marco de la línea "Marco aplicado: Autor — concepto" que el system
+// prompt del servidor obliga a escribir al final. Devuelve solo "Autor —
+// concepto", o null si el modelo no la escribió.
+export function extraerMarcoAplicado(texto) {
+  const m = (texto || '').normalize('NFC').match(/^\s*marco aplicado\s*:\s*(.+?)\s*$/im)
+  return m ? m[1] : null
 }
 
 // Saca la sección "Alivio" del resto de la orientación.

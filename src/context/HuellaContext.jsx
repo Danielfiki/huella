@@ -2,11 +2,13 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useM
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
-import { generarAccionInmediata, detectarRasgos, generarEstrategiaDesdeContexto } from '../services/anthropic'
+import { generarAccionInmediata, detectarRasgos, generarEstrategiaDesdeContexto, generarAnalisisSemanal, generarAnalisisCompleto, momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../services/anthropic'
 import { retryAsync, esErrorIAReintentable } from '../utils/retryAsync'
 import { HABILIDADES_CATALOGO } from '../pages/estrategias/helpers'
 import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
 import { cumpleUmbral } from '../utils/umbralRasgos'
+import { lunesSemanaChile } from '../utils/fechaChile'
+import { extraerMarcoAplicado } from '../utils/seccionesIA'
 
 const HuellaContext = createContext(null)
 
@@ -73,6 +75,10 @@ const initialState = {
   horaAviso:            9,
   minutoAviso:          0,
   sugerenciaEstrategia: null,
+  // Fila de analisis_semanal del hijo activo para la semana actual (lunes en
+  // Chile), o null si todavía no existe. Trae hijo_id: quien la muestre tiene
+  // que compararlo con el hijo activo.
+  analisisSemanal:      null,
 }
 
 function syncHijo(state) {
@@ -142,6 +148,9 @@ function reducer(state, action) {
 
     case 'SET_PATRONES':
       return { ...state, patrones: action.payload }
+
+    case 'SET_ANALISIS_SEMANAL':
+      return { ...state, analisisSemanal: action.payload }
 
     case 'ADD_PATRON':
       return { ...state, patrones: [action.payload, ...state.patrones] }
@@ -581,6 +590,16 @@ export function HuellaProvider({ children }) {
   // usuario ya tiene hijo. Una vez true, no vuelve a false.
   const [dataLoaded, setDataLoaded] = useState(false)
 
+  // Análisis semanal: claves "hijoId|semana" que ya se intentaron generar en
+  // esta carga de la app. Un intento por hijo y semana, salga bien o mal: si
+  // falla no se reintenta hasta la próxima vez que se abra la app.
+  const analisisIntentadosRef = useRef(new Set())
+  // Hijo activo al momento de terminar la generación, que tarda: si el papá
+  // cambió de hijo mientras tanto, el análisis se guarda igual pero no pisa
+  // el estado del hijo que está mirando.
+  const hijoActivoIdRef = useRef(state.hijoActivoId)
+  hijoActivoIdRef.current = state.hijoActivoId
+
   useEffect(() => {
     if (!user) {
       dispatch({ type: 'LOAD_STATE', payload: initialState })
@@ -604,7 +623,7 @@ export function HuellaProvider({ children }) {
   async function loadHijoDatos(hijoId, currentFamily) {
     if (!user || !hijoId) return
     const partnerIds = getPartnerIds(currentFamily)
-    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes] = await Promise.all([
+    const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes, analisisRes] = await Promise.all([
       supabase.from('episodios')
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
@@ -637,6 +656,7 @@ export function HuellaProvider({ children }) {
         .select('*').in('user_id', partnerIds)
         .eq('hijo_id', hijoId)
         .order('created_at', { ascending: false }),
+      leerAnalisisSemanal(hijoId, partnerIds),
     ])
     dispatch({ type: 'SET_EPISODIOS',   payload: await firmarCampo((episodiosRes.data ?? []).map(dbEpisodioToApp), 'fotoUrl', 'momentos') })
     dispatch({ type: 'SET_HITOS',       payload: await firmarCampo(hitosRes.data ?? [], 'foto_url', 'momentos') })
@@ -645,6 +665,134 @@ export function HuellaProvider({ children }) {
     dispatch({ type: 'SET_RASGOS',      payload: (rasgosRes.data       ?? []).map(dbRasgoToApp) })
     // Patrones: array propio, sin firmar fotos (no las tienen) y sin tocar el motor.
     dispatch({ type: 'SET_PATRONES',    payload: patronesRes.data ?? [] })
+    dispatch({ type: 'SET_ANALISIS_SEMANAL', payload: analisisRes ?? null })
+
+    asegurarAnalisisSemanal({
+      hijo:      state.hijos.find((h) => h.id === hijoId) ?? null,
+      episodios: (episodiosRes.data ?? []).map(dbEpisodioToApp),
+      hitos:     hitosRes.data ?? [],
+      existente: analisisRes,
+    })
+  }
+
+  // ── Análisis semanal ──────────────────────────────────────────────────────
+
+  // Fila de la semana actual del hijo, null si no existe, o undefined si la
+  // lectura falló (por ejemplo, la migración 023 sin correr). Nunca lanza.
+  // La diferencia importa: con undefined NO se genera, porque sin poder leer
+  // tampoco se va a poder guardar, y cada apertura gastaría una llamada a la IA.
+  async function leerAnalisisSemanal(hijoId, partnerIds) {
+    try {
+      const { data, error } = await supabase
+        .from('analisis_semanal').select('*')
+        .in('user_id', partnerIds)
+        .eq('hijo_id', hijoId)
+        .eq('semana', lunesSemanaChile())
+        .maybeSingle()
+      if (error) {
+        console.warn('[analisis] lectura fallo:', error.message)
+        return undefined
+      }
+      return data ?? null
+    } catch (err) {
+      console.warn('[analisis] lectura fallo:', err)
+      return undefined
+    }
+  }
+
+  // Genera y guarda el análisis de la semana si toca: no existe fila para este
+  // hijo y semana, hay 3 o más momentos en los últimos 7 días y no se intentó
+  // ya en esta carga. Fire-and-forget: no bloquea la carga y nunca lanza.
+  async function asegurarAnalisisSemanal({ hijo, episodios, hitos, existente }) {
+    try {
+      // existente: fila = ya hay análisis; undefined = no se pudo leer.
+      if (!user || !supabase || !hijo?.id || existente !== null) return
+      const semana = lunesSemanaChile()
+      const clave = `${hijo.id}|${semana}`
+      if (analisisIntentadosRef.current.has(clave)) return
+
+      const recientes = momentosDeLaSemana({ episodios, hitos })
+      if (recientes.episodios.length + recientes.hitos.length < MIN_MOMENTOS_ANALISIS) return
+
+      // Se marca ANTES de llamar a la IA: la llamada tarda y otra carga del
+      // mismo hijo en ese rato no tiene que disparar una segunda.
+      analisisIntentadosRef.current.add(clave)
+
+      const texto = await generarAnalisisSemanal({ hijo, episodios, hitos })
+      // Sin la primera sección la card no tiene qué mostrar: no se guarda.
+      if (!texto || !/^\s*Mejoró\s*$/m.test(texto.normalize('NFC'))) {
+        console.warn('[analisis] respuesta sin la seccion "Mejoro": no se guarda')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('analisis_semanal')
+        .insert({
+          user_id: user.id,
+          hijo_id: hijo.id,
+          semana,
+          texto,
+          // El marco sale de la segunda llamada (completarAnalisisSemanal).
+          marco:   null,
+        })
+        .select()
+        .single()
+      if (error || !data) {
+        console.warn('[analisis] no se guardo:', error?.message ?? 'el insert no devolvio fila')
+        return
+      }
+      if (data.hijo_id === hijoActivoIdRef.current) {
+        dispatch({ type: 'SET_ANALISIS_SEMANAL', payload: data })
+      }
+    } catch (err) {
+      console.warn('[analisis] fallo generacion:', err)
+    }
+  }
+
+  // Lo largo del análisis semanal: solo cuando un papá Pro toca "Leer el
+  // análisis completo". Genera con los momentos del hijo activo, guarda en
+  // texto_completo + marco y deja la fila al día en el estado.
+  //
+  // Devuelve { texto, marco, guardado }. Si la IA falla, LANZA: la card
+  // muestra el error con "Reintentar". Si la IA respondió pero el UPDATE no
+  // guardó, NO lanza: el papá lee igual lo que ya se generó (no se tira una
+  // llamada pagada) y `guardado: false` le deja reintentar solo el guardado
+  // con `texto` ya en la mano, sin volver a llamar a la IA.
+  async function completarAnalisisSemanal(analisis, textoYaGenerado = null) {
+    if (!user || !supabase || !analisis?.id) throw new Error('Falta el análisis')
+
+    let texto = textoYaGenerado
+    if (!texto) {
+      const hijo = state.hijos.find((h) => h.id === analisis.hijo_id) ?? null
+      texto = await generarAnalisisCompleto({
+        hijo,
+        episodios:  state.episodios,
+        hitos:      state.hitos,
+        tresLineas: analisis.texto,
+      })
+      if (!texto) throw new Error('No hay momentos suficientes esta semana')
+      // Sin ninguna sección larga no se guarda: quedaría un plegable vacío
+      // para toda la semana, porque lo guardado ya no se vuelve a pedir.
+      if (!/^\s*(Lo que merece atención|Posibles causas|Próximos pasos sugeridos)\s*$/m.test(texto.normalize('NFC'))) {
+        throw new Error('La respuesta no trajo las secciones del análisis')
+      }
+    }
+    const marco = extraerMarcoAplicado(texto)
+
+    const { data, error } = await supabase
+      .from('analisis_semanal')
+      .update({ texto_completo: texto, marco })
+      .eq('id', analisis.id)
+      .select()
+      .maybeSingle()
+    if (error || !data) {
+      console.warn('[analisis] completo no se guardo:', error?.message ?? 'el update no afecto ninguna fila')
+      return { texto, marco, guardado: false }
+    }
+    if (data.hijo_id === hijoActivoIdRef.current) {
+      dispatch({ type: 'SET_ANALISIS_SEMANAL', payload: data })
+    }
+    return { texto, marco, guardado: true }
   }
 
   async function loadUserData(userId, currentFamily) {
@@ -666,8 +814,9 @@ export function HuellaProvider({ children }) {
 
       // Fase 2: datos filtrados por hijo activo
       let episodios = [], hitos = [], estrategias = [], rutinas = [], rasgos = [], patrones = []
+      let analisisSemanal = null
       if (hijoActivoId) {
-        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes] = await Promise.all([
+        const [episodiosRes, hitosRes, estrategiasRes, rutinasRes, rasgosRes, patronesRes, analisisRes] = await Promise.all([
           supabase.from('episodios')
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
@@ -700,6 +849,7 @@ export function HuellaProvider({ children }) {
             .select('*').in('user_id', partnerIds)
             .eq('hijo_id', hijoActivoId)
             .order('created_at', { ascending: false }),
+          leerAnalisisSemanal(hijoActivoId, partnerIds),
         ])
         episodios   = (episodiosRes.data   ?? []).map(dbEpisodioToApp)
         hitos       =  hitosRes.data        ?? []
@@ -707,6 +857,7 @@ export function HuellaProvider({ children }) {
         rutinas     = (rutinasRes.data      ?? []).map(dbRutinaToApp)
         rasgos      = (rasgosRes.data       ?? []).map(dbRasgoToApp)
         patrones    =  patronesRes.data     ?? []
+        analisisSemanal = analisisRes
       }
 
       const hijosF     = await firmarCampo(hijos, 'avatarUrl', 'avatares')
@@ -733,7 +884,15 @@ export function HuellaProvider({ children }) {
           plan_beta_hasta: perfilRes.data?.plan_beta_hasta ?? null,
           horaAviso:   perfilRes.data?.hora_aviso   ?? 9,
           minutoAviso: perfilRes.data?.minuto_aviso ?? 0,
+          analisisSemanal: analisisSemanal ?? null,
         },
+      })
+
+      asegurarAnalisisSemanal({
+        hijo:      hijos.find((h) => h.id === hijoActivoId) ?? null,
+        episodios,
+        hitos,
+        existente: analisisSemanal,
       })
     } catch (e) {
       console.error('Error cargando datos:', e)
@@ -1854,6 +2013,7 @@ export function HuellaProvider({ children }) {
       dataLoading,
       dataLoaded,
       reloadData,
+      completarAnalisisSemanal,
       profilesByUserId,
       setHijo,
       setHijoActivo,

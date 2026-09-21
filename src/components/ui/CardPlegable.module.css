@@ -1,0 +1,72 @@
+/* Movido tal cual desde RegistroPage.module.css ("6 · Orientación completa").
+   Los valores no cambiaron: el plegable del episodio se tiene que ver igual. */
+
+.card {
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+.head:active { transform: none; }
+
+/* Lavanda = ciencia. Es el mismo significado que el punto de la firma. */
+.chip {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--color-accent-lavender);
+  color: var(--color-pill-lavender-text);
+  display: grid;
+  place-items: center;
+}
+
+.textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.titulo {
+  font-family: var(--font-heading);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.sub {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+.chevronDisco {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+}
+.chevron { transition: transform var(--motion-rapida) var(--motion-ease-estandar); }
+.chevronAbierto { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron { transition: none; }
+}

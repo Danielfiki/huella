@@ -788,3 +788,31 @@ create policy "rutinas_all" on public.rutinas
   for all
   using    (user_id = any(public.get_family_user_ids(auth.uid())))
   with check (auth.uid() = user_id);
+
+-- ── Tabla: analisis_semanal (migración 023) ──────────────────
+-- Un análisis por hijo y semana. `semana` = lunes de esa semana en hora de
+-- Chile. La app lo crea y después solo completa texto_completo y marco.
+create table if not exists public.analisis_semanal (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id)   on delete cascade,
+  hijo_id     uuid not null references public.hijos(id) on delete cascade,
+  semana      date not null,
+  texto       text not null,
+  texto_completo text,          -- migración 024
+  marco       text,
+  created_at  timestamptz default now(),
+  constraint analisis_semanal_hijo_semana_key unique (hijo_id, semana)
+);
+
+alter table public.analisis_semanal enable row level security;
+
+drop policy if exists family_data on public.analisis_semanal;
+create policy family_data on public.analisis_semanal
+  for all
+  using      (user_id = any(public.get_family_user_ids(auth.uid())))
+  with check (auth.uid() = user_id);
+
+revoke all on public.analisis_semanal from anon, authenticated;
+grant select, insert on public.analisis_semanal to authenticated;
+-- migración 024: la app completa el análisis, solo en estas dos columnas.
+grant update (texto_completo, marco) on public.analisis_semanal to authenticated;

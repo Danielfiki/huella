@@ -1,7 +1,7 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { X, ChevronDown, Clock, BookOpen, ArrowRight } from 'lucide-react'
+import { X, Clock, ArrowRight } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio, generarRespuestaReflexion } from '../../services/anthropic'
@@ -15,6 +15,7 @@ import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import Button from '../../components/ui/Button'
 import OrientacionSecciones from '../../components/registro/OrientacionSecciones'
+import CardPlegable from '../../components/ui/CardPlegable'
 import { obtenerLente } from '../../components/historial/AccionRapida'
 import { renderMarkdown } from '../../utils/renderMarkdown'
 import { separarAlivio } from '../../utils/seccionesIA'
@@ -750,39 +751,22 @@ export default function RegistroPage() {
                 fluye, `resto` va cambiando de tamaño y aparecer ahí haría
                 saltar el layout justo debajo de lo que el padre está leyendo. */}
             {resto && !loadingIA && !errorOrientacion && (
-              <section className={styles.gCardPlegable}>
-                <button
-                  className={styles.gPlegableHead}
-                  onClick={() => setOrientacionAbierta((v) => !v)}
-                  aria-expanded={orientacionAbierta}
-                  type="button"
-                >
-                  <span className={styles.gChipLibro} aria-hidden="true">
-                    <BookOpen size={14} />
-                  </span>
-                  <span className={styles.gPlegableTextos}>
-                    <span className={styles.gPlegableTitulo}>Orientación completa</span>
-                    <span className={styles.gPlegableSub}>Qué está pasando · qué hacer · qué evitar</span>
-                  </span>
-                  <span className={styles.gChevronDisco} aria-hidden="true">
-                    <ChevronDown
-                      size={15}
-                      className={`${styles.gChevron} ${orientacionAbierta ? styles.gChevronAbierto : ''}`}
-                    />
-                  </span>
-                </button>
+              <CardPlegable
+                titulo="Orientación completa"
+                subtitulo="Qué está pasando · qué hacer · qué evitar"
+                abierto={orientacionAbierta}
+                onToggle={() => setOrientacionAbierta((v) => !v)}
+              >
                 {/* El episodio se busca en el contexto por id: ahí ya llegó la
                     Acción Rápida (autor y dimensión) que el pie usa para el
                     lente. Si todavía no llegó, el pie lo infiere igual. */}
-                {orientacionAbierta && (
-                  <OrientacionSecciones
-                    texto={resto}
-                    zona={zonaIA}
-                    episodio={state.episodios.find((e) => e.id === episodioId) ?? reintentoRef.current?.episodio ?? null}
-                    hijo={state.hijo}
-                  />
-                )}
-              </section>
+                <OrientacionSecciones
+                  texto={resto}
+                  zona={zonaIA}
+                  episodio={state.episodios.find((e) => e.id === episodioId) ?? reintentoRef.current?.episodio ?? null}
+                  hijo={state.hijo}
+                />
+              </CardPlegable>
             )}
 
             {/* ── 7 · Reflexión: lo único de esta pantalla que es solo suyo ── */}

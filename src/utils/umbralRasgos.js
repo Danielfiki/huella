@@ -12,24 +12,9 @@
 // distintos (dos avances de la misma tarde son una sola observacion).
 // `cuesta` sigue pidiendo 3.
 
+import { diaChile } from './fechaChile.js'
+
 const FAMILIAS_POSITIVAS = ['mueve', 'fortalezas', 'calma']
-
-// Dia calendario en Chile ('2026-09-21'). Con Intl y no restando horas a
-// mano, por el cambio de huso: mismo criterio que api/push-remind.js. En UTC
-// un momento de las 22:30 caeria en el dia siguiente.
-const formatoDiaChile = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'America/Santiago',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
-function diaChile(fecha) {
-  if (!fecha) return null
-  const d = new Date(fecha)
-  if (Number.isNaN(d.getTime())) return null
-  return formatoDiaChile.format(d)
-}
 
 export function esFamiliaPositiva(familia) {
   return FAMILIAS_POSITIVAS.includes(familia)
