@@ -8,6 +8,7 @@ import {
   tokensMovimiento,
   useMovimientoReducido,
 } from '../motion/MotionPrimitives'
+import { crearControlVideo } from './controlVideoLoop'
 import styles from './puertas.module.css'
 
 // Las cuatro puertas del Home. Tarjetas compactas: dato visual y cero párrafos.
@@ -110,13 +111,13 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
 }
 
 // ── Su cerebro ─────────────────────────────────────────────────────────────
-// Card ancha con el cerebro en movimiento: un loop pregrabado del 3D (ida y
+// Card ancha con el cerebro en movimiento: un loop pregrabado del 3D (una
 // vuelta, mudo) a la izquierda, "Su cerebro" y la frase "Ahora mismo" de su
 // edad a la derecha. Abre /cerebro, donde vive el modelo de verdad.
 //
 // El video solo corre mientras la card se ve: fuera de pantalla se pausa. Con
 // movimiento reducido no se reproduce nunca y queda el poster. Por eso no
-// lleva `autoPlay`: lo arranca el observador, que es el que sabe si se ve.
+// lleva `autoPlay`: cuándo correr lo decide controlVideoLoop.js.
 //
 // Un video por tramo de edad, grabados en /cerebro-loop: una vuelta exacta que
 // empalma consigo misma (loop directo, sin ida y vuelta). La edad es decimal
@@ -137,23 +138,54 @@ function videoCerebro(edad) {
 
 export function PuertaCerebro({ ahora, edad, onClick }) {
   const ref = useRef(null)
+  const baseAnteriorRef = useRef(null)
   const reducido = useMovimientoReducido()
   const base = videoCerebro(edad)
 
+  // Se rearma cuando cambia el tramo (base) o la preferencia de movimiento.
+  // La lógica de cuándo correr vive en controlVideoLoop.js; acá solo se
+  // conectan los eventos.
   useEffect(() => {
     const video = ref.current
     if (!video) return undefined
+
+    // `muted` como ATRIBUTO además de propiedad: React solo fija la propiedad,
+    // y hay navegadores que miran el atributo para dejar reproducir sin gesto.
+    video.muted = true
+    video.defaultMuted = true
+    video.setAttribute('muted', '')
+
+    // Cambiar el src de un <source> ya insertado no hace nada: el video se
+    // queda con el archivo que eligió al montarse. load() lo obliga a elegir
+    // de nuevo. En el primer montaje no hace falta.
+    if (baseAnteriorRef.current && baseAnteriorRef.current !== base) video.load()
+    baseAnteriorRef.current = base
+
     if (reducido || typeof IntersectionObserver === 'undefined') {
       video.pause()
       return undefined
     }
-    const obs = new IntersectionObserver(([entrada]) => {
-      if (entrada.isIntersecting) video.play().catch(() => {})
-      else video.pause()
-    }, { threshold: 0.25 })
+
+    const control = crearControlVideo(video, { reducido })
+    const alTenerDatos = () => control.alTenerDatos()
+    const alGesto = () => control.alGesto()
+    video.addEventListener('loadeddata', alTenerDatos)
+    video.addEventListener('canplay', alTenerDatos)
+    document.addEventListener('pointerdown', alGesto, { passive: true })
+    const obs = new IntersectionObserver(
+      ([entrada]) => control.alCambiarVisibilidad(entrada.isIntersecting),
+      { threshold: 0.25 }
+    )
     obs.observe(video)
-    return () => { obs.disconnect(); video.pause() }
-  }, [reducido])
+
+    return () => {
+      obs.disconnect()
+      video.removeEventListener('loadeddata', alTenerDatos)
+      video.removeEventListener('canplay', alTenerDatos)
+      document.removeEventListener('pointerdown', alGesto)
+      control.destruir()
+    }
+  }, [reducido, base])
 
   return (
     <Puerta onClick={onClick} ariaLabel="Su cerebro">
