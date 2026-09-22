@@ -29,7 +29,7 @@
 
 ### Bloque 0 — hoy, sin Code
 
-1. ⬜ **WhatsApp a Cecilia (Leon), María (Agustina) y Pauli (Nahuel)** — desde **14 sep 2026** — las tres sin actividad tras el mensaje del 11.
+1. ⬜ **WhatsApp a Cecilia (Leon), María (Agustina) y Antonia (Ferran)** — desde **14 sep 2026** — **los tres mensajes ya están redactados (22 sep); queda enviarlos, y eso lo hace Daniel.** **Pauli (Nahuel) salió de la lista: registró el 22 sep.**
 2. ⬜ **Esta reescritura de PENDIENTES** — **16 sep 2026** — sin commit hasta el OK de Daniel.
 
 ### Bloque 1 — Retención (decisiones del 16 sep 2026)
@@ -44,7 +44,6 @@
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
 11. ⬜ **Álbum "Sus avances"** — **16 sep** — cuarto tab en `HijoPage` junto a "Su cerebro", solo hitos con foto o texto. **Code mide primero si 4 tabs caben en 390px.** Vacío: una línea + botón naranjo a registrar avance con foto; nunca "aún no tienes". Hogar natural del ítem 5.
 12. ⬜ **Card de candidato — pasada de Design** — desde **14 sep** — va **después del ítem 7**, para diseñar sobre la card correcta. El rasgo como frase sobre quién está siendo el hijo.
-13. ⬜ **Decisión de copy de Daniel: "Lo que le cuesta" → "Lo que le cuesta hoy"** — **16 sep**.
 14. ⬜ **Pieza 6 — Cerebro, "qué puedes hacer en esta etapa"** — desde **8 sep** — 2-3 prácticas por edad en cada tarjeta de zona, mismo corpus que el ítem 9. Feedback de Diego (`H-02`).
 15. ⬜ **Métrica del giro** — **16 sep** — proporción positivos/total por tester nuevo y % de candidatos positivos mostrados. **Medir en 3 semanas.**
 
@@ -106,6 +105,7 @@
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
 - ✅ **Verificación de desarrolladores de Play** — **cumplida al 21 sep 2026**.
 - ✅ **Ex ítems 16 y 17 (lentes del avance y brief de sus dos pantallas)** — **cerrados**: 12 lentes en producción desde el 19 sep (detalle: bloque del 19 sep).
+- ✅ **Ex ítem 13 — "Lo que le cuesta" → "Lo que le cuesta hoy"** — **en producción el 22 sep** (commit `16b0a2f`).
 
 ### Roadmap (decidido, con disparador)
 
@@ -376,6 +376,18 @@ La regla 6 del prompt suma ejemplos de **mismo patrón con distinta redacción**
 **Medición:** La brava tiene **9 rasgos desde el reset y 2 son duplicados por redacción** (uno de `cuesta`, uno de `fortalezas`), con el original presente en `rasgos_ya_registrados`.
 
 ⚠️ **La prueba en La brava quedó inconclusa:** la evidencia sigue en 3/3 porque **el motor no llegó a correr**. El gatillo pide cruzar un tramo de 5 momentos (`debeDetectarRasgos`, `HuellaContext.jsx:463`) y 12+2 no cruza ninguno. Se mide mañana con uso real.
+
+### 10. ✅ Ítem 13 — el rótulo del retrato, EN PRODUCCIÓN (commit `16b0a2f`)
+"Lo que le cuesta" pasa a **"Lo que le cuesta hoy"**. Era el encabezado de esa familia en el retrato (`HijoPage.jsx:28`), el único lugar donde el papá lo lee. El valor interno `'cuesta'` y la base no se tocaron. El `verbo` de esa misma línea tampoco: arma la frase de la tarjeta vacía ("qué le cuesta a {nombre}") y con "hoy" cambiaba de sentido. **El prompt del motor nunca usó ese rótulo**, solo el id.
+
+### 11. 📨 Ítem 1 — los mensajes quedaron redactados
+Listos para **Cecilia (Leon)**, **María (Agustina)** y **Antonia (Ferran)**. **Pauli sale de la lista: registró el 22 sep.** Enviarlos es de Daniel.
+
+### 12. 📊 Foto de los registros al 22 sep
+- **8 cuentas activas en 3 días.**
+- **4 entran y no registran:** Antonia, Anita, Matías, Rodrigo.
+- **3 con hijo creado y 0 registros:** Cata, Javiera, Rodrigo.
+- **Momentos huérfanos:** `diegoalmazabar` (5), `contremix` (4), `ig.olaves` (1).
 
 ### ⏭️ Pendiente
 1. ⬜ **Verificar el ítem 7(c) mañana**, con el SELECT de `rasgos` familia `cuesta` de La brava: **no debe aparecer fila nueva** y la evidencia de alguna existente tiene que subir.
