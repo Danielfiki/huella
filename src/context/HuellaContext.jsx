@@ -1387,9 +1387,28 @@ export function HuellaProvider({ children }) {
           .filter(Boolean)
         if (evidencia.length === 0) continue
 
-        // b) Dedup: mismo hijo + misma familia + mismo titulo normalizado.
+        // b) Correspondencia (item 7c): el modelo dice que esta propuesta es un
+        //    rasgo que YA existe, escrito de otra forma. El dedup de abajo no
+        //    la caza, porque compara titulos y estos son distintos.
+        //
+        //    Solo se acepta si el id venia en el payload que se le mando
+        //    —`correspondeA` ya lo valido contra esa lista en detectarRasgos—
+        //    y si el rasgo sigue existiendo. Un descartado NUNCA se fusiona:
+        //    el papa ya dijo que no lo ve en su hijo. Un id que no cumple se
+        //    ignora y el rasgo sigue el camino normal.
+        const porCorrespondencia = rasgo.correspondeA
+          ? existentes.find((r) => r.id === rasgo.correspondeA && r.estado !== 'descartado')
+          : null
+        if (porCorrespondencia) {
+          console.info(
+            '[rasgos] fusion por correspondencia:',
+            `"${rasgo.titulo}" -> "${porCorrespondencia.titulo}"`
+          )
+        }
+
+        // c) Dedup: mismo hijo + misma familia + mismo titulo normalizado.
         const tituloNorm = normalizarTitulo(rasgo.titulo)
-        const previo = existentes.find(
+        const previo = porCorrespondencia ?? existentes.find(
           (r) => r.familia === rasgo.familia && normalizarTitulo(r.titulo) === tituloNorm
         )
 
@@ -1400,7 +1419,7 @@ export function HuellaProvider({ children }) {
         }
 
         if (!previo) {
-          // c) No existe -> INSERT nuevo. El estado lo decide el flag esEmergente
+          // d) No existe -> INSERT nuevo. El estado lo decide el flag esEmergente
           //    que entrega el motor (detectarRasgos): bajo el umbral de su
           //    familia = 'emergente', sobre el umbral = 'candidato'
           //    (umbralRasgos.js). Antes no se pasaba estado y todo caia al
@@ -1417,7 +1436,7 @@ export function HuellaProvider({ children }) {
           })
           if (error) console.warn('[rasgos] insert fallo:', error.message)
         } else {
-          // d) Ya existe -> UPDATE fusionando evidencia (union por id, sin
+          // e) Ya existe -> UPDATE fusionando evidencia (union por id, sin
           //    duplicar ids ya presentes). idDe soporta el shape viejo
           //    ({ episodio_id }) y el nuevo ({ id }) sin reescribir lo antiguo.
           //    Recalcula count y actualiza confianza. updated_at a mano: la

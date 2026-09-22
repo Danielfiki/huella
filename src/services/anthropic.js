@@ -2280,8 +2280,13 @@ Reglas duras:
 4. "confianza": numero entre 0 y 1 segun la fuerza de la evidencia (1 momento ~0.4; 2 momentos coherentes ~0.55; 3 momentos ~0.7; 5 o mas concentrados ~0.85).
 5. Nunca etiquetes al niño, nunca uses jerga clínica, nunca insinúes un diagnóstico ni una condición.
 6. MEMORIA. Los rasgos en "rasgos_ya_registrados" YA EXISTEN. NUNCA propongas uno que describa el mismo patrón, aunque lo redactes distinto: si el patrón que ves coincide con uno existente, NO lo pongas en "rasgos"; devuélvelo en "refuerza" con su id y con los ids de los momentos de esta tanda que lo respaldan. Los que tienen estado "descartado" el padre o madre ya dijo que no los ve en su hijo: esos NO se vuelven a proponer NI a reforzar, se ignoran por completo.
-7. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
-8. ${REGLA_IDIOMA}
+   MISMO PATRÓN, DISTINTA REDACCIÓN. Dos frases que describen la misma conducta son UN rasgo, no dos. Ejemplos reales de pares que son el MISMO rasgo:
+   - "Cuando algo le gusta mucho, le cuesta soltarlo" y "Le cuesta soltar algo que le gusta".
+   - "Cuando algo se cae o no le sale, lo vuelve a intentar" y "Después de caerse o frustrarse, se repone".
+   Antes de proponer un rasgo, compáralo contra cada uno de "rasgos_ya_registrados" por lo que DESCRIBE, no por cómo está escrito. Si alguno describe lo mismo, ese rasgo NO va en "rasgos".
+7. CORRESPONDENCIA. Si aun así incluyes un rasgo en "rasgos" y crees que puede ser el mismo patrón que uno ya registrado, pon su id en "corresponde_a". Si es un patrón realmente nuevo, "corresponde_a" va en null. Un rasgo con "corresponde_a" NO debe repetirse además como rasgo nuevo aparte.
+8. Si no hay ningún rasgo claro, devuelve { "rasgos": [] }.
+9. ${REGLA_IDIOMA}
 
 Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este shape exacto:
 {
@@ -2290,7 +2295,8 @@ Output: JSON válido y SOLO JSON, sin texto adicional, sin markdown, con este sh
       "familia": "mueve|fortalezas|cuesta|calma",
       "titulo": "<frase corta observacional>",
       "evidencia": ["<id>", "<id>", "<id>"],
-      "confianza": 0.0
+      "confianza": 0.0,
+      "corresponde_a": "<id de rasgos_ya_registrados, o null si es un patrón nuevo>"
     }
   ],
   "refuerza": [
@@ -2400,6 +2406,10 @@ ${JSON.stringify({
     // (episodio o hito); descarta ids que no estén entre los momentos enviados.
     // Luego filtra por validez: familia permitida, >=3 items de evidencia, y
     // confianza dentro de 0-1 si viene. Protege los CHECK de la tabla rasgos.
+    // Los ids que el modelo TIENE permitido nombrar: los que se le mandaron.
+    // Sirve para `corresponde_a` y para `refuerza`; si inventa uno, se cae aca.
+    const idsValidos = new Set(yaRegistrados.map((r) => r.id))
+
     const validos = parsed.rasgos
       .map((r) => {
         if (!r) return null
@@ -2416,7 +2426,12 @@ ${JSON.stringify({
         // paso siguiente; aca NO se escribe en la tabla.
         const conFecha = evidencia.map((ev) => ({ ...ev, fecha: fechaPorId.get(ev.id) }))
         const esEmergente = !cumpleUmbral(r.familia, conFecha)
-        return { ...r, evidencia, esEmergente }
+        // Item 7(c): el modelo dice a que rasgo ya registrado corresponde esta
+        // propuesta. Solo sobrevive si el id es uno de los que se le mandaron;
+        // un id inventado se convierte en null y el rasgo sigue su camino
+        // normal. Quien fusiona es guardarRasgosDetectados.
+        const correspondeA = idsValidos.has(r.corresponde_a) ? r.corresponde_a : null
+        return { ...r, evidencia, esEmergente, correspondeA }
       })
       .filter((r) => {
         if (!r || !FAMILIAS_VALIDAS.includes(r.familia)) return false
@@ -2432,7 +2447,6 @@ ${JSON.stringify({
     // modelo inventa uno, se cae aca) y la evidencia contra los momentos de
     // esta tanda. Un refuerzo sin evidencia real no sirve: no hay nada que
     // sumarle al rasgo, asi que se descarta.
-    const idsValidos = new Set(yaRegistrados.map((r) => r.id))
     const refuerza = (Array.isArray(parsed.refuerza) ? parsed.refuerza : [])
       .map((r) => {
         if (!r || !idsValidos.has(r.id)) return null
