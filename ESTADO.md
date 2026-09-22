@@ -37,8 +37,8 @@
 3. ⬜ **Medir en Supabase: hora a la que registran los testers + retención por cohorte D1/D7/D30** — **16 sep** — ✅ **Hora medida el 22 sep:** 9 momentos de testers en 6 días, 5 entre 21:00 y 01:00. **Queda la retención D1/D7: se corre el 30 sep** con los bloques B y C de `supabase/consultas/retencion.sql`.
 4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. ✅ **Default 21:30 hecho el 22 sep** (migración 026, cuentas en 9:00 migradas). **Queda: hora anclada al onboarding y modo silencio.**
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
-6. ⬜ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — reusa el copy de re-enganche sin culpa. `ultima_actividad` ya se escribe.
-7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). **Queda:** **(c)** identidad del rasgo, medir primero con La brava limpia; y el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
+6. ✅ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — **EN PRODUCCIÓN el 22 sep** (commit `a82175d`). Al volver tras 10+ días (días de calendario de Chile, leídos de `ultima_actividad` **antes** de marcar la visita) el Home esconde la card de candidato, y lo guardado se muestra **integrado en las puertas que ya existían**: **Su huella** con el rasgo positivo confirmado más reciente, o **Momentos** con el último relato, en el lugar del contador. **Sin card nueva** y sin CSS nuevo. Historial acepta `state.momentoId` y centra esa ficha. Detalle: bloque del 22 sep.
+7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). ✅ **(c) en producción el 22 sep** (commit `01ae849`): el modelo marca con `corresponde_a` a qué rasgo existente corresponde cada propuesta y el cliente fusiona evidencia contra ese id. **Medición:** 2 duplicados por redacción de 9 rasgos de La brava. ⚠️ **Falta verificarlo con uso real**: la prueba quedó inconclusa porque el motor no cruzó tramo y no llegó a correr. Después hay que **limpiar los 2 duplicados de La brava por SQL**. **Queda también** el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
 8. ⬜ **Análisis semanal** — **16 sep** — ✅ **Fase 1 en producción el 21 sep** (detalle: bloque del 21 sep): se genera solo, se guarda, tres líneas automáticas y análisis completo bajo demanda. ✅ **Fase 2 en producción el 22 sep** (commit `e166d06`): push del domingo con "Mejoró". **Queda medir aperturas:** SELECT de `push_enviado_at` / `push_abierto_at` en `analisis_semanal` el **lunes 28 sep**.
 9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). ✅ **Paso 3 cerrado:** 12 lentes en producción desde el 19 sep. **Lo que queda:** el QA con avances reales de varios testers.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
@@ -367,10 +367,22 @@ Los perfiles nuevos nacen en 21:30 y los que seguían en 9:00 pasaron a 21:30. Q
 ### 7. ✅ Consultas guardadas en `supabase/consultas/retencion.sql`
 Tres bloques, solo SELECT: **A** hora de registro, **B** retención D1/D7/D30 por cohorte y **C** usuarios distintos con momentos. ⚠️ Excluyen solo La brava: el `user_id` de Daniel no está en este archivo.
 
+### 8. ✅ Ítem 6 — reingreso tras 10+ días, EN PRODUCCIÓN (commit `a82175d`)
+Al volver después de 10+ días (días de calendario de Chile, leídos de `ultima_actividad` **antes** de marcar la visita) el Home esconde la card de candidato y lo que el papá ya guardó se muestra **dentro de las puertas que ya existían**: **Su huella** con el rasgo positivo confirmado más reciente, o **Momentos** con el último relato, en el lugar del contador. **Sin card nueva y sin CSS nuevo.** Historial acepta `state.momentoId` y centra esa ficha.
+
+### 9. ✅ Ítem 7(c) — identidad del rasgo, EN PRODUCCIÓN (commit `01ae849`)
+La regla 6 del prompt suma ejemplos de **mismo patrón con distinta redacción**, entra la regla 7 y el campo `corresponde_a`, y el cliente fusiona evidencia contra ese id cuando estaba en el payload y no está descartado.
+
+**Medición:** La brava tiene **9 rasgos desde el reset y 2 son duplicados por redacción** (uno de `cuesta`, uno de `fortalezas`), con el original presente en `rasgos_ya_registrados`.
+
+⚠️ **La prueba en La brava quedó inconclusa:** la evidencia sigue en 3/3 porque **el motor no llegó a correr**. El gatillo pide cruzar un tramo de 5 momentos (`debeDetectarRasgos`, `HuellaContext.jsx:463`) y 12+2 no cruza ninguno. Se mide mañana con uso real.
+
 ### ⏭️ Pendiente
-1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
-2. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
-3. ⬜ **QA en Android real** cuando prenda el celular de Igna.
+1. ⬜ **Verificar el ítem 7(c) mañana**, con el SELECT de `rasgos` familia `cuesta` de La brava: **no debe aparecer fila nueva** y la evidencia de alguna existente tiene que subir.
+2. ⬜ **Limpiar por SQL los 2 duplicados de La brava**, después de esa verificación.
+3. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
+4. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
+5. ⬜ **QA en Android real** cuando prenda el celular de Igna.
 
 ---
 
