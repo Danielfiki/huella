@@ -109,7 +109,7 @@ export default function EstrategiasPage() {
     (async () => {
       setLoadingPatrones(true);
       try {
-        const interp = await detectarPatronesEstructurado({ hijo_id: hijo.id, hijo_edad: hijo.edad, episodios });
+        const interp = await detectarPatronesEstructurado({ hijo_id: hijo.id, hijo_edad: hijo.edad, hijo_genero: hijo.genero, episodios });
         if (cancel) return;
         setSugerencias(buildSugerenciasFromInterpretacion(interp, episodios));
       } catch (e) {

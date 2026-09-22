@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase.js'
 import { TAXONOMIA_EMOCIONES } from '../constants/taxonomiaEmociones.js'
 import { separarZona } from '../utils/seccionesIA.js'
-import { palabrasGenero } from '../utils/genero.js'
+import { palabrasGenero, instruccionGenero } from '../utils/genero.js'
 import { cumpleUmbral } from '../utils/umbralRasgos.js'
 import { LENTES_AVANCE, LENTE_POR_ID } from '../constants/catalogoAvance.js'
 
@@ -893,6 +893,7 @@ export async function generarAccionInmediata({ hijo, episodio, ultimoAutorUsado 
 HIJO/A
 Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}.
 Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+${instruccionGenero(hijo)}
 
 EPISODIO
 - ${datosEpisodio}
@@ -1109,6 +1110,7 @@ export async function analizarEpisodio({ hijo, episodio, historialReciente = [],
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 Episodio registrado:
 - Tipo: ${episodio.tipo}
@@ -1201,6 +1203,7 @@ export async function interpretarPatrones({ hijo, episodios, teaser = false }) {
     const promptTeaser = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 Historial de episodios (más recientes primero):
 ${resumen}
@@ -1222,6 +1225,7 @@ No agregues secciones de atención, causas ni próximos pasos. No agregues discl
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 Historial de episodios (más recientes primero):
 ${resumen}
@@ -1301,6 +1305,7 @@ function datosDeLaSemana({ hijo, episodios, hitos }) {
   const cabecera = `${marcoEdad(hijo?.edad)}
 
 Nombre: ${nombre}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 Esto es lo que su mamá o papá registró en los últimos 7 días.
 
@@ -1399,6 +1404,7 @@ export async function generarTareas({ hijo, habilidad, descripcion }) {
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 Habilidad a trabajar: ${habilidad}
 Contexto: ${descripcion || 'ninguno'}
 
@@ -1460,6 +1466,7 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
 ${contexto}
 
 Escribe exactamente 2 oraciones sobre ${hijo?.nombre || 'este niño'} (${genero}, ${hijo?.edad || '?'} años).
+${instruccionGenero(hijo)}
 
 Oración 1: El patrón más claro de esta semana y qué hacer. Máximo 20 palabras.
 Oración 2: Una frase entre *asteriscos* basada en el marco científico anterior que explique por qué. Máximo 15 palabras.
@@ -1479,6 +1486,7 @@ export async function generarEstrategia({ hijo, habilidad, descripcion }) {
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 Habilidad a fortalecer: ${habilidad}
 Contexto adicional: ${descripcion || 'ninguno'}
 
@@ -1501,6 +1509,7 @@ export async function generarReflexionCheckin({ hijo, episodio, checkin }) {
 Qué intentó hacer: ${checkin.queIntentaste || 'no especificado'}
 Cómo respondió el ${genero}: ${checkin.respuestaHijo || 'no especificado'}
 Evolución: ${evolucionTexto[checkin.evolucion] || checkin.evolucion || 'no especificada'}
+${instruccionGenero(hijo)}
 Cómo está el padre/madre ahora: ${checkin.estadoPadre || 'no especificado'}
 
 Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intentó el padre/madre, conecta la acción con el resultado que observó, y valida su esfuerzo. Sin consejos nuevos. Sin diagnósticos. Habla en segunda persona al padre/madre. Tono cálido y concreto. No uses listas ni títulos.`
@@ -1631,6 +1640,7 @@ export async function generarRespuestaReflexion({
     : ''
 
   const prompt = `${ficha}
+${instruccionGenero(hijo)}
 Esto escribió la madre o el padre sobre cómo se sintió:
 "${limpio}"${bloqueMemoria}`
 
@@ -1724,6 +1734,7 @@ export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] 
     : 'El padre no eligió categoría para este avance.'
 
   const prompt = `Avance de ${nombre}${edad != null ? `, ${edad} años` : ''}.
+${instruccionGenero(hijo)}
 ${lineaLente}
 Esto escribió la madre o el padre:
 "${descripcion}"${bloqueRasgos}`
@@ -1841,6 +1852,7 @@ export async function generarEstrategiaDesdeContexto({ texto_libre, hijo, edad_h
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 El padre/madre describe esta situación en sus propias palabras:
 "${texto_libre}"
@@ -1896,6 +1908,7 @@ export async function analizarPatron({ descripcion, desde_cuando, frecuencia, in
 ${REGLA_IDIOMA}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+${instruccionGenero(hijo)}
 
 El padre/madre registra una conducta que dura semanas o meses (NO un episodio puntual):
 Qué pasa: "${descripcion}"
@@ -2000,6 +2013,7 @@ DATOS DEL HIJO/A
 Nombre: ${hijo?.nombre || 'el niño/a'}
 Edad: ${hijo?.edad || 's/d'} años
 Género: ${genero}
+${instruccionGenero(hijo)}
 
 CICLO QUE SE ESTÁ CERRANDO
 Ciclo N°: ${ciclo.numero_ciclo}
@@ -2088,13 +2102,7 @@ export async function generarCicloN({ hijo, habilidad, descripcion, usar_memoria
   }
 
   const marco = marcoEdad(hijo?.edad)
-  const { genero } = (() => {
-    const g = hijo?.genero
-    if (g === 'f') return { genero: 'niña', pronombre: 'ella', articulo: 'la' }
-    if (g === 'm') return { genero: 'niño', pronombre: 'él', articulo: 'el' }
-    if (g === 'nb') return { genero: 'niñe', pronombre: 'elle', articulo: 'le' }
-    return { genero: 'niño/a', pronombre: 'el niño/a', articulo: 'al niño/a' }
-  })()
+  const { sustantivo: genero } = palabrasGenero(hijo)
 
   const planAnterior = JSON.stringify(ciclo_anterior?.plan || {}, null, 2)
   const cierreAnalisis = ciclo_anterior?.cierre_analisis || {}
@@ -2105,6 +2113,7 @@ DATOS DEL HIJO/A
 Nombre: ${hijo?.nombre || 'el niño/a'}
 Edad: ${hijo?.edad || 's/d'} años
 Género: ${genero}
+${instruccionGenero(hijo)}
 
 HABILIDAD QUE SE ESTÁ TRABAJANDO
 ${habilidad}
@@ -2204,7 +2213,7 @@ Output: JSON válido y sólo JSON, sin texto adicional, con este shape exacto:
   ]
 }`
 
-export async function detectarPatronesEstructurado({ hijo_id, hijo_edad, episodios }) {
+export async function detectarPatronesEstructurado({ hijo_id, hijo_edad, hijo_genero = null, episodios }) {
   const compactados = episodios.slice(0, 30).map((e) => ({
     id: e.id,
     fecha: e.fecha,
@@ -2214,6 +2223,8 @@ export async function detectarPatronesEstructurado({ hijo_id, hijo_edad, episodi
   }))
 
   const prompt = `${PROMPT_DETECTAR_PATRONES}
+
+${instruccionGenero({ genero: hijo_genero })}
 
 Datos a analizar:
 ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.length }, episodios: compactados }, null, 2)}`
@@ -2347,6 +2358,8 @@ export async function detectarRasgos({ hijo, episodios, hitos, rasgosExistentes 
     .map((r) => ({ id: r.id, familia: r.familia, titulo: r.titulo, estado: r.estado }))
 
   const prompt = `${PROMPT_DETECTAR_RASGOS}
+
+${instruccionGenero(hijo)}
 
 Datos a analizar:
 ${JSON.stringify({
@@ -2721,6 +2734,7 @@ export async function requestPrimerEncuentro(texto, { hijo = null, signal } = {}
   const prompt = `${marco}
 
 Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad ?? '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+${instruccionGenero(hijo)}
 
 Opciones de cita, autor y marco. Elige UNA y copia sus tres campos tal cual:
 ${listaBanco}
@@ -2909,6 +2923,7 @@ export async function extraerEpisodio({ transcripcion, hijo }) {
   }
 
   const prompt = `El hijo se llama ${nombre} y tiene ${edad} años.
+${instruccionGenero(hijo)}
 
 Esto es lo que contó el padre o madre, transcrito de su voz:
 

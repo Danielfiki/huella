@@ -35,3 +35,28 @@ export function palabrasGenero(hijo) {
     ? { codigo, ...palabras }
     : { codigo: null, ...NEUTRO }
 }
+
+// Linea de genero para los prompts de la IA. Va en TODO prompt que reciba
+// datos del hijo: sin ella el modelo deducia el genero desde el nombre, y con
+// un nombre como "La brava" le hablaba en femenino a un niño.
+const DICE = {
+  f:  'es una niña',
+  m:  'es un niño',
+  nb: 'es niñe (no binario)',
+}
+
+/**
+ * Instruccion de genero lista para pegar en un prompt.
+ *
+ * @param   {Object|null} hijo  Hijo en shape de app; se leen `nombre` y `genero`.
+ * @returns {string}
+ */
+export function instruccionGenero(hijo) {
+  const nombre = (hijo?.nombre || '').trim()
+  const dice = DICE[hijo?.genero]
+  if (!dice) {
+    return `${nombre ? `No sabemos el género de ${nombre}` : 'No sabemos su género'}. No lo deduzcas del nombre: usa formas dobles (niño/a) o frases que no marquen género.`
+  }
+  const sujeto = nombre ? `${nombre} ${dice}` : dice.charAt(0).toUpperCase() + dice.slice(1)
+  return `${sujeto}. Usa siempre ese género para pronombres y adjetivos, aunque el nombre parezca de otro género.`
+}
