@@ -34,13 +34,13 @@
 
 ### Bloque 1 — Retención (decisiones del 16 sep 2026)
 
-3. ⬜ **Medir en Supabase: hora a la que registran los testers + retención por cohorte D1/D7/D30** — **16 sep** — **bloquea al resto del bloque**: sin ese dato no se calibra nada de lo que sigue.
-4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. **Default de hora pasa de 9:00 a 21:30.** Espera el ítem 3. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. Lo que queda de este ítem es el paso 2.
+3. ⬜ **Medir en Supabase: hora a la que registran los testers + retención por cohorte D1/D7/D30** — **16 sep** — ✅ **Hora medida el 22 sep:** 9 momentos de testers en 6 días, 5 entre 21:00 y 01:00. **Queda la retención D1/D7: se corre el 30 sep** con los bloques B y C de `supabase/consultas/retencion.sql`.
+4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. ✅ **Default 21:30 hecho el 22 sep** (migración 026, cuentas en 9:00 migradas). **Queda: hora anclada al onboarding y modo silencio.**
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
 6. ⬜ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — reusa el copy de re-enganche sin culpa. `ultima_actividad` ya se escribe.
 7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). **Queda:** **(c)** identidad del rasgo, medir primero con La brava limpia; y el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
-8. ⬜ **Análisis semanal** — **16 sep** — ✅ **Fase 1 en producción el 21 sep** (detalle: bloque del 21 sep): se genera solo, se guarda, tres líneas automáticas y análisis completo bajo demanda. **Queda la fase 2:** push del domingo con "Mejoró". **Métrica: se abre o no** (ya se puede medir, porque ahora se guarda).
-9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). **Lo que queda: el paso 3**, que es el nuevo catálogo de 8 chips agrupadas por familia (ver el ítem 16) y el QA con avances reales de varios testers. El diseño de las dos pantallas va a una pasada de Design aparte.
+8. ⬜ **Análisis semanal** — **16 sep** — ✅ **Fase 1 en producción el 21 sep** (detalle: bloque del 21 sep): se genera solo, se guarda, tres líneas automáticas y análisis completo bajo demanda. ✅ **Fase 2 en producción el 22 sep** (commit `e166d06`): push del domingo con "Mejoró". **Queda medir aperturas:** SELECT de `push_enviado_at` / `push_abierto_at` en `analisis_semanal` el **lunes 28 sep**.
+9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). ✅ **Paso 3 cerrado:** 12 lentes en producción desde el 19 sep. **Lo que queda:** el QA con avances reales de varios testers.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
 11. ⬜ **Álbum "Sus avances"** — **16 sep** — cuarto tab en `HijoPage` junto a "Su cerebro", solo hitos con foto o texto. **Code mide primero si 4 tabs caben en 390px.** Vacío: una línea + botón naranjo a registrar avance con foto; nunca "aún no tienes". Hogar natural del ítem 5.
 12. ⬜ **Card de candidato — pasada de Design** — desde **14 sep** — va **después del ítem 7**, para diseñar sobre la card correcta. El rasgo como frase sobre quién está siendo el hijo.
@@ -48,15 +48,13 @@
 14. ⬜ **Pieza 6 — Cerebro, "qué puedes hacer en esta etapa"** — desde **8 sep** — 2-3 prácticas por edad en cada tarjeta de zona, mismo corpus que el ítem 9. Feedback de Diego (`H-02`).
 15. ⬜ **Métrica del giro** — **16 sep** — proporción positivos/total por tester nuevo y % de candidatos positivos mostrados. **Medir en 3 semanas.**
 
-16. ⬜ **Las categorías del avance pasan a ser las lentes del retrato — 8 chips en dos columnas** — **18 sep** — decisión de producto tomada (detalle y tabla completa: bloque del 18 sep). Hoy el vocabulario de lo positivo vive **tres veces sin hablarse**: `NuevoPage.jsx:40-47`, `HistorialPage.jsx:30-37` y en prosa dentro del prompt del motor (`anthropic.js:2097`). La chip elegida tiene que **viajar al motor como señal de familia** — hoy la categoría se manda (`anthropic.js:2165`) pero el prompt nunca la nombra. ⚠️ `frustration` está en inglés y **ya está guardado en la base**: renombrarlo obliga a migrar filas. **Va después del brief de Design.**
-17. ⬜ **Brief para Claude Design — las dos pantallas del avance (registro + guardado) con las 8 chips** — **18 sep** — necesita **capturas reales a 390px**, que Daniel toma desde el Android con el dev server en `--host` (no hay playwright/puppeteer, y la vista guardado no es una URL).
-
 ### Bloque 3 — Plataforma y riesgo en producción
 
 17. ⬜ **Diálogo de permiso de notificaciones en Android 13+** — desde **9 sep** — en el celular de Igna. En el manifest está resuelto; falta verlo aparecer.
 18. ⬜ **QA 2 del paso 8 del Cerebro** — desde **27 ago** — está en producción sin terminar de probar: el marcador de zona **no debe salir en el PDF**, episodio viejo sin error, slug inválido se ignora. (detalle: bloque del 27 ago)
 19. ⬜ **Techo o filtro del payload del motor** — desde **15 sep** — 102 rasgos de La brava por llamada y solo sube. Hoy alcanza y el warn avisa.
 20. ⬜ **11 momentos huérfanos con `hijo_id` null** — visto el **16 sep** — verificar que no rompan Historial ni motor; política pendiente.
+- ⬜ **QA en Android real: Home nuevo, "Esta semana", avance, video del cerebro y modo oscuro** — **22 sep** — **disparador: que prenda el celular de Igna.** De paso, medir si las 3 pestañas del avance caben en 390px (lo único vivo de los ex ítems 16 y 17).
 
 ### Bloque 4 — Cerebro, sesión propia
 
@@ -107,6 +105,7 @@
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
 - ✅ **Verificación de desarrolladores de Play** — **cumplida al 21 sep 2026**.
+- ✅ **Ex ítems 16 y 17 (lentes del avance y brief de sus dos pantallas)** — **cerrados**: 12 lentes en producción desde el 19 sep (detalle: bloque del 19 sep).
 
 ### Roadmap (decidido, con disparador)
 
@@ -342,7 +341,40 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY — domingo 21 septiembre 2026 — **Motor de rasgos: lo positivo ya llega a candidato · análisis semanal en producción · Home en tres bloques · cerebro en movimiento**
+## Cerrado HOY (22 sep 2026) — **Aviso del domingo en producción · hora de registro medida y aviso por defecto a las 21:30**
+
+**🎯 El aviso diario se movió a la hora en que los papás registran de verdad.** La medición dio 9 momentos de testers en 6 días, y 5 cayeron entre las 21:00 y la 01:00. El default quedó en 21:30 y las cuentas que seguían en 9:00 se migraron.
+
+### 1. ✅ Género del hijo desde el perfil en 19 prompts (commit `9334a0f`)
+
+### 2. ✅ Disco de superficie detrás del escarabajo en "Avance registrado" (commit `d151e01`)
+
+### 3. ✅ Aviso del domingo con "Mejoró" (ítem 8, fase 2) — EN PRODUCCIÓN (commit `e166d06`)
+- **Rama 3 de `push-remind.js`:** los domingos, si ya existe el análisis de la semana, el aviso manda el texto de "Mejoró" y gana a las otras ramas.
+- **El día de la semana se calcula en hora de Chile.** Corrige la rama 4, que dependía de UTC.
+- **Migración 025:** `push_enviado_at` y `push_abierto_at` en `analisis_semanal`. El Home marca la apertura cuando entra con `?desde=domingo` y abre la card "Esta semana".
+- QA de Daniel aprobado: la card llega abierta y `push_abierto_at` quedó marcado. Hash nuevo en producción `index-DXuEFBUv.js`, con `push_abierto_at` ×4.
+
+### 4. ✅ QA en iPhone del Home nuevo
+Card "Esta semana", registro de avance, video del cerebro y modo oscuro. **Falta Android real:** el celular de Igna no prende.
+
+### 5. 📊 Hora de registro medida (ítem 3, primera mitad)
+**9 momentos de testers en 6 días, 5 entre las 21:00 y la 01:00.** Solo cuentan momentos con `created_at` (desde el 16 sep) y sin La brava.
+
+### 6. ✅ Aviso por defecto a las 21:30 (migración 026, aplicada por Daniel)
+Los perfiles nuevos nacen en 21:30 y los que seguían en 9:00 pasaron a 21:30. Quien eligió otra hora no se tocó.
+
+### 7. ✅ Consultas guardadas en `supabase/consultas/retencion.sql`
+Tres bloques, solo SELECT: **A** hora de registro, **B** retención D1/D7/D30 por cohorte y **C** usuarios distintos con momentos. ⚠️ Excluyen solo La brava: el `user_id` de Daniel no está en este archivo.
+
+### ⏭️ Pendiente
+1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
+2. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
+3. ⬜ **QA en Android real** cuando prenda el celular de Igna.
+
+---
+
+## Sesión domingo 21 septiembre 2026 — **Motor de rasgos: lo positivo ya llega a candidato · análisis semanal en producción · Home en tres bloques · cerebro en movimiento**
 
 **🎯 Lo positivo por fin llega a la card.** Con La brava recién reseteada, el motor corrió y lo primero que propuso fue un rasgo de `mueve` ("Se queda absorta observando el mundo pequeño…") con 2 momentos de días distintos. QA de Daniel aprobado en localhost.
 
