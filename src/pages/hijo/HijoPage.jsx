@@ -25,7 +25,7 @@ import CerebroContenido from '../cerebro/CerebroContenido'
 const FAMILIAS = [
   { id: 'mueve',      titulo: 'Lo que lo mueve',  verbo: 'lo mueve' },
   { id: 'fortalezas', titulo: 'Sus fortalezas',   verbo: 'lo fortalece' },
-  { id: 'cuesta',     titulo: 'Lo que le cuesta', verbo: 'le cuesta' },
+  { id: 'cuesta',     titulo: 'Lo que le cuesta hoy', verbo: 'le cuesta' },
   { id: 'calma',      titulo: 'Lo que lo calma',  verbo: 'lo calma' },
 ]
 
