@@ -144,13 +144,67 @@ function primerasPalabras(texto, n) {
   return corte.replace(/[.,;:!?…]+$/, '') || null
 }
 
+// Numero de dia de la semana (0 = domingo) a partir del nombre corto que da
+// Intl en 'en-GB'. Asi el dia sale en hora de Chile y no en la del servidor.
+const DIA_POR_NOMBRE = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+
+// Lunes de la semana de un dia de Chile ('2026-09-20' -> '2026-09-14'). Es la
+// clave de analisis_semanal. REPLICA de `lunesSemanaChile` en
+// src/utils/fechaChile.js: ningun endpoint de api/ importa desde src/ y no se
+// estrena ese camino en el aviso diario. Si cambia alla, cambia aca.
+function lunesDeLaSemana(diaChile) {
+  const [y, m, d] = diaChile.split('-').map(Number)
+  const base = new Date(Date.UTC(y, m - 1, d))
+  const desdeLunes = (base.getUTCDay() + 6) % 7
+  base.setUTCDate(base.getUTCDate() - desdeLunes)
+  return base.toISOString().slice(0, 10)
+}
+
+// El texto de la seccion "Mejoro" del analisis guardado, en una sola linea.
+// Mismo corte que `partirEnSecciones` de AnalisisSemanalCard: el titulo se
+// compara sin ":" final ni mayusculas, y la seccion termina en el siguiente
+// titulo. REPLICA por la misma razon que la de arriba.
+const TITULOS_ANALISIS = ['mejoró', 'qué mirar', 'un paso']
+function limpiarTitulo(linea) {
+  return (linea || '').normalize('NFC').trim().replace(/:+$/, '').trim().toLowerCase()
+}
+function textoMejoro(texto) {
+  const lineas = (texto || '').normalize('NFC').split('\n')
+  const inicio = lineas.findIndex((l) => limpiarTitulo(l) === 'mejoró')
+  if (inicio < 0) return null
+  const cuerpo = []
+  for (const linea of lineas.slice(inicio + 1)) {
+    const t = limpiarTitulo(linea)
+    if (TITULOS_ANALISIS.includes(t) || t.startsWith('marco aplicado')) break
+    if (linea.trim()) cuerpo.push(linea.trim())
+  }
+  const unaLinea = cuerpo.join(' ').replace(/\s+/g, ' ').trim()
+  return unaLinea || null
+}
+
 // ── El selector ──────────────────────────────────────────────────────────
 // Devuelve el primer mensaje que aplica, o null si no hay nada que decir.
 // Recibe TODO ya resuelto: no consulta la base, asi es facil de leer y de
 // probar. Cada rama nombra a SU hijo (el del dato que la disparo), nunca al
 // primero de la lista.
 function elegirMensaje(ctx) {
-  const { rasgo, episodioIntenso, estrategia, ultimoMomento, hijoReciente, horaAviso, diasSinAbrir, hoyDia } = ctx
+  const { resumenSemanal, rasgo, episodioIntenso, estrategia, ultimoMomento, hijoReciente, horaAviso, diasSinAbrir, hoyDia } = ctx
+
+  // 3. Resumen semanal del domingo. Se numera 3 por el orden original, pero
+  //    el domingo GANA a todas, incluidas la 1 y la 2 (decision de Daniel,
+  //    22 sep 2026): es el unico dia en que Huella devuelve la semana entera.
+  //    Solo llega si ya existe el analisis de esta semana, que genera el Home;
+  //    sin analisis la prioridad sigue igual que cualquier otro dia. El texto
+  //    es el "Mejoro" tal como quedo guardado.
+  //    `rama` no viaja en el aviso: el handler la usa para marcar el envio.
+  if (resumenSemanal?.hijoNombre) {
+    return {
+      rama:  3,
+      title: `${resumenSemanal.hijoNombre} esta semana`,
+      body:  resumenSemanal.mejoro,
+      url:   `/panel?hijo=${resumenSemanal.hijoId}&desde=domingo`,
+    }
+  }
 
   // 1. Un rasgo esperando confirmacion. Va primero porque es lo unico que
   //    SOLO el cuidador puede resolver: la IA propone, el papa decide.
@@ -176,11 +230,6 @@ function elegirMensaje(ctx) {
       url:   `/checkin/${episodioIntenso.id}?hijo=${episodioIntenso.hijoId}`,
     }
   }
-
-  // 3. Resumen semanal del domingo. HUECO RESERVADO: nace con el retrato del
-  //    padre (pieza 4). Hasta entonces devuelve null y la prioridad sigue.
-  //    Se deja escrito para que el orden no se decida de nuevo despues.
-  //    if (esDomingo && resumenSemanal) return { ... }
 
   // 4. Plan activo. Informa y ofrece; NO pregunta si hizo las tareas — el copy
   //    viejo decia "¿Revisaste las tareas de esta semana?", que es pasar lista.
@@ -258,13 +307,25 @@ export default async function handler(req, res) {
   // Hora LOCAL DE CHILE de esta corrida. Se calcula con Intl y no restando
   // horas a mano, porque Chile cambia de huso dos veces al anio y hacerlo a
   // mano significa que medio anio los avisos salen corridos.
+  //
+  // El DIA sale del mismo Intl. Antes se usaba now.getDay(), que en Vercel es
+  // el dia UTC: un domingo 21:30 en Chile ya es lunes en UTC, y la rama 4
+  // salia el domingo en la noche y no el viernes.
   const partes = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'America/Santiago',
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).formatToParts(new Date())
-  const horaLocal = parseInt(partes.find((p) => p.type === 'hour').value, 10)
+  const parte = (tipo) => partes.find((p) => p.type === tipo).value
+  const horaLocal = parseInt(parte('hour'), 10)
+  const diaSemanaChile = DIA_POR_NOMBRE[parte('weekday')]
+  const esDomingo = diaSemanaChile === 0
+  const semanaChile = lunesDeLaSemana(`${parte('year')}-${parte('month')}-${parte('day')}`)
   // El job corre en :00 y :30, pero puede arrancar unos segundos tarde. Se
   // redondea al bloque de media hora para que un disparo a las 9:00:07 siga
   // contando como el bloque de las 9:00.
@@ -362,8 +423,7 @@ export default async function handler(req, res) {
     const hijoEp = epRow ? porId.get(epRow.hijo_id) : null
 
     const estRow = estrategias?.[0]
-    const diaSemana = now.getDay()
-    const hijoEst = estRow && diaSemana >= 1 && diaSemana <= 5
+    const hijoEst = estRow && diaSemanaChile >= 1 && diaSemanaChile <= 5
       ? porId.get(estRow.hijo_id)
       : null
 
@@ -393,11 +453,36 @@ export default async function handler(req, res) {
       .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]
     const hijoMomento = momRow ? porId.get(momRow.hijoId) : null
 
+    // Solo el domingo: el analisis de esta semana de cualquiera de sus hijos.
+    // Se busca por hijo y no por user_id porque lo pudo generar la pareja.
+    // Con dos hijos con analisis gana el mas reciente. Si la lectura falla,
+    // el domingo sigue como un dia normal. La lectura no usa las columnas de
+    // la migracion 025, asi que funciona aunque esa migracion no este corrida.
+    let resumenSemanal = null
+    if (esDomingo) {
+      const { data: analisis, error: errAnalisis } = await supabase
+        .from('analisis_semanal')
+        .select('id, hijo_id, texto, created_at')
+        .in('hijo_id', hijos.map((h) => h.id))
+        .eq('semana', semanaChile)
+        .order('created_at', { ascending: false })
+      if (errAnalisis) console.warn('[push-remind] analisis_semanal no se pudo leer:', errAnalisis.message)
+      for (const fila of analisis ?? []) {
+        const mejoro = textoMejoro(fila.texto)
+        const hijoRes = porId.get(fila.hijo_id)
+        if (mejoro && hijoRes) {
+          resumenSemanal = { analisisId: fila.id, hijoId: hijoRes.id, hijoNombre: hijoRes.nombre, mejoro }
+          break
+        }
+      }
+    }
+
     const diasSinAbrir = perfil?.ultima_actividad
       ? Math.floor((now - new Date(perfil.ultima_actividad)) / 864e5)
       : null
 
     const notification = elegirMensaje({
+      resumenSemanal,
       rasgo: hijoRasgo
         ? { hijoId: hijoRasgo.id, hijoNombre: hijoRasgo.nombre, titulo: rasgoRow.titulo }
         : null,
@@ -417,13 +502,27 @@ export default async function handler(req, res) {
     })
 
     if (!notification) continue
+    const { rama, ...payload } = notification
 
     try {
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify(notification)
+        JSON.stringify(payload)
       )
       sent++
+
+      // El denominador de "se abrio o no": se marca solo si el aviso salio.
+      // Con dos dispositivos se escribe dos veces, con la misma hora.
+      if (rama === 3) {
+        const { data: marcada, error: errMarca } = await supabase
+          .from('analisis_semanal')
+          .update({ push_enviado_at: new Date().toISOString() })
+          .eq('id', resumenSemanal.analisisId)
+          .select('id')
+        if (errMarca || !marcada?.length) {
+          console.warn('[push-remind] push_enviado_at no se guardo:', errMarca?.message ?? '0 filas')
+        }
+      }
     } catch (e) {
       // Suscripción expirada o revocada — limpiar
       if (e.statusCode === 410 || e.statusCode === 404) {

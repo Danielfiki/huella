@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
@@ -35,6 +35,12 @@ import styles from './PanelPage.module.css'
 // sincronica, asi que el render que viene detras ya lee este Set lleno.
 const hijosRespondidosEstaVisita = new Set()
 
+// Entrada desde el aviso del domingo, pendiente hasta que se marca la apertura
+// y se abre la card: { hijoId, marcada, abierta }. Vive en el módulo por la
+// misma razón que el Set de arriba: tiene que sobrevivir a que PanelPage se
+// desmonte y se vuelva a montar mientras carga.
+let entradaDomingo = null
+
 // ── Home · Bloque B2 del rediseño ────────────────────────────────────────────
 //
 // El Home dejó de ser un dashboard de secciones: ahora es LA PÁGINA DEL HIJO.
@@ -61,13 +67,44 @@ const CUPO_AVISO_DESDE = 3   // quedan 3 o menos → aparece el chip
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, setHijoActivo, isPro, confirmarRasgo, descartarRasgo, completarAnalisisSemanal } = useHuella()
+  const { state, setHijoActivo, isPro, confirmarRasgo, descartarRasgo, completarAnalisisSemanal, marcarAnalisisAbiertoDesdePush } = useHuella()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeCopy, setUpgradeCopy] = useState(null)
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
+
+  // Entrada desde el aviso del domingo: /panel?hijo=<id>&desde=domingo.
+  // La señal vive en `entradaDomingo` (módulo), no en el componente: al
+  // entrar, PanelPage se monta hasta tres veces —antes de los datos, al
+  // limpiar la URL (Layout le pone key={location.key}) y después del
+  // skeleton de carga— y un useState o useRef se perdía en el primero.
+  const [desdeDomingo] = useState(() => {
+    const p = new URLSearchParams(location.search)
+    if (p.get('desde') === 'domingo' && !entradaDomingo) {
+      entradaDomingo = { hijoId: p.get('hijo'), marcada: false, abierta: false }
+    }
+    return entradaDomingo
+  })
+  const hijoDomingo = desdeDomingo ? (desdeDomingo.hijoId || state.hijoActivoId) : null
+  useEffect(() => {
+    if (!desdeDomingo || desdeDomingo.marcada || !user || !hijoDomingo) return
+    desdeDomingo.marcada = true
+    marcarAnalisisAbiertoDesdePush(hijoDomingo)
+  }, [desdeDomingo, hijoDomingo, user])
+
+  // Se quita `desde` de la URL sin recargar. Espera a que Layout ya haya
+  // sacado `hijo`: si las dos limpiezas navegan en el mismo turno, la de
+  // Layout parte de la URL vieja y vuelve a poner `desde`.
+  useEffect(() => {
+    const p = new URLSearchParams(location.search)
+    if (p.get('desde') !== 'domingo' || p.has('hijo')) return
+    p.delete('desde')
+    const qs = p.toString()
+    navigate(location.pathname + (qs ? `?${qs}` : ''), { replace: true })
+  }, [location.search])
 
   // Motor de rasgos · el candidato que se le propone al papa.
   //
@@ -179,6 +216,15 @@ export default function PanelPage() {
   // mientras se generaba.
   const analisisSemanal =
     state.analisisSemanal?.hijo_id === hijo?.id ? state.analisisSemanal : null
+
+  // Aviso del domingo: la card se abre UNA vez, cuando por fin se pinta con el
+  // análisis de ese hijo. Ya abierta y marcada, la señal se borra y el Home
+  // vuelve a lo de siempre.
+  useEffect(() => {
+    if (!desdeDomingo || !analisisSemanal || hijoDomingo !== hijo?.id) return
+    desdeDomingo.abierta = true
+    if (desdeDomingo.marcada) entradaDomingo = null
+  }, [desdeDomingo, analisisSemanal, hijoDomingo, hijo?.id])
 
   // Dato de la puerta "Su cerebro": la frase "Ahora mismo" de su edad, la
   // misma de la pantalla del cerebro. Sin fecha ni edad guardada no se inventa
@@ -297,6 +343,7 @@ export default function PanelPage() {
           onUpgrade={abrirUpgradeAnalisis}
           onVerEstrategias={() => navigate('/estrategias')}
           onPedirCompleto={completarAnalisisSemanal}
+          abiertaAlInicio={!!desdeDomingo && !desdeDomingo.abierta && hijoDomingo === hijo.id}
         />
       )}
 

@@ -76,6 +76,7 @@ export default function AnalisisSemanalCard({
   onUpgrade,
   onVerEstrategias,
   onPedirCompleto,
+  abiertaAlInicio = false,
 }) {
   const totalMomentos = (episodios?.length ?? 0) + (hitos?.length ?? 0)
   const semana = momentosDeLaSemana({ episodios, hitos })
@@ -100,6 +101,7 @@ export default function AnalisisSemanalCard({
         onUpgrade={onUpgrade}
         onVerEstrategias={onVerEstrategias}
         onPedirCompleto={onPedirCompleto}
+        abiertaAlInicio={abiertaAlInicio}
       />
     )
   }
@@ -122,8 +124,10 @@ export default function AnalisisSemanalCard({
   )
 }
 
-function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrategias, onPedirCompleto }) {
-  const [cardAbierta, setCardAbierta] = useState(false)
+// `abiertaAlInicio`: solo cuando el papá entra desde el aviso del domingo. Es
+// el valor inicial y nada más; después la card se abre y cierra como siempre.
+function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrategias, onPedirCompleto, abiertaAlInicio = false }) {
+  const [cardAbierta, setCardAbierta] = useState(abiertaAlInicio)
   const [abierto, setAbierto] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState(false)

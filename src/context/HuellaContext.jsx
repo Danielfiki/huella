@@ -810,6 +810,31 @@ export function HuellaProvider({ children }) {
     return { texto, marco, guardado: true }
   }
 
+  // El papá entró al Home desde el aviso del domingo (/panel?desde=domingo).
+  // Marca push_abierto_at en el análisis de ese hijo y esta semana: es el
+  // numerador de "se abrió o no" (migración 025). Nunca lanza.
+  //
+  // Con .select(): un update que no toca ninguna fila no da error, y sin
+  // pedir la fila de vuelta parecería que funcionó.
+  async function marcarAnalisisAbiertoDesdePush(hijoId) {
+    if (!user || !supabase || !hijoId) return
+    try {
+      const { data, error } = await supabase
+        .from('analisis_semanal')
+        .update({ push_abierto_at: new Date().toISOString() })
+        .eq('hijo_id', hijoId)
+        .eq('semana', lunesSemanaChile())
+        .select('id')
+      if (error) {
+        console.warn('[analisis] push_abierto_at no se guardo:', error.message)
+      } else if (!data?.length) {
+        console.warn('[analisis] push_abierto_at: el update afecto 0 filas')
+      }
+    } catch (err) {
+      console.warn('[analisis] push_abierto_at fallo:', err)
+    }
+  }
+
   async function loadUserData(userId, currentFamily) {
     setDataLoading(true)
     try {
@@ -2029,6 +2054,7 @@ export function HuellaProvider({ children }) {
       dataLoaded,
       reloadData,
       completarAnalisisSemanal,
+      marcarAnalisisAbiertoDesdePush,
       profilesByUserId,
       setHijo,
       setHijoActivo,
