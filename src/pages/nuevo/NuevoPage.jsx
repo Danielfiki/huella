@@ -330,6 +330,7 @@ export default function NuevoPage() {
                   {nombreHijo.trim().charAt(0).toUpperCase()}
                 </span>
               )}
+              <span className={styles.gaBichoFondo} aria-hidden="true" />
               <Escarabajo
                 className={`${styles.gaBicho} ${cargandoRespuesta ? styles.gaBichoLatiendo : ''}`}
               />

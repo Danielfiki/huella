@@ -417,6 +417,21 @@
   transform-origin: center;
 }
 
+/* El disco detras del escarabajo, para que no se pierda contra la foto. Es
+   hermano del escarabajo y no su envoltorio, asi el escarabajo conserva su
+   posicion y su latido tal cual; el disco no late. Centrado sobre la caja del
+   escarabajo (30.6 x 28, a -2px del borde): 38px deja ~4px de aire a los lados
+   y queda montado sobre el borde de la foto, como badge. */
+.gaBichoFondo {
+  position: absolute;
+  right: -6px;
+  bottom: -7px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
 /* Late SOLO mientras Huella lee. Mismos valores que el latido del splash
    (scale 1 a 1.06, opacidad 0.85, 1.6s). Se redefine aca y no se importa
    porque los @keyframes de un CSS module se renombran al compilar: el nombre
