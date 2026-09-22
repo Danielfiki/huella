@@ -80,7 +80,10 @@ function Puerta({ children, onClick, ariaLabel }) {
 
 // ── Su huella ──────────────────────────────────────────────────────────────
 
-export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, onClick }) {
+// `frase` (item 6): solo el dia que el papa vuelve despues de 10+ dias. Ese
+// dia, en vez del contador, la puerta muestra un rasgo que EL confirmo. El
+// resto de los dias llega en null y la puerta es exactamente la de siempre.
+export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, frase = null, onClick }) {
   return (
     <Puerta onClick={onClick} ariaLabel={`Su huella — ${confirmados} de 12 rasgos`}>
       <span className={styles.avatar}>
@@ -95,10 +98,14 @@ export function PuertaHuella({ nombreHijo, fotoHijo, confirmados, hayNovedad, on
             <span className={`${styles.badge} ${styles.badgeVerde}`}>Algo nuevo</span>
           )}
         </span>
-        <span className={styles.dato}>
-          <NumeroQueCuenta valor={confirmados} className={styles.datoNum} />
-          <span className={styles.datoDe}>/12 rasgos</span>
-        </span>
+        {frase ? (
+          <span className={styles.frase}>{frase}</span>
+        ) : (
+          <span className={styles.dato}>
+            <NumeroQueCuenta valor={confirmados} className={styles.datoNum} />
+            <span className={styles.datoDe}>/12 rasgos</span>
+          </span>
+        )}
         <BarraSegmentos
           total={12}
           encendidos={confirmados}
@@ -213,7 +220,9 @@ export function PuertaCerebro({ ahora, edad, onClick }) {
 
 // ── Momentos ───────────────────────────────────────────────────────────────
 
-export function PuertaMomentos({ total, ultimos, fotoAvance, onClick }) {
+// `frase` (item 6): el dia del reingreso, en vez del contador, van las primeras
+// palabras del ultimo relato que escribio el papa. Los demas dias es null.
+export function PuertaMomentos({ total, ultimos, fotoAvance, frase = null, onClick }) {
   const puntos = ultimos.slice(0, MAX_PUNTOS)
   return (
     <Puerta onClick={onClick} ariaLabel={`Momentos — ${total} registrados`}>
@@ -224,10 +233,14 @@ export function PuertaMomentos({ total, ultimos, fotoAvance, onClick }) {
       </span>
       <span className={styles.centro}>
         <span className={styles.etiqueta}>Momentos</span>
-        <span className={styles.dato}>
-          <NumeroQueCuenta valor={total} className={styles.datoNum} />
-          <span className={styles.datoDe}>{total === 1 ? 'registrado' : 'registrados'}</span>
-        </span>
+        {frase ? (
+          <span className={styles.frase}>{frase}</span>
+        ) : (
+          <span className={styles.dato}>
+            <NumeroQueCuenta valor={total} className={styles.datoNum} />
+            <span className={styles.datoDe}>{total === 1 ? 'registrado' : 'registrados'}</span>
+          </span>
+        )}
         {puntos.length > 0 && (
           <span className={styles.timeline} aria-hidden="true">
             {puntos.map((ep) => (

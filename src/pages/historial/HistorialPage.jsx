@@ -171,6 +171,19 @@ export default function HistorialPage() {
 
   const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
 
+  // El Home puede mandar a un momento puntual: la card del reingreso navega
+  // con `state.momentoId`. Se espera a que la lista este pintada (por eso
+  // depende de `grupos`) y se centra esa ficha. Si el momento no esta en el
+  // filtro actual, no pasa nada: la lista queda como estaba.
+  const momentoId = location.state?.momentoId ?? null
+  useEffect(() => {
+    if (!momentoId) return
+    const nodo = document.getElementById(`momento-${momentoId}`)
+    if (!nodo) return
+    const sinMovimiento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    nodo.scrollIntoView({ block: 'center', behavior: sinMovimiento ? 'auto' : 'smooth' })
+  }, [momentoId, grupos])
+
   const promedio = useMemo(() => {
     const vals = episodiosNorm.map((e) => e.nivel).filter((n) => n != null)
     if (!vals.length) return 0

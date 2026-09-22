@@ -202,7 +202,9 @@ export default function EpisodioCard({ episodio, onDelete, onUpdate, tieneChecki
   }
 
   return (
-    <article className={styles.ep}>
+    /* El id deja que otra pantalla mande a este momento (la card del reingreso
+       en el Home). Sirve para episodios y avances: los dos pasan por aca. */
+    <article id={`momento-${episodio.id}`} className={styles.ep}>
       <div className={`${styles.emo} ${styles[`emo_${tipoClass}`]}`} aria-hidden="true">
         {episodio.emoji}
       </div>

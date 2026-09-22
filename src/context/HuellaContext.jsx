@@ -386,6 +386,45 @@ async function marcarUltimaActividad(userId) {
   try { localStorage.setItem(clave, hoy) } catch {}
 }
 
+// ── Reingreso: volvio despues de 10+ dias ────────────────────────────────────
+// Se mide en dias de CALENDARIO de Chile, no en bloques de 24 horas: quien
+// entro el lunes a las 23:00 y vuelve el jueves a las 01:00 lleva 3 dias, no 2.
+const DIAS_REINGRESO = 10
+
+function fechaChileDe(iso) {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })
+}
+
+function diasEntreFechas(desde, hasta) {
+  const [ay, am, ad] = desde.split('-').map(Number)
+  const [by, bm, bd] = hasta.split('-').map(Number)
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 864e5)
+}
+
+// Se llama con el valor de `ultima_actividad` que trajo la lectura del perfil,
+// SIEMPRE antes de marcar la visita de hoy: si se marcara primero, el dato
+// leido seria el de recien y darian 0 dias.
+//
+// La marca del dia en localStorage existe porque la primera apertura mueve
+// `ultima_actividad` a hoy: sin ella la card se perderia al recargar. Es por
+// dispositivo, y sin storage (modo privado) la card dura solo esa carga.
+function detectarReingreso(userId, ultimaActividad) {
+  if (!userId) return false
+  const clave = `huella_reingreso_${userId}`
+  const hoy = fechaChileHoy()
+  try {
+    if (localStorage.getItem(clave) === hoy) return true
+  } catch { /* sin storage: se decide con la fecha de la base */ }
+
+  // Null = nunca abrio desde la migracion 018, o sea "no se sabe". No es un
+  // reingreso.
+  if (!ultimaActividad) return false
+  if (diasEntreFechas(fechaChileDe(ultimaActividad), hoy) < DIAS_REINGRESO) return false
+
+  try { localStorage.setItem(clave, hoy) } catch {}
+  return true
+}
+
 // ── Gatillo del motor de rasgos ───────────────────────────────────────────
 // Antes la deteccion corria con `total % 5 === 0`, o sea SOLO si el conteo
 // caia justo en un multiplo. Si brincaba de 4 a 6 —un borrado, o momentos
@@ -600,6 +639,12 @@ export function HuellaProvider({ children }) {
   // usuario ya tiene hijo. Una vez true, no vuelve a false.
   const [dataLoaded, setDataLoaded] = useState(false)
 
+  // Item 6: el papa volvio despues de 10+ dias. Lo decide `detectarReingreso`
+  // con el `ultima_actividad` que trae la lectura del perfil. El Home lo usa
+  // para mostrar, en vez de la pregunta del candidato, algo que el papa ya
+  // guardo de su hijo.
+  const [reingresoHoy, setReingresoHoy] = useState(false)
+
   // Análisis semanal: claves "hijoId|semana" que ya se intentaron generar en
   // esta carga de la app. Un intento por hijo y semana, salga bien o mal: si
   // falla no se reintenta hasta la próxima vez que se abra la app.
@@ -616,11 +661,10 @@ export function HuellaProvider({ children }) {
       return
     }
     if (familyLoading) return
+    // La visita del dia se marca DENTRO de loadUserData, despues de leer el
+    // perfil: antes se marcaba aca en paralelo y la lectura podia traer la
+    // marca recien escrita, o sea 0 dias sin entrar.
     loadUserData(user.id, family)
-    // Pieza 7: deja constancia de la visita del dia. Fire-and-forget, con su
-    // propio freno diario; no se espera, no bloquea la carga y si falla solo
-    // loguea.
-    marcarUltimaActividad(user.id)
   }, [user?.id, familyLoading, family?.familyId, family?.partner?.id])
 
   function getPartnerIds(currentFamily) {
@@ -843,8 +887,12 @@ export function HuellaProvider({ children }) {
       // Fase 1: hijos y perfil (necesitamos hijoActivoId antes de cargar el resto)
       const [hijosRes, perfilRes] = await Promise.all([
         supabase.from('hijos').select('*').order('created_at', { ascending: true }),
-        supabase.from('perfiles').select('nombre, avatar_url, plan, plan_beta_hasta, hora_aviso, minuto_aviso').eq('user_id', userId).maybeSingle(),
+        supabase.from('perfiles').select('nombre, avatar_url, plan, plan_beta_hasta, hora_aviso, minuto_aviso, ultima_actividad').eq('user_id', userId).maybeSingle(),
       ])
+
+      // Item 6: se decide ANTES de marcar la visita de hoy, que pasa en el
+      // finally de esta misma funcion.
+      setReingresoHoy(detectarReingreso(userId, perfilRes.data?.ultima_actividad ?? null))
 
       const hijos = (hijosRes.data ?? []).map(dbHijoToApp)
       const ids = new Set(hijos.map(h => h.id))
@@ -941,6 +989,11 @@ export function HuellaProvider({ children }) {
       // Marca que ya completamos una carga de cuenta (con o sin datos). El gate
       // del onboarding solo decide después de esto.
       setDataLoaded(true)
+      // Pieza 7: deja constancia de la visita del dia. Va en el finally, o sea
+      // tambien si la carga fallo: el aviso diario se guia por este dato y
+      // dejarlo viejo le mandaria al papa el mensaje de "lleva dias sin abrir"
+      // cuando si abrio. Fire-and-forget, con su propio freno diario.
+      marcarUltimaActividad(userId)
     }
   }
 
@@ -2052,6 +2105,7 @@ export function HuellaProvider({ children }) {
       dispatch,
       dataLoading,
       dataLoaded,
+      reingresoHoy,
       reloadData,
       completarAnalisisSemanal,
       marcarAnalisisAbiertoDesdePush,

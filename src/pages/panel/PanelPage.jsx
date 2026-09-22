@@ -63,11 +63,21 @@ const MAX_FOTOS_CABECERA = 5
 const DIAS_PATRON_NUEVO = 3
 const CUPO_AVISO_DESDE = 3   // quedan 3 o menos → aparece el chip
 
+// Item 6: cuanto del relato se muestra en la card del reingreso. Los puntos
+// suspensivos solo salen si de verdad quedo texto afuera.
+const PALABRAS_REINGRESO = 8
+
+function primerasPalabras(texto, tope) {
+  const palabras = String(texto ?? '').trim().split(/\s+/)
+  const corte = palabras.slice(0, tope).join(' ')
+  return palabras.length > tope ? `${corte}…` : corte
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export default function PanelPage() {
   const { user } = useAuth()
-  const { state, setHijoActivo, isPro, confirmarRasgo, descartarRasgo, completarAnalisisSemanal, marcarAnalisisAbiertoDesdePush } = useHuella()
+  const { state, setHijoActivo, isPro, confirmarRasgo, descartarRasgo, completarAnalisisSemanal, marcarAnalisisAbiertoDesdePush, reingresoHoy } = useHuella()
   const navigate = useNavigate()
   const location = useLocation()
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -150,6 +160,43 @@ export default function PanelPage() {
   // visita es la pregunta, no el aviso.
   const candidatoVisible =
     hijo && hijosRespondidosEstaVisita.has(hijo.id) ? null : candidato
+
+  // Item 6 · volvio despues de 10+ dias. NO agrega nada al Home: esconde la
+  // pregunta del candidato, y lo que encontro se muestra dentro de una puerta
+  // que ya estaba —Su huella o Momentos—, donde ese dia va en vez del
+  // contador. Sale de lo que el Home ya cargo: nada de consultas nuevas.
+  //
+  // Primero un rasgo confirmado POSITIVO, el mas reciente. Si no hay, el
+  // relato mas nuevo (avance o episodio). Si no hay ninguno de los dos, las
+  // puertas quedan igual que cualquier otro dia.
+  //
+  // El positivo va primero a proposito: el que vuelve tras diez dias no tiene
+  // por que encontrarse con lo que le cuesta a su hijo.
+  const reingreso = useMemo(() => {
+    if (!reingresoHoy || !hijo) return null
+
+    const confirmados = (rasgos || []).filter(
+      (r) => r.hijoId === hijo.id && r.estado === 'confirmado' && esFamiliaPositiva(r.familia)
+    )
+    confirmados.sort((a, b) => String(a.updatedAt ?? '').localeCompare(String(b.updatedAt ?? '')))
+    const rasgo = confirmados[confirmados.length - 1]
+    if (rasgo?.titulo) return { tipo: 'rasgo', texto: rasgo.titulo }
+
+    // Los hitos siempre traen relato (`descripcion` es NOT NULL); de los
+    // episodios entran solo los que el papa escribio.
+    const conRelato = [
+      ...(episodios || [])
+        .filter((e) => (e.descripcionLibre ?? '').trim())
+        .map((e) => ({ id: e.id, fecha: e.fecha, texto: e.descripcionLibre })),
+      ...(hitos || [])
+        .filter((h) => (h.descripcion ?? '').trim())
+        .map((h) => ({ id: h.id, fecha: h.fecha, texto: h.descripcion })),
+    ].sort((a, b) => String(b.fecha ?? '').localeCompare(String(a.fecha ?? '')))
+
+    const momento = conRelato[0]
+    if (!momento) return null
+    return { tipo: 'momento', id: momento.id, texto: primerasPalabras(momento.texto, PALABRAS_REINGRESO) }
+  }, [reingresoHoy, hijo, rasgos, episodios, hitos])
 
   // Marca el hijo como respondido ANTES de disparar la accion. Si la escritura
   // falla, cambiarEstadoRasgo revierte el rasgo a candidato y vuelve a salir
@@ -316,7 +363,7 @@ export default function PanelPage() {
            Va arriba de la tarjeta central a proposito: es la unica pregunta
            de la app y tiene que verse al abrir, sin bajar ni entrar a nada.
            Antes vivia en una pestana de HijoPage y casi nadie la respondia. ── */}
-      {candidatoVisible && (
+      {!reingreso && candidatoVisible && (
         <PropuestaRasgo
           rasgo={candidatoVisible}
           nombreHijo={nombreHijo}
@@ -355,6 +402,7 @@ export default function PanelPage() {
             fotoHijo={hijo?.avatarUrl ?? null}
             confirmados={rasgosConfirmadosCount}
             hayNovedad={rasgoCandidato}
+            frase={reingreso?.tipo === 'rasgo' ? reingreso.texto : null}
             onClick={() => navigate('/hijo')}
           />
         </TarjetaEntrada>
@@ -371,7 +419,10 @@ export default function PanelPage() {
             total={totalMomentos}
             ultimos={episodios}
             fotoAvance={fotoUltimoAvance}
-            onClick={() => navigate('/historial')}
+            frase={reingreso?.tipo === 'momento' ? reingreso.texto : null}
+            onClick={() => navigate('/historial', reingreso?.tipo === 'momento'
+              ? { state: { momentoId: reingreso.id } }
+              : undefined)}
           />
         </TarjetaEntrada>
 
