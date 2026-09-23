@@ -128,6 +128,7 @@
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
+- **Personaje en Rive con animador** — cuando el personaje v1 esté validado con testers.
 
 ---
 
@@ -381,6 +382,13 @@ git worktree remove borro .bin de node_modules a traves del enlace; reparado con
 - `manifest-checksum.txt` recalculado con la función de bubblewrap (`997630560af5…`, coincide con `twa-manifest.json`), así el próximo `bubblewrap build` no pregunta si regenerar el proyecto.
 - **Respaldo** de los tres archivos antes de tocarlos: `huella-twa\respaldo-2026-09-23\` (esa carpeta no tiene git).
 - ⚠️ **Trampa de bubblewrap:** si se edita `twa-manifest.json` y `bubblewrap build` pregunta si actualizar el proyecto, responder "sí" regenera `build.gradle` desde la plantilla y baja `targetSdk` a 35. Play rechaza cualquier versión nueva con SDK 35 desde el 31 ago. Después de editar `twa-manifest.json`, recalcular el checksum, o volver a poner 36 a mano y verificarlo leyendo el AAB.
+
+### 8. ✅ Personaje v1 en vitrina privada (commit `88e2db9`)
+- **Dirección "editorial cuaderno", 10 estados:** Saludando, Escuchando, Pensando, Acompañando, En calma, Curioso, Orgulloso, Celebrando, Dormido y Buscando. Componente `src/components/personaje/Escarabajo.jsx`, con tokens `--personaje-*` nuevos en `index.css` (en oscuro solo cambia la tinta).
+- **Movimiento:** los estados se interpolan con `--motion-lenta`, el personaje respira y la línea hierve con un solo intervalo compartido. Con movimiento reducido queda quieto y cambia directo.
+- **Vitrina `/personaje`:** solo la cuenta de Daniel. Otra cuenta vuelve a `/panel` sin ver nada y sin descargar la vitrina. Tiene los estados con chips, la grilla con el momento de la app y la escena "Rasgo confirmado", que solo lee de la base.
+- **QA de Code:** claro, oscuro y movimiento reducido a 390 px, redirección con la cuenta de prueba en localhost y en producción (index `CCwcVMHQ` → `DCKeV5B7`). No hay sesión de Daniel para el QA: la escena se probó con el texto de respaldo.
+- **Siguiente paso:** aprobación de Daniel en iPhone, que además es la única forma de ver el rasgo real de La brava.
 
 ### ⏭️ Pendiente
 1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
