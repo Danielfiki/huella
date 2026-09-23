@@ -369,6 +369,7 @@ El navegador normal de Daniel tiene el marcador en 15: el motor va a volver a co
 - **Camino bueno OK en web e iPhone:** Daniel cambió la clave desde Safari (login con la nueva: 200). La configuración de Supabase estaba bien: Redirect URLs de www y localhost, plantilla con `{{ .ConfirmationURL }}`.
 - **Arreglo:** con el hash de error se muestra la pantalla de link inválido ("Este link ya no sirve"), con el botón "Pedir uno nuevo" y el hash limpio para que recargar no repita el error. La confirmación de envío suma "Usa el link del último correo que te llegue."
 - Index en producción `627wUZMq` → `CCwcVMHQ`; la prueba del hash de error pasó en producción.
+- **Caso real probado por Code con Gmail, sin QA de Daniel:** dos correos pedidos desde www.huella.lat con 80 s entre ambos. El penúltimo da `otp_expired` → "Este link ya no sirve". El último da `type=recovery` → "Crea una contraseña nueva". Queda confirmado que el correo nuevo invalida el anterior aunque nadie lo haya abierto. Commit de docs: `d1e66a4`.
 - Cuenta de prueba: `danielundurraga.r+reset0923@gmail.com` (`08af56df`), clave `QaReset-0923-c`.
 
 ### 6. 🪤 Incidente
