@@ -28,6 +28,7 @@ import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
 import BetaPage from './pages/beta/BetaPage'
+import RutaPersonaje from './pages/personaje/RutaPersonaje'
 import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
 
 // Página para grabar el loop del cerebro de la puerta "Su cerebro". Solo en
@@ -163,6 +164,9 @@ export default function App() {
               {/* Tablero privado de la beta. Fuera del Layout (sin barra de
                   navegación), detrás de login. Solo se llega escribiendo /beta. */}
               <Route path="/beta"     element={<ProtectedRoute><PageErrorBoundary><BetaPage /></PageErrorBoundary></ProtectedRoute>} />
+              {/* Vitrina privada del personaje: solo la cuenta de Daniel;
+                  cualquier otra vuelve a /panel. Sin enlace en ningún menú. */}
+              <Route path="/personaje" element={<ProtectedRoute><PageErrorBoundary><RutaPersonaje /></PageErrorBoundary></ProtectedRoute>} />
               <Route
                 path="/"
                 element={

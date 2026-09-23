@@ -1,0 +1,203 @@
+/* Vitrina privada del personaje. Ancho de celular, fondo de la app. */
+
+.pagina {
+  min-height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  overflow-x: hidden;
+}
+
+.seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rotulo {
+  font-family: var(--font-family);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── a) Personaje grande + chips ── */
+.grande {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-4);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chip {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-cta);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background var(--motion-rapida) var(--motion-ease-estandar),
+              border-color var(--motion-rapida) var(--motion-ease-estandar);
+}
+
+.chipActivo {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary-border);
+  color: var(--color-eyebrow);
+}
+
+/* ── b) Grilla de estados ── */
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4) 8px;
+}
+
+.celda {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.pieNombre {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.pieMomento {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ── c) Escena del rasgo confirmado ── */
+.escenario {
+  position: relative;
+  height: 190px;
+  overflow: hidden;
+}
+
+.caminante {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  margin-left: -75px;
+}
+
+.entrando {
+  animation: entra var(--personaje-caminata) linear both;
+}
+
+@keyframes entra {
+  from { transform: translateX(-280px); }
+  to   { transform: translateX(0); }
+}
+
+.giro {
+  transition: transform var(--motion-media) var(--motion-ease-entrada);
+}
+
+.deLado {
+  transform: rotate(90deg);
+}
+
+.huella {
+  position: absolute;
+  width: 6px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--personaje-tinta);
+  opacity: 0;
+  animation: aparece-huella var(--motion-rapida) linear forwards;
+}
+
+.huellaArriba { top: 72px; }
+.huellaAbajo  { top: 118px; }
+
+@keyframes aparece-huella {
+  to { opacity: 0.4; }
+}
+
+.revelado {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cascada {
+  animation: cascada var(--motion-media) var(--motion-ease-entrada) both;
+  animation-delay: calc(var(--motion-media) * var(--orden));
+}
+
+@keyframes cascada {
+  from { opacity: 0; transform: translateY(var(--motion-desplazamiento)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.volanta {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-eyebrow);
+  margin: 0;
+}
+
+.tituloRasgo {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.linea {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+}
+
+.repetir {
+  display: flex;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrando,
+  .cascada {
+    animation: none;
+  }
+  .huella {
+    animation: none;
+    opacity: 0.4;
+  }
+}

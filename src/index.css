@@ -565,6 +565,24 @@
   --color-medalla-base:        #BFA88A;
   --color-medalla-base-bg:     rgba(191, 168, 138, 0.22);
   --color-medalla-base-border: rgba(191, 168, 138, 0.48);
+
+  /* ═══ Personaje escarabajo (src/components/personaje) ═══
+     Direccion "editorial cuaderno". En oscuro solo cambia la tinta
+     (patas, antenas, bordes y achurado); el cuerpo y las pupilas quedan. */
+  --personaje-cuerpo:        #E56E26;
+  --personaje-sombra-cuerpo: #A84B28;
+  --personaje-pronoto:       #C45A18;
+  --personaje-cabeza:        #A84B28;
+  --personaje-luz:           #EE9452;
+  --personaje-crema:         #FAF3EC;
+  --personaje-tinta:         #2A1A0E;
+  --personaje-pupila:        #2A1A0E;
+  --personaje-pistacho:      #8FA840;
+  /* Ritmos propios del personaje. El bloque de movimiento reducido los
+     apaga con el barrido global de animaciones. */
+  --personaje-respiracion: 3s;
+  --personaje-parpadeo:    1.6s;
+  --personaje-caminata:    1.3s;
 }
 
 /* ── Modo oscuro ── */
@@ -584,6 +602,8 @@
     /* En oscuro la volanta se aclara: el #A84B28 del claro da 3,26:1 contra el
        fondo oscuro y no alcanza. Este valor llega a 7,93:1. */
     --color-eyebrow: #EE9452;
+    /* Personaje: solo la tinta se aclara para verse sobre el fondo oscuro. */
+    --personaje-tinta: #E8D9C8;
     --color-success-bg: #1A2208;
     --color-celebration-start: #241808;
     --color-celebration-end: #2A1808;

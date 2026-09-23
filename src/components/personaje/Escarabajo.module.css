@@ -1,0 +1,162 @@
+/* Personaje escarabajo. Todos los colores salen de los tokens --personaje-*
+   de index.css; en oscuro solo cambia la tinta. */
+
+.svg {
+  display: block;
+  overflow: visible;
+}
+
+/* ── Trazos de tinta ── */
+.sombra {
+  fill: var(--personaje-tinta);
+  opacity: 0.12;
+}
+
+.pata,
+.antena,
+.trazo,
+.ojoCerrado {
+  fill: none;
+  stroke: var(--personaje-tinta);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pata { stroke-width: 2.8; }
+.antena { stroke-width: 2.2; }
+.trazo { stroke-width: 2.4; }
+.ojoCerrado { stroke-width: 1.6; }
+
+.puntaAntena,
+.punto {
+  fill: var(--personaje-tinta);
+}
+
+.lineaAchurado {
+  stroke: var(--personaje-tinta);
+  stroke-width: 1;
+}
+
+/* ── Cuerpo ── */
+.elitro {
+  fill: var(--personaje-cuerpo);
+  stroke: var(--personaje-tinta);
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+
+.estria {
+  fill: none;
+  stroke: var(--personaje-sombra-cuerpo);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.brillo {
+  fill: none;
+  stroke: var(--personaje-crema);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.pronoto {
+  fill: var(--personaje-pronoto);
+  stroke: var(--personaje-tinta);
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+
+.brilloPronoto {
+  fill: none;
+  stroke: var(--personaje-luz);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.cabeza {
+  fill: var(--personaje-cabeza);
+  stroke: var(--personaje-tinta);
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+
+/* ── Ojos ── */
+.ojo {
+  fill: var(--personaje-crema);
+  stroke: var(--personaje-tinta);
+  stroke-width: 1.6;
+}
+
+.pupila { fill: var(--personaje-pupila); }
+.parpado { fill: var(--personaje-cabeza); }
+
+/* ── Extras ── */
+.marcaTerracota { stroke: var(--personaje-cuerpo); }
+.marcaPistacho { stroke: var(--personaje-pistacho); }
+
+.zeta {
+  fill: var(--personaje-tinta);
+  font-family: var(--font-heading);
+  font-style: italic;
+}
+
+.rastro {
+  fill: none;
+  stroke: var(--personaje-tinta);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 5;
+  opacity: 0.6;
+}
+
+/* Entradas y salidas de extras y de la pata que saluda. */
+.extra,
+.conFade {
+  transition: opacity var(--motion-lenta) var(--motion-ease-entrada);
+}
+
+.parpadeo {
+  animation: parpadeo var(--personaje-parpadeo) ease-in-out infinite alternate;
+}
+
+@keyframes parpadeo {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
+}
+
+/* ── Respiracion, anclada abajo ── */
+.respira {
+  transform-box: view-box;
+  transform-origin: 100px 180px;
+  animation: respira var(--personaje-respiracion) ease-in-out infinite;
+}
+
+@keyframes respira {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(0.985, 1.015); }
+}
+
+/* ── Caminata: marcha en tripode, cada pata gira sobre su union ── */
+.pasoA,
+.pasoB {
+  transform-box: view-box;
+  animation: paso calc(var(--personaje-caminata) / 5) ease-in-out infinite alternate;
+}
+
+.pasoB { animation-direction: alternate-reverse; }
+
+@keyframes paso {
+  from { transform: rotate(-10deg); }
+  to   { transform: rotate(10deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .respira,
+  .parpadeo,
+  .pasoA,
+  .pasoB {
+    animation: none;
+  }
+}
