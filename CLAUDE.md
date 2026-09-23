@@ -140,7 +140,7 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 
 10. Builds de commits anteriores: carpeta temporal con npm ci propio. Nunca enlazar node_modules del repo. Verificar node_modules con ls -a.
 
-11. QA lo hace Code (Gmail, navegador invisible, SQL). A Daniel se le pide una prueba solo si exige un celular real, y se le dice de entrada.
+11. QA lo hace Code: todo lo que se pueda verificar con Gmail, navegador invisible, SQL o el bundle, lo verifica Code, y lo revisa 2 o 3 veces antes de darlo por bueno. Una sola pasada no basta. A Daniel se le pide confirmar en celular o PC solo cuando sea extremadamente necesario, y se le dice de entrada por qué.
 
 ## Workflow
 
