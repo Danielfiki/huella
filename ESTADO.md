@@ -38,7 +38,7 @@
 4. ⬜ **Pieza 7 — la push pasa de recordatorio a entrega** — desde **8 sep**, replanteada el **16 sep** — *"Hace un mes anotaste que…"*, 10 palabras, tocar abre RegistroPage. Hora anclada a la del papá (cuándo se duerme el hijo, se pregunta en el onboarding). Modo silencio: si no entra en 2 semanas la frecuencia **baja, nunca sube**. Pipeline y 5 ramas de `push-remind.js` ya existen. ✅ **Paso 1 CERRADO el 18 sep** (commit `4e91f69`, QA de Daniel: le llegó a las 14:00): el aviso cita el título del rasgo candidato o el relato del último momento. ✅ **Default 21:30 hecho el 22 sep** (migración 026, cuentas en 9:00 migradas). **Queda: hora anclada al onboarding y modo silencio.**
 5. ⬜ **"Hace un año / hace un mes" en el Home** — **16 sep** — solo cuando exista un momento en esa fecha. Solo fecha, sin IA. Hoy no hay ninguna consulta de momentos por fecha pasada.
 6. ✅ **Reingreso tras 10+ días: el Home muestra lo que sí tiene guardado del hijo** — **16 sep** — **EN PRODUCCIÓN el 22 sep** (commit `a82175d`). Al volver tras 10+ días (días de calendario de Chile, leídos de `ultima_actividad` **antes** de marcar la visita) el Home esconde la card de candidato, y lo guardado se muestra **integrado en las puertas que ya existían**: **Su huella** con el rasgo positivo confirmado más reciente, o **Momentos** con el último relato, en el lugar del contador. **Sin card nueva** y sin CSS nuevo. Historial acepta `state.momentoId` y centra esa ficha. Detalle: bloque del 22 sep.
-7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). ✅ **(c) en producción el 22 sep** (commit `01ae849`): el modelo marca con `corresponde_a` a qué rasgo existente corresponde cada propuesta y el cliente fusiona evidencia contra ese id. **Medición:** 2 duplicados por redacción de 9 rasgos de La brava. ⚠️ **Falta verificarlo con uso real**: la prueba quedó inconclusa porque el motor no cruzó tramo y no llegó a correr. Después hay que **limpiar los 2 duplicados de La brava por SQL**. **Queda también** el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
+7. ⬜ **Motor de rasgos — equilibrar lo que se ve** — **16 sep** — evidencia del día: el motor **sí** detecta lo positivo (La brava 30 fortalezas / 28 cuesta) pero lo positivo **no llega a candidato**; los testers registran 2 difíciles por 1 positivo. ✅ **(a)**, **(b)** y **(d)** cerrados el **21 sep**, y La brava reseteada (detalle: bloque del 21 sep). ✅ **(c) en producción el 22 sep** (commit `01ae849`): el modelo marca con `corresponde_a` a qué rasgo existente corresponde cada propuesta y el cliente fusiona evidencia contra ese id. ✅ **Verificado con uso real y La brava sin duplicados el 23 sep** (detalle: bloque del 23 sep). **Queda** el denominador **"de 12"** escrito a mano en 4 lugares, que pasa por Design.
 8. ⬜ **Análisis semanal** — **16 sep** — ✅ **Fase 1 en producción el 21 sep** (detalle: bloque del 21 sep): se genera solo, se guarda, tres líneas automáticas y análisis completo bajo demanda. ✅ **Fase 2 en producción el 22 sep** (commit `e166d06`): push del domingo con "Mejoró". **Queda medir aperturas:** SELECT de `push_enviado_at` / `push_abierto_at` en `analisis_semanal` el **lunes 28 sep**.
 9. ⬜ **Respuesta inmediata al hito** — **16 sep** — ✅ **Pasos 1 y 2 hechos el 17-18 sep** (migración 021 corrida, `generarRespuestaHito`, y la respuesta ya se ve en la vista guardado; commit `fc8beb1`, QA aprobado). ✅ **Paso 3 cerrado:** 12 lentes en producción desde el 19 sep. **Lo que queda:** el QA con avances reales de varios testers.
 10. ⬜ **Pieza 5 — entrada única** — desde **8 sep**, replanteada el **16 sep** — caja "Cuéntame qué pasó" con pregunta rotativa (¿qué le hizo reír esta semana? / ¿qué te sorprendió de él? / ¿qué pasó hoy?), **igual peso a lo luminoso y a lo difícil**, confirmar antes de guardar. El primer registro guiado del onboarding es luminoso. 🔴 Nunca como secuencia tras un episodio difícil.
@@ -127,6 +127,7 @@
 - **Consent screen de Google OAuth** — antes de salir de beta cerrada.
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
+- **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
 
 ---
 
@@ -341,7 +342,36 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (22 sep 2026) — **Aviso del domingo en producción · hora de registro medida y aviso por defecto a las 21:30**
+## Cerrado HOY (23 sep 2026) — **Ítem 7(c) verificado en producción · La brava sin duplicados**
+
+**🎯 El 7(c) funciona con uso real: el momento nuevo no creó fila repetida.** Queda anotado un hallazgo del motor, sin cambio de código.
+
+### 1. ✅ Ítem 7(c) verificado en producción
+- **Deploy:** loader `C2HQS7KX` → `BTMrQhhq`, index `BSF2HRWd` → `627wUZMq`. `corresponde_a` presente en el bundle.
+- **Prueba real:** 1 momento en incógnito (La brava llegó a 16).
+- **Resultado:** ninguna fila nueva en `cuesta`. +3 evidencias legítimas: la tele de hoy, más el columpio y la manguera del 22 sep, que no se habían analizado. Sin repetidos dentro de ningún rasgo.
+
+### 2. 🪤 Hallazgo: con duplicados existentes, el motor alimenta a los dos
+El motor manda los últimos 20 episodios y 20 hitos (`anthropic.js:2324` / `:2337`), no solo lo nuevo. Y nada impide que un mismo momento refuerce dos rasgos de la misma familia (`HuellaContext.jsx:1328-1373`, `:1399-1469`). **No se cambió código.** La guarda quedó en el Roadmap con su disparador.
+
+### 3. ✅ La brava limpia por SQL
+En una transacción con chequeos:
+- Se borró `f13fbc13` (`cuesta`), duplicado de `d3042aaa` con evidencia idéntica.
+- Se borró `f51693e3` (`fortalezas`, candidato), duplicado de `562769b5`. Sus 2 evidencias ya estaban en el conservado.
+- Sin FK hacia `rasgos` en la base viva.
+- **Estado final: 9 rasgos, contadores cuadran.**
+
+### 4. 📌 Nota QA
+El navegador normal de Daniel tiene el marcador en 15: el motor va a volver a correr ahí cuando La brava llegue a 20.
+
+### ⏭️ Pendiente
+1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
+2. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
+3. ⬜ **QA en Android real** cuando prenda el celular de Igna.
+
+---
+
+## Sesión 22 sep 2026 — **Aviso del domingo en producción · hora de registro medida y aviso por defecto a las 21:30**
 
 **🎯 El aviso diario se movió a la hora en que los papás registran de verdad.** La medición dio 9 momentos de testers en 6 días, y 5 cayeron entre las 21:00 y la 01:00. El default quedó en 21:30 y las cuentas que seguían en 9:00 se migraron.
 
@@ -390,8 +420,6 @@ Listos para **Cecilia (Leon)**, **María (Agustina)** y **Antonia (Ferran)**. **
 - **Momentos huérfanos:** `diegoalmazabar` (5), `contremix` (4), `ig.olaves` (1).
 
 ### ⏭️ Pendiente
-1. ⬜ **Verificar el ítem 7(c) mañana**, con el SELECT de `rasgos` familia `cuesta` de La brava: **no debe aparecer fila nueva** y la evidencia de alguna existente tiene que subir.
-2. ⬜ **Limpiar por SQL los 2 duplicados de La brava**, después de esa verificación.
 3. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
 4. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
 5. ⬜ **QA en Android real** cuando prenda el celular de Igna.
