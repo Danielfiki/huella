@@ -28,13 +28,35 @@ export default function ResetPasswordPage() {
   const tieneHashRecovery = typeof window !== 'undefined'
     && window.location.hash.includes('type=recovery')
 
+  // Un link gastado o vencido no trae type=recovery: Supabase vuelve con
+  // #error=access_denied&error_code=otp_expired. Antes nadie lo leia y la
+  // pantalla caia muda en el form de pedir correo. Se lee al montar, antes
+  // de limpiar el hash (supabase-js no lo borra cuando trae error).
+  const tieneHashError = typeof window !== 'undefined'
+    && /(^#|&)error(_code)?=/.test(window.location.hash)
+
   // 'detectando' → cargando mientras Supabase procesa el hash.
   // 'solicitar'  → form para pedir email y enviar el link.
   // 'enviado'    → confirmación "📬 Te enviamos un correo a X".
   // 'actualizar' → form para escribir la contraseña nueva.
   // 'exito'      → contraseña actualizada, invitar a volver a login.
-  // 'link_invalido' → el hash venía pero la sesión nunca llegó.
-  const [modo, setModo] = useState(tieneHashRecovery ? 'detectando' : 'solicitar')
+  // 'link_invalido' → el link venia gastado/vencido, o el hash venía pero
+  //                   la sesión nunca llegó.
+  const [modo, setModo] = useState(() => {
+    if (tieneHashError) return 'link_invalido'
+    return tieneHashRecovery ? 'detectando' : 'solicitar'
+  })
+
+  // Saca el error de la URL para que recargar no vuelva a mostrarlo.
+  // Conserva history.state: React Router guarda ahi su clave de navegacion.
+  useEffect(() => {
+    if (!/(^#|&)error(_code)?=/.test(window.location.hash)) return
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname + window.location.search
+    )
+  }, [])
 
   // Modo SOLICITAR
   const [email, setEmail] = useState('')
@@ -188,6 +210,8 @@ export default function ResetPasswordPage() {
             marginBottom: '28px',
           }}>
             Revisa tu bandeja de entrada (y la carpeta spam por si acaso). El link expira en una hora.
+            <br />
+            Usa el link del último correo que te llegue.
           </p>
           <Link
             to="/login"
@@ -276,17 +300,21 @@ export default function ResetPasswordPage() {
               <polyline points="17 9 12 12 9 10" />
             </svg>
           </div>
-          <h1 className={styles.title}>Link inválido o expirado</h1>
+          <h1 className={styles.title}>Este link ya no sirve</h1>
           <p className={styles.subtitle} style={{ marginBottom: '28px' }}>
-            Este link ya no es válido. Solicita uno nuevo desde la pantalla de inicio de sesión.
+            Cada link funciona una sola vez y dura una hora. Si pediste más de uno, usa el último que te llegó.
           </p>
-          <Link
-            to="/login"
+          <button
+            type="button"
             className={styles.btnPrimary}
-            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: '100%' }}
+            onClick={() => setModo('solicitar')}
           >
-            Volver a iniciar sesión
-          </Link>
+            Pedir uno nuevo
+          </button>
+          <p className={styles.footer}>
+            <Link to="/login" className={styles.link}>Volver a iniciar sesión</Link>
+          </p>
         </div>
       </div>
     )
