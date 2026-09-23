@@ -55,6 +55,7 @@
 20. ⬜ **11 momentos huérfanos con `hijo_id` null** — visto el **16 sep** — verificar que no rompan Historial ni motor; política pendiente.
 - ⬜ **QA en Android real: Home nuevo, "Esta semana", avance, video del cerebro y modo oscuro** — **22 sep** — **disparador: que prenda el celular de Igna.** De paso, medir si las 3 pestañas del avance caben en 390px (lo único vivo de los ex ítems 16 y 17).
 - ⬜ **Recuperar contraseña en Android (TWA): probar si el enlace abre /reset-password o el Home con la app ya abierta.** Disparador: Android real disponible.
+- ⬜ **Avisos de Play para la próxima versión: vista de borde a borde (SDK 35), APIs obsoletas de borde a borde y restricciones de orientación en pantallas grandes.** Disparador: generar el próximo AAB.
 
 ### Bloque 4 — Cerebro, sesión propia
 
@@ -66,7 +67,6 @@
 ### Bloque 5 — Deuda, no mueve retención
 
 - ⬜ **Episodios sin orientación quedan muertos y el Historial no los marca** — **5 ago** — solo fix sistémico, sin reparación retroactiva (Daniel, 26 ago).
-- ⬜ **TWA: `twa-manifest.json` en `versionCode` 3 contra `build.gradle` en 4, y el AAB local es del 22 jul** — **9 sep** — alinear antes del próximo AAB.
 - ⬜ **Hex hardcodeados a token** — **9 jul / 9 sep** — `#B08E7B` y `#7E5F50` en `.hero` de `RetratoSendero`; `#FFD89C` en `.pdfLock`; `white`/`#fff` en `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary`.
 - ⬜ **El verde de "Ver orientación" no pasa contraste en claro** — **1 sep** — `.iaInline` da 2,68:1 en 11px bold.
 - ⬜ **Escarabajo del círculo café más chico que el del cuadrado verde** — **1 jul** — subir `.anticipoBicho` a ~69%; revisar de paso `.fotoPlaceholder` y `.circuloEscarabajoIcon`.
@@ -374,6 +374,13 @@ El navegador normal de Daniel tiene el marcador en 15: el motor va a volver a co
 
 ### 6. 🪤 Incidente
 git worktree remove borro .bin de node_modules a traves del enlace; reparado con npm ci. Regla nueva en `CLAUDE.md` (PRECISIÓN Y ESTÁNDAR, punto 10).
+
+### 7. ✅ App de Android: versionCode 5 listo para el próximo AAB (sin generar el AAB)
+- **Último subido a Play = 4** (alpha, 24 ago, "4 (1)"; prueba interna "1 (1)"; sin cambios no publicados), leído por Daniel en Play Console.
+- En `Desktop\huella-twa`: `twa-manifest.json` `appVersionCode` 3 → **5** y `app/build.gradle` `versionCode` 4 → **5**. Siguen iguales `versionName` "1", `lat.huella.app` y `targetSdkVersion 36`.
+- `manifest-checksum.txt` recalculado con la función de bubblewrap (`997630560af5…`, coincide con `twa-manifest.json`), así el próximo `bubblewrap build` no pregunta si regenerar el proyecto.
+- **Respaldo** de los tres archivos antes de tocarlos: `huella-twa\respaldo-2026-09-23\` (esa carpeta no tiene git).
+- ⚠️ **Trampa de bubblewrap:** si se edita `twa-manifest.json` y `bubblewrap build` pregunta si actualizar el proyecto, responder "sí" regenera `build.gradle` desde la plantilla y baja `targetSdk` a 35. Play rechaza cualquier versión nueva con SDK 35 desde el 31 ago. Después de editar `twa-manifest.json`, recalcular el checksum, o volver a poner 36 a mano y verificarlo leyendo el AAB.
 
 ### ⏭️ Pendiente
 1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
