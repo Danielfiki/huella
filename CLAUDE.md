@@ -138,6 +138,8 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 
 9. LOS DATOS DE PRUEBA VAN EN LA BRAVA, CON TEXTO DADO POR CLAUDE (18 sep 2026). Todo registro de prueba se hace en el perfil La brava, nunca en un hijo real de un tester ni en Pascual. Y el texto lo entrega Claude ya escrito y listo para pegar: no se le pide a Daniel que invente un ejemplo. Asi el resultado se puede comparar entre pasadas, y la basura de prueba queda concentrada en un solo perfil que ya esta marcado para reset.
 
+10. Builds de commits anteriores: carpeta temporal con npm ci propio. Nunca enlazar node_modules del repo. Verificar node_modules con ls -a.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual

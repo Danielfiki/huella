@@ -54,6 +54,7 @@
 19. ⬜ **Techo o filtro del payload del motor** — desde **15 sep** — 102 rasgos de La brava por llamada y solo sube. Hoy alcanza y el warn avisa.
 20. ⬜ **11 momentos huérfanos con `hijo_id` null** — visto el **16 sep** — verificar que no rompan Historial ni motor; política pendiente.
 - ⬜ **QA en Android real: Home nuevo, "Esta semana", avance, video del cerebro y modo oscuro** — **22 sep** — **disparador: que prenda el celular de Igna.** De paso, medir si las 3 pestañas del avance caben en 390px (lo único vivo de los ex ítems 16 y 17).
+- ⬜ **Recuperar contraseña en Android (TWA): probar si el enlace abre /reset-password o el Home con la app ya abierta.** Disparador: Android real disponible.
 
 ### Bloque 4 — Cerebro, sesión propia
 
@@ -64,7 +65,6 @@
 
 ### Bloque 5 — Deuda, no mueve retención
 
-- ⬜ **Recuperar contraseña no deja crear una nueva** — **24 ago** — el enlace abre con sesión iniciada y nunca pide clave nueva. Probablemente config de Supabase.
 - ⬜ **Episodios sin orientación quedan muertos y el Historial no los marca** — **5 ago** — solo fix sistémico, sin reparación retroactiva (Daniel, 26 ago).
 - ⬜ **TWA: `twa-manifest.json` en `versionCode` 3 contra `build.gradle` en 4, y el AAB local es del 22 jul** — **9 sep** — alinear antes del próximo AAB.
 - ⬜ **Hex hardcodeados a token** — **9 jul / 9 sep** — `#B08E7B` y `#7E5F50` en `.hero` de `RetratoSendero`; `#FFD89C` en `.pdfLock`; `white`/`#fff` en `.reflexionSaveBtn`, `.enmarcarBtn`, `.fotoRemoveBtn` y `Button.primary`.
@@ -342,7 +342,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (23 sep 2026) — **Ítem 7(c) verificado en producción · La brava sin duplicados**
+## Cerrado HOY (23 sep 2026) — **Ítem 7(c) verificado en producción · La brava sin duplicados · recuperar contraseña avisa cuando el link ya no sirve**
 
 **🎯 El 7(c) funciona con uso real: el momento nuevo no creó fila repetida.** Queda anotado un hallazgo del motor, sin cambio de código.
 
@@ -363,6 +363,16 @@ En una transacción con chequeos:
 
 ### 4. 📌 Nota QA
 El navegador normal de Daniel tiene el marcador en 15: el motor va a volver a correr ahí cuando La brava llegue a 20.
+
+### 5. ✅ Recuperar contraseña — EN PRODUCCIÓN (commit `0b42cb1`)
+- **Causa:** un enlace gastado o vencido caía mudo en el formulario de pedir correo. Supabase vuelve con `#error=access_denied&error_code=otp_expired`, y `ResetPasswordPage` solo reconocía `type=recovery`. Pasa cuando se pide el correo dos veces y se toca el primero (Gmail los junta en un hilo).
+- **Camino bueno OK en web e iPhone:** Daniel cambió la clave desde Safari (login con la nueva: 200). La configuración de Supabase estaba bien: Redirect URLs de www y localhost, plantilla con `{{ .ConfirmationURL }}`.
+- **Arreglo:** con el hash de error se muestra la pantalla de link inválido ("Este link ya no sirve"), con el botón "Pedir uno nuevo" y el hash limpio para que recargar no repita el error. La confirmación de envío suma "Usa el link del último correo que te llegue."
+- Index en producción `627wUZMq` → `CCwcVMHQ`; la prueba del hash de error pasó en producción.
+- Cuenta de prueba: `danielundurraga.r+reset0923@gmail.com` (`08af56df`), clave `QaReset-0923-c`.
+
+### 6. 🪤 Incidente
+git worktree remove borro .bin de node_modules a traves del enlace; reparado con npm ci. Regla nueva en `CLAUDE.md` (PRECISIÓN Y ESTÁNDAR, punto 10).
 
 ### ⏭️ Pendiente
 1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
