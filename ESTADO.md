@@ -390,6 +390,14 @@ git worktree remove borro .bin de node_modules a traves del enlace; reparado con
 - **QA de Code:** claro, oscuro y movimiento reducido a 390 px, redirección con la cuenta de prueba en localhost y en producción (index `CCwcVMHQ` → `DCKeV5B7`). No hay sesión de Daniel para el QA: la escena se probó con el texto de respaldo.
 - **Siguiente paso:** aprobación de Daniel en iPhone, que además es la única forma de ver el rasgo real de La brava.
 
+### 9. ✅ Personaje 3D en la vitrina (commit `160406c`)
+- **Ilustraciones 3D hechas con Gemini Nano Banana**, 10 estados, con **`02-orgulloso` como referencia de color**. Los originales, intactos, quedaron en `Desktop\huella-design-pack\personaje\originales` (la carpeta "huella diseño" no se tocó).
+- **Procesamiento por Code:** fondo quitado con un modelo de recorte, sombra suave del suelo conservada y contorno sin halo (0 a 6 píxeles de borde con color de fondo por imagen). El color se igualó al orgulloso solo en los tonos terracota: la diferencia bajó de ΔE 1,9–8,0 a 0,1–0,6. `06-en-calma` y `09-dormido` ya no se ven rosados.
+- **Salida:** 10 WebP con transparencia de 800 px de alto en `public/personaje/`, de 52 a 116 KB (643 KB entre las 10).
+- **Vitrina `/personaje`:** grilla con las 10 y su momento de la app, visor grande que entra con fundido y escala y respira, y la escena "Rasgo confirmado" con el orgulloso entrando con rebote. Con movimiento reducido no se anima nada. `Escarabajo.jsx` (el SVG) queda en el repo sin uso.
+- **QA de Code:** claro, oscuro y movimiento reducido a 390 px. La cuenta de prueba termina en `/panel` sin ver nada, confirmado 3 veces en producción (index `DCKeV5B7` → `ClTHcjia`).
+- **Siguiente paso:** la animación de cada estado.
+
 ### ⏭️ Pendiente
 1. ⬜ **Lunes 28 sep:** medir aperturas del aviso del domingo (`push_enviado_at` / `push_abierto_at`).
 2. ⬜ **Miércoles 30 sep:** correr los bloques B y C de `retencion.sql`.
