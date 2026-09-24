@@ -29,53 +29,44 @@
   margin: 0;
 }
 
-/* ── a) Personaje grande + chips ── */
-.grande {
-  display: flex;
-  justify-content: center;
-  padding-top: var(--space-4);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
-
-.chip {
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-cta);
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: background var(--motion-rapida) var(--motion-ease-estandar),
-              border-color var(--motion-rapida) var(--motion-ease-estandar);
-}
-
-.chipActivo {
-  background: var(--color-primary-bg);
-  border-color: var(--color-primary-border);
-  color: var(--color-eyebrow);
-}
-
-/* ── b) Grilla de estados ── */
+/* ── a) Grilla de los 10 estados ── */
 .grilla {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4) 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-4);
 }
 
 .celda {
-  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  color: inherit;
+}
+
+/* Marco cuadrado fijo: las ilustraciones tienen proporciones distintas y
+   todas se apoyan abajo, asi los nombres quedan a la misma altura. */
+.marco {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+/* Absoluta: si la imagen participa del flujo, su alto natural estira el
+   marco por encima del aspect-ratio (las ilustraciones altas lo rompian). */
+.miniatura {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
 }
 
 .pie {
@@ -87,7 +78,7 @@
 }
 
 .pieNombre {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-text);
 }
@@ -97,52 +88,88 @@
   color: var(--color-text-muted);
 }
 
+/* ── b) Visor grande ── */
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-4);
+  cursor: pointer;
+}
+
+.visorFigura {
+  margin: 0;
+  width: 100%;
+  max-width: 398px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.visorEntrada {
+  width: 100%;
+  height: min(62dvh, 460px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: entra-visor var(--motion-media) var(--motion-ease-entrada) both;
+}
+
+@keyframes entra-visor {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.visorImagen {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 100%;
+  animation: respira var(--personaje-respiracion) ease-in-out infinite;
+}
+
+@keyframes respira {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.015); }
+}
+
+.visorCerrar {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
 /* ── c) Escena del rasgo confirmado ── */
 .escenario {
-  position: relative;
-  height: 190px;
-  overflow: hidden;
+  height: 240px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
-.caminante {
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  margin-left: -75px;
+.escenaImagen {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  transform-origin: 50% 100%;
 }
 
-.entrando {
-  animation: entra var(--personaje-caminata) linear both;
+.rebote {
+  animation: rebote var(--motion-lenta) var(--motion-ease-entrada) both;
 }
 
-@keyframes entra {
-  from { transform: translateX(-280px); }
-  to   { transform: translateX(0); }
-}
-
-.giro {
-  transition: transform var(--motion-media) var(--motion-ease-entrada);
-}
-
-.deLado {
-  transform: rotate(90deg);
-}
-
-.huella {
-  position: absolute;
-  width: 6px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--personaje-tinta);
-  opacity: 0;
-  animation: aparece-huella var(--motion-rapida) linear forwards;
-}
-
-.huellaArriba { top: 72px; }
-.huellaAbajo  { top: 118px; }
-
-@keyframes aparece-huella {
-  to { opacity: 0.4; }
+@keyframes rebote {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.96); }
+  55%  { opacity: 1; transform: translateY(-8px) scale(1.01); }
+  78%  { transform: translateY(2px) scale(0.998); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .revelado {
@@ -192,12 +219,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entrando,
+  .visorEntrada,
+  .visorImagen,
+  .rebote,
   .cascada {
     animation: none;
-  }
-  .huella {
-    animation: none;
-    opacity: 0.4;
   }
 }

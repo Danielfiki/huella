@@ -1,30 +1,47 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { palabrasGenero } from '../../utils/genero'
-import Escarabajo, { ESTADOS_PERSONAJE, useMovimientoReducido } from '../../components/personaje/Escarabajo'
 import Button from '../../components/ui/Button'
 import styles from './PersonajePage.module.css'
 
 // Vitrina privada del personaje (ruta /personaje, solo Daniel; el filtro vive
 // en RutaPersonaje). No esta enlazada desde ningun menu y no escribe nada en
 // la base: la escena del rasgo solo LEE el confirmado mas reciente de La brava.
+//
+// Usa las 10 ilustraciones 3D de public/personaje (referencia de color:
+// 02-orgulloso). El personaje dibujado en SVG (components/personaje/
+// Escarabajo.jsx) queda en el repo, sin uso.
 
-// El momento de la app donde vive cada estado, en el mismo orden.
-const MOMENTOS = {
-  saludando:   'Bienvenida',
-  escuchando:  'Mientras escribe',
-  pensando:    'La IA prepara',
-  acompanando: 'Momento difícil',
-  en_calma:    'Calmarse juntos',
-  curioso:     'Card candidato',
-  orgulloso:   'Avance o rasgo',
-  celebrando:  'Hitos grandes',
-  dormido:     'Vacío y 21:30',
-  buscando:    'Sin datos o error',
-}
+const ESTADOS = [
+  { archivo: '01-saludando',   nombre: 'Saludando',   momento: 'Bienvenida' },
+  { archivo: '02-orgulloso',   nombre: 'Orgulloso',   momento: 'Avance o rasgo' },
+  { archivo: '03-acompanando', nombre: 'Acompañando', momento: 'Momento difícil' },
+  { archivo: '04-escuchando',  nombre: 'Escuchando',  momento: 'Mientras escribe' },
+  { archivo: '05-pensando',    nombre: 'Pensando',    momento: 'La IA prepara' },
+  { archivo: '06-en-calma',    nombre: 'En calma',    momento: 'Calmarse juntos' },
+  { archivo: '07-curioso',     nombre: 'Curioso',     momento: 'Card candidato' },
+  { archivo: '08-celebrando',  nombre: 'Celebrando',  momento: 'Hitos grandes' },
+  { archivo: '09-dormido',     nombre: 'Dormido',     momento: 'Vacío y 21:30' },
+  { archivo: '10-buscando',    nombre: 'Buscando',    momento: 'Sin datos o error' },
+]
+
+const ruta = (archivo) => `/personaje/${archivo}.webp`
 
 const RASGO_RESPALDO = 'Después de caerse o frustrarse, se repone y quiere volver a intentarlo'
-const HUELLAS = 6
+
+function useMovimientoReducido() {
+  const consulta = '(prefers-reduced-motion: reduce)'
+  const [reducido, setReducido] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(consulta).matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(consulta)
+    const alCambiar = () => setReducido(mq.matches)
+    mq.addEventListener('change', alCambiar)
+    return () => mq.removeEventListener('change', alCambiar)
+  }, [])
+  return reducido
+}
 
 function duracionMs(nombre) {
   const valor = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim()
@@ -64,58 +81,71 @@ function useRasgoDeLaBrava() {
   return datos
 }
 
+// ── b) Visor grande ─────────────────────────────────────────────────────
+function Visor({ estado, alCerrar }) {
+  useEffect(() => {
+    const alTeclear = (e) => { if (e.key === 'Escape') alCerrar() }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [alCerrar])
+
+  return (
+    <div
+      className={styles.visor}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Escarabajo ${estado.nombre.toLowerCase()}`}
+      onClick={alCerrar}
+    >
+      <figure className={styles.visorFigura} key={estado.archivo}>
+        <div className={styles.visorEntrada}>
+          <img
+            className={styles.visorImagen}
+            src={ruta(estado.archivo)}
+            alt={`Escarabajo ${estado.nombre.toLowerCase()}`}
+          />
+        </div>
+        <figcaption className={styles.pie}>
+          <span className={styles.pieNombre}>{estado.nombre}</span>
+          <span className={styles.pieMomento}>{estado.momento}</span>
+        </figcaption>
+      </figure>
+      <p className={styles.visorCerrar}>Toca para cerrar</p>
+    </div>
+  )
+}
+
+// ── c) Escena del rasgo confirmado ──────────────────────────────────────
 function EscenaRasgo() {
   const reducido = useMovimientoReducido()
   const { hijo, rasgo } = useRasgoDeLaBrava()
   const [vuelta, setVuelta] = useState(0)
-  const [fase, setFase] = useState(reducido ? 'listo' : 'caminando')
+  const [listo, setListo] = useState(reducido)
 
   useEffect(() => {
     if (reducido) {
-      setFase('listo')
+      setListo(true)
       return undefined
     }
-    setFase('caminando')
-    const caminata = duracionMs('--personaje-caminata')
-    const giro = duracionMs('--motion-media')
-    const t1 = setTimeout(() => setFase('girando'), caminata)
-    const t2 = setTimeout(() => setFase('listo'), caminata + giro)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-    }
+    setListo(false)
+    const t = setTimeout(() => setListo(true), duracionMs('--motion-lenta'))
+    return () => clearTimeout(t)
   }, [vuelta, reducido])
 
   // El genero sale del perfil del hijo; el nombre solo se muestra.
   const nombre = hijo?.nombre || `tu ${palabrasGenero(hijo).sustantivo}`
   const titulo = rasgo?.titulo || RASGO_RESPALDO
-  const listo = fase === 'listo'
 
   return (
     <section className={styles.seccion}>
       <h2 className={styles.rotulo}>Escena: rasgo confirmado</h2>
 
       <div className={styles.escenario} key={vuelta}>
-        {Array.from({ length: HUELLAS }, (_, i) => (
-          <span
-            key={i}
-            className={`${styles.huella} ${i % 2 ? styles.huellaAbajo : styles.huellaArriba}`}
-            style={{
-              left: `${8 + i * 6}%`,
-              animationDelay: `calc(var(--personaje-caminata) * ${(i / HUELLAS).toFixed(3)})`,
-            }}
-            aria-hidden="true"
-          />
-        ))}
-        <div className={`${styles.caminante} ${fase === 'caminando' ? styles.entrando : ''}`}>
-          <div className={`${styles.giro} ${fase === 'caminando' ? styles.deLado : ''}`}>
-            <Escarabajo
-              estado={listo ? 'orgulloso' : 'curioso'}
-              tamano={150}
-              caminando={fase === 'caminando'}
-            />
-          </div>
-        </div>
+        <img
+          className={`${styles.escenaImagen} ${reducido ? '' : styles.rebote}`}
+          src={ruta('02-orgulloso')}
+          alt="Escarabajo orgulloso"
+        />
       </div>
 
       {listo && (
@@ -141,9 +171,9 @@ function EscenaRasgo() {
         <Button
           variant="ghost"
           onClick={() => {
-            // La fase cambia en el mismo render que la vuelta: sin esto el
-            // escenario nuevo se pintaba un cuadro con el escarabajo ya quieto.
-            if (!reducido) setFase('caminando')
+            // Se esconde el texto en el mismo render que la vuelta, para que
+            // la escena nueva no pinte un cuadro con el texto ya puesto.
+            if (!reducido) setListo(false)
             setVuelta((v) => v + 1)
           }}
         >
@@ -155,46 +185,37 @@ function EscenaRasgo() {
 }
 
 export default function PersonajePage() {
-  const [estado, setEstado] = useState('saludando')
+  const [abierto, setAbierto] = useState(null)
+  const cerrar = React.useCallback(() => setAbierto(null), [])
 
   return (
     <main className={styles.pagina}>
       <section className={styles.seccion}>
-        <h2 className={styles.rotulo}>Estados</h2>
-        <div className={styles.grande}>
-          <Escarabajo estado={estado} tamano={220} />
-        </div>
-        <div className={styles.chips}>
-          {ESTADOS_PERSONAJE.map((e) => (
+        <h2 className={styles.rotulo}>Los 10 estados</h2>
+        <div className={styles.grilla}>
+          {ESTADOS.map((e) => (
             <button
-              key={e.clave}
+              key={e.archivo}
               type="button"
-              className={`${styles.chip} ${estado === e.clave ? styles.chipActivo : ''}`}
-              aria-pressed={estado === e.clave}
-              onClick={() => setEstado(e.clave)}
+              className={styles.celda}
+              onClick={() => setAbierto(e)}
+              aria-label={`Ver en grande: ${e.nombre}`}
             >
-              {e.nombre}
+              <span className={styles.marco}>
+                <img className={styles.miniatura} src={ruta(e.archivo)} alt="" />
+              </span>
+              <span className={styles.pie}>
+                <span className={styles.pieNombre}>{e.nombre}</span>
+                <span className={styles.pieMomento}>{e.momento}</span>
+              </span>
             </button>
           ))}
         </div>
       </section>
 
-      <section className={styles.seccion}>
-        <h2 className={styles.rotulo}>En la app</h2>
-        <div className={styles.grilla}>
-          {ESTADOS_PERSONAJE.map((e) => (
-            <figure key={e.clave} className={styles.celda}>
-              <Escarabajo estado={e.clave} tamano={110} />
-              <figcaption className={styles.pie}>
-                <span className={styles.pieNombre}>{e.nombre}</span>
-                <span className={styles.pieMomento}>{MOMENTOS[e.clave]}</span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
       <EscenaRasgo />
+
+      {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>
   )
 }
