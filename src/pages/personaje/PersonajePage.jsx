@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
@@ -8,9 +8,10 @@ import styles from './PersonajePage.module.css'
 // en RutaPersonaje). No esta enlazada desde ningun menu y no escribe nada en
 // la base: la escena del rasgo solo LEE el confirmado mas reciente de La brava.
 //
-// Usa las 10 ilustraciones 3D de public/personaje (referencia de color:
-// 02-orgulloso). El personaje dibujado en SVG (components/personaje/
-// Escarabajo.jsx) queda en el repo, sin uso.
+// Usa los 10 videos de public/personaje/video (referencia de color:
+// 02-orgulloso), cada uno dentro de un circulo crema fijo. Las WebP quietas
+// de public/personaje y el SVG (components/personaje/Escarabajo.jsx) quedan
+// en el repo, sin uso.
 
 const ESTADOS = [
   { archivo: '01-saludando',   nombre: 'Saludando',   momento: 'Bienvenida' },
@@ -25,7 +26,12 @@ const ESTADOS = [
   { archivo: '10-buscando',    nombre: 'Buscando',    momento: 'Sin datos o error' },
 ]
 
-const ruta = (archivo) => `/personaje/${archivo}.webp`
+const rutaVideo = (archivo) => `/personaje/video/${archivo}.mp4`
+const rutaPoster = (archivo) => `/personaje/video/${archivo}.webp`
+
+// El saludo no se repite: se reproduce una vez y queda en el ultimo cuadro
+// (su poster es ese ultimo cuadro).
+const UNA_VEZ = '01-saludando'
 
 const RASGO_RESPALDO = 'Después de caerse o frustrarse, se repone y quiere volver a intentarlo'
 
@@ -48,6 +54,57 @@ function duracionMs(nombre) {
   const n = parseFloat(valor)
   if (!Number.isFinite(n)) return 0
   return valor.endsWith('ms') ? n : n * 1000
+}
+
+// Video del personaje en su circulo crema. Solo corre mientras esta en
+// pantalla (IntersectionObserver); con movimiento reducido queda el poster.
+// Sin autoplay en la grilla: el atributo obliga a descargar el video aunque
+// diga preload="none". El visor (cargar="auto") si parte solo.
+function VideoPersonaje({ archivo, cargar = 'none', pausado = false, className = '' }) {
+  const ref = useRef(null)
+  const terminado = useRef(false)
+  const reducido = useMovimientoReducido()
+  const [enPantalla, setEnPantalla] = useState(false)
+  const unaVez = archivo === UNA_VEZ
+
+  useEffect(() => {
+    const video = ref.current
+    // iOS solo deja reproducir sin toque si el video esta silenciado.
+    video.muted = true
+    const obs = new IntersectionObserver(([e]) => setEnPantalla(e.isIntersecting), { threshold: 0.25 })
+    obs.observe(video)
+    return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const video = ref.current
+    if (reducido || pausado || !enPantalla) {
+      video.pause()
+      return
+    }
+    if (unaVez && terminado.current) return
+    video.play().catch(() => {})
+  }, [enPantalla, pausado, reducido, unaVez])
+
+  return (
+    <span className={`${styles.escena} ${className}`}>
+      <span className={styles.recorte}>
+        <video
+          ref={ref}
+          className={styles.video}
+          src={rutaVideo(archivo)}
+          poster={rutaPoster(archivo)}
+          muted
+          playsInline
+          autoPlay={cargar === 'auto' && !reducido}
+          loop={!unaVez}
+          preload={reducido ? 'none' : cargar}
+          onEnded={() => { terminado.current = true }}
+          aria-hidden="true"
+        />
+      </span>
+    </span>
+  )
 }
 
 // Lee La brava y su rasgo confirmado mas reciente. Solo SELECT.
@@ -98,12 +155,9 @@ function Visor({ estado, alCerrar }) {
       onClick={alCerrar}
     >
       <figure className={styles.visorFigura} key={estado.archivo}>
+        {/* Elemento nuevo en cada apertura: el saludo vuelve a partir de cero. */}
         <div className={styles.visorEntrada}>
-          <img
-            className={styles.visorImagen}
-            src={ruta(estado.archivo)}
-            alt={`Escarabajo ${estado.nombre.toLowerCase()}`}
-          />
+          <VideoPersonaje archivo={estado.archivo} cargar="auto" />
         </div>
         <figcaption className={styles.pie}>
           <span className={styles.pieNombre}>{estado.nombre}</span>
@@ -141,10 +195,9 @@ function EscenaRasgo() {
       <h2 className={styles.rotulo}>Escena: rasgo confirmado</h2>
 
       <div className={styles.escenario} key={vuelta}>
-        <img
-          className={`${styles.escenaImagen} ${reducido ? '' : styles.rebote}`}
-          src={ruta('02-orgulloso')}
-          alt="Escarabajo orgulloso"
+        <VideoPersonaje
+          archivo="02-orgulloso"
+          className={`${styles.escenaCirculo} ${reducido ? '' : styles.rebote}`}
         />
       </div>
 
@@ -201,9 +254,7 @@ export default function PersonajePage() {
               onClick={() => setAbierto(e)}
               aria-label={`Ver en grande: ${e.nombre}`}
             >
-              <span className={styles.marco}>
-                <img className={styles.miniatura} src={ruta(e.archivo)} alt="" />
-              </span>
+              <VideoPersonaje archivo={e.archivo} pausado={abierto !== null} />
               <span className={styles.pie}>
                 <span className={styles.pieNombre}>{e.nombre}</span>
                 <span className={styles.pieMomento}>{e.momento}</span>

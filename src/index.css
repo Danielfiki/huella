@@ -583,6 +583,11 @@
   --personaje-respiracion: 3s;
   --personaje-parpadeo:    1.6s;
   --personaje-caminata:    1.3s;
+  /* Escenario de los videos del personaje: circulo crema donde vive cada
+     video. Fijo en claro Y en oscuro, sin override (mismo criterio que
+     --color-cta-disco): el fondo de los videos es exactamente este crema,
+     asi que si cambiara se veria el borde cuadrado del video. */
+  --personaje-escenario: #FAF3EC;
 }
 
 /* ── Modo oscuro ── */
