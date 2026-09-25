@@ -346,13 +346,16 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ## Cerrado HOY (25 sep 2026) — **Bienvenida del escarabajo en el Home, solo cuenta de Daniel**
 
-### 1. ✅ Bienvenida en el Home (commit `e891221`)
-- **Qué hace:** en la primera apertura del Home de cada día (calendario de Chile, marca en localStorage por usuario), el escarabajo asomado de costado entra desde el borde derecho, saluda una vez (5 s) y sale. Dura 6,6 s y se desmonta. Con movimiento reducido no aparece.
-- **Solo la cuenta de Daniel:** el chunk y los archivos de `public/personaje/home/` se piden solo si toca mostrarla. La cuenta de prueba ve el Home igual que antes y no descarga nada, probado en local y dos veces en producción.
-- **Archivo:** `asomado-saludo.webp`, 270 px, 18 fps, 751 KB, más un póster de 10,5 KB. Se muestra a 150 px de ancho. El corte cae en el borde de la pantalla y los dedos quedan 11 px afuera.
+### 1. ✅ Bienvenida actuada en el Home (commit `4207389`, reemplaza a `e891221`)
+- **Qué hace:** en la primera apertura del Home de cada día (calendario de Chile, marca en localStorage por usuario), el escarabajo aparece en la esquina inferior derecha con un fundido de 150 ms, se asoma, saluda, se despide y se esconde detrás del borde de la pantalla. Todo lo actúa el video: el código ya no lo desliza. Se desmonta a los 5,7 s, cuando ya se escondió. Con movimiento reducido no aparece.
+- **Video:** `15-bienvenida-costado.mp4`, de Gemini. Se usa el tramo del cuadro 89 al 219 (de 3,708 s a 9,125 s): parte asomado y quieto y termina en el primer cuadro sin personaje. Se descartan la primera escondida y la reaparición del final.
+- **Cortes resueltos:** el corte de abajo cae exacto sobre el borde superior de la barra (0 px, medido en vivo, así que sirve también con la zona segura del iPhone). El corte derecho cae en el borde de la pantalla y los dedos quedan 11 px afuera. La barra queda siempre por encima y el escarabajo queda a 32 px del +.
+- **Solo la cuenta de Daniel:** el chunk y los archivos de `public/personaje/home/` se piden solo si toca mostrarla. La cuenta de prueba ve el Home igual que antes y no descarga nada.
+- **Archivo:** `asomado-saludo.webp`, 270 px, 24 fps, 131 cuadros, 849 KB, más un póster de 7,2 KB. Se muestra a 150 px de ancho.
 - **Prueba:** en `/personaje`, el botón "Ver bienvenida otra vez" borra la marca de hoy y lleva al Home.
-- **QA de Code:** claro, oscuro y movimiento reducido a 390 px, segunda apertura del mismo día sin bienvenida, consola sin errores. Index `C8y856Gx` → `Dmjnt6jw`.
-- 👀 **Ojo:** el video también corta el cuerpo abajo, y ese corte se ve en el aire a media pantalla.
+- **QA de Code:** claro, oscuro y movimiento reducido a 390 px, segunda apertura del mismo día sin bienvenida, consola sin errores.
+- 👀 **Ojo:** mientras saluda tapa el lado derecho de "Esta semana", y una antena pasa sobre el disco de "Registrar un momento".
+- **Guardado para después:** `14-saludo-muro.mp4` (Wan) está respaldado para visitas sobre un borde horizontal.
 
 ### 2. ⏸️ Compañía sobre la card "Esta semana", en pausa
 - Sobre la card hay 16 px antes de "Registrar un momento" y el cuerpo necesita 95 a 120 px. Está en el Roadmap.
