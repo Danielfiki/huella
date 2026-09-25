@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { borrarMarcaBienvenida } from '../../components/personaje/bienvenida'
@@ -242,7 +241,6 @@ function EscenaRasgo() {
 
 export default function PersonajePage() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [abierto, setAbierto] = useState(null)
   const cerrar = React.useCallback(() => setAbierto(null), [])
 
@@ -271,13 +269,15 @@ export default function PersonajePage() {
 
       <EscenaRasgo />
 
-      {/* Prueba de la bienvenida del Home: borra la marca de hoy y va al Home */}
+      {/* Prueba de la bienvenida del Home: borra la marca de hoy y va al Home.
+          Carga completa y no navigate: asi el celular siempre prueba el codigo
+          recien desplegado, aunque la pestaña estuviera abierta de antes. */}
       <div className={styles.repetir}>
         <Button
           variant="ghost"
           onClick={() => {
             borrarMarcaBienvenida(user.id)
-            navigate('/panel')
+            window.location.assign('/panel')
           }}
         >
           Ver bienvenida otra vez

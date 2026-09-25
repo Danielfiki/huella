@@ -1,25 +1,34 @@
-/* Capa desde arriba de la pantalla hasta el borde superior de la barra
-   inferior (el alto lo pone el componente, medido en vivo). No recibe toques
-   ni mueve el scroll. El overflow hidden recorta lo que pasa del borde derecho
-   (los dedos) y deja la barra siempre por encima: el escarabajo nunca se
-   dibuja sobre ella. */
+/* Franja pegada al borde superior de la barra inferior (la capa vive dentro de
+   la barra). bottom 100% seria el borde de adentro; el + 1px suma la linea de
+   borde de la barra (border-top de 1px en Layout.module.css), asi el corte
+   del cuerpo cae exacto sobre esa linea. Mide lo mismo que el
+   escarabajo mas alto (150 px de ancho x 568/450) y recorta lo que pasa del
+   borde derecho: los dedos. No recibe toques. El z-index negativo la deja
+   detras de todo lo de la barra, incluido el +, pero delante de la pagina
+   (la barra es su propio contexto de apilado, z-index 1). */
 .capa {
-  position: fixed;
-  top: 0;
+  position: absolute;
   left: 0;
   right: 0;
+  bottom: calc(100% + 1px);
+  height: 190px;
   overflow: hidden;
   pointer-events: none;
-  z-index: 50;
+  z-index: -1;
 }
 
 /* Esquina inferior derecha. El borde de abajo del archivo es el corte del
-   cuerpo y cae sobre la barra; el ancho y el `right` negativo (lo que ocupan
-   los dedos pasado el corte) los pone el componente. */
+   cuerpo; la linea del corte derecho esta al 92,58 % del ancho del archivo, y
+   el right negativo saca de la franja lo que viene despues (los dedos).
+   Ancho de 150 px; si el + queda cerca (pantallas angostas) se achica hasta
+   130 para que la caja quede a 8 px del + (el + mide 48 y va al centro). */
 .escarabajo {
+  --ancho: clamp(130px, calc((50% - 32px) / 0.92578), 150px);
   position: absolute;
   bottom: 0;
-  aspect-ratio: 270 / 340;
+  right: calc(var(--ancho) * -0.07422);
+  width: var(--ancho);
+  aspect-ratio: 450 / 568;
   opacity: 0;
 }
 
