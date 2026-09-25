@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { marcarBienvenida } from './bienvenida'
-import { diag } from './diagnostico'
 import styles from './BienvenidaEscarabajo.module.css'
 
 // Bienvenida del Home (solo la cuenta de Daniel, una vez al dia; el filtro vive
@@ -15,14 +14,13 @@ import styles from './BienvenidaEscarabajo.module.css'
 // premultiplicado arriba (450 x 568), 16 px negros y la mascara abajo. Un
 // shader WebGL toma el color de arriba y el alfa de abajo.
 //
-// Arranque: play() apenas llega loadeddata; WebGL se prepara en paralelo y el
-// canvas dibuja desde el evento playing. El video nunca se pausa ni se
-// desmonta con un play() pendiente (en el iPhone eso lo abortaba).
+// Arranque: play() apenas el video tiene src (iOS no baja datos antes); WebGL
+// se prepara en paralelo y el canvas dibuja desde el evento playing. El video
+// nunca se pausa ni se desmonta con un play() pendiente (en el iPhone eso lo
+// abortaba).
 // Nunca "nada": si play() se rechaza con NotAllowedError (bajo consumo), si no
 // hay WebGL, si el video da error, si no hay cuadro 3 s despues de playing o
 // si playing no llega en 8 s, queda el poster quieto 4 s y se desmonta.
-//
-// TEMPORAL: cada paso se anota en el diagnostico (diag) para el bug del iPhone.
 
 const VIDEO = '/personaje/home/bienvenida-alfa.mp4'
 const POSTER = '/personaje/home/asomado-saludo-poster.webp'
@@ -93,7 +91,6 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     if (estado.current.terminado) return
     estado.current.terminado = true
     cancelAnimationFrame(rafRef.current)
-    diag(`capa desmontada: ${porque}`)
     terminarRef.current()
   }
   // Poster quieto 4 s y fuera. No toca el video: si hay un play() pendiente,
@@ -102,7 +99,6 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     if (estado.current.poster || estado.current.terminado) return
     estado.current.poster = true
     cancelAnimationFrame(rafRef.current)
-    diag(`fallback poster quieto 4 s: ${porque}`)
     marcarBienvenida(userId)
     setFase('posterQuieto')
     setTimeout(() => terminar('termino el poster quieto'), POSTER_QUIETO)
@@ -110,7 +106,6 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
 
   // video completo en la cache del navegador + poster, antes de mostrar nada.
   useEffect(() => {
-    diag(`bienvenida montada; barra ${barra ? 'encontrada' : 'NO encontrada'}`)
     if (!barra) { terminar('no hay barra inferior'); return }
     let vivo = true
     const poster = new Image()
@@ -120,8 +115,6 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
       poster.decode(),
     ]).then(([v, p]) => {
       if (!vivo) return
-      diag(`video descargado: ${v.status === 'fulfilled' ? `ok ${Math.round(v.value.byteLength / 1024)} KB` : `error ${v.reason}`}`)
-      diag(`poster decodificado: ${p.status === 'fulfilled' ? 'ok' : `error ${p.reason}`}`)
       if (p.status !== 'fulfilled') { terminar('el poster no decodifica'); return }
       setFuente(VIDEO)
       if (v.status !== 'fulfilled') alPoster('el video no se descargo')
@@ -133,7 +126,6 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
   useEffect(() => {
     if (fase !== 'oculto') return
     marcarBienvenida(userId)
-    diag('marca del dia puesta; fundido de entrada')
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setFase((f) => (f === 'oculto' ? 'visible' : f))))
     return () => cancelAnimationFrame(id)
   }, [fase, userId])
@@ -145,16 +137,13 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     if (!fuente || estado.current.arranco) return
     estado.current.arranco = true
     const video = videoRef.current
-    diag('play() llamado al asignar el video')
     let p
     try { p = video.play() } catch (e) { p = Promise.reject(e) }
-    Promise.resolve(p).then(() => diag('play(): ok')).catch((e) => {
-      const nombre = e && e.name
-      diag(`play(): ${nombre}: ${e && e.message}${nombre === 'NotAllowedError' ? '  -> probable modo de bajo consumo' : ''}`)
-      if (nombre === 'NotAllowedError') alPoster('play() rechazado (NotAllowedError)')
+    // NotAllowedError: iOS en bajo consumo no deja reproducir
+    Promise.resolve(p).catch((e) => {
+      if (e && e.name === 'NotAllowedError') alPoster('play() rechazado (NotAllowedError)')
     })
     const comp = canvasRef.current ? crearCompositor(canvasRef.current) : { error: 'no hay canvas' }
-    diag(`WebGL: ${comp.dibujar ? 'si' : `no (${comp.error})`}`)
     if (!comp.dibujar) { alPoster(comp.error); return }
     compRef.current = comp
     setTimeout(() => { if (!estado.current.playing) alPoster(`playing no llego en ${SIN_PLAYING} ms desde play()`) }, SIN_PLAYING)
@@ -162,13 +151,11 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
 
   // el fundido de entrada parte con lo primero que llegue: loadeddata o playing
   const alCargarDatos = () => {
-    diag('video: loadeddata')
     setFase((f) => (f === 'cargando' ? 'oculto' : f))
   }
 
   // playing: arranca el dibujo y el vigilante de 3 s al primer cuadro
   const alReproducir = () => {
-    diag('video: playing')
     setFase((f) => (f === 'cargando' ? 'oculto' : f))
     if (estado.current.playing) return
     estado.current.playing = true
@@ -182,20 +169,18 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
       // cuenta como dibujado solo si el pixel del cuerpo trae contenido (alfa > 0):
       // al llegar playing la textura puede venir vacia un instante, y el poster
       // tiene que seguir a la vista hasta que haya un cuadro de verdad
-      if (primero && px && Number(px.split(',')[3].split(' ')[0]) > 0) { estado.current.dibujado = true; diag(`primer cuadro dibujado; pixel del cuerpo rgba=${px}`); setDibujado(true) }
+      if (primero && px && Number(px.split(',')[3].split(' ')[0]) > 0) { estado.current.dibujado = true; setDibujado(true) }
       if (!video.ended) rafRef.current = requestAnimationFrame(cuadro)
     }
     cuadro()
   }
 
   const alTerminarVideo = () => {
-    diag('video: ended')
     if (compRef.current && !estado.current.poster) compRef.current.dibujar(videoRef.current, false)
     if (!estado.current.poster) terminar('evento ended del video')
   }
 
   if (!fuente || !barra) return null
-  const ev = (nombre) => () => diag(`video: ${nombre}`)
   // El tramo parte casi vacio (el escarabajo todavia escondido y se asoma), asi
   // que el poster (ya asomado) no va debajo del canvas al empezar: solo en el
   // fallback.
@@ -214,13 +199,10 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
           playsInline
           autoPlay
           preload="auto"
-          onLoadStart={ev('loadstart')}
-          onLoadedMetadata={ev('loadedmetadata')}
-          onCanPlay={ev('canplay')}
           onLoadedData={alCargarDatos}
           onPlaying={alReproducir}
           onEnded={alTerminarVideo}
-          onError={(e) => { const er = e.currentTarget.error; diag(`video: error codigo ${er && er.code} ${er && er.message}`); alPoster(`error del video (codigo ${er && er.code})`) }}
+          onError={(e) => { const er = e.currentTarget.error; alPoster(`error del video (codigo ${er && er.code})`) }}
         />
       </div>
     </div>,

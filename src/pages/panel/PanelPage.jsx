@@ -15,16 +15,12 @@ import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
 import { AHORA, porTope } from '../cerebro/contenidoCerebro'
-import { DUENO_PERSONAJE, tocaBienvenida, leerMarca } from '../../components/personaje/bienvenida'
-import { diag } from '../../components/personaje/diagnostico'
-import { diaChile } from '../../utils/fechaChile'
+import { DUENO_PERSONAJE, tocaBienvenida } from '../../components/personaje/bienvenida'
 import styles from './PanelPage.module.css'
 
 // Bienvenida del escarabajo: solo la cuenta de Daniel, y el chunk (con los
 // archivos de public/personaje/home) solo se pide si toca mostrarla.
 const BienvenidaEscarabajo = lazy(() => import('../../components/personaje/BienvenidaEscarabajo'))
-// TEMPORAL: panel de diagnostico de la bienvenida, solo la cuenta de Daniel.
-const DiagnosticoBienvenida = lazy(() => import('../../components/personaje/DiagnosticoBienvenida'))
 
 // UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
 // va y el siguiente candidato espera a que vuelva a abrir la app. Encadenar
@@ -93,19 +89,11 @@ export default function PanelPage() {
   const [upgradeCopy, setUpgradeCopy] = useState(null)
   // Se decide una vez al montar: la cuenta de Daniel, sin movimiento reducido
   // y sin la marca de hoy. La marca la pone la bienvenida cuando entra.
-  const [bienvenida, setBienvenida] = useState(() => {
-    const esDaniel = user?.id === DUENO_PERSONAJE
-    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const toca = esDaniel && !reducido && tocaBienvenida(user.id)
-    if (esDaniel) { // TEMPORAL: diagnostico del bug del iPhone
-      diag(`prefers-reduced-motion: ${reducido ? 'si' : 'no'}`)
-      diag(`marca del dia guardada: ${leerMarca(user.id) ?? '(ninguna)'}; hoy en Chile: ${diaChile(new Date())}`)
-      diag(toca ? 'toca bienvenida: si' : `toca bienvenida: no (${reducido ? 'movimiento reducido' : 'la marca de hoy ya esta puesta'})`)
-    }
-    return toca
-  })
-  const esDaniel = user?.id === DUENO_PERSONAJE
-  useEffect(() => { if (esDaniel && dataLoaded) diag('Home cargado (dataLoaded)') }, [esDaniel, dataLoaded])
+  const [bienvenida, setBienvenida] = useState(() =>
+    user?.id === DUENO_PERSONAJE &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    tocaBienvenida(user.id)
+  )
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
@@ -475,12 +463,6 @@ export default function PanelPage() {
       {bienvenida && dataLoaded && (
         <Suspense fallback={null}>
           <BienvenidaEscarabajo userId={user.id} alTerminar={() => setBienvenida(false)} />
-        </Suspense>
-      )}
-
-      {esDaniel && (
-        <Suspense fallback={null}>
-          <DiagnosticoBienvenida activa={bienvenida} />
         </Suspense>
       )}
 

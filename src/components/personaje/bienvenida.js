@@ -17,11 +17,6 @@ export function tocaBienvenida(userId) {
   }
 }
 
-// TEMPORAL (diagnostico): la marca guardada tal cual, o el error al leerla.
-export function leerMarca(userId) {
-  try { return localStorage.getItem(clave(userId)) } catch (e) { return `error al leer: ${e.name}` }
-}
-
 export function marcarBienvenida(userId) {
   try { localStorage.setItem(clave(userId), diaChile(new Date())) } catch { /* sin marca */ }
 }
