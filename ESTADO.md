@@ -130,6 +130,7 @@
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
 - **Personaje en Rive con animador** — cuando el personaje v1 esté validado con testers.
 - **Compañía del escarabajo sobre la card Esta semana** — faltan 80-105 px sobre la card, bucle ping-pong listo. Disparador: revisión del Home con Design.
+- **Bienvenida del escarabajo para todos los usuarios** — Disparador: Daniel decide.
 
 ---
 
@@ -364,13 +365,21 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Hallazgo:** WebKit reproduce el saludo más lento de lo que dura el archivo, porque atrasa cuadros en vez de saltárselos. El desmontaje a los 5,55 s cortaba al escarabajo antes de que se escondiera. Ahora se desmonta a los 10,8 s: como el último cuadro está vacío, el tiempo de más no se ve.
 - **QA de Code:** WebKit con iPhone 15 (claro, oscuro, desplazado y movimiento reducido) y Chromium a 390 px. Corte contra la barra 0 px, posición idéntica en 5 momentos, a 33,6 px del +, consola sin errores. La cuenta de prueba no cambia ni descarga nada.
 
+### 1c. ✅ ESTADO FINAL de la bienvenida: aprobada por Daniel en su iPhone 14 (commit `eace0d7`)
+- **Video actuado:** `15-bienvenida-costado.mp4`, cuadros 43 a 219 (1,792 s a 9,125 s). La entrada y la salida son del propio video: parte escondido detrás del borde (cuadro 43, casi vacío), se asoma, saluda, se despide y se esconde. Termina en el primer cuadro vacío. El código no lo mueve: solo un fundido de opacidad de 150 ms.
+- **Técnica:** MP4 H.264 con transparencia empaquetada (`public/personaje/home/bienvenida-alfa.mp4`, 450 x 1152: color premultiplicado arriba, 16 px de separación, máscara abajo; CRF 18, 24 fps, 755 KB) compuesto con WebGL en un canvas a 3x del tamaño en pantalla (150 px). Reemplaza al WebP animado, que Safari decodificaba por CPU y atrasaba. Proporción fuente contra render: 0,7377 contra 0,7346 (0,42 %).
+- **Anclado a la barra:** portal dentro de `[data-nav-inferior]` con `bottom: calc(100% + 1px)`. El corte de abajo cae exacto sobre la barra (0 px) y el derecho, en el borde de la pantalla.
+- **iOS:** `muted`, `playsinline` y `autoplay`, con `play()` apenas el video tiene src (iOS no baja datos antes de `play()`). El `<video>` fuente va a tamaño natural con opacidad 0 (a 1 px WebKit entrega la textura vacía). El fallback al póster quieto (4 s) solo corre después de `playing`, o si `play()` da NotAllowedError, o si no hay WebGL. Se desmonta con `ended`.
+- **Cómo se llegó:** el iPhone real se trababa en `loadedmetadata`. Un panel de diagnóstico temporal, solo para Daniel, mostró que el vigilante de 1,5 s abortaba el `play()` y que iOS no emite `loadeddata` sin `play()`. El panel ya se quitó (`eace0d7`).
+- **QA de cierre:** WebKit con iPhone 14 en claro y oscuro (corte 0 px y posición idéntica en 5 momentos, desmontaje con `ended` a ~7,5 s), movimiento reducido sin bienvenida, marca del día y botón de prueba, build y consola sin errores. La cuenta de prueba no cambia ni descarga nada, en local y en producción. Index `OTJPXVsn`.
+
 ### 2. ⏸️ Compañía sobre la card "Esta semana", en pausa
 - Sobre la card hay 16 px antes de "Registrar un momento" y el cuerpo necesita 95 a 120 px. Está en el Roadmap.
 - El bucle del 13 falló con fundido (antenas fantasma) y con corte (salto 8 veces un paso normal). Cuando se retome va de ida y vuelta.
 - Lo procesado quedó en `huella diseño\escarabajo-home`, fuera del repo.
 
 ### ⏭️ Pendiente
-1. ⬜ **Daniel aprueba la bienvenida en iPhone** y se decide si pasa a todos.
+1. ✅ **Daniel aprobó la bienvenida en su iPhone 14.** Si pasa a todos los usuarios queda en el Roadmap.
 
 ---
 

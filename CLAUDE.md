@@ -144,6 +144,14 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 
 12. Todo lo que se ubica en pantalla o es visual se verifica en WebKit con descriptor de iPhone, no solo en Chromium.
 
+## PERSONAJE Y ANIMACION
+
+- El personaje actúa su entrada y su salida en el video; el código nunca lo mueve.
+- Los cortes del personaje calzan con bordes reales de la UI (pantalla, barra). Se anclan con CSS dentro del elemento, no se calculan con JS.
+- Técnica: MP4 H.264 con transparencia empaquetada + WebGL, a 3x del tamaño en pantalla. En iOS: `muted`, `playsinline`, `autoplay` y `play()` inmediato; el fallback corre solo después de `playing`; el `<video>` fuente va a tamaño natural con opacidad 0.
+- Se verifica siempre en WebKit con descriptor de iPhone 14. Si falla en el teléfono real, se arma un panel de diagnóstico temporal solo para Daniel.
+- Si algo ya funciona, se corrige solo lo pedido: no se cambia la técnica sin que Daniel lo pida.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual
