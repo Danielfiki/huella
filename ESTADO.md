@@ -357,6 +357,13 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - 👀 **Ojo:** mientras saluda tapa el lado derecho de "Esta semana", y una antena pasa sobre el disco de "Registrar un momento".
 - **Guardado para después:** `14-saludo-muro.mp4` (Wan) está respaldado para visitas sobre un borde horizontal.
 
+### 1b. 🔧 Dos defectos en el iPhone de Daniel, arreglados (commit `4d0a810`)
+- **Defecto 1, posición:** en el iPhone el escarabajo quedaba a media pantalla, con el corte sobre "Registrar un momento", y además se deslizaba. **Causa:** el iPhone corría la versión anterior (`e891221`) en una pestaña de Safari abierta desde antes del deploy. La app no recarga al navegar, y el botón de prueba navegaba dentro de la misma página. Reproducido en WebKit con iPhone 15: esa versión deja el corte en y=439,5, sobre el botón (y 368–428) y 148,5 px por encima de la barra. No había service worker con caché (`sw.js` solo maneja push) e `index.html` va con `max-age=0`.
+- **Arreglo del 1:** el botón "Ver bienvenida otra vez" ahora hace una carga completa (`window.location.assign`) y siempre trae el código recién desplegado. La capa además vive DENTRO de la barra (portal a `[data-nav-inferior]`, `bottom: calc(100% + 1px)` por la línea de borde de la barra), sin medir nada con JS: queda pegada con cualquier alto de pantalla y con la barra de Safari visible o escondida. Cero movimiento por código: solo el fundido de opacidad.
+- **Defecto 2, pixelado:** el WebP medía 270 px y se mostraba a 150 px en una pantalla 3x, con calidad 40. **Arreglo:** rehecho desde el video a 450 px, calidad 80 y transparencia 90, a 22 fps (a 24 fps pasaba el tope): 2.467 KB. El AVIF quedaba en 1.016 KB, pero se descartó porque el WebKit de prueba no abre ningún AVIF y no se podía verificar.
+- **Hallazgo:** WebKit reproduce el saludo más lento de lo que dura el archivo, porque atrasa cuadros en vez de saltárselos. El desmontaje a los 5,55 s cortaba al escarabajo antes de que se escondiera. Ahora se desmonta a los 10,8 s: como el último cuadro está vacío, el tiempo de más no se ve.
+- **QA de Code:** WebKit con iPhone 15 (claro, oscuro, desplazado y movimiento reducido) y Chromium a 390 px. Corte contra la barra 0 px, posición idéntica en 5 momentos, a 33,6 px del +, consola sin errores. La cuenta de prueba no cambia ni descarga nada.
+
 ### 2. ⏸️ Compañía sobre la card "Esta semana", en pausa
 - Sobre la card hay 16 px antes de "Registrar un momento" y el cuerpo necesita 95 a 120 px. Está en el Roadmap.
 - El bucle del 13 falló con fundido (antenas fantasma) y con corte (salto 8 veces un paso normal). Cuando se retome va de ida y vuelta.

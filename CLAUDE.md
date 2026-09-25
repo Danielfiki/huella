@@ -142,6 +142,8 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 
 11. QA lo hace Code: todo lo que se pueda verificar con Gmail, navegador invisible, SQL o el bundle, lo verifica Code, y lo revisa 2 o 3 veces antes de darlo por bueno. Una sola pasada no basta. A Daniel se le pide confirmar en celular o PC solo cuando sea extremadamente necesario, y se le dice de entrada por qué.
 
+12. Todo lo que se ubica en pantalla o es visual se verifica en WebKit con descriptor de iPhone, no solo en Chromium.
+
 ## Workflow
 
 - Al inicio de cada sesión: lee `ESTADO.md` para el estado actual
