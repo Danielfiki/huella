@@ -7,7 +7,8 @@ import styles from './BienvenidaEscarabajo.module.css'
 // Bienvenida del Home (solo la cuenta de Daniel, una vez al dia; el filtro vive
 // en PanelPage). El escarabajo actua solo: se asoma en la esquina inferior
 // derecha, saluda, se despide y se esconde detras del borde (video 15 de
-// Gemini, tramo 3,708 s a 9,125 s). El codigo NO lo mueve: solo un fundido de
+// Gemini, cuadros 43 a 219: 1,792 s a 9,125 s, con la entrada actuada desde
+// detras del borde). El codigo NO lo mueve: solo un fundido de
 // opacidad al aparecer, el tramo una vez y se desmonta en `ended`.
 //
 // Video con transparencia empaquetada: un MP4 H.264 (450 x 1152) con el color
@@ -195,7 +196,10 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
 
   if (!fuente || !barra) return null
   const ev = (nombre) => () => diag(`video: ${nombre}`)
-  const posterVisible = !dibujado || fase === 'posterQuieto'
+  // El tramo parte casi vacio (el escarabajo todavia escondido y se asoma), asi
+  // que el poster (ya asomado) no va debajo del canvas al empezar: solo en el
+  // fallback.
+  const posterVisible = fase === 'posterQuieto'
 
   return createPortal(
     <div className={styles.capa} aria-hidden="true">
