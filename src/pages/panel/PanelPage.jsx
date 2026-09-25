@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHuella, calcularEdadDecimal } from '../../context/HuellaContext'
@@ -15,11 +15,11 @@ import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
 import { AHORA, porTope } from '../cerebro/contenidoCerebro'
-import { DUENO_PERSONAJE, tocaBienvenida } from '../../components/personaje/bienvenida'
+import { tocaBienvenida } from '../../components/personaje/bienvenida'
 import styles from './PanelPage.module.css'
 
-// Bienvenida del escarabajo: solo la cuenta de Daniel, y el chunk (con los
-// archivos de public/personaje/home) solo se pide si toca mostrarla.
+// Bienvenida del escarabajo, para todos: el chunk (con los archivos de
+// public/personaje/home) solo se pide si toca mostrarla.
 const BienvenidaEscarabajo = lazy(() => import('../../components/personaje/BienvenidaEscarabajo'))
 
 // UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
@@ -87,10 +87,12 @@ export default function PanelPage() {
   const location = useLocation()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeCopy, setUpgradeCopy] = useState(null)
-  // Se decide una vez al montar: la cuenta de Daniel, sin movimiento reducido
-  // y sin la marca de hoy. La marca la pone la bienvenida cuando entra.
+  // Se decide una vez al montar: sin movimiento reducido y sin la marca de hoy
+  // de este usuario. La marca la pone la bienvenida cuando entra. No se monta
+  // mientras el onboarding este en pantalla (gastaria la marca sin verse).
+  const { onboardingVisible, onboardingDecidido } = useOutletContext() || {}
   const [bienvenida, setBienvenida] = useState(() =>
-    user?.id === DUENO_PERSONAJE &&
+    !!user?.id &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
     tocaBienvenida(user.id)
   )
@@ -460,7 +462,7 @@ export default function PanelPage() {
         </TarjetaEntrada>
       </div>
 
-      {bienvenida && dataLoaded && (
+      {bienvenida && dataLoaded && onboardingDecidido && !onboardingVisible && (
         <Suspense fallback={null}>
           <BienvenidaEscarabajo userId={user.id} alTerminar={() => setBienvenida(false)} />
         </Suspense>

@@ -1,7 +1,7 @@
 import { diaChile } from '../../utils/fechaChile'
 
-// El personaje todavia es privado: solo lo ve la cuenta de Daniel. La vitrina
-// (/personaje) y la bienvenida del Home filtran con este id.
+// La vitrina del personaje (/personaje) es privada: solo la cuenta de Daniel.
+// La bienvenida del Home es para todos (una vez al dia por usuario).
 export const DUENO_PERSONAJE = '04ddd97a-e674-4e59-8f37-78cb38d46090'
 
 // Marca del dia de la bienvenida, por usuario: guarda el dia de Chile en que

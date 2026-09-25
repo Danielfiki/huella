@@ -243,10 +243,16 @@ export default function Layout() {
     direction = currentIndex > prevIndex ? 'forward' : 'backward'
   }
 
+  // Si el onboarding esta en pantalla, y si ya se sabe (cuenta y familia
+  // cargadas). Tambien va a las paginas (contexto del Outlet): el Home no monta
+  // la bienvenida del escarabajo debajo del onboarding ni antes de saberlo.
+  const onboardingVisible = !familyLoading && showOnboarding && (ensayo || !family || family.role === 'owner')
+  const onboardingDecidido = !familyLoading && dataLoaded
+
   return (
     <div className={styles.container}>
       {dataLoading && <div className={styles.loadingBar} />}
-      {!familyLoading && showOnboarding && (ensayo || !family || family.role === 'owner') && (
+      {onboardingVisible && (
         <Onboarding
           ensayo={ensayo}
           ensayoIA={ensayoIA}
@@ -312,7 +318,7 @@ export default function Layout() {
         <NotifBanner />
         {dataLoading ? <SkeletonLoader /> : (
           <PageTransition key={location.key} direction={direction}>
-            <Outlet />
+            <Outlet context={{ onboardingVisible, onboardingDecidido }} />
           </PageTransition>
         )}
       </main>

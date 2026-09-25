@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { marcarBienvenida } from './bienvenida'
 import styles from './BienvenidaEscarabajo.module.css'
 
-// Bienvenida del Home (solo la cuenta de Daniel, una vez al dia; el filtro vive
+// Bienvenida del Home (todos los usuarios, una vez al dia; el filtro vive
 // en PanelPage). El escarabajo actua solo: se asoma en la esquina inferior
 // derecha, saluda, se despide y se esconde detras del borde (video 15 de
 // Gemini, cuadros 43 a 219: 1,792 s a 9,125 s, con la entrada actuada desde
