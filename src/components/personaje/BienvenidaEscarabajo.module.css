@@ -59,3 +59,8 @@
   opacity: 0;
   pointer-events: none;
 }
+
+/* canvas escondido mientras se muestra el poster quieto */
+.apagado {
+  visibility: hidden;
+}
