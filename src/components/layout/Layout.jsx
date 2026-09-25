@@ -317,13 +317,14 @@ export default function Layout() {
         )}
       </main>
 
-      <nav className={styles.bottomNav}>
+      {/* data-nav-*: la bienvenida del escarabajo mide aca el borde de la barra y el + */}
+      <nav className={styles.bottomNav} data-nav-inferior="">
         {navItems.map(({ to, icon: Icon, label, destacado, esPerfil }) =>
           destacado ? (
             <NavLink key={to} to={to} className={({ isActive }) =>
               `${styles.navRegistrar} ${isActive ? styles.navRegistrarActive : ''}`
             }>
-              <div className={styles.navRegistrarBtn}>
+              <div className={styles.navRegistrarBtn} data-nav-registrar="">
                 <Icon size={22} />
               </div>
               <span className={styles.navRegistrarLabel}>{label}</span>

@@ -1,34 +1,31 @@
-/* Capa sobre toda la pantalla que no recibe toques ni mueve el scroll. El
-   overflow hidden recorta lo que pasa del borde derecho (los dedos). */
+/* Capa desde arriba de la pantalla hasta el borde superior de la barra
+   inferior (el alto lo pone el componente, medido en vivo). No recibe toques
+   ni mueve el scroll. El overflow hidden recorta lo que pasa del borde derecho
+   (los dedos) y deja la barra siempre por encima: el escarabajo nunca se
+   dibuja sobre ella. */
 .capa {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 50;
 }
 
-/* 150 px de ancho (el archivo es de 270). En el archivo la linea de corte del
-   cuerpo esta a 232 de 270 px, o sea a 129 de 150: con right -21px el corte
-   cae justo en el borde derecho de la pantalla y los dedos quedan 11 px
-   afuera. Fuera de escena se corre su propio ancho a la derecha. */
+/* Esquina inferior derecha. El borde de abajo del archivo es el corte del
+   cuerpo y cae sobre la barra; el ancho y el `right` negativo (lo que ocupan
+   los dedos pasado el corte) los pone el componente. */
 .escarabajo {
   position: absolute;
-  top: 50%;
-  right: -21px;
-  width: 150px;
-  aspect-ratio: 270 / 396;
-  transform: translate(100%, -50%);
+  bottom: 0;
+  aspect-ratio: 270 / 340;
+  opacity: 0;
 }
 
-.dentro {
-  transform: translate(0, -50%);
-  transition: transform var(--motion-lenta) var(--motion-ease-entrada);
-}
-
-.saliendo {
-  transform: translate(100%, -50%);
-  transition: transform var(--motion-lenta) var(--motion-ease-salida);
+.visible {
+  opacity: 1;
+  transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
 }
 
 .imagen {
