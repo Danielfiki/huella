@@ -130,7 +130,6 @@
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
 - **Personaje en Rive con animador** — cuando el personaje v1 esté validado con testers.
 - **Compañía del escarabajo sobre la card Esta semana** — faltan 80-105 px sobre la card, bucle ping-pong listo. Disparador: revisión del Home con Design.
-- **Bienvenida del escarabajo para todos los usuarios** — Disparador: Daniel decide.
 
 ---
 
@@ -373,13 +372,19 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Cómo se llegó:** el iPhone real se trababa en `loadedmetadata`. Un panel de diagnóstico temporal, solo para Daniel, mostró que el vigilante de 1,5 s abortaba el `play()` y que iOS no emite `loadeddata` sin `play()`. El panel ya se quitó (`eace0d7`).
 - **QA de cierre:** WebKit con iPhone 14 en claro y oscuro (corte 0 px y posición idéntica en 5 momentos, desmontaje con `ended` a ~7,5 s), movimiento reducido sin bienvenida, marca del día y botón de prueba, build y consola sin errores. La cuenta de prueba no cambia ni descarga nada, en local y en producción. Index `OTJPXVsn`.
 
+### 1d. ✅ Bienvenida para TODOS los usuarios (commit `8706e60`, decisión de Daniel)
+- **Qué cambió:** se quitó el filtro por user_id de la bienvenida en el Home. Todo lo demás queda igual: una vez al día por usuario (la marca lleva el id), calendario de Chile, sin toques, sin bienvenida con movimiento reducido, anclada a la barra y con la técnica de video + WebGL. La vitrina `/personaje` y su botón de prueba siguen solo para Daniel.
+- **Onboarding:** la bienvenida no se monta mientras el onboarding está en pantalla ni antes de que Layout sepa si toca mostrarlo (se pasa `onboardingVisible` y `onboardingDecidido` por el contexto del Outlet). Sin eso, una cuenta nueva bajaba el chunk, el video y el póster debajo del onboarding y se quedaba sin su bienvenida del día.
+- **QA de Code:** la cuenta de prueba (en onboarding, login real) no ve ni descarga nada, en local y en producción, en WebKit iPhone 14 y Chromium, y `/personaje` la redirige a `/panel`. Simulada con Home y con su user_id real, ve la bienvenida una sola vez en el día (WebKit iPhone 14 claro y oscuro, Chromium 390 px), con corte de 0 px. Con movimiento reducido no aparece. La cuenta de Daniel y su botón de prueba siguen funcionando. Build y consola sin errores. Index `C8lCKTHl`.
+- ⚠️ **Sin cerrar:** la simulación con Home contra producción falló dos veces seguidas por tiempo de carga del navegador de prueba (producción respondía 200 en 0,36 s). El mismo build pasó en local.
+
 ### 2. ⏸️ Compañía sobre la card "Esta semana", en pausa
 - Sobre la card hay 16 px antes de "Registrar un momento" y el cuerpo necesita 95 a 120 px. Está en el Roadmap.
 - El bucle del 13 falló con fundido (antenas fantasma) y con corte (salto 8 veces un paso normal). Cuando se retome va de ida y vuelta.
 - Lo procesado quedó en `huella diseño\escarabajo-home`, fuera del repo.
 
 ### ⏭️ Pendiente
-1. ✅ **Daniel aprobó la bienvenida en su iPhone 14.** Si pasa a todos los usuarios queda en el Roadmap.
+1. ✅ **Daniel aprobó la bienvenida en su iPhone 14** y quedó para todos los usuarios (`8706e60`).
 
 ---
 
