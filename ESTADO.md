@@ -129,6 +129,7 @@
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
 - **Personaje en Rive con animador** — cuando el personaje v1 esté validado con testers.
+- **Escarabajo asomado en Home** — Disparador: Daniel elige ubicación.
 
 ---
 
@@ -343,7 +344,23 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (23 sep 2026) — **Ítem 7(c) verificado en producción · La brava sin duplicados · recuperar contraseña avisa cuando el link ya no sirve**
+## Cerrado HOY (24 sep 2026) — **Vitrina /personaje animada: 10 videos en producción**
+
+### 1. ✅ Personaje animado en la vitrina (commit `97a5a2d`)
+- **10 videos hechos de imagen a video:** 01 a 03 con Gemini Veo, 04 a 10 con Wan 2.5. Los originales quedaron en `huella-design-pack\personaje\videos-originales`, con checksum igual.
+- **Escenario crema fijo:** el fondo de cada video se aplanó a `#FAF3EC` y el terracota se igualó al de `02-orgulloso` (ΔE 0,01 a 0,17).
+- **Bucle en todos salvo 01-saludando**, que se reproduce una vez. Con movimiento reducido se ve el póster quieto.
+- **Corrección de sombra:** la sombra se desvanece al 4% del borde de la fuente, para que no se corte en seco. Revisada en grande en 08-celebrando.
+- **Salida:** `public/personaje/video/`, 10 MP4 de 165 a 480 KB y 10 pósters WebP de 12 a 23 KB.
+- **QA de Code:** claro, oscuro y movimiento reducido. La redirección se probó dos veces en local y dos en producción: otra cuenta termina en `/panel` sin descargar videos. Index `ClTHcjia` → `C8y856Gx`, y los MP4 de producción pesan lo mismo al byte que los del repo.
+- 🪤 Esta sesión se cortó antes de escribir ESTADO.md (error de la API y reinicio del PC). Se cerró el 25 sep.
+
+### ⏭️ Pendiente
+1. ⬜ **Escarabajo asomado en el Home:** está en el Roadmap. Espera que Daniel elija la ubicación. Los 3 originales ya están respaldados.
+
+---
+
+## Sesión 23 sep 2026 — **Ítem 7(c) verificado en producción · La brava sin duplicados · recuperar contraseña avisa cuando el link ya no sirve**
 
 **🎯 El 7(c) funciona con uso real: el momento nuevo no creó fila repetida.** Queda anotado un hallazgo del motor, sin cambio de código.
 
