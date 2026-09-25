@@ -37,10 +37,25 @@
   transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
 }
 
+/* poster y canvas ocupan la caja entera: misma proporcion que el video
+   (450 x 568), sin estirar */
 .imagen {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   user-select: none;
+}
+
+/* El video es solo la fuente del canvas: invisible pero en el DOM y a su
+   tamano natural (450 x 1152). WebKit sube a WebGL el cuadro al tamano con que
+   el video se pinta: a 1 px la textura llega vacia. La capa lo recorta. */
+.fuente {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 450px;
+  height: 1152px;
+  opacity: 0;
+  pointer-events: none;
 }

@@ -7,54 +7,84 @@ import styles from './BienvenidaEscarabajo.module.css'
 // en PanelPage). El escarabajo actua solo: se asoma en la esquina inferior
 // derecha, saluda, se despide y se esconde detras del borde (video 15 de
 // Gemini, tramo 3,708 s a 9,125 s). El codigo NO lo mueve: solo un fundido de
-// opacidad en el primer cuadro, el tramo una vez y se desmonta cuando el WebP
-// termina, en un cuadro ya vacio.
+// opacidad al aparecer, el tramo una vez y se desmonta en `ended`.
+//
+// Video con transparencia empaquetada: un MP4 H.264 (450 x 1152) con el color
+// premultiplicado arriba (450 x 568), 16 px negros y la mascara abajo. Un
+// shader WebGL toma el color de arriba y el alfa de abajo. Safari decodifica
+// H.264 por hardware; el WebP animado anterior se decodificaba por CPU y se
+// atrasaba en el iPhone. Sin WebGL, o si el navegador no deja reproducir,
+// queda el poster quieto.
 //
 // Vive DENTRO de la barra inferior (portal a [data-nav-inferior]), anclado a su
-// borde superior con CSS: el corte del cuerpo queda pegado a la barra en
-// cualquier alto de pantalla, con la zona segura del iPhone y con la barra de
-// Safari visible o escondida, sin medir nada con JS.
-//
-// El WebP se baja como blob y se muestra con una URL propia: asi arranca
-// siempre desde el primer cuadro, aunque el navegador ya lo tenga en memoria
-// de una vuelta anterior (con la misma URL quedaria en el ultimo).
+// borde superior con CSS, sin medir nada con JS.
 
-const SALUDO = '/personaje/home/asomado-saludo.webp'
+const VIDEO = '/personaje/home/bienvenida-alfa.mp4'
 const POSTER = '/personaje/home/asomado-saludo-poster.webp'
-const DURACION_SALUDO = 5400 // ms, 120 cuadros a 22 fps; el ultimo esta vacio
-// Safari no se salta cuadros si no alcanza a decodificarlos: los atrasa, y el
-// saludo puede durar mas que 5,4 s. Como el ultimo cuadro esta vacio y el WebP
-// no se repite, quedar montado de mas no se ve: se desmonta con margen amplio
-// para no cortarlo nunca antes de que se esconda.
-const MARGEN_FINAL = DURACION_SALUDO
+const ANCHO = 450, ALTO = 568, SEPARACION = 16, ALTO_VIDEO = ALTO * 2 + SEPARACION
+const DURACION = 5460 // ms, solo para el caso sin video (poster quieto)
 const RESPALDO_FUNDIDO = 600 // por si transitionend no llega
 
+const VERTICES = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2((p.x+1.0)*0.5,(1.0-p.y)*0.5);gl_Position=vec4(p,0.0,1.0);}'
+const FRAGMENTO = `precision mediump float;uniform sampler2D t;varying vec2 uv;
+void main(){vec3 c=texture2D(t,vec2(uv.x,uv.y*${(ALTO / ALTO_VIDEO).toFixed(6)})).rgb;
+float a=texture2D(t,vec2(uv.x,${((ALTO + SEPARACION) / ALTO_VIDEO).toFixed(6)}+uv.y*${(ALTO / ALTO_VIDEO).toFixed(6)})).r;
+gl_FragColor=vec4(min(c,vec3(a)),a);}`
+
+// Programa WebGL que compone color + mascara; null si no hay WebGL.
+function crearCompositor(canvas) {
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false })
+  if (!gl) return null
+  const sh = (tipo, src) => { const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s); return s }
+  const prog = gl.createProgram()
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERTICES))
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAGMENTO))
+  gl.linkProgram(prog)
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null
+  gl.useProgram(prog)
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  const loc = gl.getAttribLocation(prog, 'p')
+  gl.enableVertexAttribArray(loc)
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.viewport(0, 0, ANCHO, ALTO)
+  return (video) => {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  }
+}
+
 export default function BienvenidaEscarabajo({ userId, alTerminar }) {
-  // cargando -> oculto -> visible -> saludando
+  // cargando -> oculto -> visible -> actuando
   const [fase, setFase] = useState('cargando')
-  const [saludo, setSaludo] = useState(null)
-  const [animado, setAnimado] = useState(false)
+  const [fuente, setFuente] = useState(null)
+  const [dibujado, setDibujado] = useState(false)
   const [barra] = useState(() => document.querySelector('[data-nav-inferior]'))
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
   const terminar = useRef(alTerminar)
   terminar.current = alTerminar
 
-  // blob del saludo + poster en cache antes de mostrar nada
+  // video completo en la cache del navegador + poster, antes de mostrar nada.
+  // El <video> usa la URL normal y no un blob: WebKit no reproduce video desde
+  // blob: (error 4 en la prueba con descriptor de iPhone).
   useEffect(() => {
     if (!barra) { terminar.current(); return }
     let vivo = true
-    let url = null
     const poster = new Image()
     poster.src = POSTER
     Promise.all([
-      fetch(SALUDO).then((r) => { if (!r.ok) throw new Error(r.status); return r.blob() }),
+      fetch(VIDEO).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer() }),
       poster.decode(),
-    ]).then(([blob]) => {
-      if (!vivo) return
-      url = URL.createObjectURL(blob)
-      setSaludo(url)
-      setFase('oculto')
-    }).catch(() => { if (vivo) terminar.current() })
-    return () => { vivo = false; if (url) URL.revokeObjectURL(url) }
+    ]).then(() => { if (vivo) setFuente(VIDEO) }).catch(() => { if (vivo) terminar.current() })
+    return () => { vivo = false }
   }, [barra])
 
   // 'oculto' se pinta un cuadro en opacidad 0 y recien ahi se funde
@@ -66,32 +96,61 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
   }, [fase, userId])
 
   useEffect(() => {
-    if (fase === 'visible') {
-      const t = setTimeout(() => setFase('saludando'), RESPALDO_FUNDIDO)
-      return () => clearTimeout(t)
+    if (fase !== 'visible') return
+    const t = setTimeout(() => setFase('actuando'), RESPALDO_FUNDIDO)
+    return () => clearTimeout(t)
+  }, [fase])
+
+  // actuando: el video corre y cada cuadro se compone en el canvas
+  useEffect(() => {
+    if (fase !== 'actuando') return
+    const video = videoRef.current
+    const dibujar = canvasRef.current && crearCompositor(canvasRef.current)
+    let raf = 0
+    let quieto = null
+    const posterQuieto = () => { quieto = setTimeout(() => terminar.current(), DURACION) }
+    if (!dibujar || !video) { posterQuieto(); return () => clearTimeout(quieto) }
+    const cuadro = () => {
+      dibujar(video)
+      if (!video.paused && !video.ended) raf = requestAnimationFrame(cuadro)
     }
-    if (fase === 'saludando' && animado) {
-      const t = setTimeout(() => terminar.current(), DURACION_SALUDO + MARGEN_FINAL)
-      return () => clearTimeout(t)
+    const alTocar = () => { cuadro(); setDibujado(true) }
+    const alTerminarVideo = () => { dibujar(video); terminar.current() }
+    video.addEventListener('playing', alTocar)
+    video.addEventListener('ended', alTerminarVideo)
+    video.play().catch(posterQuieto)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(quieto)
+      video.removeEventListener('playing', alTocar)
+      video.removeEventListener('ended', alTerminarVideo)
     }
-  }, [fase, animado])
+  }, [fase])
 
   const alTerminarFundido = (e) => {
-    if (e.target === e.currentTarget && e.propertyName === 'opacity' && fase === 'visible') setFase('saludando')
+    if (e.target === e.currentTarget && e.propertyName === 'opacity' && fase === 'visible') setFase('actuando')
   }
 
-  if (fase === 'cargando' || !barra) return null
+  if (!fuente || !barra) return null
 
   return createPortal(
     <div className={styles.capa} aria-hidden="true">
       <div
-        className={`${styles.escarabajo} ${fase === 'oculto' ? '' : styles.visible}`}
+        className={`${styles.escarabajo} ${fase === 'cargando' || fase === 'oculto' ? '' : styles.visible}`}
         onTransitionEnd={alTerminarFundido}
       >
-        {!animado && <img className={styles.imagen} src={POSTER} alt="" draggable="false" />}
-        {fase === 'saludando' && (
-          <img className={styles.imagen} src={saludo} alt="" draggable="false" onLoad={() => setAnimado(true)} />
-        )}
+        {!dibujado && <img className={styles.imagen} src={POSTER} alt="" draggable="false" />}
+        <canvas ref={canvasRef} className={styles.imagen} width={ANCHO} height={ALTO} />
+        <video
+          ref={videoRef}
+          className={styles.fuente}
+          src={fuente}
+          muted
+          playsInline
+          preload="auto"
+          onLoadedData={() => setFase((f) => (f === 'cargando' ? 'oculto' : f))}
+          onError={() => terminar.current()}
+        />
       </div>
     </div>,
     barra
