@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
+import { borrarMarcaBienvenida } from '../../components/personaje/bienvenida'
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
 import styles from './PersonajePage.module.css'
@@ -238,6 +241,8 @@ function EscenaRasgo() {
 }
 
 export default function PersonajePage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [abierto, setAbierto] = useState(null)
   const cerrar = React.useCallback(() => setAbierto(null), [])
 
@@ -265,6 +270,19 @@ export default function PersonajePage() {
       </section>
 
       <EscenaRasgo />
+
+      {/* Prueba de la bienvenida del Home: borra la marca de hoy y va al Home */}
+      <div className={styles.repetir}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            borrarMarcaBienvenida(user.id)
+            navigate('/panel')
+          }}
+        >
+          Ver bienvenida otra vez
+        </Button>
+      </div>
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>

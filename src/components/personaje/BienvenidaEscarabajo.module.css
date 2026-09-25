@@ -1,0 +1,40 @@
+/* Capa sobre toda la pantalla que no recibe toques ni mueve el scroll. El
+   overflow hidden recorta lo que pasa del borde derecho (los dedos). */
+.capa {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* 150 px de ancho (el archivo es de 270). En el archivo la linea de corte del
+   cuerpo esta a 232 de 270 px, o sea a 129 de 150: con right -21px el corte
+   cae justo en el borde derecho de la pantalla y los dedos quedan 11 px
+   afuera. Fuera de escena se corre su propio ancho a la derecha. */
+.escarabajo {
+  position: absolute;
+  top: 50%;
+  right: -21px;
+  width: 150px;
+  aspect-ratio: 270 / 396;
+  transform: translate(100%, -50%);
+}
+
+.dentro {
+  transform: translate(0, -50%);
+  transition: transform var(--motion-lenta) var(--motion-ease-entrada);
+}
+
+.saliendo {
+  transform: translate(100%, -50%);
+  transition: transform var(--motion-lenta) var(--motion-ease-salida);
+}
+
+.imagen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
