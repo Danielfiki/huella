@@ -137,13 +137,14 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     return () => cancelAnimationFrame(id)
   }, [fase, userId])
 
-  // loadeddata: play() de inmediato, WebGL en paralelo y el seguro de 8 s
-  const alCargarDatos = () => {
-    diag('video: loadeddata')
-    if (estado.current.arranco) return
+  // Apenas el <video> tiene src: play() de inmediato, sin esperar ningun
+  // evento. iOS Safari no baja datos del video hasta que se llama play(): si se
+  // espera loadeddata, nunca llega. WebGL se prepara en el mismo momento.
+  useEffect(() => {
+    if (!fuente || estado.current.arranco) return
     estado.current.arranco = true
-    setFase((f) => (f === 'cargando' ? 'oculto' : f))
     const video = videoRef.current
+    diag('play() llamado al asignar el video')
     let p
     try { p = video.play() } catch (e) { p = Promise.reject(e) }
     Promise.resolve(p).then(() => diag('play(): ok')).catch((e) => {
@@ -155,12 +156,19 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     diag(`WebGL: ${comp.dibujar ? 'si' : `no (${comp.error})`}`)
     if (!comp.dibujar) { alPoster(comp.error); return }
     compRef.current = comp
-    setTimeout(() => { if (!estado.current.playing) alPoster(`playing no llego en ${SIN_PLAYING} ms desde loadeddata`) }, SIN_PLAYING)
+    setTimeout(() => { if (!estado.current.playing) alPoster(`playing no llego en ${SIN_PLAYING} ms desde play()`) }, SIN_PLAYING)
+  }, [fuente]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // el fundido de entrada parte con lo primero que llegue: loadeddata o playing
+  const alCargarDatos = () => {
+    diag('video: loadeddata')
+    setFase((f) => (f === 'cargando' ? 'oculto' : f))
   }
 
   // playing: arranca el dibujo y el vigilante de 3 s al primer cuadro
   const alReproducir = () => {
     diag('video: playing')
+    setFase((f) => (f === 'cargando' ? 'oculto' : f))
     if (estado.current.playing) return
     estado.current.playing = true
     setTimeout(() => { if (!estado.current.dibujado) alPoster(`ningun cuadro dibujado ${SIN_CUADRO} ms despues de playing`) }, SIN_CUADRO)
@@ -170,7 +178,10 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
       if (!comp || estado.current.poster || estado.current.terminado) return
       const primero = !estado.current.dibujado
       const px = comp.dibujar(video, primero)
-      if (primero) { estado.current.dibujado = true; diag(`primer cuadro dibujado; pixel del cuerpo rgba=${px}`); setDibujado(true) }
+      // cuenta como dibujado solo si el pixel del cuerpo trae contenido (alfa > 0):
+      // al llegar playing la textura puede venir vacia un instante, y el poster
+      // tiene que seguir a la vista hasta que haya un cuadro de verdad
+      if (primero && px && Number(px.split(',')[3].split(' ')[0]) > 0) { estado.current.dibujado = true; diag(`primer cuadro dibujado; pixel del cuerpo rgba=${px}`); setDibujado(true) }
       if (!video.ended) rafRef.current = requestAnimationFrame(cuadro)
     }
     cuadro()
@@ -197,6 +208,7 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
           src={fuente}
           muted
           playsInline
+          autoPlay
           preload="auto"
           onLoadStart={ev('loadstart')}
           onLoadedMetadata={ev('loadedmetadata')}
