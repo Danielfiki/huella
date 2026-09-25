@@ -129,7 +129,7 @@
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
 - **Personaje en Rive con animador** — cuando el personaje v1 esté validado con testers.
-- **Escarabajo asomado en Home** — Disparador: Daniel elige ubicación.
+- **Compañía del escarabajo sobre la card Esta semana** — faltan 80-105 px sobre la card, bucle ping-pong listo. Disparador: revisión del Home con Design.
 
 ---
 
@@ -344,7 +344,27 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (24 sep 2026) — **Vitrina /personaje animada: 10 videos en producción**
+## Cerrado HOY (25 sep 2026) — **Bienvenida del escarabajo en el Home, solo cuenta de Daniel**
+
+### 1. ✅ Bienvenida en el Home (commit `e891221`)
+- **Qué hace:** en la primera apertura del Home de cada día (calendario de Chile, marca en localStorage por usuario), el escarabajo asomado de costado entra desde el borde derecho, saluda una vez (5 s) y sale. Dura 6,6 s y se desmonta. Con movimiento reducido no aparece.
+- **Solo la cuenta de Daniel:** el chunk y los archivos de `public/personaje/home/` se piden solo si toca mostrarla. La cuenta de prueba ve el Home igual que antes y no descarga nada, probado en local y dos veces en producción.
+- **Archivo:** `asomado-saludo.webp`, 270 px, 18 fps, 751 KB, más un póster de 10,5 KB. Se muestra a 150 px de ancho. El corte cae en el borde de la pantalla y los dedos quedan 11 px afuera.
+- **Prueba:** en `/personaje`, el botón "Ver bienvenida otra vez" borra la marca de hoy y lleva al Home.
+- **QA de Code:** claro, oscuro y movimiento reducido a 390 px, segunda apertura del mismo día sin bienvenida, consola sin errores. Index `C8y856Gx` → `Dmjnt6jw`.
+- 👀 **Ojo:** el video también corta el cuerpo abajo, y ese corte se ve en el aire a media pantalla.
+
+### 2. ⏸️ Compañía sobre la card "Esta semana", en pausa
+- Sobre la card hay 16 px antes de "Registrar un momento" y el cuerpo necesita 95 a 120 px. Está en el Roadmap.
+- El bucle del 13 falló con fundido (antenas fantasma) y con corte (salto 8 veces un paso normal). Cuando se retome va de ida y vuelta.
+- Lo procesado quedó en `huella diseño\escarabajo-home`, fuera del repo.
+
+### ⏭️ Pendiente
+1. ⬜ **Daniel aprueba la bienvenida en iPhone** y se decide si pasa a todos.
+
+---
+
+## Sesión 24 sep 2026 — **Vitrina /personaje animada: 10 videos en producción**
 
 ### 1. ✅ Personaje animado en la vitrina (commit `97a5a2d`)
 - **10 videos hechos de imagen a video:** 01 a 03 con Gemini Veo, 04 a 10 con Wan 2.5. Los originales quedaron en `huella-design-pack\personaje\videos-originales`, con checksum igual.
