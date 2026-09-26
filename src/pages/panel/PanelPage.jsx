@@ -15,7 +15,7 @@ import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
 import { AHORA, porTope } from '../cerebro/contenidoCerebro'
-import { tocaBienvenida } from '../../components/personaje/bienvenida'
+import { tocaBienvenida, elegirVariante } from '../../components/personaje/bienvenida'
 import styles from './PanelPage.module.css'
 
 // Bienvenida del escarabajo, para todos: el chunk (con los archivos de
@@ -96,6 +96,8 @@ export default function PanelPage() {
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
     tocaBienvenida(user.id)
   )
+  // al azar sin repetir la ultima (bienvenida.js)
+  const [variante] = useState(() => (bienvenida ? elegirVariante(user.id) : null))
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
@@ -464,7 +466,7 @@ export default function PanelPage() {
 
       {bienvenida && dataLoaded && onboardingDecidido && !onboardingVisible && (
         <Suspense fallback={null}>
-          <BienvenidaEscarabajo userId={user.id} alTerminar={() => setBienvenida(false)} />
+          <BienvenidaEscarabajo userId={user.id} variante={variante} alTerminar={() => setBienvenida(false)} />
         </Suspense>
       )}
 

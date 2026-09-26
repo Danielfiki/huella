@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { borrarMarcaBienvenida } from '../../components/personaje/bienvenida'
+import { borrarMarcaBienvenida, forzarVariante, VARIANTES } from '../../components/personaje/bienvenida'
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
 import styles from './PersonajePage.module.css'
@@ -271,7 +271,9 @@ export default function PersonajePage() {
 
       {/* Prueba de la bienvenida del Home: borra la marca de hoy y va al Home.
           Carga completa y no navigate: asi el celular siempre prueba el codigo
-          recien desplegado, aunque la pestaña estuviera abierta de antes. */}
+          recien desplegado, aunque la pestaña estuviera abierta de antes.
+          El boton grande sigue la alternancia (sale la que no se vio la ultima
+          vez); los chicos fuerzan una variante, para QA. */}
       <div className={styles.repetir}>
         <Button
           variant="ghost"
@@ -282,6 +284,22 @@ export default function PersonajePage() {
         >
           Ver bienvenida otra vez
         </Button>
+      </div>
+      <div className={styles.repetir}>
+        {VARIANTES.map((v) => (
+          <Button
+            key={v.id}
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              forzarVariante(v.id)
+              borrarMarcaBienvenida(user.id)
+              window.location.assign('/panel')
+            }}
+          >
+            {v.nombre}
+          </Button>
+        ))}
       </div>
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}

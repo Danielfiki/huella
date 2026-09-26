@@ -1,8 +1,8 @@
 /* Franja pegada al borde superior de la barra inferior (la capa vive dentro de
    la barra). bottom 100% seria el borde de adentro; el + 1px suma la linea de
    borde de la barra (border-top de 1px en Layout.module.css), asi el corte
-   del cuerpo cae exacto sobre esa linea. Mide lo mismo que el
-   escarabajo mas alto (150 px de ancho x 568/450) y recorta lo que pasa del
+   del cuerpo cae exacto sobre esa linea. Alcanza para la variante mas alta
+   (derecha, 217,5 px) y recorta lo que pasa del
    borde derecho: los dedos. No recibe toques. El z-index negativo la deja
    detras de todo lo de la barra, incluido el +, pero delante de la pagina
    (la barra es su propio contexto de apilado, z-index 1). */
@@ -11,25 +11,42 @@
   left: 0;
   right: 0;
   bottom: calc(100% + 1px);
-  height: 190px;
+  height: 220px;
   overflow: hidden;
   pointer-events: none;
   z-index: -1;
 }
 
 /* Esquina inferior derecha. El borde de abajo del archivo es el corte del
-   cuerpo; la linea del corte derecho esta al 92,58 % del ancho del archivo, y
-   el right negativo saca de la franja lo que viene despues (los dedos).
-   Ancho de 150 px; si el + queda cerca (pantallas angostas) se achica hasta
-   130 para que la caja quede a 8 px del + (el + mide 48 y va al centro). */
+   cuerpo; el right negativo de cada variante deja la linea del corte derecho
+   en el borde de la pantalla y saca lo que viene despues (los dedos). */
 .escarabajo {
-  --ancho: clamp(130px, calc((50% - 32px) / 0.92578), 150px);
+  --base: clamp(130px, calc((50% - 32px) / 0.92578), 150px);
   position: absolute;
   bottom: 0;
-  right: calc(var(--ancho) * -0.07422);
+  right: calc(var(--ancho) * var(--fuera));
   width: var(--ancho);
-  aspect-ratio: 450 / 568;
   opacity: 0;
+}
+
+/* Video 15. Corte derecho al 92,58 % del ancho del archivo. Ancho de 150 px;
+   si el + queda cerca (pantallas angostas) se achica hasta 130 para que la
+   caja quede a 8 px del + (el + mide 48 y va al centro). */
+.costado {
+  --ancho: var(--base);
+  --fuera: -0.07422;
+  aspect-ratio: 450 / 568;
+}
+
+/* Video 17. Recorte 702 x 714 de la fuente; la pared de la que se asoma queda
+   en x 1183 de 1280 en su punto mas a la izquierda, al 86,18 % del ancho del
+   archivo: esa linea va al borde de la pantalla. Escala: el craneo mide lo
+   mismo que en el costado (radio medido en pantalla, WebKit iPhone 14):
+   1,34143 veces el ancho del costado. */
+.derecha {
+  --ancho: calc(var(--base) * 1.34143);
+  --fuera: -0.13818;
+  aspect-ratio: 642 / 652;
 }
 
 .visible {
@@ -37,8 +54,8 @@
   transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
 }
 
-/* poster y canvas ocupan la caja entera: misma proporcion que el video
-   (450 x 568), sin estirar */
+/* poster y canvas ocupan la caja entera: misma proporcion que el video,
+   sin estirar */
 .imagen {
   position: absolute;
   inset: 0;
@@ -48,16 +65,24 @@
 }
 
 /* El video es solo la fuente del canvas: invisible pero en el DOM y a su
-   tamano natural (450 x 1152). WebKit sube a WebGL el cuadro al tamano con que
+   tamano natural. WebKit sube a WebGL el cuadro al tamano con que
    el video se pinta: a 1 px la textura llega vacia. La capa lo recorta. */
 .fuente {
   position: absolute;
   top: 0;
   left: 0;
-  width: 450px;
-  height: 1152px;
   opacity: 0;
   pointer-events: none;
+}
+
+.costado .fuente {
+  width: 450px;
+  height: 1152px;
+}
+
+.derecha .fuente {
+  width: 642px;
+  height: 1320px;
 }
 
 /* canvas escondido mientras se muestra el poster quieto */

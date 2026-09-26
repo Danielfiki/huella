@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { marcarBienvenida } from './bienvenida'
+import { marcarBienvenida, marcarVariante } from './bienvenida'
 import styles from './BienvenidaEscarabajo.module.css'
 
 // Bienvenida del Home (todos los usuarios, una vez al dia; el filtro vive
@@ -21,22 +21,29 @@ import styles from './BienvenidaEscarabajo.module.css'
 // Nunca "nada": si play() se rechaza con NotAllowedError (bajo consumo), si no
 // hay WebGL, si el video da error, si no hay cuadro 3 s despues de playing o
 // si playing no llega en 8 s, queda el poster quieto 4 s y se desmonta.
+//
+// Variantes (bienvenida.js): cada una trae su video, poster y medidas; la
+// capa, el anclaje y todo lo demas es igual para todas.
 
-const VIDEO = '/personaje/home/bienvenida-alfa.mp4'
-const POSTER = '/personaje/home/asomado-saludo-poster.webp'
-const ANCHO = 450, ALTO = 568, SEPARACION = 16, ALTO_VIDEO = ALTO * 2 + SEPARACION
+const SEPARACION = 16
 const POSTER_QUIETO = 4000
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
 const SIN_PLAYING = 8000 // seguro: desde loadeddata, si nunca llega playing
+// 1 pixel del cuerpo por variante (x, y desde arriba) para saber que ya hay un cuadro de verdad
+const PIXEL_CUERPO = { costado: [330, 450], derecha: [541, 405] }
 
 const VERTICES = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2((p.x+1.0)*0.5,(1.0-p.y)*0.5);gl_Position=vec4(p,0.0,1.0);}'
-const FRAGMENTO = `precision mediump float;uniform sampler2D t;varying vec2 uv;
+const fragmento = (ALTO, ALTO_VIDEO) => `precision mediump float;uniform sampler2D t;varying vec2 uv;
 void main(){vec3 c=texture2D(t,vec2(uv.x,uv.y*${(ALTO / ALTO_VIDEO).toFixed(6)})).rgb;
 float a=texture2D(t,vec2(uv.x,${((ALTO + SEPARACION) / ALTO_VIDEO).toFixed(6)}+uv.y*${(ALTO / ALTO_VIDEO).toFixed(6)})).r;
 gl_FragColor=vec4(min(c,vec3(a)),a);}`
 
 // Programa WebGL que compone color + mascara. Devuelve { dibujar } o { error }.
-function crearCompositor(canvas) {
+function crearCompositor(canvas, variante) {
+  const { ancho: ANCHO, alto: ALTO } = variante
+  const ALTO_VIDEO = ALTO * 2 + SEPARACION
+  const FRAGMENTO = fragmento(ALTO, ALTO_VIDEO)
+  const [px0, py0] = PIXEL_CUERPO[variante.id]
   let gl = null
   try { gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false }) } catch (e) { return { error: `getContext lanzo ${e.name}: ${e.message}` } }
   if (!gl) return { error: 'getContext(webgl) devolvio null' }
@@ -64,15 +71,16 @@ function crearCompositor(canvas) {
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (!leer) return null
-    // 1 pixel del cuerpo (x 330, y 450 desde arriba), leido en el mismo cuadro
+    // 1 pixel del cuerpo, leido en el mismo cuadro
     const px = new Uint8Array(4)
-    gl.readPixels(330, ALTO - 450, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+    gl.readPixels(px0, ALTO - py0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
     return `${px.join(',')} glError=${gl.getError()}`
   }
   return { dibujar }
 }
 
-export default function BienvenidaEscarabajo({ userId, alTerminar }) {
+export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
+  const { video: VIDEO, poster: POSTER, ancho: ANCHO, alto: ALTO } = variante
   // cargando -> oculto -> visible | posterQuieto  (solo la visibilidad; el
   // video y el canvas corren aparte, por eventos)
   const [fase, setFase] = useState('cargando')
@@ -100,6 +108,7 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     estado.current.poster = true
     cancelAnimationFrame(rafRef.current)
     marcarBienvenida(userId)
+    marcarVariante(userId, variante.id)
     setFase('posterQuieto')
     setTimeout(() => terminar('termino el poster quieto'), POSTER_QUIETO)
   }
@@ -126,9 +135,10 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
   useEffect(() => {
     if (fase !== 'oculto') return
     marcarBienvenida(userId)
+    marcarVariante(userId, variante.id)
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setFase((f) => (f === 'oculto' ? 'visible' : f))))
     return () => cancelAnimationFrame(id)
-  }, [fase, userId])
+  }, [fase, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apenas el <video> tiene src: play() de inmediato, sin esperar ningun
   // evento. iOS Safari no baja datos del video hasta que se llama play(): si se
@@ -143,7 +153,7 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
     Promise.resolve(p).catch((e) => {
       if (e && e.name === 'NotAllowedError') alPoster('play() rechazado (NotAllowedError)')
     })
-    const comp = canvasRef.current ? crearCompositor(canvasRef.current) : { error: 'no hay canvas' }
+    const comp = canvasRef.current ? crearCompositor(canvasRef.current, variante) : { error: 'no hay canvas' }
     if (!comp.dibujar) { alPoster(comp.error); return }
     compRef.current = comp
     setTimeout(() => { if (!estado.current.playing) alPoster(`playing no llego en ${SIN_PLAYING} ms desde play()`) }, SIN_PLAYING)
@@ -188,7 +198,7 @@ export default function BienvenidaEscarabajo({ userId, alTerminar }) {
 
   return createPortal(
     <div className={styles.capa} aria-hidden="true">
-      <div className={`${styles.escarabajo} ${fase === 'cargando' || fase === 'oculto' ? '' : styles.visible}`}>
+      <div className={`${styles.escarabajo} ${styles[variante.id]} ${fase === 'cargando' || fase === 'oculto' ? '' : styles.visible}`}>
         {posterVisible && <img className={styles.imagen} src={POSTER} alt="" draggable="false" />}
         <canvas ref={canvasRef} className={`${styles.imagen} ${fase === 'posterQuieto' ? styles.apagado : ''}`} width={ANCHO} height={ALTO} />
         <video

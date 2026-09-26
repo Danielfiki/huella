@@ -1,7 +1,8 @@
 import { diaChile } from '../../utils/fechaChile'
 
 // La vitrina del personaje (/personaje) es privada: solo la cuenta de Daniel.
-// La bienvenida del Home es para todos (una vez al dia por usuario).
+// La bienvenida del Home es para todos (una vez al dia por usuario); las
+// variantes privadas, solo para Daniel.
 export const DUENO_PERSONAJE = '04ddd97a-e674-4e59-8f37-78cb38d46090'
 
 // Marca del dia de la bienvenida, por usuario: guarda el dia de Chile en que
@@ -23,4 +24,44 @@ export function marcarBienvenida(userId) {
 
 export function borrarMarcaBienvenida(userId) {
   try { localStorage.removeItem(clave(userId)) } catch { /* sin marca */ }
+}
+
+// Variantes de la bienvenida. Cada una trae su video empaquetado (color arriba,
+// 16 px, mascara abajo) a 3x del tamano en pantalla, su poster y su clase de
+// CSS (ancho, proporcion y corte derecho viven en BienvenidaEscarabajo.module.css).
+// Para sumar la tercera: agregarla aqui y su clase en el CSS.
+export const VARIANTES = [
+  { id: 'costado', nombre: 'Costado', video: '/personaje/home/bienvenida-alfa.mp4', poster: '/personaje/home/asomado-saludo-poster.webp', ancho: 450, alto: 568 },
+  // video 17, cuadros 7 a 228; solo la cuenta de Daniel mientras se prueba
+  { id: 'derecha', nombre: 'Derecha', video: '/personaje/home/bienvenida-derecha-alfa.mp4', poster: '/personaje/home/bienvenida-derecha-poster.webp', ancho: 642, alto: 652, privada: true },
+]
+
+const claveUltima = (userId) => `huella_bienvenida_ultima_${userId}`
+const CLAVE_FORZADA = 'huella_bienvenida_forzada'
+
+const disponibles = (userId) => VARIANTES.filter((v) => !v.privada || userId === DUENO_PERSONAJE)
+
+// Al azar sin repetir la ultima mostrada. La vitrina puede forzar una (se
+// consume cuando la bienvenida entra, en marcarVariante).
+export function elegirVariante(userId) {
+  const lista = disponibles(userId)
+  try {
+    const v = lista.find((x) => x.id === localStorage.getItem(CLAVE_FORZADA))
+    if (v) return v
+  } catch { /* sin forzar */ }
+  let ultima = null
+  try { ultima = localStorage.getItem(claveUltima(userId)) } catch { /* sin ultima */ }
+  const opciones = lista.length > 1 ? lista.filter((v) => v.id !== ultima) : lista
+  return opciones[Math.floor(Math.random() * opciones.length)]
+}
+
+export function marcarVariante(userId, id) {
+  try {
+    localStorage.setItem(claveUltima(userId), id)
+    localStorage.removeItem(CLAVE_FORZADA)
+  } catch { /* sin ultima */ }
+}
+
+export function forzarVariante(id) {
+  try { localStorage.setItem(CLAVE_FORZADA, id) } catch { /* sin forzar */ }
 }
