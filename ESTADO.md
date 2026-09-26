@@ -344,7 +344,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (25 sep 2026) — **Bienvenida del escarabajo en el Home, solo cuenta de Daniel**
+## Cerrado HOY (25 sep 2026) — **Bienvenida del escarabajo en el Home, todos los usuarios**
 
 ### 1. ✅ Bienvenida actuada en el Home (commit `4207389`, reemplaza a `e891221`)
 - **Qué hace:** en la primera apertura del Home de cada día (calendario de Chile, marca en localStorage por usuario), el escarabajo aparece en la esquina inferior derecha con un fundido de 150 ms, se asoma, saluda, se despide y se esconde detrás del borde de la pantalla. Todo lo actúa el video: el código ya no lo desliza. Se desmonta a los 5,7 s, cuando ya se escondió. Con movimiento reducido no aparece.
