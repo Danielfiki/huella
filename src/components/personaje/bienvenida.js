@@ -1,8 +1,8 @@
 import { diaChile } from '../../utils/fechaChile'
 
 // La vitrina del personaje (/personaje) es privada: solo la cuenta de Daniel.
-// La bienvenida del Home es para todos (una vez al dia por usuario); las
-// variantes privadas, solo para Daniel.
+// La bienvenida del Home es para todos (una vez al dia por usuario), con sus
+// 3 variantes.
 export const DUENO_PERSONAJE = '04ddd97a-e674-4e59-8f37-78cb38d46090'
 
 // Marca del dia de la bienvenida, por usuario: guarda el dia de Chile en que
@@ -28,25 +28,23 @@ export function borrarMarcaBienvenida(userId) {
 
 // Variantes de la bienvenida. Cada una trae su video empaquetado (color arriba,
 // 16 px, mascara abajo) a 3x del tamano en pantalla, su poster y su clase de
-// CSS (ancho, proporcion y corte derecho viven en BienvenidaEscarabajo.module.css).
-// Para sumar la tercera: agregarla aqui y su clase en el CSS.
+// CSS (ancho, proporcion y corte viven en BienvenidaEscarabajo.module.css).
 export const VARIANTES = [
+  // video 15, cuadros 43 a 219
   { id: 'costado', nombre: 'Costado', video: '/personaje/home/bienvenida-alfa.mp4', poster: '/personaje/home/asomado-saludo-poster.webp', ancho: 450, alto: 568 },
-  // video 17, cuadros 7 a 228; solo la cuenta de Daniel mientras se prueba
-  { id: 'derecha', nombre: 'Derecha', video: '/personaje/home/bienvenida-derecha-alfa.mp4', poster: '/personaje/home/bienvenida-derecha-poster.webp', ancho: 642, alto: 652, privada: true },
-  // video 16, cuadros 0 a 228; solo la cuenta de Daniel mientras se prueba
-  { id: 'centro', nombre: 'Centro', video: '/personaje/home/bienvenida-centro-alfa.mp4', poster: '/personaje/home/bienvenida-centro-poster.webp', ancho: 484, alto: 538, privada: true },
+  // video 17, cuadros 7 a 228
+  { id: 'derecha', nombre: 'Derecha', video: '/personaje/home/bienvenida-derecha-alfa.mp4', poster: '/personaje/home/bienvenida-derecha-poster.webp', ancho: 642, alto: 652 },
+  // video 16, cuadros 0 a 228
+  { id: 'centro', nombre: 'Centro', video: '/personaje/home/bienvenida-centro-alfa.mp4', poster: '/personaje/home/bienvenida-centro-poster.webp', ancho: 484, alto: 538 },
 ]
 
 const claveUltima = (userId) => `huella_bienvenida_ultima_${userId}`
 const CLAVE_FORZADA = 'huella_bienvenida_forzada'
 
-const disponibles = (userId) => VARIANTES.filter((v) => !v.privada || userId === DUENO_PERSONAJE)
-
 // Al azar sin repetir la ultima mostrada. La vitrina puede forzar una (se
 // consume cuando la bienvenida entra, en marcarVariante).
 export function elegirVariante(userId) {
-  const lista = disponibles(userId)
+  const lista = VARIANTES
   try {
     const v = lista.find((x) => x.id === localStorage.getItem(CLAVE_FORZADA))
     if (v) return v

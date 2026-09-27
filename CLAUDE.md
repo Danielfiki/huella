@@ -151,7 +151,8 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 - Técnica: MP4 H.264 con transparencia empaquetada + WebGL, a 3x del tamaño en pantalla. En iOS: `muted`, `playsinline`, `autoplay` y `play()` inmediato; el fallback corre solo después de `playing`; el `<video>` fuente va a tamaño natural con opacidad 0.
 - Se verifica siempre en WebKit con descriptor de iPhone 14. Si falla en el teléfono real, se arma un panel de diagnóstico temporal solo para Daniel.
 - Si algo ya funciona, se corrige solo lo pedido: no se cambia la técnica sin que Daniel lo pida.
-- Cada animación del personaje tiene 3 variantes distintas y la app las alterna (sin repetir la última). Ningún estado se implementa sin sus 3 alternativas.
+- Cada animación del personaje (bienvenida, pensando, orgulloso, celebrando y todas las demás) tiene 3 variantes distintas que la app alterna sin repetir la última. Ningún estado se implementa sin sus 3 variantes.
+- Prompt de video: exigir primer y último cuadro totalmente vacíos; el personaje actúa entrada y salida. Verificar 0 píxeles opacos en el primer y el último frame antes de procesar.
 
 ## Workflow
 
