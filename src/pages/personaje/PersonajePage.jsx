@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button'
 import AlivioHuella from '../../components/registro/AlivioHuella'
 import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
-import { usaPensando, elegirPensando, precargarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
+import { usaPensando, elegirPensando, marcarPensando, precargarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
 import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
@@ -72,6 +72,9 @@ function VideoPersonaje({ archivo, cargar = 'none', pausado = false, className =
   const terminado = useRef(false)
   const reducido = useMovimientoReducido()
   const [enPantalla, setEnPantalla] = useState(false)
+  // Sin movimiento reducido, nada se ve hasta que el video corre: en Modo de
+  // bajo consumo iOS no deja reproducir y el poster quedaba congelado.
+  const [corriendo, setCorriendo] = useState(false)
   const unaVez = archivo === UNA_VEZ
 
   useEffect(() => {
@@ -98,7 +101,7 @@ function VideoPersonaje({ archivo, cargar = 'none', pausado = false, className =
       <span className={styles.recorte}>
         <video
           ref={ref}
-          className={styles.video}
+          className={`${styles.video} ${!reducido && !corriendo ? styles.sinCorrer : ''}`}
           src={rutaVideo(archivo)}
           poster={rutaPoster(archivo)}
           muted
@@ -106,6 +109,7 @@ function VideoPersonaje({ archivo, cargar = 'none', pausado = false, className =
           autoPlay={cargar === 'auto' && !reducido}
           loop={!unaVez}
           preload={reducido ? 'none' : cargar}
+          onPlaying={() => setCorriendo(true)}
           onEnded={() => { terminado.current = true }}
           aria-hidden="true"
         />
@@ -252,7 +256,13 @@ const CARGA_SIMULADA = 8000
 function PruebaPensando({ userId }) {
   const [prueba, setPrueba] = useState(null) // { n, texto, variante }
   const zonaRef = useRef(null)
-  useEffect(() => { if (usaPensando(userId)) precargarPensando(VARIANTES_PENSANDO[0]) }, [userId])
+  useEffect(() => { if (usaPensando(userId)) VARIANTES_PENSANDO.forEach(precargarPensando) }, [userId])
+  // Sin `v`: sigue la alternancia (al azar sin repetir la ultima). Con `v`: fuerza esa.
+  const probar = (v) => {
+    const variante = usaPensando(userId) ? (v || elegirPensando(userId)) : null
+    if (variante) marcarPensando(userId, variante.id)
+    setPrueba((p) => ({ n: (p?.n || 0) + 1, texto: '', variante }))
+  }
   // La prueba queda bajo el botón: se trae a la vista, porque WebKit no pinta
   // los cuadros de un video fuera de pantalla y el vigilante lo daría por caído.
   useEffect(() => {
@@ -267,12 +277,16 @@ function PruebaPensando({ userId }) {
   return (
     <>
       <div className={styles.repetir}>
-        <Button
-          variant="ghost"
-          onClick={() => setPrueba((p) => ({ n: (p?.n || 0) + 1, texto: '', variante: usaPensando(userId) ? elegirPensando(userId) : null }))}
-        >
+        <Button variant="ghost" onClick={() => probar()}>
           Ver pensando
         </Button>
+      </div>
+      <div className={styles.repetir}>
+        {VARIANTES_PENSANDO.map((v, i) => (
+          <Button key={v.id} variant="ghost" size="sm" onClick={() => probar(v)}>
+            {i + 1}
+          </Button>
+        ))}
       </div>
       {prueba && (
         <div ref={zonaRef} className={styles.pruebaPensando}>
@@ -300,6 +314,11 @@ function PruebaPensando({ userId }) {
 
 export default function PersonajePage() {
   const { user } = useAuth()
+  const verBienvenida = (forzada) => {
+    if (forzada) forzarVariante(forzada)
+    borrarMarcaBienvenida(user.id)
+    window.location.assign('/panel')
+  }
   const [abierto, setAbierto] = useState(null)
   const cerrar = React.useCallback(() => setAbierto(null), [])
 
@@ -334,13 +353,7 @@ export default function PersonajePage() {
           El boton grande sigue la alternancia (sale la que no se vio la ultima
           vez); los chicos fuerzan una variante, para QA. */}
       <div className={styles.repetir}>
-        <Button
-          variant="ghost"
-          onClick={() => {
-            borrarMarcaBienvenida(user.id)
-            window.location.assign('/panel')
-          }}
-        >
+        <Button variant="ghost" onClick={() => verBienvenida()}>
           Ver bienvenida otra vez
         </Button>
       </div>
@@ -350,11 +363,7 @@ export default function PersonajePage() {
             key={v.id}
             variant="ghost"
             size="sm"
-            onClick={() => {
-              forzarVariante(v.id)
-              borrarMarcaBienvenida(user.id)
-              window.location.assign('/panel')
-            }}
+            onClick={() => verBienvenida(v.id)}
           >
             {v.nombre}
           </Button>

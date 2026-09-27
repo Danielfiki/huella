@@ -18,7 +18,7 @@ const SEPARACION = 16
 const SIN_CUADRO = 3000
 const SALIDA = 150
 // 1 pixel del cuerpo (x, y desde arriba) opaco en todos los cuadros del loop
-const PIXEL_CUERPO = { rascando: [181, 420] }
+const PIXEL_CUERPO = { rascando: [181, 420], barbilla: [108, 176], manos: [113, 179] }
 
 const VERTICES = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2((p.x+1.0)*0.5,(1.0-p.y)*0.5);gl_Position=vec4(p,0.0,1.0);}'
 const fragmento = (ALTO, ALTO_VIDEO) => `precision mediump float;uniform sampler2D t;varying vec2 uv;

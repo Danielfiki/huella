@@ -153,6 +153,7 @@ Reglas duras. No negociables. Aplican a TODA sesión.
 - Si algo ya funciona, se corrige solo lo pedido: no se cambia la técnica sin que Daniel lo pida.
 - Cada animación del personaje (bienvenida, pensando, orgulloso, celebrando y todas las demás) tiene 3 variantes distintas que la app alterna sin repetir la última. Ningún estado se implementa sin sus 3 variantes.
 - Prompt de video: exigir primer y último cuadro totalmente vacíos; el personaje actúa entrada y salida. Verificar 0 píxeles opacos en el primer y el último frame antes de procesar.
+- ITERACIÓN VISUAL: una ronda = cambio + push; Daniel lo mira en huella.lat con su cuenta (lo que está en prueba sigue solo en la cuenta de Daniel). Sin red local ni dev server, y sin QA de producción en cada ronda. Máximo 15 min por ronda; se pueden juntar varios cambios. El QA completo va cuando Daniel da el OK final.
 
 ## Workflow
 

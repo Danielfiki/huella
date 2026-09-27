@@ -79,6 +79,11 @@
   background: var(--personaje-escenario);
 }
 
+/* hasta que el video corre no se ve (ni su poster quieto) */
+.sinCorrer {
+  opacity: 0;
+}
+
 .pie {
   display: flex;
   flex-direction: column;

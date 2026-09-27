@@ -46,3 +46,27 @@
   width: 362px;
   height: 1268px;
 }
+
+/* 21-pensando-2 y 22-pensando-3: cortadas con la geometria de la 05 medida en
+   radios de craneo; --alto-sello deja el craneo del mismo tamano en el sello. */
+.barbilla {
+  --alto-sello: 1.0032;
+  width: calc(216px / 3);
+  aspect-ratio: 216 / 294;
+}
+
+.barbilla .fuente {
+  width: 216px;
+  height: 604px;
+}
+
+.manos {
+  --alto-sello: 1.0148;
+  width: calc(226px / 3);
+  aspect-ratio: 226 / 298;
+}
+
+.manos .fuente {
+  width: 226px;
+  height: 612px;
+}

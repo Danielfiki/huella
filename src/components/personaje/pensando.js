@@ -4,10 +4,14 @@ import { DUENO_PERSONAJE } from './bienvenida'
 // Solo la cuenta de Daniel mientras se prueba, y nunca con movimiento reducido.
 // Cada variante trae su video empaquetado (color arriba, 16 px, mascara abajo)
 // a 3x del tamano en pantalla; ancho, proporcion y posicion viven en
-// PensandoEscarabajo.module.css. Faltan la segunda y la tercera variante.
+// PensandoEscarabajo.module.css.
 export const VARIANTES_PENSANDO = [
   // video 05-pensando, cuadros 11 a 115 (cierre de loop sin fundido), 30 fps
   { id: 'rascando', video: '/personaje/pensando-alfa.mp4', poster: '/personaje/pensando-poster.webp', ancho: 362, alto: 626 },
+  // video 21-pensando-2 (mano en la barbilla), cuadros 4 a 190, 24 fps
+  { id: 'barbilla', video: '/personaje/pensando-2-alfa.mp4', poster: '/personaje/pensando-2-poster.webp', ancho: 216, alto: 294 },
+  // video 22-pensando-3 (manos en la guata), cuadros 4 a 214, 24 fps
+  { id: 'manos', video: '/personaje/pensando-3-alfa.mp4', poster: '/personaje/pensando-3-poster.webp', ancho: 226, alto: 298 },
 ]
 
 const claveUltima = (userId) => `huella_pensando_ultima_${userId}`

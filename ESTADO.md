@@ -349,7 +349,29 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (26 sep 2026) — **Bienvenida con 3 variantes, EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (27 sep 2026) — **Pensando con 3 variantes (solo cuenta de Daniel) y bienvenida sin póster congelado**
+
+### 1. ✅ Pensando: variantes 2 y 3
+- **barbilla** (video 21-pensando-2, mano en la barbilla, cuadros 4 a 190) y **manos** (video 22-pensando-3, manos en la guata, cuadros 4 a 214), mismo proceso que la 1: máscara @imgly, niveles de alfa, terracota de 02-orgulloso, transparencia empaquetada, CRF 18, 24 fps.
+- Escala: cráneo con R = 119 px en la fuente (ancho 238 en las dos) y la geometría de la 05 en radios de cráneo; en el sello miden 98,3 y 99,4 px de alto (`--alto-sello` 1,0032 y 1,0148). Póster lado a lado con la 1: cráneo igual ±5 %.
+- Archivos: `public/personaje/pensando-2-alfa.mp4` (310 KB) + póster, `pensando-3-alfa.mp4` (335 KB) + póster.
+- Entran a la alternancia sin repetir la última y al selector 1/2/3 de la vitrina. Siguen solo para la cuenta de Daniel.
+- ⚠️ Sin QA en WebKit en esta sesión (ronda de iteración): Daniel las mira en huella.lat.
+
+### 2. ✅ Bienvenida: nada congelado
+- Si el video no llega a pintar (bajo consumo en iOS, sin WebGL, error), esa vez no aparece nada y el día no se marca; se reintenta en la próxima apertura. Se sacó el póster quieto de 4 s. En la vitrina, los videos no se ven hasta que corren.
+
+### 3. ✅ Regla ITERACIÓN VISUAL en CLAUDE.md
+- Ya no es por red local: una ronda = cambio + push a la cuenta de Daniel, sin QA de producción, máximo 15 min. Se revirtió el acceso sin login a /personaje en el dev server (quedó de la prueba local abandonada).
+
+### ⏭️ Pendiente
+1. ⬜ Daniel mira las 3 variantes de pensando en huella.lat (vitrina /personaje, botones 1/2/3) y da el OK o pide ajustes.
+2. ⬜ Con el OK: QA completo en WebKit iPhone 14 y decidir si pensando pasa a todos.
+3. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).
+
+---
+
+## Sesión 26 sep 2026 — **Bienvenida con 3 variantes, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Bienvenida con 3 variantes que se alternan (commits `9336611`, `226f167` y `9302254`)
 - **Qué hace:** la bienvenida del Home tiene 3 variantes: **costado** (video 15, esquina inferior derecha), **derecha** (video 17, se asoma desde el borde derecho) y **centro** (video 16, sube al centro y apoya las manos en la barra). Cada día se elige una al azar, sin repetir la última (clave `huella_bienvenida_ultima_<id>` en localStorage). Todo lo demás sigue igual: una vez al día (calendario de Chile), nunca sobre el onboarding, nunca con movimiento reducido y el mismo póster de respaldo.

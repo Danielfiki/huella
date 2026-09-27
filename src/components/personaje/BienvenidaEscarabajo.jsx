@@ -18,15 +18,16 @@ import styles from './BienvenidaEscarabajo.module.css'
 // se prepara en paralelo y el canvas dibuja desde el evento playing. El video
 // nunca se pausa ni se desmonta con un play() pendiente (en el iPhone eso lo
 // abortaba).
-// Nunca "nada": si play() se rechaza con NotAllowedError (bajo consumo), si no
-// hay WebGL, si el video da error, si no hay cuadro 3 s despues de playing o
-// si playing no llega en 8 s, queda el poster quieto 4 s y se desmonta.
+// Nada se ve hasta que el video pinta su primer cuadro de verdad: recien ahi
+// aparece y se marca el dia. Si play() se rechaza con NotAllowedError (Modo de
+// bajo consumo en iOS), si no hay WebGL, si el video da error, si no hay cuadro
+// 3 s despues de playing o si playing no llega en 8 s, esa vez no aparece nada
+// (sin poster quieto) y el dia NO se marca: se intenta en la proxima apertura.
 //
 // Variantes (bienvenida.js): cada una trae su video, poster y medidas; la
 // capa, el anclaje y todo lo demas es igual para todas.
 
 const SEPARACION = 16
-const POSTER_QUIETO = 4000
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
 const SIN_PLAYING = 8000 // seguro: desde loadeddata, si nunca llega playing
 // 1 pixel del cuerpo por variante (x, y desde arriba) para saber que ya hay un cuadro de verdad
@@ -80,10 +81,7 @@ function crearCompositor(canvas, variante) {
 }
 
 export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
-  const { video: VIDEO, poster: POSTER, ancho: ANCHO, alto: ALTO } = variante
-  // cargando -> oculto -> visible | posterQuieto  (solo la visibilidad; el
-  // video y el canvas corren aparte, por eventos)
-  const [fase, setFase] = useState('cargando')
+  const { video: VIDEO, ancho: ANCHO, alto: ALTO } = variante
   const [fuente, setFuente] = useState(null)
   const [dibujado, setDibujado] = useState(false)
   const [barra] = useState(() => document.querySelector('[data-nav-inferior]'))
@@ -91,7 +89,7 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
   const canvasRef = useRef(null)
   const compRef = useRef(null)
   const rafRef = useRef(0)
-  const estado = useRef({ terminado: false, poster: false, arranco: false, playing: false, dibujado: false })
+  const estado = useRef({ terminado: false, arranco: false, playing: false, dibujado: false })
   const terminarRef = useRef(alTerminar)
   terminarRef.current = alTerminar
 
@@ -101,44 +99,32 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
     cancelAnimationFrame(rafRef.current)
     terminarRef.current()
   }
-  // Poster quieto 4 s y fuera. No toca el video: si hay un play() pendiente,
-  // sigue pendiente hasta que se desmonte todo.
-  const alPoster = (porque) => {
-    if (estado.current.poster || estado.current.terminado) return
-    estado.current.poster = true
+  // Falla antes del primer cuadro: esa vez no se muestra nada y el dia no se
+  // marca. No toca el video: si hay un play() pendiente, sigue pendiente hasta
+  // que se desmonte todo.
+  const abandonar = (porque) => {
+    if (estado.current.terminado) return
     cancelAnimationFrame(rafRef.current)
-    marcarBienvenida(userId)
-    marcarVariante(userId, variante.id)
-    setFase('posterQuieto')
-    setTimeout(() => terminar('termino el poster quieto'), POSTER_QUIETO)
+    terminar(porque)
   }
 
-  // video completo en la cache del navegador + poster, antes de mostrar nada.
+  // video completo en la cache del navegador antes de mostrar nada.
   useEffect(() => {
     if (!barra) { terminar('no hay barra inferior'); return }
     let vivo = true
-    const poster = new Image()
-    poster.src = POSTER
-    Promise.allSettled([
-      fetch(VIDEO).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer() }),
-      poster.decode(),
-    ]).then(([v, p]) => {
-      if (!vivo) return
-      if (p.status !== 'fulfilled') { terminar('el poster no decodifica'); return }
-      setFuente(VIDEO)
-      if (v.status !== 'fulfilled') alPoster('el video no se descargo')
-    })
+    fetch(VIDEO)
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer() })
+      .then(() => { if (vivo) setFuente(VIDEO) })
+      .catch(() => { if (vivo) abandonar('el video no se descargo') })
     return () => { vivo = false; cancelAnimationFrame(rafRef.current) }
   }, [barra]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 'oculto' se pinta un cuadro en opacidad 0 y recien ahi se funde
+  // primer cuadro de verdad: recien ahi se marca el dia (y la variante)
   useEffect(() => {
-    if (fase !== 'oculto') return
+    if (!dibujado) return
     marcarBienvenida(userId)
     marcarVariante(userId, variante.id)
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFase((f) => (f === 'oculto' ? 'visible' : f))))
-    return () => cancelAnimationFrame(id)
-  }, [fase, userId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dibujado]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apenas el <video> tiene src: play() de inmediato, sin esperar ningun
   // evento. iOS Safari no baja datos del video hasta que se llama play(): si se
@@ -151,34 +137,28 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
     try { p = video.play() } catch (e) { p = Promise.reject(e) }
     // NotAllowedError: iOS en bajo consumo no deja reproducir
     Promise.resolve(p).catch((e) => {
-      if (e && e.name === 'NotAllowedError') alPoster('play() rechazado (NotAllowedError)')
+      if (e && e.name === 'NotAllowedError') abandonar('play() rechazado (NotAllowedError)')
     })
     const comp = canvasRef.current ? crearCompositor(canvasRef.current, variante) : { error: 'no hay canvas' }
-    if (!comp.dibujar) { alPoster(comp.error); return }
+    if (!comp.dibujar) { abandonar(comp.error); return }
     compRef.current = comp
-    setTimeout(() => { if (!estado.current.playing) alPoster(`playing no llego en ${SIN_PLAYING} ms desde play()`) }, SIN_PLAYING)
+    setTimeout(() => { if (!estado.current.playing) abandonar(`playing no llego en ${SIN_PLAYING} ms desde play()`) }, SIN_PLAYING)
   }, [fuente]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // el fundido de entrada parte con lo primero que llegue: loadeddata o playing
-  const alCargarDatos = () => {
-    setFase((f) => (f === 'cargando' ? 'oculto' : f))
-  }
 
   // playing: arranca el dibujo y el vigilante de 3 s al primer cuadro
   const alReproducir = () => {
-    setFase((f) => (f === 'cargando' ? 'oculto' : f))
     if (estado.current.playing) return
     estado.current.playing = true
-    setTimeout(() => { if (!estado.current.dibujado) alPoster(`ningun cuadro dibujado ${SIN_CUADRO} ms despues de playing`) }, SIN_CUADRO)
+    setTimeout(() => { if (!estado.current.dibujado) abandonar(`ningun cuadro dibujado ${SIN_CUADRO} ms despues de playing`) }, SIN_CUADRO)
     const video = videoRef.current
     const cuadro = () => {
       const comp = compRef.current
-      if (!comp || estado.current.poster || estado.current.terminado) return
+      if (!comp || estado.current.terminado) return
       const primero = !estado.current.dibujado
       const px = comp.dibujar(video, primero)
       // cuenta como dibujado solo si el pixel del cuerpo trae contenido (alfa > 0):
-      // al llegar playing la textura puede venir vacia un instante, y el poster
-      // tiene que seguir a la vista hasta que haya un cuadro de verdad
+      // al llegar playing la textura puede venir vacia un instante, y la capa
+      // no aparece hasta que haya un cuadro de verdad
       if (primero && px && Number(px.split(',')[3].split(' ')[0]) > 0) { estado.current.dibujado = true; setDibujado(true) }
       if (!video.ended) rafRef.current = requestAnimationFrame(cuadro)
     }
@@ -186,21 +166,16 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
   }
 
   const alTerminarVideo = () => {
-    if (compRef.current && !estado.current.poster) compRef.current.dibujar(videoRef.current, false)
-    if (!estado.current.poster) terminar('evento ended del video')
+    if (compRef.current) compRef.current.dibujar(videoRef.current, false)
+    terminar('evento ended del video')
   }
 
   if (!fuente || !barra) return null
-  // El tramo parte casi vacio (el escarabajo todavia escondido y se asoma), asi
-  // que el poster (ya asomado) no va debajo del canvas al empezar: solo en el
-  // fallback.
-  const posterVisible = fase === 'posterQuieto'
 
   return createPortal(
     <div className={styles.capa} aria-hidden="true">
-      <div className={`${styles.escarabajo} ${styles[variante.id]} ${fase === 'cargando' || fase === 'oculto' ? '' : styles.visible}`}>
-        {posterVisible && <img className={styles.imagen} src={POSTER} alt="" draggable="false" />}
-        <canvas ref={canvasRef} className={`${styles.imagen} ${fase === 'posterQuieto' ? styles.apagado : ''}`} width={ANCHO} height={ALTO} />
+      <div className={`${styles.escarabajo} ${styles[variante.id]} ${dibujado ? styles.visible : ''}`}>
+        <canvas ref={canvasRef} className={styles.imagen} width={ANCHO} height={ALTO} />
         <video
           ref={videoRef}
           className={styles.fuente}
@@ -209,10 +184,9 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
           playsInline
           autoPlay
           preload="auto"
-          onLoadedData={alCargarDatos}
           onPlaying={alReproducir}
           onEnded={alTerminarVideo}
-          onError={(e) => { const er = e.currentTarget.error; alPoster(`error del video (codigo ${er && er.code})`) }}
+          onError={(e) => { const er = e.currentTarget.error; abandonar(`error del video (codigo ${er && er.code})`) }}
         />
       </div>
     </div>,

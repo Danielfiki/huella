@@ -14,10 +14,12 @@
   opacity: 0;
 }
 
-/* Pisa el tamano propio de la variante (.rascando): alto del sello, ancho por
-   proporcion. */
+/* Pisa el tamano propio de la variante: alto del sello (por el factor de la
+   variante, que deja el craneo del mismo tamano en las 3), ancho por
+   proporcion y los pies abajo. */
 .sello .enSello {
-  top: 0;
-  height: 100%;
+  top: auto;
+  bottom: 0;
+  height: calc(100% * var(--alto-sello, 1));
   width: auto;
 }

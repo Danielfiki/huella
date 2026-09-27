@@ -100,8 +100,3 @@
   width: 484px;
   height: 1092px;
 }
-
-/* canvas escondido mientras se muestra el poster quieto */
-.apagado {
-  visibility: hidden;
-}
