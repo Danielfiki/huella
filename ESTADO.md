@@ -100,6 +100,11 @@
 - ⬜ **Cortar la línea 3 de `ESTADO.md`** — **4 ago** — ~69 mil caracteres en una sola línea. Requiere sesión propia.
 - ⬜ **`TooltipAyuda` y `GraficoFrecuenciaSemanal` son código muerto** — **17 sep** — no los importa nadie (grep fuera de su propio archivo = vacío), Vite los saca del build y su CSS no llega a producción. Ya tienen el arreglo de modo oscuro aplicado por si se usan. **Decide Daniel: borrar o dejar.**
 
+### Personaje
+
+- ⬜ **Estado "pensando" con sus 3 variantes** — **26 sep** — ficha propuesta, sin aprobar. Regla: ningún estado entra sin sus 3 variantes (CLAUDE.md).
+- ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
+
 ### Sale de la cola
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
@@ -344,7 +349,26 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (25 sep 2026) — **Bienvenida del escarabajo en el Home, todos los usuarios**
+## Cerrado HOY (26 sep 2026) — **Bienvenida con 3 variantes, EN PRODUCCIÓN PARA TODOS**
+
+### 1. ✅ Bienvenida con 3 variantes que se alternan (commits `9336611`, `226f167` y `9302254`)
+- **Qué hace:** la bienvenida del Home tiene 3 variantes: **costado** (video 15, esquina inferior derecha), **derecha** (video 17, se asoma desde el borde derecho) y **centro** (video 16, sube al centro y apoya las manos en la barra). Cada día se elige una al azar, sin repetir la última (clave `huella_bienvenida_ultima_<id>` en localStorage). Todo lo demás sigue igual: una vez al día (calendario de Chile), nunca sobre el onboarding, nunca con movimiento reducido y el mismo póster de respaldo.
+- **Para todos** desde `9302254`. La vitrina `/personaje` sigue solo para Daniel, con botones para forzar Costado, Derecha o Centro.
+- **Archivos:** `public/personaje/home/`: `bienvenida-alfa.mp4` + `asomado-saludo-poster.webp` (costado), `bienvenida-derecha-alfa.mp4` + `bienvenida-derecha-poster.webp`, `bienvenida-centro-alfa.mp4` + `bienvenida-centro-poster.webp`. Los originales `16-bienvenida-centro` y `17-bienvenida-derecha` están en `Escritorio\huella diseño`.
+- **Derecha:** cuadros 7 a 228 (en el 6 todavía quedaban 28 px de antena). La pared de la que se asoma se mueve de x 1183 a 1215 en la fuente, así que la línea x 1183 va al borde de la pantalla y la mano sale de pantalla. Recorte 702 × 714; en pantalla mide 201,2 × 204,3.
+- **Centro:** cuadros 0 a 228. El fondo es un solo azul acero, sin repisa celeste: la repisa es un borde con sombra en y 665, y ese es el corte de abajo. Recorte 562 × 624; en pantalla mide 144,9 × 161, centrado por el eje del cuerpo. Sin halo azul: 0 huecos en ojos y bufanda.
+- **Escala:** el cráneo mide lo mismo en las 3 (radio de 41,2 a 41,4 px, medido sobre captura en WebKit).
+- 👀 **Dedos del centro:** las puntas quedan detrás de la barra, por decisión de Daniel.
+- **QA de cierre (Code, contra producción, cuenta de prueba):** en WebKit iPhone 14, claro y oscuro, las 3 se reproducen completas (7,38 / 9,25 / 9,54 s) y terminan solas con `ended`, sin póster de respaldo. Cotas: costado 251,1/403,7/401,1/593, derecha 216,6/388,7/417,8/593, centro 144,9 × 161 con eje en 195. Corte inferior en 0 px en las 3. 9 bienvenidas seguidas: nunca dos iguales y aparecen las 3. En onboarding y con movimiento reducido no aparece ninguna ni se piden videos. Chromium como regresión: igual. Los 3 MP4 son idénticos byte a byte al repo. Index `BM1-YChx`.
+- 🪤 **Errores "access control checks" en la prueba:** vienen del script de prueba (navega dos veces y corta pedidos del Supabase simulado), no de la app. Con una sola navegación, 0 errores.
+
+### ⏭️ Pendiente
+1. ⬜ **Siguiente estado del personaje: "pensando", con sus 3 variantes.** La ficha está propuesta y sin aprobar.
+2. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).
+
+---
+
+## Sesión 25 sep 2026 — **Bienvenida del escarabajo en el Home, todos los usuarios**
 
 ### 1. ✅ Bienvenida actuada en el Home (commit `4207389`, reemplaza a `e891221`)
 - **Qué hace:** en la primera apertura del Home de cada día (calendario de Chile, marca en localStorage por usuario), el escarabajo aparece en la esquina inferior derecha con un fundido de 150 ms, se asoma, saluda, se despide y se esconde detrás del borde de la pantalla. Todo lo actúa el video: el código ya no lo desliza. Se desmonta a los 5,7 s, cuando ya se escondió. Con movimiento reducido no aparece.
