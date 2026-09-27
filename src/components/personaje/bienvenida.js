@@ -34,6 +34,8 @@ export const VARIANTES = [
   { id: 'costado', nombre: 'Costado', video: '/personaje/home/bienvenida-alfa.mp4', poster: '/personaje/home/asomado-saludo-poster.webp', ancho: 450, alto: 568 },
   // video 17, cuadros 7 a 228; solo la cuenta de Daniel mientras se prueba
   { id: 'derecha', nombre: 'Derecha', video: '/personaje/home/bienvenida-derecha-alfa.mp4', poster: '/personaje/home/bienvenida-derecha-poster.webp', ancho: 642, alto: 652, privada: true },
+  // video 16, cuadros 0 a 228; solo la cuenta de Daniel mientras se prueba
+  { id: 'centro', nombre: 'Centro', video: '/personaje/home/bienvenida-centro-alfa.mp4', poster: '/personaje/home/bienvenida-centro-poster.webp', ancho: 484, alto: 538, privada: true },
 ]
 
 const claveUltima = (userId) => `huella_bienvenida_ultima_${userId}`

@@ -49,6 +49,17 @@
   aspect-ratio: 642 / 652;
 }
 
+/* Video 16. Recorte 562 x 624 de la fuente; el borde de abajo es el borde
+   superior de la repisa (y 665). Centrado por el eje del cuerpo (x 648,5 de
+   la fuente, al 43,15 % del ancho del archivo), no por la caja, que la mano
+   que saluda estira a la derecha. Escala: craneo igual al del costado
+   (radio medido en pantalla, WebKit iPhone 14). */
+.centro {
+  --ancho: calc(var(--base) * 0.96604);
+  aspect-ratio: 484 / 538;
+  right: calc(50% - var(--ancho) * 0.56851);
+}
+
 .visible {
   opacity: 1;
   transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
@@ -83,6 +94,11 @@
 .derecha .fuente {
   width: 642px;
   height: 1320px;
+}
+
+.centro .fuente {
+  width: 484px;
+  height: 1092px;
 }
 
 /* canvas escondido mientras se muestra el poster quieto */
