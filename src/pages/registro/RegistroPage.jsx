@@ -11,6 +11,7 @@ import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEp
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
 import { usaPensando, elegirPensando, marcarPensando, precargarPensando } from '../../components/personaje/pensando'
+import SelloPensando from '../../components/personaje/SelloPensando'
 import PreparandoMas from '../../components/registro/PreparandoMas'
 import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
@@ -316,7 +317,7 @@ export default function RegistroPage() {
   // las de la pareja, que también viven en `state.episodios`.
   const { user } = useAuth()
   const navigate = useNavigate()
-  // Escarabajo pensando en lugar de los puntitos: solo la cuenta de Daniel y
+  // Escarabajo pensando en la caja del sello: solo la cuenta de Daniel y
   // sin movimiento reducido (pensando.js). Se decide una vez al montar.
   const [pensando] = useState(() => {
     if (!usaPensando(user?.id)) return null
@@ -679,7 +680,7 @@ export default function RegistroPage() {
               {/* El escarabajo suelto, sin caja: el mismo gesto del splash de
                   arranque. Va sin envoltorio a propósito — cualquier `span`
                   alrededor sería otra vez un contenedor. */}
-              <Escarabajo className={styles.gSelloBicho} />
+              <SelloPensando pensando={pensando} activo={loadingIA} className={styles.gSelloBicho} />
               <p className={styles.gEyebrowVoz}>huella te lee</p>
             </div>
 
@@ -705,7 +706,7 @@ export default function RegistroPage() {
               ) : (
                 // Los puntitos solo hasta que empieza a llegar texto; de ahí en
                 // adelante el alivio se va escribiendo solo.
-                <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} pensando={pensando} />
+                <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
               )}
             </div>
           </div>

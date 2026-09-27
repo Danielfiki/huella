@@ -17,8 +17,6 @@
      carácter, lo de abajo no puede ir saltando. Da para el alivio típico
      (2-3 frases en dos párrafos); si se pasa, crece sin romper nada. */
   min-height: 140px;
-  /* ancla del escarabajo pensando (absoluto, arriba y al centro) */
-  position: relative;
 }
 
 .parrafo {
@@ -49,8 +47,6 @@
 /* Mientras Huella lee: los mismos puntos del hilo, sin barra ni porcentaje.
    Acá no se informa progreso, se acompaña. */
 .puntos { display: inline-flex; gap: 5px; padding: 6px 0; }
-/* con el escarabajo pensando los puntitos no se ven, pero guardan su lugar */
-.puntosOcultos { visibility: hidden; }
 .puntos i {
   width: 6px;
   height: 6px;

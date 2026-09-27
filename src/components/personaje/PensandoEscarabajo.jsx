@@ -63,7 +63,7 @@ function crearCompositor(canvas, variante) {
   }
 }
 
-export default function PensandoEscarabajo({ variante, visible, alReproducir, alFallar, alTerminar }) {
+export default function PensandoEscarabajo({ variante, visible, alReproducir, alDibujar, alFallar, alTerminar, className = '' }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const dibujarRef = useRef(null)
@@ -71,7 +71,7 @@ export default function PensandoEscarabajo({ variante, visible, alReproducir, al
   const estado = useRef({ playing: false, dibujado: false, fin: false })
   const [dibujado, setDibujado] = useState(false)
   const cb = useRef({})
-  cb.current = { alReproducir, alFallar, alTerminar }
+  cb.current = { alReproducir, alDibujar, alFallar, alTerminar }
 
   // play() de inmediato; WebGL en paralelo
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function PensandoEscarabajo({ variante, visible, alReproducir, al
       if (estado.current.fin || !dibujarRef.current) return
       const primero = !estado.current.dibujado
       const alfa = dibujarRef.current(video, primero)
-      if (primero && alfa > 0) { estado.current.dibujado = true; setDibujado(true) }
+      if (primero && alfa > 0) { estado.current.dibujado = true; setDibujado(true); cb.current.alDibujar?.() }
       rafRef.current = requestAnimationFrame(cuadro)
     }
     cuadro()
@@ -116,7 +116,7 @@ export default function PensandoEscarabajo({ variante, visible, alReproducir, al
   }
 
   return (
-    <div className={`${styles.capa} ${styles[variante.id]} ${dibujado && visible ? styles.visible : ''}`} aria-hidden="true">
+    <div className={`${styles.capa} ${styles[variante.id]} ${className} ${dibujado && visible ? styles.visible : ''}`} aria-hidden="true">
       <canvas ref={canvasRef} className={styles.imagen} width={variante.ancho} height={variante.alto} />
       <video
         ref={videoRef}

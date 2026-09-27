@@ -1,0 +1,23 @@
+/* Caja del sello: el escarabajo pensando se monta encima, centrado y con el
+   alto del sello (98 px en .gSelloBicho). Nada se mueve: el sello sigue en el
+   flujo y solo cambia su opacidad. */
+.sello {
+  position: relative;
+}
+
+.bicho {
+  display: block;
+  transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
+}
+
+.oculto {
+  opacity: 0;
+}
+
+/* Pisa el tamano propio de la variante (.rascando): alto del sello, ancho por
+   proporcion. */
+.sello .enSello {
+  top: 0;
+  height: 100%;
+  width: auto;
+}

@@ -927,10 +927,6 @@
   padding: 18px 20px;
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
-  /* por encima del escarabajo pensando (absoluto en AlivioHuella): el borde de
-     esta tarjeta es el corte de sus patas */
-  position: relative;
-  z-index: 1;
 }
 
 .gWellHead {

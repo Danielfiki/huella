@@ -5,6 +5,7 @@ import { borrarMarcaBienvenida, forzarVariante, VARIANTES } from '../../componen
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
 import AlivioHuella from '../../components/registro/AlivioHuella'
+import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { usaPensando, elegirPensando, precargarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
 import regStyles from '../registro/RegistroPage.module.css'
@@ -275,13 +276,12 @@ function PruebaPensando({ userId }) {
       </div>
       {prueba && (
         <div ref={zonaRef} className={styles.pruebaPensando}>
+          <div className={regStyles.gSello}>
+            <SelloPensando key={prueba.n} pensando={prueba.variante} activo={!prueba.texto} className={regStyles.gSelloBicho} />
+            <p className={regStyles.gEyebrowVoz}>huella te lee</p>
+          </div>
           <div className={regStyles.gAlivio}>
-            <AlivioHuella
-              key={prueba.n}
-              texto={prueba.texto}
-              cargando={!prueba.texto}
-              pensando={prueba.variante}
-            />
+            <AlivioHuella key={prueba.n} texto={prueba.texto} cargando={!prueba.texto} />
           </div>
           <div className={regStyles.gCards}>
             <section className={regStyles.gWell}>

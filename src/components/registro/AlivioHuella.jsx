@@ -1,8 +1,5 @@
-import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import styles from './AlivioHuella.module.css'
-
-// Solo se pide si el padre pasa `pensando` (la cuenta de Daniel mientras se prueba).
-const PensandoEscarabajo = lazy(() => import('../personaje/PensandoEscarabajo'))
 
 // ──────────────────────────────────────────────────────────────────────
 // EL ALIVIO — lo primero que el padre lee después de guardar.
@@ -76,50 +73,19 @@ function conCitas(texto) {
   )
 }
 
-// El escarabajo pensando (solo cuando el padre pasa `pensando`): reemplaza a los
-// puntitos. Los puntitos siguen ocupando su lugar, invisibles, así nada se mueve.
-// Si el video no llega a playing en 3 s (o falla), quedan los puntitos.
-const ESPERA_PLAYING = 3000
-
-export default function AlivioHuella({ texto, cargando = false, pensando = null }) {
+export default function AlivioHuella({ texto, cargando = false }) {
   const revelado = useRevelado(texto || '')
-  const [activo, setActivo] = useState(false)
-  const [fallo, setFallo] = useState(false)
-  const [fuera, setFuera] = useState(false)
 
+  // El hook va antes del corte porque los hooks no pueden ser condicionales.
+  if (!cargando && !texto) return null
   // Ya llegó texto pero el revelado todavía no lo alcanza: se siguen mostrando
   // los puntos en vez de una burbuja vacía por un instante.
   const mostrarPuntos = cargando && !revelado
-  const conEscarabajo = !!pensando && !fallo && !fuera
-
-  useEffect(() => {
-    if (!conEscarabajo || !mostrarPuntos || activo) return undefined
-    const id = setTimeout(() => setFallo(true), ESPERA_PLAYING)
-    return () => clearTimeout(id)
-  }, [conEscarabajo, mostrarPuntos, activo])
-
-  // Los hooks van antes del corte porque no pueden ser condicionales.
-  if (!cargando && !texto) return null
 
   return (
     <div className={styles.alivio}>
-      {conEscarabajo && (
-        <Suspense fallback={null}>
-          <PensandoEscarabajo
-            variante={pensando}
-            visible={mostrarPuntos}
-            alReproducir={() => setActivo(true)}
-            alFallar={() => setFallo(true)}
-            alTerminar={() => setFuera(true)}
-          />
-        </Suspense>
-      )}
       {mostrarPuntos ? (
-        <span
-          className={`${styles.puntos} ${conEscarabajo ? styles.puntosOcultos : ''}`}
-          role="status"
-          aria-label="Huella está leyendo"
-        >
+        <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
           <i /><i /><i />
         </span>
       ) : (
