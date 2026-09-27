@@ -1,0 +1,48 @@
+/* El escarabajo va arriba y al centro del bloque del alivio, donde empiezan los
+   tres puntitos. Absoluto: no empuja nada. Cae hacia abajo por encima del
+   espacio vacio y por DETRAS de la tarjeta "Como te sentiste tu?" (esa tarjeta
+   tiene z-index 1 en RegistroPage.module.css): el borde de la tarjeta es el
+   corte de las patas. No recibe toques. */
+.capa {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-rapida) var(--motion-ease-salida);
+}
+
+.visible {
+  opacity: 1;
+  transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
+}
+
+/* 05-pensando: archivo 362 x 626 a 3x; craneo de 40,3 px en captura WebKit
+   iPhone 14 (la bienvenida mide 40,7 a 41,4). */
+.rascando {
+  width: calc(362px / 3);
+  aspect-ratio: 362 / 626;
+}
+
+.imagen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* El video es solo la fuente del canvas: invisible, en el DOM y a su tamano
+   natural (WebKit sube la textura al tamano con que se pinta el video). */
+.fuente {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rascando .fuente {
+  width: 362px;
+  height: 1268px;
+}

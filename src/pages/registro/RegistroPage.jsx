@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from 'react'
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, Clock, ArrowRight } from 'lucide-react'
@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
+import { usaPensando, elegirPensando, marcarPensando, precargarPensando } from '../../components/personaje/pensando'
 import PreparandoMas from '../../components/registro/PreparandoMas'
 import Escarabajo from '../../components/ui/Escarabajo'
 import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
@@ -315,6 +316,15 @@ export default function RegistroPage() {
   // las de la pareja, que también viven en `state.episodios`.
   const { user } = useAuth()
   const navigate = useNavigate()
+  // Escarabajo pensando en lugar de los puntitos: solo la cuenta de Daniel y
+  // sin movimiento reducido (pensando.js). Se decide una vez al montar.
+  const [pensando] = useState(() => {
+    if (!usaPensando(user?.id)) return null
+    const v = elegirPensando(user.id)
+    marcarPensando(user.id, v.id)
+    return v
+  })
+  useEffect(() => { if (pensando) precargarPensando(pensando) }, [pensando])
 
   const [vista, setVista] = useState('conversacional')
   // La orientación larga arranca plegada: lo que el padre necesita al terminar
@@ -695,7 +705,7 @@ export default function RegistroPage() {
               ) : (
                 // Los puntitos solo hasta que empieza a llegar texto; de ahí en
                 // adelante el alivio se va escribiendo solo.
-                <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} />
+                <AlivioHuella texto={alivio} cargando={loadingIA && !alivio} pensando={pensando} />
               )}
             </div>
           </div>

@@ -208,6 +208,14 @@
   justify-content: center;
 }
 
+/* Prueba del escarabajo pensando: mismo bloque que la pantalla de guardado
+   (alivio arriba, tarjeta de la reflexion abajo) */
+.pruebaPensando {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--space-6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .visorEntrada,
   .rebote,

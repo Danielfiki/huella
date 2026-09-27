@@ -4,6 +4,10 @@ import { useAuth } from '../../context/AuthContext'
 import { borrarMarcaBienvenida, forzarVariante, VARIANTES } from '../../components/personaje/bienvenida'
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
+import AlivioHuella from '../../components/registro/AlivioHuella'
+import VoiceTextarea from '../../components/ui/VoiceTextarea'
+import { usaPensando, elegirPensando, precargarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
+import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
 // Vitrina privada del personaje (ruta /personaje, solo Daniel; el filtro vive
@@ -239,6 +243,61 @@ function EscenaRasgo() {
   )
 }
 
+// Prueba del estado "pensando": el mismo AlivioHuella y la misma tarjeta de la
+// pantalla de guardado del episodio (con sus clases), 8 s de carga simulada y
+// después un texto, para ver la salida con fundido. No llama a la IA.
+const CARGA_SIMULADA = 8000
+
+function PruebaPensando({ userId }) {
+  const [prueba, setPrueba] = useState(null) // { n, texto, variante }
+  const zonaRef = useRef(null)
+  useEffect(() => { if (usaPensando(userId)) precargarPensando(VARIANTES_PENSANDO[0]) }, [userId])
+  // La prueba queda bajo el botón: se trae a la vista, porque WebKit no pinta
+  // los cuadros de un video fuera de pantalla y el vigilante lo daría por caído.
+  useEffect(() => {
+    if (prueba?.n) zonaRef.current?.scrollIntoView({ block: 'center' })
+  }, [prueba?.n])
+  useEffect(() => {
+    if (!prueba || prueba.texto) return undefined
+    const id = setTimeout(() => setPrueba((p) => ({ ...p, texto: 'Esto es solo una prueba: aquí aparece lo primero que Huella te responde.' })), CARGA_SIMULADA)
+    return () => clearTimeout(id)
+  }, [prueba])
+
+  return (
+    <>
+      <div className={styles.repetir}>
+        <Button
+          variant="ghost"
+          onClick={() => setPrueba((p) => ({ n: (p?.n || 0) + 1, texto: '', variante: usaPensando(userId) ? elegirPensando(userId) : null }))}
+        >
+          Ver pensando
+        </Button>
+      </div>
+      {prueba && (
+        <div ref={zonaRef} className={styles.pruebaPensando}>
+          <div className={regStyles.gAlivio}>
+            <AlivioHuella
+              key={prueba.n}
+              texto={prueba.texto}
+              cargando={!prueba.texto}
+              pensando={prueba.variante}
+            />
+          </div>
+          <div className={regStyles.gCards}>
+            <section className={regStyles.gWell}>
+              <div className={regStyles.gWellHead}>
+                <h4 className={regStyles.gWellTitulo}>¿Cómo te sentiste tú?</h4>
+                <span className={regStyles.gWellTag}>Opcional</span>
+              </div>
+              <VoiceTextarea value="" onChange={() => {}} onVoiceResult={() => {}} placeholder="Escribe si quieres — esto es solo para ti." />
+            </section>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function PersonajePage() {
   const { user } = useAuth()
   const [abierto, setAbierto] = useState(null)
@@ -301,6 +360,8 @@ export default function PersonajePage() {
           </Button>
         ))}
       </div>
+
+      <PruebaPensando userId={user.id} />
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>
