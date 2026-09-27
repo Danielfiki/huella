@@ -78,8 +78,8 @@ function conCitas(texto) {
 
 // El escarabajo pensando (solo cuando el padre pasa `pensando`): reemplaza a los
 // puntitos. Los puntitos siguen ocupando su lugar, invisibles, así nada se mueve.
-// Si el video no llega a playing en 1,5 s (o falla), quedan los puntitos.
-const ESPERA_PLAYING = 1500
+// Si el video no llega a playing en 3 s (o falla), quedan los puntitos.
+const ESPERA_PLAYING = 3000
 
 export default function AlivioHuella({ texto, cargando = false, pensando = null }) {
   const revelado = useRevelado(texto || '')
