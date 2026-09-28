@@ -349,7 +349,31 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (27 sep 2026) — **Pensando con 3 variantes (solo cuenta de Daniel) y bienvenida sin póster congelado**
+## Cerrado HOY (28 sep 2026) — **Pensando EN PRODUCCIÓN PARA TODOS, con 3 variantes**
+
+### 1. ✅ Pensando para todos (commits `210defa`, `aef6712`, `0bdd3a7`, `f036cf7` y `31cd646`)
+- **Dónde:** la caja del sello de la pantalla de guardado del episodio ("huella te lee"). Nunca con movimiento reducido. La vitrina `/personaje` sigue siendo solo de Daniel (la cierra `RutaPersonaje`).
+- **Cómo se ve (aprobado por Daniel en su iPhone, `f036cf7`):** la caja queda vacía mientras carga (los puntitos siguen), el escarabajo entra con fundido de 150 ms al pintar su primer cuadro y, si no pinta en 2,5 s, entra el sello con el mismo fundido. Al terminar la orientación, fundido de vuelta al sello. 12 px de separación con "huella te lee". El video elegido se precalienta al abrir el registro (oculto, `play()` y pausa en el cuadro 0).
+- **3 variantes** que se alternan sin repetir la última: rascando, barbilla, manos. Originales `05-pensando`, `21-pensando-2`, `22-pensando-3` y `20-pensando-base` en `Escritorio\huella diseño`.
+- **Arreglo "nada congelado"** (bienvenida en Modo de bajo consumo): ya vigente.
+
+### 2. QA de cierre (Code, WebKit iPhone 14, producción `lSoh8CeF`, cuenta de prueba)
+- ✅ **7 episodios con IA real:** el sello en opacidad 0 al montar, el escarabajo entra entre 0,66 y 0,94 s sin que aparezca antes el logo, el video avanza, sigue mientras crece el texto (el texto empieza a los ~3,3 s y el escarabajo sigue hasta los ~14 s), 12 px medidos y el sello vuelve al final. Consola sin errores.
+- ✅ **Alternancia por el camino real** (Registrar → "Un episodio difícil"): manos, barbilla, rascando, barbilla, manos, barbilla. Nunca dos iguales seguidas y aparecen las 3. Un montaje y un video por visita.
+- ✅ **Movimiento reducido:** el sello de siempre desde el primer cuadro y ningún MP4 pedido.
+- ❌ **Defecto encontrado (sin arreglar, espera OK de Daniel):** al RECARGAR la página estando en `/registro`, la pantalla se monta dos veces, cada montaje elige y marca una variante, y se bajan dos videos. El segundo solo evita al primero, así que puede repetir la última mostrada (pasó: manos, manos). Arreglo propuesto: marcar la variante cuando de verdad se muestra (al pintar), no al montar.
+- ⬜ **Sin probar:** el rechazo forzado de `play()` (la simulación falló, porque el video tiene `autoplay` y arranca sin `play()`; hay que bloquear también el autoplay) y el halo en modo oscuro.
+- ⚠️ **La cuenta de prueba quedó bloqueada para registrar:** 15 episodios (tope gratis, sale el muro de Pro) y límite diario de IA agotado (429). Ahora tiene hijo "La brava" y nombre "Tester", o sea que ya no sirve para probar el onboarding.
+
+### ⏭️ Pendiente
+1. ⬜ Daniel decide si se arregla el doble montaje al recargar `/registro`.
+2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro: hay que darle Pro a la cuenta de prueba (o resetearla por SQL) y esperar el reinicio del límite diario de IA.
+3. ⬜ **Cola viva del personaje:** 2 bienvenidas nuevas (borde izquierdo y esquina inferior izquierda; imágenes 18 y 19 listas, faltan los videos). Después "orgulloso" y "celebrando".
+4. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).
+
+---
+
+## Sesión 27 sep 2026 — **Pensando con 3 variantes (solo cuenta de Daniel) y bienvenida sin póster congelado**
 
 ### 1. ✅ Pensando: variantes 2 y 3
 - **barbilla** (video 21-pensando-2, mano en la barbilla, cuadros 4 a 190) y **manos** (video 22-pensando-3, manos en la guata, cuadros 4 a 214), mismo proceso que la 1: máscara @imgly, niveles de alfa, terracota de 02-orgulloso, transparencia empaquetada, CRF 18, 24 fps.
