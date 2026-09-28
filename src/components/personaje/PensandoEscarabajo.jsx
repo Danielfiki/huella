@@ -13,7 +13,6 @@ import styles from './PensandoEscarabajo.module.css'
 //   puntitos (si playing no llega a tiempo, el padre lo desmonta).
 // - Si despues de playing no hay un cuadro con cuerpo en 3 s, avisa `alFallar`.
 // - Con `visible` en false se desvanece y avisa `alTerminar` para desmontarse.
-// - Con `unaVez` no hace loop: al terminar el video avisa `alAcabar` (orgulloso).
 
 const SEPARACION = 16
 const SIN_CUADRO = 3000
@@ -50,7 +49,7 @@ function crearCompositor(canvas, variante) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.viewport(0, 0, ANCHO, ALTO)
-  const [px0, py0] = PIXEL_CUERPO[variante.id] || variante.pixel
+  const [px0, py0] = PIXEL_CUERPO[variante.id]
   // dibuja el cuadro; con `leer` devuelve el alfa de un pixel del cuerpo
   return (video, leer) => {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
@@ -64,7 +63,7 @@ function crearCompositor(canvas, variante) {
   }
 }
 
-export default function PensandoEscarabajo({ variante, visible, unaVez = false, alReproducir, alDibujar, alFallar, alTerminar, alAcabar, className = '' }) {
+export default function PensandoEscarabajo({ variante, visible, alReproducir, alDibujar, alFallar, alTerminar, className = '' }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const dibujarRef = useRef(null)
@@ -72,7 +71,7 @@ export default function PensandoEscarabajo({ variante, visible, unaVez = false, 
   const estado = useRef({ playing: false, dibujado: false, fin: false })
   const [dibujado, setDibujado] = useState(false)
   const cb = useRef({})
-  cb.current = { alReproducir, alDibujar, alFallar, alTerminar, alAcabar }
+  cb.current = { alReproducir, alDibujar, alFallar, alTerminar }
 
   // play() de inmediato; WebGL en paralelo
   useEffect(() => {
@@ -108,10 +107,8 @@ export default function PensandoEscarabajo({ variante, visible, unaVez = false, 
     cuadro()
   }
 
-  // loop a mano: en WebKit el atributo loop se queda en pausa al final.
-  // Con `unaVez`, en vez de repetir avisa que termino.
+  // loop a mano: en WebKit el atributo loop se queda en pausa al final
   const alTerminarVideo = () => {
-    if (unaVez) { cb.current.alAcabar?.(); return }
     const video = videoRef.current
     video.currentTime = 0
     const p = video.play()

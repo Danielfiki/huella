@@ -8,11 +8,7 @@ import AlivioHuella from '../../components/registro/AlivioHuella'
 import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
-import EscarabajoAvance from '../../components/personaje/EscarabajoAvance'
-import EscarabajoSvg from '../../components/ui/Escarabajo'
-import { usaOrgulloso, elegirOrgulloso, marcarOrgulloso, VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
 import regStyles from '../registro/RegistroPage.module.css'
-import nuevoStyles from '../nuevo/NuevoPage.module.css'
 import styles from './PersonajePage.module.css'
 
 // Vitrina privada del personaje (ruta /personaje, solo Daniel; el filtro vive
@@ -320,86 +316,6 @@ function PruebaPensando({ userId }) {
   )
 }
 
-// Prueba del estado "orgulloso": el mismo circulo y las mismas clases de la
-// pantalla de avance registrado. 6 s de lectura simulada (pensando) y despues
-// una respuesta (orgulloso, una vez). No llama a la IA.
-const LECTURA_SIMULADA = 6000
-
-function PruebaOrgulloso({ userId }) {
-  const [prueba, setPrueba] = useState(null) // { n, respuesta, pensando, orgulloso }
-  const [cubierto, setCubierto] = useState(false)
-  const zonaRef = useRef(null)
-  const activo = usaOrgulloso(userId)
-  useEffect(() => {
-    if (!activo) return undefined
-    VARIANTES_PENSANDO.forEach(precargarPensando)
-    const limpiar = VARIANTES_ORGULLOSO.map(calentarPensando)
-    return () => limpiar.forEach((f) => f())
-  }, [activo])
-  // Sin `v`: sigue la alternancia. Con `v`: fuerza esa variante de orgulloso.
-  const probar = (v) => {
-    if (!activo) return
-    setPrueba((p) => ({ n: (p?.n || 0) + 1, respuesta: false, pensando: elegirPensando(userId), orgulloso: v || elegirOrgulloso(userId) }))
-  }
-  useEffect(() => {
-    if (prueba?.n) zonaRef.current?.scrollIntoView({ block: 'center' })
-  }, [prueba?.n])
-  useEffect(() => {
-    if (!prueba || prueba.respuesta) return undefined
-    const id = setTimeout(() => setPrueba((p) => ({ ...p, respuesta: true })), LECTURA_SIMULADA)
-    return () => clearTimeout(id)
-  }, [prueba])
-
-  return (
-    <>
-      <div className={styles.repetir}>
-        <Button variant="ghost" onClick={() => probar()}>
-          Ver orgulloso
-        </Button>
-      </div>
-      <div className={styles.repetir}>
-        {VARIANTES_ORGULLOSO.map((v, i) => (
-          <Button key={v.id} variant="ghost" size="sm" onClick={() => probar(v)}>
-            {i + 1}
-          </Button>
-        ))}
-      </div>
-      {prueba && (
-        <div ref={zonaRef} className={`${nuevoStyles.gaCanvas} ${styles.pruebaPensando}`}>
-          <div className={nuevoStyles.gaSello}>
-            <div className={nuevoStyles.gaCirculo}>
-              <span className={nuevoStyles.gaCirculoInicial} aria-hidden="true">L</span>
-              <span className={`${nuevoStyles.gaBichoCapa} ${cubierto ? nuevoStyles.gaBichoCapaOculta : ''}`}>
-                <span className={nuevoStyles.gaBichoFondo} aria-hidden="true" />
-                <EscarabajoSvg className={`${nuevoStyles.gaBicho} ${!prueba.respuesta ? nuevoStyles.gaBichoLatiendo : ''}`} />
-              </span>
-              <EscarabajoAvance
-                key={prueba.n}
-                pensando={prueba.pensando}
-                orgulloso={prueba.orgulloso}
-                cargando={!prueba.respuesta}
-                respuesta={prueba.respuesta}
-                alCubrir={setCubierto}
-                alMostrarPensando={() => marcarPensando(userId, prueba.pensando.id)}
-                alMostrarOrgulloso={() => marcarOrgulloso(userId, prueba.orgulloso.id)}
-              />
-            </div>
-            <h3 className={nuevoStyles.gaTitulo}>Avance registrado</h3>
-          </div>
-          <div className={nuevoStyles.gaVoz}>
-            <p className={`${regStyles.gEyebrowVoz} ${nuevoStyles.gaFirma}`}>huella te lee</p>
-            {!prueba.respuesta ? (
-              <p className={nuevoStyles.gaCargando}>Huella está leyendo lo que escribiste…</p>
-            ) : (
-              <p className={nuevoStyles.gaRespuesta}>Esto es solo una prueba: aquí aparece lo que Huella responde al avance.</p>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  )
-}
-
 export default function PersonajePage() {
   const { user } = useAuth()
   const verBienvenida = (forzada) => {
@@ -459,8 +375,6 @@ export default function PersonajePage() {
       </div>
 
       <PruebaPensando userId={user.id} />
-
-      <PruebaOrgulloso userId={user.id} />
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>

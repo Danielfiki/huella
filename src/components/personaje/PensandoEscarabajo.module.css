@@ -70,17 +70,3 @@
   width: 226px;
   height: 612px;
 }
-
-/* 02-orgulloso (variante 1 de orgulloso, se reproduce una vez): cortada con
-   R = 123 px de craneo en la fuente y la misma escala que pensando, asi en la
-   capa del avance el craneo mide lo mismo que en el sello del episodio. */
-.jarra {
-  --alto-sello: 1.0395;
-  width: calc(170px / 3);
-  aspect-ratio: 170 / 306;
-}
-
-.jarra .fuente {
-  width: 170px;
-  height: 628px;
-}

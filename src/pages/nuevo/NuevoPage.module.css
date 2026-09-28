@@ -432,17 +432,6 @@
   background: var(--color-surface);
 }
 
-/* Envoltorio del disco y el escarabajo chico, sin posicion propia (los dos
-   siguen ubicandose contra el circulo). Solo sirve para desvanecerlos juntos
-   mientras el escarabajo grande de la derecha esta a la vista. */
-.gaBichoCapa {
-  transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
-}
-
-.gaBichoCapaOculta {
-  opacity: 0;
-}
-
 /* Late SOLO mientras Huella lee. Mismos valores que el latido del splash
    (scale 1 a 1.06, opacidad 0.85, 1.6s). Se redefine aca y no se importa
    porque los @keyframes de un CSS module se renombran al compilar: el nombre
