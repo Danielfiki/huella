@@ -265,7 +265,6 @@ function PruebaPensando({ userId }) {
   // Sin `v`: sigue la alternancia (al azar sin repetir la ultima). Con `v`: fuerza esa.
   const probar = (v) => {
     const variante = usaPensando(userId) ? (v || elegirPensando(userId)) : null
-    if (variante) marcarPensando(userId, variante.id)
     setPrueba((p) => ({ n: (p?.n || 0) + 1, texto: '', variante }))
   }
   // La prueba queda bajo el botón: se trae a la vista, porque WebKit no pinta
@@ -296,7 +295,7 @@ function PruebaPensando({ userId }) {
       {prueba && (
         <div ref={zonaRef} className={styles.pruebaPensando}>
           <div className={regStyles.gSello}>
-            <SelloPensando key={prueba.n} pensando={prueba.variante} activo={!prueba.texto} className={regStyles.gSelloBicho} />
+            <SelloPensando key={prueba.n} pensando={prueba.variante} activo={!prueba.texto} alMostrar={() => marcarPensando(userId, prueba.variante.id)} className={regStyles.gSelloBicho} />
             <p className={regStyles.gEyebrowVoz}>huella te lee</p>
           </div>
           <div className={regStyles.gAlivio}>

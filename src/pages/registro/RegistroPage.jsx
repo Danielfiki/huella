@@ -321,9 +321,7 @@ export default function RegistroPage() {
   // sin movimiento reducido (pensando.js). Se decide una vez al montar.
   const [pensando] = useState(() => {
     if (!usaPensando(user?.id)) return null
-    const v = elegirPensando(user.id)
-    marcarPensando(user.id, v.id)
-    return v
+    return elegirPensando(user.id)
   })
   useEffect(() => {
     if (!pensando) return undefined
@@ -684,7 +682,7 @@ export default function RegistroPage() {
               {/* El escarabajo suelto, sin caja: el mismo gesto del splash de
                   arranque. Va sin envoltorio a propósito — cualquier `span`
                   alrededor sería otra vez un contenedor. */}
-              <SelloPensando pensando={pensando} activo={loadingIA} className={styles.gSelloBicho} />
+              <SelloPensando pensando={pensando} activo={loadingIA} alMostrar={() => marcarPensando(user.id, pensando.id)} className={styles.gSelloBicho} />
               <p className={styles.gEyebrowVoz}>huella te lee</p>
             </div>
 
