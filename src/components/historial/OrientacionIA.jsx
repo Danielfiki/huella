@@ -1,17 +1,18 @@
 import React from 'react'
 import Escarabajo from '../ui/Escarabajo'
-import PieCientifico from '../patron/PieCientifico'
-import { marcoDelEpisodio } from '../../services/anthropic'
+import OrientacionSecciones from '../registro/OrientacionSecciones'
 import styles from './OrientacionIA.module.css'
 
-// `episodio` e `hijo` son opcionales y alimentan el pie (descargo + lente).
-// Es el mismo pie de la pantalla post-guardado y de los patrones, así que un
-// episodio viejo (anterior al 27 ago 2026, cuando el marco venía escrito por
-// el modelo dentro del texto) cierra igual que uno nuevo: el lente se deriva
-// en cliente con `marcoDelEpisodio`, nunca sale del texto.
+// La orientación COMPLETA que se guardó al registrar (`orientacion.completa`),
+// partida por sus secciones con el mismo componente y los mismos estilos de la
+// pantalla del episodio recién registrado. Antes se mostraba solo la primera
+// línea y 4 más, y quedaban fuera "Qué hacer ahora" y "Qué evitar". Una
+// orientación vieja sin secciones se muestra entera como texto.
+//
+// `episodio` e `hijo` son opcionales y alimentan el pie (descargo + lente), que
+// pone OrientacionSecciones: el lente se deriva en cliente con
+// `marcoDelEpisodio`, nunca sale del texto.
 export default function OrientacionIA({ orientacion, onClose, episodio = null, hijo = null }) {
-  const { titulo, resumen } = orientacion
-  const { autor, lente } = marcoDelEpisodio({ episodio, hijo })
   return (
     <div className={styles.panel}>
       <div className={styles.head}>
@@ -26,9 +27,12 @@ export default function OrientacionIA({ orientacion, onClose, episodio = null, h
           </button>
         )}
       </div>
-      <h4 className={styles.ttl}>{titulo}</h4>
-      <p className={styles.body}>{resumen}</p>
-      <PieCientifico marco={`${autor} · ${lente}`} etiqueta="Lente" />
+      <OrientacionSecciones
+        texto={orientacion.completa}
+        episodio={episodio}
+        hijo={hijo}
+        className={styles.secciones}
+      />
     </div>
   )
 }

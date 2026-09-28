@@ -46,18 +46,8 @@
   place-items: center;
 }
 .close svg { width: 14px; height: 14px; }
-.ttl {
-  font-family: var(--font-heading);
-  font-size: 14.5px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  line-height: 1.2;
-  margin: 0;
-  color: var(--color-text);
-}
-.body {
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: var(--color-text);
-  margin: 6px 0 0;
+/* Las secciones traen el margen lateral de la pantalla de guardado; acá el
+   panel ya tiene el suyo, así que se anula para no angostar el texto. */
+.panel .secciones {
+  padding: 0;
 }

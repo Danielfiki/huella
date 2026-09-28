@@ -23,6 +23,14 @@ import styles from './OrientacionSecciones.module.css'
 // (neutro, que no es una alarma). Nada de rojo en esta pantalla.
 
 const TONOS = [styles.puntoMocha, styles.puntoVerde, styles.puntoNeutro]
+// El tono va por título y no solo por posición: en Momentos la orientación
+// llega con "Alivio" adelante, y por posición "Qué hacer ahora" quedaría neutro.
+// En la pantalla de guardado el orden es este mismo, así que ahí no cambia nada.
+const TONO_POR_TITULO = {
+  'qué está pasando': styles.puntoMocha,
+  'qué hacer ahora': styles.puntoVerde,
+  'qué evitar': styles.puntoNeutro,
+}
 
 // Letra chica que a veces escribe el MODELO al final de la orientación, y que
 // esta pantalla ya pone por su cuenta (el `PieCientifico` de más abajo). Sin
@@ -83,19 +91,21 @@ function partirEnSecciones(texto) {
 // (autor + enfoque) desde la Acción Rápida ya guardada, o lo infiere en
 // cliente si no la hay. Siempre devuelve algo, así que el pie siempre lleva
 // marco: no depende del modelo ni de una columna.
-export default function OrientacionSecciones({ texto, zona = null, episodio = null, hijo = null }) {
+// `className` deja que quien lo monta ajuste el contenedor (Momentos lo pone
+// dentro de un panel que ya trae su propio margen).
+export default function OrientacionSecciones({ texto, zona = null, episodio = null, hijo = null, className = '' }) {
   const secciones = partirEnSecciones(texto)
   if (!secciones.length) return null
 
   const { autor, lente } = marcoDelEpisodio({ episodio, hijo })
 
   return (
-    <div className={styles.cuerpo}>
+    <div className={`${styles.cuerpo} ${className}`}>
       {secciones.map((seccion, i) => (
         <section key={i} className={styles.bloque}>
           {seccion.titulo && (
             <h4 className={styles.titulo}>
-              <span className={`${styles.punto} ${TONOS[i % TONOS.length]}`} aria-hidden="true" />
+              <span className={`${styles.punto} ${TONO_POR_TITULO[seccion.titulo.normalize('NFC').toLowerCase()] ?? TONOS[i % TONOS.length]}`} aria-hidden="true" />
               {seccion.titulo}
             </h4>
           )}
