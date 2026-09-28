@@ -1,23 +1,35 @@
-import React, { useState, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import Escarabajo from '../ui/Escarabajo'
 import styles from './SelloPensando.module.css'
 
 // El sello de la pantalla de guardado ("huella te lee"). Mientras Huella genera
 // la orientacion (`activo`), y solo si viene `pensando` (la cuenta de Daniel,
 // sin movimiento reducido), el escarabajo pensando ocupa la misma caja del
-// sello. El sello se va recien cuando el video ya pinto un cuadro: si nunca
-// llega, queda el sello y nunca hay un hueco en blanco. Al terminar la
-// orientacion, fundido de 150 ms de vuelta al sello.
+// sello. Mientras el video carga la caja queda vacia (los puntitos siguen
+// abajo): el escarabajo entra con fundido cuando pinta su primer cuadro, y si
+// no pinta en 2,5 s entra el sello con el mismo fundido. Nunca se ven los dos.
+// Al terminar la orientacion, fundido de 150 ms de vuelta al sello.
 const PensandoEscarabajo = lazy(() => import('./PensandoEscarabajo'))
+const TOPE_CUADRO = 2500
 
 export default function SelloPensando({ pensando, activo, className }) {
   const [dibujado, setDibujado] = useState(false)
   const [fuera, setFuera] = useState(false)
+  const [visto, setVisto] = useState(activo)
   const conEscarabajo = !!pensando && !fuera
+
+  useEffect(() => { if (activo) setVisto(true) }, [activo])
+
+  // tope: sin primer cuadro en 2,5 s, el escarabajo sale y entra el sello
+  useEffect(() => {
+    if (!conEscarabajo || dibujado) return undefined
+    const id = setTimeout(() => setFuera(true), TOPE_CUADRO)
+    return () => clearTimeout(id)
+  }, [conEscarabajo, dibujado])
 
   return (
     <div className={styles.sello}>
-      <span className={`${styles.bicho} ${conEscarabajo && dibujado && activo ? styles.oculto : ''}`}>
+      <span className={`${styles.bicho} ${conEscarabajo && (activo || !visto) ? styles.oculto : ''}`}>
         <Escarabajo className={className} />
       </span>
       {conEscarabajo && (

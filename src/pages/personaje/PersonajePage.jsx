@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button'
 import AlivioHuella from '../../components/registro/AlivioHuella'
 import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
-import { usaPensando, elegirPensando, marcarPensando, precargarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
+import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
 import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
@@ -256,7 +256,12 @@ const CARGA_SIMULADA = 8000
 function PruebaPensando({ userId }) {
   const [prueba, setPrueba] = useState(null) // { n, texto, variante }
   const zonaRef = useRef(null)
-  useEffect(() => { if (usaPensando(userId)) VARIANTES_PENSANDO.forEach(precargarPensando) }, [userId])
+  useEffect(() => {
+    if (!usaPensando(userId)) return undefined
+    VARIANTES_PENSANDO.forEach(precargarPensando)
+    const limpiar = VARIANTES_PENSANDO.map(calentarPensando)
+    return () => limpiar.forEach((f) => f())
+  }, [userId])
   // Sin `v`: sigue la alternancia (al azar sin repetir la ultima). Con `v`: fuerza esa.
   const probar = (v) => {
     const variante = usaPensando(userId) ? (v || elegirPensando(userId)) : null

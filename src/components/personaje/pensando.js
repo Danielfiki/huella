@@ -36,6 +36,30 @@ export function precargarPensando(variante) {
   import('./PensandoEscarabajo').catch(() => {})
 }
 
+// Arranque rapido en iOS: mientras el papa escribe, el video elegido queda
+// montado oculto (opacidad 0, tamano natural), muted + playsinline, con play()
+// y pausado en el cuadro 0 al llegar playing. Si play() se rechaza no pasa
+// nada: el sello entra a los 2,5 s. Devuelve la limpieza.
+export function calentarPensando(variante) {
+  let video = null
+  try {
+    video = document.createElement('video')
+    video.muted = true
+    video.playsInline = true
+    video.setAttribute('muted', '')
+    video.setAttribute('playsinline', '')
+    video.setAttribute('aria-hidden', 'true')
+    video.preload = 'auto'
+    video.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;z-index:-1'
+    video.addEventListener('playing', () => { video.pause(); video.currentTime = 0 }, { once: true })
+    video.src = variante.video
+    document.body.appendChild(video)
+    const p = video.play()
+    if (p && p.catch) p.catch(() => {})
+  } catch { /* sin calentar */ }
+  return () => { try { video?.pause(); video?.remove() } catch { /* ya fuera */ } }
+}
+
 export function marcarPensando(userId, id) {
   try { localStorage.setItem(claveUltima(userId), id) } catch { /* sin ultima */ }
 }

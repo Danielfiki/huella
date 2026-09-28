@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
-import { usaPensando, elegirPensando, marcarPensando, precargarPensando } from '../../components/personaje/pensando'
+import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando } from '../../components/personaje/pensando'
 import SelloPensando from '../../components/personaje/SelloPensando'
 import PreparandoMas from '../../components/registro/PreparandoMas'
 import Escarabajo from '../../components/ui/Escarabajo'
@@ -325,7 +325,11 @@ export default function RegistroPage() {
     marcarPensando(user.id, v.id)
     return v
   })
-  useEffect(() => { if (pensando) precargarPensando(pensando) }, [pensando])
+  useEffect(() => {
+    if (!pensando) return undefined
+    precargarPensando(pensando)
+    return calentarPensando(pensando)
+  }, [pensando])
 
   const [vista, setVista] = useState('conversacional')
   // La orientación larga arranca plegada: lo que el padre necesita al terminar

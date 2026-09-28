@@ -16,10 +16,12 @@
 
 /* Pisa el tamano propio de la variante: alto del sello (por el factor de la
    variante, que deja el craneo del mismo tamano en las 3), ancho por
-   proporcion y los pies abajo. */
+   proporcion y los pies abajo. Sube 12 px dentro de la caja para separarse
+   de "huella te lee"; el texto y el sello no se mueven. */
 .sello .enSello {
   top: auto;
   bottom: 0;
   height: calc(100% * var(--alto-sello, 1));
   width: auto;
+  transform: translate(-50%, -12px);
 }
