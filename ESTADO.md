@@ -361,14 +361,27 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - ✅ **7 episodios con IA real:** el sello en opacidad 0 al montar, el escarabajo entra entre 0,66 y 0,94 s sin que aparezca antes el logo, el video avanza, sigue mientras crece el texto (el texto empieza a los ~3,3 s y el escarabajo sigue hasta los ~14 s), 12 px medidos y el sello vuelve al final. Consola sin errores.
 - ✅ **Alternancia por el camino real** (Registrar → "Un episodio difícil"): manos, barbilla, rascando, barbilla, manos, barbilla. Nunca dos iguales seguidas y aparecen las 3. Un montaje y un video por visita.
 - ✅ **Movimiento reducido:** el sello de siempre desde el primer cuadro y ningún MP4 pedido.
-- ❌ **Defecto encontrado (sin arreglar, espera OK de Daniel):** al RECARGAR la página estando en `/registro`, la pantalla se monta dos veces, cada montaje elige y marca una variante, y se bajan dos videos. El segundo solo evita al primero, así que puede repetir la última mostrada (pasó: manos, manos). Arreglo propuesto: marcar la variante cuando de verdad se muestra (al pintar), no al montar.
+- ✅ **Defecto encontrado y arreglado (`387b795`, sin QA todavía):** al RECARGAR la página estando en `/registro`, la pantalla se monta dos veces y cada montaje marcaba una variante, así que podía repetir la última mostrada (pasó: manos, manos). Ahora la variante se anota recién cuando el escarabajo pinta su primer cuadro, igual que la bienvenida. Sigue pasando que al recargar se bajan dos videos.
 - ⬜ **Sin probar:** el rechazo forzado de `play()` (la simulación falló, porque el video tiene `autoplay` y arranca sin `play()`; hay que bloquear también el autoplay) y el halo en modo oscuro.
 - ⚠️ **La cuenta de prueba quedó bloqueada para registrar:** 15 episodios (tope gratis, sale el muro de Pro) y límite diario de IA agotado (429). Ahora tiene hijo "La brava" y nombre "Tester", o sea que ya no sirve para probar el onboarding.
 
+### 3. ❌ Orgulloso al lado de la foto del avance: DESCARTADO
+- `d24bf3e` puso pensando (mientras lee) y orgulloso (al responder) a la derecha del círculo en la pantalla de avance registrado. Daniel lo descartó: rompe la armonía de la pantalla y el paso de pensando a orgulloso se ve como un fantasma.
+- `49d72b4` lo revierte entero: la pantalla de avance y la vitrina quedan exactamente como antes de `d24bf3e` (sin "Ver orgulloso").
+- Antes también se descartó la caja del escarabajo chico del círculo: mide 28 px de alto y el cráneo quedaba con radio de ~5 px (el mínimo es 18).
+
+### 4. Orgulloso: dirección nueva (aprobada, se implementa cuando estén sus 3 variantes)
+- **Llega DE VISITA desde abajo**, como la bienvenida del centro: sube desde la barra, se muestra orgulloso y se esconde solo, en el espacio vacío bajo "Ver todos los avances".
+- ✅ **2 videos procesados, sin conectar a la app** (`public/personaje/home/`, ningún componente los usa). Mismo proceso que la bienvenida del centro: chroma del azul acero, descontaminado, terracota de 02-orgulloso, corte inferior en la línea de la repisa (y = 677), escala de cráneo igual a la del centro (radio 127 px en la fuente → ×1,085), MP4 empaquetado CRF 18 a 24 fps.
+  - **orgulloso-pulgar-alfa.mp4** (pulgar arriba): cuadros 2 a 213 (8,83 s), 424 × 556, 1.129 KB, + póster. ⚠️ El original se llama `24-orgulloso-base.png.mp4`, no `23-orgulloso-1.mp4` (ese nombre no existe en la carpeta); el contenido es el pulgar arriba.
+  - **orgulloso-aplauso-alfa.mp4** (aplauso suave, original `25-orgulloso-2.mp4`): cuadros 2 a 219 (9,08 s), 418 × 560, 1.210 KB, + póster.
+  - Verificado: el cuadro 1 (destello de la referencia) queda fuera; 0 píxeles opacos en el primer y el último cuadro (también en el MP4 ya codificado); antenas enteras (fila de arriba y columnas de los costados vacías en todos los cuadros); cuerpo apoyado en la última fila. Las puntas de los dedos que cuelgan sobre la repisa (hasta y ≈ 703) quedan cortadas en la línea.
+- ⬜ **Falta la variante 3 de orgulloso** (el video).
+
 ### ⏭️ Pendiente
-1. ⬜ Daniel decide si se arregla el doble montaje al recargar `/registro`.
-2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro: hay que darle Pro a la cuenta de prueba (o resetearla por SQL) y esperar el reinicio del límite diario de IA.
-3. ⬜ **Cola viva del personaje:** 2 bienvenidas nuevas (borde izquierdo y esquina inferior izquierda; imágenes 18 y 19 listas, faltan los videos). Después "orgulloso" y "celebrando".
+1. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla igual → implementar la visita bajo "Ver todos los avances" con las 3 (solo cuenta de Daniel primero).
+2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro de pensando: hay que darle Pro a la cuenta de prueba y reiniciar su contador de IA (SQL entregado a Daniel el 28 sep).
+3. ⬜ **Cola viva del personaje:** 2 bienvenidas nuevas (borde izquierdo y esquina inferior izquierda; imágenes 18 y 19 listas, faltan los videos). Después "celebrando".
 4. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).
 
 ---
