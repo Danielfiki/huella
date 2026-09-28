@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Camera, X } from 'lucide-react'
 import Escarabajo from '../../components/ui/Escarabajo'
@@ -10,6 +10,9 @@ import Button from '../../components/ui/Button'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { generarRespuestaHito } from '../../services/anthropic'
 import { GRUPOS_AVANCE, LENTE_POR_ID, PLACEHOLDERS_AVANCE } from '../../constants/catalogoAvance'
+import EscarabajoAvance from '../../components/personaje/EscarabajoAvance'
+import { elegirPensando, marcarPensando, precargarPensando, calentarPensando } from '../../components/personaje/pensando'
+import { usaOrgulloso, elegirOrgulloso, marcarOrgulloso } from '../../components/personaje/orgulloso'
 import styles from './NuevoPage.module.css'
 // Las chips de las lentes son EXACTAMENTE las de los filtros del Historial: se
 // importa su modulo en vez de copiar las reglas. El unico ajuste es el padding,
@@ -91,6 +94,23 @@ export default function NuevoPage() {
   const [respuestaHito, setRespuestaHito] = useState(null)
   const [cargandoRespuesta, setCargandoRespuesta] = useState(false)
   const respuestaPedidaRef = useRef(null)
+
+  // Escarabajo grande del avance (pensando mientras lee, orgulloso al
+  // responder): solo la cuenta de Daniel y sin movimiento reducido. Se elige al
+  // abrir el formulario, y ahi mismo se precalientan los dos videos para que
+  // iOS ya los tenga cargados al guardar. Se anotan recien cuando pintan.
+  const [personaje, setPersonaje] = useState(null)
+  const [escarabajoCubierto, setEscarabajoCubierto] = useState(false)
+  useEffect(() => {
+    if (vista !== 'hito' || !usaOrgulloso(user?.id)) return
+    setPersonaje({ pensando: elegirPensando(user.id), orgulloso: elegirOrgulloso(user.id) })
+  }, [vista, user?.id])
+  useEffect(() => {
+    if (!personaje) return undefined
+    precargarPensando(personaje.pensando)
+    const limpiar = [calentarPensando(personaje.pensando), calentarPensando(personaje.orgulloso)]
+    return () => limpiar.forEach((f) => f())
+  }, [personaje])
 
   function handleFotoChange(e) {
     const file = e.target.files?.[0]
@@ -330,10 +350,25 @@ export default function NuevoPage() {
                   {nombreHijo.trim().charAt(0).toUpperCase()}
                 </span>
               )}
-              <span className={styles.gaBichoFondo} aria-hidden="true" />
-              <Escarabajo
-                className={`${styles.gaBicho} ${cargandoRespuesta ? styles.gaBichoLatiendo : ''}`}
-              />
+              {/* El chico se desvanece mientras el grande está a la vista. */}
+              <span className={`${styles.gaBichoCapa} ${escarabajoCubierto ? styles.gaBichoCapaOculta : ''}`}>
+                <span className={styles.gaBichoFondo} aria-hidden="true" />
+                <Escarabajo
+                  className={`${styles.gaBicho} ${cargandoRespuesta ? styles.gaBichoLatiendo : ''}`}
+                />
+              </span>
+              {personaje && (
+                <EscarabajoAvance
+                  key={hitoGuardadoId}
+                  pensando={personaje.pensando}
+                  orgulloso={personaje.orgulloso}
+                  cargando={cargandoRespuesta}
+                  respuesta={!!respuestaHito?.linea1}
+                  alCubrir={setEscarabajoCubierto}
+                  alMostrarPensando={() => marcarPensando(user.id, personaje.pensando.id)}
+                  alMostrarOrgulloso={() => marcarOrgulloso(user.id, personaje.orgulloso.id)}
+                />
+              )}
             </div>
             <h3 className={styles.gaTitulo}>Avance registrado</h3>
 
