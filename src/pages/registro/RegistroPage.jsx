@@ -317,7 +317,7 @@ export default function RegistroPage() {
   // las de la pareja, que también viven en `state.episodios`.
   const { user } = useAuth()
   const navigate = useNavigate()
-  // Escarabajo pensando en la caja del sello: solo la cuenta de Daniel y
+  // Escarabajo pensando en la caja del sello: para todos,
   // sin movimiento reducido (pensando.js). Se decide una vez al montar.
   const [pensando] = useState(() => {
     if (!usaPensando(user?.id)) return null

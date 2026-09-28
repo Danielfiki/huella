@@ -3,7 +3,7 @@ import Escarabajo from '../ui/Escarabajo'
 import styles from './SelloPensando.module.css'
 
 // El sello de la pantalla de guardado ("huella te lee"). Mientras Huella genera
-// la orientacion (`activo`), y solo si viene `pensando` (la cuenta de Daniel,
+// la orientacion (`activo`), y solo si viene `pensando` (todos los usuarios,
 // sin movimiento reducido), el escarabajo pensando ocupa la misma caja del
 // sello. Mientras el video carga la caja queda vacia (los puntitos siguen
 // abajo): el escarabajo entra con fundido cuando pinta su primer cuadro, y si

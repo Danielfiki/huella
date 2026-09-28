@@ -1,7 +1,6 @@
-import { DUENO_PERSONAJE } from './bienvenida'
-
 // Estado "pensando": el escarabajo en loop mientras la IA lee el episodio.
-// Solo la cuenta de Daniel mientras se prueba, y nunca con movimiento reducido.
+// Para todos los usuarios, nunca con movimiento reducido (la vitrina sigue
+// siendo solo de Daniel por RutaPersonaje).
 // Cada variante trae su video empaquetado (color arriba, 16 px, mascara abajo)
 // a 3x del tamano en pantalla; ancho, proporcion y posicion viven en
 // PensandoEscarabajo.module.css.
@@ -17,7 +16,7 @@ export const VARIANTES_PENSANDO = [
 const claveUltima = (userId) => `huella_pensando_ultima_${userId}`
 
 export function usaPensando(userId) {
-  if (userId !== DUENO_PERSONAJE) return false
+  if (!userId) return false
   try { return !window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
 }
 
