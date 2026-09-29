@@ -35,12 +35,6 @@ export function pillClassFor(gatillante) {
   return PILL_BY_CATEGORIA[slug] || 'tangerine'
 }
 
-export function statColorFor(value) {
-  if (value < 2) return 'calm'
-  if (value > 3.5) return 'alert'
-  return 'warm'
-}
-
 export function groupEpisodios(episodios, today = new Date()) {
   const grupos = []
   const dayMs = 86400000

@@ -1,7 +1,10 @@
+/* La página ocupa el ancho entero y cada bloque pone sus propios 20 px (sin
+   el margen negativo se sumaban al padding del Layout y quedaban 40). */
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  margin: -20px -20px 0;
   background: var(--color-bg);
 }
 
@@ -99,7 +102,3 @@
   line-height: 1.5;
   color: var(--color-text-muted);
 }
-
-/* Rediseño de Momentos: la página ocupa el ancho entero y cada bloque pone
-   sus propios 20 px (sin esto se sumaban al padding del Layout y quedaban 40). */
-.pageNuevo { margin: -20px -20px 0; }

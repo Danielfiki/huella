@@ -2,10 +2,9 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useM
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import { useFamily } from './FamilyContext'
-import { generarAccionInmediata, detectarRasgos, generarEstrategiaDesdeContexto, generarAnalisisSemanal, generarAnalisisCompleto, momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../services/anthropic'
+import { detectarRasgos, generarEstrategiaDesdeContexto, generarAnalisisSemanal, generarAnalisisCompleto, momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../services/anthropic'
 import { retryAsync, esErrorIAReintentable } from '../utils/retryAsync'
 import { HABILIDADES_CATALOGO } from '../pages/estrategias/helpers'
-import colaRegeneracion from '../utils/colaRegeneracionAccionRapida'
 import { cumpleUmbral } from '../utils/umbralRasgos'
 import { lunesSemanaChile } from '../utils/fechaChile'
 import { extraerMarcoAplicado } from '../utils/seccionesIA'
@@ -2083,40 +2082,6 @@ export function HuellaProvider({ children }) {
       return { ok: false, mensaje: 'No pudimos conectar. Intenta de nuevo en un momento.' }
     }
   }
-
-  // Acción Rápida v1.2 — inyectamos el regenerador en la cola para que las
-  // EpisodioCards puedan pedir regeneración sin acoplar la cola al context.
-  // Usamos refs porque updateEpisodio y actualizarUltimoAutorIa se recrean
-  // en cada render del provider, y el useEffect de seteo debe correr una
-  // sola vez (sino la cola pierde referencia a la función registrada).
-  const updateEpisodioRef       = useRef(updateEpisodio)
-  const actualizarUltimoAutorRef = useRef(actualizarUltimoAutorIa)
-  useEffect(() => {
-    updateEpisodioRef.current       = updateEpisodio
-    actualizarUltimoAutorRef.current = actualizarUltimoAutorIa
-  })
-
-  useEffect(() => {
-    colaRegeneracion.setRegenerador(async (episodio, hijo) => {
-      const ultimoAutorUsado = hijo?.ultimoAutorIa ?? null
-      const resultado = await generarAccionInmediata({
-        hijo,
-        episodio,
-        ultimoAutorUsado,
-        ahora: new Date(),
-      })
-      // Persistimos en el episodio (5 columnas accion_rapida_*).
-      await updateEpisodioRef.current({
-        id:           episodio.id,
-        accionRapida: resultado,
-      })
-      // Actualizamos último autor del hijo (anti-repetición).
-      if (hijo?.id && resultado?.autor) {
-        await actualizarUltimoAutorRef.current(hijo.id, resultado.autor)
-      }
-      return resultado
-    })
-  }, [])
 
   return (
     <HuellaContext.Provider value={{

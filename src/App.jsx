@@ -195,7 +195,7 @@ export default function App() {
                     (notificaciones, historial del navegador, PWA instalada). */}
                 <Route path="hitos"       element={<Navigate to="/historial" replace />} />
                 <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
-                {/* Momento abierto del rediseño de Momentos (solo la cuenta de Daniel; la pagina redirige a las demas). */}
+                {/* Momento abierto de Momentos (episodio o avance en pantalla propia). */}
                 <Route path="momento/:id" element={<PageErrorBoundary><MomentoPage /></PageErrorBoundary>} />
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
                 <Route path="hijo"                    element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />

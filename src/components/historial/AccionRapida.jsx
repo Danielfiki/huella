@@ -3,7 +3,8 @@ import { AUTORES, MAPA_DIMENSIONES } from '../../services/anthropic'
 import Escarabajo from '../ui/Escarabajo'
 import styles from './AccionRapida.module.css'
 
-// AccionRapida — visible siempre en la EpisodioCard (no detrás de botón).
+// AccionRapida — la usa la pantalla de guardado del episodio ("Para la próxima").
+// Desde el rediseño de Momentos ya no va en el historial.
 // Recibe el objeto persistido en columnas `accion_rapida_*` del episodio,
 // más una flag `regenerando` cuando la cola está actualizando esta card
 // en background tras detectar cambio de bucket de tiempo.

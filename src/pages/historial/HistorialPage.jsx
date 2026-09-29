@@ -3,13 +3,10 @@ import { Loader } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
-import HistorialHeader from '../../components/historial/HistorialHeader'
 import FiltroChips from '../../components/historial/FiltroChips'
 import DaySeparator from '../../components/historial/DaySeparator'
-import EpisodioCard from '../../components/historial/EpisodioCard'
 import MomentoFila from '../../components/historial/MomentoFila'
 import MomentosCabecera from '../../components/historial/MomentosCabecera'
-import { usaMomentosNuevo } from './momentosNuevo'
 import PatronCard from '../../components/patron/PatronCard'
 import { groupEpisodios, TIPOS } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
@@ -38,11 +35,9 @@ function parseOrientacionIA(text) {
 export default function HistorialPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro, profilesByUserId } = useHuella()
+  const { state, isPro, profilesByUserId } = useHuella()
   const { user } = useAuth()
   const { episodios, hitos, hijo, estrategias } = state
-  // Rediseño de Momentos: solo la cuenta de Daniel (momentosNuevo.js).
-  const nuevo = usaMomentosNuevo(user?.id)
 
   // Filtro inicial:
   //  1. Si la navegación trae un filtro explícito (p. ej. el "y N más" del Home), manda.
@@ -62,13 +57,8 @@ export default function HistorialPage() {
 
   const [showSearch, setShowSearch] = useState(false)
   const [busqueda, setBusqueda] = useState('')
-  const [checkinsHechos, setCheckinsHechos] = useState(new Set())
   const [pdfActivado, setPdfActivado] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
-
-  useEffect(() => {
-    getCheckinsHechos().then(setCheckinsHechos)
-  }, [])
 
   const episodiosNorm = useMemo(
     () =>
@@ -164,26 +154,13 @@ export default function HistorialPage() {
 
   const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
 
-  // El Home puede mandar a un momento puntual: la card del reingreso navega
-  // con `state.momentoId`. Se espera a que la lista este pintada (por eso
-  // depende de `grupos`) y se centra esa ficha. Si el momento no esta en el
-  // filtro actual, no pasa nada: la lista queda como estaba.
+  // El Home puede mandar a un momento puntual (la card del reingreso navega
+  // con `state.momentoId`): se abre directo en su propia pantalla. Con replace,
+  // volver desde el momento lleva de vuelta al Home.
   const momentoId = location.state?.momentoId ?? null
   useEffect(() => {
-    if (!momentoId) return
-    // En el rediseño el momento se abre en su propia pantalla.
-    if (nuevo) { navigate(`/momento/${momentoId}`, { replace: true }); return }
-    const nodo = document.getElementById(`momento-${momentoId}`)
-    if (!nodo) return
-    const sinMovimiento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    nodo.scrollIntoView({ block: 'center', behavior: sinMovimiento ? 'auto' : 'smooth' })
-  }, [momentoId, grupos])
-
-  const promedio = useMemo(() => {
-    const vals = episodiosNorm.map((e) => e.nivel).filter((n) => n != null)
-    if (!vals.length) return 0
-    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
-  }, [episodiosNorm])
+    if (momentoId) navigate(`/momento/${momentoId}`, { replace: true })
+  }, [momentoId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const rango = useMemo(() => {
     if (!todosUnificados.length) return ''
@@ -231,18 +208,12 @@ export default function HistorialPage() {
   const esPro = isPro()
   const hayEpisodios = episodios.length > 0
 
-  function handleDelete(id, source) {
-    return source === 'hito' ? deleteHito(id) : deleteEpisodio(id)
-  }
-
   // El estado vacío solo aplica si NO hay absolutamente nada. Con patrones (aunque
   // sin episodios ni hitos) la página se muestra: filtros + filtro de patrones.
   if (totalRegistros === 0 && patronesLista.length === 0) {
     return (
-      <div className={`${styles.page} ${nuevo ? styles.pageNuevo : ''}`}>
-        {nuevo
-          ? <MomentosCabecera onBack={() => navigate(-1)} />
-          : <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />}
+      <div className={styles.page}>
+        <MomentosCabecera onBack={() => navigate(-1)} />
         <div className={styles.empty}>
           <p className={styles.emptyText}>
             Sin registros aún — cuando empieces a registrar, aquí aparecerá todo.
@@ -253,24 +224,8 @@ export default function HistorialPage() {
   }
 
   return (
-    <div className={`${styles.page} ${nuevo ? styles.pageNuevo : ''}`}>
-      {nuevo ? (
-        <MomentosCabecera
-          onBack={() => navigate(-1)}
-          onSearch={() => { setShowSearch((s) => !s); setBusqueda('') }}
-          onExportPDF={
-            hayEpisodios
-              ? (esPro ? () => setPdfActivado(true) : () => setShowUpgrade(true))
-              : undefined
-          }
-          hasNewExport={esPro && hayEpisodios && !pdfActivado}
-          exportBloqueado={!esPro && hayEpisodios}
-        />
-      ) : (
-      <HistorialHeader
-        count={totalRegistros}
-        promedio={promedio}
-        rango={rango}
+    <div className={styles.page}>
+      <MomentosCabecera
         onBack={() => navigate(-1)}
         onSearch={() => { setShowSearch((s) => !s); setBusqueda('') }}
         onExportPDF={
@@ -281,7 +236,6 @@ export default function HistorialPage() {
         hasNewExport={esPro && hayEpisodios && !pdfActivado}
         exportBloqueado={!esPro && hayEpisodios}
       />
-      )}
       <FiltroChips
         active={filtro}
         onChange={setFiltro}
@@ -366,24 +320,14 @@ export default function HistorialPage() {
 
             {grupos.map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio={nuevo} />
-                {g.episodios.map((ep) => nuevo ? (
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio />
+                {g.episodios.map((ep) => (
                   // El nombre va solo si lo registró el otro adulto.
                   <MomentoFila
                     key={ep.id}
                     momento={ep}
                     autor={ep.userId && ep.userId !== user?.id ? getAuthorDisplay(ep.userId, profilesByUserId, user?.id) : ''}
                     onAbrir={() => navigate(`/momento/${ep.id}`)}
-                  />
-                ) : (
-                  <EpisodioCard
-                    key={ep.id}
-                    episodio={ep}
-                    onDelete={(id) => handleDelete(id, ep._source)}
-                    onUpdate={ep._source === 'episodio' ? updateEpisodio : undefined}
-                    tieneCheckin={checkinsHechos.has(ep.id)}
-                    onNavigate={navigate}
-                    authorName={getAuthorDisplay(ep.userId, profilesByUserId, user?.id)}
                   />
                 ))}
               </React.Fragment>

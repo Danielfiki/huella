@@ -12,10 +12,10 @@ import { LENTE_POR_ID } from '../../constants/catalogoAvance'
 import { TIPOS, emoTileClass } from '../../components/historial/helpers'
 import OrientacionSecciones from '../../components/registro/OrientacionSecciones'
 import Escarabajo from '../../components/ui/Escarabajo'
-import { usaMomentosNuevo, fechaMomento } from './momentosNuevo'
+import { fechaMomento } from './momentosNuevo'
 import styles from './MomentoPage.module.css'
 
-// El momento abierto (rediseño de Momentos, solo la cuenta de Daniel): un
+// El momento abierto de Momentos: un
 // episodio o un avance en pantalla propia. Episodio: relato completo, emoción,
 // la orientación completa por secciones, la reflexión con su respuesta de
 // Huella, "¿Cómo siguió?" (entre 20 y 48 h) y borrar dentro de "Más opciones".
@@ -34,7 +34,6 @@ export default function MomentoPage() {
   const [confirmando, setConfirmando] = useState(false)
   const [borrando, setBorrando] = useState(false)
 
-  if (!usaMomentosNuevo(user?.id)) return <Navigate to="/historial" replace />
   if (!episodio && !hito) {
     // Recién borrado, o todavía cargando: vuelve a la lista.
     return state.episodios.length || state.hitos.length ? <Navigate to="/historial" replace /> : null
@@ -188,7 +187,7 @@ function CuerpoEpisodio({ episodio, mio, hijo, episodios, userId, updateEpisodio
   )
 }
 
-// Misma lógica que la reflexión de EpisodioCard: se guarda, y la primera vez
+// Misma lógica que tenía la reflexión en la tarjeta vieja: se guarda, y la primera vez
 // que queda guardada Huella responde una sola vez (la columna es el candado).
 function Reflexion({ episodio, hijo, episodios, userId, updateEpisodio }) {
   const [reflexion, setReflexion] = useState(episodio.reflexion ?? '')
@@ -280,7 +279,7 @@ function CuerpoAvance({ hito, mio, userId, updateHitoFoto }) {
   const inputRef = useRef(null)
   const [linea1, ...resto] = (hito.respuesta_ia || '').split('\n').filter((l) => l.trim())
 
-  // Mismo camino que EpisodioCard: comprimir, subir al bucket privado y
+  // Mismo camino de siempre para la foto de un avance: comprimir, subir al bucket privado y
   // guardar el PATH.
   async function subirFoto(e) {
     const file = e.target.files?.[0]
