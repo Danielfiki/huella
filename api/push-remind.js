@@ -65,10 +65,10 @@ const BANCO_ETAPA = {
   '6-8': [
     'Ya se compara con los demás y escucha mucho lo que tú dices sobre cómo es. Ahí pesa cada palabra.',
     'Puede esperar bastante bien, hasta que aparece el cansancio o el hambre. Ahí se le acaba todo.',
-    'Cuando se porta mal, muchas veces le falta una habilidad, no ganas de hacerte la vida difícil.',
+    'Cuando se porta mal, muchas veces le está faltando una habilidad que todavía está aprendiendo.',
   ],
   '9-12': [
-    'Empieza a pedir espacio propio. Eso no es alejarse de ti, es armar su rincón.',
+    'Empieza a pedir espacio propio. Está armando su rincón, y tú sigues siendo su casa.',
     'Los amigos empiezan a pesar tanto como tú. Es normal, y tú sigues ahí.',
     'Puede razonar como grande y perder el control como chico, en el mismo día.',
   ],
