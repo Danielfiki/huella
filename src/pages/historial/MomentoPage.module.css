@@ -128,6 +128,7 @@
 .icono_lavender { background: var(--color-pill-lavender-bg); }
 .icono_green    { background: var(--color-pill-green-bg); }
 .icono_gold     { background: var(--color-pill-gold-bg); }
+.icono_pregunta { background: var(--color-success-bg); }
 
 .tipo {
   margin: 0;

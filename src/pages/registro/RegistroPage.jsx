@@ -23,6 +23,7 @@ import { renderMarkdown } from '../../utils/renderMarkdown'
 import { separarAlivio } from '../../utils/seccionesIA'
 import styles from './RegistroPage.module.css'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
+import TopeDiario, { esLimiteDiario } from '../../components/ui/TopeDiario'
 
 
 function EmocionSelector({ emocion, setEmocion }) {
@@ -361,6 +362,8 @@ export default function RegistroPage() {
   const [respuestaIA, setRespuestaIA] = useState('')
   const [loadingIA, setLoadingIA] = useState(false)
   const [errorOrientacion, setErrorOrientacion] = useState(false)
+  // Si el error fue el tope diario de IA, se dice eso y a qué hora vuelve.
+  const [topeDiario, setTopeDiario] = useState(false)
   const [accionIA, setAccionIA] = useState('')
   const [loadingAccion, setLoadingAccion] = useState(false)
   const [loadingGuardar, setLoadingGuardar] = useState(false)
@@ -530,6 +533,7 @@ export default function RegistroPage() {
     if (!args) return
     setLoadingIA(true)
     setErrorOrientacion(false)
+    setTopeDiario(false)
     setRespuestaIA('')
     setZonaIA(null)
     try {
@@ -564,11 +568,13 @@ export default function RegistroPage() {
         updateEpisodio({ id: args.episodioId, orientacionIA: texto, orientacionZona: zona })
           .catch((err) => console.warn('[RegistroPage] no se guardo la orientacion:', err.message))
       }
-    } catch {
+    } catch (err) {
       // El mensaje específico va a consola via console.error de
-      // anthropic.js; al usuario le mostramos un estado uniforme.
+      // anthropic.js; al usuario le mostramos un estado uniforme, salvo el tope
+      // diario, que tiene su propio aviso.
       setRespuestaIA('')
       setZonaIA(null)
+      setTopeDiario(esLimiteDiario(err))
       setErrorOrientacion(true)
     } finally {
       setLoadingIA(false)
@@ -687,7 +693,9 @@ export default function RegistroPage() {
             </div>
 
             <div className={styles.gAlivio}>
-              {errorOrientacion ? (
+              {errorOrientacion && topeDiario ? (
+                <TopeDiario nombreHijo={state.hijo?.nombre} />
+              ) : errorOrientacion ? (
                 <div className={styles.gErrorCard}>
                   <h4 className={styles.gErrorTitulo}>
                     No pudimos leer tu momento esta vez.

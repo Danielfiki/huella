@@ -4,6 +4,7 @@ import { FileDown, Loader, AlertCircle } from 'lucide-react'
 import InformePDF from './InformePDF'
 import { interpretarPatrones, analizarReflexionesCuidador } from '../../services/anthropic'
 import styles from './GenerarInformeBtn.module.css'
+import { esLimiteDiario, mensajeTopeDiario } from '../../components/ui/TopeDiario'
 
 const PLACEHOLDER_RESUMEN = 'El resumen ejecutivo no estuvo disponible al momento de generar este informe.'
 
@@ -37,9 +38,9 @@ export default function PDFSection({ hijo, episodios, estrategias, hitos }) {
       if (!isMounted.current) return
       setResumenEjecutivo(resumen)
       setReflexionesCuidador(reflexiones)
-    } catch {
+    } catch (err) {
       if (!isMounted.current) return
-      setErrorIA(true)
+      setErrorIA(esLimiteDiario(err) ? 'tope' : true)
     } finally {
       if (isMounted.current) setListo(true)
     }
@@ -70,7 +71,9 @@ export default function PDFSection({ hijo, episodios, estrategias, hitos }) {
       <div className={styles.errorWrap}>
         <div className={styles.errorContent}>
           <AlertCircle size={18} className={styles.errorIcon} />
-          <p className={styles.errorMsg}>No fue posible generar el análisis con IA.</p>
+          <p className={styles.errorMsg}>
+            {errorIA === 'tope' ? mensajeTopeDiario() : 'No fue posible generar el análisis con IA.'}
+          </p>
         </div>
         <div className={styles.errorBtns}>
           <button className={styles.retryBtn} onClick={correr}>

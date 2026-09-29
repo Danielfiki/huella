@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
 import { generarReflexionCheckin } from '../../services/anthropic'
+import { esLimiteDiario, mensajeTopeDiario } from '../../components/ui/TopeDiario'
 
 const OPCIONES_PASO1 = [
   'Me calmé primero antes de actuar',
@@ -41,6 +42,7 @@ export default function CheckinPage() {
   const [estadoPadre, setEstadoPadre] = useState(null)
   const [reflexionIA, setReflexionIA] = useState('')
   const [cargandoIA, setCargandoIA] = useState(false)
+  const [topeDiario, setTopeDiario] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [yaHecho, setYaHecho] = useState(false)
 
@@ -72,8 +74,9 @@ export default function CheckinPage() {
         },
       })
       setReflexionIA(texto ?? '')
-    } catch {
+    } catch (err) {
       setReflexionIA('')
+      setTopeDiario(esLimiteDiario(err))
     } finally {
       setCargandoIA(false)
     }
@@ -261,7 +264,9 @@ export default function CheckinPage() {
           ) : (
             <div style={s.reflexionBox}>
               <p style={s.reflexionTexto}>
-                {reflexionIA || 'No se pudo generar una reflexión. Puedes guardar igual.'}
+                {reflexionIA || (topeDiario
+                  ? `${mensajeTopeDiario()} Puedes guardar igual.`
+                  : 'No se pudo generar una reflexión. Puedes guardar igual.')}
               </p>
             </div>
           )}

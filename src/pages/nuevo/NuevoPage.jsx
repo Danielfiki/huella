@@ -23,6 +23,7 @@ import regStyles from '../../pages/registro/RegistroPage.module.css'
 // diaria · Su cerebro): misma tipografía y mismo subrayado del activo. Se
 // importa su módulo en vez de recrearlas.
 import hijoStyles from '../../pages/hijo/HijoPage.module.css'
+import { puedePreguntar } from '../../services/preguntas'
 
 async function compressImage(file, maxSize = 1200) {
   return new Promise((resolve) => {
@@ -296,6 +297,27 @@ export default function NuevoPage() {
           </div>
           <span className={styles.choiceChevron}>›</span>
         </button>
+
+        {/* Preguntar a Huella: una duda aunque no haya pasado nada. Registrar ≠
+            Preguntar, por eso va aparte y debajo, con su propio título. Solo
+            para la cuenta de Daniel hasta que la apruebe. */}
+        {puedePreguntar(user?.id) && (
+          <div className={styles.preguntarBloque}>
+            <h3 className={styles.preguntarTitulo}>¿Tienes una duda?</h3>
+            <button className={styles.choicePregunta} onClick={() => navigate('/preguntar')}>
+              <span className={styles.choiceIconoPregunta}>💭</span>
+              <div className={styles.choiceTexto}>
+                <p className={styles.choiceTituloPregunta}>Preguntar a Huella</p>
+                <p className={styles.choiceDesc}>
+                  {(state.hijos || []).length > 1
+                    ? 'Una duda sobre tus hijos, aunque no haya pasado nada.'
+                    : `Una duda sobre ${state.hijo?.nombre || 'tu hijo'}, aunque no haya pasado nada.`}
+                </p>
+              </div>
+              <span className={styles.choiceChevron}>›</span>
+            </button>
+          </div>
+        )}
       </div>
     )
   }

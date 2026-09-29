@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Keyboard, Check, Mic, ArrowUp } from 'lucide-react'
-import Escarabajo from '../ui/Escarabajo'
 import VoiceTextarea from '../ui/VoiceTextarea'
 import Button from '../ui/Button'
 import { extraerEpisodio } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES, labelTipo, labelCuando } from '../../constants/catalogoEpisodio'
+import { FilaHuella, FilaPadre, PuntosLeyendo, HojaInferior } from '../conversacion/Conversacion'
 import styles from './RegistroConversacional.module.css'
 
 // ──────────────────────────────────────────────────────────────────────
@@ -381,59 +381,31 @@ export default function RegistroConversacional({
       </div>
 
       <div className={styles.hiloScroll} ref={hiloRef}>
-        <div className={styles.filaHuella}>
-          <span className={styles.avatarHuella} aria-hidden="true">
-            <Escarabajo className={styles.avatarSvg} />
-          </span>
-          <div className={styles.burbujaHuella}>
-            <p className={styles.pregunta}>¿Qué pasó con {nombre}?</p>
-            <p className={styles.subtexto}>
-              Cuéntamelo como se lo contarías a una amiga. Sin orden, sin filtro.
-            </p>
-          </div>
-        </div>
+        <FilaHuella>
+          <p className={styles.pregunta}>¿Qué pasó con {nombre}?</p>
+          <p className={styles.subtexto}>
+            Cuéntamelo como se lo contarías a una amiga. Sin orden, sin filtro.
+          </p>
+        </FilaHuella>
 
         {mensajes.map((m, i) => m.de === 'padre' ? (
-          <div className={styles.filaPadre} key={i}>
-            <div className={styles.burbujaPadre}>
-              <p className={styles.relato}>{m.texto}</p>
-            </div>
-            <span className={styles.avatarPadre} aria-hidden="true">
-              {padreAvatarUrl
-                ? <img src={padreAvatarUrl} alt="" className={styles.avatarPadreFoto} />
-                : inicialPadre}
-            </span>
-          </div>
+          <FilaPadre key={i} avatarUrl={padreAvatarUrl} inicial={inicialPadre}>
+            <p className={styles.relato}>{m.texto}</p>
+          </FilaPadre>
         ) : (
-          <div className={styles.filaHuella} key={i}>
-            <span className={styles.avatarHuella} aria-hidden="true">
-              <Escarabajo className={styles.avatarSvg} />
-            </span>
-            <div className={styles.burbujaHuella}>
-              <p className={styles.pregunta}>{m.texto}</p>
-            </div>
-          </div>
+          <FilaHuella key={i}>
+            <p className={styles.pregunta}>{m.texto}</p>
+          </FilaHuella>
         ))}
 
         {extrayendo && (
-          <div className={styles.filaHuella}>
-            <span className={styles.avatarHuella} aria-hidden="true">
-              <Escarabajo className={styles.avatarSvg} />
-            </span>
-            <div className={styles.burbujaHuella}>
-              <span className={styles.puntos} role="status" aria-label="Huella está leyendo">
-                <i /><i /><i />
-              </span>
-            </div>
-          </div>
+          <FilaHuella>
+            <PuntosLeyendo />
+          </FilaHuella>
         )}
 
         {validando && (
-        <div className={styles.filaHuella}>
-          <span className={styles.avatarHuella} aria-hidden="true">
-            <Escarabajo className={styles.avatarSvg} />
-          </span>
-          <div className={styles.burbujaHuella}>
+        <FilaHuella>
             {sinOrdenar ? (
               <p className={styles.parrafo}>
                 Guardé tu relato. Esta vez lo ordenamos entre los dos:{' '}
@@ -478,8 +450,7 @@ export default function RegistroConversacional({
                 <p className={styles.microcopy}>Toca cualquier palabra destacada si no calza.</p>
               </>
             )}
-          </div>
-        </div>
+        </FilaHuella>
         )}
 
         {validando && (
@@ -639,10 +610,7 @@ function HojaEdicion({ campo, valores, onCerrar, onElegir }) {
   }
 
   return (
-    <div className={styles.hojaOverlay} onClick={onCerrar}>
-      <div className={styles.hoja} onClick={(e) => e.stopPropagation()}>
-        <span className={styles.hojaAsa} aria-hidden="true" />
-        <p className={styles.hojaTitulo}>{titulos[campo]}</p>
+    <HojaInferior titulo={titulos[campo]} onCerrar={onCerrar}>
 
         {campo === 'tipo' && (
           <div className={styles.hojaOpciones}>
@@ -731,7 +699,6 @@ function HojaEdicion({ campo, valores, onCerrar, onElegir }) {
             </Button>
           </div>
         )}
-      </div>
-    </div>
+    </HojaInferior>
   )
 }

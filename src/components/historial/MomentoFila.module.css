@@ -38,6 +38,7 @@
 .icono_lavender { background: var(--color-pill-lavender-bg); }
 .icono_green    { background: var(--color-pill-green-bg); }
 .icono_gold     { background: var(--color-pill-gold-bg); }
+.icono_pregunta { background: var(--color-success-bg); }
 
 .tipo {
   flex: 1;
@@ -62,6 +63,17 @@
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-muted);
+}
+
+/* Una pregunta es más larga que un tipo de momento: dos líneas y corta. */
+.tipoPregunta {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .relato {

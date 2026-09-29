@@ -115,6 +115,8 @@ export function emoTileClass(tipo) {
     case 'miedo':
     case 'transicion':
       return 'blue'
+    case 'pregunta':
+      return 'pregunta'
     default:
       return 'tangerine'
   }

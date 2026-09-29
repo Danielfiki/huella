@@ -12,6 +12,7 @@ import { groupEpisodios, TIPOS } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { LENTE_POR_ID } from '../../constants/catalogoAvance'
+import { puedePreguntar, usePreguntas } from '../../services/preguntas'
 import styles from './HistorialPage.module.css'
 
 const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
@@ -54,6 +55,26 @@ export default function HistorialPage() {
   // Se congela al montar: distingue "me trajeron acá con el filtro puesto" de
   // "toqué el chip yo". Solo en el primer caso hace falta explicar la lista.
   const llegoConPatrones = useRef(location.state?.filtro === 'patrones').current
+
+  // Preguntar a Huella: filtro propio, fuera de "Momentos". Solo en las cuentas
+  // que tienen la función.
+  const conPreguntas = puedePreguntar(user?.id)
+  const { preguntas } = usePreguntas(hijo?.id, conPreguntas)
+  const preguntasNorm = useMemo(
+    () => preguntas.map((p) => {
+      const mensajes = Array.isArray(p.mensajes) ? p.mensajes : []
+      return {
+        id: p.id,
+        fecha: p.created_at,
+        emoji: '💭',
+        titulo: mensajes[0]?.pregunta || 'Pregunta',
+        descripcionLibre: p.resumen || mensajes[0]?.respuesta || '',
+        tipo: 'pregunta',
+        userId: p.user_id,
+      }
+    }),
+    [preguntas]
+  )
 
   const [showSearch, setShowSearch] = useState(false)
   const [busqueda, setBusqueda] = useState('')
@@ -200,8 +221,9 @@ export default function HistorialPage() {
       logros: hitosNorm.length,
       fotos: todosUnificados.filter((e) => e.fotoUrl).length,
       patrones: patronesLista.length,
+      ...(conPreguntas ? { preguntas: preguntasNorm.length } : {}),
     }),
-    [todosUnificados, episodiosNorm, hitosNorm, patronesLista]
+    [todosUnificados, episodiosNorm, hitosNorm, patronesLista, conPreguntas, preguntasNorm]
   )
 
   const totalRegistros = episodios.length + hitos.length
@@ -210,7 +232,7 @@ export default function HistorialPage() {
 
   // El estado vacío solo aplica si NO hay absolutamente nada. Con patrones (aunque
   // sin episodios ni hitos) la página se muestra: filtros + filtro de patrones.
-  if (totalRegistros === 0 && patronesLista.length === 0) {
+  if (totalRegistros === 0 && patronesLista.length === 0 && preguntasNorm.length === 0) {
     return (
       <div className={styles.page}>
         <MomentosCabecera onBack={() => navigate(-1)} />
@@ -242,6 +264,7 @@ export default function HistorialPage() {
         counts={counts}
         hijo={hijo?.nombre}
         rango={rango}
+        conPreguntas={conPreguntas}
       />
       {showSearch && (
         <div className={styles.busquedaWrap}>
@@ -280,7 +303,26 @@ export default function HistorialPage() {
           </Suspense>
         )}
 
-        {filtro === 'patrones' ? (
+        {filtro === 'preguntas' ? (
+          /* ── Rama de preguntas: su propia lista, por día ── */
+          preguntasNorm.length === 0 ? (
+            <p className={styles.emptyFilter}>Sin preguntas todavía.</p>
+          ) : (
+            groupEpisodios(preguntasNorm).map((g, i) => (
+              <React.Fragment key={i}>
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio />
+                {g.episodios.map((p) => (
+                  <MomentoFila
+                    key={p.id}
+                    momento={p}
+                    autor={p.userId && p.userId !== user?.id ? getAuthorDisplay(p.userId, profilesByUserId, user?.id) : ''}
+                    onAbrir={() => navigate(`/pregunta/${p.id}`)}
+                  />
+                ))}
+              </React.Fragment>
+            ))
+          )
+        ) : filtro === 'patrones' ? (
           /* ── Rama de patrones: tarjeta propia, fuera del pipeline de episodios/hitos ── */
           patronesLista.length === 0 ? (
             <p className={styles.emptyFilter}>Sin patrones registrados aún.</p>

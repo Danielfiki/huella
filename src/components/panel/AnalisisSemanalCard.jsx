@@ -9,6 +9,7 @@ import MomentosEnNumeros from './MomentosEnNumeros'
 import { esLetraChicaDelModelo } from '../registro/OrientacionSecciones'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../../services/anthropic'
+import TopeDiario, { esLimiteDiario } from '../ui/TopeDiario'
 import styles from './AnalisisSemanalCard.module.css'
 
 // La card "Esta semana" del Home. Es la única lectura de la semana: absorbió
@@ -157,7 +158,8 @@ function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrateg
       setSinGuardar(!r.guardado)
     } catch (err) {
       console.warn('[analisis] completo fallo:', err)
-      setError(true)
+      // El tope diario tiene su propio aviso; el resto, el de siempre.
+      setError(esLimiteDiario(err) ? 'tope' : true)
     } finally {
       setCargando(false)
     }
@@ -224,6 +226,10 @@ function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrateg
           ) : cargando ? (
             <div className={styles.cuerpo}>
               <p className={styles.cargando}>Huella está leyendo la semana…</p>
+            </div>
+          ) : error === 'tope' ? (
+            <div className={styles.cuerpo}>
+              <TopeDiario conBoton={false} />
             </div>
           ) : error ? (
             <div className={styles.cuerpo}>

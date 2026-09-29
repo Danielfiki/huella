@@ -24,6 +24,7 @@ import {
 } from './helpers';
 import { getAuthorDisplay } from '../../utils/authorDisplay';
 import styles from './EstrategiasPage.module.css';
+import TopeDiario, { esLimiteDiario } from '../../components/ui/TopeDiario';
 
 export default function EstrategiasPage() {
   const navigate = useNavigate();
@@ -252,7 +253,7 @@ export default function EstrategiasPage() {
       navigate(`/estrategias/${row.id}`, { replace: true });
     } catch (err) {
       console.error('caso libre falló', err);
-      setCasoLibreError(err.message || 'Algo falló al generar el plan.');
+      setCasoLibreError(esLimiteDiario(err) ? 'tope' : (err.message || 'Algo falló al generar el plan.'));
       setCasoLibreEstado('error');
     } finally {
       generandoCasoLibreRef.current = false;
@@ -271,6 +272,17 @@ export default function EstrategiasPage() {
             pasoActual={0}
             hijoEdad={hijo?.edad}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (casoLibreEstado === 'error' && casoLibreError === 'tope') {
+    return (
+      <div className={styles.page}>
+        <HeaderMocha titulo="Tu plan" onBack={() => setCasoLibreEstado('idle')} />
+        <div className={styles.body}>
+          <TopeDiario nombreHijo={hijo?.nombre} />
         </div>
       </div>
     );

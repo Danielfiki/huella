@@ -3154,3 +3154,141 @@ function normalizarExtraccion(raw) {
     citas,
   }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// preguntarAHuella — "Preguntar a Huella".
+//
+// El papá hace una duda sobre un hijo aunque no haya pasado nada, y recibe
+// una respuesta corta según la edad: qué es esperable, qué observar y cuándo
+// consultar. Nunca diagnostica. Hasta 5 preguntas sobre el mismo tema.
+//
+// Una sola llamada por pregunta y SIN reintento automático: cada pregunta
+// descuenta exactamente 1 de la cuota diaria. Si la respuesta no se puede
+// leer, la pantalla ofrece reintentar y ahí el papá decide.
+//
+// La lente sale de la lista de autores que calzan con la edad (la misma tabla
+// de mínimos y máximos de la Acción Rápida). Si el modelo devuelve una que no
+// está en la lista, se reemplaza por una que sí.
+// ════════════════════════════════════════════════════════════════════
+
+export const PASOS_SIGUIENTES = ['registrar', 'algo_que_no_cambia', 'plan', 'especialista']
+export const TEMAS_FUERA_DE_MARCO = ['medicamentos', 'salud_fisica', 'diagnostico', 'legal']
+
+// "Autor · Lente" de todos los autores del banco que calzan con esta edad.
+export function lentesParaEdad(edad) {
+  const n = parseInt(edad, 10) || 4
+  return Object.keys(AUTORES)
+    .filter((autor) => autorCalzaConEdad(autor, n) && AUTORES[autor]?.lente)
+    .map((autor) => `${autor} · ${AUTORES[autor].lente}`)
+}
+
+function lenteDeRespaldo(edad) {
+  const n = parseInt(edad, 10) || 4
+  const autor = n >= 12 ? 'Lisa Damour' : 'Daniel Siegel'
+  return `${autor} · ${AUTORES[autor].lente}`
+}
+
+// Lo que Huella ya sabe del hijo, compacto: los rasgos confirmados y los
+// últimos momentos. El modelo lo usa solo si conecta con la pregunta.
+function bloqueLoQueSabe({ nombre, rasgosConfirmados = [], momentosRecientes = [] }) {
+  const rasgos = rasgosConfirmados.map((r) => (typeof r === 'string' ? r : r?.titulo)).filter(Boolean).slice(0, 8)
+  const momentos = momentosRecientes.slice(0, 8).map((m) => {
+    const fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : ''
+    const relato = (m.descripcionLibre || m.descripcion || m.contexto || '').replace(/\s+/g, ' ').slice(0, 160)
+    const tipo = m._tipo === 'avance' ? 'avance' : (m.tipo || 'episodio')
+    return `- ${fecha} · ${tipo}${m.emocion ? ` · ${m.emocion}` : ''}${relato ? ` · «${relato}»` : ''}`
+  })
+  return `LO QUE HUELLA YA SABE DE ${nombre.toUpperCase()} (úsalo solo si conecta de verdad con la pregunta; si no conecta, no lo menciones)
+Rasgos confirmados:
+${rasgos.length ? rasgos.map((r) => `- ${r}`).join('\n') : '- ninguno todavía'}
+Momentos recientes:
+${momentos.length ? momentos.join('\n') : '- ninguno todavía'}`
+}
+
+export async function preguntarAHuella({ hijo, pregunta, historial = [], rasgosConfirmados = [], momentosRecientes = [] }) {
+  const nombre = hijo?.nombre || 'tu hijo/a'
+  const edad = hijo?.edad ?? null
+  const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
+  const lentes = lentesParaEdad(edad)
+
+  const conversacion = historial.length
+    ? `CONVERSACIÓN HASTA AHORA (mismo tema, en orden):
+${historial.map((m, i) => `${i + 1}. Pregunta: «${m.pregunta}»\n   Tu respuesta: «${m.respuesta}»`).join('\n')}
+
+`
+    : ''
+
+  const prompt = `${marcoEdad(edad)}
+
+${REGLA_IDIOMA}
+
+HIJO/A
+Nombre: ${nombre}, ${edad ?? '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+${instruccionGenero(hijo)}
+
+${bloqueLoQueSabe({ nombre, rasgosConfirmados, momentosRecientes })}
+
+${conversacion}${historial.length ? 'PREGUNTA DE SEGUIMIENTO' : 'PREGUNTA'} DEL PAPÁ O LA MAMÁ:
+«${pregunta}»
+
+${REGLA_PREGUNTA} Acá la contesta la primera frase de "respuesta".
+
+QUÉ HACES
+Respondes una duda sobre ${nombre}, aunque no haya pasado nada. Una respuesta corta calibrada a sus ${edad ?? '?'} años: qué es esperable a esta edad, qué conviene observar y cuándo vale la pena consultar. Nunca diagnosticas, nunca etiquetas ${articulo === 'la' ? 'a la' : 'al'} ${genero} y nunca culpas al adulto.
+
+CAMPOS
+- "respuesta": 3 a 5 líneas, entre 40 y 90 palabras. La primera frase contesta la pregunta directo (sí, no, depende, o lo que corresponda). Después, lo que explica eso a esta edad y UNA idea práctica y concreta para esta semana. Si algo amerita consultar, cierra con el criterio concreto (qué señal y por cuánto tiempo). Sin listas.
+- "lente": copia EXACTA de UNA de estas, la que más guió tu respuesta:
+${lentes.map((l) => `  ${l}`).join('\n')}
+- "ofrecer_registrar": true SOLO si en su texto el papá contó un hecho concreto que ya pasó (una escena: qué hizo ${pronombre} y cuándo). Una duda general va en false.
+- "fuera_de_marco": null, salvo que la pregunta sea sobre uno de estos temas. Ahí no respondes el fondo, dejas "respuesta" vacía y devuelves:
+  medicamentos o dosis → {"tema":"medicamentos","a_quien":"pediatra"}
+  salud física (fiebre, dolor, síntomas, una enfermedad) → {"tema":"salud_fisica","a_quien":"pediatra"}
+  un diagnóstico (si tiene TDAH, autismo, ansiedad u otro) → {"tema":"diagnostico","a_quien":"pediatra"}
+  temas legales (tuición, visitas, pensión, custodia) → {"tema":"legal","a_quien":"abogado de familia"}
+- "resumen_hasta_ahora": dos frases, máximo 40 palabras, sobre TODA la conversación. La primera dice qué es esperable de ${nombre} a esta edad en este tema. La segunda da la señal concreta que haría conveniente actuar o consultar, y por cuánto tiempo. Habla de ${nombre}, nunca de la conversación ni del adulto (nada de «su papá pregunta…»). Sin nombrar autores.
+- "paso_siguiente": UNO de "registrar", "algo_que_no_cambia", "plan" o "especialista", coherente con el resumen:
+  registrar: contó algo que ya pasó y vale la pena anotarlo.
+  algo_que_no_cambia: es una conducta que se sostiene por semanas o meses.
+  plan: hay una habilidad concreta para trabajar con pasos.
+  especialista: el resumen dice que conviene consultar.
+  Si ninguno calza claro, usa registrar: sirve para anotarlo la próxima vez que pase.
+
+COMILLAS: dentro de los textos NUNCA escribas comillas dobles ("). Si citas una frase, usa comillas latinas « ».
+
+Responde SOLO con JSON puro, sin markdown ni texto antes o después:
+{"respuesta":"...","lente":"...","ofrecer_registrar":false,"fuera_de_marco":null,"resumen_hasta_ahora":"...","paso_siguiente":"..."}`
+
+  const parsed = extraerJSON(await llamarAPI(prompt, 900, {
+    voz: { campos: ['respuesta', 'resumen_hasta_ahora'] },
+  }))
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    const e = new Error('La respuesta no se pudo leer.')
+    e.code = 'respuesta_ilegible'
+    throw e
+  }
+
+  const fuera = parsed.fuera_de_marco
+  if (fuera && typeof fuera === 'object' && TEMAS_FUERA_DE_MARCO.includes(fuera.tema)) {
+    return { fueraDeMarco: { tema: fuera.tema, aQuien: fuera.tema === 'legal' ? 'abogado' : 'pediatra' } }
+  }
+
+  const respuesta = typeof parsed.respuesta === 'string' ? parsed.respuesta.trim() : ''
+  if (!respuesta) {
+    const e = new Error('La respuesta llegó vacía.')
+    e.code = 'respuesta_ilegible'
+    throw e
+  }
+  const lente = lentes.includes(parsed.lente) ? parsed.lente : lenteDeRespaldo(edad)
+  const resumen = typeof parsed.resumen_hasta_ahora === 'string' ? parsed.resumen_hasta_ahora.trim() : ''
+  const pasoSiguiente = PASOS_SIGUIENTES.includes(parsed.paso_siguiente) ? parsed.paso_siguiente : null
+
+  return {
+    fueraDeMarco: null,
+    respuesta,
+    lente,
+    ofrecerRegistrar: parsed.ofrecer_registrar === true,
+    resumen,
+    pasoSiguiente,
+  }
+}

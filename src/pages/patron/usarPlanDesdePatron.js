@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
+import { esLimiteDiario, mensajeTopeDiario } from '../../components/ui/TopeDiario'
 
 // Armar un plan a partir de un patrón, desde los DOS lugares que lo ofrecen:
 // la salida del análisis recién hecho (PatronPage) y la lectura de un patrón
@@ -95,7 +96,7 @@ export function usarPlanDesdePatron() {
       navigate(`/estrategias/${row.id}`, { replace: true })
     } catch (err) {
       console.error('armar plan desde patron falló', err)
-      setError('No pudimos generar el plan. Intenta de nuevo.')
+      setError(esLimiteDiario(err) ? mensajeTopeDiario() : 'No pudimos generar el plan. Intenta de nuevo.')
       setCreando(false)
       return false
     }

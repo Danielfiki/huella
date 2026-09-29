@@ -9,6 +9,7 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import PieCientifico from '../../components/patron/PieCientifico'
 import { usarPlanDesdePatron, PASOS_PLAN } from './usarPlanDesdePatron'
 import styles from './PatronPage.module.css'
+import TopeDiario, { esLimiteDiario } from '../../components/ui/TopeDiario'
 
 // Opciones de selección única. El value es el que va a la BD; el label es copy.
 // REGLA DURA DE UI: las tres opciones de "¿Desde cuándo?" se ven EXACTAMENTE
@@ -83,6 +84,7 @@ export default function PatronPage() {
   const [patronRow, setPatronRow] = useState(null)
   const [resultado, setResultado] = useState(null)
   const [error, setError]         = useState('')
+  const [topeDiario, setTopeDiario] = useState(false)
   const [pasoActual, setPasoActual] = useState(0)
 
   // El armado del plan vive en un hook compartido con PatronLecturaPage: son
@@ -141,6 +143,7 @@ export default function PatronPage() {
   async function handleAnalizar() {
     setFase('generando')
     setError('')
+    setTopeDiario(false)
     try {
       const r = respuestas()
       // 1. INSERT — en reintento reusamos la fila ya creada, no duplicamos.
@@ -161,6 +164,7 @@ export default function PatronPage() {
       setFase('resultado')
     } catch (err) {
       console.error('analizar patron falló', err)
+      setTopeDiario(esLimiteDiario(err))
       setError('No pudimos completar el análisis. Lo que escribiste quedó guardado — puedes reintentar.')
       setFase('error')
     }
@@ -199,10 +203,14 @@ export default function PatronPage() {
       <div className={styles.page}>
         <Header onBack={() => navigate('/panel')} />
         <div className={styles.body}>
-          <div className={styles.reintentarBox}>
-            <p className={styles.reintentarTexto}>{error}</p>
-            <button className={styles.btnPrincipal} onClick={handleAnalizar} type="button">Reintentar</button>
-          </div>
+          {topeDiario ? (
+            <TopeDiario nombreHijo={hijo?.nombre} />
+          ) : (
+            <div className={styles.reintentarBox}>
+              <p className={styles.reintentarTexto}>{error}</p>
+              <button className={styles.btnPrincipal} onClick={handleAnalizar} type="button">Reintentar</button>
+            </div>
+          )}
         </div>
       </div>
     )

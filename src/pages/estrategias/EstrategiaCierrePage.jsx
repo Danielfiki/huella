@@ -7,6 +7,7 @@ import { analizarCierreCiclo, generarCicloN } from '../../services/anthropic'
 import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync'
 import LoadingDignificado from './components/LoadingDignificado'
 import Pantalla3_Cierre from './Pantalla3_Cierre'
+import { esLimiteDiario, mensajeTopeDiario } from '../../components/ui/TopeDiario'
 
 // EstrategiaCierrePage.jsx · Bloque 3 de Fase 5 P3 Cierre.
 // Contenedor con toda la lógica: carga del plan y ciclo, generación
@@ -64,6 +65,8 @@ export default function EstrategiaCierrePage() {
   const [estado, setEstado] = useState('inicial')
   const [analisis, setAnalisis] = useState(null)
   const [procesando, setProcesando] = useState(false)
+  // El tope diario de IA se dice como tal, con la hora a la que vuelve.
+  const [topeDiario, setTopeDiario] = useState(false)
 
   const yaGenerado = Boolean(ciclo?.cierre_analisis?.que_cambio)
 
@@ -148,6 +151,7 @@ export default function EstrategiaCierrePage() {
       } catch (err) {
         console.error('EstrategiaCierrePage.generar failed:', err)
         generadoRef.current = false
+        setTopeDiario(esLimiteDiario(err))
         if (!cancelado) setEstado('error')
       }
     }
@@ -218,6 +222,7 @@ export default function EstrategiaCierrePage() {
       navigate(`/estrategias/${id}`, { replace: true })
     } catch (err) {
       console.error('handleIniciarNuevoCiclo failed:', err)
+      setTopeDiario(esLimiteDiario(err))
       creandoRef.current = false
       setProcesando(false)
       setEstado('error_ciclo')
@@ -262,7 +267,7 @@ export default function EstrategiaCierrePage() {
   if (estado === 'error') {
     return (
       <div style={{ padding: 24, maxWidth: 480, margin: '0 auto' }}>
-        <p>No pudimos generar el análisis. Intenta de nuevo.</p>
+        <p>{topeDiario ? mensajeTopeDiario() : 'No pudimos generar el análisis. Intenta de nuevo.'}</p>
         <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
           <button onClick={() => { generadoRef.current = false; setEstado('inicial') }}>Reintentar</button>
           <button onClick={() => navigate(`/estrategias/${id}`)}>Volver al detalle</button>
@@ -290,7 +295,7 @@ export default function EstrategiaCierrePage() {
   if (estado === 'error_ciclo') {
     return (
       <div style={{ padding: 24, maxWidth: 480, margin: '0 auto' }}>
-        <p>No pudimos crear el nuevo ciclo. Intenta de nuevo.</p>
+        <p>{topeDiario ? mensajeTopeDiario() : 'No pudimos crear el nuevo ciclo. Intenta de nuevo.'}</p>
         <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
           <button onClick={handleIniciarNuevoCiclo}>Reintentar</button>
           <button onClick={() => setEstado('listo')}>Volver al cierre</button>

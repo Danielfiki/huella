@@ -109,7 +109,7 @@ export default function MomentoPage() {
 // oscurecido. Va por portal a document.body (mismo motivo que UpgradeModal: que
 // ninguna capa de la página le gane). Tocar el fondo, "No" o Escape cierra sin
 // borrar; el foco entra en "No" y el Tab no sale del diálogo.
-function DialogoBorrar({ borrando, alCerrar, alBorrar }) {
+export function DialogoBorrar({ borrando, alCerrar, alBorrar }) {
   const noRef = useRef(null)
   const siRef = useRef(null)
   useEffect(() => { noRef.current?.focus() }, [])

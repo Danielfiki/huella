@@ -14,6 +14,7 @@ import { usarPlanDesdePatron, PASOS_PLAN } from './usarPlanDesdePatron'
 import { PASOS_ANALISIS } from './PatronPage'
 import shared from './PatronPage.module.css'   // reusa header/bloques/cierre de Fase B
 import styles from './PatronLecturaPage.module.css'
+import TopeDiario, { esLimiteDiario } from '../../components/ui/TopeDiario'
 
 // Header mocha idéntico al del formulario / salidas de Fase B.
 function Header({ onBack }) {
@@ -56,6 +57,7 @@ export default function PatronLecturaPage() {
   // pantalla): en vez de tres bloques vacíos va el mismo reintentar del flujo,
   // que genera el análisis sobre esta misma fila.
   const [analizando, setAnalizando] = useState(false)
+  const [topeDiario, setTopeDiario] = useState(false)
   const [pasoAnalisis, setPasoAnalisis] = useState(0)
   useEffect(() => {
     if (!analizando) return undefined
@@ -66,6 +68,7 @@ export default function PatronLecturaPage() {
 
   async function reintentarAnalisis() {
     setAnalizando(true)
+    setTopeDiario(false)
     try {
       const hijo = (state.hijos || []).find((h) => h.id === patron.hijo_id) || state.hijo
       const salida = await retryAsync(
@@ -82,6 +85,7 @@ export default function PatronLecturaPage() {
       await actualizarPatronIA(patron.id, salida.clasificacion, salida)
     } catch (err) {
       console.error('reintentar analisis de patron falló', err)
+      setTopeDiario(esLimiteDiario(err))
     } finally {
       setAnalizando(false)
     }
@@ -162,7 +166,9 @@ export default function PatronLecturaPage() {
     <div className={shared.page}>
       <Header onBack={() => navigate(-1)} />
       <div className={shared.body}>
-        {!patron.orientacion_ia ? (
+        {!patron.orientacion_ia && topeDiario ? (
+          <TopeDiario nombreHijo={state.hijo?.nombre} />
+        ) : !patron.orientacion_ia ? (
           <div className={shared.reintentarBox}>
             <p className={shared.reintentarTexto}>No pudimos completar el análisis. Lo que escribiste quedó guardado — puedes reintentar.</p>
             <button className={shared.btnPrincipal} onClick={reintentarAnalisis} type="button">Reintentar</button>

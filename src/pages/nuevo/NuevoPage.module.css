@@ -116,6 +116,46 @@
 .choicePatronLleno .choiceIconoPatron { opacity: 0.6; }
 
 .choiceTexto { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+
+/* Preguntar a Huella (diseño A): bloque aparte, con su título, en verde
+   pistacho para que no se confunda con las tres formas de registrar. */
+.preguntarBloque { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.preguntarTitulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+.choicePregunta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 96px;
+  padding: 16px 18px 16px 20px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--color-accent-light);
+  background: var(--color-success-bg);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: transform 0.15s;
+}
+.choicePregunta:active { transform: scale(0.97); }
+.choiceIconoPregunta {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+.choiceTituloPregunta { font-size: 18px; font-weight: 600; line-height: 1.25; color: var(--color-text); margin: 0; }
 .choiceTitulo { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0; }
 .choiceDesc { font-size: 13px; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
 

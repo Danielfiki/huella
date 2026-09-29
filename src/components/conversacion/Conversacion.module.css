@@ -1,0 +1,132 @@
+/* Burbujas y hoja inferior compartidas por Registrar y Preguntar.
+   Reglas movidas tal cual desde RegistroConversacional.module.css. */
+
+.filaHuella {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  align-self: flex-start;
+  max-width: 94%;
+}
+.filaPadre {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  align-self: flex-end;
+  max-width: 92%;
+}
+
+/* Avatar del padre: su inicial sobre durazno. Reusa el par de tokens de las
+   pills de estado, que ya trae el contraste resuelto y su override de dark. */
+.avatarPadre {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-pill-estado-bg);
+  color: var(--color-pill-estado-text);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  order: 2;
+  overflow: hidden;
+}
+
+/* Foto del cuidador dentro del mismo disco de 48px que ocupaba la inicial:
+   llena el circulo sin deformar y sin cambiar la geometria de la fila. */
+.avatarPadreFoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Avatar de Huella: escarabajo crema sobre disco terracota */
+.avatarHuella {
+  width: 48px;
+  height: 48px;
+  /* Cuadrado redondeado y no circulo, igual que los badges del panel: en un
+     circulo las patas del logo tocan el borde y hay que achicarlo. Asi el
+     dibujo entra al 90% como en la referencia. */
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: var(--color-on-mocha);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+/* 90%, igual que los badges del panel. Antes era 61% y por eso el logo se
+   veia perdido dentro de su disco. */
+.avatarSvg { width: 90%; height: 90%; }
+
+.burbujaHuella {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 5px;
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.burbujaPadre {
+  background: var(--color-primary-bg);
+  border-radius: var(--radius-lg) var(--radius-lg) 5px var(--radius-lg);
+  padding: 11px 14px;
+}
+
+/* Puntos de "Huella está leyendo" */
+.puntos { display: inline-flex; gap: 4px; padding: 3px 0; }
+.puntos i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-text-light);
+  animation: latir 1.2s ease-in-out infinite;
+}
+.puntos i:nth-child(2) { animation-delay: .18s; }
+.puntos i:nth-child(3) { animation-delay: .36s; }
+@keyframes latir { 0%,100% { opacity:.3; } 50% { opacity:1; } }
+
+/* ── Hoja inferior ── */
+.hojaOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-scrim);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+.hoja {
+  width: 100%;
+  max-height: 78dvh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 10px 16px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-lg);
+}
+.hojaAsa {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  align-self: center;
+  flex: none;
+}
+.hojaTitulo {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  color: var(--color-text);
+  margin: 2px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puntos i { animation: none; opacity: .6; }
+}

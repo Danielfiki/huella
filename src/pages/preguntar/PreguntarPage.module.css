@@ -1,0 +1,228 @@
+/* Preguntar a Huella (diseño B a G2). */
+
+/* El Layout ya pone 20 px arriba y a los lados. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 28px;
+}
+
+/* B2 · varios hijos: volver + chips */
+.cabeceraHijos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.volver {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+.chipsHijos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chipsHijos::-webkit-scrollbar { display: none; }
+.chipHijo {
+  height: 36px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chipHijoOn {
+  border-color: var(--color-text);
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.titulo {
+  margin: 12px 0 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+
+.campo { display: flex; flex-direction: column; }
+
+.botonPreguntar {
+  min-height: 54px;
+  width: 100%;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-primary-deep);
+  /* Blanco en claro y oscuro en dark, donde primary-deep se aclara. */
+  color: var(--color-surface);
+  font-family: var(--font-family);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.botonPreguntar:disabled { opacity: 0.4; cursor: default; }
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-danger-text);
+}
+
+/* C · el hilo mientras Huella lee */
+.hilo { display: flex; flex-direction: column; gap: 12px; }
+.burbujaTexto {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+/* D / E1 · la conversación */
+.terminar {
+  height: 36px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pregunta {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  color: var(--color-text);
+  text-wrap: pretty;
+  scroll-margin-top: 16px;
+}
+.preguntaChica {
+  margin: 4px 0 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--color-text);
+  text-wrap: pretty;
+  scroll-margin-top: 16px;
+}
+.quedan {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.seguir {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.seguirCampo { flex: 1; min-width: 0; }
+.enviar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary-deep);
+  /* Blanco en claro y oscuro en dark, donde primary-deep se aclara. */
+  color: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.enviar:disabled { opacity: 0.4; cursor: default; }
+
+.botonBlanco {
+  min-height: 56px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 17px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* F · fuera del marco */
+.preguntaFuera {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+.preguntaFueraChica {
+  margin: 4px 0 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+.tarjetaFuera {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+}
+.textoFuera {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* E2 · ver la conversación */
+.verConversacion {
+  width: 100%;
+  min-height: 60px;
+  padding: 0 20px;
+  border-radius: var(--radius-cta);
+  border: 1.5px solid var(--color-border);
+  background: none;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.verConversacionN { font-weight: 400; color: var(--color-text-muted); }
+.chevronAbierto { transform: rotate(180deg); }

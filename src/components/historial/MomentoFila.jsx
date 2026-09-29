@@ -23,7 +23,7 @@ export default function MomentoFila({ momento, autor = '', onAbrir }) {
     >
       <span className={styles.cabeza}>
         <span className={`${styles.icono} ${styles[`icono_${tono}`] || ''}`} aria-hidden="true">{momento.emoji}</span>
-        <span className={styles.tipo}>{momento.titulo}</span>
+        <span className={`${styles.tipo} ${momento.tipo === 'pregunta' ? styles.tipoPregunta : ''}`}>{momento.titulo}</span>
         <span className={styles.hora}>
           {formatHora(momento.fecha)}
           {autor && <span className={styles.autor}> · {autor}</span>}

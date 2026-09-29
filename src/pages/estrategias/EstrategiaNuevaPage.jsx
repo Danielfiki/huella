@@ -10,6 +10,7 @@ import HeaderMocha from './components/HeaderMocha';
 import LoadingDignificado from './components/LoadingDignificado';
 import { HABILIDADES_CATALOGO, CONTEXTOS_HABILIDAD, MAX_PLANES_ACTIVOS_FREE, estadoPlan } from './helpers';
 import styles from './EstrategiaNuevaPage.module.css';
+import TopeDiario, { esLimiteDiario } from '../../components/ui/TopeDiario';
 
 const PASOS_LOADING = [
   'Leyendo lo que registraste',
@@ -159,7 +160,7 @@ export default function EstrategiaNuevaPage() {
       navigate(`/estrategias/${row.id}`, { replace: true });
     } catch (err) {
       console.error('generar estrategia falló', err);
-      setError(err.message || 'Algo falló al generar el plan.');
+      setError(esLimiteDiario(err) ? 'tope' : (err.message || 'Algo falló al generar el plan.'));
       setEstado('error');
     } finally {
       generando.current = false;
@@ -179,6 +180,17 @@ export default function EstrategiaNuevaPage() {
             habilidadId={habilidad.id}
             hijoEdad={hijo?.edad}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (estado === 'error' && error === 'tope') {
+    return (
+      <div className={styles.page}>
+        <HeaderMocha titulo="Tu plan" onBack={() => navigate('/estrategias')} />
+        <div className={styles.body}>
+          <TopeDiario nombreHijo={hijo?.nombre} />
         </div>
       </div>
     );

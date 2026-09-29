@@ -21,7 +21,12 @@ const TIPOS = [
 // Es el mismo padding lateral de la barra, para que no quede pegado al borde.
 const AIRE = 20
 
-export default function FiltroChips({ active, onChange, counts = {}, hijo, rango = '14 días' }) {
+// "Preguntas" va después de "Acompañas" y antes de los chips de contexto. Solo
+// en las cuentas que tienen Preguntar a Huella.
+const PREGUNTAS = { key: 'preguntas', label: 'Preguntas' }
+
+export default function FiltroChips({ active, onChange, counts = {}, hijo, rango = '14 días', conPreguntas = false }) {
+  const tipos = conPreguntas ? [...TIPOS, PREGUNTAS] : TIPOS
   const barraRef = useRef(null)
   const activoRef = useRef(null)
 
@@ -51,7 +56,7 @@ export default function FiltroChips({ active, onChange, counts = {}, hijo, rango
 
   return (
     <nav className={styles.bar} aria-label="Filtros del historial" ref={barraRef}>
-      {TIPOS.map((t) => (
+      {tipos.map((t) => (
         <button
           key={t.key}
           ref={active === t.key ? activoRef : undefined}

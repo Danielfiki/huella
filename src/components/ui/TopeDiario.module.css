@@ -1,0 +1,53 @@
+/* Tope diario de IA (diseño G1). */
+.tope {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+.cabeza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icono {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.titulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+.texto {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+.boton {
+  min-height: 52px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton:active { transform: scale(0.98); }
