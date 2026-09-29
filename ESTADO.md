@@ -29,7 +29,7 @@
 
 ### Bloque 0 — hoy, sin Code
 
-1. ⬜ **WhatsApp a Cecilia (Leon), María (Agustina) y Antonia (Ferran)** — desde **14 sep 2026** — **los tres mensajes ya están redactados (22 sep); queda enviarlos, y eso lo hace Daniel.** **Pauli (Nahuel) salió de la lista: registró el 22 sep.**
+1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — **29 sep 2026** — en diagnóstico.
 2. ⬜ **Esta reescritura de PENDIENTES** — **16 sep 2026** — sin commit hasta el OK de Daniel.
 
 ### Bloque 1 — Retención (decisiones del 16 sep 2026)
@@ -73,6 +73,8 @@
 - ⬜ **Archivos y SVG sueltos en la raíz** — **9 jul** — capturas de Play, logos, feature graphic, PDF, `SPEC-ALGO-QUE-SE-REPITE.md`, `diff_estrategias.txt`, `qa_invitar.sql`. Decidir uno por uno + `.gitignore`.
 - ⬜ **`.claude/settings.local.json` modificado sin decidir** — **16 sep** — entra sin detalle, lo precisa Daniel.
 - ⬜ **Plan Hobby de Vercel es para uso no comercial** — **9 sep** — mirarlo el día que entre el primer peso.
+- ⬜ **Botón de perfil de la barra superior de 36 a 44 px** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (zona táctil).
+- ⬜ **Color del rótulo "Registrar" de la barra inferior a `--color-eyebrow`** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (hoy `--color-primary` da 2,9:1).
 - ⬜ **Brief para ilustrador** — **16 sep** — entra sin detalle, lo precisa Daniel.
 - ⬜ **Auditoría del costo de la API** — **16 sep** — entra sin detalle, lo precisa Daniel.
 - ⬜ **`InvitarPage`** — **16 sep** — entra sin detalle, lo precisa Daniel.
@@ -102,10 +104,17 @@
 
 ### Personaje
 
-- ⬜ **Estado "pensando" con sus 3 variantes** — **26 sep** — ficha propuesta, sin aprobar. Regla: ningún estado entra sin sus 3 variantes (CLAUDE.md).
+- ⬜ **Orgulloso: llega DE VISITA desde abajo** (como la bienvenida del centro, en el espacio bajo "Ver todos los avances") — **28 sep** — variantes 1 (pulgar) y 2 (aplauso) procesadas en `public/personaje/home/`, sin conectar. **Falta el video de la variante 3**; con ella se implementa. Se descartó antes al lado de la foto del avance (revertido en `49d72b4`).
 - ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
 
 ### Sale de la cola
+
+- ✅ **Estado "pensando" con sus 3 variantes** — **en producción para todos el 28 sep** (commits `210defa`, `aef6712`, `0bdd3a7`, `f036cf7`, `31cd646`; variante anotada al pintar en `387b795`).
+- ✅ **WhatsApp a Cecilia, María y Antonia** — **enviados** (sale del Bloque 0).
+- ✅ **Solicitud de acceso a producción en Google Play** — **enviada el 28 sep a las 14:41**.
+- ✅ **Arreglo de Diego: "Ver orientación" mostraba media orientación** — **en producción para todos el 28 sep** (`86f1357`).
+- ✅ **Rediseño de Momentos** — **en producción para todos el 29 sep** (detalle: bloque del 29 sep).
+- ✅ **Grilla de "¿Cómo estás tú?" del seguimiento** — **en producción para todos el 29 sep** (`ebe7924`).
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
 - ✅ **Verificación de desarrolladores de Play** — **cumplida al 21 sep 2026**.
@@ -349,7 +358,35 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (28 sep 2026) — **Pensando EN PRODUCCIÓN PARA TODOS, con 3 variantes**
+## Cerrado HOY (29 sep 2026) — **Rediseño de Momentos EN PRODUCCIÓN PARA TODOS**
+
+### 1. ✅ Rediseño de Momentos para todos (commits `7f0c69c`, `804d69c`, `ebe7924` y `a8c04ce`)
+- **Lista:** fila de página simple (volver, "Momentos", buscar y PDF en neutro), sin el panel café ni las estadísticas. Los 5 filtros siguen como estaban. Tarjeta mínima: ícono + tipo entero + hora, y el relato del papá en 2 líneas; toda la tarjeta abre el momento. Salieron el resumen duplicado, los puntitos, el basurero, el nombre propio (solo sale si lo registró el otro adulto) y la Acción rápida.
+- **Momento abierto** (`/momento/:id`, `MomentoPage.jsx`): relato completo, chip de emoción, orientación completa por secciones con pasos numerados, reflexión con su guardado y la respuesta de Huella, "¿Cómo siguió?" (20-48 h) y borrar en "···" con diálogo centrado sobre fondo `--color-scrim`. Avance: foto o cámara, relato y la respuesta de Huella (`hitos.respuesta_ia`, antes no se veía en ningún lado). El `momentoId` que manda el Home abre directo el momento.
+- **Acción rápida fuera de Momentos:** abrir Momentos ya no llama a la IA. Los datos guardados no se tocaron; la Acción rápida sigue en la pantalla de guardado del episodio.
+- **Código viejo borrado** (grep sin referencias antes de sacarlo): `EpisodioCard`, `OrientacionIA`, `IntensidadDots`, `HistorialHeader` (con sus CSS), `colaRegeneracionAccionRapida.js` y el bloque que le inyectaba el regenerador en `HuellaContext`, más `statColorFor`. `AccionRapida` se queda: la usa el registro.
+- ⚠️ El commit `a8c04ce` salió con el mensaje del anterior ("fix: estados del seguimiento…"), pero su contenido es este cierre. No se reescribió porque ya estaba en main.
+
+### 2. ✅ Seguimiento "¿Cómo estás tú?" (`ebe7924`, para todos)
+- Los 5 estados en grilla pareja (3 columnas iguales; Bien y Orgulloso/a centrados abajo), todo dentro de la tarjeta a 390 px y botones de 44 px o más.
+
+### 3. QA de cierre (Code, WebKit iPhone 14, producción `CzcpzAf6`, cuenta de prueba)
+- ✅ Abrir Momentos: 0 llamadas a la IA. Los 5 filtros muestran lo que dicen (16 / 0 / 1 / 0 / 0). Tarjetas dentro de 390 px (borde máx. 370) y el tipo sin cortar. Hay de episodio y de avance.
+- ✅ Episodio abierto: orientación con Alivio / Qué está pasando / Qué hacer ahora / Qué evitar; reflexión guardada ("✓ Guardado") y respuesta de Huella visible; diálogo de borrar visible con foco en "No" y se cierra con "No" sin borrar.
+- ✅ Avance abierto: cámara (no tiene foto), relato y respuesta de Huella.
+- ✅ Enlace con `momentoId` (el mismo state que manda la card del reingreso del Home, simulado) abre ese momento.
+- ✅ Modo oscuro de lista y momento abierto; consola sin errores en claro y oscuro.
+- ⬜ Nombre del otro adulto: **sin probar**, la cuenta de prueba no tiene pareja.
+- Datos de prueba nuevos en La brava: un avance ("Se atrevió a algo nuevo", 28 sep) y una reflexión en el episodio del 28 sep a las 15:00.
+
+### ⏭️ Pendiente
+1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — en diagnóstico.
+2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.
+3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
+
+---
+
+## Sesión 28 sep 2026 — **Pensando EN PRODUCCIÓN PARA TODOS, con 3 variantes**
 
 ### 1. ✅ Pensando para todos (commits `210defa`, `aef6712`, `0bdd3a7`, `f036cf7` y `31cd646`)
 - **Dónde:** la caja del sello de la pantalla de guardado del episodio ("huella te lee"). Nunca con movimiento reducido. La vitrina `/personaje` sigue siendo solo de Daniel (la cierra `RutaPersonaje`).
