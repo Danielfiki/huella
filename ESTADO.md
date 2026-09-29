@@ -385,7 +385,15 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Respuesta a avance:** recibe `calibracionEdadCompacta` (no el marco largo: son dos líneas en Haiku). Sin edad no se manda nada.
 - **QA (Code, WebKit iPhone 14, localhost con Supabase real):** La brava a 14 años. Episodio de tristeza → dimensión `ritmo_presencia`, autor **Lisa Damour · Adolescencia**. Avance → el prompt empieza con "CALIBRACIÓN (12-18 años)". Edad devuelta (2021-03-03) y los dos registros borrados (quedan 15 episodios y 1 avance).
 
+### 5. ✅ Voz de la IA: pregunta primero, sin "no es X, es Y", citas exactas (para todos)
+- **Pregunta del papá:** se contesta primero. El código detecta la pregunta (`preguntasDe`) y le dice al modelo dónde va la respuesta (orientación, avance, patrón).
+- **Fórmula prohibida:** una sola prohibición en `REGLA_IDIOMA`, el banco de autores de `src/services/anthropic.js` y el de `api/anthropic.js` reescritos en positivo, y las instrucciones que pedían "soltar la culpa" ahora piden tranquilizar en positivo.
+- **Red de voz en `api/anthropic.js`:** cubre las 22 llamadas que producen texto para el papá. Borra en código los anuncios ("Para responder tu pregunta…", "La respuesta corta es…"). Si el detector marca la fórmula o "valorar que preguntes", Haiku (`claude-haiku-4-5-20251001`) reescribe el párrafo o el campo completo, una vez, con 5 s de tope. Si la reescritura vuelve a marcar, trae "no es / no fue / no era / no significa" o "en lugar de / en vez de / más que", cambia el largo más de 30% o altera una cita, queda el original. No descuenta de la cuota. Logs `[voz]`.
+- **Citas del papá:** van exactas (género y persona gramatical) y como frase completa. En código, toda cita entre comillas que no esté literal en el relato pierde las comillas (orientación: solo el Alivio; primer encuentro; extracción). Logs `[cita]`.
+- **QA (Code, script con el modelo real, sin pantalla):** varias rondas. La última: A1 y A2 contestan primero ("Sí, es normal que te hable así a esta edad…"), citas literales, sin anuncios ni "valorar que preguntes"; unitarias de anuncios, detector y JSON correctas.
+
 ### ⏭️ Pendiente
+0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
 1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — en diagnóstico.
 2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.

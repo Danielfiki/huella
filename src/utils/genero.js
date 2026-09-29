@@ -39,6 +39,10 @@ export function palabrasGenero(hijo) {
 // Linea de genero para los prompts de la IA. Va en TODO prompt que reciba
 // datos del hijo: sin ella el modelo deducia el genero desde el nombre, y con
 // un nombre como "La brava" le hablaba en femenino a un niño.
+// Una cita del papá va exacta aunque use otro género: corregirla es ponerle
+// en la boca palabras que no dijo. El dato guardado manda fuera de la cita.
+const CITA_EXACTA = 'Si citas entre comillas lo que escribió el padre o la madre, la cita va exacta, con sus palabras, su género y su persona gramatical ("me gritó" se queda como "me gritó"), aunque no calce con este. Fuera de la cita, usa el género de acá.'
+
 const DICE = {
   f:  'es una niña',
   m:  'es un niño',
@@ -55,8 +59,8 @@ export function instruccionGenero(hijo) {
   const nombre = (hijo?.nombre || '').trim()
   const dice = DICE[hijo?.genero]
   if (!dice) {
-    return `${nombre ? `No sabemos el género de ${nombre}` : 'No sabemos su género'}. No lo deduzcas del nombre: usa formas dobles (niño/a) o frases que no marquen género.`
+    return `${nombre ? `No sabemos el género de ${nombre}` : 'No sabemos su género'}. No lo deduzcas del nombre: usa formas dobles (niño/a) o frases que no marquen género. Si citas entre comillas lo que escribió el padre o la madre, la cita va exacta, con sus palabras y su persona gramatical.`
   }
   const sujeto = nombre ? `${nombre} ${dice}` : dice.charAt(0).toUpperCase() + dice.slice(1)
-  return `${sujeto}. Usa siempre ese género para pronombres y adjetivos, aunque el nombre parezca de otro género.`
+  return `${sujeto}. Usa siempre ese género para pronombres y adjetivos, aunque el nombre parezca de otro género. ${CITA_EXACTA}`
 }

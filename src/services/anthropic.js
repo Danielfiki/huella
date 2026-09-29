@@ -202,11 +202,11 @@ async function llamarAPI(prompt, max_tokens, opciones = {}) {
 // una copia equivalente de esta regla porque el cliente y el serverless no
 // comparten módulo. Si cambias una, cambia la otra.
 // ──────────────────────────────────────────────────────────────────────
-const REGLA_IDIOMA = `IDIOMA — REGLA CRÍTICA E INNEGOCIABLE: escribe SIEMPRE en español latinoamericano neutro con TUTEO: tú dices, puedes, quieres, dile, mira, recuerda, haz. PROHIBIDO el voseo argentino/rioplatense en CUALQUIER forma, incluidas las de pronombre pegado al verbo: vos, sos, tenés, podés, querés, sabés, hacés, fijate, mirá, decí, y sobre todo "decile", "contale", "hacele", "mandale", "dale" (imperativo rioplatense). PROHIBIDOS también los modismos regionales marcados (che, boludo) y el español de España (vale, vosotros, coger). Correcto: "dile chau", "puedes intentar", "cuando quieras". Neutro y cálido. VOCABULARIO — Huella es una app chilena. PROHIBIDAS las palabras que en Chile tienen doble sentido vulgar, aunque en otros países sean neutras. En particular NUNCA uses "pico" (di "momento de máxima activación", "punto más alto"), ni "concha", ni "pinchar", ni "polla". VOZ — PROHIBIDO NEGAR PARA AFIRMAR: nunca expliques algo diciendo primero lo que no es. Prohibidas estas formas y cualquier variante: "no es X, es Y", "no X, sino Y", "no por X sino porque Y", "no fue X, fue Y", "el problema no es X", "no se trata de X", "más que X, es Y". Si lo que escribió el papá o la mamá necesita otra lectura, di en positivo y en concreto qué está pasando, sin nombrar primero la lectura equivocada. Prohibido: "No se alejó de ti por desconfianza, sino porque necesitaba un momento". Bien: "Necesitaba un rato a solas antes de poder hablar, y después te buscó". Revisa tu respuesta antes de devolverla.`
+const REGLA_IDIOMA = `IDIOMA — REGLA CRÍTICA E INNEGOCIABLE: escribe SIEMPRE en español latinoamericano neutro con TUTEO: tú dices, puedes, quieres, dile, mira, recuerda, haz. PROHIBIDO el voseo argentino/rioplatense en CUALQUIER forma, incluidas las de pronombre pegado al verbo: vos, sos, tenés, podés, querés, sabés, hacés, fijate, mirá, decí, y sobre todo "decile", "contale", "hacele", "mandale", "dale" (imperativo rioplatense). PROHIBIDOS también los modismos regionales marcados (che, boludo) y el español de España (vale, vosotros, coger). Correcto: "dile chau", "puedes intentar", "cuando quieras". Neutro y cálido. VOCABULARIO — Huella es una app chilena. PROHIBIDAS las palabras que en Chile tienen doble sentido vulgar, aunque en otros países sean neutras. En particular NUNCA uses "pico" (di "momento de máxima activación", "punto más alto"), ni "concha", ni "pinchar", ni "polla". VOZ — PROHIBIDO NEGAR PARA AFIRMAR: nunca expliques algo diciendo primero lo que no es. Prohibidas estas formas y cualquier variante: "no es X, es Y", "no X, sino Y", "no por X sino porque Y", "no fue X, fue Y", "el problema no es X", "no se trata de X", "más que X, es Y". Si lo que escribió el papá o la mamá necesita otra lectura, di en positivo y en concreto qué está pasando, sin nombrar primero la lectura equivocada. Prohibido: "No se alejó de ti por desconfianza, sino porque necesitaba un momento". Bien: "Necesitaba un rato a solas antes de poder hablar, y después te buscó". Tampoco anuncies lo que vas a decir ("Para responder tu pregunta directamente:", "La respuesta corta es…"): dilo y listo. Revisa tu respuesta antes de devolverla.`
 
 // Si el papá pregunta algo, se le contesta primero. Cada prompt agrega DÓNDE
 // va esa respuesta, porque la estructura de salida cambia de uno a otro.
-const REGLA_PREGUNTA = `PREGUNTA DEL PAPÁ O LA MAMÁ: si su texto trae una pregunta explícita ("¿es normal que...?", "¿qué hago si...?", "¿está bien que...?"), contéstala directo y primero, calibrada a la edad, antes del resto. Si no hay pregunta, esto no cambia nada.`
+const REGLA_PREGUNTA = `PREGUNTA DEL PAPÁ O LA MAMÁ: si su texto trae una pregunta explícita ("¿es normal que...?", "¿qué hago si...?", "¿está bien que...?"), contéstala directo y primero, calibrada a la edad, antes del resto. No anuncies que vas a responder ("Para responder tu pregunta directamente:", "La respuesta corta es…"): responde y listo. Si no hay pregunta, esto no cambia nada.`
 
 // La regla general sola no alcanzó: con un formato fijo (las dos líneas del
 // avance, el JSON del patrón) el modelo seguía el formato y se saltaba la
@@ -216,6 +216,32 @@ function preguntasDe(...textos) {
     .filter(Boolean)
     .flatMap((t) => String(t).match(/¿[^¿?]+?|[^.!?¿]+?/g) || [])
     .map((q) => q.trim())
+}
+
+// Una cita del papá entre comillas tiene que estar literal en su relato. Si no
+// está (la pasó a "te gritó", le cambió el género o la inventó), pierde las
+// comillas y queda como paráfrasis: nunca se le atribuye algo que no escribió.
+// Se compara sin mayúsculas, sin espacios dobles y sin la puntuación de los
+// bordes. Nunca tira: ante cualquier cosa rara devuelve el texto tal cual.
+const normCita = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+export function revisarCitas(texto, relato) {
+  if (!texto || !relato) return texto
+  const base = normCita(relato)
+  return texto.replace(/"([^"\n]+)"|“([^”\n]+)”/g, (todo, a, b) => {
+    const dentro = a ?? b
+    const limpio = normCita(dentro).replace(/^[.,;:¡!¿?…\s]+|[.,;:¡!¿?…\s]+$/g, '')
+    if (!limpio || base.includes(limpio)) return todo
+    console.log('[cita] comillas quitadas:', JSON.stringify(dentro))
+    return dentro
+  })
+}
+
+// En la orientación solo el Alivio cita al papá. Las demás secciones usan
+// comillas para frases que el papá puede decirle al hijo, y esas se quedan.
+function revisarCitasDelAlivio(texto, relato) {
+  const corte = texto.indexOf('\nQué está pasando')
+  if (corte === -1) return texto
+  return revisarCitas(texto.slice(0, corte), relato) + texto.slice(corte)
 }
 
 const TEMAS_CONTEMPORANEOS = `TEMAS ESPECÍFICOS Y DOLORES PARENTALES CONTEMPORÁNEOS:
@@ -796,7 +822,7 @@ Barbara Coloroso ("Kids Are Worth It!"): el objetivo final de la disciplina es q
 Alfie Kohn ("Punished by Rewards", "Unconditional Parenting"): los premios y castigos externos — incluyendo el elogio evaluativo — socavan sistemáticamente la motivación intrínseca y el pensamiento autónomo; el elogio evaluativo ("qué inteligente eres") daña la tolerancia al fracaso y la autoestima real más que el silencio; el amor no debe retirarse nunca como herramienta disciplinaria — el amor condicional produce ansiedad de aprobación crónica; trabajar con los niños en lugar de hacer cosas a los niños; aplicación: reemplazar el elogio evaluativo por descripción de lo observado.
 Gabor Maté ("Scattered Minds", "Hold On to Your Kids"): el niño difícil es el niño con mayor sensibilidad neurológica al ambiente, no con mayor maldad; el TDAH y las dificultades conductuales severas son frecuentemente respuestas adaptativas al estrés temprano o a la falta de sintonía relacional en sistemas nerviosos más sensibles; el diagnóstico no debe reemplazar la pregunta por el ambiente y la historia; la pregunta útil es "qué le ha pasado a este niño y en qué entorno vive"; aplicación: siempre explorar el contexto y la historia antes de patologizar.
 Laura Markham ("Peaceful Parent, Happy Kids"): la regulación del padre/madre es condición previa e ineludible a cualquier intervención eficaz — un adulto fisiológicamente desregulado no puede regular a nadie, independientemente de qué técnica aplique; el padre/madre debe manejar su propio "inner life" — sus detonadores, sus miedos, su historia — antes de intervenir; la conexión emocional diaria (tiempo especial, juego, sintonía) es la base que hace posible toda disciplina efectiva; aplicación: la primera intervención es la regulación del adulto.
-Becky Kennedy ("Good Inside"): todo comportamiento tiene una raíz comprensible desde el interior del niño — hay niños con recursos insuficientes en ese momento; separar al niño de la conducta: el problema se enfrenta juntos, el niño no es el problema que puede hacer un padre/madre; "deeply feeling kids" no están dañados, están desbordados; el rol del padre/madre es ser regulador y guía, no juez; aplicación: reformular "mi hijo es difícil" como "mi hijo está teniendo dificultades".
+Becky Kennedy ("Good Inside"): todo comportamiento tiene una raíz comprensible desde el interior del niño — hay niños con recursos insuficientes en ese momento; separar al niño de la conducta: el problema se enfrenta juntos, con el niño del mismo lado que puede hacer un padre/madre; "deeply feeling kids" no están dañados, están desbordados; el rol del padre/madre es ser regulador y guía, no juez; aplicación: reformular "mi hijo es difícil" como "mi hijo está teniendo dificultades".
 Shefali Tsabary ("The Conscious Parent", "Out of Control"): la crianza consciente requiere que el padre/madre trabaje activamente su propio mundo interior — sus miedos no resueltos, sus patrones reactivos, su historia de apego; el hijo es un ser separado con su propio espíritu; el conflicto con el hijo es siempre una invitación al crecimiento del propio padre/madre; aplicación: antes de corregir al hijo, preguntarse qué activa ese comportamiento en el propio sistema nervioso del adulto.
 Jon Kabat-Zinn ("Everyday Blessings: The Inner Work of Mindful Parenting"): la calidad de la presencia del padre/madre importa más que la cantidad de tiempo — la atención plena reduce la reactividad automática ante la conducta del hijo; el mindfulness parental es la capacidad de responder en lugar de reaccionar; la práctica de observar los propios pensamientos y emociones crea el espacio entre el estímulo y la respuesta donde reside la elección consciente; aplicación: la pausa de tres segundos antes de responder ante la conducta difícil es una práctica concreta.
 Carlos González ("Mi niño no me come", "Bésame mucho"): el niño que "no come" generalmente come exactamente lo que su cuerpo necesita — la batalla de la alimentación la crea el adulto con presión, distracción, negociación y condicionamiento; retirar la presión y respetar la autorregulación del hambre resuelve el problema en la mayoría de los casos sin ninguna intervención adicional; las demandas de afecto físico del niño pequeño crean seguridad que posteriormente habilita la autonomía; aplicación: retirar la presión en la alimentación es la primera intervención.
@@ -1173,7 +1199,7 @@ ${REGLA_IDIOMA}
 ${REGLA_PREGUNTA} En esta respuesta la contestan las primeras una o dos frases de Alivio, y la cita del relato va después.
 
 Alivio
-(2-3 frases, y es lo primero que el padre lee. Abre CITANDO entre comillas dobles las palabras textuales que usó en su relato, tal cual las dijo. Después normaliza lo que hizo la niña o el niño para su edad, y cierra tranquilizando al padre en positivo: qué está pasando en su hijo y qué está haciendo bien él, sin negar primero. En vez de «no es un fracaso de crianza», algo como «a esta edad es esperable, y que te lo preguntes muestra que estás atento». Tono sereno, nada de felicitaciones ni de consejos: acá solo se lo acompaña. Las comillas dobles marcan la cita del padre y no se usan para nada más en esta sección. Ejemplo del tono buscado: Dijiste que te sentiste "pésimo". Eras un papá cansado en una fila larga, y Mateo tampoco tenía cómo ordenarse solo a esa hora. Lo que pasó fue eso, y ya pasó.)
+(2-3 frases, y es lo primero que el padre lee. Abre CITANDO entre comillas dobles las palabras textuales que usó en su relato, tal cual las dijo, también con el género y la persona gramatical con que las escribió («me gritó» se queda como «me gritó»), aunque no calce con el género guardado. La cita va después de «Dijiste que» o «Me contaste:», como frase completa. Nunca la metas dentro de otra frase conjugada. Después normaliza lo que hizo la niña o el niño para su edad, y cierra tranquilizando al padre en positivo: qué está pasando en su hijo y qué está haciendo bien él con su hijo, sin negar primero. Por ejemplo, en vez de «no es un fracaso de crianza», algo en la línea de «a esta edad es esperable». Es solo ilustrativo: no copies esas palabras, di lo tuyo con otra forma. Tono sereno, nada de felicitaciones ni de consejos: acá solo se lo acompaña. Las comillas dobles marcan la cita del padre y no se usan para nada más en esta sección. Ejemplo del tono buscado: Dijiste que te sentiste "pésimo". Eras un papá cansado en una fila larga, y Mateo tampoco tenía cómo ordenarse solo a esa hora. Lo que pasó fue eso, y ya pasó.)
 
 Qué está pasando
 (1-2 oraciones explicando el mecanismo neurológico o de desarrollo específico para esta edad)
@@ -1218,14 +1244,19 @@ Reglas de esa línea, en orden de prioridad:
   // En streaming el filtro se aplica también a cada pedazo: el marcador es lo
   // último que escribe el modelo, así que sin esto se vería aparecer letra por
   // letra al final de la orientación.
+  const relato = [episodio.descripcionLibre, episodio.contexto].filter(Boolean).join(' ')
+  const conCitasRevisadas = (r) => ({ ...r, texto: revisarCitasDelAlivio(r.texto, relato) })
+
   if (onTexto) {
     const crudo = await llamarAPIStream(prompt, 1400, (parcial) => {
       onTexto(separarZona(parcial).texto)
     }, { voz: true })
-    return separarZona(crudo)
+    const final = conCitasRevisadas(separarZona(crudo))
+    onTexto(final.texto)
+    return final
   }
 
-  return separarZona(await llamarAPI(prompt, 1400, { voz: true }))
+  return conCitasRevisadas(separarZona(await llamarAPI(prompt, 1400, { voz: true })))
 }
 
 // teaser=true (plan free): genera SOLO la sección "Lo que está mejorando" con
@@ -1267,7 +1298,7 @@ Lo que está mejorando
 
 No agregues secciones de atención, causas ni próximos pasos. No agregues disclaimer. Cuida la gramática y la sintaxis con precisión. Usa oraciones cortas y claras. Nunca dejes frases incompletas.`
 
-    return llamarAPI(promptTeaser, 400)
+    return llamarAPI(promptTeaser, 400, { voz: true })
   }
 
   const prompt = `${marco}
@@ -1298,7 +1329,7 @@ Próximos pasos sugeridos
 
 Esta orientación se basa en evidencia del desarrollo infantil y no constituye un diagnóstico clínico. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.`
 
-  return llamarAPI(prompt, 2500)
+  return llamarAPI(prompt, 2500, { voz: true })
 }
 
 // ── Análisis semanal ─────────────────────────────────────────────────────
@@ -1404,7 +1435,7 @@ Cierra con las dos líneas finales de siempre (descargo y "Marco aplicado"), cad
 
 ${REGLA_IDIOMA}`
 
-  return llamarAPI(prompt, 350)
+  return llamarAPI(prompt, 350, { voz: true })
 }
 
 export async function generarAnalisisCompleto({ hijo, episodios, hitos, tresLineas }) {
@@ -1438,7 +1469,7 @@ Cierra con las dos líneas finales de siempre (descargo y "Marco aplicado"), cad
 
 ${REGLA_IDIOMA}`
 
-  return llamarAPI(prompt, 900)
+  return llamarAPI(prompt, 900, { voz: true })
 }
 
 export async function generarTareas({ hijo, habilidad, descripcion }) {
@@ -1461,7 +1492,7 @@ Genera exactamente 4 semanas de tareas concretas para el padre/madre, calibradas
 
 Reglas por tarea: máximo 90 caracteres, verbo de acción concreto, realizable en casa sin preparación, en segunda persona al padre/madre. Semana 1: observar y preparar el ambiente. Semana 4: consolidar y generalizar. 3 tareas por semana. Cada tarea debe ser posible para un padre/madre con un niño de la edad indicada.`
 
-  const raw = await llamarAPI(prompt, 700)
+  const raw = await llamarAPI(prompt, 700, { voz: 'json' })
   try {
     const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const parsed = JSON.parse(clean)
@@ -1520,7 +1551,7 @@ Oración 2: Una frase entre *asteriscos* basada en el marco científico anterior
 
 Solo esas 2 oraciones. Sin títulos. Sin explicaciones extra.`
 
-  return llamarAPI(prompt, 200)
+  return llamarAPI(prompt, 200, { voz: true })
 }
 
 export async function generarEstrategia({ hijo, habilidad, descripcion }) {
@@ -1540,7 +1571,7 @@ Contexto adicional: ${descripcion || 'ninguno'}
 Responde SOLO con JSON puro, sin bloques de código markdown, sin \`\`\`json, sin \`\`\` al inicio o al final, sin texto adicional antes o después. La estrategia debe estar calibrada estrictamente a la edad y al marco científico anterior. Estructura exacta:
 {"porQueImporta":"2-3 frases sobre por qué esta habilidad importa en esta etapa del desarrollo para un niño de esta edad específica, sin markdown","semanas":[{"numero":1,"titulo":"Observar y preparar","accion":"Acción concreta para esta semana, máximo 2 frases, en segunda persona al padre/madre, apropiada para la edad","indicador":"Cómo saber si está funcionando, 1 frase","tareas":["tarea 1 en segunda persona, max 90 caracteres, apropiada para la edad","tarea 2","tarea 3"]},{"numero":2,"titulo":"Introducir","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":3,"titulo":"Practicar","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":4,"titulo":"Consolidar","accion":"...","indicador":"...","tareas":["...","...","..."]}]}`
 
-  const raw = await llamarAPI(prompt, 4000)
+  const raw = await llamarAPI(prompt, 4000, { voz: 'json' })
   return extraerJSON(raw)
 }
 
@@ -1561,7 +1592,7 @@ Cómo está el padre/madre ahora: ${checkin.estadoPadre || 'no especificado'}
 
 Escribe exactamente 2-3 oraciones que cierren este ciclo. Reconoce lo que intentó el padre/madre, conecta la acción con el resultado que observó, y valida su esfuerzo. Sin consejos nuevos. Sin diagnósticos. Habla en segunda persona al padre/madre. Tono cálido y concreto. No uses listas ni títulos.`
 
-  return llamarAPI(prompt, 250)
+  return llamarAPI(prompt, 250, { voz: true })
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -1693,6 +1724,7 @@ Esto escribió la madre o el padre sobre cómo se sintió:
 
   // 160 y no 120: el hilo necesita una frase más que la respuesta pelada.
   return llamarAPI(prompt, 160, {
+    voz: true,
     system: SYSTEM_RESPUESTA_REFLEXION,
     model: 'claude-haiku-4-5',
   })
@@ -1855,7 +1887,7 @@ Escribe un párrafo corto (máximo 100 palabras) que:
 - PROHIBIDO markdown en la respuesta: nada de #, ##, **, *, _ ni símbolos de formato
 - FORMATO DE TÍTULOS: si usas algún título de sección como "Alivio", "Qué está pasando", "Qué hacer ahora", "Qué evitar", "Lo que está mejorando", "Lo que merece atención", "Posibles causas" o "Próximos pasos sugeridos", escríbelo EXACTAMENTE así, en línea aparte, sin dos puntos al final, sin variación`
 
-  return llamarAPI(prompt, 250)
+  return llamarAPI(prompt, 250, { voz: true })
 }
 
 function extraerJSON(raw) {
@@ -1951,7 +1983,7 @@ Analiza la situación y genera un plan de 4 semanas calibrado a la edad. Reglas:
 Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto adicional:
 {"habilidad_id":"<id exacto del catálogo o null>","label_usado":"<label oficial si hay habilidad_id, sino null>","label_inferido":"<frase cálida si habilidad_id es null, sino null>","porQueImporta":"2-3 frases sobre por qué trabajar esto importa en esta etapa, sin markdown","semanas":[{"numero":1,"titulo":"Observar y preparar","accion":"Acción concreta para esta semana, máximo 2 frases, en segunda persona al padre/madre, apropiada para la edad","indicador":"Cómo saber si está funcionando, 1 frase","tareas":["tarea 1, max 90 caracteres, segunda persona","tarea 2","tarea 3"]},{"numero":2,"titulo":"Introducir","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":3,"titulo":"Practicar","accion":"...","indicador":"...","tareas":["...","...","..."]},{"numero":4,"titulo":"Consolidar","accion":"...","indicador":"...","tareas":["...","...","..."]}]}`
 
-  const raw = await llamarAPI(prompt, 4000)
+  const raw = await llamarAPI(prompt, 4000, { voz: 'json' })
   return extraerJSON(raw)
 }
 
@@ -2150,7 +2182,7 @@ recomendaciones DEBE ser un array de strings (3 a 4 elementos), nunca un string 
 Sin texto antes ni después del JSON. Sin cercas de markdown. Sin comentarios.`
 
   try {
-    const raw = await llamarAPI(prompt, 2000)
+    const raw = await llamarAPI(prompt, 2000, { voz: 'json' })
     const parsed = extraerJSON(raw)
     if (!parsed || typeof parsed !== 'object') {
       return { que_cambio: '', que_quedo_pendiente: '', recomendaciones: [] }
@@ -2255,7 +2287,7 @@ Devuelve SOLO un JSON válido con esta estructura exacta:
 El array semanas es la fuente de verdad: duracion_semanas debe ser igual a semanas.length. Si decides que el ciclo dura 4 semanas, genera exactamente 4 objetos en el array. Sin texto fuera del JSON. Sin cercas de markdown.`
 
   try {
-    const raw = await llamarAPI(prompt, 4000)
+    const raw = await llamarAPI(prompt, 4000, { voz: 'json' })
     const parsed = extraerJSON(raw)
     if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.semanas)) {
       return null
@@ -2324,7 +2356,7 @@ ${instruccionGenero({ genero: hijo_genero })}
 Datos a analizar:
 ${JSON.stringify({ contexto: { hijo_id, hijo_edad, total_episodios: episodios.length }, episodios: compactados }, null, 2)}`
 
-  const raw = await llamarAPI(prompt, 1024)
+  const raw = await llamarAPI(prompt, 1024, { voz: 'json' })
 
   const match = raw.match(/\{[\s\S]*\}/)
   if (!match) return { patrones: [] }
@@ -2479,7 +2511,7 @@ ${JSON.stringify({
   // media llave. El 15 sep, con 102 rasgos en el payload, la respuesta llego
   // truncada a 3662 caracteres y JSON.parse murio en un catch mudo: el motor
   // llevaba corridas apagandose sin decir nada.
-  const { texto: raw, stopReason } = await llamarAPI(prompt, 4000, { conMeta: true })
+  const { texto: raw, stopReason } = await llamarAPI(prompt, 4000, { conMeta: true, voz: 'json' })
 
   // La senal directa de truncamiento, antes de que el parseo falle.
   if (stopReason === 'max_tokens') {
@@ -2782,7 +2814,7 @@ Contenido de cada campo:
 
 1. "comprension": ENTRE 60 Y 90 PALABRAS, en EXACTAMENTE 2 PÁRRAFOS separados por una línea en blanco (\n\n).
 
-   PÁRRAFO 1 — el alivio. Abre CITANDO entre comillas dobles un fragmento textual del relato, tal cual lo escribió, sin corregirlo ni parafrasearlo. Elige el fragmento donde se nota lo que le pesó. Después normaliza lo que hizo el niño o la niña para su edad, según el marco científico que recibiste, y tranquiliza en positivo: qué está pasando en su hijo y qué está haciendo bien el padre o madre, sin negar primero. Las comillas dobles marcan la cita del relato y no se usan para nada más en este párrafo.
+   PÁRRAFO 1 — el alivio. Abre CITANDO entre comillas dobles un fragmento textual del relato, tal cual lo escribió, sin corregirlo ni parafrasearlo, ni siquiera el género o la persona gramatical («me gritó» se queda como «me gritó»), aunque no calce con el género guardado. La cita va después de «Dijiste que» o «Me contaste:», como frase completa. Nunca la metas dentro de otra frase conjugada. Elige el fragmento donde se nota lo que le pesó. Después normaliza lo que hizo el niño o la niña para su edad, según el marco científico que recibiste, y tranquiliza en positivo: qué está pasando en su hijo y qué está haciendo bien el padre o madre con su hijo, sin negar primero. Las comillas dobles marcan la cita del relato y no se usan para nada más en este párrafo.
 
    PÁRRAFO 2 — qué está pasando. Una o dos oraciones sobre el mecanismo de desarrollo específico de esa edad que explica lo que pasó. En lenguaje humano, sin jerga clínica.
 
@@ -2869,6 +2901,7 @@ Relato del padre/madre:
       // el nombre y un fragmento textual del relato. Con 200 se cortaba.
       max_tokens: 500,
       system: PROMPT_PRIMER_ENCUENTRO,
+      voz: 'json',
     }),
     signal,
   })
@@ -2904,7 +2937,7 @@ Relato del padre/madre:
     banco.find((e) => e.cita === String(parsed.cita || '').trim()) || banco[0] || null
 
   return {
-    comprension: String(parsed.comprension || ''),
+    comprension: revisarCitas(String(parsed.comprension || ''), texto),
     cita:        elegida ? elegida.cita  : '',
     autor:       elegida ? elegida.autor : '',
     marco:       elegida ? elegida.marco : '',
@@ -2968,7 +3001,7 @@ ${EMOCIONES_PARA_EXTRACCION}
 
 ━━━ EL PÁRRAFO ━━━
 Es lo que el padre va a leer para confirmar que entendiste. Reglas:
-- USA LAS PALABRAS DEL PADRE. Si dijo "se amurró", el párrafo dice "se amurró". Si dijo "le grité", dice "le grité". No traduzcas a jerga de catálogo.
+- USA LAS PALABRAS DEL PADRE. Si dijo "se amurró", el párrafo dice "se amurró". Si dijo "le grité", dice "le grité". No traduzcas a jerga de catálogo. Lo que pongas entre comillas va exacto, con el género y la persona gramatical que usó el padre («me gritó» se queda como «me gritó»), aunque no calce con el género guardado. La cita va después de «Dijiste que» o «Me contaste:», como frase completa. Nunca la metas dentro de otra frase conjugada.
 - Escríbelo en segunda persona, hablándole a él: "Me contaste que...".
 - Máximo 2 frases. Natural, como se lo repetirías a un amigo para chequear que entendiste bien.
 - ${REGLA_IDIOMA}
@@ -3053,6 +3086,7 @@ Esto es lo que contó el padre o madre, transcrito de su voz:
       // Apretado a propósito: con más espacio el modelo empieza a interpretar.
       max_tokens: 400,
       system: PROMPT_EXTRACCION,
+      voz: 'json',
     }),
   })
 
@@ -3070,6 +3104,7 @@ Esto es lo que contó el padre o madre, transcrito de su voz:
     throw new Error('extraccion-no-parseable')
   }
 
+  if (typeof parsed.parrafo === 'string') parsed.parrafo = revisarCitas(parsed.parrafo, transcripcion)
   return normalizarExtraccion(parsed)
 }
 

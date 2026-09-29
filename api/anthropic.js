@@ -232,11 +232,15 @@ VOCABULARIO — Huella es una app chilena. PROHIBIDAS las palabras que en Chile 
 // ── Red de voz ──
 // Última defensa contra "no es X, es Y" en lo que lee el papá. Los prompts ya
 // lo prohíben, pero el modelo lo sigue escribiendo, sobre todo al querer
-// tranquilizar. El cliente la pide con `voz`: true para texto plano, o
-// { campos: [...] } para revisar solo esos campos de una respuesta JSON.
-// Las frases detectadas se reescriben una sola vez con Haiku. Si la
-// reescritura falla, tarda más de 5 s o vuelve a traer la fórmula, se entrega
-// el texto original: nunca un error al papá. No pasa por el límite diario.
+// tranquilizar. El cliente la pide con `voz`: true para texto plano,
+// { campos: [...] } para revisar solo esos campos de una respuesta JSON, o
+// 'json' para revisar todos los textos del JSON (los ids y las etiquetas no
+// traen la fórmula, así que la red no los toca).
+// Se reescribe la unidad COMPLETA que contiene la frase marcada: el párrafo en
+// texto plano, el campo entero en JSON. Reescribir solo la frase la dejaba
+// suelta o le borraba la mitad del sentido. Una sola llamada a Haiku por
+// respuesta. Cada unidad reescrita se revisa y, si no pasa, queda la
+// original: nunca un error al papá. No pasa por el límite diario.
 const MODELO_VOZ = 'claude-haiku-4-5-20251001'
 const TIMEOUT_VOZ_MS = 5000
 
@@ -249,14 +253,76 @@ const PATRONES_VOZ = [
   /\bno (?:es|era|fue|son|eran)\b[^.;:!?\n]{1,60}:\s*\S/i,
   // "X, no Y" como contraste al final de la frase, y "el problema es X, no Y"
   /,\s*no (?:un|una|unos|unas|el|los|las|del|de|por|como|desde|porque|solo)\b[^.;:!?\n]{0,60}[.;!?]?\s*$/i,
+  // Valorar que el papá pregunte: "que estés acá preguntándote qué hacer
+  // muestra…", "que te lo preguntes dice mucho…". Los prompts ya no lo piden
+  // y el modelo lo sigue escribiendo cada vez que hay una pregunta.
+  /\bque\s+(?:tú\s+)?(?:te\s+)?(?:lo\s+)?(?:(?:estés|estes|hayas|hagas)\b[^.!?\n]{0,60}?pregunt[a-záéíóú]*|preguntes)\b[^.!?\n]{0,60}?\b(?:muestra|dice|habla|demuestra|refleja)\b/i,
 ]
+
+// Anuncios de la respuesta al inicio de una frase ("Para responder tu pregunta
+// directamente:", "Y para responder directo a lo que preguntas:", "La
+// respuesta corta es"). Se borran en código antes de todo lo demás: la
+// respuesta que viene después queda igual, con su primera letra en mayúscula.
+const ANUNCIOS = [
+  /(^|[.!?]["”»]?\s+|\n\s*)(?:y\s+)?(?:para responder|respondiendo)\b[^:.!?\n]{0,50}?\bpregunt[a-z]*\b[^:.!?\n]{0,20}?[:,]\s*(\S)/gi,
+  /(^|[.!?]["”»]?\s+|\n\s*)(?:y\s+)?la respuesta corta es\s*[:,]?\s*(\S)/gi,
+]
+function quitarAnuncios(texto) {
+  let limpio = texto
+  for (const re of ANUNCIOS) {
+    // Se borra el anuncio y la letra que queda al inicio de la frase va en
+    // mayúscula. Nada más del texto se toca.
+    limpio = limpio.replace(re, (todo, antes, letra) => {
+      console.log('[voz] anuncio quitado:', JSON.stringify(todo.slice(antes.length, -letra.length).trim()))
+      return antes + letra.toUpperCase()
+    })
+  }
+  return limpio
+}
 
 const tieneFormula = (frase) => PATRONES_VOZ.some((re) => re.test(frase))
 const frasesDe = (texto) => (texto.match(/[^.!?\n]+[.!?]*/g) || []).map((f) => f.trim()).filter(Boolean)
+const unidadConFormula = (texto) => frasesDe(texto).some(tieneFormula)
+// En la reescritura no puede quedar ninguna negación de este tipo, aunque el
+// detector no la marque ("…y aunque parezca una tormenta, no es ruptura").
+const NEGACION_PROHIBIDA = /\bno (?:es|fue|era|significa)\b/i
+// El contraste que Haiku usaba para esquivar la negación ("…y honras su
+// proceso en lugar de forzar una resolución").
+const CONTRASTE_PROHIBIDO = /\b(?:en lugar de|en vez de|más que)\b/i
+const citasDe = (texto) => texto.match(/"[^"\n]+"|“[^”\n]+”|«[^»\n]+»/g) || []
 
-const SYSTEM_VOZ = `Recibes un array JSON de frases en español escritas para una madre o un padre. Cada frase niega algo para después afirmar otra cosa ("no es X, es Y", "no X, sino Y", "X, no Y"). Reescribe cada una en positivo: di directo lo que sí pasa, sin nombrar lo que se negaba. Mantén el sentido, el tuteo, un largo parecido y la puntuación final. Si la frase trae comillas « » o una cita, consérvalas. No agregues ideas nuevas. Devuelve SOLO un array JSON de strings, del mismo largo y en el mismo orden, sin texto antes ni después.`
+// Por qué se rechaza una reescritura, o null si pasa.
+function motivoDeRechazo(original, nueva) {
+  if (!nueva || !nueva.trim()) return 'vacía'
+  if (unidadConFormula(nueva)) return 'el detector vuelve a marcar'
+  // Lo que el papá escribió entre comillas no cuenta: esa cita va exacta.
+  const sinCitas = citasDe(nueva).reduce((acc, c) => acc.split(c).join(''), nueva)
+  if (NEGACION_PROHIBIDA.test(sinCitas)) return 'trae "no es / no fue / no era / no significa"'
+  if (CONTRASTE_PROHIBIDO.test(sinCitas)) return 'trae "en lugar de / en vez de / más que"'
+  if (Math.abs(nueva.length - original.length) / original.length > 0.3) return 'el largo cambió más de 30%'
+  if (citasDe(original).some((c) => !nueva.includes(c))) return 'se alteró una cita'
+  return null
+}
 
-async function reescribirFrases(frases, apiKey) {
+const SYSTEM_VOZ = `Recibes un array JSON de textos en español escritos para una madre o un padre. Cada texto es un párrafo completo y tiene al menos una frase con uno de estos dos problemas:
+1. Niega algo para afirmar otra cosa ("no es X, es Y", "no X, sino Y", "X, no Y").
+2. Valora que la madre o el padre haya preguntado ("que te lo preguntes muestra…", "que estés acá preguntándote… dice mucho…").
+
+Reescribe cada párrafo entero. Para el problema 1: que ninguna frase niegue para afirmar, conservando TODO el sentido, incluido lo que se negaba, dicho en positivo, y el mismo tono. Para el problema 2: saca esa idea del párrafo y deja el resto igual.
+Ejemplo: "La rabia no fue contra ti, fue lo que quedó de un día que lo dejó al límite." → "La rabia fue lo que quedó de un día que lo dejó al límite, y la soltó contigo porque eres su lugar seguro."
+Ejemplo: "Ese silencio no es ignorarlo, es darle tiempo a su cuerpo." → "Con ese silencio sigues cerca y le das a su cuerpo el tiempo que necesita."
+
+Reglas:
+- Nada de "no es", "no fue", "no era" ni "no significa" en lo que devuelvas.
+- Todo lo que está entre comillas ("…", “…” o «…») se copia exacto, letra por letra.
+- Las frases que no tienen ninguno de los dos problemas se quedan como están.
+- Un largo parecido al original, tuteo, y el mismo género que usa el texto para el hijo o la hija.
+- No agregues ideas que el párrafo original no tenía: solo cambia cómo se dice lo que ya estaba.
+- Prohibido "en lugar de", "en vez de", "más que", "honrar" y el lenguaje de coach. Frases simples, como las diría un adulto a otro en la cocina.
+
+Devuelve SOLO un array JSON de strings, del mismo largo y en el mismo orden, sin texto antes ni después.`
+
+async function reescribirUnidades(unidades, apiKey) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_VOZ_MS)
   try {
@@ -265,9 +331,9 @@ async function reescribirFrases(frases, apiKey) {
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
         model: MODELO_VOZ,
-        max_tokens: 600,
+        max_tokens: 1500,
         system: SYSTEM_VOZ,
-        messages: [{ role: 'user', content: JSON.stringify(frases) }],
+        messages: [{ role: 'user', content: JSON.stringify(unidades) }],
       }),
       signal: controller.signal,
     })
@@ -275,10 +341,8 @@ async function reescribirFrases(frases, apiKey) {
     const d = await r.json()
     const crudo = d?.content?.[0]?.text || ''
     const arr = JSON.parse(crudo.slice(crudo.indexOf('['), crudo.lastIndexOf(']') + 1))
-    if (!Array.isArray(arr) || arr.length !== frases.length) return { error: 'forma inválida' }
-    if (arr.some((x) => typeof x !== 'string' || !x.trim())) return { error: 'frase vacía' }
-    if (arr.some(tieneFormula)) return { error: 'la reescritura trae la fórmula' }
-    return { nuevas: arr.map((x) => x.trim()) }
+    if (!Array.isArray(arr) || arr.length !== unidades.length) return { error: 'forma inválida' }
+    return { nuevas: arr.map((x) => (typeof x === 'string' ? x.trim() : '')) }
   } catch (err) {
     return { error: err?.name === 'AbortError' ? 'más de 5 s' : (err?.message || 'error') }
   } finally {
@@ -286,37 +350,87 @@ async function reescribirFrases(frases, apiKey) {
   }
 }
 
-// Revisa uno o varios textos a la vez y devuelve los textos corregidos, o los
-// originales si algo falló. Una sola llamada a Haiku por respuesta.
-async function revisarTextos(textos, apiKey) {
-  const detectadas = [...new Set(textos.flatMap((t) => frasesDe(t).filter(tieneFormula)))]
-  if (detectadas.length === 0) return textos
-  console.log('[voz] fórmula detectada:', JSON.stringify(detectadas))
-  const { nuevas, error } = await reescribirFrases(detectadas, apiKey)
+// Recibe las unidades (párrafos o campos) y devuelve las mismas unidades,
+// reescritas solo las que traían la fórmula y pasaron la revisión.
+async function revisarUnidades(unidadesOriginales, apiKey) {
+  const unidades = unidadesOriginales.map(quitarAnuncios)
+  const marcadas = [...new Set(unidades.filter(unidadConFormula))]
+  if (marcadas.length === 0) return unidades
+  console.log('[voz] fórmula detectada:', JSON.stringify(marcadas))
+  const { nuevas, error } = await reescribirUnidades(marcadas, apiKey)
   if (!nuevas) {
     console.log('[voz] se entrega el original:', error)
-    return textos
+    return unidades
   }
-  console.log('[voz] fórmula reescrita:', JSON.stringify(nuevas))
-  return textos.map((t) => detectadas.reduce((acc, f, i) => acc.split(f).join(nuevas[i]), t))
+  const reemplazo = new Map()
+  marcadas.forEach((original, k) => {
+    const motivo = motivoDeRechazo(original, nuevas[k])
+    if (motivo) {
+      console.log('[voz] se entrega el original:', motivo, JSON.stringify(nuevas[k]))
+    } else {
+      console.log('[voz] fórmula reescrita:', JSON.stringify(nuevas[k]))
+      reemplazo.set(original, nuevas[k])
+    }
+  })
+  return unidades.map((u) => reemplazo.get(u) ?? u)
+}
+
+// Texto plano: la unidad es el párrafo. Los saltos de línea se conservan tal
+// cual, porque en varias respuestas son dato (secciones, las dos líneas del
+// avance).
+async function revisarTextoPlano(texto, apiKey) {
+  const partes = texto.split(/(\n+)/)
+  const indices = partes.map((p, k) => (k % 2 === 0 && p.trim() ? k : -1)).filter((k) => k !== -1)
+  const revisadas = await revisarUnidades(indices.map((k) => partes[k]), apiKey)
+  indices.forEach((k, n) => { partes[k] = revisadas[n] })
+  return partes.join('')
+}
+
+// Junta los strings de un JSON (a cualquier profundidad) y los vuelve a poner
+// en su lugar después de revisarlos.
+function stringsDe(valor, fuera = []) {
+  if (typeof valor === 'string') fuera.push(valor)
+  else if (Array.isArray(valor)) valor.forEach((v) => stringsDe(v, fuera))
+  else if (valor && typeof valor === 'object') Object.values(valor).forEach((v) => stringsDe(v, fuera))
+  return fuera
+}
+function reponerStrings(valor, cola) {
+  if (typeof valor === 'string') return cola.shift()
+  if (Array.isArray(valor)) return valor.map((v) => reponerStrings(v, cola))
+  if (valor && typeof valor === 'object') {
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, reponerStrings(v, cola)]))
+  }
+  return valor
 }
 
 async function aplicarRedDeVoz(texto, voz, apiKey) {
   if (!voz || !texto) return texto
   try {
-    if (voz === true) return (await revisarTextos([texto], apiKey))[0]
+    if (voz === true) return await revisarTextoPlano(texto, apiKey)
+
+    // Respuesta JSON: se ubica el objeto o el array que viene en el texto. La
+    // unidad es el campo completo.
+    const i = texto.search(/[{[]/)
+    if (i === -1) return texto
+    const j = texto.lastIndexOf(texto[i] === '{' ? '}' : ']')
+    if (j <= i) return texto
+    const valor = JSON.parse(texto.slice(i, j + 1))
+
+    if (voz === 'json') {
+      const originales = stringsDe(valor)
+      if (!originales.length) return texto
+      const corregidos = await revisarUnidades(originales, apiKey)
+      if (originales.every((s, k) => s === corregidos[k])) return texto
+      return texto.slice(0, i) + JSON.stringify(reponerStrings(valor, [...corregidos])) + texto.slice(j + 1)
+    }
 
     const campos = Array.isArray(voz?.campos) ? voz.campos : []
-    const i = texto.indexOf('{')
-    const j = texto.lastIndexOf('}')
-    if (!campos.length || i === -1 || j <= i) return texto
-    const obj = JSON.parse(texto.slice(i, j + 1))
-    const presentes = campos.filter((c) => typeof obj[c] === 'string')
+    const presentes = campos.filter((c) => typeof valor?.[c] === 'string')
     if (!presentes.length) return texto
-    const corregidos = await revisarTextos(presentes.map((c) => obj[c]), apiKey)
-    if (presentes.every((c, k) => obj[c] === corregidos[k])) return texto
-    presentes.forEach((c, k) => { obj[c] = corregidos[k] })
-    return texto.slice(0, i) + JSON.stringify(obj) + texto.slice(j + 1)
+    const corregidos = await revisarUnidades(presentes.map((c) => valor[c]), apiKey)
+    if (presentes.every((c, k) => valor[c] === corregidos[k])) return texto
+    presentes.forEach((c, k) => { valor[c] = corregidos[k] })
+    return texto.slice(0, i) + JSON.stringify(valor) + texto.slice(j + 1)
   } catch (err) {
     // JSON que no se pudo leer acá: el cliente tiene su propio parser
     // tolerante, así que se le entrega tal cual.
