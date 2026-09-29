@@ -201,6 +201,16 @@ const REGLA_IDIOMA = `IDIOMA — REGLA CRÍTICA E INNEGOCIABLE: escribe SIEMPRE 
 // va esa respuesta, porque la estructura de salida cambia de uno a otro.
 const REGLA_PREGUNTA = `PREGUNTA DEL PAPÁ O LA MAMÁ: si su texto trae una pregunta explícita ("¿es normal que...?", "¿qué hago si...?", "¿está bien que...?"), contéstala directo y primero, calibrada a la edad, antes del resto. Si no hay pregunta, esto no cambia nada.`
 
+// La regla general sola no alcanzó: con un formato fijo (las dos líneas del
+// avance, el JSON del patrón) el modelo seguía el formato y se saltaba la
+// pregunta. Por eso el código la detecta y se la pasa con nombre y lugar.
+function preguntasDe(...textos) {
+  return textos
+    .filter(Boolean)
+    .flatMap((t) => String(t).match(/¿[^¿?]+?|[^.!?¿]+?/g) || [])
+    .map((q) => q.trim())
+}
+
 const TEMAS_CONTEMPORANEOS = `TEMAS ESPECÍFICOS Y DOLORES PARENTALES CONTEMPORÁNEOS:
 PANTALLAS Y TECNOLOGÍA: Jonathan Haidt ("The Anxious Generation", 2024): smartphones antes de los 16 años están causando la peor crisis de salud mental juvenil de la historia — no smartphone antes de secundaria, no redes sociales antes de 16, sin pantallas en el cuarto, más tiempo no estructurado. Jean Twenge ("iGen", "Generation Me"): la generación Z es la más ansiosa, solitaria y deprimida — correlación directa entre horas de pantalla y depresión, especialmente en niñas. Anya Kamenetz ("The Art of Screen Time"): enfoque equilibrado — ni pánico ni permisividad; el contexto importa más que el tiempo total. Michael Rich (Harvard, "médico de los medios"): los medios digitales afectan el sueño, la atención y el desarrollo social — la clave es la calidad del contenido y el uso compartido. Yalda Uhls ("Media Moms & Digital Dads"): los niños que pasan tiempo sin pantallas mejoran dramáticamente su lectura de emociones.
 ANSIEDAD INFANTIL Y PARENTAL: Tamar Chansky ("Freeing Your Child from Anxiety"): externalizar la ansiedad, darle nombre y acompañar al niño a acercarse de a poco a lo que teme. Lynn Lyons ("Anxious Kids, Anxious Parents"): la acomodación parental — hacer lo que el hijo ansioso pide para que se calme — refuerza el circuito de la ansiedad; los padres deben modelar tolerancia a la incertidumbre. Rachel Busman (TCC para niños): la terapia cognitivo-conductual es el tratamiento con mayor evidencia para la ansiedad infantil. Dan Peters: alta capacidad intelectual y ansiedad van frecuentemente juntos — el niño brillante que se paraliza ante el error.
@@ -1173,6 +1183,8 @@ NO ESCRIBAS NINGÚN DESCARGO. Nada de "esta orientación se basa en evidencia de
 
 Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
 
+REVISIÓN FINAL ANTES DE DEVOLVER: relee cada sección, también "Qué hacer ahora" y "Qué evitar", y reescribe en positivo cualquier frase que niegue para afirmar ("no es X, es Y", "no X, sino Y" y sus variantes). No uses la palabra "literalmente".
+
 ÚLTIMA LÍNEA DE TU RESPUESTA, SIEMPRE. Después de todo lo anterior, en una línea suelta y aparte, escribe exactamente:
 Zona del cerebro: slug
 
@@ -1758,6 +1770,7 @@ export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] 
   // no se la daba al modelo. Sin lente (categoria NULL) se dice que no eligió,
   // en vez de callarlo: el silencio el modelo lo rellena solo.
   const lente = LENTE_POR_ID[hito?.categoria]
+  const preguntas = preguntasDe(descripcion)
   const lineaLente = lente?.familia
     ? `El padre lo anotó como ${lente.label}, familia ${lente.familia}.`
     : 'El padre no eligió categoría para este avance.'
@@ -1771,7 +1784,10 @@ export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] 
 ${instruccionGenero(hijo)}
 ${lineaLente}
 Esto escribió la madre o el padre:
-"${descripcion}"${bloqueRasgos}`
+"${descripcion}"${bloqueRasgos}${preguntas.length ? `
+
+EN SU TEXTO PREGUNTA: ${preguntas.map((q) => `"${q}"`).join(' ')}
+La línea 1 contesta esa pregunta directo, calibrada a la edad: empieza con sí, no o depende, y di por qué en pocas palabras. La línea 2 sigue igual.` : ''}`
 
   const bruto = await llamarAPI(prompt, 160, {
     system: SYSTEM_RESPUESTA_HITO,
@@ -1954,6 +1970,7 @@ export async function analizarPatron({ descripcion, desde_cuando, frecuencia, in
 
   const desdeTexto  = { siempre: 'Siempre ha sido así, nunca lo dejó', reciente: 'Empezó hace poco', regresion: 'Ya lo había dejado y volvió' }
   const frecTexto   = { diario: 'Todos los días', semanal: 'Varias veces por semana', ocasional: 'De vez en cuando' }
+  const preguntas = preguntasDe(descripcion, ya_intentado)
   const interfTexto = { alta: 'Les complica la rutina', baja: 'Molesta pero conviven' }
 
   // Capa 2: si es regresión, el post-proceso de abajo ya fija la clasificación
@@ -1975,7 +1992,10 @@ Qué pasa: "${descripcion}"
 Desde cuándo: ${desdeTexto[desde_cuando] || desde_cuando}
 Qué tan seguido: ${frecTexto[frecuencia] || frecuencia}
 Cuánto les complica: ${interfTexto[interferencia] || interferencia}
-Qué ya intentó: ${ya_intentado ? `"${ya_intentado}"` : 'no lo dice'}
+Qué ya intentó: ${ya_intentado ? `"${ya_intentado}"` : 'no lo dice'}${preguntas.length ? `
+
+PREGUNTA EXPLÍCITA DEL PAPÁ O LA MAMÁ: ${preguntas.map((q) => `«${q}»`).join(' ')}
+Las primeras una o dos frases de que_esta_pasando contestan esa pregunta directo, calibradas a la edad: empiezan con sí, no o depende. Recién después explicas la conducta.` : ''}
 
 La EDAD es el dato central de la clasificación: una misma conducta puede ser esperable a una edad y motivo de consulta a otra. Clasifica en una de estas tres:
 - "esperable": es propia de la etapa de desarrollo a esta edad; no requiere intervención especial, solo acompañamiento.
