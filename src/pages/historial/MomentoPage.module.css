@@ -57,11 +57,28 @@
   cursor: pointer;
 }
 
-.confirmar {
+/* Diálogo de borrar: centrado, con el fondo oscurecido. */
+.fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--color-scrim);
+}
+
+.dialogo {
+  width: 100%;
+  max-width: 320px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
 }
 
 .confirmarTexto {

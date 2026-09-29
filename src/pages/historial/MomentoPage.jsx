@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { ArrowLeft, MoreHorizontal, Camera } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
@@ -69,7 +70,7 @@ export default function MomentoPage() {
           <div className={styles.opciones}>
             <button
               className={styles.boton}
-              onClick={() => { setMenuAbierto((v) => !v); setConfirmando(false) }}
+              onClick={() => setMenuAbierto((v) => !v)}
               aria-label="Más opciones"
               aria-expanded={menuAbierto}
             >
@@ -77,28 +78,18 @@ export default function MomentoPage() {
             </button>
             {menuAbierto && (
               <div className={styles.menu} role="menu">
-                {!confirmando ? (
-                  <button className={styles.menuItem} role="menuitem" onClick={() => setConfirmando(true)}>
-                    Borrar este momento
-                  </button>
-                ) : (
-                  <div className={styles.confirmar}>
-                    <p className={styles.confirmarTexto}>¿Lo borramos? No se puede deshacer.</p>
-                    <div className={styles.confirmarBotones}>
-                      <button className={styles.confirmarNo} onClick={() => { setConfirmando(false); setMenuAbierto(false) }} disabled={borrando}>
-                        No
-                      </button>
-                      <button className={styles.confirmarSi} onClick={borrar} disabled={borrando}>
-                        {borrando ? '…' : 'Borrar'}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <button className={styles.menuItem} role="menuitem" onClick={() => { setMenuAbierto(false); setConfirmando(true) }}>
+                  Borrar este momento
+                </button>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {confirmando && (
+        <DialogoBorrar borrando={borrando} alCerrar={() => setConfirmando(false)} alBorrar={borrar} />
+      )}
 
       <div className={styles.encabezado}>
         <span className={`${styles.icono} ${styles[`icono_${emoTileClass(tipo)}`] || ''}`} aria-hidden="true">{emoji}</span>
@@ -112,6 +103,42 @@ export default function MomentoPage() {
         ? <CuerpoEpisodio episodio={episodio} mio={mio} hijo={state.hijo} episodios={state.episodios} userId={user?.id} updateEpisodio={updateEpisodio} getCheckinsHechos={getCheckinsHechos} navigate={navigate} />
         : <CuerpoAvance hito={hito} mio={mio} userId={user?.id} updateHitoFoto={updateHitoFoto} />}
     </div>
+  )
+}
+
+// Confirmación de borrar: diálogo centrado sobre la pantalla, con el fondo
+// oscurecido. Va por portal a document.body (mismo motivo que UpgradeModal: que
+// ninguna capa de la página le gane). Tocar el fondo, "No" o Escape cierra sin
+// borrar; el foco entra en "No" y el Tab no sale del diálogo.
+function DialogoBorrar({ borrando, alCerrar, alBorrar }) {
+  const noRef = useRef(null)
+  const siRef = useRef(null)
+  useEffect(() => { noRef.current?.focus() }, [])
+
+  function teclas(e) {
+    if (e.key === 'Escape' && !borrando) { e.preventDefault(); alCerrar() }
+    if (e.key === 'Tab') {
+      const [primero, ultimo] = [noRef.current, siRef.current]
+      if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo?.focus() }
+      else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero?.focus() }
+    }
+  }
+
+  return createPortal(
+    <div className={styles.fondo} onClick={(e) => { if (e.target === e.currentTarget && !borrando) alCerrar() }}>
+      <div className={styles.dialogo} role="dialog" aria-modal="true" aria-labelledby="dialogo-borrar-texto" onKeyDown={teclas}>
+        <p id="dialogo-borrar-texto" className={styles.confirmarTexto}>¿Lo borramos? No se puede deshacer.</p>
+        <div className={styles.confirmarBotones}>
+          <button ref={noRef} className={styles.confirmarNo} onClick={alCerrar} disabled={borrando}>
+            No
+          </button>
+          <button ref={siRef} className={styles.confirmarSi} onClick={alBorrar} disabled={borrando}>
+            {borrando ? '…' : 'Borrar'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   )
 }
 

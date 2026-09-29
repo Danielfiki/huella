@@ -216,11 +216,13 @@ export default function CheckinPage() {
           <h2 style={s.titulo}>¿Cómo estás tú?</h2>
           <p style={s.subtitle}>Tu estado emocional también importa registrarlo.</p>
           <div style={s.estadoRow}>
-            {OPCIONES_ESTADO.map(op => (
+            {OPCIONES_ESTADO.map((op, i) => (
               <button
                 key={op.valor}
                 style={{
                   ...s.estadoBtn,
+                  // fila 2 centrada: Bien en las columnas 2-3, Orgulloso/a en 4-5
+                  ...(i === 3 ? { gridColumn: '2 / span 2' } : i === 4 ? { gridColumn: '4 / span 2' } : {}),
                   borderColor: estadoPadre === op.valor ? 'var(--color-primary, #c96f45)' : '#e0d5cc',
                   background:  estadoPadre === op.valor ? '#fdf0e8' : '#fff',
                 }}
@@ -394,13 +396,19 @@ const s = {
     background: '#fff',
     cursor: 'pointer',
   },
+  // Grilla de 6 columnas iguales donde cada botón ocupa 2: se ve como 3 columnas
+  // de igual ancho, y la segunda fila (Bien, Orgulloso/a) queda centrada. Con
+  // flex cada botón tomaba el ancho de su texto y Orgulloso/a se salía a 390 px.
   estadoRow: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
     gap: '6px',
     marginBottom: '20px',
   },
   estadoBtn: {
-    flex: 1,
+    gridColumn: 'span 2',
+    minWidth: 0,
+    minHeight: '44px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
