@@ -91,36 +91,52 @@ function partirEnSecciones(texto) {
 // (autor + enfoque) desde la Acción Rápida ya guardada, o lo infiere en
 // cliente si no la hay. Siempre devuelve algo, así que el pie siempre lleva
 // marco: no depende del modelo ni de una columna.
+// `grande`: la versión del momento abierto de Momentos (subtítulos y cuerpo más
+// grandes, pasos con el número en un círculo).
 // `className` deja que quien lo monta ajuste el contenedor (Momentos lo pone
 // dentro de un panel que ya trae su propio margen).
-export default function OrientacionSecciones({ texto, zona = null, episodio = null, hijo = null, className = '' }) {
+export default function OrientacionSecciones({ texto, zona = null, episodio = null, hijo = null, className = '', grande = false }) {
   const secciones = partirEnSecciones(texto)
   if (!secciones.length) return null
 
   const { autor, lente } = marcoDelEpisodio({ episodio, hijo })
 
   return (
-    <div className={`${styles.cuerpo} ${className}`}>
-      {secciones.map((seccion, i) => (
-        <section key={i} className={styles.bloque}>
-          {seccion.titulo && (
-            <h4 className={styles.titulo}>
-              <span className={`${styles.punto} ${TONO_POR_TITULO[seccion.titulo.normalize('NFC').toLowerCase()] ?? TONOS[i % TONOS.length]}`} aria-hidden="true" />
-              {seccion.titulo}
-            </h4>
-          )}
-          {seccion.lineas.map((linea, j) => {
-            // Los pasos vienen numerados ("1. ..."): se sangran para que se
-            // lean como lista sin dibujar viñetas.
-            const esPaso = /^\d+\.\s/.test(linea)
-            return (
-              <p key={j} className={esPaso ? styles.paso : styles.parrafo}>
-                {renderInline(linea)}
-              </p>
-            )
-          })}
-        </section>
-      ))}
+    <div className={`${styles.cuerpo} ${grande ? styles.grande : ''} ${className}`}>
+      {secciones.map((seccion, i) => {
+        const tituloNorm = seccion.titulo.normalize('NFC').toLowerCase()
+        return (
+          <section key={i} className={styles.bloque}>
+            {seccion.titulo && (
+              <h4 className={styles.titulo}>
+                {!grande && (
+                  <span className={`${styles.punto} ${TONO_POR_TITULO[tituloNorm] ?? TONOS[i % TONOS.length]}`} aria-hidden="true" />
+                )}
+                {seccion.titulo}
+              </h4>
+            )}
+            {seccion.lineas.map((linea, j) => {
+              // Los pasos vienen numerados ("1. ..."): se sangran para que se
+              // lean como lista sin dibujar viñetas. En `grande` (el momento
+              // abierto de Momentos) el número va en un círculo.
+              const paso = linea.match(/^(\d+)\.\s+(.*)$/)
+              if (paso && grande) {
+                return (
+                  <div key={j} className={styles.pasoGrande}>
+                    <span className={`${styles.numero} ${tituloNorm === 'qué hacer ahora' ? styles.numeroVerde : ''}`} aria-hidden="true">{paso[1]}</span>
+                    <p className={styles.parrafo}>{renderInline(paso[2])}</p>
+                  </div>
+                )
+              }
+              return (
+                <p key={j} className={paso ? styles.paso : styles.parrafo}>
+                  {renderInline(linea)}
+                </p>
+              )
+            })}
+          </section>
+        )
+      })}
 
       {/* El enlace va ANTES de toda la letra chica — el descargo de acá abajo, y
           cualquier cierre académico que el modelo haya escrito y que

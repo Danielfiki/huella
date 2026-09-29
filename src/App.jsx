@@ -19,6 +19,7 @@ import EstrategiaNuevaPage from './pages/estrategias/EstrategiaNuevaPage'
 import EstrategiaDetailPage from './pages/estrategias/EstrategiaDetailPage'
 import EstrategiaCierrePage from './pages/estrategias/EstrategiaCierrePage'
 import HistorialPage from './pages/historial/HistorialPage'
+import MomentoPage from './pages/historial/MomentoPage'
 import PerfilPage from './pages/perfil/PerfilPage'
 import HijoPage from './pages/hijo/HijoPage'
 import CerebroPage from './pages/cerebro/CerebroPage'
@@ -194,6 +195,8 @@ export default function App() {
                     (notificaciones, historial del navegador, PWA instalada). */}
                 <Route path="hitos"       element={<Navigate to="/historial" replace />} />
                 <Route path="historial"   element={<PageErrorBoundary><HistorialPage /></PageErrorBoundary>} />
+                {/* Momento abierto del rediseño de Momentos (solo la cuenta de Daniel; la pagina redirige a las demas). */}
+                <Route path="momento/:id" element={<PageErrorBoundary><MomentoPage /></PageErrorBoundary>} />
                 <Route path="perfil"      element={<PageErrorBoundary><PerfilPage /></PageErrorBoundary>} />
                 <Route path="hijo"                    element={<PageErrorBoundary><HijoPage /></PageErrorBoundary>} />
                 <Route path="cerebro"                 element={<PageErrorBoundary><CerebroPage /></PageErrorBoundary>} />

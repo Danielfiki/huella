@@ -7,26 +7,17 @@ import HistorialHeader from '../../components/historial/HistorialHeader'
 import FiltroChips from '../../components/historial/FiltroChips'
 import DaySeparator from '../../components/historial/DaySeparator'
 import EpisodioCard from '../../components/historial/EpisodioCard'
+import MomentoFila from '../../components/historial/MomentoFila'
+import MomentosCabecera from '../../components/historial/MomentosCabecera'
+import { usaMomentosNuevo } from './momentosNuevo'
 import PatronCard from '../../components/patron/PatronCard'
-import { groupEpisodios } from '../../components/historial/helpers'
+import { groupEpisodios, TIPOS } from '../../components/historial/helpers'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { LENTE_POR_ID } from '../../constants/catalogoAvance'
 import styles from './HistorialPage.module.css'
 
 const PDFSection = lazy(() => import('../../modules/pdf/PDFSection'))
-
-const TIPOS = {
-  rabieta:     { label: 'Rabieta / explosión',              emoji: '💥' },
-  llanto:      { label: 'Llanto intenso',                   emoji: '😭' },
-  agresividad: { label: 'Golpes / agresividad',             emoji: '👊' },
-  miedo:       { label: 'Miedo / angustia',                 emoji: '🫣' },
-  sueño:       { label: 'No quiere dormir',                 emoji: '🛏️' },
-  social:      { label: 'Se aisló / no quiso relacionarse', emoji: '🫥' },
-  desconexion: { label: 'Se cerró / no respondía',          emoji: '🔇' },
-  oposicion:   { label: 'Oposición / no coopera',           emoji: '🚫' },
-  otro:        { label: 'Otro',                             emoji: '📝' },
-}
 
 const SECTION_TITLES = new Set([
   'Qué está pasando', 'Qué hacer ahora', 'Qué evitar',
@@ -50,6 +41,8 @@ export default function HistorialPage() {
   const { state, deleteEpisodio, updateEpisodio, deleteHito, getCheckinsHechos, isPro, profilesByUserId } = useHuella()
   const { user } = useAuth()
   const { episodios, hitos, hijo, estrategias } = state
+  // Rediseño de Momentos: solo la cuenta de Daniel (momentosNuevo.js).
+  const nuevo = usaMomentosNuevo(user?.id)
 
   // Filtro inicial:
   //  1. Si la navegación trae un filtro explícito (p. ej. el "y N más" del Home), manda.
@@ -178,6 +171,8 @@ export default function HistorialPage() {
   const momentoId = location.state?.momentoId ?? null
   useEffect(() => {
     if (!momentoId) return
+    // En el rediseño el momento se abre en su propia pantalla.
+    if (nuevo) { navigate(`/momento/${momentoId}`, { replace: true }); return }
     const nodo = document.getElementById(`momento-${momentoId}`)
     if (!nodo) return
     const sinMovimiento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -245,7 +240,9 @@ export default function HistorialPage() {
   if (totalRegistros === 0 && patronesLista.length === 0) {
     return (
       <div className={styles.page}>
-        <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />
+        {nuevo
+          ? <MomentosCabecera onBack={() => navigate(-1)} />
+          : <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />}
         <div className={styles.empty}>
           <p className={styles.emptyText}>
             Sin registros aún — cuando empieces a registrar, aquí aparecerá todo.
@@ -257,6 +254,19 @@ export default function HistorialPage() {
 
   return (
     <div className={styles.page}>
+      {nuevo ? (
+        <MomentosCabecera
+          onBack={() => navigate(-1)}
+          onSearch={() => { setShowSearch((s) => !s); setBusqueda('') }}
+          onExportPDF={
+            hayEpisodios
+              ? (esPro ? () => setPdfActivado(true) : () => setShowUpgrade(true))
+              : undefined
+          }
+          hasNewExport={esPro && hayEpisodios && !pdfActivado}
+          exportBloqueado={!esPro && hayEpisodios}
+        />
+      ) : (
       <HistorialHeader
         count={totalRegistros}
         promedio={promedio}
@@ -271,6 +281,7 @@ export default function HistorialPage() {
         hasNewExport={esPro && hayEpisodios && !pdfActivado}
         exportBloqueado={!esPro && hayEpisodios}
       />
+      )}
       <FiltroChips
         active={filtro}
         onChange={setFiltro}
@@ -355,8 +366,16 @@ export default function HistorialPage() {
 
             {grupos.map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} />
-                {g.episodios.map((ep) => (
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio={nuevo} />
+                {g.episodios.map((ep) => nuevo ? (
+                  // El nombre va solo si lo registró el otro adulto.
+                  <MomentoFila
+                    key={ep.id}
+                    momento={ep}
+                    autor={ep.userId && ep.userId !== user?.id ? getAuthorDisplay(ep.userId, profilesByUserId, user?.id) : ''}
+                    onAbrir={() => navigate(`/momento/${ep.id}`)}
+                  />
+                ) : (
                   <EpisodioCard
                     key={ep.id}
                     episodio={ep}

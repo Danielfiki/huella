@@ -1,0 +1,334 @@
+/* El momento abierto (rediseño de Momentos). Todo sale de tokens de index.css;
+   medidas de las specs de Design. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 12px 20px 32px;
+}
+
+.barra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.boton {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* ── Más opciones ── */
+.opciones { position: relative; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 220px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.menuItem {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-danger-text);
+  cursor: pointer;
+}
+
+.confirmar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.confirmarTexto {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.confirmarBotones {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmarNo,
+.confirmarSi {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.confirmarNo { background: var(--color-surface-alt); color: var(--color-text); }
+.confirmarSi { background: var(--color-danger-text); color: var(--color-white); }
+
+/* ── Encabezado ── */
+.encabezado {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icono {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+  background: var(--color-surface-alt);
+}
+.icono_blue     { background: var(--color-pill-blue-bg); }
+.icono_lavender { background: var(--color-pill-lavender-bg); }
+.icono_green    { background: var(--color-pill-green-bg); }
+.icono_gold     { background: var(--color-pill-gold-bg); }
+
+.tipo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.fecha {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ── Episodio ── */
+.chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--color-pill-emocion-bg);
+  color: var(--color-pill-emocion-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chipRotulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.relato {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+
+.rotulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-pistacho-tinta);
+}
+
+.rotuloIcono {
+  width: 22px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+/* ── Reflexión ── */
+.tarjetaReflexion { gap: 12px; }
+
+.reflexionLabel {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.reflexionCampo {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font-family: var(--font-family);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.reflexionGuardar {
+  align-self: flex-start;
+  height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-text);
+  color: var(--color-white);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reflexionOk {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-pill-green-text);
+}
+
+.reflexionReintentar {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-danger-text);
+  cursor: pointer;
+}
+
+.respuestaReflexion {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.respuestaIcono {
+  width: 18px;
+  height: auto;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-pistacho-tinta);
+}
+
+/* ── ¿Cómo siguió? ── */
+.comoSiguio {
+  width: 100%;
+  height: 52px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.seguimientoHecho {
+  align-self: flex-start;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--color-pill-green-bg);
+  color: var(--color-pill-green-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── Avance ── */
+.foto {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.camara {
+  align-self: flex-start;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.errorFoto {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-danger-text);
+}
+
+.tarjetaRespuesta { gap: 12px; }
+
+.respuestaAvanceIcono {
+  width: 22px;
+  height: auto;
+  color: var(--color-pistacho-tinta);
+}
+
+.respuestaLinea1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.respuestaLinea2 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
