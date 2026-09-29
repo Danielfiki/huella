@@ -379,10 +379,18 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - ⬜ Nombre del otro adulto: **sin probar**, la cuenta de prueba no tiene pareja.
 - Datos de prueba nuevos en La brava: un avance ("Se atrevió a algo nuevo", 28 sep) y una reflexión en el episodio del 28 sep a las 15:00.
 
+### 4. ✅ Banco teórico: la edad filtra primero (para todos)
+- **Antes:** en la Acción Rápida el tema ganaba a la edad y solo había edades mínimas, así que un adolescente triste recibía Lansbury.
+- **Ahora:** `EDAD_MAXIMA_AUTOR` (Gerber hasta 3, Lansbury hasta 6, Carlos González y Bowlby hasta 11) y `autorCalzaConEdad` filtran en la Acción Rápida, el primer encuentro y el cierre. Si el tema no tiene autor para la edad, desde 12 cae a Damour / Siegel / Steinberg y antes a Siegel.
+- **Respuesta a avance:** recibe `calibracionEdadCompacta` (no el marco largo: son dos líneas en Haiku). Sin edad no se manda nada.
+- **QA (Code, WebKit iPhone 14, localhost con Supabase real):** La brava a 14 años. Episodio de tristeza → dimensión `ritmo_presencia`, autor **Lisa Damour · Adolescencia**. Avance → el prompt empieza con "CALIBRACIÓN (12-18 años)". Edad devuelta (2021-03-03) y los dos registros borrados (quedan 15 episodios y 1 avance).
+
 ### ⏭️ Pendiente
 1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — en diagnóstico.
 2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
+4. ⬜ **Motor de rasgos sin marco por edad:** `detectarRasgos` solo recibe `hijo_edad` como número.
+5. ⬜ **Sin tope de edad en el onboarding:** acepta 0-129, y de 19 para arriba cae igual en el marco 12-18.
 
 ---
 

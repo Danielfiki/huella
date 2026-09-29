@@ -629,20 +629,44 @@ const EDAD_MINIMA_AUTOR = {
   'Jean Twenge':        10,
 }
 
+// Y el tope, para los autores cuyo trabajo es de primera infancia. Sin esto,
+// la dimensión ganaba antes que la edad: un adolescente triste caía en
+// ritmo_presencia y le tocaba Lansbury. Criterio de cada tope:
+//   Gerber: RIE es de bebés y caminadores.
+//   Lansbury: "No Bad Kids" es de caminadores y preescolares.
+//   Carlos González: el marco 6-12 todavía lo nombra, en la adolescencia no.
+//   Bowlby: el apego de la primera infancia; al adolescente lo toma Neufeld.
+// Prizant y Wolfelt no llevan tope: los dos escriben también para
+// adolescentes ("Uniquely Human", "Healing Your Grieving Heart for Teens").
+const EDAD_MAXIMA_AUTOR = {
+  'Magda Gerber':     3,
+  'Janet Lansbury':   6,
+  'Carlos González':  11,
+  'John Bowlby':      11,
+}
+
+const autorCalzaConEdad = (autor, edadNum) => {
+  const minimo = EDAD_MINIMA_AUTOR[autor]
+  const maximo = EDAD_MAXIMA_AUTOR[autor]
+  return (minimo == null || edadNum >= minimo) && (maximo == null || edadNum <= maximo)
+}
+
 // Elige autor para esta dimensión + edad, respetando anti-repetición vs el
-// último autor que se usó para este hijo. Si tras filtrar queda lista vacía,
-// fallback a 'Daniel Siegel' (presente en el banco, sin restricción etaria,
-// dimensión 'desregulacion').
+// último autor que se usó para este hijo. La edad filtra primero. Si tras
+// filtrar no queda nadie de la dimensión, un adolescente cae a los autores
+// de comunicacion_adolescente y un niño a 'Daniel Siegel' (sin restricción
+// etaria, dimensión 'desregulacion').
 function seleccionarAutor({ dimension, edad, ultimoAutorUsado }) {
   const mapeo = MAPA_DIMENSIONES[dimension] || MAPA_DIMENSIONES.desregulacion
   const candidatosCrudos = [mapeo.primario, mapeo.secundario, mapeo.terciario].filter(Boolean)
 
   const edadNum = parseInt(edad, 10) || 4
-  const compatibles = candidatosCrudos.filter((autor) => {
-    const minimo = EDAD_MINIMA_AUTOR[autor]
-    return minimo == null || edadNum >= minimo
-  })
+  let compatibles = candidatosCrudos.filter((autor) => autorCalzaConEdad(autor, edadNum))
 
+  if (compatibles.length === 0 && edadNum >= 12) {
+    const ado = MAPA_DIMENSIONES.comunicacion_adolescente
+    compatibles = [ado.primario, ado.secundario, ado.terciario]
+  }
   if (compatibles.length === 0) return 'Daniel Siegel'
 
   // Anti-repetición: si hay más de un candidato compatible, descartamos al
@@ -1733,7 +1757,12 @@ export async function generarRespuestaHito({ hijo, hito, rasgosConfirmados = [] 
     ? `El padre lo anotó como ${lente.label}, familia ${lente.familia}.`
     : 'El padre no eligió categoría para este avance.'
 
-  const prompt = `Avance de ${nombre}${edad != null ? `, ${edad} años` : ''}.
+  // La misma calibración por edad que la Acción Rápida. El marco largo pesa
+  // miles de caracteres y esta respuesta son dos líneas en Haiku. Sin edad no
+  // se manda: calibrar a los 4 años por defecto sería inventar.
+  const calibracion = edad != null ? `${calibracionEdadCompacta(edad)}\n\n` : ''
+
+  const prompt = `${calibracion}Avance de ${nombre}${edad != null ? `, ${edad} años` : ''}.
 ${instruccionGenero(hijo)}
 ${lineaLente}
 Esto escribió la madre o el padre:
@@ -2544,8 +2573,8 @@ ${JSON.stringify({
 
 // Arma el subconjunto del banco que se le ofrece al modelo: recorre las
 // dimensiones del MAPA, toma el autor primario de cada una, descarta a los que
-// no corresponden a la edad (EDAD_MINIMA_AUTOR: Damour y Steinberg desde los
-// 12, Haidt y Twenge desde los 10, Wolfelt desde los 3) y saca una
+// no corresponden a la edad (EDAD_MINIMA_AUTOR y EDAD_MAXIMA_AUTOR, vía
+// autorCalzaConEdad) y saca una
 // articulacion del pool de cada uno.
 //
 // Devuelve entre 5 y 8 entradas de la forma { cita, autor, marco }, donde
@@ -2560,8 +2589,7 @@ export function bancoPrimerEncuentro(edad, maximo = 7) {
     const autor = mapeo.primario
     if (!autor || vistos.has(autor)) continue
 
-    const minimo = EDAD_MINIMA_AUTOR[autor]
-    if (minimo != null && edadNum < minimo) continue
+    if (!autorCalzaConEdad(autor, edadNum)) continue
 
     const cita = seleccionarArticulacion(autor)
     if (!cita) continue
@@ -2679,10 +2707,9 @@ export function autoresParaCierre(edad, maximo = 6) {
 
   const permitido = (autor) => {
     if (AUTORES_SOLO_POR_DIMENSION.has(autor)) return false
-    const minimo = EDAD_MINIMA_AUTOR[autor]
-    if (minimo == null) return true
+    if (conEdad) return autorCalzaConEdad(autor, edadNum)
     // Sin edad, los autores con piso etario no son transversales: fuera.
-    return conEdad ? edadNum >= minimo : false
+    return EDAD_MINIMA_AUTOR[autor] == null
   }
 
   const transversales = todos
