@@ -21,7 +21,7 @@ const TIMEOUT_MS = 75000
 // Si el stream se corta a mitad NO lanza: devuelve lo que alcanzó a llegar. Un
 // texto incompleto sirve; perder lo que ya se leyó, no. El caller decide si con
 // eso basta o si cae al camino de error.
-async function llamarAPIStream(prompt, max_tokens, onTexto) {
+async function llamarAPIStream(prompt, max_tokens, onTexto, opciones = {}) {
   const headers = { 'content-type': 'application/json' }
 
   if (supabase) {
@@ -39,7 +39,7 @@ async function llamarAPIStream(prompt, max_tokens, onTexto) {
     response = await fetch('/api/anthropic', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ prompt, max_tokens, stream: true }),
+      body: JSON.stringify({ prompt, max_tokens, stream: true, ...(opciones.voz ? { voz: opciones.voz } : {}) }),
       signal: controller.signal,
     })
   } catch (err) {
@@ -95,6 +95,12 @@ async function llamarAPIStream(prompt, max_tokens, onTexto) {
           texto += evento.delta.text
           onTexto?.(texto)
         }
+        // La red de voz del servidor manda el texto completo corregido al
+        // final, si tuvo que reescribir algo.
+        if (evento.type === 'huella_voz' && typeof evento.texto === 'string') {
+          texto = evento.texto
+          onTexto?.(texto)
+        }
         // Anthropic manda los errores de mitad de stream como su propio evento.
         if (evento.type === 'error') {
           throw new Error(evento.error?.message || 'stream_error')
@@ -141,6 +147,7 @@ async function llamarAPI(prompt, max_tokens, opciones = {}) {
         max_tokens,
         ...(opciones.system ? { system: opciones.system } : {}),
         ...(opciones.model  ? { model:  opciones.model  } : {}),
+        ...(opciones.voz    ? { voz:    opciones.voz    } : {}),
       }),
       signal: controller.signal,
     })
@@ -213,7 +220,7 @@ function preguntasDe(...textos) {
 
 const TEMAS_CONTEMPORANEOS = `TEMAS ESPECÍFICOS Y DOLORES PARENTALES CONTEMPORÁNEOS:
 PANTALLAS Y TECNOLOGÍA: Jonathan Haidt ("The Anxious Generation", 2024): smartphones antes de los 16 años están causando la peor crisis de salud mental juvenil de la historia — no smartphone antes de secundaria, no redes sociales antes de 16, sin pantallas en el cuarto, más tiempo no estructurado. Jean Twenge ("iGen", "Generation Me"): la generación Z es la más ansiosa, solitaria y deprimida — correlación directa entre horas de pantalla y depresión, especialmente en niñas. Anya Kamenetz ("The Art of Screen Time"): enfoque equilibrado — ni pánico ni permisividad; el contexto importa más que el tiempo total. Michael Rich (Harvard, "médico de los medios"): los medios digitales afectan el sueño, la atención y el desarrollo social — la clave es la calidad del contenido y el uso compartido. Yalda Uhls ("Media Moms & Digital Dads"): los niños que pasan tiempo sin pantallas mejoran dramáticamente su lectura de emociones.
-ANSIEDAD INFANTIL Y PARENTAL: Tamar Chansky ("Freeing Your Child from Anxiety"): externalizar la ansiedad, darle nombre y acompañar al niño a acercarse de a poco a lo que teme. Lynn Lyons ("Anxious Kids, Anxious Parents"): la acomodación parental — hacer lo que el hijo ansioso pide para que se calme — refuerza el circuito de la ansiedad; los padres deben modelar tolerancia a la incertidumbre. Rachel Busman (TCC para niños): la terapia cognitivo-conductual es el tratamiento con mayor evidencia para la ansiedad infantil. Dan Peters: alta capacidad intelectual y ansiedad van frecuentemente juntos — el niño brillante que se paraliza ante el error.
+ANSIEDAD INFANTIL Y PARENTAL: Tamar Chansky ("Freeing Your Child from Anxiety"): externalizar la ansiedad, darle nombre y acompañar la exposición gradual a lo que teme; evitarlo mantiene el miedo. Lynn Lyons ("Anxious Kids, Anxious Parents"): la acomodación parental — hacer lo que el hijo ansioso pide para que se calme — refuerza el circuito de la ansiedad; los padres deben modelar tolerancia a la incertidumbre. Rachel Busman (TCC para niños): la terapia cognitivo-conductual es el tratamiento con mayor evidencia para la ansiedad infantil. Dan Peters: alta capacidad intelectual y ansiedad van frecuentemente juntos — el niño brillante que se paraliza ante el error.
 TDAH Y NEURODIVERSIDAD: Russell Barkley ("Taking Charge of ADHD"): el TDAH es un trastorno del desarrollo de la autorregulación, no de la atención — el déficit real es en la memoria de trabajo, la inhibición y el manejo del tiempo. Edward Hallowell ("Driven to Distraction"): el TDAH como motor de creatividad y pasión cuando se canaliza bien — el diagnóstico como liberación, no como condena. Thomas Brown (funciones ejecutivas): el TDAH afecta el sistema de gestión del cerebro — le cuesta activarse por cómo funciona su cerebro. Temple Grandin ("The Autistic Brain"): el autismo como diferencia de procesamiento, no como déficit — el pensamiento visual como fortaleza real.
 LÍMITES Y OBEDIENCIA: Henry Cloud y John Townsend ("Boundaries with Kids"): los límites enseñan que las acciones tienen consecuencias reales — sin límites el niño no desarrolla carácter. Nancy Samalin: el enojo parental es normal y manejable — lo que importa es cómo se expresa, no si existe. Alfie Kohn ("Unconditional Parenting"): los premios y castigos crean obediencia externa pero no carácter interno — el objetivo es la autonomía moral.
 SUEÑO: Harvey Karp ("Happiest Baby on the Block"): las 5 S para calmar bebés — el cuarto trimestre requiere replicar condiciones intrauterinas. Carlos González ("Dormir sin lágrimas"): los despertares nocturnos son fisiología normal de la infancia temprana; el acompañamiento presente, no el entrenamiento conductual, es la intervención coherente con el desarrollo. T. Berry Brazelton (touchpoints del sueño): cada salto evolutivo desorganiza el sueño transitoriamente; el sueño consolidado se logra con tiempo y consistencia afectiva, no con extinción del llanto.
@@ -777,7 +784,7 @@ ${TEMAS_CONTEMPORANEOS}`
   if (n <= 5) {
     return `MARCO CIENTÍFICO (2-6 años):
 Daniel Siegel y Tina Payne Bryson ("The Whole-Brain Child", "No-Drama Discipline"): la corteza prefrontal — sede del autocontrol, la planificación y la regulación emocional — no madura hasta los 25 años; a esta edad el cerebro límbico domina y las emociones son inmediatas, intensas y sin filtro racional; "connect then redirect" — conectar emocionalmente antes de cualquier corrección; el cerebro se integra mediante relaciones, no mediante consecuencias; narrar lo ocurrido después del episodio en calma construye integración cortical; aplicación: conexión emocional es el primer paso sin excepción.
-Stuart Shanker ("Self-Reg: How to Help Your Child (and You) Break the Stress Cycle"): el niño actúa desde el estrés acumulado, no desde la maldad; Self-Reg distingue estrés de descontrol — el objetivo es reducir la carga de estrés que genera la conducta; cinco dominios de estrés se acumulan (biológico, emocional, cognitivo, social, prosocial); reducir el estrés en un dominio libera recursos para los demás; la pregunta útil es "qué le está sobrecargando"; aplicación: buscar el estresor antes de intervenir sobre la conducta.
+Stuart Shanker ("Self-Reg: How to Help Your Child (and You) Break the Stress Cycle"): el niño actúa desde el estrés acumulado, no desde la maldad; Self-Reg distingue estrés de descontrol — el objetivo es reducir la carga de estrés que está detrás de la conducta; cinco dominios de estrés se acumulan (biológico, emocional, cognitivo, social, prosocial); reducir el estrés en un dominio libera recursos para los demás; la pregunta útil es "qué le está sobrecargando"; aplicación: buscar el estresor antes de intervenir sobre la conducta.
 Bruce Perry ("The Boy Who Was Raised as a Dog", modelo neurosequencial del desarrollo): el cerebro se desarrolla de abajo hacia arriba — tronco encefálico (regulación básica), mesencéfalo (movimiento y emoción), sistema límbico (apego), córtex (pensamiento); no puedes acceder al razonamiento cortical sin haber regulado los niveles inferiores; la secuencia es regulación, relación, razonamiento — en ese orden, sin excepciones posibles; las intervenciones deben empezar en el nivel donde el niño está funcionando, no donde el adulto quiere que esté; aplicación: regular primero, razonar después es una ley neurológica, no una preferencia.
 Ross Greene ("The Explosive Child", CPS — Collaborative Problem Solving): los niños se portan bien cuando pueden; si no pueden, falta una habilidad — cognitiva, lingüística, de regulación o de flexibilidad — no voluntad ni motivación; el CPS identifica el problema específico y lo resuelve colaborativamente con el niño en calma; el Plan B (solución colaborativa) supera al Plan A (imposición) en durabilidad del cambio conductual; las consecuencias durante el episodio de desregulación no producen aprendizaje; aplicación: preguntar qué habilidad falta, no qué consecuencia aplicar.
 Janet Lansbury ("No Bad Kids", "Elevating Child Care"): el berrinche es una necesidad de descarga emocional completamente legítima y necesaria para el desarrollo; interrumpirlo o calmarlo prematuramente impide el procesamiento emocional completo; la intervención correcta es acompañar con presencia segura y calma, sin intentar resolver, distraer, negociar ni eliminar la emoción; el adulto que tolera el berrinche sin ansiedad transmite al niño que sus emociones son manejables; aplicación: presencia sin rescate es la técnica.
@@ -789,7 +796,7 @@ Barbara Coloroso ("Kids Are Worth It!"): el objetivo final de la disciplina es q
 Alfie Kohn ("Punished by Rewards", "Unconditional Parenting"): los premios y castigos externos — incluyendo el elogio evaluativo — socavan sistemáticamente la motivación intrínseca y el pensamiento autónomo; el elogio evaluativo ("qué inteligente eres") daña la tolerancia al fracaso y la autoestima real más que el silencio; el amor no debe retirarse nunca como herramienta disciplinaria — el amor condicional produce ansiedad de aprobación crónica; trabajar con los niños en lugar de hacer cosas a los niños; aplicación: reemplazar el elogio evaluativo por descripción de lo observado.
 Gabor Maté ("Scattered Minds", "Hold On to Your Kids"): el niño difícil es el niño con mayor sensibilidad neurológica al ambiente, no con mayor maldad; el TDAH y las dificultades conductuales severas son frecuentemente respuestas adaptativas al estrés temprano o a la falta de sintonía relacional en sistemas nerviosos más sensibles; el diagnóstico no debe reemplazar la pregunta por el ambiente y la historia; la pregunta útil es "qué le ha pasado a este niño y en qué entorno vive"; aplicación: siempre explorar el contexto y la historia antes de patologizar.
 Laura Markham ("Peaceful Parent, Happy Kids"): la regulación del padre/madre es condición previa e ineludible a cualquier intervención eficaz — un adulto fisiológicamente desregulado no puede regular a nadie, independientemente de qué técnica aplique; el padre/madre debe manejar su propio "inner life" — sus detonadores, sus miedos, su historia — antes de intervenir; la conexión emocional diaria (tiempo especial, juego, sintonía) es la base que hace posible toda disciplina efectiva; aplicación: la primera intervención es la regulación del adulto.
-Becky Kennedy ("Good Inside"): todo comportamiento tiene una raíz comprensible desde el interior del niño — hay niños con recursos insuficientes en ese momento; separar la identidad del niño de su conducta es el acto terapéutico más importante que puede hacer un padre/madre; "deeply feeling kids" no están dañados, están desbordados; el rol del padre/madre es ser regulador y guía, no juez; aplicación: reformular "mi hijo es difícil" como "mi hijo está teniendo dificultades".
+Becky Kennedy ("Good Inside"): todo comportamiento tiene una raíz comprensible desde el interior del niño — hay niños con recursos insuficientes en ese momento; separar al niño de la conducta: el problema se enfrenta juntos, el niño no es el problema que puede hacer un padre/madre; "deeply feeling kids" no están dañados, están desbordados; el rol del padre/madre es ser regulador y guía, no juez; aplicación: reformular "mi hijo es difícil" como "mi hijo está teniendo dificultades".
 Shefali Tsabary ("The Conscious Parent", "Out of Control"): la crianza consciente requiere que el padre/madre trabaje activamente su propio mundo interior — sus miedos no resueltos, sus patrones reactivos, su historia de apego; el hijo es un ser separado con su propio espíritu; el conflicto con el hijo es siempre una invitación al crecimiento del propio padre/madre; aplicación: antes de corregir al hijo, preguntarse qué activa ese comportamiento en el propio sistema nervioso del adulto.
 Jon Kabat-Zinn ("Everyday Blessings: The Inner Work of Mindful Parenting"): la calidad de la presencia del padre/madre importa más que la cantidad de tiempo — la atención plena reduce la reactividad automática ante la conducta del hijo; el mindfulness parental es la capacidad de responder en lugar de reaccionar; la práctica de observar los propios pensamientos y emociones crea el espacio entre el estímulo y la respuesta donde reside la elección consciente; aplicación: la pausa de tres segundos antes de responder ante la conducta difícil es una práctica concreta.
 Carlos González ("Mi niño no me come", "Bésame mucho"): el niño que "no come" generalmente come exactamente lo que su cuerpo necesita — la batalla de la alimentación la crea el adulto con presión, distracción, negociación y condicionamiento; retirar la presión y respetar la autorregulación del hambre resuelve el problema en la mayoría de los casos sin ninguna intervención adicional; las demandas de afecto físico del niño pequeño crean seguridad que posteriormente habilita la autonomía; aplicación: retirar la presión en la alimentación es la primera intervención.
@@ -981,7 +988,7 @@ Sin texto antes ni después. Sin cercas de código markdown. El texto va complet
     // y escapes ≈ 30 tokens, + margen para que el modelo no se quede sin
     // espacio antes de cerrar la oración (raíz del bug del episodio
     // "Oposición / no coopera" que terminó en "...voz suave:" truncado).
-    const raw   = await llamarAPI(prompt, 600)
+    const raw   = await llamarAPI(prompt, 600, { voz: { campos: ['texto'] } })
     const texto = extraerTextoAccion(raw)
 
     if (!texto) {
@@ -1166,7 +1173,7 @@ ${REGLA_IDIOMA}
 ${REGLA_PREGUNTA} En esta respuesta la contestan las primeras una o dos frases de Alivio, y la cita del relato va después.
 
 Alivio
-(2-3 frases, y es lo primero que el padre lee. Abre CITANDO entre comillas dobles las palabras textuales que usó en su relato, tal cual las dijo. Después normaliza lo que hizo la niña o el niño para su edad, y cierra soltando la culpa del padre. Tono sereno, nada de felicitaciones ni de consejos: acá solo se lo acompaña. Las comillas dobles marcan la cita del padre y no se usan para nada más en esta sección. Ejemplo del tono buscado: Dijiste que te sentiste "pésimo". Eras un papá cansado en una fila larga, y Mateo tampoco tenía cómo ordenarse solo a esa hora. Lo que pasó fue eso, y ya pasó.)
+(2-3 frases, y es lo primero que el padre lee. Abre CITANDO entre comillas dobles las palabras textuales que usó en su relato, tal cual las dijo. Después normaliza lo que hizo la niña o el niño para su edad, y cierra tranquilizando al padre en positivo: qué está pasando en su hijo y qué está haciendo bien él, sin negar primero. En vez de «no es un fracaso de crianza», algo como «a esta edad es esperable, y que te lo preguntes muestra que estás atento». Tono sereno, nada de felicitaciones ni de consejos: acá solo se lo acompaña. Las comillas dobles marcan la cita del padre y no se usan para nada más en esta sección. Ejemplo del tono buscado: Dijiste que te sentiste "pésimo". Eras un papá cansado en una fila larga, y Mateo tampoco tenía cómo ordenarse solo a esa hora. Lo que pasó fue eso, y ya pasó.)
 
 Qué está pasando
 (1-2 oraciones explicando el mecanismo neurológico o de desarrollo específico para esta edad)
@@ -1214,11 +1221,11 @@ Reglas de esa línea, en orden de prioridad:
   if (onTexto) {
     const crudo = await llamarAPIStream(prompt, 1400, (parcial) => {
       onTexto(separarZona(parcial).texto)
-    })
+    }, { voz: true })
     return separarZona(crudo)
   }
 
-  return separarZona(await llamarAPI(prompt, 1400))
+  return separarZona(await llamarAPI(prompt, 1400, { voz: true }))
 }
 
 // teaser=true (plan free): genera SOLO la sección "Lo que está mejorando" con
@@ -1792,6 +1799,7 @@ La línea 1 contesta esa pregunta directo, calibrada a la edad: empieza con sí,
   const bruto = await llamarAPI(prompt, 160, {
     system: SYSTEM_RESPUESTA_HITO,
     model: 'claude-haiku-4-5',
+    voz: true,
   })
 
   // Red de seguridad. El límite 3 del system ya lo prohíbe, pero el modelo
@@ -2004,7 +2012,7 @@ La EDAD es el dato central de la clasificación: una misma conducta puede ser es
 ${avisoRegresion}
 Escribe SIEMPRE los tres textos, en las tres clasificaciones, incluida "derivar": decir qué ayuda y qué no ayuda protege al ${genero} mientras la familia consulta.
 
-Reglas de tono INNEGOCIABLES: nunca diagnostiques, nunca etiquetes al ${genero} (prohibido "es ansioso", "es mañoso", "es problemático" y cualquier rótulo), nunca uses lenguaje de defecto ni culpes al padre/madre. Habla del comportamiento y del contexto, no de una condición del ${genero}. Sereno, cálido y concreto.
+Reglas de tono INNEGOCIABLES: nunca diagnostiques, nunca etiquetes al ${genero} (prohibido "es ansioso", "es mañoso", "es problemático" y cualquier rótulo), nunca uses lenguaje de defecto. Habla del comportamiento y del contexto del ${genero}. Si el padre o la madre necesita tranquilidad, dásela en positivo: qué está pasando en su hijo a esta edad y qué está haciendo bien, sin negar primero. Sereno, cálido y concreto.
 
 REGLA DURA SOBRE LOS TRES TEXTOS: que_esta_pasando, que_ayuda y que_lo_empeora describen SOLO qué está pasando, qué ayuda en el día a día y qué lo empeora. NUNCA mencionan planes, programas, semanas, pasos a seguir ni ofertas de acompañamiento estructurado — ofrecer un plan es trabajo de la interfaz, no del texto. PROHIBIDAS dentro de los tres textos estas palabras y giros: "plan", "programa", "semana 1", "cuatro semanas", "te puedo armar", "sigue estos pasos". Los consejos concretos de "qué ayuda" SÍ se mantienen: lo prohibido es ofrecer un producto de la app, no dar orientación para el día a día.
 
@@ -2038,10 +2046,11 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto ant
   // (la respuesta cambia de una vez a otra); si vuelve a fallar, el caller
   // muestra reintentar sobre la fila ya guardada. Nunca se escribe basura, que
   // además rebotaría en el CHECK.
+  const VOZ_PATRON = { voz: { campos: ['que_esta_pasando', 'que_ayuda', 'que_lo_empeora'] } }
   const VALIDAS = ['esperable', 'instalado', 'derivar']
   const esValida = (x) => x && typeof x === 'object' && VALIDAS.includes(x.clasificacion)
-  let parsed = extraerJSON(await llamarAPI(prompt, 1500))
-  if (!esValida(parsed)) parsed = extraerJSON(await llamarAPI(prompt, 1500))
+  let parsed = extraerJSON(await llamarAPI(prompt, 1500, VOZ_PATRON))
+  if (!esValida(parsed)) parsed = extraerJSON(await llamarAPI(prompt, 1500, VOZ_PATRON))
   if (!esValida(parsed)) {
     throw new Error('El análisis no se generó correctamente. Intenta de nuevo.')
   }
@@ -2118,7 +2127,7 @@ ${episodiosTexto}
 TAREA
 Genera un análisis del cierre de este ciclo con TRES secciones:
 1. que_cambio: qué evolución observable hubo durante este ciclo (en el hijo/a, en ${pronombre} ${articulo}, en la dinámica familiar). Concreto, observacional, sin diagnóstico.
-2. que_quedo_pendiente: qué del plan no se logró, qué patrones siguen presentes, qué obstáculos aparecieron. Honesto pero sin culpabilizar.
+2. que_quedo_pendiente: qué del plan no se logró, qué patrones siguen presentes, qué obstáculos aparecieron. Honesto y dicho en positivo, sin juicios.
 3. recomendaciones: 3 a 4 sugerencias prácticas y específicas para el próximo paso (un nuevo ciclo o un cierre definitivo de esta habilidad). Cada recomendación es una frase corta y accionable de 1 a 2 oraciones, NO un párrafo. Concreta, no abstracta. Dirigida al papá o mamá en segunda persona con tuteo chileno ("fíjate", "intenta", "prueba", "ten en cuenta"). Sin numeración dentro del texto del ítem (nada de "1.", "2.") — la UI decide cómo listarlas.
 
 REGLAS DURAS
@@ -2773,7 +2782,7 @@ Contenido de cada campo:
 
 1. "comprension": ENTRE 60 Y 90 PALABRAS, en EXACTAMENTE 2 PÁRRAFOS separados por una línea en blanco (\n\n).
 
-   PÁRRAFO 1 — el alivio. Abre CITANDO entre comillas dobles un fragmento textual del relato, tal cual lo escribió, sin corregirlo ni parafrasearlo. Elige el fragmento donde se nota lo que le pesó. Después normaliza lo que hizo el niño o la niña para su edad, según el marco científico que recibiste, y suelta la culpa del padre o madre. Las comillas dobles marcan la cita del relato y no se usan para nada más en este párrafo.
+   PÁRRAFO 1 — el alivio. Abre CITANDO entre comillas dobles un fragmento textual del relato, tal cual lo escribió, sin corregirlo ni parafrasearlo. Elige el fragmento donde se nota lo que le pesó. Después normaliza lo que hizo el niño o la niña para su edad, según el marco científico que recibiste, y tranquiliza en positivo: qué está pasando en su hijo y qué está haciendo bien el padre o madre, sin negar primero. Las comillas dobles marcan la cita del relato y no se usan para nada más en este párrafo.
 
    PÁRRAFO 2 — qué está pasando. Una o dos oraciones sobre el mecanismo de desarrollo específico de esa edad que explica lo que pasó. En lenguaje humano, sin jerga clínica.
 
@@ -2781,7 +2790,7 @@ Contenido de cada campo:
 
 PROHIBIDO: un tercer párrafo, dar consejos prácticos, listar pasos, prometer lo que la app va a hacer, diagnosticar, juzgar al padre o madre, patologizar, sermonear, felicitar, o pasarte de 90 palabras.
 
-MARCO ANTI-VERGÜENZA — es lo más importante de esta respuesta. Quien escribe acaba de contarle a una app algo que quizás no le contó a nadie. Nunca insinúes que debió actuar distinto, ni que hay una forma correcta que no encontró. Si en el relato hay algo de lo que se arrepiente (gritó, perdió la paciencia, se salió de la pieza), reconócelo como lo que le pasa a un adulto cansado, no como un error a corregir. Después del alivio no va ningún "pero".
+MARCO ANTI-VERGÜENZA — es lo más importante de esta respuesta. Quien escribe acaba de contarle a una app algo que quizás no le contó a nadie. Nunca insinúes que debió actuar distinto, ni que hay una forma correcta que no encontró. Si en el relato hay algo de lo que se arrepiente (gritó, perdió la paciencia, se salió de la pieza), reconócelo como lo que le pasa a un adulto cansado. Después del alivio no va ningún "pero".
 
 2. "cita", 3. "autor" y 4. "marco": NO los escribes tú. En el mensaje del usuario viene una lista numerada de opciones, cada una con su cita, su autor y su marco. Elige LA QUE MEJOR ENCAJE con lo que el padre o madre acaba de contar y copia sus tres campos EXACTAMENTE como aparecen, carácter por carácter. No los reescribas, no los mezcles entre opciones distintas, no inventes una cita nueva ni un autor que no esté en la lista. Los tres campos salen SIEMPRE de la misma opción.
 

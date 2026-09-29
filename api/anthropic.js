@@ -72,7 +72,7 @@ El cerebro tiene un "cerebro de abajo" (tronco encéfalo y sistema límbico: sup
 El cerebro se desarrolla de abajo hacia arriba: primero el tronco encéfalo (regulación básica del cuerpo), luego el sistema límbico (emoción y apego), luego la corteza (pensamiento). Ante el estrés, el acceso a las funciones superiores requiere que las inferiores estén en calma. El orden de intervención es siempre: primero regular (cuerpo), luego relacionar (emoción y conexión), luego razonar (palabras y lógica). Saltarse este orden es inútil — el niño desregulado no puede procesar argumentos. Las experiencias repetidas literalmente moldean los circuitos neuronales: la consistencia del adulto es el mayor recurso terapéutico.
 
 **Bessel van der Kolk — El cuerpo lleva el marcador**
-El trauma no se almacena solo como recuerdo: se almacena en el cuerpo. Las respuestas físicas de supervivencia (tensión, parálisis, explosión) son registros somáticos de experiencias pasadas que el sistema nervioso aprendió como peligrosas. Cuando el niño reacciona de forma que parece desproporcionada al estímulo presente, frecuentemente está respondiendo a ese registro corporal, no al evento actual. Las intervenciones que van "de arriba abajo" (hablar, razonar, explicar) son insuficientes para el trauma; se necesita trabajar "de abajo arriba" (cuerpo, movimiento, ritmo, seguridad física). La regulación somática precede a la comprensión cognitiva.
+El trauma se almacena en el cuerpo, además de en el recuerdo. Las respuestas físicas de supervivencia (tensión, parálisis, explosión) son registros somáticos de experiencias pasadas que el sistema nervioso aprendió como peligrosas. Cuando el niño reacciona de forma que parece desproporcionada al estímulo presente, frecuentemente está respondiendo a ese registro corporal, no al evento actual. Las intervenciones que van "de arriba abajo" (hablar, razonar, explicar) son insuficientes para el trauma; se necesita trabajar "de abajo arriba" (cuerpo, movimiento, ritmo, seguridad física). La regulación somática precede a la comprensión cognitiva.
 
 **Allan Schore — Regulación afectiva y hemisferio derecho**
 Los primeros años de vida son críticos para el desarrollo del hemisferio derecho, que procesa las emociones, la comunicación no verbal y el apego. La sincronía entre el hemisferio derecho del cuidador y el del niño — lograda a través de la mirada, el tono de voz, el ritmo y el contacto — regula el sistema nervioso del niño desde afuera hacia adentro. Este proceso, llamado co-regulación, es la base biológica del apego. Cuando el padre está desregulado, el niño no puede regularse. La capacidad del adulto de manejar su propio estado interno es el factor más determinante en el desarrollo emocional del niño.
@@ -86,7 +86,7 @@ El sistema nervioso autónomo tiene tres estados jerarquizados: (1) ventral vaga
 El apego es un sistema biológico de supervivencia: el niño busca proximidad con el cuidador cuando está asustado, herido o inseguro. Un cuidador que responde de forma consistente y sensible construye una "base segura" desde la cual el niño puede explorar el mundo. Las experiencias repetidas con el cuidador forman "modelos operativos internos" — mapas mentales sobre si el mundo es seguro, si los otros son confiables, y si uno mismo es valioso. Estos modelos guían las relaciones a lo largo de toda la vida y pueden modificarse con nuevas experiencias relacionales.
 
 **Mary Ainsworth — Patrones de apego**
-Ainsworth identificó cuatro patrones de apego observables: (1) Seguro — el niño usa al cuidador como base segura, se angustia con la separación y se calma al reunirse; (2) Ansioso-ambivalente — alta angustia, dificultad para calmarse incluso al reunirse, el cuidador ha sido inconsistente; (3) Evitativo — el niño suprime sus necesidades de apego, el cuidador ha respondido con rechazo o distancia; (4) Desorganizado — el cuidador es simultáneamente la fuente de miedo y de consuelo, el niño no tiene estrategia coherente. Conocer el patrón ayuda a entender por qué el niño responde como lo hace — no como característica del niño sino como aprendizaje relacional.
+Ainsworth identificó cuatro patrones de apego observables: (1) Seguro — el niño usa al cuidador como base segura, se angustia con la separación y se calma al reunirse; (2) Ansioso-ambivalente — alta angustia, dificultad para calmarse incluso al reunirse, el cuidador ha sido inconsistente; (3) Evitativo — el niño suprime sus necesidades de apego, el cuidador ha respondido con rechazo o distancia; (4) Desorganizado — el cuidador es simultáneamente la fuente de miedo y de consuelo, el niño no tiene estrategia coherente. Conocer el patrón ayuda a entender por qué el niño responde como lo hace — como aprendizaje relacional.
 
 **Dan Hughes — PACE y terapia diádica del desarrollo**
 El estado interno que el adulto necesita mantener para conectar con un niño con historial difícil se resume en PACE: Playfulness (ligereza y juego), Acceptance (aceptación profunda de la persona del niño, no de sus conductas), Curiosity (curiosidad genuina sobre el mundo interno del niño — "¿qué estará sintiendo? ¿qué necesita?"), Empathy (empatía que sintoniza con el estado emocional del niño). Este estado es contagioso: cuando el adulto lo mantiene, activa el sistema de apego del niño y lo hace accesible. La intersubjetividad — la experiencia de sentirse conocido y comprendido — es el mecanismo terapéutico central.
@@ -100,10 +100,10 @@ Incluso las conductas más perturbadoras del niño pueden entenderse como expres
 ── REGULACIÓN EMOCIONAL Y CONDUCTUAL ──
 
 **Ross Greene — Habilidades no adquiridas y Plan B colaborativo**
-"Los niños se portan bien cuando pueden." La conducta problemática no es elección ni mala voluntad — es señal de que el niño carece de una habilidad específica para manejar esa situación. Las habilidades rezagadas más comunes: tolerancia a la frustración, flexibilidad cognitiva, manejo de transiciones, regulación emocional, pensamiento causa-efecto, lectura de situaciones sociales. El Plan B colaborativo: (1) Empatizar — entender la preocupación y perspectiva del niño sin juzgar; (2) Definir el problema — el adulto expone su preocupación; (3) Invitar — construir juntos una solución que funcione para los dos. Imponer (Plan A) genera resistencia y no enseña la habilidad. Ignorar (Plan C) tampoco enseña.
+"Los niños se portan bien cuando pueden." La conducta problemática es señal de que el niño carece de una habilidad específica para manejar esa situación. Las habilidades rezagadas más comunes: tolerancia a la frustración, flexibilidad cognitiva, manejo de transiciones, regulación emocional, pensamiento causa-efecto, lectura de situaciones sociales. El Plan B colaborativo: (1) Empatizar — entender la preocupación y perspectiva del niño sin juzgar; (2) Definir el problema — el adulto expone su preocupación; (3) Invitar — construir juntos una solución que funcione para los dos. Imponer (Plan A) genera resistencia y no enseña la habilidad. Ignorar (Plan C) tampoco enseña.
 
 **Stuart Shanker — Los 5 dominios de estrés y la autorregulación**
-La conducta disruptiva es casi siempre señal de sobrecarga, no de mala voluntad. El estrés se acumula en cinco dominios: (1) Biológico — hambre, sueño, dolor, sensibilidad sensorial, estado físico; (2) Emocional — frustración, vergüenza, miedo, tristeza no procesada; (3) Cognitivo — demandas que superan los recursos actuales, sobrecarga de información; (4) Social — dificultades de lectura de señales, conflictos con pares, exclusión; (5) Prosocial — empatía excesiva, absorber el estrés de los adultos del entorno. Antes de intervenir: identifica qué dominio está más sobrecargado. La meta no es controlar la conducta sino restaurar la energía de regulación. El reencuadre conductual — ver la conducta como señal de estrés, no como desafío — cambia completamente la respuesta del adulto.
+La conducta disruptiva es casi siempre señal de sobrecarga. El estrés se acumula en cinco dominios: (1) Biológico — hambre, sueño, dolor, sensibilidad sensorial, estado físico; (2) Emocional — frustración, vergüenza, miedo, tristeza no procesada; (3) Cognitivo — demandas que superan los recursos actuales, sobrecarga de información; (4) Social — dificultades de lectura de señales, conflictos con pares, exclusión; (5) Prosocial — empatía excesiva, absorber el estrés de los adultos del entorno. Antes de intervenir: identifica qué dominio está más sobrecargado. La meta es restaurar la energía de regulación. El reencuadre conductual — ver la conducta como señal de estrés — cambia completamente la respuesta del adulto.
 
 **Mona Delahooke — El perfil neurológico individual**
 Cada niño tiene un perfil neurológico único — un umbral sensorial particular, una forma característica de procesar el entorno — que determina cómo responde al estrés. Lo que parece "desobediencia" o "mal comportamiento" frecuentemente es una respuesta del sistema nervioso que está fuera del control voluntario del niño. Delahooke distingue entre conductas "top-down" (intencionales, accesibles con consecuencias y reglas) y conductas "bottom-up" (respuestas automáticas del sistema nervioso que requieren regulación, no corrección). Aplicar consecuencias a una conducta bottom-up no solo no funciona: daña la relación y aumenta el estrés. El primer paso es siempre entender si la conducta es top-down o bottom-up.
@@ -114,13 +114,13 @@ El desarrollo ocurre a través de niveles de capacidad emocional y relacional: (
 ── CRIANZA RESPETUOSA ──
 
 **Janet Lansbury — Presencia regulatoria y límites con empatía**
-El niño necesita un adulto que no se desregule con él. La calma del padre es la intervención. Las rabietas y los colapsos emocionales son descargas necesarias, no manipulación — el niño no elige desregularse para fastidiar. Lansbury enseña a nombrar la emoción sin minimizarla ni amplificarla ("veo que estás muy enojado"), a sostener límites con voz cálida y firme al mismo tiempo, a no rescatar al niño de emociones incómodas sino acompañarlas sin ansiedad. Confiar en la competencia del niño — su capacidad de atravesar lo difícil — es un acto de respeto profundo.
+El niño necesita un adulto que no se desregule con él. La calma del padre es la intervención. Las rabietas y los colapsos emocionales son descargas necesarias de un sistema nervioso desbordado. Lansbury enseña a nombrar la emoción sin minimizarla ni amplificarla ("veo que estás muy enojado"), a sostener límites con voz cálida y firme al mismo tiempo, a acompañar las emociones incómodas del niño sin ansiedad y sin apurarse a resolverlas. Confiar en la competencia del niño — su capacidad de atravesar lo difícil — es un acto de respeto profundo.
 
 **Alfie Kohn — Educación incondicional**
-Los premios y castigos enseñan al niño a actuar en función de recompensas externas, no de valores internos. A largo plazo, destruyen la motivación intrínseca y comunican amor condicional: "te quiero cuando te portas bien". El amor incondicional — que no depende de la conducta del niño — es la base del desarrollo saludable. Las consecuencias "naturales" que los adultos imponen no son tan naturales — frecuentemente son castigos disfrazados. Kohn invita a preguntarse no "¿cómo hago que mi hijo haga X?" sino "¿qué necesita mi hijo para querer hacer X?".
+Los premios y castigos enseñan al niño a actuar en función de recompensas externas, no de valores internos. A largo plazo, destruyen la motivación intrínseca y comunican amor condicional: "te quiero cuando te portas bien". El amor incondicional — que no depende de la conducta del niño — es la base del desarrollo saludable. Las consecuencias "naturales" que imponen los adultos frecuentemente son castigos disfrazados. Kohn invita a preguntarse "¿qué necesita mi hijo para querer hacer X?".
 
 **Laura Markham — Crianza pacífica y coaching emocional**
-El estado emocional del padre es contagioso. Un padre regulado regula a su hijo; un padre desbordado desbordar al suyo. La crianza pacífica no es crianza permisiva — es crianza con límites desde la conexión, no desde el control. El coaching emocional enseña al niño a nombrar, tolerar y procesar sus emociones: validar la emoción ("tiene sentido que estés enojado"), nombrarla, acompañarla sin resolverla prematuramente. La conexión —momentos de presencia plena con el niño— llena el "vaso emocional" que permite la cooperación.
+El estado emocional del padre es contagioso. Un padre regulado regula a su hijo; un padre desbordado desbordar al suyo. La crianza pacífica pone límites desde la conexión. El coaching emocional enseña al niño a nombrar, tolerar y procesar sus emociones: validar la emoción ("tiene sentido que estés enojado"), nombrarla, acompañarla sin resolverla prematuramente. La conexión —momentos de presencia plena con el niño— llena el "vaso emocional" que permite la cooperación.
 
 **Adele Faber — Cómo hablar para que los niños escuchen**
 La forma en que los adultos hablan con los niños determina si estos se sienten vistos o juzgados, y si pueden escuchar o se ponen a la defensiva. Faber enseña: validar emociones con palabras simples antes de corregir o instruir, usar descripciones en lugar de evaluaciones ("veo que dejaste los zapatos en la puerta" en lugar de "eres un desordenado"), ofrecer opciones genuinas, usar notas y humor en lugar de órdenes. El lenguaje que culpa o etiqueta ("siempre haces lo mismo") cierra al niño; el lenguaje descriptivo y validador lo abre.
@@ -134,27 +134,27 @@ El juego es el lenguaje natural del niño para procesar experiencias, conectar y
 El aprendizaje ocurre en la zona de desarrollo próximo: lo que el niño no puede hacer solo pero sí puede hacer con apoyo. El "andamiaje" — apoyo temporal del adulto que se retira gradualmente — es el mecanismo del aprendizaje. Esto aplica también a las habilidades emocionales: el niño aprende a regularse co-regulándose primero con el adulto. Pedir a un niño que maneje situaciones para las que no tiene aún las herramientas es ignorar su zona de desarrollo próximo.
 
 **Jean Piaget — Etapas del desarrollo cognitivo**
-El pensamiento del niño es cualitativamente diferente al del adulto — no es pensamiento adulto incompleto. En la etapa preoperacional (aprox. 2-7 años), el niño no puede tomar fácilmente la perspectiva del otro (egocentrismo cognitivo, no egoísmo moral), piensa mágicamente, y no puede sostener dos perspectivas simultáneas. Exigir razonamiento abstracto, empatía compleja o consecuencias diferidas a un niño preoperacional es pedir algo neurológicamente imposible para su etapa.
+El pensamiento del niño es cualitativamente diferente al del adulto, con su propia lógica. En la etapa preoperacional (aprox. 2-7 años), el niño no puede tomar fácilmente la perspectiva del otro (egocentrismo cognitivo, no egoísmo moral), piensa mágicamente, y no puede sostener dos perspectivas simultáneas. Exigir razonamiento abstracto, empatía compleja o consecuencias diferidas a un niño preoperacional es pedir algo neurológicamente imposible para su etapa.
 
 **Urie Bronfenbrenner — El modelo ecológico**
 El niño se desarrolla en capas de contexto que se influyen mutuamente: microsistema (familia, escuela, amigos directos), mesosistema (relaciones entre los microsistemas), exosistema (trabajo de los padres, comunidad) y macrosistema (cultura, valores sociales). Un episodio conductual del niño no ocurre en un vacío — está embedded en todos estos contextos. El estrés del padre en el trabajo llega al niño. Las tensiones en la pareja llegan al niño. Entender el contexto ecológico amplía lo que es posible hacer.
 
 **Howard Gardner — Inteligencias múltiples**
-La inteligencia no es una sola capacidad. Gardner identifica al menos ocho tipos: lingüística, lógico-matemática, espacial, musical, corporal-kinestésica, interpersonal, intrapersonal, naturalista. Un niño que "no aprende" en el formato estándar puede estar aprendiendo profundamente en otro canal. Las dificultades conductuales a menudo se reducen cuando el niño puede usar sus fortalezas naturales.
+La inteligencia tiene varias formas. Gardner identifica al menos ocho tipos: lingüística, lógico-matemática, espacial, musical, corporal-kinestésica, interpersonal, intrapersonal, naturalista. Un niño que "no aprende" en el formato estándar puede estar aprendiendo profundamente en otro canal. Las dificultades conductuales a menudo se reducen cuando el niño puede usar sus fortalezas naturales.
 
 **Alison Gopnik — El niño como científico**
-Los niños son agentes activos de su propio aprendizaje — no vasijas que se llenan sino científicos que formulan hipótesis y las prueban. La curiosidad, la exploración y el juego desordenado son mecanismos de aprendizaje, no distracciones. Gopnik distingue entre el "modo linterna" del niño (atención amplia, exploratoria, abierta) y el "modo foco" del adulto (atención concentrada, orientada a metas). Ambos son necesarios en distintas etapas. Forzar el modo foco demasiado pronto interfiere con el aprendizaje natural.
+Los niños son agentes activos de su propio aprendizaje — pequeños científicos que formulan hipótesis y las prueban. La curiosidad, la exploración y el juego desordenado son mecanismos de aprendizaje, no distracciones. Gopnik distingue entre el "modo linterna" del niño (atención amplia, exploratoria, abierta) y el "modo foco" del adulto (atención concentrada, orientada a metas). Ambos son necesarios en distintas etapas. Forzar el modo foco demasiado pronto interfiere con el aprendizaje natural.
 
 ── TRAUMA, RESILIENCIA Y REGULACIÓN SOMÁTICA ──
 
 **Peter Levine — Trauma como energía atrapada**
-El trauma no es el evento en sí — es la energía de supervivencia que quedó atrapada en el cuerpo cuando el sistema nervioso no pudo completar su respuesta de defensa. Los animales en la naturaleza se "sacuden" después de un susto para descargar esa energía; los humanos frecuentemente suprimen esa descarga. Cuando esa energía queda atrapada, puede manifestarse como hipersensibilidad, explosiones, rigidez o colapso. El Somatic Experiencing de Levine trabaja con el cuerpo para completar esas respuestas interrumpidas. En el contexto de crianza: permitir y acompañar las expresiones físicas del niño (el llanto, el temblor, el movimiento) es permitir la descarga natural.
+El trauma es la energía de supervivencia que quedó atrapada en el cuerpo cuando el sistema nervioso no pudo completar su respuesta de defensa. Los animales en la naturaleza se "sacuden" después de un susto para descargar esa energía; los humanos frecuentemente suprimen esa descarga. Cuando esa energía queda atrapada, puede manifestarse como hipersensibilidad, explosiones, rigidez o colapso. El Somatic Experiencing de Levine trabaja con el cuerpo para completar esas respuestas interrumpidas. En el contexto de crianza: permitir y acompañar las expresiones físicas del niño (el llanto, el temblor, el movimiento) es permitir la descarga natural.
 
 **Gabor Maté — Trauma, cuerpo y necesidades legítimas**
-El trauma no es lo que te pasa, sino lo que pasa dentro de ti como resultado. Las heridas de apego más significativas frecuentemente son heridas de omisión — no lo que los padres hicieron, sino lo que no pudieron dar. Maté invita siempre a preguntar: "¿qué necesidad legítima está tratando de satisfacer este niño con esta conducta?" Toda conducta tiene una función — incluso las más perturbadoras. El estrés crónico en la infancia deja huellas en el cuerpo y en la fisiología. La conexión mente-cuerpo no es metáfora — es biología. Y el factor más protector siempre es la calidad de la relación con al menos un adulto que ve al niño de verdad.
+El trauma es lo que pasa dentro de ti como resultado de lo que viviste. Las heridas de apego más significativas frecuentemente son heridas de omisión — lo que los padres no pudieron dar. Maté invita siempre a preguntar: "¿qué necesidad legítima está tratando de satisfacer este niño con esta conducta?" Toda conducta tiene una función — incluso las más perturbadoras. El estrés crónico en la infancia deja huellas en el cuerpo y en la fisiología. La conexión mente-cuerpo es biología. Y el factor más protector siempre es la calidad de la relación con al menos un adulto que ve al niño de verdad.
 
 **Tina Payne Bryson — El cerebro del sí y conectar antes de redirigir**
-(Con Dan Siegel) Después de cualquier episodio difícil, el niño necesita primero reconexión emocional antes de poder aprender de lo ocurrido. El "cerebro del no" — dominado por el miedo y la defensa — no puede aprender ni integrar. El "cerebro del sí" — en estado de conexión y seguridad — puede reflexionar, reparar y crecer. La secuencia es siempre: conectar primero (validar la emoción, restablecer la relación), redirigir después (conversar sobre lo que pasó, construir la habilidad). El tiempo para enseñar no es en el momento del desborde — es después, cuando el cerebro vuelve a estar integrado.
+(Con Dan Siegel) Después de cualquier episodio difícil, el niño necesita primero reconexión emocional antes de poder aprender de lo ocurrido. El "cerebro del no" — dominado por el miedo y la defensa — no puede aprender ni integrar. El "cerebro del sí" — en estado de conexión y seguridad — puede reflexionar, reparar y crecer. La secuencia es siempre: conectar primero (validar la emoción, restablecer la relación), redirigir después (conversar sobre lo que pasó, construir la habilidad). El tiempo para enseñar es después del desborde, cuando el cerebro vuelve a estar integrado.
 
 ━━━ CÓMO FORMULAR CADA RESPUESTA ━━━
 
@@ -229,6 +229,102 @@ VOCABULARIO — Huella es una app chilena. PROHIBIDAS las palabras que en Chile 
   "Marco aplicado: Jean Piaget — pensamiento preoperacional"
   "Marco aplicado: Lev Vygotsky — zona de desarrollo próximo"`
 
+// ── Red de voz ──
+// Última defensa contra "no es X, es Y" en lo que lee el papá. Los prompts ya
+// lo prohíben, pero el modelo lo sigue escribiendo, sobre todo al querer
+// tranquilizar. El cliente la pide con `voz`: true para texto plano, o
+// { campos: [...] } para revisar solo esos campos de una respuesta JSON.
+// Las frases detectadas se reescriben una sola vez con Haiku. Si la
+// reescritura falla, tarda más de 5 s o vuelve a traer la fórmula, se entrega
+// el texto original: nunca un error al papá. No pasa por el límite diario.
+const MODELO_VOZ = 'claude-haiku-4-5-20251001'
+const TIMEOUT_VOZ_MS = 5000
+
+const PATRONES_VOZ = [
+  // "no es X, es Y" / "no fue X — fue Y"
+  /\bno (?:es|era|fue|son|eran|está|estaba)\b[^.;:!?\n]{1,80}?(?:,|—|–)\s*(?:es|era|fue|son|eran|está|estaba)\b/i,
+  // "no X, sino Y" / "no por X sino porque Y"
+  /\bno\b[^.;:!?\n]{1,80}?\bsino\b/i,
+  // "no es X: Y"
+  /\bno (?:es|era|fue|son|eran)\b[^.;:!?\n]{1,60}:\s*\S/i,
+  // "X, no Y" como contraste al final de la frase, y "el problema es X, no Y"
+  /,\s*no (?:un|una|unos|unas|el|los|las|del|de|por|como|desde|porque|solo)\b[^.;:!?\n]{0,60}[.;!?]?\s*$/i,
+]
+
+const tieneFormula = (frase) => PATRONES_VOZ.some((re) => re.test(frase))
+const frasesDe = (texto) => (texto.match(/[^.!?\n]+[.!?]*/g) || []).map((f) => f.trim()).filter(Boolean)
+
+const SYSTEM_VOZ = `Recibes un array JSON de frases en español escritas para una madre o un padre. Cada frase niega algo para después afirmar otra cosa ("no es X, es Y", "no X, sino Y", "X, no Y"). Reescribe cada una en positivo: di directo lo que sí pasa, sin nombrar lo que se negaba. Mantén el sentido, el tuteo, un largo parecido y la puntuación final. Si la frase trae comillas « » o una cita, consérvalas. No agregues ideas nuevas. Devuelve SOLO un array JSON de strings, del mismo largo y en el mismo orden, sin texto antes ni después.`
+
+async function reescribirFrases(frases, apiKey) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_VOZ_MS)
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: MODELO_VOZ,
+        max_tokens: 600,
+        system: SYSTEM_VOZ,
+        messages: [{ role: 'user', content: JSON.stringify(frases) }],
+      }),
+      signal: controller.signal,
+    })
+    if (!r.ok) return { error: `status ${r.status}` }
+    const d = await r.json()
+    const crudo = d?.content?.[0]?.text || ''
+    const arr = JSON.parse(crudo.slice(crudo.indexOf('['), crudo.lastIndexOf(']') + 1))
+    if (!Array.isArray(arr) || arr.length !== frases.length) return { error: 'forma inválida' }
+    if (arr.some((x) => typeof x !== 'string' || !x.trim())) return { error: 'frase vacía' }
+    if (arr.some(tieneFormula)) return { error: 'la reescritura trae la fórmula' }
+    return { nuevas: arr.map((x) => x.trim()) }
+  } catch (err) {
+    return { error: err?.name === 'AbortError' ? 'más de 5 s' : (err?.message || 'error') }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Revisa uno o varios textos a la vez y devuelve los textos corregidos, o los
+// originales si algo falló. Una sola llamada a Haiku por respuesta.
+async function revisarTextos(textos, apiKey) {
+  const detectadas = [...new Set(textos.flatMap((t) => frasesDe(t).filter(tieneFormula)))]
+  if (detectadas.length === 0) return textos
+  console.log('[voz] fórmula detectada:', JSON.stringify(detectadas))
+  const { nuevas, error } = await reescribirFrases(detectadas, apiKey)
+  if (!nuevas) {
+    console.log('[voz] se entrega el original:', error)
+    return textos
+  }
+  console.log('[voz] fórmula reescrita:', JSON.stringify(nuevas))
+  return textos.map((t) => detectadas.reduce((acc, f, i) => acc.split(f).join(nuevas[i]), t))
+}
+
+async function aplicarRedDeVoz(texto, voz, apiKey) {
+  if (!voz || !texto) return texto
+  try {
+    if (voz === true) return (await revisarTextos([texto], apiKey))[0]
+
+    const campos = Array.isArray(voz?.campos) ? voz.campos : []
+    const i = texto.indexOf('{')
+    const j = texto.lastIndexOf('}')
+    if (!campos.length || i === -1 || j <= i) return texto
+    const obj = JSON.parse(texto.slice(i, j + 1))
+    const presentes = campos.filter((c) => typeof obj[c] === 'string')
+    if (!presentes.length) return texto
+    const corregidos = await revisarTextos(presentes.map((c) => obj[c]), apiKey)
+    if (presentes.every((c, k) => obj[c] === corregidos[k])) return texto
+    presentes.forEach((c, k) => { obj[c] = corregidos[k] })
+    return texto.slice(0, i) + JSON.stringify(obj) + texto.slice(j + 1)
+  } catch (err) {
+    // JSON que no se pudo leer acá: el cliente tiene su propio parser
+    // tolerante, así que se le entrega tal cual.
+    console.log('[voz] se entrega el original:', err?.message)
+    return texto
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -252,7 +348,7 @@ export default async function handler(req, res) {
     })
   }
 
-  const { prompt, max_tokens = 700, system, stream = false, model } = req.body
+  const { prompt, max_tokens = 700, system, stream = false, model, voz = null } = req.body
   if (!prompt) {
     return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
@@ -368,24 +464,50 @@ export default async function handler(req, res) {
     res.flushHeaders?.()
 
     const reader = response.body.getReader()
+    // Con red de voz se va juntando el texto mientras se reenvía, para
+    // revisarlo al final. Si se reescribe algo, viaja un evento propio
+    // `huella_voz` con el texto completo corregido y el cliente lo reemplaza.
+    const decoder = new TextDecoder()
+    let pendiente = ''
+    let completo = ''
+    let cortado = false
     try {
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
         res.write(value)
+        if (!voz) continue
+        pendiente += decoder.decode(value, { stream: true })
+        const lineas = pendiente.split('\n')
+        pendiente = lineas.pop() ?? ''
+        for (const linea of lineas) {
+          if (!linea.startsWith('data:')) continue
+          try {
+            const ev = JSON.parse(linea.slice(5).trim())
+            if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') completo += ev.delta.text
+          } catch { /* línea que no es JSON */ }
+        }
       }
     } catch (err) {
       // Se cortó a media transmisión. Lo que ya viajó es válido y el cliente se
       // queda con eso; acá solo se cierra sin ensuciar el stream con un JSON de
       // error que el parser del cliente no espera.
+      cortado = true
       console.error('[anthropic] stream interrumpido:', err?.message)
+    }
+    if (voz && !cortado && completo) {
+      const corregido = await aplicarRedDeVoz(completo, voz, apiKey)
+      if (corregido !== completo) {
+        res.write(`data: ${JSON.stringify({ type: 'huella_voz', texto: corregido })}\n\n`)
+      }
     }
     return res.end()
   }
 
   const data = await response.json()
+  const texto = await aplicarRedDeVoz(data.content[0].text, voz, apiKey)
   // stop_reason viaja al cliente para que pueda distinguir una respuesta
   // completa de una cortada por max_tokens. Sin esto una respuesta truncada
   // llega como JSON invalido y no hay forma de saber por que.
-  return res.status(200).json({ text: data.content[0].text, stop_reason: data.stop_reason ?? null })
+  return res.status(200).json({ text: texto, stop_reason: data.stop_reason ?? null })
 }
