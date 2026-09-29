@@ -1816,8 +1816,34 @@ function extraerJSON(raw) {
   try {
     return JSON.parse(jsonStr)
   } catch {
-    return raw
+    // Solo si falló: el modelo a veces cita frases de ejemplo con comillas
+    // dobles sin escapar dentro de un valor ("hazle preguntas: "¿qué crees?"")
+    // y eso corta el string. Se reparan esas comillas y se prueba una vez más.
+    // Con un JSON que ya se leía bien este camino nunca corre.
+    try {
+      return JSON.parse(escaparComillasInternas(jsonStr))
+    } catch {
+      return raw
+    }
   }
+}
+
+// Recorre el JSON y, dentro de un string, escapa toda comilla doble que no lo
+// cierra. Una comilla cierra el string solo si lo que sigue (saltando
+// espacios) es `,` `}` `]` o `:`; si no, es una cita dentro del texto.
+function escaparComillasInternas(s) {
+  let out = ''
+  let dentro = false
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (dentro && c === '\\') { out += c + (s[i + 1] ?? ''); i++; continue }
+    if (c !== '"') { out += c; continue }
+    if (!dentro) { dentro = true; out += c; continue }
+    let j = i + 1
+    while (j < s.length && /\s/.test(s[j])) j++
+    if (j >= s.length || ',}]:'.includes(s[j])) { dentro = false; out += c } else out += '\\"'
+  }
+  return out
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1938,6 +1964,10 @@ El autor DEBE salir de la lista cerrada de abajo. PROHIBIDO inventar autores. PR
 LISTA CERRADA DE AUTORES VÁLIDOS: Daniel Siegel, Bruce Perry, Ross Greene, Stuart Shanker, Gabor Maté, Adele Faber, Elaine Mazlish, Janet Lansbury, Magda Gerber, John Gottman, Bessel van der Kolk, Carlos González, John Bowlby, Gordon Neufeld, Laura Markham, Jane Nelsen, Lisa Damour, Laurence Steinberg, Alan Wolfelt, Barry Prizant, Elaine Aron, Stephen Porges, Tina Payne Bryson, Mona Delahooke, Dan Hughes, Lawrence Cohen, Peter Levine, Alfie Kohn, Jean Piaget, Lev Vygotsky, Ellyn Satter, Adele Diamond, Russell Barkley, Edward Hallowell, Tamar Chansky, Lynn Lyons, Diana Baumrind, Becky Kennedy, Haim Ginott, Stanley Greenspan, T. Berry Brazelton, Harvey Karp, Ed Tronick, Allan Schore, Jerome Kagan, Stanley Turecki, Brené Brown, Temple Grandin, Kenneth Ginsburg, Erik Erikson, Jon Kabat-Zinn, Shefali Tsabary.
 EXCEPCIÓN ACOTADA: Jonathan Haidt y Jean Twenge SOLO pueden aparecer si este patrón trata de pantallas o redes sociales en un niño o niña mayor de 10 años. En cualquier otro caso están PROHIBIDOS.
 
+COMILLAS — REGLA DURA. Dentro de los textos NUNCA escribas comillas dobles ("). Si citas una frase de ejemplo, usa comillas latinas « ». Ejemplo correcto: pregúntale «¿qué crees que va a pasar ahora?». Las comillas dobles dentro de un texto rompen la respuesta.
+
+VOZ — REGLA DURA. Prohibida la fórmula «No es X, es Y» y todas sus variantes: «No es X: es Y», «no es que X, sino Y», «esto no es X, sino Y». Di directamente lo que pasa, sin negar primero otra cosa.
+
 REGLA DE EXTENSIÓN — DURA. Los topes de palabras de abajo son máximos, no metas: si se dice en menos, mejor. Quien lee esto es un padre o una madre cansada, muchas veces de noche, y un párrafo denso se abandona a la mitad. Prefiere la frase que se entiende de una sola pasada. Cuida la gramática y la sintaxis con precisión. Evita frases ambiguas o mal construidas. Usa oraciones cortas y claras. Nunca dejes frases incompletas. Revisa que cada adjetivo y adverbio esté correctamente ubicado respecto al sustantivo que modifica.
 
 Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto antes o después. Estructura exacta:
@@ -1949,14 +1979,16 @@ Responde SOLO con JSON puro, sin bloques markdown, sin \`\`\`json, sin texto ant
   "marco_aplicado": "Autor — concepto clave que guió esta orientación"
 }`
 
-  const raw = await llamarAPI(prompt, 1500)
-  const parsed = extraerJSON(raw)
-
-  // Post-proceso duro de la clasificación. Si la IA devuelve algo fuera del
-  // set válido, lo tratamos como fallo (el caller muestra reintentar sobre la
-  // fila ya guardada; no escribimos basura que además rebotaría en el CHECK).
+  // Post-proceso duro de la clasificación. Si la IA devuelve algo que no se
+  // puede leer o una clasificación fuera del set válido, se le pide UNA vez más
+  // (la respuesta cambia de una vez a otra); si vuelve a fallar, el caller
+  // muestra reintentar sobre la fila ya guardada. Nunca se escribe basura, que
+  // además rebotaría en el CHECK.
   const VALIDAS = ['esperable', 'instalado', 'derivar']
-  if (!parsed || typeof parsed !== 'object' || !VALIDAS.includes(parsed.clasificacion)) {
+  const esValida = (x) => x && typeof x === 'object' && VALIDAS.includes(x.clasificacion)
+  let parsed = extraerJSON(await llamarAPI(prompt, 1500))
+  if (!esValida(parsed)) parsed = extraerJSON(await llamarAPI(prompt, 1500))
+  if (!esValida(parsed)) {
     throw new Error('El análisis no se generó correctamente. Intenta de nuevo.')
   }
   const clasificacion = (desde_cuando === 'regresion' || parsed.clasificacion === 'derivar')

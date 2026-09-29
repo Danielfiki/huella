@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useHuella } from '../../context/HuellaContext'
+import { analizarPatron } from '../../services/anthropic'
+import { retryAsync, esErrorIAReintentable } from '../../utils/retryAsync'
 import { useAuth } from '../../context/AuthContext'
 import { canModify } from '../../utils/authorDisplay'
 import CerrarPatronModal from '../../components/patron/CerrarPatronModal'
@@ -9,6 +11,7 @@ import PlanDelPatron from '../../components/patron/PlanDelPatron'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import LoadingDignificado from '../estrategias/components/LoadingDignificado'
 import { usarPlanDesdePatron, PASOS_PLAN } from './usarPlanDesdePatron'
+import { PASOS_ANALISIS } from './PatronPage'
 import shared from './PatronPage.module.css'   // reusa header/bloques/cierre de Fase B
 import styles from './PatronLecturaPage.module.css'
 
@@ -40,7 +43,7 @@ function Bloque({ variante, titulo, children }) {
 export default function PatronLecturaPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { state, dataLoaded, cerrarPatron } = useHuella()
+  const { state, dataLoaded, cerrarPatron, actualizarPatronIA } = useHuella()
   const { user } = useAuth()
   const [showCerrar, setShowCerrar] = useState(false)
   // Mismo hook que usa PatronPage al salir del análisis: los cuatro pasos del
@@ -48,6 +51,41 @@ export default function PatronLecturaPage() {
   const { armarPlan, creando, pasoActual, error: planError, showUpgrade, cerrarUpgrade } = usarPlanDesdePatron()
 
   const patron = (state.patrones || []).find((p) => p.id === id)
+
+  // Registro sin análisis (la IA falló al crearlo y el papá salió de la
+  // pantalla): en vez de tres bloques vacíos va el mismo reintentar del flujo,
+  // que genera el análisis sobre esta misma fila.
+  const [analizando, setAnalizando] = useState(false)
+  const [pasoAnalisis, setPasoAnalisis] = useState(0)
+  useEffect(() => {
+    if (!analizando) return undefined
+    setPasoAnalisis(0)
+    const t = setInterval(() => setPasoAnalisis((p) => Math.min(p + 1, PASOS_ANALISIS.length - 1)), 3500)
+    return () => clearInterval(t)
+  }, [analizando])
+
+  async function reintentarAnalisis() {
+    setAnalizando(true)
+    try {
+      const hijo = (state.hijos || []).find((h) => h.id === patron.hijo_id) || state.hijo
+      const salida = await retryAsync(
+        () => analizarPatron({
+          descripcion:   patron.descripcion,
+          desde_cuando:  patron.desde_cuando,
+          frecuencia:    patron.frecuencia,
+          interferencia: patron.interferencia,
+          ya_intentado:  patron.ya_intentado,
+          hijo,
+        }),
+        { esReintentable: esErrorIAReintentable }
+      )
+      await actualizarPatronIA(patron.id, salida.clasificacion, salida)
+    } catch (err) {
+      console.error('reintentar analisis de patron falló', err)
+    } finally {
+      setAnalizando(false)
+    }
+  }
 
   // Guard: si no existe (deep-link a un id ajeno o inexistente), a Home.
   useEffect(() => {
@@ -86,6 +124,23 @@ export default function PatronLecturaPage() {
   // PatronPage. Antes solo cambiaba el texto del botón, y armar un plan tarda
   // cerca de un minuto: un botón con otra etiqueta no alcanza para decir que
   // hay algo pasando.
+  if (analizando) {
+    return (
+      <div className={shared.page}>
+        <Header />
+        <div className={shared.body}>
+          <LoadingDignificado
+            titulo="Estamos mirando esto."
+            sub="Tarda menos de un minuto. Quédate por acá mientras tanto."
+            pasos={PASOS_ANALISIS}
+            pasoActual={pasoAnalisis}
+            hijoEdad={state.hijo?.edad}
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (creando) {
     return (
       <div className={shared.page}>
@@ -107,6 +162,12 @@ export default function PatronLecturaPage() {
     <div className={shared.page}>
       <Header onBack={() => navigate(-1)} />
       <div className={shared.body}>
+        {!patron.orientacion_ia ? (
+          <div className={shared.reintentarBox}>
+            <p className={shared.reintentarTexto}>No pudimos completar el análisis. Lo que escribiste quedó guardado — puedes reintentar.</p>
+            <button className={shared.btnPrincipal} onClick={reintentarAnalisis} type="button">Reintentar</button>
+          </div>
+        ) : (<>
         <div className={shared.bloques}>
           <Bloque variante="pasando" titulo="Qué está pasando">{o.que_esta_pasando}</Bloque>
           <Bloque variante="ayuda"   titulo="Qué ayuda">{o.que_ayuda}</Bloque>
@@ -139,6 +200,7 @@ export default function PatronLecturaPage() {
             onVer={() => navigate(`/estrategias/${plan.id}`)}
           />
         )}
+        </>)}
 
         <div className={styles.footer}>
           {!cerrado && esMio && (

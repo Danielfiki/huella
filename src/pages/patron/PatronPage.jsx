@@ -30,7 +30,9 @@ const OPCIONES_INTERF = [
   { value: 'baja', label: 'Molesta pero convivimos' },
 ]
 
-const PASOS_ANALISIS = [
+// Exportado: la pantalla de lectura usa los mismos pasos cuando reintenta un
+// análisis que no se alcanzó a generar.
+export const PASOS_ANALISIS = [
   'Leyendo lo que registraste',
   'Considerando la edad',
   'Buscando bibliografía pediátrica',
