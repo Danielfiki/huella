@@ -239,7 +239,7 @@ export default function HistorialPage() {
   // sin episodios ni hitos) la página se muestra: filtros + filtro de patrones.
   if (totalRegistros === 0 && patronesLista.length === 0) {
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} ${nuevo ? styles.pageNuevo : ''}`}>
         {nuevo
           ? <MomentosCabecera onBack={() => navigate(-1)} />
           : <HistorialHeader count={0} promedio={0} onBack={() => navigate(-1)} onSearch={() => setShowSearch((s) => !s)} />}
@@ -253,7 +253,7 @@ export default function HistorialPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${nuevo ? styles.pageNuevo : ''}`}>
       {nuevo ? (
         <MomentosCabecera
           onBack={() => navigate(-1)}

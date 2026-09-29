@@ -5,6 +5,8 @@
   flex-direction: column;
   gap: 18px;
   padding: 12px 20px 32px;
+  /* Anula el padding del Layout: los 20 px los pone esta pagina. */
+  margin: -20px -20px 0;
 }
 
 .barra {
