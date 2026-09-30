@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { DUENO_PERSONAJE } from '../components/personaje/bienvenida'
 
 // ──────────────────────────────────────────────────────────────────────
 // Preguntar a Huella — datos.
@@ -13,10 +12,10 @@ import { DUENO_PERSONAJE } from '../components/personaje/bienvenida'
 // escribe lo suyo), así que en modo pareja se ven las de los dos.
 // ──────────────────────────────────────────────────────────────────────
 
-// Hasta que Daniel la apruebe, la funcionalidad es solo de su cuenta. Mismo
-// mecanismo que la vitrina del personaje: su user_id, sin flags nuevos.
+// Abierta a todos desde el 29 sep 2026 (Daniel la aprobó en su teléfono):
+// basta con tener sesión.
 export function puedePreguntar(userId) {
-  return !!userId && userId === DUENO_PERSONAJE
+  return !!userId
 }
 
 // Tope de preguntas por conversación.

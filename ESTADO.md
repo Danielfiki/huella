@@ -29,8 +29,7 @@
 
 ### Bloque 0 — hoy, sin Code
 
-1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — **29 sep 2026** — en diagnóstico.
-2. ⬜ **Esta reescritura de PENDIENTES** — **16 sep 2026** — sin commit hasta el OK de Daniel.
+1. ⬜ **Esta reescritura de PENDIENTES** — **16 sep 2026** — sin commit hasta el OK de Daniel.
 
 ### Bloque 1 — Retención (decisiones del 16 sep 2026)
 
@@ -392,9 +391,9 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Citas del papá:** van exactas (género y persona gramatical) y como frase completa. En código, toda cita entre comillas que no esté literal en el relato pierde las comillas (orientación: solo el Alivio; primer encuentro; extracción). Logs `[cita]`.
 - **QA (Code, script con el modelo real, sin pantalla):** varias rondas. La última: A1 y A2 contestan primero ("Sí, es normal que te hable así a esta edad…"), citas literales, sin anuncios ni "valorar que preguntes"; unitarias de anuncios, detector y JSON correctas.
 
-### 6. ✅ Preguntar a Huella (SOLO la cuenta de Daniel) y tope diario (para todos)
+### 6. ✅ Preguntar a Huella (ABIERTA A TODOS desde el 29 sep 2026) y tope diario (para todos)
 - **Qué es:** una duda sobre un hijo aunque no haya pasado nada. Hasta 5 preguntas sobre el mismo tema; a las 5 o con "Terminar" cierra con resumen y UN paso siguiente (registrar / algo que no cambia / plan / pediatra). Se guarda en Momentos, filtro "Preguntas" (después de "Acompañas"). Registrar ≠ Preguntar: tabla propia `preguntas` (migración `027_preguntas.sql`, corrida por Daniel en el SQL Editor, misma policy que episodios).
-- **Solo para Daniel:** `puedePreguntar` usa su user_id (`DUENO_PERSONAJE`). Para abrirla a todos basta cambiar esa función.
+- **Abierta a todos el 29 sep 2026**, después de que Daniel la aprobó en su teléfono: `puedePreguntar` devuelve true para cualquier usuario con sesión.
 - **IA:** `preguntarAHuella` con marco por edad, lentes que calzan con la edad, género, rasgos confirmados y momentos recientes, REGLA_PREGUNTA y red de voz. Una llamada por pregunta, sin reintento automático. Medicamentos, salud física, diagnóstico y temas legales se derivan y NO se guardan.
 - **Registrar sin cambios:** burbujas y hoja inferior salieron a `components/conversacion/Conversacion.jsx`; antes/después de Registrar idénticos píxel a píxel (4 capturas, animaciones apagadas).
 - **Tope diario (G), para todos:** `TopeDiario` reemplaza el mensaje genérico cuando el error es `limite_diario` en orientación del episodio, análisis semanal, patrón (crear y reabrir), plan desde patrón, estrategias (nueva, caso libre, cierre y ciclo nuevo), check-in y PDF. Dice "hoy/mañana a las HH:MM" en hora del teléfono (la cuota vuelve a la medianoche UTC: 21:00 en Chile).
@@ -409,8 +408,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ### ⏭️ Pendiente
 0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
-0. ⬜ **Aprobar Preguntar a Huella** en el teléfono de Daniel antes de abrirla a todos.
-1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — en diagnóstico.
+0. ⬜ **Selector de hijo en Registrar + guardar el hijo activo al recargar (caso Diego).**
 2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
 4. ⬜ **Motor de rasgos sin marco por edad:** `detectarRasgos` solo recibe `hijo_edad` como número.
