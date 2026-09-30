@@ -1,0 +1,35 @@
+/* Pantalla de prueba de la vitrina (dentro del Layout): contenido de sobra
+   para desplazar y filas que cuentan toques */
+.pagina {
+  color: var(--color-text);
+}
+
+.titulo {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  margin: 0 0 var(--space-4);
+}
+
+.ayuda {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.botones {
+  display: flex;
+  justify-content: center;
+}
+
+.fila {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: var(--space-6) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+}

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { borrarMarcaBienvenida, forzarVariante, VARIANTES } from '../../components/personaje/bienvenida'
@@ -10,9 +9,6 @@ import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
 import { usaOrgulloso, elegirOrgulloso, VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
-import OrgullosoEscarabajo from '../../components/personaje/OrgullosoEscarabajo'
-import BienvenidaEscarabajo from '../../components/personaje/BienvenidaEscarabajo'
-import layoutStyles from '../../components/layout/Layout.module.css'
 import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
@@ -321,52 +317,15 @@ function PruebaPensando({ userId }) {
   )
 }
 
-// La vitrina vive fuera del Layout: no tiene la barra inferior a la que se
-// engancha la capa del escarabajo, ni el <main> que desplaza la app. Esta
-// escena los arma con las MISMAS clases del Layout (container, main que
-// desplaza, bottomNav con data-nav-inferior), a pantalla completa, con
-// contenido de sobra para desplazar y botones que cuentan toques. La escena
-// se cierra sola cuando la animacion termina o no puede correr.
-function EscenaApp({ titulo, alCerrar, children }) {
-  const [toques, setToques] = useState(0)
-  // la animacion busca la barra al montarse: se monta recien cuando la
-  // escena (y su barra) ya estan en el DOM
-  const [lista, setLista] = useState(false)
-  useEffect(() => { setLista(true) }, [])
-  return createPortal(
-    <div className={styles.escenaApp}>
-      <div className={layoutStyles.container}>
-        <header className={layoutStyles.header} />
-        <main className={layoutStyles.main}>
-          <p className={styles.escenaTitulo}>{titulo}</p>
-          <p className={styles.escenaAyuda}>Mientras corre, desliza hacia abajo y toca los botones de abajo. Toques: {toques}</p>
-          <div className={styles.repetir}>
-            <Button variant="ghost" size="sm" onClick={alCerrar}>Cerrar prueba</Button>
-          </div>
-          {Array.from({ length: 14 }, (_, i) => (
-            <button key={i} type="button" className={styles.escenaFila} onClick={() => setToques((n) => n + 1)}>
-              Fila de prueba {i + 1}
-            </button>
-          ))}
-        </main>
-        <nav className={layoutStyles.bottomNav} data-nav-inferior="">
-          {['Inicio', 'Historial', '+', 'Patrones', 'Ideas'].map((t) => (
-            <span key={t} className={layoutStyles.navItem}>{t}</span>
-          ))}
-        </nav>
-        {lista && children}
-      </div>
-    </div>,
-    document.body
-  )
-}
-
-// Visita de orgulloso dentro de la escena. Sin numero sigue la alternancia
+// La vitrina vive fuera del Layout (sin la barra inferior a la que se
+// engancha la capa del escarabajo): las pruebas corren en /prueba-personaje,
+// dentro del Layout, con la barra y el main reales del Home. Carga completa y
+// no navigate, como "Ver bienvenida": el celular siempre prueba lo ultimo.
+// Visita de orgulloso en la pantalla de prueba. Sin numero sigue la alternancia
 // (sin repetir la ultima); con numero fuerza esa variante.
 // Bienvenida A / B / C: diagnostico TEMPORAL del Home que no se desplaza en el
 // iPhone (ver `prueba` en BienvenidaEscarabajo). Usa la variante Centro y no
 // marca el dia, asi no gasta la bienvenida del Home.
-const CENTRO = VARIANTES.find((v) => v.id === 'centro')
 const PRUEBAS_SCROLL = [
   { id: 'A', rotulo: 'Bienvenida A (como hoy)' },
   { id: 'B', rotulo: 'Bienvenida B (video en la barra)' },
@@ -374,10 +333,8 @@ const PRUEBAS_SCROLL = [
 ]
 
 function PruebasEscena({ userId }) {
-  const [prueba, setPrueba] = useState(null) // { n, tipo, variante, modo }
-  const cerrar = () => setPrueba(null)
-  const abrir = (tipo, variante, modo) => setPrueba((p) => ({ n: (p?.n || 0) + 1, tipo, variante, modo }))
-  const verOrgulloso = (v) => { if (usaOrgulloso(userId)) abrir('orgulloso', v || elegirOrgulloso(userId)) }
+  const abrir = (qs) => window.location.assign(`/prueba-personaje?${qs}`)
+  const verOrgulloso = (v) => { if (usaOrgulloso(userId)) abrir(`tipo=orgulloso&v=${(v || elegirOrgulloso(userId)).id}`) }
   return (
     <>
       <div className={styles.repetir}>
@@ -394,22 +351,11 @@ function PruebasEscena({ userId }) {
       </div>
       {PRUEBAS_SCROLL.map((m) => (
         <div key={m.id} className={styles.repetir}>
-          <Button variant="ghost" size="sm" onClick={() => abrir('bienvenida', CENTRO, m.id)}>
+          <Button variant="ghost" size="sm" onClick={() => abrir(`tipo=bienvenida&modo=${m.id}`)}>
             {m.rotulo}
           </Button>
         </div>
       ))}
-      {prueba && (
-        <EscenaApp
-          key={prueba.n}
-          titulo={prueba.tipo === 'orgulloso' ? `Orgulloso: ${prueba.variante.id}` : `Bienvenida ${prueba.modo}`}
-          alCerrar={cerrar}
-        >
-          {prueba.tipo === 'orgulloso'
-            ? <OrgullosoEscarabajo userId={userId} variante={prueba.variante} alTerminar={cerrar} />
-            : <BienvenidaEscarabajo userId={userId} variante={prueba.variante} prueba={prueba.modo} alPrimerCuadro={() => {}} alTerminar={cerrar} />}
-        </EscenaApp>
-      )}
     </>
   )
 }

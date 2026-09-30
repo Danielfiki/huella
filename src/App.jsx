@@ -32,6 +32,7 @@ import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
 import BetaPage from './pages/beta/BetaPage'
 import RutaPersonaje from './pages/personaje/RutaPersonaje'
+import RutaPruebaPersonaje from './pages/personaje/RutaPruebaPersonaje'
 import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
 
 // Página para grabar el loop del cerebro de la puerta "Su cerebro". Solo en
@@ -180,6 +181,9 @@ export default function App() {
               >
                 <Route index element={<Navigate to="/panel" replace />} />
                 <Route path="panel"       element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
+                {/* Pantalla de prueba de la vitrina del personaje, con la barra y el
+                    main reales del Home. Solo la cuenta de Daniel. */}
+                <Route path="prueba-personaje" element={<PageErrorBoundary><RutaPruebaPersonaje /></PageErrorBoundary>} />
                 <Route path="nuevo"       element={<PageErrorBoundary><NuevoPage /></PageErrorBoundary>} />
                 <Route path="patron"      element={<PageErrorBoundary><PatronPage /></PageErrorBoundary>} />
                 <Route path="patron/:id"  element={<PageErrorBoundary><PatronLecturaPage /></PageErrorBoundary>} />
