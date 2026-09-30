@@ -334,7 +334,7 @@ function EscenaApp({ titulo, alCerrar, children }) {
   const [lista, setLista] = useState(false)
   useEffect(() => { setLista(true) }, [])
   return createPortal(
-    <div className={styles.escena}>
+    <div className={styles.escenaApp}>
       <div className={layoutStyles.container}>
         <header className={layoutStyles.header} />
         <main className={layoutStyles.main}>

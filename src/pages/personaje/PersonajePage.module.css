@@ -230,8 +230,9 @@
 }
 
 /* Escena de prueba (orgulloso y bienvenida A/B/C): la app a pantalla
-   completa sobre la vitrina, con las clases del Layout */
-.escena {
+   completa sobre la vitrina, con las clases del Layout. OJO: .escena ya es
+   el circulo de cada estado; esta se llama escenaApp. */
+.escenaApp {
   position: fixed;
   inset: 0;
   z-index: 50;
