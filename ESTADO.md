@@ -410,6 +410,8 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
 0. ⬜ **Selector de hijo en Registrar + guardar el hijo activo al recargar (caso Diego).**
 2. 🟡 **Orgulloso de visita:** implementado con las 3 (30 sep), solo Daniel; falta su OK visual y abrirlo a todos.
+   - 30 sep: en la vitrina no aparecia porque /personaje va fuera del Layout (no hay barra). Ahora corre en una escena con las clases reales del Layout. ⚠️ En iPhone 14 no queda espacio vacio bajo "Ver todos los avances": el escarabajo tapa "Volver al inicio", "Ver todos los avances" y parte de "Agregar foto". Decision de diseno pendiente con Daniel.
+   - 30 sep: diagnostico TEMPORAL del Home que no se desplaza en iPhone: bienvenida A / B / C en la vitrina (prop `prueba` de BienvenidaEscarabajo). En el navegador automatizado las tres se desplazan y dejan pasar toques; falta que Daniel diga cual se desplaza en su iPhone. Despues: aplicar la que sirva a la bienvenida y al orgulloso y SACAR la prop `prueba` y los botones.
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
 4. ⬜ **Motor de rasgos sin marco por edad:** `detectarRasgos` solo recibe `hijo_edad` como número.
 5. ⬜ **Sin tope de edad en el onboarding:** acepta 0-129, y de 19 para arriba cae igual en el marco 12-18.

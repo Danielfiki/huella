@@ -30,6 +30,14 @@ import styles from './BienvenidaEscarabajo.module.css'
 // La visita de orgulloso (pantalla de avance) usa este mismo componente: pasa
 // `estilos` con las clases de sus variantes y `alPrimerCuadro` para marcar
 // la suya en vez del dia de la bienvenida.
+//
+// `prueba` (solo la vitrina, diagnostico TEMPORAL del Home que no se desplaza
+// en el iPhone): sin ella, o con 'A', todo queda como hoy. 'B' saca el
+// <video> fuente de la capa y lo pone en una caja recortada al tamano de la
+// barra, anclada arriba de la barra: el video nunca pisa la zona que se
+// desplaza (ni recortado ni entero, porque su tamano natural cae hacia abajo,
+// fuera de la pantalla). 'C' deja el video en la capa pero al ancho del
+// escarabajo, no a su tamano natural.
 
 const SEPARACION = 16
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
@@ -84,7 +92,7 @@ function crearCompositor(canvas, variante) {
   return { dibujar }
 }
 
-export default function BienvenidaEscarabajo({ userId, variante, alTerminar, estilos, alPrimerCuadro }) {
+export default function BienvenidaEscarabajo({ userId, variante, alTerminar, estilos, alPrimerCuadro, prueba }) {
   // las clases que existen en los dos modulos (p. ej. fuente) se suman
   const [st] = useState(() => {
     if (!estilos) return styles
@@ -184,13 +192,10 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar, est
 
   if (!fuente || !barra) return null
 
-  return createPortal(
-    <div className={st.capa} aria-hidden="true">
-      <div className={`${st.escarabajo} ${st[variante.id]} ${dibujado ? st.visible : ''}`}>
-        <canvas ref={canvasRef} className={st.imagen} width={ANCHO} height={ALTO} />
+  const video = (
         <video
           ref={videoRef}
-          className={st.fuente}
+          className={`${st.fuente} ${prueba === 'C' ? st.fuenteChica : ''}`}
           src={fuente}
           muted
           playsInline
@@ -200,8 +205,18 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar, est
           onEnded={alTerminarVideo}
           onError={(e) => { const er = e.currentTarget.error; abandonar(`error del video (codigo ${er && er.code})`) }}
         />
+  )
+
+  return createPortal(
+    <>
+      <div className={st.capa} aria-hidden="true">
+        <div className={`${st.escarabajo} ${st[variante.id]} ${dibujado ? st.visible : ''}`}>
+          <canvas ref={canvasRef} className={st.imagen} width={ANCHO} height={ALTO} />
+          {prueba !== 'B' && video}
+        </div>
       </div>
-    </div>,
+      {prueba === 'B' && <div className={`${st.fuenteBarra} ${st[variante.id]}`} aria-hidden="true">{video}</div>}
+    </>,
     barra
   )
 }
