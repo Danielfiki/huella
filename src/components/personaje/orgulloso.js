@@ -16,7 +16,8 @@ export const VARIANTES_ORGULLOSO = [
   { id: 'pulgar', video: '/personaje/home/orgulloso-pulgar-alfa.mp4', ancho: 424, alto: 556, pixel: [214, 548] },
   // video 25-orgulloso-2 (aplauso suave), cuadros 2 a 219
   { id: 'aplauso', video: '/personaje/home/orgulloso-aplauso-alfa.mp4', ancho: 418, alto: 560, pixel: [194, 552] },
-  // video 26-orgulloso-3 (manos en la cintura), cuadros 4 a 236
+  // video 26-orgulloso-3 (manos en la cintura), cuadros 4 a 236 sin el 25, 27,
+  // 29 y 50: la subida de la fuente se frenaba a mitad de camino
   { id: 'jarras', video: '/personaje/home/orgulloso-jarras-alfa.mp4', ancho: 598, alto: 600, pixel: [293, 592] },
 ]
 
