@@ -401,9 +401,14 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **QA (Code):** con IA real, 14 y 4 años contestan directo y sin fórmula; medicamento derivado y sin guardar; guardar, cerrar y borrar desde la app con la cuenta de prueba; cuota 0 → 1 → 2 con el token real (la red de voz no descuenta). Capturas en `huella-design-pack/preguntar/implementado/`. Datos de prueba borrados (preguntas y la fila de hoy de `api_llamadas`).
 - ⚠️ La cuenta de Daniel está exenta del tope en el servidor: nunca va a ver G ni gastar cuota al preguntar.
 
+### 7. ✅ Preguntar: QA de Daniel en su teléfono (20:30-20:45)
+- **Dictado roto en Preguntar (arreglado):** VoiceTextarea entrega una FUNCIÓN que arma el texto desde el anterior, no un string; Preguntar la metía como texto y el borrador quedaba siendo una función. `borrador.trim()` reventaba y salía "Esta página tuvo un error". Reproducido en WebKit simulando SpeechRecognition (mismos eventos que el micrófono). **Registrar no estaba afectado:** `recibirVoz` ya aceptaba la función; dictar y enviar probado ahí también.
+- "Terminar" pasó de arriba a abajo, como "Terminar y ver resumen" junto al campo. El hijo va sin inicial: foto si tiene, si no solo nombre y edad.
+- Red de voz: el detector marca "sin X sino Y" y "más que" como contraste (con coma, o "Más que X, es Y"); no marca "vale más que", "más que nunca". "Literalmente" prohibido en REGLA_IDIOMA.
+- **Edad (arreglado para toda la app):** `calcularEdad` y `calcularEdadDecimal` leían 'YYYY-MM-DD' como medianoche UTC; en Chile la edad subía un día antes del cumpleaños. Ahora se lee como día local.
+
 ### ⏭️ Pendiente
 0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
-0. ⬜ **Red de voz: detectar "más que" como contraste en el texto original** (hoy solo se rechaza cuando aparece en una reescritura). Ejemplo real: «el "no" a veces es reflejo, más que decisión».
 0. ⬜ **Aprobar Preguntar a Huella** en el teléfono de Daniel antes de abrirla a todos.
 1. ⬜ **Bug de Matías en "Algo que aún no cambia"** — en diagnóstico.
 2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.

@@ -9,9 +9,8 @@ import styles from './PiezasPregunta.module.css'
 
 export const PIE_EVIDENCIA = 'Esto se apoya en evidencia del desarrollo infantil. No es un diagnóstico.'
 
-// Volver + el hijo (inicial, nombre y edad). `derecha` es el lugar de
-// "Terminar" en la conversación.
-export function CabeceraHijo({ hijo, onVolver, derecha = null }) {
+// Volver + el hijo: su foto si la tiene en el perfil, y nombre y edad.
+export function CabeceraHijo({ hijo, onVolver }) {
   const nombre = hijo?.nombre || ''
   return (
     <div className={styles.cabecera}>
@@ -19,13 +18,12 @@ export function CabeceraHijo({ hijo, onVolver, derecha = null }) {
         <ArrowLeft size={20} />
       </button>
       <div className={styles.hijo}>
-        <span className={styles.inicial} aria-hidden="true">{nombre.charAt(0).toUpperCase()}</span>
+        {hijo?.avatarUrl && <img src={hijo.avatarUrl} alt="" className={styles.foto} />}
         <div className={styles.hijoTexto}>
           <span className={styles.hijoNombre}>{nombre}</span>
           {hijo?.edad != null && <span className={styles.hijoEdad}>{hijo.edad} {hijo.edad === 1 ? 'año' : 'años'}</span>}
         </div>
       </div>
-      {derecha}
     </div>
   )
 }

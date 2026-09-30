@@ -99,17 +99,18 @@
 }
 
 /* D / E1 · la conversación */
-.terminar {
-  height: 36px;
-  flex-shrink: 0;
-  padding: 0 16px;
-  border-radius: 999px;
+/* Acción secundaria debajo del campo de seguir preguntando. */
+.terminarAbajo {
+  min-height: 48px;
+  width: 100%;
   border: none;
-  background: var(--color-surface-alt);
-  color: var(--color-text);
+  background: none;
+  color: var(--color-text-muted);
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 .pregunta {

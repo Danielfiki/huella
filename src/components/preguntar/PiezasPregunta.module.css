@@ -26,21 +26,14 @@
   flex: 1;
   min-width: 0;
 }
-.inicial {
+.foto {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--color-primary-bg);
+  object-fit: cover;
   border: 2px solid var(--color-surface);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--color-primary-dark);
 }
 .hijoTexto { display: flex; flex-direction: column; min-width: 0; }
 .hijoNombre {

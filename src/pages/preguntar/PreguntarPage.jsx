@@ -193,7 +193,7 @@ export default function PreguntarPage() {
               <VoiceTextarea
                 value={borrador}
                 onChange={setBorrador}
-                onVoiceResult={(t) => setBorrador((b) => (b ? `${b} ${t}` : t))}
+                onVoiceResult={setBorrador}
                 placeholder={ejemploPregunta(hijo)}
               />
             </div>
@@ -281,11 +281,7 @@ export default function PreguntarPage() {
   // ── D / E1 · la conversación ──
   return (
     <div className={styles.pagina}>
-      <CabeceraHijo
-        hijo={hijo}
-        onVolver={() => navigate(-1)}
-        derecha={<button type="button" className={styles.terminar} onClick={terminar}>Terminar</button>}
-      />
+      <CabeceraHijo hijo={hijo} onVolver={() => navigate(-1)} />
 
       {mensajes.map((m, i) => (
         <React.Fragment key={i}>
@@ -328,7 +324,7 @@ export default function PreguntarPage() {
               <VoiceTextarea
                 value={borrador}
                 onChange={setBorrador}
-                onVoiceResult={(t) => setBorrador((b) => (b ? `${b} ${t}` : t))}
+                onVoiceResult={setBorrador}
                 placeholder="Pregunta algo más sobre esto"
               />
             </div>
@@ -343,6 +339,11 @@ export default function PreguntarPage() {
             </button>
           </div>
           {error && <p className={styles.error}>{error}</p>}
+          {/* Terminar va abajo, junto al campo: se decide después de leer la
+              última respuesta, no antes. */}
+          <button type="button" className={styles.terminarAbajo} onClick={terminar}>
+            Terminar y ver resumen
+          </button>
           {ultimo?.ofrecerRegistrar && (
             <button type="button" className={styles.botonBlanco} onClick={() => navigate('/registro')}>
               Registrar lo que pasó <ArrowRight size={18} />

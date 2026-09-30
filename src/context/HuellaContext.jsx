@@ -11,10 +11,19 @@ import { extraerMarcoAplicado } from '../utils/seccionesIA'
 
 const HuellaContext = createContext(null)
 
+// 'YYYY-MM-DD' se lee como día LOCAL. Con new Date('2020-09-30') el navegador
+// la toma como medianoche UTC, que en Chile es el 29 a las 21:00: la edad
+// subía un día antes del cumpleaños.
+function fechaLocal(fecha) {
+  return typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+    ? new Date(`${fecha}T00:00:00`)
+    : new Date(fecha)
+}
+
 export function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return null
   const hoy = new Date()
-  const nac = new Date(fechaNacimiento)
+  const nac = fechaLocal(fechaNacimiento)
   let edad = hoy.getFullYear() - nac.getFullYear()
   const m = hoy.getMonth() - nac.getMonth()
   if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
@@ -37,7 +46,7 @@ export function calcularEdad(fechaNacimiento) {
 // Devuelve null si no hay fecha, si no se puede parsear o si es futura.
 export function calcularEdadDecimal(fechaNacimiento) {
   if (!fechaNacimiento) return null
-  const nac = new Date(fechaNacimiento)
+  const nac = fechaLocal(fechaNacimiento)
   if (Number.isNaN(nac.getTime())) return null
   const hoy = new Date()
 

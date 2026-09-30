@@ -251,6 +251,11 @@ const PATRONES_VOZ = [
   /\bno\b[^.;:!?\n]{1,80}?\bsino\b/i,
   // "no es X: Y"
   /\bno (?:es|era|fue|son|eran)\b[^.;:!?\n]{1,60}:\s*\S/i,
+  // "sin X sino Y" ("sin forzarlo a alejarse del contacto sino ampliándolo")
+  /\bsin\b[^.;:!?\n]{1,80}?\bsino\b/i,
+  // "más que" como contraste: "es reflejo, más que decisión", "Más que X, es Y"
+  /,\s*más que\b/i,
+  /(?:^|[.!?]\s+)más que\b[^.;:!?\n]{1,60},\s*(?:es|era|fue|son|está)\b/i,
   // "X, no Y" como contraste al final de la frase, y "el problema es X, no Y"
   /,\s*no (?:un|una|unos|unas|el|los|las|del|de|por|como|desde|porque|solo)\b[^.;:!?\n]{0,60}[.;!?]?\s*$/i,
   // Valorar que el papá pregunte: "que estés acá preguntándote qué hacer
