@@ -8,6 +8,8 @@ import AlivioHuella from '../../components/registro/AlivioHuella'
 import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
+import { usaOrgulloso, elegirOrgulloso, VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
+import OrgullosoEscarabajo from '../../components/personaje/OrgullosoEscarabajo'
 import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
@@ -316,6 +318,36 @@ function PruebaPensando({ userId }) {
   )
 }
 
+// Prueba de la visita de orgulloso: la misma que sale en la pantalla de avance
+// guardado, subiendo desde la barra de esta pagina. Sin numero sigue la
+// alternancia (sin repetir la ultima); con numero fuerza esa variante.
+function PruebaOrgulloso({ userId }) {
+  const [prueba, setPrueba] = useState(null) // { n, variante }
+  const probar = (v) => {
+    if (!usaOrgulloso(userId)) return
+    setPrueba((p) => ({ n: (p?.n || 0) + 1, variante: v || elegirOrgulloso(userId) }))
+  }
+  return (
+    <>
+      <div className={styles.repetir}>
+        <Button variant="ghost" onClick={() => probar()}>
+          Ver orgulloso
+        </Button>
+      </div>
+      <div className={styles.repetir}>
+        {VARIANTES_ORGULLOSO.map((v, i) => (
+          <Button key={v.id} variant="ghost" size="sm" onClick={() => probar(v)}>
+            {i + 1}
+          </Button>
+        ))}
+      </div>
+      {prueba && (
+        <OrgullosoEscarabajo key={prueba.n} userId={userId} variante={prueba.variante} alTerminar={() => setPrueba(null)} />
+      )}
+    </>
+  )
+}
+
 export default function PersonajePage() {
   const { user } = useAuth()
   const verBienvenida = (forzada) => {
@@ -375,6 +407,8 @@ export default function PersonajePage() {
       </div>
 
       <PruebaPensando userId={user.id} />
+
+      <PruebaOrgulloso userId={user.id} />
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>

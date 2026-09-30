@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Camera, X } from 'lucide-react'
 import Escarabajo from '../../components/ui/Escarabajo'
@@ -24,6 +24,11 @@ import regStyles from '../../pages/registro/RegistroPage.module.css'
 // importa su módulo en vez de recrearlas.
 import hijoStyles from '../../pages/hijo/HijoPage.module.css'
 import { puedePreguntar } from '../../services/preguntas'
+import { usaOrgulloso, elegirOrgulloso } from '../../components/personaje/orgulloso'
+
+// Visita de orgulloso en la vista de avance guardado (por ahora solo la
+// cuenta de Daniel): el chunk baja solo cuando hace falta.
+const OrgullosoEscarabajo = lazy(() => import('../../components/personaje/OrgullosoEscarabajo'))
 
 async function compressImage(file, maxSize = 1200) {
   return new Promise((resolve) => {
@@ -55,6 +60,10 @@ export default function NuevoPage() {
   const [vista, setVista] = useState(
     location.state?.vistaInicial === 'hito' ? 'hito' : 'elegir'
   )
+  // Variante de la visita de orgulloso para esta apertura de la vista
+  // guardado (null: no hay visita). Se elige al abrirla y vuelve a null
+  // cuando el video termina o no puede correr.
+  const [orgulloso, setOrgulloso] = useState(null)
 
   // Un ejemplo de los tres, elegido UNA vez al montar. El inicializador
   // perezoso del useState es lo que garantiza que no rote en cada render: con
@@ -198,6 +207,7 @@ export default function NuevoPage() {
       setHitoGuardadoSinFoto((!huboFotoEnSubmit || fotoFallo) && Boolean(inserted?.id))
       setFotoEnmarcaUrl(null)
       setErrorFotoEnmarca(fotoFallo ? 'No se pudo subir la foto. Intenta de nuevo.' : '')
+      setOrgulloso(usaOrgulloso(user?.id) ? elegirOrgulloso(user.id) : null)
       setVista('guardado')
     } catch (e) {
       setError('No se pudo guardar: ' + e.message)
@@ -459,6 +469,13 @@ export default function NuevoPage() {
           <button className={styles.verHitosBtn} onClick={() => navigate('/historial', { state: { filtro: 'logros' } })}>
             Ver todos los avances →
           </button>
+          {/* Sube desde la barra inferior (vive dentro de ella, no ocupa
+              lugar en la pagina) en el espacio bajo este boton. */}
+          {orgulloso && (
+            <Suspense fallback={null}>
+              <OrgullosoEscarabajo userId={user.id} variante={orgulloso} alTerminar={() => setOrgulloso(null)} />
+            </Suspense>
+          )}
         </div>
       </div>
     )

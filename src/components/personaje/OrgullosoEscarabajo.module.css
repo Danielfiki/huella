@@ -1,0 +1,46 @@
+/* Visita de orgulloso en la pantalla de avance. La capa, el fundido, el canvas
+   y el video fuente son los de BienvenidaEscarabajo.module.css; aca solo van
+   las variantes.
+   Los tres archivos tienen la misma escala que la bienvenida del centro
+   (craneo de la fuente x1,085, igual en los tres: 275 / 267 / 273 px de ancho
+   de craneo en el archivo), asi que el ancho en pantalla es el del centro por
+   la razon entre anchos de archivo: base x 0,96604 x ancho / 484. El borde de
+   abajo es la linea de la repisa y cae sobre el borde de la barra. Centrado
+   por el eje de la cabeza (medido en el archivo), no por la caja. */
+
+/* Video 23 (pulgar arriba). Eje de la cabeza al 50,47 % del ancho. */
+.pulgar {
+  --ancho: calc(var(--base) * 0.84628);
+  aspect-ratio: 424 / 556;
+  right: calc(50% - var(--ancho) * 0.49528);
+}
+
+/* Video 25 (aplauso). Eje de la cabeza al 46,41 % del ancho. */
+.aplauso {
+  --ancho: calc(var(--base) * 0.83431);
+  aspect-ratio: 418 / 560;
+  right: calc(50% - var(--ancho) * 0.53589);
+}
+
+/* Video 26 (manos en la cintura). La caja es mas ancha por los codos; eje
+   de la cabeza al 49,08 % del ancho. */
+.jarras {
+  --ancho: calc(var(--base) * 1.19358);
+  aspect-ratio: 598 / 600;
+  right: calc(50% - var(--ancho) * 0.50920);
+}
+
+.pulgar .fuente {
+  width: 424px;
+  height: 1128px;
+}
+
+.aplauso .fuente {
+  width: 418px;
+  height: 1136px;
+}
+
+.jarras .fuente {
+  width: 598px;
+  height: 1216px;
+}

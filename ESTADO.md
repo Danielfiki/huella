@@ -103,7 +103,7 @@
 
 ### Personaje
 
-- ⬜ **Orgulloso: llega DE VISITA desde abajo** (como la bienvenida del centro, en el espacio bajo "Ver todos los avances") — **28 sep** — variantes 1 (pulgar) y 2 (aplauso) procesadas en `public/personaje/home/`, sin conectar. **Falta el video de la variante 3**; con ella se implementa. Se descartó antes al lado de la foto del avance (revertido en `49d72b4`).
+- 🟡 **Orgulloso: llega DE VISITA desde abajo** (como la bienvenida del centro, en el espacio bajo "Ver todos los avances") — **30 sep: conectado con sus 3 variantes (pulgar, aplauso, jarras), SOLO cuenta de Daniel, esperando su OK visual.** Una vez por apertura de la vista de avance guardado, sin repetir la última; en la vitrina, "Ver orgulloso" 1 / 2 / 3. Se descartó antes al lado de la foto del avance (revertido en `49d72b4`).
 - ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
 
 ### Sale de la cola
@@ -409,7 +409,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 ### ⏭️ Pendiente
 0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
 0. ⬜ **Selector de hijo en Registrar + guardar el hijo activo al recargar (caso Diego).**
-2. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla → implementar con las 3.
+2. 🟡 **Orgulloso de visita:** implementado con las 3 (30 sep), solo Daniel; falta su OK visual y abrirlo a todos.
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
 4. ⬜ **Motor de rasgos sin marco por edad:** `detectarRasgos` solo recibe `hijo_edad` como número.
 5. ⬜ **Sin tope de edad en el onboarding:** acepta 0-129, y de 19 para arriba cae igual en el marco 12-18.
@@ -446,7 +446,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - ⬜ **Falta la variante 3 de orgulloso** (el video).
 
 ### ⏭️ Pendiente
-1. ⬜ **Orgulloso de visita:** llega la variante 3 → procesarla igual → implementar la visita bajo "Ver todos los avances" con las 3 (solo cuenta de Daniel primero).
+1. 🟡 **Orgulloso de visita:** implementado el 30 sep con las 3, solo cuenta de Daniel. Variante 3 = video `26-orgulloso-3.mp4` (manos en la cintura), cuadros 4 a 236 (9,71 s), 598 × 600, `orgulloso-jarras-alfa.mp4`; misma repisa (y 677) y escala (×1,085; cráneo 273 px vs 275 / 267). Limpieza nueva en la franja de la repisa: alfa por proporción de azul, así la sombra de las manos sobre el borde no queda como halo. `24-orgulloso-base.png.mp4` renombrado a `23-orgulloso-1.mp4`.
 2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro de pensando: hay que darle Pro a la cuenta de prueba y reiniciar su contador de IA (SQL entregado a Daniel el 28 sep).
 3. ⬜ **Cola viva del personaje:** 2 bienvenidas nuevas (borde izquierdo y esquina inferior izquierda; imágenes 18 y 19 listas, faltan los videos). Después "celebrando".
 4. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).

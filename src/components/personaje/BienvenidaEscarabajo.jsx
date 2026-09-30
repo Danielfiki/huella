@@ -26,6 +26,10 @@ import styles from './BienvenidaEscarabajo.module.css'
 //
 // Variantes (bienvenida.js): cada una trae su video, poster y medidas; la
 // capa, el anclaje y todo lo demas es igual para todas.
+//
+// La visita de orgulloso (pantalla de avance) usa este mismo componente: pasa
+// `estilos` con las clases de sus variantes y `alPrimerCuadro` para marcar
+// la suya en vez del dia de la bienvenida.
 
 const SEPARACION = 16
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
@@ -44,7 +48,7 @@ function crearCompositor(canvas, variante) {
   const { ancho: ANCHO, alto: ALTO } = variante
   const ALTO_VIDEO = ALTO * 2 + SEPARACION
   const FRAGMENTO = fragmento(ALTO, ALTO_VIDEO)
-  const [px0, py0] = PIXEL_CUERPO[variante.id]
+  const [px0, py0] = variante.pixel || PIXEL_CUERPO[variante.id]
   let gl = null
   try { gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false }) } catch (e) { return { error: `getContext lanzo ${e.name}: ${e.message}` } }
   if (!gl) return { error: 'getContext(webgl) devolvio null' }
@@ -80,7 +84,14 @@ function crearCompositor(canvas, variante) {
   return { dibujar }
 }
 
-export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
+export default function BienvenidaEscarabajo({ userId, variante, alTerminar, estilos, alPrimerCuadro }) {
+  // las clases que existen en los dos modulos (p. ej. fuente) se suman
+  const [st] = useState(() => {
+    if (!estilos) return styles
+    const juntas = { ...styles }
+    for (const k of Object.keys(estilos)) juntas[k] = styles[k] ? `${styles[k]} ${estilos[k]}` : estilos[k]
+    return juntas
+  })
   const { video: VIDEO, ancho: ANCHO, alto: ALTO } = variante
   const [fuente, setFuente] = useState(null)
   const [dibujado, setDibujado] = useState(false)
@@ -122,6 +133,7 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
   // primer cuadro de verdad: recien ahi se marca el dia (y la variante)
   useEffect(() => {
     if (!dibujado) return
+    if (alPrimerCuadro) { alPrimerCuadro(); return }
     marcarBienvenida(userId)
     marcarVariante(userId, variante.id)
   }, [dibujado]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -173,12 +185,12 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar }) {
   if (!fuente || !barra) return null
 
   return createPortal(
-    <div className={styles.capa} aria-hidden="true">
-      <div className={`${styles.escarabajo} ${styles[variante.id]} ${dibujado ? styles.visible : ''}`}>
-        <canvas ref={canvasRef} className={styles.imagen} width={ANCHO} height={ALTO} />
+    <div className={st.capa} aria-hidden="true">
+      <div className={`${st.escarabajo} ${st[variante.id]} ${dibujado ? st.visible : ''}`}>
+        <canvas ref={canvasRef} className={st.imagen} width={ANCHO} height={ALTO} />
         <video
           ref={videoRef}
-          className={styles.fuente}
+          className={st.fuente}
           src={fuente}
           muted
           playsInline
