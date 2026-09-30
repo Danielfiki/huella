@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { borrarMarcaBienvenida, forzarVariante, VARIANTES } from '../../components/personaje/bienvenida'
+import { elegirVariante, VARIANTES } from '../../components/personaje/bienvenida'
 import { palabrasGenero } from '../../utils/genero'
 import Button from '../../components/ui/Button'
 import AlivioHuella from '../../components/registro/AlivioHuella'
@@ -318,23 +318,15 @@ function PruebaPensando({ userId }) {
 }
 
 // La vitrina vive fuera del Layout (sin la barra inferior a la que se
-// engancha la capa del escarabajo): las pruebas corren en /prueba-personaje,
-// dentro del Layout, con la barra y el main reales del Home. Carga completa y
-// no navigate, como "Ver bienvenida": el celular siempre prueba lo ultimo.
-// Visita de orgulloso en la pantalla de prueba. Sin numero sigue la alternancia
-// (sin repetir la ultima); con numero fuerza esa variante.
-// Bienvenida A / B / C: diagnostico TEMPORAL del Home que no se desplaza en el
-// iPhone (ver `prueba` en BienvenidaEscarabajo). Usa la variante Centro y no
-// marca el dia, asi no gasta la bienvenida del Home.
-const PRUEBAS_SCROLL = [
-  { id: 'A', rotulo: 'Bienvenida A (como hoy)' },
-  { id: 'B', rotulo: 'Bienvenida B (video en la barra)' },
-  { id: 'C', rotulo: 'Bienvenida C (video chico)' },
-]
+// engancha la capa del escarabajo): la bienvenida y el orgulloso se prueban en
+// /prueba-personaje, dentro del Layout, con la barra y el main reales del
+// Home. Carga completa y no navigate: el celular siempre prueba lo ultimo.
+// El boton grande sigue la alternancia (sin repetir la ultima); los chicos
+// fuerzan una variante.
+const abrirPrueba = (tipo, id) => window.location.assign(`/prueba-personaje?tipo=${tipo}&v=${id}`)
 
-function PruebasEscena({ userId }) {
-  const abrir = (qs) => window.location.assign(`/prueba-personaje?${qs}`)
-  const verOrgulloso = (v) => { if (usaOrgulloso(userId)) abrir(`tipo=orgulloso&v=${(v || elegirOrgulloso(userId)).id}`) }
+function PruebaOrgulloso({ userId }) {
+  const verOrgulloso = (v) => { if (usaOrgulloso(userId)) abrirPrueba('orgulloso', (v || elegirOrgulloso(userId)).id) }
   return (
     <>
       <div className={styles.repetir}>
@@ -349,24 +341,13 @@ function PruebasEscena({ userId }) {
           </Button>
         ))}
       </div>
-      {PRUEBAS_SCROLL.map((m) => (
-        <div key={m.id} className={styles.repetir}>
-          <Button variant="ghost" size="sm" onClick={() => abrir(`tipo=bienvenida&modo=${m.id}`)}>
-            {m.rotulo}
-          </Button>
-        </div>
-      ))}
     </>
   )
 }
 
 export default function PersonajePage() {
   const { user } = useAuth()
-  const verBienvenida = (forzada) => {
-    if (forzada) forzarVariante(forzada)
-    borrarMarcaBienvenida(user.id)
-    window.location.assign('/panel')
-  }
+  const verBienvenida = (forzada) => abrirPrueba('bienvenida', forzada || elegirVariante(user.id).id)
   const [abierto, setAbierto] = useState(null)
   const cerrar = React.useCallback(() => setAbierto(null), [])
 
@@ -395,11 +376,8 @@ export default function PersonajePage() {
 
       <EscenaRasgo />
 
-      {/* Prueba de la bienvenida del Home: borra la marca de hoy y va al Home.
-          Carga completa y no navigate: asi el celular siempre prueba el codigo
-          recien desplegado, aunque la pestaña estuviera abierta de antes.
-          El boton grande sigue la alternancia (sale la que no se vio la ultima
-          vez); los chicos fuerzan una variante, para QA. */}
+      {/* Prueba de la bienvenida del Home en /prueba-personaje (no gasta la
+          bienvenida del dia). */}
       <div className={styles.repetir}>
         <Button variant="ghost" onClick={() => verBienvenida()}>
           Ver bienvenida otra vez
@@ -420,7 +398,7 @@ export default function PersonajePage() {
 
       <PruebaPensando userId={user.id} />
 
-      <PruebasEscena userId={user.id} />
+      <PruebaOrgulloso userId={user.id} />
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>

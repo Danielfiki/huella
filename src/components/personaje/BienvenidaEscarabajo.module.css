@@ -77,7 +77,8 @@
 
 /* El video es solo la fuente del canvas: invisible pero en el DOM y a su
    tamano natural. WebKit sube a WebGL el cuadro al tamano con que
-   el video se pinta: a 1 px la textura llega vacia. La capa lo recorta. */
+   el video se pinta: a 1 px la textura llega vacia. Lo recorta la caja
+   de la barra (fuenteBarra). */
 .fuente {
   position: absolute;
   top: 0;
@@ -101,20 +102,14 @@
   height: 1092px;
 }
 
-/* Diagnostico TEMPORAL (vitrina, prueba B): caja del tamano de la barra, en
-   la barra misma y detras de su fondo, que recorta el video fuente. Ancla
-   arriba: el resto del video cae hacia abajo, fuera de la pantalla. */
+/* Caja del tamano de la barra, en la barra misma y detras de su fondo, que
+   recorta el video fuente. Ancla arriba: el resto del video cae hacia abajo,
+   fuera de la pantalla. Asi el video nunca pisa el <main> que desplaza (en el
+   iPhone real, sobre el main bloqueaba el desplazamiento). */
 .fuenteBarra {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: -1;
-}
-
-/* Diagnostico TEMPORAL (vitrina, prueba C): el video fuente al ancho del
-   escarabajo y no a su tamano natural. */
-.escarabajo .fuenteChica {
-  width: 100%;
-  height: auto;
 }

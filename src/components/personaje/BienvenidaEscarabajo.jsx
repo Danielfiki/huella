@@ -31,13 +31,12 @@ import styles from './BienvenidaEscarabajo.module.css'
 // `estilos` con las clases de sus variantes y `alPrimerCuadro` para marcar
 // la suya en vez del dia de la bienvenida.
 //
-// `prueba` (solo la vitrina, diagnostico TEMPORAL del Home que no se desplaza
-// en el iPhone): sin ella, o con 'A', todo queda como hoy. 'B' saca el
-// <video> fuente de la capa y lo pone en una caja recortada al tamano de la
-// barra, anclada arriba de la barra: el video nunca pisa la zona que se
-// desplaza (ni recortado ni entero, porque su tamano natural cae hacia abajo,
-// fuera de la pantalla). 'C' deja el video en la capa pero al ancho del
-// escarabajo, no a su tamano natural.
+// El <video> fuente NO vive en la capa: va en una caja recortada al tamano de
+// la barra, anclada arriba de la barra (el resto del video, a tamano natural,
+// cae hacia abajo, fuera de la pantalla). En el iPhone real, con el video en
+// la capa (encima del <main> que desplaza) el Home no se desplazaba mientras
+// corria la animacion, aunque todo tenia pointer-events: none (30 sep 2026,
+// diagnostico A / B / C en el iPhone de Daniel: solo A bloqueaba).
 
 const SEPARACION = 16
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
@@ -92,7 +91,7 @@ function crearCompositor(canvas, variante) {
   return { dibujar }
 }
 
-export default function BienvenidaEscarabajo({ userId, variante, alTerminar, estilos, alPrimerCuadro, prueba }) {
+export default function BienvenidaEscarabajo({ userId, variante, alTerminar, estilos, alPrimerCuadro }) {
   // las clases que existen en los dos modulos (p. ej. fuente) se suman
   const [st] = useState(() => {
     if (!estilos) return styles
@@ -195,7 +194,7 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar, est
   const video = (
         <video
           ref={videoRef}
-          className={`${st.fuente} ${prueba === 'C' ? st.fuenteChica : ''}`}
+          className={st.fuente}
           src={fuente}
           muted
           playsInline
@@ -212,10 +211,12 @@ export default function BienvenidaEscarabajo({ userId, variante, alTerminar, est
       <div className={st.capa} aria-hidden="true">
         <div className={`${st.escarabajo} ${st[variante.id]} ${dibujado ? st.visible : ''}`}>
           <canvas ref={canvasRef} className={st.imagen} width={ANCHO} height={ALTO} />
-          {prueba !== 'B' && video}
         </div>
       </div>
-      {prueba === 'B' && <div className={`${st.fuenteBarra} ${st[variante.id]}`} aria-hidden="true">{video}</div>}
+      {/* la clase de la variante solo da el tamano natural del video (.x .fuente) */}
+      <div className={st.fuenteBarra} aria-hidden="true">
+        <div className={st[variante.id]}>{video}</div>
+      </div>
     </>,
     barra
   )

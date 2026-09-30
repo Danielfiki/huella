@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import Button from '../../components/ui/Button'
 import BienvenidaEscarabajo from '../../components/personaje/BienvenidaEscarabajo'
 import OrgullosoEscarabajo from '../../components/personaje/OrgullosoEscarabajo'
-import { VARIANTES } from '../../components/personaje/bienvenida'
+import { VARIANTES, marcarVariante } from '../../components/personaje/bienvenida'
 import { VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
 import styles from './PruebaPersonajePage.module.css'
 
@@ -13,16 +13,14 @@ import styles from './PruebaPersonajePage.module.css'
 // del Home que no se desplaza en el iPhone corre en las mismas condiciones.
 // Solo la cuenta de Daniel (el filtro vive en RutaPruebaPersonaje).
 //   ?tipo=orgulloso&v=pulgar|aplauso|jarras
-//   ?tipo=bienvenida&modo=A|B|C  (variante Centro; no marca el dia)
+//   ?tipo=bienvenida&v=costado|derecha|centro  (no marca el dia: solo anota
+//   la variante mostrada, para que "Ver bienvenida otra vez" alterne)
 export default function PruebaPersonajePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const tipo = params.get('tipo')
-  const modo = params.get('modo')
-  const variante = tipo === 'orgulloso'
-    ? VARIANTES_ORGULLOSO.find((v) => v.id === params.get('v'))
-    : VARIANTES.find((v) => v.id === 'centro')
+  const variante = (tipo === 'orgulloso' ? VARIANTES_ORGULLOSO : VARIANTES).find((v) => v.id === params.get('v'))
   const [vuelta, setVuelta] = useState(0)
   const [corriendo, setCorriendo] = useState(false)
   const [toques, setToques] = useState(0)
@@ -31,7 +29,7 @@ export default function PruebaPersonajePage() {
   // pagina (y el Layout con su barra) ya estan en el DOM.
   useEffect(() => { if (variante) setCorriendo(true) }, [vuelta]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const titulo = tipo === 'orgulloso' ? `Orgulloso: ${params.get('v')}` : `Bienvenida ${modo}`
+  const titulo = `${tipo === 'orgulloso' ? 'Orgulloso' : 'Bienvenida'}: ${params.get('v')}`
 
   return (
     <div className={styles.pagina}>
@@ -48,7 +46,7 @@ export default function PruebaPersonajePage() {
       ))}
       {corriendo && (tipo === 'orgulloso'
         ? <OrgullosoEscarabajo key={vuelta} userId={user.id} variante={variante} alTerminar={() => setCorriendo(false)} />
-        : <BienvenidaEscarabajo key={vuelta} userId={user.id} variante={variante} prueba={modo} alPrimerCuadro={() => {}} alTerminar={() => setCorriendo(false)} />)}
+        : <BienvenidaEscarabajo key={vuelta} userId={user.id} variante={variante} alPrimerCuadro={() => marcarVariante(user.id, variante.id)} alTerminar={() => setCorriendo(false)} />)}
     </div>
   )
 }
