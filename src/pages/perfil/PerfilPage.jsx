@@ -236,13 +236,13 @@ export default function PerfilPage() {
   // Ya se borro en la base: se saca de la lista y se pasa a otro hijo. Si no
   // queda ninguno, a crear uno.
   async function despuesDeEliminarHijo() {
-    const borradoId = eliminandoHijo.id
+    const { id: borradoId, nombre: borradoNombre } = eliminandoHijo
     const restantes = state.hijos.filter((h) => h.id !== borradoId)
     setEliminandoHijo(null)
     dispatch({ type: 'SET_HIJOS', payload: restantes })
     if (restantes.length) {
       await setHijoActivo(restantes[0].id)
-      navigate('/panel')
+      navigate('/panel', { state: { hijoEliminado: borradoNombre } })
     } else {
       dispatch({ type: 'SET_HIJO_ACTIVO', payload: null })
       for (const type of ['SET_EPISODIOS', 'SET_HITOS', 'SET_ESTRATEGIAS']) dispatch({ type, payload: [] })

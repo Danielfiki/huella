@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import styles from './EliminarHijo.module.css'
 
@@ -101,7 +101,7 @@ export function EliminarHijoModal({ hijo, conPareja, onCerrar, onEliminado }) {
         </p>
 
         <label className={styles.label} htmlFor="eliminar-hijo-nombre">
-          Escribe {hijo.nombre} para confirmar
+          Escribe <strong>{hijo.nombre}</strong> para confirmar
         </label>
         <input
           id="eliminar-hijo-nombre"
@@ -135,10 +135,21 @@ export function AvisoNombreRepetido({ nombre, onCrear, onVolver }) {
       <div className={styles.modal} role="dialog" aria-modal="true">
         <h2 className={styles.titulo}>Ya tienes a {nombre}. ¿Es otro hijo?</h2>
         <div className={styles.botones}>
-          <button type="button" className={styles.volver} onClick={onVolver}>No, volver</button>
-          <button type="button" className={styles.primario} onClick={onCrear}>Sí, crear</button>
+          <button type="button" className={styles.primario} onClick={onVolver}>No, volver</button>
+          <button type="button" className={styles.volver} onClick={onCrear}>Sí, crear</button>
         </div>
       </div>
     </div>
   )
+}
+
+// Aviso breve en el Home despues de eliminar. Se va solo a los 3 s.
+export function AvisoEliminado({ nombre, onFin }) {
+  const fin = useRef(onFin)
+  fin.current = onFin
+  useEffect(() => {
+    const t = setTimeout(() => fin.current(), 3000)
+    return () => clearTimeout(t)
+  }, [])
+  return <div className={styles.avisoBreve} role="status">Se eliminó el perfil de {nombre}</div>
 }
