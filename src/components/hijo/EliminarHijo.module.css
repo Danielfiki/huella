@@ -1,0 +1,100 @@
+/* Hoja de "Eliminar perfil" y aviso de nombre repetido. Misma caja que
+   CerrarPatronModal: centrada, margen lateral 20. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--color-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+.modal {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  border-radius: 20px;
+  padding: 22px 20px;
+}
+.titulo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+.texto {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0 0 18px;
+}
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-family: var(--font-family);
+  font-size: 16px; /* 16: iOS no hace zoom al enfocar */
+  color: var(--color-text);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-danger);
+}
+.error {
+  font-size: 13px;
+  color: var(--color-danger-text);
+  margin: 12px 0 0;
+}
+
+.botones {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.volver,
+.peligro,
+.primario {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-cta);
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.volver {
+  border: 1.5px solid var(--color-primary-border);
+  background: transparent;
+  color: var(--color-primary-dark);
+}
+.peligro {
+  border: none;
+  background: var(--color-danger);
+  color: var(--color-white);
+}
+.primario {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-cta-primary);
+}
+.peligro:disabled {
+  background: var(--color-border);
+  color: var(--color-text-light);
+  cursor: default;
+}
+.volver:disabled { opacity: 0.5; }

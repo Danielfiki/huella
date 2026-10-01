@@ -587,6 +587,12 @@
 }
 .eliminarLink:hover { color: var(--color-danger); }
 
+/* Mismo link discreto, al pie de la card del hijo. */
+.eliminarHijoLink {
+  display: block;
+  margin: 16px auto 0;
+}
+
 .eliminarCard {
   display: flex;
   flex-direction: column;

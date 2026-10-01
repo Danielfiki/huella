@@ -12,6 +12,7 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import TusMedallas from '../../components/medallas/TusMedallas'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
+import { EliminarHijoModal, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
 import styles from './PerfilPage.module.css'
 
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
@@ -50,7 +51,7 @@ async function compressImage(file, maxSize = 400) {
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
-  const { state, setHijo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading, guardarHoraAviso } = useHuella()
+  const { state, dispatch, setHijo, setHijoActivo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading, guardarHoraAviso } = useHuella()
 
   // Control permanente de notificaciones push. Reutiliza el MISMO hook que el
   // NotifBanner (permission/isSupported/requestPermission); no duplica la logica
@@ -91,6 +92,7 @@ export default function PerfilPage() {
   const [errorPadreAvatar, setErrorPadreAvatar] = useState('')
 
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
+  const [eliminandoHijo, setEliminandoHijo] = useState(null)
   const [eliminandoCuenta, setEliminandoCuenta] = useState(false)
   const [errorEliminar, setErrorEliminar] = useState('')
 
@@ -225,6 +227,26 @@ export default function PerfilPage() {
       setErrorEliminar('No se pudo eliminar la cuenta. Intenta de nuevo o escribe a danielundurraga.r@gmail.com')
       setEliminandoCuenta(false)
       setConfirmandoEliminar(false)
+    }
+  }
+
+  // Solo el creador del hijo puede borrarlo (eliminar_hijo lo vuelve a chequear).
+  const puedeBorrarHijo = puedeEliminarHijo(user?.email) && state.hijo?.userId === user?.id
+
+  // Ya se borro en la base: se saca de la lista y se pasa a otro hijo. Si no
+  // queda ninguno, a crear uno.
+  async function despuesDeEliminarHijo() {
+    const borradoId = eliminandoHijo.id
+    const restantes = state.hijos.filter((h) => h.id !== borradoId)
+    setEliminandoHijo(null)
+    dispatch({ type: 'SET_HIJOS', payload: restantes })
+    if (restantes.length) {
+      await setHijoActivo(restantes[0].id)
+      navigate('/panel')
+    } else {
+      dispatch({ type: 'SET_HIJO_ACTIVO', payload: null })
+      for (const type of ['SET_EPISODIOS', 'SET_HITOS', 'SET_ESTRATEGIAS']) dispatch({ type, payload: [] })
+      navigate('/hijo?nuevo=true')
     }
   }
 
@@ -615,7 +637,26 @@ export default function PerfilPage() {
             Agregar otro hijo/a
           </button>
         )}
+
+        {puedeBorrarHijo && (
+          <button
+            type="button"
+            className={`${styles.eliminarLink} ${styles.eliminarHijoLink}`}
+            onClick={() => setEliminandoHijo(state.hijo)}
+          >
+            Eliminar perfil de {state.hijo.nombre}
+          </button>
+        )}
       </Card>
+
+      {eliminandoHijo && (
+        <EliminarHijoModal
+          hijo={eliminandoHijo}
+          conPareja={Boolean(family?.partner)}
+          onCerrar={() => setEliminandoHijo(null)}
+          onEliminado={despuesDeEliminarHijo}
+        />
+      )}
 
       {/* ── Mi Familia ───────────────────────────────── */}
       <Card>

@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
+import { useAuth } from '../../context/AuthContext'
+import { AvisoNombreRepetido, normalizarNombre, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
 import Card from '../../components/ui/Card'
 // La card de propuesta se mudo al Home (PanelPage) el 14 sep: era lo unico
 // que Huella le pide al papa y aca vivia detras de una pestana. De este
@@ -33,6 +35,7 @@ const FAMILIAS = [
 
 export default function HijoPage() {
   const { state, setHijo } = useHuella()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { hijo, episodios, hitos, rasgos } = state
@@ -45,10 +48,21 @@ export default function HijoPage() {
   const [genero, setGenero]               = useState('')
   const [loadingCrear, setLoadingCrear]   = useState(false)
   const [errorCrear, setErrorCrear]       = useState('')
+  const [nombreRepetido, setNombreRepetido] = useState(null)   // nombre del hijo que ya existe
 
   async function handleCrear(e) {
     e.preventDefault()
     if (!nombre.trim()) return
+    // Nombre que ya existe en la familia: se pregunta antes de crear.
+    if (puedeEliminarHijo(user?.email)) {
+      const repetido = state.hijos.find((h) => normalizarNombre(h.nombre) === normalizarNombre(nombre))
+      if (repetido) { setNombreRepetido(repetido.nombre); return }
+    }
+    await crear()
+  }
+
+  async function crear() {
+    setNombreRepetido(null)
     setLoadingCrear(true)
     setErrorCrear('')
     try {
@@ -133,6 +147,14 @@ export default function HijoPage() {
             </button>
           </form>
         </Card>
+
+        {nombreRepetido && (
+          <AvisoNombreRepetido
+            nombre={nombreRepetido}
+            onCrear={crear}
+            onVolver={() => navigate(-1)}
+          />
+        )}
       </div>
     )
   }

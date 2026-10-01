@@ -481,6 +481,7 @@ function debeDetectarRasgos(hijoId, total) {
 function dbHijoToApp(row) {
   return {
     id:              row.id,
+    userId:          row.user_id,
     nombre:          row.nombre,
     edad:            calcularEdad(row.fecha_nacimiento) ?? row.edad ?? null,
     avatarUrl:       row.avatar_url ?? null,
