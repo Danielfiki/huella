@@ -12,7 +12,7 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import TusMedallas from '../../components/medallas/TusMedallas'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
-import { EliminarHijoModal, anunciarEliminado, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
+import { EliminarHijoModal, anunciarEliminado } from '../../components/hijo/EliminarHijo'
 import styles from './PerfilPage.module.css'
 
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
@@ -231,7 +231,7 @@ export default function PerfilPage() {
   }
 
   // Solo el creador del hijo puede borrarlo (eliminar_hijo lo vuelve a chequear).
-  const puedeBorrarHijo = puedeEliminarHijo(user?.id) && state.hijo?.userId === user?.id
+  const puedeBorrarHijo = Boolean(user?.id) && state.hijo?.userId === user.id
 
   // Ya se borro en la base: se saca de la lista y se pasa a otro hijo. Si no
   // queda ninguno, a crear uno.

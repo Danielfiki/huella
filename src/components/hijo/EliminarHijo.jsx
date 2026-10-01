@@ -4,15 +4,7 @@ import { supabase } from '../../lib/supabase'
 import styles from './EliminarHijo.module.css'
 
 // "Eliminar perfil" de un hijo y el aviso de nombre repetido al crear uno.
-// En prueba: solo lo ven estas dos cuentas, por id (igual que DUENO_PERSONAJE).
-const CUENTAS_EN_PRUEBA = [
-  '04ddd97a-e674-4e59-8f37-78cb38d46090', // Daniel
-  '08af56df-42e7-43f8-ab35-2e64618855e4', // cuenta de prueba (+reset0923)
-]
-
-export function puedeEliminarHijo(userId) {
-  return CUENTAS_EN_PRUEBA.includes(userId)
-}
+// Para todos: eliminar solo lo ve quien creo al hijo (lo decide PerfilPage).
 
 // Sin importar mayusculas, tildes, emojis ni signos ("Pascual ❤️" = "pascual").
 export function normalizarNombre(nombre) {
