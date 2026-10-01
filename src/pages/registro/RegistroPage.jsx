@@ -196,11 +196,13 @@ function TimeSpinner({ value, onUp, onDown }) {
 // queda adelante, se baja a la hora actual.
 function FechaHoraPickerSinFuturo({ value, onChange }) {
   const ahora = nowLocal()
-  return <FechaHoraPicker value={value} onChange={(v) => onChange(v > ahora ? ahora : v)} max={ahora} />
+  return <FechaHoraPicker value={value} onChange={(v) => onChange(v > ahora ? ahora : v)} max={ahora} compacto />
 }
 const SELECTOR_FECHA = { ahora: nowLocal, Picker: FechaHoraPickerSinFuturo }
 
-function FechaHoraPicker({ value, onChange, max }) {
+// `compacto`: filas de 44 px y la hora en una sola fila (▼ 14 ▲), para que
+// quepa en la hoja del registro conversacional. Sin la prop, como siempre.
+function FechaHoraPicker({ value, onChange, max, compacto = false }) {
   const sel  = parseFechaStr(value)
   const maxP = max ? parseFechaStr(max) : null
 
@@ -241,7 +243,7 @@ function FechaHoraPicker({ value, onChange, max }) {
   const cells    = [...Array(offset).fill(null), ...Array.from({ length: daysInMo }, (_, i) => i + 1)]
 
   return (
-    <div className={styles.fechaHoraPicker}>
+    <div className={`${styles.fechaHoraPicker} ${compacto ? styles.pickerCompacto : ''}`}>
       <div className={styles.calNav}>
         <button type="button" className={styles.calNavBtn} onClick={prevMonth} disabled={!canPrev}>‹</button>
         <span className={styles.calMesLabel}>{CAL_MESES[viewMonth]} {viewYear}</span>

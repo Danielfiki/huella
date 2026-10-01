@@ -38,3 +38,5 @@
 .sobrio .lbl { font-size: 20px; color: var(--color-text); }
 .sobrio .meta { font-size: 12px; }
 .sobrio.today::before { display: none; }
+.unaLinea .lbl,
+.unaLinea .meta { white-space: nowrap; }

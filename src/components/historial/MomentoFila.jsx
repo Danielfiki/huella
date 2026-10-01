@@ -25,8 +25,8 @@ export default function MomentoFila({ momento, autor = '', onAbrir }) {
         <span className={`${styles.icono} ${styles[`icono_${tono}`] || ''}`} aria-hidden="true">{momento.emoji}</span>
         <span className={`${styles.tipo} ${momento.tipo === 'pregunta' ? styles.tipoPregunta : ''}`}>{momento.titulo}</span>
         <span className={styles.hora}>
-          {formatHora(momento.fecha)}
-          {momento.pasoEl && <> · {momento.pasoEl}</>}
+          {/* "Pasó ayer" reemplaza a la hora cuando pasó otro día. */}
+          {momento.pasoEl || formatHora(momento.fecha)}
           {autor && <span className={styles.autor}> · {autor}</span>}
         </span>
         <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />

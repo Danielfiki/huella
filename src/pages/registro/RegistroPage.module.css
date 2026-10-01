@@ -572,6 +572,19 @@
   padding-bottom: 2px;
 }
 
+/* Variante compacta (hoja de "Otro momento…" del registro conversacional):
+   filas de 44 px —el mínimo táctil— en vez de celdas cuadradas, y la hora en
+   una sola fila con ▼ a la izquierda y ▲ a la derecha. */
+.pickerCompacto { gap: 6px; padding: 8px 10px; margin-top: 0; }
+.pickerCompacto .calNavBtn { width: 44px; height: 44px; }
+.pickerCompacto .calGrid { row-gap: 0; }
+.pickerCompacto .calDia { padding: 0 0 2px; }
+.pickerCompacto .calDiaBtn { aspect-ratio: auto; height: 44px; }
+.pickerCompacto .timePicker { padding-top: 6px; gap: 8px; }
+.pickerCompacto .timeSpinner { flex-direction: row-reverse; gap: 4px; }
+.pickerCompacto .timeVal { font-size: 24px; min-width: 40px; }
+.pickerCompacto .timeSep { font-size: 24px; }
+
 /* ══════════════════════════════════════════════════════════════════
    POST-GUARDADO · la pantalla que se lee después de contar algo
    ══════════════════════════════════════════════════════════════════

@@ -55,7 +55,12 @@ export function etiquetaPaso(fecha, createdAt, today = new Date()) {
   return `Pasó el ${paso.getDate()} ${MESES_CORTOS[paso.getMonth()]}${anio}`
 }
 
-export function groupEpisodios(episodios, today = new Date()) {
+const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
+const fechaCorta = (d) => `${DIAS_CORTOS[d.getDay()]}, ${d.getDate()} ${MESES_CORTOS[d.getMonth()]}`
+
+// `enPrueba`: meses como en la etiqueta ("sep", no "sept") y un grupo de un
+// solo día con una sola fecha. Sin la opción, los encabezados quedan como hoy.
+export function groupEpisodios(episodios, today = new Date(), { enPrueba = false } = {}) {
   const grupos = []
   const dayMs = 86400000
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -88,7 +93,9 @@ export function groupEpisodios(episodios, today = new Date()) {
       type: 'day',
       label: label.charAt(0).toUpperCase() + label.slice(1),
       meta:
-        date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) +
+        (enPrueba
+          ? `${String(date.getDate()).padStart(2, '0')} ${MESES_CORTOS[date.getMonth()]}`
+          : date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })) +
         ` · ${buckets.get(key).length}`,
       isToday: diffDays === 0,
       episodios: buckets.get(key),
@@ -100,9 +107,12 @@ export function groupEpisodios(episodios, today = new Date()) {
     const newest = new Date(fechaDeOrden(overflow[0]))
     const fmt = (d) =>
       d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
+    const mismoDia = newest.toDateString() === oldest.toDateString()
     grupos.push({
       type: 'range',
-      label: `${fmt(newest)} — ${fmt(oldest)}`,
+      label: !enPrueba
+        ? `${fmt(newest)} — ${fmt(oldest)}`
+        : mismoDia ? fechaCorta(newest) : `${fechaCorta(newest)} — ${fechaCorta(oldest)}`,
       meta: `${overflow.length} momento${overflow.length === 1 ? '' : 's'}`,
       isToday: false,
       episodios: overflow,

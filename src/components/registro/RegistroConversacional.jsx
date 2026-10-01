@@ -664,12 +664,15 @@ function HojaEdicion({ campo, valores, selectorFecha, onCerrar, onElegir }) {
         )}
 
         {campo === 'cuandoPaso' && eligiendoFecha && (
-          <div className={styles.hojaTexto}>
+          <>
             <selectorFecha.Picker value={fecha} onChange={setFecha} />
-            <Button variant="primary" fullWidth onClick={() => onElegir('cuandoPaso', 'custom', fecha)}>
-              Listo
-            </Button>
-          </div>
+            {/* Fijo al pie de la hoja: se ve siempre, aunque la hoja desplace. */}
+            <div className={styles.hojaPieFijo}>
+              <Button variant="primary" fullWidth onClick={() => onElegir('cuandoPaso', 'custom', fecha)}>
+                Listo
+              </Button>
+            </div>
+          </>
         )}
 
         {campo === 'emocion' && (

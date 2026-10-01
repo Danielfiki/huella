@@ -188,7 +188,7 @@ export default function HistorialPage() {
     return result
   }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda, porRegistro])
 
-  const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
+  const grupos = useMemo(() => groupEpisodios(filtered, undefined, { enPrueba: porRegistro }), [filtered, porRegistro])
 
   // El Home puede mandar a un momento puntual (la card del reingreso navega
   // con `state.momentoId`): se abre directo en su propia pantalla. Con replace,
@@ -323,9 +323,9 @@ export default function HistorialPage() {
           preguntasNorm.length === 0 ? (
             <p className={styles.emptyFilter}>Sin preguntas todavía.</p>
           ) : (
-            groupEpisodios(preguntasNorm).map((g, i) => (
+            groupEpisodios(preguntasNorm, undefined, { enPrueba: porRegistro }).map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio />
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea={porRegistro} />
                 {g.episodios.map((p) => (
                   <MomentoFila
                     key={p.id}
@@ -377,7 +377,7 @@ export default function HistorialPage() {
 
             {grupos.map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio />
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea={porRegistro} />
                 {g.episodios.map((ep) => (
                   // El nombre va solo si lo registró el otro adulto.
                   <MomentoFila
