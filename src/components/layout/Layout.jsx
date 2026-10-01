@@ -5,6 +5,7 @@ import Onboarding from '../../pages/onboarding/Onboarding'
 import Logo from '../ui/Logo'
 import { persistirPerfilOnboarding } from '../../services/onboardingPersistor'
 import NotifBanner from '../NotifBanner'
+import { AvisoEliminado } from '../hijo/EliminarHijo'
 import { useHuella } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
 import { useMedallasNuevas } from '../medallas/medallasNuevas'
@@ -322,6 +323,8 @@ export default function Layout() {
           </PageTransition>
         )}
       </main>
+
+      <AvisoEliminado />
 
       {/* data-nav-*: la bienvenida del escarabajo mide aca el borde de la barra y el + */}
       <nav className={styles.bottomNav} data-nav-inferior="">

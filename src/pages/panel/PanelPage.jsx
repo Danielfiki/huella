@@ -8,7 +8,6 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
-import { AvisoEliminado } from '../../components/hijo/EliminarHijo'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
 import { PuertaHuella, PuertaCerebro, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
 import AnalisisSemanalCard from '../../components/panel/AnalisisSemanalCard'
@@ -476,15 +475,6 @@ export default function PanelPage() {
           onClose={() => setShowUpgrade(false)}
           tituloCustom={upgradeCopy?.titulo}
           mensajeCustom={upgradeCopy?.mensaje}
-        />
-      )}
-
-      {/* Llega desde Perfil tras eliminar un hijo. Al terminar se limpia el
-          state para que volver atras o recargar no lo repita. */}
-      {location.state?.hijoEliminado && (
-        <AvisoEliminado
-          nombre={location.state.hijoEliminado}
-          onFin={() => navigate(location.pathname + location.search, { replace: true, state: null })}
         />
       )}
     </div>

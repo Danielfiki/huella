@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import styles from './EliminarHijo.module.css'
 
@@ -20,6 +21,13 @@ export function normalizarNombre(nombre) {
     .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, ' ')
     .trim().toLowerCase()
+}
+
+// El nombre para mostrar en "Escribe ... para confirmar": sin emojis ni signos
+// sobrantes, pero con sus mayusculas y tildes ("Pascual ❤️" -> "Pascual").
+export function nombreLimpio(nombre) {
+  const limpio = (nombre || '').replace(/[^\p{L}\p{N}\s'-]/gu, '').replace(/\s+/g, ' ').trim()
+  return limpio || (nombre || '').trim()
 }
 
 // Busca un hijo de la familia con el mismo nombre. Lee de la base en el
@@ -115,7 +123,7 @@ export function EliminarHijoModal({ hijo, conPareja, onCerrar, onEliminado }) {
         </p>
 
         <label className={styles.label} htmlFor="eliminar-hijo-nombre">
-          Escribe <strong>{hijo.nombre}</strong> para confirmar
+          Escribe <strong>{nombreLimpio(hijo.nombre)}</strong> para confirmar
         </label>
         <input
           id="eliminar-hijo-nombre"
@@ -157,13 +165,33 @@ export function AvisoNombreRepetido({ nombre, onCrear, onVolver }) {
   )
 }
 
-// Aviso breve en el Home despues de eliminar. Se va solo a los 3 s.
-export function AvisoEliminado({ nombre, onFin }) {
-  const fin = useRef(onFin)
-  fin.current = onFin
+// Aviso breve despues de eliminar. No depende del Home ni del state de
+// navegacion: la hoja lo anuncia apenas el borrado sale bien, y lo pinta
+// AvisoEliminado, que vive en el Layout (nunca se desmonta) y se portalea a
+// document.body (fuera de la transicion de pagina). Se va solo a los 3 s.
+let anunciado = null
+const oyentes = new Set()
+export function anunciarEliminado(nombre) {
+  anunciado = { nombre, id: Date.now() }
+  oyentes.forEach((f) => f())
+}
+
+export function AvisoEliminado() {
+  const [aviso, setAviso] = useState(anunciado)
   useEffect(() => {
-    const t = setTimeout(() => fin.current(), 3000)
-    return () => clearTimeout(t)
+    const oir = () => setAviso(anunciado)
+    oyentes.add(oir)
+    oir()
+    return () => { oyentes.delete(oir) }
   }, [])
-  return <div className={styles.avisoBreve} role="status">Se eliminó el perfil de {nombre}</div>
+  useEffect(() => {
+    if (!aviso) return
+    const t = setTimeout(() => { if (anunciado === aviso) anunciado = null; setAviso(null) }, 3000)
+    return () => clearTimeout(t)
+  }, [aviso])
+  if (!aviso) return null
+  return createPortal(
+    <div key={aviso.id} className={styles.avisoBreve} role="status">Se eliminó el perfil de {aviso.nombre}</div>,
+    document.body
+  )
 }

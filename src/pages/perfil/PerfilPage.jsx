@@ -12,7 +12,7 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import TusMedallas from '../../components/medallas/TusMedallas'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
-import { EliminarHijoModal, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
+import { EliminarHijoModal, anunciarEliminado, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
 import styles from './PerfilPage.module.css'
 
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
@@ -238,11 +238,16 @@ export default function PerfilPage() {
   async function despuesDeEliminarHijo() {
     const { id: borradoId, nombre: borradoNombre } = eliminandoHijo
     const restantes = state.hijos.filter((h) => h.id !== borradoId)
+    document.activeElement?.blur?.()   // cierra el teclado del iPhone
+    anunciarEliminado(borradoNombre)
     setEliminandoHijo(null)
     dispatch({ type: 'SET_HIJOS', payload: restantes })
     if (restantes.length) {
-      await setHijoActivo(restantes[0].id)
-      navigate('/panel', { state: { hijoEliminado: borradoNombre } })
+      // El cambio de hijo se despacha al llamar; se navega antes de esperar la
+      // carga, asi navigate nunca corre desde Perfil ya desmontado.
+      const carga = setHijoActivo(restantes[0].id)
+      navigate('/panel')
+      await carga
     } else {
       dispatch({ type: 'SET_HIJO_ACTIVO', payload: null })
       for (const type of ['SET_EPISODIOS', 'SET_HITOS', 'SET_ESTRATEGIAS']) dispatch({ type, payload: [] })
