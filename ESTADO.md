@@ -26,6 +26,7 @@
 
 **Regla de trabajo**
 - 📌 **La prueba de fallo la hace Code, con el medio más simple, tope 10 minutos. Daniel nunca usa DevTools** — desde **15 sep 2026** — así se probaron la 941, la 1578 y la 1295: arnés temporal fuera del repo, id inexistente para forzar 0 filas, evidencia pegada en el chat y todo lo temporal borrado al terminar.
+- 🔴 **Nunca simular un borrado con intercepción de red** — desde **1 oct 2026** — todo lo destructivo se prueba **solo con datos temporales reales creados para la prueba**. Salió del incidente del 1 oct: un `page.route` que no atrapó nada dejó pasar el `eliminar_hijo` real y borró La brava (bloque del 1 oct).
 
 ### Bloque 0 — hoy, sin Code
 
@@ -103,7 +104,13 @@
 
 ### Personaje
 
-- ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver Cerrado HOY (30 sep).
+- ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
+
+### Eliminar perfil y Momentos (desde 1 oct)
+
+- ⬜ **Fotos de la pareja sueltas al eliminar un hijo** — **1 oct** — las fotos de momentos y avances que subió la pareja viven en su carpeta de Storage; quien elimina no las puede borrar (la policy solo deja borrar la carpeta propia) y quedan sin nada que las apunte. Hoy solo se anotan en la consola.
+- ⬜ **Orden de Momentos por fecha de registro** — **1 oct** — hoy Momentos agrupa en Hoy / Ayer y ordena por `fecha` (cuándo pasó). Daniel quiere ordenar por `created_at` (cuándo se registró) y mostrar "Pasó ayer" en la tarjeta cuando no coinciden. La IA y los patrones siguen usando `fecha`. Ojo: `created_at` es null en momentos anteriores al 16 sep 2026.
+- ⬜ **Bug: "Otro momento…" en Registrar conversacional** — **1 oct** — no tiene selector de fecha y guarda la hora del registro (`RegistroPage.jsx` `computarFecha`, caso `custom` sin `fechaCustom`). El selector solo existe en el modo clásico.
 - ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
 
 ### Sale de la cola
@@ -113,6 +120,7 @@
 - ✅ **Solicitud de acceso a producción en Google Play** — **enviada el 28 sep a las 14:41**.
 - ✅ **Arreglo de Diego: "Ver orientación" mostraba media orientación** — **en producción para todos el 28 sep** (`86f1357`).
 - ✅ **Rediseño de Momentos** — **en producción para todos el 29 sep** (detalle: bloque del 29 sep).
+- ✅ **"Eliminar perfil" de un hijo + aviso de nombre repetido** — **en producción para todos el 1 oct** (`d9e848d`, `dc1ae96`, `d2a7864`, `5f7bbce`, `bc33fcd`; migración 028; detalle: Cerrado HOY 1 oct).
 - ✅ **Grilla de "¿Cómo estás tú?" del seguimiento** — **en producción para todos el 29 sep** (`ebe7924`).
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
@@ -357,7 +365,37 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (30 sep 2026) — **Orgulloso de visita EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (1 oct 2026) — **"Eliminar perfil" de un hijo EN PRODUCCIÓN PARA TODOS**
+
+### 1. ✅ Eliminar perfil + aviso de nombre repetido, para todos
+- **Dónde:** Tú → al pie de la card del hijo, link discreto **"Eliminar perfil de [nombre]"**. Solo lo ve quien creó al hijo (`hijos.user_id` = usuario actual); la pareja nunca.
+- **Hoja:** conteos reales de lo que se pierde (momentos, avances, preguntas, planes; omite los 0), campo para escribir el nombre (sin importar mayúsculas, tildes, emojis ni espacios; la etiqueta muestra el nombre sin emoji) y botón rojo **"Eliminar para siempre"** que se habilita solo si coincide. Si falla: "No se pudo eliminar. No se borró nada, intenta de nuevo."
+- **Después:** si quedan hijos, pasa a otro y va al Home; si no queda ninguno, a "Nuevo hijo/a". Aviso breve **"Se eliminó el perfil de [nombre]"** 3 s: lo monta el Layout y va por portal a `document.body` (no depende del Home ni del state de navegación).
+- **Aviso de nombre repetido** al crear un hijo: "Ya tienes a [nombre]. ¿Es otro hijo?" con **"No, volver"** (principal) y "Sí, crear". Lee los hijos de la base al tocar "Crear hijo/a". Todos los caminos (Tú → "Agregar otro hijo/a", "+" del Home, vuelta tras eliminar) llegan al mismo formulario.
+- **Base:** RPC `eliminar_hijo` (migración `028_eliminar_hijo.sql`, **corrida por Daniel en Supabase el 1 oct**). SECURITY DEFINER, solo el creador; borra episodios, hitos, estrategias y patrones del hijo y después la fila de `hijos` (lo demás cae por CASCADE) en una sola transacción, y devuelve las rutas de fotos para que el cliente las borre de Storage.
+- **Commits:** `d9e848d` (función + RPC), `dc1ae96` (ajustes de botones, aviso y borde), `d2a7864` (filtro por id, emojis, lista desde la base), `5f7bbce` (aviso en el Layout, nombre sin emoji), `bc33fcd` (apertura a todos). Index en producción `DBSCai7F`.
+
+### 2. QA de cierre (Code, WebKit iPhone 14, cuenta de prueba, base de producción)
+- ✅ Aviso de repetido en los 3 caminos ("La brava ❤️", "  la brava ", "LA BRAVA"), sin crear duplicados.
+- ✅ `eliminar_hijo` con un uuid ajeno: **403** "No se puede eliminar este hijo". Sin sesión: **401** "permission denied". Nada borrado.
+- ✅ **Último hijo, prueba real:** "Temporal" con foto como único hijo → eliminado → "Nuevo hijo/a" + aviso. Captura `huella-design-pack/eliminar-perfil/10-ultimo-hijo-v5.png`.
+- ✅ **Foto en Storage:** el listado de la API (`/storage/v1/object/list/avatares`) la muestra antes y **ya no la muestra justo después** de eliminar. El "200" de la ronda anterior fue una descarga hecha segundos después del borrado (respuesta en caché); la foto de ese hijo tampoco existe hoy (listado vacío, descarga 400). **No hizo falta arreglo.**
+- ✅ Producción: con la cuenta de prueba, en www.huella.lat (index `DBSCai7F`) se ve "Eliminar perfil de La brava" en Tú.
+- Daniel aprobó en su iPhone: eliminar, hoja con teclado, aviso de eliminado (`5f7bbce`) y aviso de repetido.
+
+### 3. 🪤 Incidente: La brava borrada en el QA
+- **1 oct:** para simular el caso "último hijo" sin borrar nada, Code interceptó la red con `page.route` de Playwright (WebKit) y respondió falso a `eliminar_hijo`. **La intercepción no atrapó ningún pedido** (log vacío) y el RPC real borró **La brava con 15 momentos, 37 avances y 7 rasgos**. Causa de la falla de intercepción: sin confirmar (el service worker no tiene manejador de `fetch`, quedó descartado).
+- Daniel la dio por perdida (sin recuperación). **Rearmada desde la app el 1 oct:** "La brava", Niño, nacimiento **2021-03-03** (de este archivo, QA del banco teórico), **sin registros**. La cuenta de prueba queda solo con La brava, 0 registros sin hijo y Storage vacío.
+- **Regla nueva (abajo, en "Regla de trabajo"):** nunca simular borrados con intercepción de red.
+
+### ⏭️ Pendiente
+1. ⬜ Fotos que subió la pareja quedan sueltas en Storage al eliminar un hijo (viven en la carpeta de la pareja y la policy solo deja borrar la propia).
+2. ⬜ Orden de Momentos por fecha de registro (ver PENDIENTES).
+3. ⬜ Bug "Otro momento…" en Registrar conversacional (ver PENDIENTES).
+
+---
+
+## Sesión 30 sep 2026 — **Orgulloso de visita EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Orgulloso para todos
 - **Dónde:** pantalla de avance guardado. Sube desde el borde de la barra, **pegado a la izquierda sobre "Inicio"** (cuerpo a 8 px del borde), se muestra orgulloso y se va solo. Tapa parte de los botones un rato: en un iPhone normal no hay hueco libre sobre la barra (medido: compactar la pantalla libera 112 px y la jarras necesita 180; Daniel aceptó taparlos un rato).
@@ -474,7 +512,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
   - **orgulloso-pulgar-alfa.mp4** (pulgar arriba): cuadros 2 a 213 (8,83 s), 424 × 556, 1.129 KB, + póster. ⚠️ El original se llama `24-orgulloso-base.png.mp4`, no `23-orgulloso-1.mp4` (ese nombre no existe en la carpeta); el contenido es el pulgar arriba.
   - **orgulloso-aplauso-alfa.mp4** (aplauso suave, original `25-orgulloso-2.mp4`): cuadros 2 a 219 (9,08 s), 418 × 560, 1.210 KB, + póster.
   - Verificado: el cuadro 1 (destello de la referencia) queda fuera; 0 píxeles opacos en el primer y el último cuadro (también en el MP4 ya codificado); antenas enteras (fila de arriba y columnas de los costados vacías en todos los cuadros); cuerpo apoyado en la última fila. Las puntas de los dedos que cuelgan sobre la repisa (hasta y ≈ 703) quedan cortadas en la línea.
-- ✅ **Variante 3 de orgulloso** (jarras): llegó y se procesó el 30 sep (ver Cerrado HOY 30 sep).
+- ✅ **Variante 3 de orgulloso** (jarras): llegó y se procesó el 30 sep (ver bloque del 30 sep).
 
 ### ⏭️ Pendiente
 2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro de pensando: hay que darle Pro a la cuenta de prueba y reiniciar su contador de IA (SQL entregado a Daniel el 28 sep).
