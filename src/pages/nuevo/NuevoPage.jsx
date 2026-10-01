@@ -1,4 +1,4 @@
-import React, { useState, useRef, lazy, Suspense } from 'react'
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Camera, X } from 'lucide-react'
 import Escarabajo from '../../components/ui/Escarabajo'
@@ -24,7 +24,7 @@ import regStyles from '../../pages/registro/RegistroPage.module.css'
 // importa su módulo en vez de recrearlas.
 import hijoStyles from '../../pages/hijo/HijoPage.module.css'
 import { puedePreguntar } from '../../services/preguntas'
-import { usaOrgulloso, elegirOrgulloso } from '../../components/personaje/orgulloso'
+import { usaOrgulloso, elegirOrgulloso, precargarOrgulloso } from '../../components/personaje/orgulloso'
 
 // Visita de orgulloso en la vista de avance guardado (por ahora solo la
 // cuenta de Daniel): el chunk baja solo cuando hace falta.
@@ -60,10 +60,29 @@ export default function NuevoPage() {
   const [vista, setVista] = useState(
     location.state?.vistaInicial === 'hito' ? 'hito' : 'elegir'
   )
-  // Variante de la visita de orgulloso para esta apertura de la vista
-  // guardado (null: no hay visita). Se elige al abrirla y vuelve a null
-  // cuando el video termina o no puede correr.
+  // Visita de orgulloso. La variante se elige (y su video se precarga) al
+  // abrir el formulario de avance; la visita arranca apenas el avance quedo
+  // guardado en la base, sin esperar la foto ni la respuesta de la IA, y
+  // vuelve a null cuando el video termina o no puede correr.
+  const [proximoOrgulloso, setProximoOrgulloso] = useState(null)
   const [orgulloso, setOrgulloso] = useState(null)
+  useEffect(() => {
+    if (vista !== 'hito' || !usaOrgulloso(user?.id)) return
+    const v = elegirOrgulloso(user.id)
+    setProximoOrgulloso(v)
+    precargarOrgulloso(v)
+  }, [vista]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Va como hijo con key en la raiz del formulario y en la de "guardado": React
+  // la conserva al cambiar de vista (las dos raices son el mismo div), asi no
+  // se reinicia si el guardado sigue con la foto. Sube desde la barra (vive
+  // dentro de ella, no ocupa lugar en la pagina), pegado a la izquierda sobre
+  // "Inicio". Tapa parte de los botones un rato: no hay hueco libre sobre la
+  // barra en un iPhone normal.
+  const visitaOrgulloso = orgulloso && (
+    <Suspense key="visita-orgulloso" fallback={null}>
+      <OrgullosoEscarabajo userId={user.id} variante={orgulloso} izquierda alTerminar={() => setOrgulloso(null)} />
+    </Suspense>
+  )
 
   // Un ejemplo de los tres, elegido UNA vez al montar. El inicializador
   // perezoso del useState es lo que garantiza que no rote en cada render: con
@@ -175,6 +194,9 @@ export default function NuevoPage() {
       }
       const inserted = await addHito(hito)
 
+      // Guardado en la base: la visita arranca ya, junto con la IA.
+      if (inserted?.id && usaOrgulloso(user?.id)) setOrgulloso(proximoOrgulloso || elegirOrgulloso(user.id))
+
       // Arranca acá, ANTES de la foto y sin await: las dos cosas corren en
       // paralelo y ninguna espera a la otra. El candado es el id del hito.
       if (inserted?.id && respuestaPedidaRef.current !== inserted.id) {
@@ -207,7 +229,6 @@ export default function NuevoPage() {
       setHitoGuardadoSinFoto((!huboFotoEnSubmit || fotoFallo) && Boolean(inserted?.id))
       setFotoEnmarcaUrl(null)
       setErrorFotoEnmarca(fotoFallo ? 'No se pudo subir la foto. Intenta de nuevo.' : '')
-      setOrgulloso(usaOrgulloso(user?.id) ? elegirOrgulloso(user.id) : null)
       setVista('guardado')
     } catch (e) {
       setError('No se pudo guardar: ' + e.message)
@@ -469,16 +490,8 @@ export default function NuevoPage() {
           <button className={styles.verHitosBtn} onClick={() => navigate('/historial', { state: { filtro: 'logros' } })}>
             Ver todos los avances →
           </button>
-          {/* Sube desde la barra inferior (vive dentro de ella, no ocupa
-              lugar en la pagina), pegado a la izquierda sobre "Inicio". Tapa
-              parte de los botones un rato, en cualquier lado: no hay hueco
-              libre sobre la barra en un iPhone normal. */}
-          {orgulloso && (
-            <Suspense fallback={null}>
-              <OrgullosoEscarabajo userId={user.id} variante={orgulloso} izquierda alTerminar={() => setOrgulloso(null)} />
-            </Suspense>
-          )}
         </div>
+        {visitaOrgulloso}
       </div>
     )
   }
@@ -603,6 +616,7 @@ export default function NuevoPage() {
         Guardar avance
       </Button>
       {error && <p className={styles.error}>{error}</p>}
+      {visitaOrgulloso}
     </div>
   )
 }

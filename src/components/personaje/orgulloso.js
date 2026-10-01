@@ -39,3 +39,12 @@ export function elegirOrgulloso(userId) {
 export function marcarOrgulloso(userId, id) {
   try { localStorage.setItem(claveUltima(userId), id) } catch { /* sin ultima */ }
 }
+
+// Al abrir el formulario de avance: baja el video de la variante que toca y
+// el codigo del componente, para que la visita asome apenas se guarda. La
+// visita igual descarga el video entero antes de mostrarse (si la precarga
+// no termino, espera y arranca desde el principio, nunca a mitad).
+export function precargarOrgulloso(variante) {
+  try { fetch(variante.video).catch(() => {}) } catch { /* sin precarga */ }
+  import('./OrgullosoEscarabajo').catch(() => {})
+}
