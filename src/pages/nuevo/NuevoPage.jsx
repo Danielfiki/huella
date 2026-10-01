@@ -470,10 +470,12 @@ export default function NuevoPage() {
             Ver todos los avances →
           </button>
           {/* Sube desde la barra inferior (vive dentro de ella, no ocupa
-              lugar en la pagina) en el espacio bajo este boton. */}
+              lugar en la pagina), pegado a la izquierda sobre "Inicio". Tapa
+              parte de los botones un rato, en cualquier lado: no hay hueco
+              libre sobre la barra en un iPhone normal. */}
           {orgulloso && (
             <Suspense fallback={null}>
-              <OrgullosoEscarabajo userId={user.id} variante={orgulloso} alTerminar={() => setOrgulloso(null)} />
+              <OrgullosoEscarabajo userId={user.id} variante={orgulloso} izquierda alTerminar={() => setOrgulloso(null)} />
             </Suspense>
           )}
         </div>

@@ -13,6 +13,7 @@
   --ancho: calc(var(--base) * 0.84628);
   aspect-ratio: 424 / 556;
   right: calc(50% - var(--ancho) * 0.49528);
+  --margen-izq: 0.00943;
 }
 
 /* Video 25 (aplauso). Eje de la cabeza al 46,41 % del ancho. */
@@ -20,6 +21,7 @@
   --ancho: calc(var(--base) * 0.83431);
   aspect-ratio: 418 / 560;
   right: calc(50% - var(--ancho) * 0.53589);
+  --margen-izq: 0.00957;
 }
 
 /* Video 26 (manos en la cintura). La caja es mas ancha por los codos; eje
@@ -28,6 +30,18 @@
   --ancho: calc(var(--base) * 1.19358);
   aspect-ratio: 598 / 600;
   right: calc(50% - var(--ancho) * 0.50920);
+  --margen-izq: 0.01003;
+}
+
+/* Pegado a la izquierda (pantalla de avance guardado): sube sobre "Inicio".
+   Igual tapa parte de los botones y textos un rato (30 sep: medido en SE,
+   14, 14 Pro Max y Safari; Daniel lo acepto para probarlo). El primer pixel visible
+   del cuerpo, en toda la animacion, queda a 8 px del borde de la pantalla:
+   --margen-izq es la parte transparente de la caja a la izquierda (medida
+   en el archivo). Va despues de las variantes: gana su right. */
+.izquierda {
+  right: auto;
+  left: calc(8px - var(--ancho) * var(--margen-izq));
 }
 
 .pulgar .fuente {
