@@ -7,6 +7,7 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio, generarRespuestaReflexion } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { useAuth } from '../../context/AuthContext'
+import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
@@ -189,6 +190,15 @@ function TimeSpinner({ value, onUp, onDown }) {
     </div>
   )
 }
+
+// El mismo selector para "Otro momento…" del registro conversacional (en
+// prueba). Sin fechas futuras: tope en el día de hoy y, si la hora elegida
+// queda adelante, se baja a la hora actual.
+function FechaHoraPickerSinFuturo({ value, onChange }) {
+  const ahora = nowLocal()
+  return <FechaHoraPicker value={value} onChange={(v) => onChange(v > ahora ? ahora : v)} max={ahora} />
+}
+const SELECTOR_FECHA = { ahora: nowLocal, Picker: FechaHoraPickerSinFuturo }
 
 function FechaHoraPicker({ value, onChange, max }) {
   const sel  = parseFechaStr(value)
@@ -424,6 +434,7 @@ export default function RegistroPage() {
     // que ya hace computarFecha con un valor vacío, y evita bloquear el
     // guardado por un campo que el relato no mencionó.
     setCuandoPaso(d.cuandoPaso || 'ahora')
+    if (d.fechaCustom) setFechaCustom(d.fechaCustom)
     setIntensidad(d.intensidad || null)
   }
 
@@ -465,7 +476,7 @@ export default function RegistroPage() {
       // computarFecha se usa en los tres modos: en detallado mapea el chip
       // a un timestamp histórico, en rápido también (ahora el modo rápido
       // tiene la misma pregunta "¿Cuándo pasó?" — D2 del fix del Bug 1).
-      fecha: computarFecha(esConv ? (datos?.cuandoPaso || 'ahora') : cuandoPaso, fechaCustom),
+      fecha: computarFecha(esConv ? (datos?.cuandoPaso || 'ahora') : cuandoPaso, esConv ? datos?.fechaCustom : fechaCustom),
       // El conversacional sí guarda emoción: la extrae del relato y el padre
       // la valida, así que llega con la misma confianza que en el detallado.
       emocion: (modo === 'detallado' || esConv)
@@ -898,6 +909,7 @@ export default function RegistroPage() {
         onVolver={() => navigate('/nuevo')}
         onConfirmar={handleConfirmarConversacional}
         onEditarTodo={handleEditarTodo}
+        selectorFecha={enPrueba(user?.id) ? SELECTOR_FECHA : null}
       />
     )
   }

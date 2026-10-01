@@ -8,7 +8,8 @@ import DaySeparator from '../../components/historial/DaySeparator'
 import MomentoFila from '../../components/historial/MomentoFila'
 import MomentosCabecera from '../../components/historial/MomentosCabecera'
 import PatronCard from '../../components/patron/PatronCard'
-import { groupEpisodios, TIPOS } from '../../components/historial/helpers'
+import { groupEpisodios, etiquetaPaso, TIPOS } from '../../components/historial/helpers'
+import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { LENTE_POR_ID } from '../../constants/catalogoAvance'
@@ -81,11 +82,20 @@ export default function HistorialPage() {
   const [pdfActivado, setPdfActivado] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
+  // En prueba: Momentos ordena y agrupa por cuándo se REGISTRÓ (created_at; si
+  // falta, cuándo pasó) y la tarjeta avisa "Pasó ayer" si no coinciden. Solo
+  // esta pantalla: la IA, los patrones y el gráfico siguen con `fecha`.
+  const porRegistro = enPrueba(user?.id)
+  const orden = (fecha, createdAt) => (porRegistro ? (createdAt || fecha) : fecha)
+  const paso  = (fecha, createdAt) => (porRegistro ? etiquetaPaso(fecha, createdAt) : null)
+
   const episodiosNorm = useMemo(
     () =>
       episodios.map((ep) => ({
         id: ep.id,
         fecha: ep.fecha,
+        fechaOrden: orden(ep.fecha, ep.createdAt),
+        pasoEl: paso(ep.fecha, ep.createdAt),
         emoji: TIPOS[ep.tipo]?.emoji ?? '📝',
         titulo: TIPOS[ep.tipo]?.label ?? ep.tipo,
         descripcion: ep.contexto || null,
@@ -103,7 +113,7 @@ export default function HistorialPage() {
         accionRapida: ep.accionRapida ?? null,
         _source: 'episodio',
       })),
-    [episodios]
+    [episodios, porRegistro]
   )
 
   const hitosNorm = useMemo(
@@ -120,6 +130,8 @@ export default function HistorialPage() {
         return {
           id: h.id,
           fecha: h.fecha,
+          fechaOrden: orden(h.fecha, h.created_at),
+          pasoEl: paso(h.fecha, h.created_at),
           // Mismo emoji para todos los avances: el catálogo ya no trae uno por
           // lente, porque la identidad visual de las 12 la define Design.
           emoji: '⭐',
@@ -139,21 +151,24 @@ export default function HistorialPage() {
           _source: 'hito',
         }
       }),
-    [hitos]
+    [hitos, porRegistro]
   )
 
   const todosUnificados = useMemo(
     () =>
       [...episodiosNorm, ...hitosNorm].sort(
-        (a, b) => new Date(b.fecha) - new Date(a.fecha)
+        (a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden)
       ),
     [episodiosNorm, hitosNorm]
   )
 
   const filtered = useMemo(() => {
     let result
-    if (filtro === 'dificiles') result = episodiosNorm.filter((e) => e.nivel >= 3)
-    else if (filtro === 'logros') result = hitosNorm
+    // En prueba, los filtros salen de la lista ya ordenada por registro.
+    const eps = porRegistro ? todosUnificados.filter((e) => e._source === 'episodio') : episodiosNorm
+    const his = porRegistro ? todosUnificados.filter((e) => e._source === 'hito') : hitosNorm
+    if (filtro === 'dificiles') result = eps.filter((e) => e.nivel >= 3)
+    else if (filtro === 'logros') result = his
     // 'fotos' cruza episodios e hitos: es lo que reemplaza al álbum, que solo
     // mostraba hitos. Un episodio difícil con foto también es un momento visual.
     else if (filtro === 'fotos') result = todosUnificados.filter((e) => e.fotoUrl)
@@ -171,7 +186,7 @@ export default function HistorialPage() {
       })
     }
     return result
-  }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda])
+  }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda, porRegistro])
 
   const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
 
@@ -185,7 +200,7 @@ export default function HistorialPage() {
 
   const rango = useMemo(() => {
     if (!todosUnificados.length) return ''
-    const oldest = new Date(todosUnificados[todosUnificados.length - 1].fecha)
+    const oldest = new Date(todosUnificados[todosUnificados.length - 1].fechaOrden)
     const days = Math.ceil((new Date() - oldest) / 86400000)
     if (days <= 1) return 'Hoy'
     if (days <= 30) return `Últ. ${days} días`

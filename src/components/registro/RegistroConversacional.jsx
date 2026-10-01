@@ -76,6 +76,14 @@ const FRASES = {
   cuandoPaso: (v) => `y lo dejé en ${v}`,
 }
 
+// "Otro momento…" con fecha elegida: "el 28 sep, 14:30" (hora local).
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+function labelFechaCustom(valor) {
+  const [d, t] = valor.split('T')
+  const [, mes, dia] = d.split('-').map(Number)
+  return `el ${dia} ${MESES_CORTOS[mes - 1]}, ${t}`
+}
+
 // Solo la primera letra: bajar la etiqueta entera con toLowerCase se comería
 // las mayúsculas de un nombre propio dentro del contexto.
 const bajarInicial = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s)
@@ -160,6 +168,9 @@ export default function RegistroConversacional({
   onVolver,
   guardando = false,
   errorGuardar = '',
+  // En prueba: { ahora, Picker } para que "Otro momento…" abra el selector de
+  // fecha y hora del modo clásico. Sin él, "Otro momento…" queda como hoy.
+  selectorFecha = null,
 }) {
   // narrar → (extrayendo) → [repregunta → (extrayendo)] → validar
   const [fase, setFase] = useState('narrar')
@@ -185,6 +196,7 @@ export default function RegistroConversacional({
   const [emocion, setEmocion] = useState(null)      // string: la específica
   const [contexto, setContexto] = useState('')
   const [cuandoPaso, setCuandoPaso] = useState('')
+  const [fechaCustom, setFechaCustom] = useState('')  // 'YYYY-MM-DDTHH:MM' local, solo con "Otro momento…"
   const [intensidad, setIntensidad] = useState(null)
 
   const [parrafo, setParrafo] = useState('')
@@ -334,6 +346,7 @@ export default function RegistroConversacional({
       emocion,
       contexto,
       cuandoPaso,
+      fechaCustom,
       intensidad,
     })
   }
@@ -345,6 +358,7 @@ export default function RegistroConversacional({
       emocion,
       contexto,
       cuandoPaso,
+      fechaCustom,
       intensidad,
     })
   }
@@ -367,7 +381,7 @@ export default function RegistroConversacional({
     tipo:       labelTipo(tipo),
     emocion:    emocion,
     contexto:   contexto,
-    cuandoPaso: labelCuando(cuandoPaso),
+    cuandoPaso: cuandoPaso === 'custom' && fechaCustom ? labelFechaCustom(fechaCustom) : labelCuando(cuandoPaso),
   }
   const colgados = CAMPOS
     .filter((campo) => !ubicados.includes(campo))
@@ -544,13 +558,14 @@ export default function RegistroConversacional({
       {campoEditando && (
         <HojaEdicion
           campo={campoEditando}
-          valores={{ tipo, emocion, contexto, cuandoPaso }}
+          valores={{ tipo, emocion, contexto, cuandoPaso, fechaCustom }}
+          selectorFecha={selectorFecha}
           onCerrar={() => setCampoEditando(null)}
-          onElegir={(campo, valor) => {
+          onElegir={(campo, valor, fecha = '') => {
             if (campo === 'tipo')       setTipo(valor)
             if (campo === 'emocion')    setEmocion(valor)
             if (campo === 'contexto')   setContexto(valor)
-            if (campo === 'cuandoPaso') setCuandoPaso(valor)
+            if (campo === 'cuandoPaso') { setCuandoPaso(valor); setFechaCustom(fecha) }
             setCampoEditando(null)
           }}
         />
@@ -598,9 +613,12 @@ function GrabadorVoz({ value, onChange, onDictado, onEnviar }) {
 // ══════════════════════════════════════════════════════════════════════
 // Hoja de edición — sube desde abajo con las opciones reales del campo.
 // ══════════════════════════════════════════════════════════════════════
-function HojaEdicion({ campo, valores, onCerrar, onElegir }) {
+function HojaEdicion({ campo, valores, selectorFecha, onCerrar, onElegir }) {
   const [catAbierta, setCatAbierta] = useState(null)
   const [textoLibre, setTextoLibre] = useState(valores.contexto || '')
+  // "Otro momento…" con selector: se elige fecha y hora y se confirma con Listo.
+  const [eligiendoFecha, setEligiendoFecha] = useState(!!selectorFecha && valores.cuandoPaso === 'custom')
+  const [fecha, setFecha] = useState(valores.fechaCustom || (selectorFecha ? selectorFecha.ahora() : ''))
 
   const titulos = {
     tipo:       '¿Qué pasó?',
@@ -629,19 +647,28 @@ function HojaEdicion({ campo, valores, onCerrar, onElegir }) {
           </div>
         )}
 
-        {campo === 'cuandoPaso' && (
+        {campo === 'cuandoPaso' && !eligiendoFecha && (
           <div className={styles.hojaOpciones}>
             {CUANDO_OPCIONES.map((c) => (
               <button
                 key={c.id}
                 className={`${styles.opcion} ${valores.cuandoPaso === c.id ? styles.opcionOn : ''}`}
-                onClick={() => onElegir('cuandoPaso', c.id)}
+                onClick={() => (c.id === 'custom' && selectorFecha ? setEligiendoFecha(true) : onElegir('cuandoPaso', c.id))}
                 type="button"
               >
                 <span>{c.label}</span>
                 {valores.cuandoPaso === c.id && <Check size={15} className={styles.opcionCheck} />}
               </button>
             ))}
+          </div>
+        )}
+
+        {campo === 'cuandoPaso' && eligiendoFecha && (
+          <div className={styles.hojaTexto}>
+            <selectorFecha.Picker value={fecha} onChange={setFecha} />
+            <Button variant="primary" fullWidth onClick={() => onElegir('cuandoPaso', 'custom', fecha)}>
+              Listo
+            </Button>
           </div>
         )}
 

@@ -35,6 +35,26 @@ export function pillClassFor(gatillante) {
   return PILL_BY_CATEGORIA[slug] || 'tangerine'
 }
 
+// Fecha con la que Momentos ordena y agrupa. `fechaOrden` la pone HistorialPage
+// (cuando se registró, en las cuentas en prueba); si no viene, cuándo pasó.
+const fechaDeOrden = (ep) => ep.fechaOrden ?? ep.fecha
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// "Pasó ayer" / "Pasó el 28 sep" cuando el día en que pasó no es el día en que
+// se registró. Días en la hora local del teléfono. Sin registro: nada.
+export function etiquetaPaso(fecha, createdAt, today = new Date()) {
+  if (!fecha || !createdAt) return null
+  const dia = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const paso = new Date(fecha)
+  if (dia(paso) === dia(new Date(createdAt))) return null
+  const atras = Math.round((dia(today) - dia(paso)) / 86400000)
+  if (atras === 0) return 'Pasó hoy'
+  if (atras === 1) return 'Pasó ayer'
+  const anio = paso.getFullYear() !== today.getFullYear() ? ` ${paso.getFullYear()}` : ''
+  return `Pasó el ${paso.getDate()} ${MESES_CORTOS[paso.getMonth()]}${anio}`
+}
+
 export function groupEpisodios(episodios, today = new Date()) {
   const grupos = []
   const dayMs = 86400000
@@ -45,7 +65,7 @@ export function groupEpisodios(episodios, today = new Date()) {
   const overflow = []
 
   for (const ep of episodios) {
-    const epDay = startOfDay(new Date(ep.fecha)).getTime()
+    const epDay = startOfDay(new Date(fechaDeOrden(ep))).getTime()
     const diffDays = Math.round((t0 - epDay) / dayMs)
     if (diffDays < 4) {
       const key = epDay
@@ -76,8 +96,8 @@ export function groupEpisodios(episodios, today = new Date()) {
   }
 
   if (overflow.length > 0) {
-    const oldest = new Date(overflow[overflow.length - 1].fecha)
-    const newest = new Date(overflow[0].fecha)
+    const oldest = new Date(fechaDeOrden(overflow[overflow.length - 1]))
+    const newest = new Date(fechaDeOrden(overflow[0]))
     const fmt = (d) =>
       d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
     grupos.push({

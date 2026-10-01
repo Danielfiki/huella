@@ -26,6 +26,7 @@ export default function MomentoFila({ momento, autor = '', onAbrir }) {
         <span className={`${styles.tipo} ${momento.tipo === 'pregunta' ? styles.tipoPregunta : ''}`}>{momento.titulo}</span>
         <span className={styles.hora}>
           {formatHora(momento.fecha)}
+          {momento.pasoEl && <> · {momento.pasoEl}</>}
           {autor && <span className={styles.autor}> · {autor}</span>}
         </span>
         <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />

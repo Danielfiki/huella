@@ -514,6 +514,7 @@ function dbEpisodioToApp(row) {
     gatillantes:      row.gatillantes ?? [],
     estadoPadre:      row.estado_padre,
     fecha:            row.fecha,
+    createdAt:        row.created_at ?? null,
     orientacionIA:    row.orientacion_ia    ?? null,
     // Paso 8. Mientras la migracion 014 no este corrida la columna no existe y
     // `row.orientacion_zona` llega undefined: el ?? null lo absorbe y la app
