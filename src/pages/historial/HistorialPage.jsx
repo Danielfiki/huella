@@ -380,7 +380,7 @@ export default function HistorialPage() {
                 <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea={porRegistro} />
                 {g.episodios.map((ep) => (
                   // El nombre va solo si lo registró el otro adulto.
-                  <MomentoFila
+                  <MomentoFila horaAbajo={porRegistro}
                     key={ep.id}
                     momento={ep}
                     autor={ep.userId && ep.userId !== user?.id ? getAuthorDisplay(ep.userId, profilesByUserId, user?.id) : ''}
