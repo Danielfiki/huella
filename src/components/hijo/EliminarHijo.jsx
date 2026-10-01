@@ -3,19 +3,33 @@ import { supabase } from '../../lib/supabase'
 import styles from './EliminarHijo.module.css'
 
 // "Eliminar perfil" de un hijo y el aviso de nombre repetido al crear uno.
-// En prueba: solo lo ven estas dos cuentas.
+// En prueba: solo lo ven estas dos cuentas, por id (igual que DUENO_PERSONAJE).
 const CUENTAS_EN_PRUEBA = [
-  'danielundurraga.r@gmail.com',
-  'danielundurraga.r+reset0923@gmail.com',
+  '04ddd97a-e674-4e59-8f37-78cb38d46090', // Daniel
+  '08af56df-42e7-43f8-ab35-2e64618855e4', // cuenta de prueba (+reset0923)
 ]
 
-export function puedeEliminarHijo(email) {
-  return CUENTAS_EN_PRUEBA.includes((email || '').toLowerCase())
+export function puedeEliminarHijo(userId) {
+  return CUENTAS_EN_PRUEBA.includes(userId)
 }
 
-// Sin importar mayusculas, tildes ni espacios a los lados.
+// Sin importar mayusculas, tildes, emojis ni signos ("Pascual ❤️" = "pascual").
 export function normalizarNombre(nombre) {
-  return (nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
+  return (nombre || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim().toLowerCase()
+}
+
+// Busca un hijo de la familia con el mismo nombre. Lee de la base en el
+// momento, asi no depende de que la lista en memoria ya este cargada.
+export async function buscarHijoRepetido(nombre, hijosEnMemoria = []) {
+  let hijos = hijosEnMemoria
+  const { data, error } = await supabase.from('hijos').select('nombre')
+  if (!error && data) hijos = data
+  const buscado = normalizarNombre(nombre)
+  return buscado ? hijos.find((h) => normalizarNombre(h.nombre) === buscado) ?? null : null
 }
 
 const PIEZAS = [

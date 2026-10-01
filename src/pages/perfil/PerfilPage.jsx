@@ -231,7 +231,7 @@ export default function PerfilPage() {
   }
 
   // Solo el creador del hijo puede borrarlo (eliminar_hijo lo vuelve a chequear).
-  const puedeBorrarHijo = puedeEliminarHijo(user?.email) && state.hijo?.userId === user?.id
+  const puedeBorrarHijo = puedeEliminarHijo(user?.id) && state.hijo?.userId === user?.id
 
   // Ya se borro en la base: se saca de la lista y se pasa a otro hijo. Si no
   // queda ninguno, a crear uno.

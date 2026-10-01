@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { useAuth } from '../../context/AuthContext'
-import { AvisoNombreRepetido, normalizarNombre, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
+import { AvisoNombreRepetido, buscarHijoRepetido, puedeEliminarHijo } from '../../components/hijo/EliminarHijo'
 import Card from '../../components/ui/Card'
 // La card de propuesta se mudo al Home (PanelPage) el 14 sep: era lo unico
 // que Huella le pide al papa y aca vivia detras de una pestana. De este
@@ -54,8 +54,10 @@ export default function HijoPage() {
     e.preventDefault()
     if (!nombre.trim()) return
     // Nombre que ya existe en la familia: se pregunta antes de crear.
-    if (puedeEliminarHijo(user?.email)) {
-      const repetido = state.hijos.find((h) => normalizarNombre(h.nombre) === normalizarNombre(nombre))
+    if (puedeEliminarHijo(user?.id)) {
+      setLoadingCrear(true)
+      const repetido = await buscarHijoRepetido(nombre, state.hijos)
+      setLoadingCrear(false)
       if (repetido) { setNombreRepetido(repetido.nombre); return }
     }
     await crear()
