@@ -26,8 +26,8 @@ import hijoStyles from '../../pages/hijo/HijoPage.module.css'
 import { puedePreguntar } from '../../services/preguntas'
 import { usaOrgulloso, elegirOrgulloso, precargarOrgulloso } from '../../components/personaje/orgulloso'
 
-// Visita de orgulloso en la vista de avance guardado (por ahora solo la
-// cuenta de Daniel): el chunk baja solo cuando hace falta.
+// Visita de orgulloso en la vista de avance guardado (todos los usuarios):
+// el chunk baja solo cuando hace falta.
 const OrgullosoEscarabajo = lazy(() => import('../../components/personaje/OrgullosoEscarabajo'))
 
 async function compressImage(file, maxSize = 1200) {

@@ -103,7 +103,7 @@
 
 ### Personaje
 
-- 🟡 **Orgulloso: llega DE VISITA desde abajo** (como la bienvenida del centro, en el espacio bajo "Ver todos los avances") — **30 sep: conectado con sus 3 variantes (pulgar, aplauso, jarras), SOLO cuenta de Daniel, esperando su OK visual.** Una vez por apertura de la vista de avance guardado, sin repetir la última; en la vitrina, "Ver orgulloso" 1 / 2 / 3. Se descartó antes al lado de la foto del avance (revertido en `49d72b4`).
+- ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver Cerrado HOY (30 sep).
 - ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
 
 ### Sale de la cola
@@ -357,7 +357,39 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (29 sep 2026) — **Rediseño de Momentos EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (30 sep 2026) — **Orgulloso de visita EN PRODUCCIÓN PARA TODOS**
+
+### 1. ✅ Orgulloso para todos
+- **Dónde:** pantalla de avance guardado. Sube desde el borde de la barra, **pegado a la izquierda sobre "Inicio"** (cuerpo a 8 px del borde), se muestra orgulloso y se va solo. Tapa parte de los botones un rato: en un iPhone normal no hay hueco libre sobre la barra (medido: compactar la pantalla libera 112 px y la jarras necesita 180; Daniel aceptó taparlos un rato).
+- **Cuándo:** arranca **apenas el avance queda guardado en la base**, sin esperar la foto ni la respuesta de la IA (acompaña la espera). La variante se elige y su video se precarga al abrir el formulario de avance. Guardado fallido: sin visita. Una vez por avance.
+- **3 variantes** sin repetir la última: pulgar (`23-orgulloso-1`), aplauso (`25-orgulloso-2`), jarras (`26-orgulloso-3`, a la subida se le sacaron 4 cuadros para quitar un frenazo de la fuente).
+- **Nunca con movimiento reducido**; si el video no puede correr, no aparece nada. La vitrina `/personaje` y `/prueba-personaje` siguen solo para Daniel.
+- **Arreglo para todos (bienvenida y orgulloso):** el video fuente vive recortado dentro de la barra; en el iPhone real, encima del `<main>` bloqueaba el desplazamiento del Home.
+- Commits del día: `bb2dc32` (orgulloso conectado), `2e7fc8d`/`48ae2e2`/`c8c637e` (vitrina y escena de prueba), `b114f0d` (video en la barra), `dccb29b` (jarras pareja), `fa066d8` (izquierda), `7eb4f01` (arranque al guardar) y el commit de apertura a todos.
+
+### 2. QA de cierre (Code, WebKit iPhone SE 375x667 y 14 390x844, cuenta de prueba no dueña, IA real)
+- ✅ 6 avances: visita en cada uno por la izquierda, 3 variantes sin repetir la anterior, IA visible con el escarabajo en pantalla, toques a la página (9/9), se va sola.
+- ✅ Desplazamiento con el dedo durante la visita (Chromium SE: 46 -> 181 px) y "Agregar foto" bajo el escarabajo abre el selector.
+- ✅ Guardado fallido simulado: error y sin visita. Movimiento reducido y video bloqueado: no aparece nada.
+- ✅ Home: bienvenida 1 vez al día, 3 variantes sin repetir, video en la barra, el Home se desplaza durante la bienvenida (0 -> 185 px).
+- ✅ La cuenta de prueba termina en /panel desde /personaje y /prueba-personaje.
+- 9 avances de prueba del QA borrados. Capturas en `huella-design-pack/qa-orgulloso-cierre`.
+
+### 3. Notas del día
+- 30 sep: en la vitrina no aparecia porque /personaje va fuera del Layout (no hay barra). Ahora corre en una escena con las clases reales del Layout. ⚠️ En iPhone 14 no queda espacio vacio bajo "Ver todos los avances": el escarabajo tapa "Volver al inicio", "Ver todos los avances" y parte de "Agregar foto". Decision de diseno pendiente con Daniel.
+- 30 sep (2e7fc8d, regresion): la clase nueva .escena de la escena de prueba choco con la .escena que ya existia (el circulo de cada estado) en PersonajePage.module.css: los 10 circulos quedaron fijos a pantalla completa, encimados sobre el titulo y tapando los botones. Renombrada a .escenaApp. Verificado antes/despues en WebKit (iPhone 14 y SE 375x667) y la bienvenida del Home identica; capturas en huella-design-pack/qa-vitrina-30sep.
+- 30 sep: la visita de orgulloso arranca apenas el avance queda guardado en la base (antes de la foto y sin esperar la IA); la variante se elige y su video se precarga al abrir el formulario de avance. Guardado fallido: sin visita. Medido en WebKit: el escarabajo asoma ~2 s despues de que la base confirma (arranque del video; la red ya no pesa). Pendiente posible: bajarlo a <1 s exigiria arrancar el video antes de la confirmacion. Ojo (de antes): el texto de "huella te lee" se muestra recien despues de guardar la respuesta en la base (~1 s extra), porque cargandoRespuesta se apaga en el finally.
+- ✅ 30 sep: orgulloso 3 (jarras) subia en camara lenta a mitad de camino (en la FUENTE: pasos de 7 px por cuadro en los cuadros 24 a 30, contra 11 a 14 antes y despues; el mp4 estaba bien a 24 fps). Se sacaron los cuadros 25, 27, 29 y 50 de la fuente (seleccion que minimiza el cambio de velocidad entre cuadros vecinos, nunca dos seguidos): subida 1,79 s -> 1,67 s, pareja, pose y salida intactas. Mismo recorte, escala, ganancia y limpieza. Graficos en qa-vitrina-30sep (-v4).
+- ✅ 30 sep: **en el iPhone real la animacion bloqueaba el desplazamiento del Home** mientras corria, aunque capa, canvas y video tenian pointer-events: none (en el navegador automatizado no se reproducia). Diagnostico en el iPhone de Daniel: A (video fuente en la capa, sobre el <main>) no se desplazaba; B (video fuente recortado dentro de la barra) y C (video chico) si. **Arreglado con B** para todas las variantes: bienvenida costado / derecha / centro (Home, todos) y orgulloso 1 / 2 / 3 (avance, solo Daniel). Nada visible cambia (Home antes/despues pausado en el mismo instante: 0 px distintos en derecha). Prop `prueba`, variante C y botones A / B / C eliminados. La vitrina prueba las 6 en /prueba-personaje (dentro del Layout, barra real, solo Daniel).
+
+### ⏭️ Pendiente
+1. ⬜ Bajar el arranque de la visita a menos de 1 s tras guardar (hoy ~2 s en WebKit: arranque del video). Exigiría arrancar el video antes de la confirmación de la base.
+2. ⬜ Pulgar (orgulloso 1) tiene una meseta corta a mitad de la subida; si se ve lento, mismo arreglo que jarras.
+3. ⬜ Avances de prueba anteriores al QA de cierre siguen en La brava (registrados el 30 sep durante las pruebas).
+
+---
+
+## Sesión 29 sep 2026 — **Rediseño de Momentos EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Rediseño de Momentos para todos (commits `7f0c69c`, `804d69c`, `ebe7924` y `a8c04ce`)
 - **Lista:** fila de página simple (volver, "Momentos", buscar y PDF en neutro), sin el panel café ni las estadísticas. Los 5 filtros siguen como estaban. Tarjeta mínima: ícono + tipo entero + hora, y el relato del papá en 2 líneas; toda la tarjeta abre el momento. Salieron el resumen duplicado, los puntitos, el basurero, el nombre propio (solo sale si lo registró el otro adulto) y la Acción rápida.
@@ -409,12 +441,6 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 ### ⏭️ Pendiente
 0. ⬜ **Medir en 1 semana cuántas veces se activan [voz] y [cita] en los logs de Vercel.**
 0. ⬜ **Selector de hijo en Registrar + guardar el hijo activo al recargar (caso Diego).**
-2. 🟡 **Orgulloso de visita:** implementado con las 3 (30 sep), solo Daniel; falta su OK visual y abrirlo a todos.
-   - 30 sep: en la vitrina no aparecia porque /personaje va fuera del Layout (no hay barra). Ahora corre en una escena con las clases reales del Layout. ⚠️ En iPhone 14 no queda espacio vacio bajo "Ver todos los avances": el escarabajo tapa "Volver al inicio", "Ver todos los avances" y parte de "Agregar foto". Decision de diseno pendiente con Daniel.
-   - 30 sep (2e7fc8d, regresion): la clase nueva .escena de la escena de prueba choco con la .escena que ya existia (el circulo de cada estado) en PersonajePage.module.css: los 10 circulos quedaron fijos a pantalla completa, encimados sobre el titulo y tapando los botones. Renombrada a .escenaApp. Verificado antes/despues en WebKit (iPhone 14 y SE 375x667) y la bienvenida del Home identica; capturas en huella-design-pack/qa-vitrina-30sep.
-   - 30 sep: la visita de orgulloso arranca apenas el avance queda guardado en la base (antes de la foto y sin esperar la IA); la variante se elige y su video se precarga al abrir el formulario de avance. Guardado fallido: sin visita. Medido en WebKit: el escarabajo asoma ~2 s despues de que la base confirma (arranque del video; la red ya no pesa). Pendiente posible: bajarlo a <1 s exigiria arrancar el video antes de la confirmacion. Ojo (de antes): el texto de "huella te lee" se muestra recien despues de guardar la respuesta en la base (~1 s extra), porque cargandoRespuesta se apaga en el finally.
-   - ✅ 30 sep: orgulloso 3 (jarras) subia en camara lenta a mitad de camino (en la FUENTE: pasos de 7 px por cuadro en los cuadros 24 a 30, contra 11 a 14 antes y despues; el mp4 estaba bien a 24 fps). Se sacaron los cuadros 25, 27, 29 y 50 de la fuente (seleccion que minimiza el cambio de velocidad entre cuadros vecinos, nunca dos seguidos): subida 1,79 s -> 1,67 s, pareja, pose y salida intactas. Mismo recorte, escala, ganancia y limpieza. Graficos en qa-vitrina-30sep (-v4).
-   - ✅ 30 sep: **en el iPhone real la animacion bloqueaba el desplazamiento del Home** mientras corria, aunque capa, canvas y video tenian pointer-events: none (en el navegador automatizado no se reproducia). Diagnostico en el iPhone de Daniel: A (video fuente en la capa, sobre el <main>) no se desplazaba; B (video fuente recortado dentro de la barra) y C (video chico) si. **Arreglado con B** para todas las variantes: bienvenida costado / derecha / centro (Home, todos) y orgulloso 1 / 2 / 3 (avance, solo Daniel). Nada visible cambia (Home antes/despues pausado en el mismo instante: 0 px distintos en derecha). Prop `prueba`, variante C y botones A / B / C eliminados. La vitrina prueba las 6 en /prueba-personaje (dentro del Layout, barra real, solo Daniel).
 3. ⬜ Probar el nombre del otro adulto en Momentos con una cuenta con pareja.
 4. ⬜ **Motor de rasgos sin marco por edad:** `detectarRasgos` solo recibe `hijo_edad` como número.
 5. ⬜ **Sin tope de edad en el onboarding:** acepta 0-129, y de 19 para arriba cae igual en el marco 12-18.
@@ -448,10 +474,9 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
   - **orgulloso-pulgar-alfa.mp4** (pulgar arriba): cuadros 2 a 213 (8,83 s), 424 × 556, 1.129 KB, + póster. ⚠️ El original se llama `24-orgulloso-base.png.mp4`, no `23-orgulloso-1.mp4` (ese nombre no existe en la carpeta); el contenido es el pulgar arriba.
   - **orgulloso-aplauso-alfa.mp4** (aplauso suave, original `25-orgulloso-2.mp4`): cuadros 2 a 219 (9,08 s), 418 × 560, 1.210 KB, + póster.
   - Verificado: el cuadro 1 (destello de la referencia) queda fuera; 0 píxeles opacos en el primer y el último cuadro (también en el MP4 ya codificado); antenas enteras (fila de arriba y columnas de los costados vacías en todos los cuadros); cuerpo apoyado en la última fila. Las puntas de los dedos que cuelgan sobre la repisa (hasta y ≈ 703) quedan cortadas en la línea.
-- ⬜ **Falta la variante 3 de orgulloso** (el video).
+- ✅ **Variante 3 de orgulloso** (jarras): llegó y se procesó el 30 sep (ver Cerrado HOY 30 sep).
 
 ### ⏭️ Pendiente
-1. 🟡 **Orgulloso de visita:** implementado el 30 sep con las 3, solo cuenta de Daniel. Variante 3 = video `26-orgulloso-3.mp4` (manos en la cintura), cuadros 4 a 236 (9,71 s), 598 × 600, `orgulloso-jarras-alfa.mp4`; misma repisa (y 677) y escala (×1,085; cráneo 273 px vs 275 / 267). Limpieza nueva en la franja de la repisa: alfa por proporción de azul, así la sombra de las manos sobre el borde no queda como halo. `24-orgulloso-base.png.mp4` renombrado a `23-orgulloso-1.mp4`.
 2. ⬜ Terminar el QA de rechazo de `play()` y modo oscuro de pensando: hay que darle Pro a la cuenta de prueba y reiniciar su contador de IA (SQL entregado a Daniel el 28 sep).
 3. ⬜ **Cola viva del personaje:** 2 bienvenidas nuevas (borde izquierdo y esquina inferior izquierda; imágenes 18 y 19 listas, faltan los videos). Después "celebrando".
 4. ⏸️ **Compañía sobre la card "Esta semana":** sigue en pausa (Roadmap).

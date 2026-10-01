@@ -1,9 +1,8 @@
-import { DUENO_PERSONAJE } from './bienvenida'
-
 // Visita de "orgulloso" en la pantalla de avance guardado: sube desde la barra
 // inferior, se muestra orgulloso y se esconde solo, una vez por cada apertura
-// de la pantalla. Por ahora solo la cuenta de Daniel; nunca con movimiento
-// reducido.
+// de la pantalla. Para todos los usuarios (desde el 30 sep 2026); nunca con
+// movimiento reducido. La vitrina y /prueba-personaje siguen siendo solo de
+// Daniel (RutaPersonaje y RutaPruebaPersonaje).
 // Cada variante trae su video empaquetado (color arriba, 16 px, mascara abajo)
 // a 3x del tamano en pantalla. El borde de abajo de los tres archivos es la
 // linea de la repisa (y 677 de la fuente) y la escala es la misma (craneo de
@@ -24,7 +23,7 @@ export const VARIANTES_ORGULLOSO = [
 const claveUltima = (userId) => `huella_orgulloso_ultima_${userId}`
 
 export function usaOrgulloso(userId) {
-  if (userId !== DUENO_PERSONAJE) return false
+  if (!userId) return false
   try { return !window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
 }
 
