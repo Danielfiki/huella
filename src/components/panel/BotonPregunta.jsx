@@ -44,13 +44,16 @@ export default function BotonPregunta({ onClick, oculto = false, evitarRef = nul
     <button
       ref={botonRef}
       type="button"
-      className={`${styles.circulo} ${escondido ? styles.escondido : ''}`}
+      className={`${styles.ficha} ${escondido ? styles.escondido : ''}`}
       onClick={onClick}
+      // iOS Safari solo aplica :active si el elemento escucha touchstart
+      onTouchStart={() => {}}
       aria-label="Preguntar a Huella"
       aria-hidden={escondido || undefined}
       tabIndex={escondido ? -1 : 0}
     >
-      ?
+      <span className={styles.atras} aria-hidden="true" />
+      <span className={styles.adelante} aria-hidden="true">?</span>
     </button>,
     barra
   )

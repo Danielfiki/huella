@@ -1,31 +1,77 @@
-/* Circulo "?" del Home, dentro de la barra inferior. 56 px, a 16 px del borde
-   derecho y 8 px sobre la barra (bottom: 100% es el borde de adentro; el +1px
-   suma la linea de borde de la barra, como la capa del escarabajo). Solo el
-   circulo recibe toques: fuera de el, nada se bloquea. */
-.circulo {
+/* "Ficha" del "?" en el Home (Claude Design), dentro de la barra inferior.
+   60 x 60 en total: dos fichas de 56, la de atras corrida 4 px abajo y 4 px a
+   la derecha. A 16 px del borde derecho y 8 px sobre la barra, medidos desde
+   el borde exterior de la ficha de atras (bottom: 100% es el borde de adentro;
+   el +1px suma la linea de borde de la barra, como la capa del escarabajo).
+   Solo la ficha recibe toques: fuera de ella, nada se bloquea. */
+.ficha {
   position: absolute;
   right: 16px;
   bottom: calc(100% + 1px + 8px);
   z-index: 1; /* delante de la capa del escarabajo (z-index -1) */
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 1;
+  transition: opacity var(--motion-media) var(--motion-ease-entrada), visibility 0s linear 0s;
+}
+
+.atras,
+.adelante {
+  position: absolute;
   width: 56px;
   height: 56px;
-  box-sizing: border-box; /* el borde va dentro de los 56 px */
-  border-radius: 50%;
-  /* Terracota del nombre del saludo, "?" y borde crema: el borde lo despega
-     de las cards blancas. */
-  border: 2px solid var(--color-cream);
+  box-sizing: border-box;
+  border-radius: 14px;
+}
+
+/* Ficha de atras: terracota del saludo, asomando abajo a la derecha. */
+.atras {
+  left: 4px;
+  top: 4px;
   background: var(--color-primary-deep);
-  color: var(--color-cream);
   box-shadow: var(--shadow-sm);
+  animation: asoma 6s var(--motion-ease-estandar) infinite;
+}
+
+/* Ficha de adelante: crema con borde terracota al 55 %; el "?" con la serif
+   del saludo, ~55 % del alto, es lo unico de color. */
+.adelante {
+  left: 0;
+  top: 0;
+  background: var(--color-cream);
+  border: 1.5px solid color-mix(in srgb, var(--color-primary-deep) 55%, transparent);
+  color: var(--color-primary-deep);
   font-family: var(--font-heading);
-  font-size: 26px;
+  font-size: 31px;
   font-weight: 700;
   line-height: 1;
   display: grid;
   place-items: center;
-  cursor: pointer;
-  opacity: 1;
-  transition: opacity var(--motion-media) var(--motion-ease-entrada), visibility 0s linear 0s;
+  transition: transform var(--motion-presion) var(--motion-ease-estandar), background-color var(--motion-presion) var(--motion-ease-estandar), color var(--motion-presion) var(--motion-ease-estandar);
+}
+
+/* Al tocar: la de adelante baja hasta apoyarse en la de atras y se tine.
+   Dura lo que dura el toque. */
+.ficha:active .adelante {
+  transform: translate(4px, 4px);
+  background: var(--color-primary-deep);
+  color: var(--color-cream);
+}
+
+/* Reposo: cada 6 s la de atras asoma 1 px mas y vuelve, muy suave. */
+@keyframes asoma {
+  0%, 82%, 100% { transform: translate(0, 0); }
+  90% { transform: translate(1px, 1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atras { animation: none; }
+  .adelante { transition: none; }
 }
 
 /* Escondido: fundido de salida y, al terminar, fuera del arbol de toques. */
