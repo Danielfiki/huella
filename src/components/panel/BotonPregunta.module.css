@@ -9,10 +9,13 @@
   z-index: 1; /* delante de la capa del escarabajo (z-index -1) */
   width: 56px;
   height: 56px;
+  box-sizing: border-box; /* el borde va dentro de los 56 px */
   border-radius: 50%;
-  border: none;
-  background: var(--color-cream);
-  color: var(--color-primary-dark);
+  /* Terracota del nombre del saludo, "?" y borde crema: el borde lo despega
+     de las cards blancas. */
+  border: 2px solid var(--color-cream);
+  background: var(--color-primary-deep);
+  color: var(--color-cream);
   box-shadow: var(--shadow-sm);
   font-family: var(--font-heading);
   font-size: 26px;
