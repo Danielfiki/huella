@@ -44,14 +44,25 @@
   left: calc(8px - var(--ancho) * var(--margen-izq));
 }
 
-/* Pegado a la derecha y en espejo (visita del circulo "?"). Con el espejo, la
-   parte transparente de la izquierda del archivo queda a la derecha: el
-   primer pixel visible del cuerpo cae a 8 px del borde derecho. Sube por
-   detras del circulo, que vive en la barra con z-index mayor. */
+/* Video 30 (visita del circulo "?", mano en el menton). Misma escala que los
+   orgullosos: ancho = base x 0,96604 x 432 / 484. Recorte 398 px de la
+   fuente con 4 px transparentes a cada lado (0,01005). */
+.pregunta1 {
+  --ancho: calc(var(--base) * 0.86225);
+  aspect-ratio: 432 / 562;
+  right: calc(50% - var(--ancho) * 0.5);
+  --margen-izq: 0.01005;
+  --margen-der: 0.01005;
+}
+
+/* Pegado a la derecha, SIN espejo (visita del circulo "?": la mano del menton
+   queda a la izquierda, lejos del circulo). El primer pixel visible del
+   cuerpo cae a 8 px del borde derecho (--margen-der: parte transparente a la
+   derecha del archivo). Sube por detras del circulo, que vive en la barra
+   con z-index mayor. Va despues de las variantes: gana su right. */
 .derecha {
   left: auto;
-  right: calc(8px - var(--ancho) * var(--margen-izq));
-  transform: scaleX(-1);
+  right: calc(8px - var(--ancho) * var(--margen-der, var(--margen-izq)));
 }
 
 .pulgar .fuente {
@@ -62,6 +73,11 @@
 .aplauso .fuente {
   width: 418px;
   height: 1136px;
+}
+
+.pregunta1 .fuente {
+  width: 432px;
+  height: 1140px;
 }
 
 .jarras .fuente {

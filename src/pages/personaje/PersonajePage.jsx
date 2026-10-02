@@ -400,10 +400,11 @@ export default function PersonajePage() {
 
       <PruebaOrgulloso userId={user.id} />
 
-      {/* Visita del circulo "?": el orgulloso pulgar en espejo a la derecha,
-          subiendo por detras del circulo (solo vitrina, sin logica diaria). */}
+      {/* Visita del circulo "?": video 30 (mano en el menton) a la derecha, sin
+          espejo, subiendo por detras del circulo (solo vitrina, sin logica
+          diaria). */}
       <div className={styles.repetir}>
-        <Button variant="ghost" onClick={() => abrirPrueba('visita', 'pulgar')}>
+        <Button variant="ghost" onClick={() => abrirPrueba('visita', 'pregunta1')}>
           Ver visita ?
         </Button>
       </div>

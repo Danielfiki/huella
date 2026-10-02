@@ -6,6 +6,7 @@ import BienvenidaEscarabajo from '../../components/personaje/BienvenidaEscarabaj
 import OrgullosoEscarabajo from '../../components/personaje/OrgullosoEscarabajo'
 import { VARIANTES, marcarVariante } from '../../components/personaje/bienvenida'
 import { VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
+import { VARIANTES_PREGUNTA } from '../../components/personaje/pregunta'
 import BotonPregunta from '../../components/panel/BotonPregunta'
 import styles from './PruebaPersonajePage.module.css'
 
@@ -21,9 +22,9 @@ export default function PruebaPersonajePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const tipo = params.get('tipo')
-  // ?tipo=visita&v=pulgar: el circulo "?" con el orgulloso en espejo a la derecha
+  // ?tipo=visita&v=pregunta1: el circulo "?" con su visita a la derecha, sin espejo
   const esVisita = tipo === 'visita'
-  const variante = (tipo === 'orgulloso' || esVisita ? VARIANTES_ORGULLOSO : VARIANTES).find((v) => v.id === params.get('v'))
+  const variante = (esVisita ? VARIANTES_PREGUNTA : tipo === 'orgulloso' ? VARIANTES_ORGULLOSO : VARIANTES).find((v) => v.id === params.get('v'))
   const [vuelta, setVuelta] = useState(0)
   const [corriendo, setCorriendo] = useState(false)
   const [toques, setToques] = useState(0)
