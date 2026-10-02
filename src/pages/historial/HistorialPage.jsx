@@ -9,7 +9,6 @@ import MomentoFila from '../../components/historial/MomentoFila'
 import MomentosCabecera from '../../components/historial/MomentosCabecera'
 import PatronCard from '../../components/patron/PatronCard'
 import { groupEpisodios, etiquetaPaso, TIPOS } from '../../components/historial/helpers'
-import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { getAuthorDisplay } from '../../utils/authorDisplay'
 import UpgradeModal from '../../components/ui/UpgradeModal'
 import { LENTE_POR_ID } from '../../constants/catalogoAvance'
@@ -82,12 +81,11 @@ export default function HistorialPage() {
   const [pdfActivado, setPdfActivado] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
-  // En prueba: Momentos ordena y agrupa por cuándo se REGISTRÓ (created_at; si
-  // falta, cuándo pasó) y la tarjeta avisa "Pasó ayer" si no coinciden. Solo
-  // esta pantalla: la IA, los patrones y el gráfico siguen con `fecha`.
-  const porRegistro = enPrueba(user?.id)
-  const orden = (fecha, createdAt) => (porRegistro ? (createdAt || fecha) : fecha)
-  const paso  = (fecha, createdAt) => (porRegistro ? etiquetaPaso(fecha, createdAt) : null)
+  // Momentos ordena y agrupa por cuándo se REGISTRÓ (created_at; si falta,
+  // cuándo pasó) y la tarjeta avisa "Pasó ayer" si no coinciden. Solo esta
+  // pantalla: la IA, los patrones y el gráfico siguen con `fecha`.
+  const orden = (fecha, createdAt) => createdAt || fecha
+  const paso  = (fecha, createdAt) => etiquetaPaso(fecha, createdAt)
 
   const episodiosNorm = useMemo(
     () =>
@@ -113,7 +111,7 @@ export default function HistorialPage() {
         accionRapida: ep.accionRapida ?? null,
         _source: 'episodio',
       })),
-    [episodios, porRegistro]
+    [episodios]
   )
 
   const hitosNorm = useMemo(
@@ -151,7 +149,7 @@ export default function HistorialPage() {
           _source: 'hito',
         }
       }),
-    [hitos, porRegistro]
+    [hitos]
   )
 
   const todosUnificados = useMemo(
@@ -164,9 +162,9 @@ export default function HistorialPage() {
 
   const filtered = useMemo(() => {
     let result
-    // En prueba, los filtros salen de la lista ya ordenada por registro.
-    const eps = porRegistro ? todosUnificados.filter((e) => e._source === 'episodio') : episodiosNorm
-    const his = porRegistro ? todosUnificados.filter((e) => e._source === 'hito') : hitosNorm
+    // Los filtros salen de la lista ya ordenada por registro.
+    const eps = todosUnificados.filter((e) => e._source === 'episodio')
+    const his = todosUnificados.filter((e) => e._source === 'hito')
     if (filtro === 'dificiles') result = eps.filter((e) => e.nivel >= 3)
     else if (filtro === 'logros') result = his
     // 'fotos' cruza episodios e hitos: es lo que reemplaza al álbum, que solo
@@ -186,9 +184,9 @@ export default function HistorialPage() {
       })
     }
     return result
-  }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda, porRegistro])
+  }, [filtro, todosUnificados, episodiosNorm, hitosNorm, busqueda])
 
-  const grupos = useMemo(() => groupEpisodios(filtered, undefined, { enPrueba: porRegistro }), [filtered, porRegistro])
+  const grupos = useMemo(() => groupEpisodios(filtered), [filtered])
 
   // El Home puede mandar a un momento puntual (la card del reingreso navega
   // con `state.momentoId`): se abre directo en su propia pantalla. Con replace,
@@ -323,9 +321,9 @@ export default function HistorialPage() {
           preguntasNorm.length === 0 ? (
             <p className={styles.emptyFilter}>Sin preguntas todavía.</p>
           ) : (
-            groupEpisodios(preguntasNorm, undefined, { enPrueba: porRegistro }).map((g, i) => (
+            groupEpisodios(preguntasNorm).map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea={porRegistro} />
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea />
                 {g.episodios.map((p) => (
                   <MomentoFila
                     key={p.id}
@@ -377,10 +375,10 @@ export default function HistorialPage() {
 
             {grupos.map((g, i) => (
               <React.Fragment key={i}>
-                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea={porRegistro} />
+                <DaySeparator label={g.label} meta={g.meta} isToday={g.isToday} sobrio unaLinea />
                 {g.episodios.map((ep) => (
                   // El nombre va solo si lo registró el otro adulto.
-                  <MomentoFila horaAbajo={porRegistro}
+                  <MomentoFila horaAbajo
                     key={ep.id}
                     momento={ep}
                     autor={ep.userId && ep.userId !== user?.id ? getAuthorDisplay(ep.userId, profilesByUserId, user?.id) : ''}

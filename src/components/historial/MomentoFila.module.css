@@ -60,7 +60,7 @@
 
 .autor { font-weight: 600; }
 
-/* Hora abajo (cuentas en prueba). El tipo sigue en 16 px: el ancho que le
+/* Hora abajo (lista de Momentos). El tipo sigue en 16 px: el ancho que le
    faltaba en iPhone SE sale de los espacios (ícono 12 -> 8, flecha 12 -> 4). */
 .cabezaAbajo { gap: 0; }
 .cabezaAbajo .icono { margin-right: 8px; }

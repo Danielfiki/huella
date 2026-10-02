@@ -326,7 +326,9 @@
    contenido no asome por debajo del botón. */
 .hojaPieFijo {
   position: sticky;
-  bottom: 0;
+  /* Pegado al borde real de la hoja, no al de su contenido: así cubre también
+     el padding inferior y nada asoma por debajo cuando la hoja desplaza (SE). */
+  bottom: calc(-1 * max(20px, env(safe-area-inset-bottom)));
   margin: 0 -16px calc(-1 * max(20px, env(safe-area-inset-bottom)));
   padding: 8px 16px max(20px, env(safe-area-inset-bottom));
   background: var(--color-surface);

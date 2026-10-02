@@ -168,8 +168,8 @@ export default function RegistroConversacional({
   onVolver,
   guardando = false,
   errorGuardar = '',
-  // En prueba: { ahora, Picker } para que "Otro momento…" abra el selector de
-  // fecha y hora del modo clásico. Sin él, "Otro momento…" queda como hoy.
+  // { ahora, Picker } para que "Otro momento…" abra el selector de fecha y
+  // hora del modo clásico. Sin él, "Otro momento…" guarda la hora actual.
   selectorFecha = null,
 }) {
   // narrar → (extrayendo) → [repregunta → (extrayendo)] → validar

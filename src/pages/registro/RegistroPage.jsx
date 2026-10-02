@@ -7,7 +7,6 @@ import UpgradeModal from '../../components/ui/UpgradeModal'
 import { analizarEpisodio, generarAccionInmediata, extraerEpisodio, generarRespuestaReflexion } from '../../services/anthropic'
 import { TAXONOMIA_EMOCIONES } from '../../constants/taxonomiaEmociones'
 import { useAuth } from '../../context/AuthContext'
-import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { TIPOS, INTENSIDADES, CUANDO_OPCIONES } from '../../constants/catalogoEpisodio'
 import RegistroConversacional from '../../components/registro/RegistroConversacional'
 import AlivioHuella from '../../components/registro/AlivioHuella'
@@ -191,9 +190,9 @@ function TimeSpinner({ value, onUp, onDown }) {
   )
 }
 
-// El mismo selector para "Otro momento…" del registro conversacional (en
-// prueba). Sin fechas futuras: tope en el día de hoy y, si la hora elegida
-// queda adelante, se baja a la hora actual.
+// El mismo selector para "Otro momento…" del registro conversacional. Sin
+// fechas futuras: tope en el día de hoy y, si la hora elegida queda adelante,
+// se baja a la hora actual.
 function FechaHoraPickerSinFuturo({ value, onChange }) {
   const ahora = nowLocal()
   return <FechaHoraPicker value={value} onChange={(v) => onChange(v > ahora ? ahora : v)} max={ahora} compacto />
@@ -911,7 +910,7 @@ export default function RegistroPage() {
         onVolver={() => navigate('/nuevo')}
         onConfirmar={handleConfirmarConversacional}
         onEditarTodo={handleEditarTodo}
-        selectorFecha={enPrueba(user?.id) ? SELECTOR_FECHA : null}
+        selectorFecha={SELECTOR_FECHA}
       />
     )
   }

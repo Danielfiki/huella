@@ -36,7 +36,7 @@ export function pillClassFor(gatillante) {
 }
 
 // Fecha con la que Momentos ordena y agrupa. `fechaOrden` la pone HistorialPage
-// (cuando se registró, en las cuentas en prueba); si no viene, cuándo pasó.
+// (cuándo se registró); si no viene, cuándo pasó.
 const fechaDeOrden = (ep) => ep.fechaOrden ?? ep.fecha
 
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -58,9 +58,9 @@ export function etiquetaPaso(fecha, createdAt, today = new Date()) {
 const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
 const fechaCorta = (d) => `${DIAS_CORTOS[d.getDay()]}, ${d.getDate()} ${MESES_CORTOS[d.getMonth()]}`
 
-// `enPrueba`: meses como en la etiqueta ("sep", no "sept") y un grupo de un
-// solo día con una sola fecha. Sin la opción, los encabezados quedan como hoy.
-export function groupEpisodios(episodios, today = new Date(), { enPrueba = false } = {}) {
+// Meses como en la etiqueta ("sep", no "sept") y un grupo de un solo día con
+// una sola fecha.
+export function groupEpisodios(episodios, today = new Date()) {
   const grupos = []
   const dayMs = 86400000
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -93,9 +93,7 @@ export function groupEpisodios(episodios, today = new Date(), { enPrueba = false
       type: 'day',
       label: label.charAt(0).toUpperCase() + label.slice(1),
       meta:
-        (enPrueba
-          ? `${String(date.getDate()).padStart(2, '0')} ${MESES_CORTOS[date.getMonth()]}`
-          : date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })) +
+        `${String(date.getDate()).padStart(2, '0')} ${MESES_CORTOS[date.getMonth()]}` +
         ` · ${buckets.get(key).length}`,
       isToday: diffDays === 0,
       episodios: buckets.get(key),
@@ -105,14 +103,10 @@ export function groupEpisodios(episodios, today = new Date(), { enPrueba = false
   if (overflow.length > 0) {
     const oldest = new Date(fechaDeOrden(overflow[overflow.length - 1]))
     const newest = new Date(fechaDeOrden(overflow[0]))
-    const fmt = (d) =>
-      d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
     const mismoDia = newest.toDateString() === oldest.toDateString()
     grupos.push({
       type: 'range',
-      label: !enPrueba
-        ? `${fmt(newest)} — ${fmt(oldest)}`
-        : mismoDia ? fechaCorta(newest) : `${fechaCorta(newest)} — ${fechaCorta(oldest)}`,
+      label: mismoDia ? fechaCorta(newest) : `${fechaCorta(newest)} — ${fechaCorta(oldest)}`,
       meta: `${overflow.length} momento${overflow.length === 1 ? '' : 's'}`,
       isToday: false,
       episodios: overflow,

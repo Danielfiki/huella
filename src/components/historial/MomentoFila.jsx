@@ -12,7 +12,7 @@ function formatHora(fecha) {
 // papá en dos líneas. Lo demás vive en el momento abierto. `autor` llega solo
 // cuando lo registró el otro adulto.
 //
-// `horaAbajo` (cuentas en prueba): el tipo usa todo el ancho de la fila, en una
+// `horaAbajo` (lista de Momentos): el tipo usa todo el ancho de la fila, en una
 // sola línea, y la hora (o "Pasó ayer") baja a una línea chica debajo.
 export default function MomentoFila({ momento, autor = '', onAbrir, horaAbajo = false }) {
   const relato = momento.descripcionLibre || momento.descripcion || ''
