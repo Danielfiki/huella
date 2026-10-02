@@ -44,6 +44,16 @@
   left: calc(8px - var(--ancho) * var(--margen-izq));
 }
 
+/* Pegado a la derecha y en espejo (visita del circulo "?"). Con el espejo, la
+   parte transparente de la izquierda del archivo queda a la derecha: el
+   primer pixel visible del cuerpo cae a 8 px del borde derecho. Sube por
+   detras del circulo, que vive en la barra con z-index mayor. */
+.derecha {
+  left: auto;
+  right: calc(8px - var(--ancho) * var(--margen-izq));
+  transform: scaleX(-1);
+}
+
 .pulgar .fuente {
   width: 424px;
   height: 1128px;

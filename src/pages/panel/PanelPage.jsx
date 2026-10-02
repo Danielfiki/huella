@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -9,6 +9,8 @@ import { useConsejoDiario } from '../../components/ui/useConsejoDiario'
 import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
+import BotonPregunta from '../../components/panel/BotonPregunta'
+import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { PuertaHuella, PuertaCerebro, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
 import AnalisisSemanalCard from '../../components/panel/AnalisisSemanalCard'
 import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
@@ -91,6 +93,8 @@ export default function PanelPage() {
   // de este usuario. La marca la pone la bienvenida cuando entra. No se monta
   // mientras el onboarding este en pantalla (gastaria la marca sin verse).
   const { onboardingVisible, onboardingDecidido } = useOutletContext() || {}
+  const conPregunta = enPrueba(user?.id)
+  const registrarRef = useRef(null)
   const [bienvenida, setBienvenida] = useState(() =>
     !!user?.id &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
@@ -390,7 +394,7 @@ export default function PanelPage() {
       )}
 
       {/* ── La única acción ── */}
-      <BotonRegistrar onClick={() => navigate('/nuevo')} avisoCupo={avisoCupo} />
+      <BotonRegistrar onClick={() => navigate('/nuevo')} avisoCupo={avisoCupo} refRaiz={registrarRef} />
 
       {/* ── Esta semana: la única lectura de la semana. Guía si la cuenta es
            nueva, barras siempre, y el análisis cuando lo hay. ── */}
@@ -468,6 +472,23 @@ export default function PanelPage() {
         <Suspense fallback={null}>
           <BienvenidaEscarabajo userId={user.id} variante={variante} alTerminar={() => setBienvenida(false)} />
         </Suspense>
+      )}
+
+      {/* Circulo "?" (en prueba): acceso a Preguntar a Huella con el hijo
+          activo. Se esconde mientras corre la bienvenida y nunca tapa
+          "Registrar un momento". El espacio de abajo (47 px + los 16 del gap
+          = 63) evita que tape la ultima card al bajar hasta el final. */}
+      {conPregunta && (
+        <>
+          <div className={styles.espacioPregunta} aria-hidden="true" />
+          {dataLoaded && (
+            <BotonPregunta
+              onClick={() => navigate('/preguntar')}
+              oculto={bienvenida || !!onboardingVisible}
+              evitarRef={registrarRef}
+            />
+          )}
+        </>
       )}
 
       {showUpgrade && (

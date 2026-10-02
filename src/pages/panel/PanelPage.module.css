@@ -86,3 +86,11 @@
   border-color: var(--color-text-light);
   color: var(--color-text);
 }
+
+/* Circulo "?" (en prueba): espacio al final del Home para que el circulo,
+   fijo sobre la barra, nunca tape la ultima card. 47 px + los 16 px del gap
+   de .page = 63 px (medido: alto del circulo + 8 px sobre la barra - 1). */
+.espacioPregunta {
+  height: 47px;
+  flex-shrink: 0;
+}

@@ -6,6 +6,7 @@ import BienvenidaEscarabajo from '../../components/personaje/BienvenidaEscarabaj
 import OrgullosoEscarabajo from '../../components/personaje/OrgullosoEscarabajo'
 import { VARIANTES, marcarVariante } from '../../components/personaje/bienvenida'
 import { VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
+import BotonPregunta from '../../components/panel/BotonPregunta'
 import styles from './PruebaPersonajePage.module.css'
 
 // Pantalla de prueba de la vitrina, DENTRO del Layout: la barra inferior, el
@@ -20,7 +21,9 @@ export default function PruebaPersonajePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const tipo = params.get('tipo')
-  const variante = (tipo === 'orgulloso' ? VARIANTES_ORGULLOSO : VARIANTES).find((v) => v.id === params.get('v'))
+  // ?tipo=visita&v=pulgar: el circulo "?" con el orgulloso en espejo a la derecha
+  const esVisita = tipo === 'visita'
+  const variante = (tipo === 'orgulloso' || esVisita ? VARIANTES_ORGULLOSO : VARIANTES).find((v) => v.id === params.get('v'))
   const [vuelta, setVuelta] = useState(0)
   const [corriendo, setCorriendo] = useState(false)
   const [toques, setToques] = useState(0)
@@ -29,7 +32,7 @@ export default function PruebaPersonajePage() {
   // pagina (y el Layout con su barra) ya estan en el DOM.
   useEffect(() => { if (variante) setCorriendo(true) }, [vuelta]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const titulo = `${tipo === 'orgulloso' ? 'Orgulloso' : 'Bienvenida'}: ${params.get('v')}`
+  const titulo = esVisita ? 'Visita del ?' : `${tipo === 'orgulloso' ? 'Orgulloso' : 'Bienvenida'}: ${params.get('v')}`
 
   return (
     <div className={styles.pagina}>
@@ -44,7 +47,10 @@ export default function PruebaPersonajePage() {
           Fila de prueba {i + 1}
         </button>
       ))}
-      {corriendo && (tipo === 'orgulloso'
+      {esVisita && <BotonPregunta onClick={() => navigate('/preguntar')} />}
+      {corriendo && (esVisita
+        ? <OrgullosoEscarabajo key={vuelta} userId={user.id} variante={variante} derecha alTerminar={() => setCorriendo(false)} />
+        : tipo === 'orgulloso'
         ? <OrgullosoEscarabajo key={vuelta} userId={user.id} variante={variante} alTerminar={() => setCorriendo(false)} />
         : <BienvenidaEscarabajo key={vuelta} userId={user.id} variante={variante} alPrimerCuadro={() => marcarVariante(user.id, variante.id)} alTerminar={() => setCorriendo(false)} />)}
     </div>

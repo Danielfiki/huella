@@ -9,8 +9,10 @@ import styles from './OrgullosoEscarabajo.module.css'
 // las variantes y lo que se marca con el primer cuadro: la variante mostrada,
 // para no repetirla la proxima vez.
 // `izquierda`: pegado a la izquierda (sobre "Inicio") en vez de al centro.
-export default function OrgullosoEscarabajo({ userId, variante, alTerminar, izquierda }) {
-  const estilos = izquierda ? { ...styles, [variante.id]: `${styles[variante.id]} ${styles.izquierda}` } : styles
+// `derecha`: en espejo, pegado a la derecha (visita del circulo "?").
+export default function OrgullosoEscarabajo({ userId, variante, alTerminar, izquierda, derecha }) {
+  const lado = izquierda ? styles.izquierda : derecha ? styles.derecha : null
+  const estilos = lado ? { ...styles, [variante.id]: `${styles[variante.id]} ${lado}` } : styles
   return (
     <BienvenidaEscarabajo
       userId={userId}

@@ -400,6 +400,14 @@ export default function PersonajePage() {
 
       <PruebaOrgulloso userId={user.id} />
 
+      {/* Visita del circulo "?": el orgulloso pulgar en espejo a la derecha,
+          subiendo por detras del circulo (solo vitrina, sin logica diaria). */}
+      <div className={styles.repetir}>
+        <Button variant="ghost" onClick={() => abrirPrueba('visita', 'pulgar')}>
+          Ver visita ?
+        </Button>
+      </div>
+
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}
     </main>
   )

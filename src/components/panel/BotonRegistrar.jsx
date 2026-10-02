@@ -13,9 +13,10 @@ import styles from './botonRegistrar.module.css'
 // `avisoCupo` es el chip discreto del plan free cuando quedan pocos momentos.
 // Va DEBAJO del botón y solo aparece cuando aplica: nunca ocupa espacio si el
 // usuario no está cerca del límite.
-export function BotonRegistrar({ onClick, avisoCupo = null }) {
+// `refRaiz`: el Home lo usa para que el circulo "?" nunca tape este boton.
+export function BotonRegistrar({ onClick, avisoCupo = null, refRaiz = null }) {
   return (
-    <div className={styles.wrap}>
+    <div ref={refRaiz} className={styles.wrap}>
       <button type="button" className={styles.boton} onClick={onClick}>
         {/* Decorativos: el nombre accesible del botón lo da solo el label.
             Sin aria-hidden, el Escarabajo aporta su propio aria-label="Huella"
