@@ -109,8 +109,7 @@
 ### Eliminar perfil y Momentos (desde 1 oct)
 
 - ⬜ **Fotos de la pareja sueltas al eliminar un hijo** — **1 oct** — las fotos de momentos y avances que subió la pareja viven en su carpeta de Storage; quien elimina no las puede borrar (la policy solo deja borrar la carpeta propia) y quedan sin nada que las apunte. Hoy solo se anotan en la consola.
-- ⬜ **Orden de Momentos por fecha de registro** — **1 oct** — hoy Momentos agrupa en Hoy / Ayer y ordena por `fecha` (cuándo pasó). Daniel quiere ordenar por `created_at` (cuándo se registró) y mostrar "Pasó ayer" en la tarjeta cuando no coinciden. La IA y los patrones siguen usando `fecha`. Ojo: `created_at` es null en momentos anteriores al 16 sep 2026.
-- ⬜ **Bug: "Otro momento…" en Registrar conversacional** — **1 oct** — no tiene selector de fecha y guarda la hora del registro (`RegistroPage.jsx` `computarFecha`, caso `custom` sin `fechaCustom`). El selector solo existe en el modo clásico.
+- 📐 **Para el rediseño de Momentos (Design)** — **2 oct** — la tarjeta ahora lleva **la hora o "Pasó ayer" / "Pasó el 28 sep" debajo del tipo**, y **el tipo nunca baja de línea** (16 px; medido con los 22 tipos en iPhone SE: el más largo, "Se aisló / no quiso relacionarse", 224,7 px de 235, margen 10,3). El ancho salió de los espacios: ícono 12 → 8 px, flecha 12 → 4 px. Cualquier rediseño de la tarjeta tiene que respetar esas dos reglas.
 - ⏸️ **Compañía sobre la card "Esta semana"** — sigue en pausa, con su disparador en el Roadmap.
 
 ### Sale de la cola
@@ -120,7 +119,8 @@
 - ✅ **Solicitud de acceso a producción en Google Play** — **enviada el 28 sep a las 14:41**.
 - ✅ **Arreglo de Diego: "Ver orientación" mostraba media orientación** — **en producción para todos el 28 sep** (`86f1357`).
 - ✅ **Rediseño de Momentos** — **en producción para todos el 29 sep** (detalle: bloque del 29 sep).
-- ✅ **"Eliminar perfil" de un hijo + aviso de nombre repetido** — **en producción para todos el 1 oct** (`d9e848d`, `dc1ae96`, `d2a7864`, `5f7bbce`, `bc33fcd`; migración 028; detalle: Cerrado HOY 1 oct).
+- ✅ **"Eliminar perfil" de un hijo + aviso de nombre repetido** — **en producción para todos el 1 oct** (`d9e848d`, `dc1ae96`, `d2a7864`, `5f7bbce`, `bc33fcd`; migración 028; detalle: Cerrado HOY 1-2 oct).
+- ✅ **Orden de Momentos por fecha de registro + selector de "Otro momento…" en el registro conversacional** — **en producción para todos el 2 oct** (`81c37bf`, `5c3c78e`, `d2da687`, `969ca6e`; detalle: Cerrado HOY 1-2 oct).
 - ✅ **Grilla de "¿Cómo estás tú?" del seguimiento** — **en producción para todos el 29 sep** (`ebe7924`).
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
@@ -365,7 +365,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (1 oct 2026) — **"Eliminar perfil" de un hijo EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (1-2 oct 2026) — **"Eliminar perfil" de un hijo y orden de Momentos por registro, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Eliminar perfil + aviso de nombre repetido, para todos
 - **Dónde:** Tú → al pie de la card del hijo, link discreto **"Eliminar perfil de [nombre]"**. Solo lo ve quien creó al hijo (`hijos.user_id` = usuario actual); la pareja nunca.
@@ -388,10 +388,18 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Daniel la dio por perdida (sin recuperación). **Rearmada desde la app el 1 oct:** "La brava", Niño, nacimiento **2021-03-03** (de este archivo, QA del banco teórico), **sin registros**. La cuenta de prueba queda solo con La brava, 0 registros sin hijo y Storage vacío.
 - **Regla nueva (abajo, en "Regla de trabajo"):** nunca simular borrados con intercepción de red.
 
+### 4. ✅ Orden de Momentos por fecha de registro + "Otro momento…" (para todos, 2 oct)
+- **Momentos ordena y agrupa (Hoy / Ayer / fechas) por `created_at`**, lo último arriba; si falta (momentos anteriores al 16 sep), usa `fecha`. Días en la hora local del teléfono. **Solo Momentos:** la IA, los patrones y el gráfico de la semana del Home siguen con `fecha` (cuándo pasó).
+- **Tarjeta:** si el día en que pasó no es el día en que se registró, **"Pasó ayer" / "Pasó el 28 sep" reemplaza a la hora**. La hora (o la etiqueta) va **debajo del tipo**, y el tipo va en **una sola línea a 16 px** (ver la nota para Design en PENDIENTES).
+- **Encabezados:** "sep" (no "sept"), un grupo de un solo día con una sola fecha ("dom, 20 sep"), sin bajar de línea en SE.
+- **Registro conversacional:** "Otro momento…" abre el calendario con hora del modo clásico, compacto (filas de 44 px, hora en una fila), **sin fechas futuras**, con **"Listo" fijo al pie** de la hoja; lo elegido se guarda en `fecha`. Arregla el bug de que guardaba la hora del registro.
+- **Commits:** `81c37bf` (orden, etiqueta y selector, en prueba), `5c3c78e` (hoja compacta con Listo fijo, etiqueta en lugar de la hora, encabezados), `d2da687` (hora abajo), `969ca6e` (apertura a todos + el pie de "Listo" cubre el borde de la hoja). Se eliminó `src/utils/cuentasEnPrueba.js`. Index en producción `B6BrqpRv`.
+- **QA de cierre (Code, WebKit SE 375x548 y 14 390x664, cuenta de prueba, sin IA salvo 2 extracciones para abrir el selector, sin intercepción):** 3 episodios (hoy, pasó ayer registrado hoy, 20 sep sin `created_at`) y 1 avance en La brava → orden por registro en SE y 14, "Hoy · 3", "dom, 20 sep" de un solo día, "Pasó ayer" en lugar de la hora, tipos en una línea con la hora debajo. **Gráfico de la semana:** hoy cuenta 2 y ayer 1 (por cuándo pasó; por registro hoy serían 3). Selector abre en SE y 14 con "Listo" visible, sin guardar nada. En la captura de SE asomaban los botones de la hora bajo "Listo": el pie fijo se ancló al borde real de la hoja y quedó limpio (re-medido arriba y al fondo en SE y 14). Todo lo de prueba borrado por id; la cuenta queda solo con La brava, 0 registros y 0 sin hijo. Capturas en `huella-design-pack/orden-momentos` (`11-cierre-*`, `12-cierre-*`).
+- Daniel aprobó en su iPhone: registro conversacional con "Otro momento…" (ayer), "Listo" visible, aparece en "Hoy" con "Pasó ayer" y el tipo en una línea.
+
 ### ⏭️ Pendiente
 1. ⬜ Fotos que subió la pareja quedan sueltas en Storage al eliminar un hijo (viven en la carpeta de la pareja y la policy solo deja borrar la propia).
-2. ⬜ Orden de Momentos por fecha de registro (ver PENDIENTES).
-3. ⬜ Bug "Otro momento…" en Registrar conversacional (ver PENDIENTES).
+2. 📐 Para el rediseño de Momentos (Design): hora debajo del tipo y tipo en una línea (ver PENDIENTES).
 
 ---
 
