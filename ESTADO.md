@@ -106,7 +106,8 @@
 
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
 - ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver Cerrado HOY.
-- ⬜ **Variantes 2 y 3 de la visita del "?"** — **3 oct** — misma base `24-orgulloso-base`; cada video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suman a `VARIANTES_PREGUNTA` en `pregunta.js` (la elección ya alterna sin repetir la última).
+- ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver Cerrado HOY.
+- ⬜ **Variante 3 de la visita del "?"** — **3 oct** — 2 intentos fallidos el 3 oct: Veo convierte la mano en alto en un saludo. **Otra idea: solo cara, sin levantar la mano** (mira hacia arriba pensando y abre los ojos como si se le ocurriera algo). Misma base `24-orgulloso-base`; el video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suma a `VARIANTES_PREGUNTA` en `pregunta.js`.
 - ⬜ **Procesar y sumar las bienvenidas 4 y 5** — **3 oct** — ya están medidas; falta empaquetarlas y agregarlas a `VARIANTES` en `bienvenida.js`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
@@ -369,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (2-3 oct 2026) — **Ficha "?" del Home y visita diaria del escarabajo, EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (2-3 oct 2026) — **Ficha "?" del Home, visita diaria del escarabajo y su variante 2, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Ficha "?" para todos
 - Diseño de Claude Design: dos fichas de 56 px (la de atrás terracota, corrida 4 px; la de adelante crema con el "?" en Fraunces). Al tocar, la de adelante baja y se tiñe; en reposo la de atrás asoma 1 px cada 6 s (sin animación con "reducir movimiento").
@@ -390,8 +391,15 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Capturas en `huella-design-pack/visita-pregunta/` con sufijo `-cierre`: la cara y la mano del mentón quedan libres en los 3 tamaños.
 - Nota: este archivo decía que `src/utils/cuentasEnPrueba.js` se había eliminado el 2 oct; volvió con la ficha y queda en uso por la vitrina.
 
+### 4. ✅ Variante 2 de la visita del "?" (video 31, se rasca la cabeza), para todos
+- Cuadros 1 a 233 (el 0 es el destello; desde el 234 vuelve a asomar). Del 218 al 233 ya vienen vacíos: primer y último cuadro con 0 píxeles opacos, sin fundido.
+- Mismo pipeline y escala que el 30 (cráneo 67 px), sin espejo: la mano queda a la izquierda. Recorte 40 px más ancho a la izquierda por la mano, con el mismo borde derecho y repisa: cae en el mismo lugar de la pantalla (borde derecho en 383 en el 14, igual que el 30). Archivo `pregunta-2-alfa.mp4`, 476x562.
+- Capturas `vista-previa-14-rasca-p2.png` y `vista-previa-se-rasca-p2.png` (s 4,9): cara y mano libres, la ficha solo tapa la bufanda.
+- Commit `812f2b4`. Index en producción `BcQ8cbEL`; el video responde 200.
+- **Variante 3:** 2 intentos fallidos (Veo convierte la mano en alto en saludo). Queda con otra idea (ver PENDIENTES → Personaje).
+
 ### ⏭️ Pendiente
-1. ⬜ Variantes 2 y 3 de la visita del "?" (ver PENDIENTES → Personaje).
+1. ⬜ Variante 3 de la visita del "?": solo cara, sin levantar la mano (ver PENDIENTES → Personaje).
 2. ⬜ Bienvenidas 4 y 5: procesar y sumar.
 3. ⬜ Opcional: la ficha se encoge al tocar por `button:active` global.
 
