@@ -11,7 +11,9 @@ import styles from './BotonPregunta.module.css'
 // `evitarRef`: un elemento que el circulo nunca tapa ("Registrar un momento").
 // Si al desplazar se solaparian, el circulo se esconde y vuelve con un fundido
 // apenas ese elemento sale de su zona.
-export default function BotonPregunta({ onClick, oculto = false, evitarRef = null }) {
+// `alCambiarVisible(visible)`: avisa cada vez que se muestra o se esconde (la
+// visita del escarabajo espera a que se vea, para subir detras de ella).
+export default function BotonPregunta({ onClick, oculto = false, evitarRef = null, alCambiarVisible = null }) {
   const [barra] = useState(() => document.querySelector('[data-nav-inferior]'))
   const botonRef = useRef(null)
   const [tapa, setTapa] = useState(true) // arranca escondido hasta medir
@@ -38,8 +40,10 @@ export default function BotonPregunta({ onClick, oculto = false, evitarRef = nul
     }
   }, [barra, evitarRef])
 
+  const escondido = !barra || oculto || tapa
+  useEffect(() => { alCambiarVisible?.(!escondido) }, [escondido]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!barra) return null
-  const escondido = oculto || tapa
   return createPortal(
     <button
       ref={botonRef}

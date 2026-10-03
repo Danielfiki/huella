@@ -10,7 +10,6 @@ import { CabeceraHijo } from '../../components/panel/CabeceraHijo'
 import PropuestaRasgo from '../../components/hijo/PropuestaRasgo'
 import { BotonRegistrar } from '../../components/panel/BotonRegistrar'
 import BotonPregunta from '../../components/panel/BotonPregunta'
-import { enPrueba } from '../../utils/cuentasEnPrueba'
 import { PuertaHuella, PuertaCerebro, PuertaMomentos, PuertaAcompanando } from '../../components/panel/Puertas'
 import AnalisisSemanalCard from '../../components/panel/AnalisisSemanalCard'
 import { TarjetaEntrada } from '../../components/motion/MotionPrimitives'
@@ -18,11 +17,22 @@ import { MAX_EPISODIOS_FREE } from '../estrategias/helpers'
 import { esFamiliaPositiva } from '../../utils/umbralRasgos'
 import { AHORA, porTope } from '../cerebro/contenidoCerebro'
 import { tocaBienvenida, elegirVariante } from '../../components/personaje/bienvenida'
+import { tocaVisitaPregunta, elegirPregunta, marcarPregunta } from '../../components/personaje/pregunta'
 import styles from './PanelPage.module.css'
 
 // Bienvenida del escarabajo, para todos: el chunk (con los archivos de
 // public/personaje/home) solo se pide si toca mostrarla.
 const BienvenidaEscarabajo = lazy(() => import('../../components/personaje/BienvenidaEscarabajo'))
+// Visita del escarabajo detras de la ficha "?": mismo componente que el
+// orgulloso, pegado a la derecha. Tambien se pide solo si toca.
+const OrgullosoEscarabajo = lazy(() => import('../../components/personaje/OrgullosoEscarabajo'))
+
+// Entrada al Home (location.key) en la que se decidio la bienvenida. Al
+// cargar, PanelPage se monta varias veces con la misma entrada; ninguna de
+// esas puede traer la visita del "?" aunque la bienvenida ya haya marcado el
+// dia: la visita es para una entrada siguiente. Vive en el modulo por la
+// misma razon que hijosRespondidosEstaVisita.
+let entradaBienvenida = null
 
 // UNO POR VISITA. Cuando el papa responde la propuesta de rasgo, la card se
 // va y el siguiente candidato espera a que vuelva a abrir la app. Encadenar
@@ -93,15 +103,34 @@ export default function PanelPage() {
   // de este usuario. La marca la pone la bienvenida cuando entra. No se monta
   // mientras el onboarding este en pantalla (gastaria la marca sin verse).
   const { onboardingVisible, onboardingDecidido } = useOutletContext() || {}
-  const conPregunta = enPrueba(user?.id)
   const registrarRef = useRef(null)
-  const [bienvenida, setBienvenida] = useState(() =>
-    !!user?.id &&
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    tocaBienvenida(user.id)
-  )
+  const [bienvenida, setBienvenida] = useState(() => {
+    const toca = !!user?.id &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      tocaBienvenida(user.id)
+    if (toca) entradaBienvenida = location.key
+    return toca
+  })
   // al azar sin repetir la ultima (bienvenida.js)
   const [variante] = useState(() => (bienvenida ? elegirVariante(user.id) : null))
+  // Visita de la ficha "?": una vez al dia, en una entrada al Home posterior a
+  // la de la bienvenida y nunca junto con ella; sin movimiento reducido. La
+  // marca la pone la visita con su primer cuadro (pregunta.js).
+  const [visita, setVisita] = useState(() =>
+    !bienvenida && !!user?.id &&
+    location.key !== entradaBienvenida &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    tocaVisitaPregunta(user.id)
+      ? elegirPregunta(user.id)
+      : null
+  )
+  // La visita sube detras de la ficha: arranca recien cuando la ficha se ve
+  // (en el SE, arriba del todo, la ficha se esconde para no tapar "Registrar
+  // un momento" y el escarabajo quedaria encima del boton). Una vez que
+  // arranco no se corta: el video no se desmonta a mitad.
+  const [fichaVisible, setFichaVisible] = useState(false)
+  const [visitaArranco, setVisitaArranco] = useState(false)
+  useEffect(() => { if (visita && fichaVisible) setVisitaArranco(true) }, [visita, fichaVisible])
 
   const { hijo, hijos, episodios, hitos, estrategias, rasgos, padreNombre } = state
   const nombreHijo = hijo?.nombre || 'tu hijo/a'
@@ -474,21 +503,31 @@ export default function PanelPage() {
         </Suspense>
       )}
 
-      {/* Circulo "?" (en prueba): acceso a Preguntar a Huella con el hijo
-          activo. Se esconde mientras corre la bienvenida y nunca tapa
-          "Registrar un momento". El espacio de abajo (47 px + los 16 del gap
-          = 63) evita que tape la ultima card al bajar hasta el final. */}
-      {conPregunta && (
-        <>
-          <div className={styles.espacioPregunta} aria-hidden="true" />
-          {dataLoaded && (
-            <BotonPregunta
-              onClick={() => navigate('/preguntar')}
-              oculto={bienvenida || !!onboardingVisible}
-              evitarRef={registrarRef}
-            />
-          )}
-        </>
+      {/* Ficha "?": acceso a Preguntar a Huella con el hijo activo. Se
+          esconde mientras corre la bienvenida y nunca tapa "Registrar un
+          momento". El espacio de abajo (47 px + los 16 del gap = 63) evita
+          que tape la ultima card al bajar hasta el final. Durante la visita
+          sigue visible y se puede tocar: el escarabajo sube detras de ella. */}
+      <div className={styles.espacioPregunta} aria-hidden="true" />
+      {dataLoaded && (
+        <BotonPregunta
+          onClick={() => navigate('/preguntar')}
+          oculto={bienvenida || !!onboardingVisible}
+          evitarRef={registrarRef}
+          alCambiarVisible={setFichaVisible}
+        />
+      )}
+
+      {visita && visitaArranco && dataLoaded && onboardingDecidido && !onboardingVisible && (
+        <Suspense fallback={null}>
+          <OrgullosoEscarabajo
+            userId={user.id}
+            variante={visita}
+            derecha
+            alPrimerCuadro={() => marcarPregunta(user.id, visita.id)}
+            alTerminar={() => setVisita(null)}
+          />
+        </Suspense>
       )}
 
       {showUpgrade && (

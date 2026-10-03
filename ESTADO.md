@@ -105,6 +105,10 @@
 ### Personaje
 
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
+- ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver Cerrado HOY.
+- ⬜ **Variantes 2 y 3 de la visita del "?"** — **3 oct** — misma base `24-orgulloso-base`; cada video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suman a `VARIANTES_PREGUNTA` en `pregunta.js` (la elección ya alterna sin repetir la última).
+- ⬜ **Procesar y sumar las bienvenidas 4 y 5** — **3 oct** — ya están medidas; falta empaquetarlas y agregarlas a `VARIANTES` en `bienvenida.js`.
+- ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
 ### Eliminar perfil y Momentos (desde 1 oct)
 
@@ -119,8 +123,8 @@
 - ✅ **Solicitud de acceso a producción en Google Play** — **enviada el 28 sep a las 14:41**.
 - ✅ **Arreglo de Diego: "Ver orientación" mostraba media orientación** — **en producción para todos el 28 sep** (`86f1357`).
 - ✅ **Rediseño de Momentos** — **en producción para todos el 29 sep** (detalle: bloque del 29 sep).
-- ✅ **"Eliminar perfil" de un hijo + aviso de nombre repetido** — **en producción para todos el 1 oct** (`d9e848d`, `dc1ae96`, `d2a7864`, `5f7bbce`, `bc33fcd`; migración 028; detalle: Cerrado HOY 1-2 oct).
-- ✅ **Orden de Momentos por fecha de registro + selector de "Otro momento…" en el registro conversacional** — **en producción para todos el 2 oct** (`81c37bf`, `5c3c78e`, `d2da687`, `969ca6e`; detalle: Cerrado HOY 1-2 oct).
+- ✅ **"Eliminar perfil" de un hijo + aviso de nombre repetido** — **en producción para todos el 1 oct** (`d9e848d`, `dc1ae96`, `d2a7864`, `5f7bbce`, `bc33fcd`; migración 028; detalle: bloque del 1-2 oct).
+- ✅ **Orden de Momentos por fecha de registro + selector de "Otro momento…" en el registro conversacional** — **en producción para todos el 2 oct** (`81c37bf`, `5c3c78e`, `d2da687`, `969ca6e`; detalle: bloque del 1-2 oct).
 - ✅ **Grilla de "¿Cómo estás tú?" del seguimiento** — **en producción para todos el 29 sep** (`ebe7924`).
 
 - ❌ **"Racha por interacción activa"** — **eliminada el 16 sep 2026**: contradice la regla dura de esta cola.
@@ -365,7 +369,35 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (1-2 oct 2026) — **"Eliminar perfil" de un hijo y orden de Momentos por registro, EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (2-3 oct 2026) — **Ficha "?" del Home y visita diaria del escarabajo, EN PRODUCCIÓN PARA TODOS**
+
+### 1. ✅ Ficha "?" para todos
+- Diseño de Claude Design: dos fichas de 56 px (la de atrás terracota, corrida 4 px; la de adelante crema con el "?" en Fraunces). Al tocar, la de adelante baja y se tiñe; en reposo la de atrás asoma 1 px cada 6 s (sin animación con "reducir movimiento").
+- Abre Preguntar a Huella con el hijo activo. Se esconde durante la bienvenida y cuando taparía "Registrar un momento" (en el SE, arriba del todo).
+- Commits: `9bb1a00` (la ficha, aprobada por Daniel en su iPhone) y el de este cierre (sin filtro de cuentas).
+
+### 2. ✅ Visita diaria del escarabajo detrás de la ficha
+- **Cuándo:** máximo 1 vez al día por usuario en el teléfono, solo en el Home. Nunca en la primera apertura del día (es de la bienvenida): sale en la siguiente entrada al Home después de la de la bienvenida, y nunca en la misma entrada (el Home se monta varias veces al cargar; la entrada se reconoce por `location.key`). La marca del día se guarda como la de la bienvenida (`huella_visita_pregunta_<usuario>` con el día de Chile) y se pone recién con el primer cuadro: si el video falla, no se marca y queda solo la ficha.
+- **Espera a la ficha:** arranca recién cuando la ficha se ve. En el SE, arriba del todo, la ficha se esconde para no tapar "Registrar un momento" y el escarabajo quedaba encima del botón: ahora la visita sale cuando el papá baja un poco. Una vez que arrancó no se corta.
+- **Video:** solo el 30 (mano en el mentón), pegado a la derecha y sin espejo, por detrás de la ficha. Sistema de 3 variantes listo en `pregunta.js` (`elegirPregunta` sin repetir la última; hoy hay una). La visita ya no anota su variante en la clave de los orgullosos (`OrgullosoEscarabajo` acepta su propio `alPrimerCuadro`).
+- Nada con "reducir movimiento". La vitrina (`/personaje`, `/prueba-personaje`) sigue privada (`enPrueba` en sus rutas).
+
+### 3. QA de cierre (Code, WebKit SE 375x548, 14 390x664 y Pro Max 430x740, cuenta de prueba, sin IA ni datos nuevos; 2 pasadas completas, 0 fallas)
+- ✅ 1ª apertura del día: bienvenida, sin visita. 2ª (Tú → Inicio): la visita, una vez. 3ª y recarga del mismo día: nada.
+- ✅ Durante la visita: el toque sobre el cuerpo del escarabajo llega a la página, el Home baja (WebKit móvil no simula el gesto: se movió el scroll del `main`) y la ficha se ve, recibe el toque y abre `/preguntar`.
+- ✅ SE arriba del todo con la ficha escondida: la visita espera; al bajar, sale.
+- ✅ Video bloqueado: no aparece nada, la ficha se ve y la visita no queda marcada. Con "reducir movimiento": ni bienvenida ni visita, la ficha sí.
+- Capturas en `huella-design-pack/visita-pregunta/` con sufijo `-cierre`: la cara y la mano del mentón quedan libres en los 3 tamaños.
+- Nota: este archivo decía que `src/utils/cuentasEnPrueba.js` se había eliminado el 2 oct; volvió con la ficha y queda en uso por la vitrina.
+
+### ⏭️ Pendiente
+1. ⬜ Variantes 2 y 3 de la visita del "?" (ver PENDIENTES → Personaje).
+2. ⬜ Bienvenidas 4 y 5: procesar y sumar.
+3. ⬜ Opcional: la ficha se encoge al tocar por `button:active` global.
+
+---
+
+## Sesión 1-2 oct 2026 — **"Eliminar perfil" de un hijo y orden de Momentos por registro, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Eliminar perfil + aviso de nombre repetido, para todos
 - **Dónde:** Tú → al pie de la card del hijo, link discreto **"Eliminar perfil de [nombre]"**. Solo lo ve quien creó al hijo (`hijos.user_id` = usuario actual); la pareja nunca.
