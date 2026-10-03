@@ -55,6 +55,19 @@
   --margen-der: 0.01005;
 }
 
+/* Video 31 (visita del "?", se rasca la cabeza). Misma escala y mismo borde
+   derecho que el 30: recorte de 438 px de la fuente (40 mas a la izquierda,
+   por la mano) -> ancho = 0,86225 x 476 / 432. A la derecha quedan los mismos
+   4 px de la fuente que en el 30 (4 / 438), asi el cuerpo cae en el mismo
+   lugar. */
+.pregunta2 {
+  --ancho: calc(var(--base) * 0.95007);
+  aspect-ratio: 476 / 562;
+  right: calc(50% - var(--ancho) * 0.5);
+  --margen-izq: 0.00913;
+  --margen-der: 0.00913;
+}
+
 /* Pegado a la derecha, SIN espejo (visita del circulo "?": la mano del menton
    queda a la izquierda, lejos del circulo). El primer pixel visible del
    cuerpo cae a 8 px del borde derecho (--margen-der: parte transparente a la
@@ -77,6 +90,11 @@
 
 .pregunta1 .fuente {
   width: 432px;
+  height: 1140px;
+}
+
+.pregunta2 .fuente {
+  width: 476px;
   height: 1140px;
 }
 

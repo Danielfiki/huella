@@ -10,6 +10,11 @@ export const VARIANTES_PREGUNTA = [
   // video 30-pregunta-1 (mano en el menton), cuadros 1 a 239 (el 0 es el
   // destello); los ultimos 6 con fundido a transparente: el ultimo, vacio.
   { id: 'pregunta1', video: '/personaje/home/pregunta-1-alfa.mp4', ancho: 432, alto: 562, pixel: [216, 550] },
+  // video 31-pregunta-2 (se rasca la cabeza), cuadros 1 a 233 (el 0 es el
+  // destello; desde el 234 vuelve a asomar). El 218 al 233 ya vienen vacios.
+  // Recorte mas ancho a la izquierda por la mano, mismo borde derecho, repisa
+  // y escala que el 30: cae en el mismo lugar de la pantalla.
+  { id: 'pregunta2', video: '/personaje/home/pregunta-2-alfa.mp4', ancho: 476, alto: 562, pixel: [260, 550] },
 ]
 
 // Una vez al dia por usuario en este telefono, igual que la bienvenida: guarda
