@@ -28,6 +28,7 @@ import CerebroPage from './pages/cerebro/CerebroPage'
 import TerminosPage from './pages/legal/TerminosPage'
 import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import PrivacidadPage from './pages/legal/PrivacidadPage'
+import PortadaPage from './pages/portada/PortadaPage'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
@@ -161,6 +162,8 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/terminos"       element={<TerminosPage />} />
               <Route path="/privacidad"     element={<PrivacidadPage />} />
+              {/* Portada publica en prueba; la logica para pasarla a "/" esta en pages/portada/destinoRaiz.js (sin activar). */}
+              <Route path="/portada-prueba" element={<PortadaPage />} />
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />

@@ -1,0 +1,1332 @@
+/* Portada publica — propuesta B de Claude Design ("Bloques de color").
+   Celular primero (el diseno a 390); desde 900 px, la version de computador
+   (diseno a 1440, contenido a 1280 como maximo). Colores: tokens --portada-*
+   (fijos en claro y oscuro, ver index.css). */
+
+.pagina {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--portada-crema);
+  color: var(--portada-tinta);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+.contenedor {
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* ── Textos compartidos ── */
+.encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.antetitulo,
+.antetituloTinta,
+.antetituloTerracota {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--portada-tangerine-osc);
+}
+
+.antetituloTinta { color: var(--portada-tinta); }
+.antetituloTerracota { color: var(--portada-terracota); }
+
+.titulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+/* ── Marco de telefono: todo en proporcion a --ancho ── */
+.telefono {
+  width: var(--ancho);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: calc(var(--ancho) * 0.0333);
+  border-radius: calc(var(--ancho) * 0.17);
+  background: var(--portada-tinta);
+}
+
+.pantalla {
+  border-radius: calc(var(--ancho) * 0.137);
+  overflow: hidden;
+  background: var(--portada-mocha);
+}
+
+.isla {
+  height: calc(var(--ancho) * 0.1185);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.isla span {
+  width: calc(var(--ancho) * 0.289);
+  height: calc(var(--ancho) * 0.0815);
+  border-radius: calc(var(--ancho) * 0.045);
+  background: var(--portada-tinta);
+}
+
+.captura {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pie {
+  height: calc(var(--ancho) * 0.065);
+  background: var(--portada-crema);
+}
+
+/* El del hero: sin pie, alto de sobra y recortado abajo por su contenedor */
+.cortado {
+  height: calc(var(--ancho) * 2.25);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cortado .pantalla {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.marcoSuave {
+  background: var(--portada-tinta-suave);
+  box-shadow: var(--portada-sombra-telefono);
+}
+
+.marcoSombra { box-shadow: var(--shadow-lg); }
+.pantallaCrema { background: var(--portada-crema); }
+.islaMocha { background: var(--portada-mocha); }
+
+.altoCompleto {
+  aspect-ratio: 1170 / 1992;
+  background: var(--portada-crema);
+}
+
+.tamHero { --ancho: 270px; }
+.tamTeLee { --ancho: 266px; }
+.tamAvance { --ancho: 236px; }
+/* Dos de 172 + 14 de espacio: en el 390 asoman 8 px sobre el margen (como en
+   el diseno); en pantallas mas angostas se achican parejo, sin salirse. */
+.tamDemas { --ancho: min(172px, calc((100vw - 32px - 14px) / 2)); }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--portada-terracota);
+  color: var(--portada-crema);
+  padding-top: 16px;
+}
+
+.marcaAgua {
+  position: absolute;
+  top: 120px;
+  right: -110px;
+  width: 265px;
+  height: auto;
+  color: var(--portada-crema);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.cabecera {
+  position: relative;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logoEnlace { display: flex; color: var(--portada-crema); }
+
+.logo {
+  display: block;
+  height: 39px;
+  width: auto;
+  margin: -5.3px -27.8px -5.8px -8.6px;
+}
+
+.navCabecera {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.enlaceEntrar {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--portada-crema);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.botonCabecera {
+  height: 46px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-cta);
+  background: var(--portada-crema);
+  color: var(--portada-terracota);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.heroGrilla {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.heroTexto {
+  padding-top: 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.heroTitulo {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 54px;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  /* corta como el diseno: ¿Que paso / hoy con tu / hijo? (la Fraunces de la
+     app es de un solo corte optico y sin esto quedaria en 2 lineas) */
+  max-width: 5.4em;
+}
+
+.heroBajada {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--portada-crema);
+  text-wrap: pretty;
+}
+
+.heroAcciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.botonCrema,
+.botonBorde {
+  height: 58px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-cta);
+  font-size: 17px;
+}
+
+.botonCrema {
+  background: var(--portada-crema);
+  color: var(--portada-terracota);
+  font-weight: 700;
+}
+
+.botonBorde {
+  border: 1.5px solid var(--portada-crema);
+  color: var(--portada-crema);
+  font-weight: 600;
+}
+
+.heroGratis {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--portada-crema);
+}
+
+.heroTelefono {
+  position: relative;
+  margin-top: 40px;
+  height: 340px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Lema ── */
+.lema {
+  padding: 40px 24px;
+  background: var(--portada-durazno);
+  text-align: center;
+}
+
+.lemaTexto {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.2;
+  color: var(--portada-terracota);
+}
+
+/* ── Cómo funciona ── */
+.comoFunciona {
+  position: relative;
+  overflow: hidden;
+}
+
+/* el espacio de abajo es del escarabajo: nunca queda sobre los pasos */
+.comoFuncionaInterior {
+  padding-top: 64px;
+  padding-bottom: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.pasos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.paso {
+  padding: 24px 0;
+  border-top: 2px solid var(--portada-tinta);
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.paso:last-child { border-bottom: 2px solid var(--portada-tinta); }
+
+.pasoNumero {
+  width: 58px;
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 76px;
+  line-height: 0.8;
+  color: var(--portada-tangerine);
+}
+
+.pasoTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pasoTitulo {
+  font-family: var(--font-family); /* h3: sin esto hereda la serif global */
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pasoDescripcion {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--portada-tinta-suave);
+}
+
+.personaje {
+  position: absolute;
+  right: -2px;
+  bottom: 0;
+  height: 160px;
+  width: auto;
+  pointer-events: none;
+}
+
+/* ── Huella te lee ── */
+.teLee {
+  background: var(--portada-tinta);
+  color: var(--portada-crema);
+}
+
+.teLeeGrilla {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.teLeeTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.escarabajoChico {
+  display: block;
+  width: 35px;
+  height: auto;
+  color: var(--portada-tangerine);
+}
+
+.bajadaOscura {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--portada-borde);
+}
+
+.teLeeTelefonos {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+/* ── Avances ── */
+.avances {
+  background: var(--portada-pistacho);
+  color: var(--portada-tinta);
+}
+
+.avancesGrilla {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* En celular el telefono va entre la bajada y las familias */
+.avancesTexto { display: contents; }
+.avancesTexto > .antetituloTinta { order: 1; }
+.avancesTexto > .titulo { order: 2; }
+.avancesTexto > .bajadaAvances { order: 3; }
+.avancesTelefono {
+  order: 4;
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+.avancesTexto > .familias { order: 5; }
+
+.bajadaAvances {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.familias {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.familia {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--portada-crema);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.familiaTitulo {
+  font-family: var(--font-family); /* h3: sin esto hereda la serif global */
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.puntoMueve { background: var(--portada-tangerine); }
+.puntoFortalezas { background: var(--portada-pistacho); }
+.puntoCalma { background: var(--portada-mocha); }
+
+.lentes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--portada-tinta-suave);
+}
+
+.lentes li { display: inline; }
+.lentes li:not(:last-child)::after { content: ' · '; }
+
+/* ── Lo demás que hay en Huella ── */
+.demas { background: var(--portada-blanco); }
+
+.demasInterior {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.demasGrilla {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.demasTelefonos {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.figura {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.figuraTexto {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--portada-tinta-suave);
+}
+
+.funciones {
+  display: flex;
+  flex-direction: column;
+}
+
+.funcion {
+  padding: 18px 0;
+  border-top: 1px solid var(--portada-borde);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.funcion:last-child { border-bottom: 1px solid var(--portada-borde); }
+
+.funcionTitulo {
+  font-family: var(--font-family); /* h3: sin esto hereda la serif global */
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.etiquetaPro {
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--portada-durazno);
+  color: var(--portada-terracota);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.funcionTexto {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--portada-tinta-suave);
+}
+
+/* ── El banco teórico ── */
+.banco {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bancoTextos {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bajadaBanco {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.grafico {
+  margin: 0;
+  padding: 22px 18px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--portada-blanco);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.graficoTitulo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--portada-tinta);
+}
+
+.graficoGrilla {
+  display: grid;
+  grid-template-columns: 98px 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.autor { font-weight: 700; }
+
+.carril {
+  position: relative;
+  height: 22px;
+  background: var(--portada-crema);
+  border-radius: var(--radius-xs);
+}
+
+.barra {
+  position: absolute;
+  left: var(--desde);
+  width: var(--largo);
+  top: 5px;
+  bottom: 5px;
+  border-radius: var(--radius-xs);
+}
+
+.barraHasta { background: var(--portada-tangerine); }
+.barraDesde { background: var(--portada-mocha); }
+
+.eje {
+  position: relative;
+  height: 24px;
+  border-top: 2px solid var(--portada-tinta);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--portada-tinta-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.marca,
+.marcaInicio,
+.marcaFin {
+  position: absolute;
+  top: 6px;
+}
+
+.marca {
+  left: var(--en);
+  transform: translateX(-50%);
+}
+
+.marcaInicio { left: 0; }
+.marcaFin { right: 0; }
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 13px;
+  color: var(--portada-tinta-suave);
+}
+
+.leyendaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leyendaMuestra {
+  width: 20px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+}
+
+.graficoNota {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--portada-borde);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--portada-tinta-suave);
+}
+
+.dimensiones {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: var(--radius-cta);
+  background: var(--portada-durazno);
+  color: var(--portada-terracota);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ── Planes ── */
+.planes { background: var(--portada-arena); }
+
+.planesGrilla {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.planesEncabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.planesNota {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--portada-tinta-suave);
+}
+
+.planGratis,
+.planPro {
+  padding: 28px 24px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.planGratis { background: var(--portada-blanco); }
+
+.planPro {
+  background: var(--portada-tinta);
+  color: var(--portada-crema);
+}
+
+.planGratisCabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.planNombre {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.planGratisPrecio {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.planLista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.planLista li {
+  display: flex;
+  gap: 10px;
+}
+
+.guion { color: var(--portada-tangerine); font-weight: 700; }
+.guionClaro { color: var(--portada-naranja-claro); font-weight: 700; }
+
+.botonPlanGratis,
+.botonPlanPro {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-btn);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.botonPlanGratis {
+  background: var(--portada-tangerine);
+  color: var(--portada-blanco);
+}
+
+.botonPlanPro {
+  background: var(--portada-crema);
+  color: var(--portada-tinta);
+}
+
+.planProCabeza {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planProPrecio {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--portada-naranja-claro);
+}
+
+.planProPeriodo {
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--portada-borde);
+}
+
+.planProAnual {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--portada-borde);
+}
+
+.planProPago {
+  margin: 0;
+  font-size: 13px;
+  color: var(--portada-borde);
+  text-align: center;
+}
+
+/* ── Cierre ── */
+.cierre {
+  background: var(--portada-terracota);
+  color: var(--portada-crema);
+}
+
+.cierreInterior {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cierreAcciones {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.enlaceCierre {
+  align-self: center;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--portada-crema);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ── Pie ── */
+.pie_ {
+  flex: 1 1 0%;
+  background: var(--portada-tinta);
+  color: var(--portada-crema);
+}
+
+.pieInterior {
+  padding-top: 48px;
+  padding-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.logoPie {
+  display: block;
+  align-self: flex-start;
+  height: 41px;
+  width: auto;
+  margin: -5.5px -29.2px -6.1px -9.1px;
+  color: var(--portada-crema);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
+.enlaceLegal {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  color: var(--portada-crema);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.correo {
+  align-self: flex-start;
+  color: var(--portada-naranja-claro);
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.copyright {
+  margin: 0;
+  font-size: 13px;
+  color: var(--portada-tinta-clara);
+}
+
+/* ── Lo que cambia entre celular y computador ── */
+@media (max-width: 899.98px) {
+  .soloEscritorio { display: none; }
+}
+
+@media (min-width: 900px) {
+  .soloMovil { display: none; }
+
+  .contenedor {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 56px;
+    padding-right: 56px;
+  }
+
+  .encabezado { gap: 12px; }
+
+  .antetitulo,
+  .antetituloTinta,
+  .antetituloTerracota { font-size: 13px; }
+
+  .titulo {
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .tamHero { --ancho: 330px; }
+  .tamTeLee { --ancho: 288px; }
+  .tamAvance { --ancho: 310px; }
+  .tamDemas { --ancho: 246px; }
+  .marcoLeve { box-shadow: var(--shadow-md); }
+
+  /* Hero */
+  .hero { padding-top: 0; }
+
+  .marcaAgua {
+    top: -60px;
+    right: auto;
+    left: 44%;
+    width: 459px;
+    opacity: 0.07;
+  }
+
+  .cabecera {
+    height: 88px;
+    gap: 24px;
+  }
+
+  .logo {
+    height: 45px;
+    margin: -6.1px -32.1px -6.7px -9.9px;
+  }
+
+  .enlaceEntrar { min-height: 0; }
+
+  .heroGrilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(520px, 100%), 1fr));
+    gap: 48px;
+    align-items: end;
+  }
+
+  .heroTexto {
+    padding: 72px 0 112px;
+    gap: 28px;
+  }
+
+  .heroTitulo {
+    /* 96 en el diseno; con la Fraunces de la app a 96 "¿Que paso hoy" no cabe
+       en la columna y el titulo caia en 3 lineas. A 90 queda en 2, como el diseno */
+    max-width: none;
+    font-size: 90px;
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .heroBajada {
+    max-width: 520px;
+    font-size: 21px;
+  }
+
+  .heroAcciones {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .botonCrema,
+  .botonBorde {
+    height: 62px;
+    font-size: 18px;
+  }
+
+  .botonCrema { padding: 0 38px; }
+  .botonBorde { padding: 0 34px; }
+
+  .heroGratis {
+    margin: 0;
+    padding-left: 8px;
+    font-size: 15px;
+    text-align: left;
+  }
+
+  .heroTelefono {
+    margin-top: 0;
+    height: 560px;
+    align-items: flex-start;
+  }
+
+  /* Lema */
+  .lema { padding: 44px 56px; }
+  .lemaTexto { font-size: 40px; }
+
+  /* Cómo funciona */
+  .comoFuncionaInterior {
+    padding-top: 120px;
+    padding-bottom: 230px;
+    gap: 56px;
+  }
+
+  .pasos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 40px;
+  }
+
+  .paso {
+    padding: 28px 0 0;
+    border-top-width: 3px;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .paso:last-child { border-bottom: 0; }
+
+  .pasoNumero {
+    width: auto;
+    font-size: 128px;
+  }
+
+  .pasoTexto { gap: 16px; }
+  .pasoTitulo { font-size: 22px; }
+  .pasoDescripcion { font-size: 17px; }
+
+  .personaje {
+    right: -3px;
+    height: 200px;
+  }
+
+  /* Huella te lee */
+  .teLeeGrilla {
+    padding-top: 112px;
+    padding-bottom: 112px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr));
+    gap: 64px;
+    align-items: center;
+  }
+
+  .teLeeTexto {
+    gap: 24px;
+    max-width: 500px;
+  }
+
+  .escarabajoChico { width: 42px; }
+  .bajadaOscura { font-size: 19px; }
+
+  .teLeeTelefonos {
+    padding-top: 0;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  .teLeeSegundo { margin-top: 72px; }
+
+  /* Avances */
+  .avancesGrilla {
+    padding-top: 112px;
+    padding-bottom: 112px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+    gap: 64px;
+    align-items: center;
+  }
+
+  .avancesTexto {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* telefono a la izquierda: se anula el orden de celular */
+  .avancesTelefono {
+    order: 0;
+    padding: 0;
+  }
+
+  .bajadaAvances {
+    max-width: 560px;
+    font-size: 19px;
+  }
+
+  .familias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: 14px;
+    padding-top: 8px;
+  }
+
+  .familia { padding: 22px; }
+
+  .lentes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    line-height: 1.5;
+  }
+
+  .lentes li { display: block; }
+  .lentes li:not(:last-child)::after { content: none; }
+
+  /* Lo demás */
+  .demasInterior {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    gap: 56px;
+  }
+
+  .demasGrilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr));
+    gap: 64px;
+    align-items: start;
+  }
+
+  .demasTelefonos { gap: 24px; }
+  .figura { gap: 12px; }
+  .figuraBaja { margin-top: 48px; }
+  .figuraTexto { font-size: 14px; }
+
+  .funciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    column-gap: 32px;
+  }
+
+  .funcion {
+    padding: 22px 0;
+    gap: 6px;
+  }
+
+  .funcion:last-child { border-bottom: 0; }
+  .funcionTitulo { font-size: 18px; }
+
+  /* Banco teórico: textos y dimensiones a la izquierda, gráfico a la derecha */
+  .banco {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'textos grafico'
+      'dimensiones grafico';
+    column-gap: 64px;
+    row-gap: 28px;
+    align-items: start;
+    align-content: start;
+  }
+
+  .bancoTextos {
+    grid-area: textos;
+    gap: 28px;
+  }
+
+  .bajadaBanco { font-size: 19px; }
+
+  .grafico {
+    grid-area: grafico;
+    padding: 32px 32px 26px;
+    gap: 18px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .graficoTitulo { font-size: 13px; }
+
+  .graficoGrilla {
+    grid-template-columns: 140px 1fr;
+    font-size: 16px;
+  }
+
+  .carril { height: 26px; }
+
+  .barra {
+    top: 6px;
+    bottom: 6px;
+  }
+
+  .leyenda { font-size: 14px; }
+  .graficoNota { font-size: 13px; }
+  .dimensiones { grid-area: dimensiones; }
+  .chips { gap: 10px; }
+
+  .chip {
+    padding: 9px 16px;
+    font-size: 15px;
+  }
+
+  /* Planes */
+  .planesGrilla {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .planesEncabezado {
+    gap: 12px;
+    padding-right: 24px;
+  }
+
+  .planGratis,
+  .planPro {
+    padding: 36px 32px;
+    gap: 22px;
+  }
+
+  .planNombre { font-size: 32px; }
+  .planGratisPrecio { font-size: 17px; }
+
+  .planLista {
+    gap: 12px;
+    font-size: 16px;
+  }
+
+  .planGratis .planLista { flex: 1 1 0%; }
+
+  .botonPlanGratis,
+  .botonPlanPro { height: 54px; }
+
+  .planProPrecio { font-size: 40px; }
+  .planProPeriodo { font-size: 16px; }
+  .planProPago { margin-top: -8px; }
+
+  /* Cierre */
+  .cierreInterior {
+    padding-top: 96px;
+    padding-bottom: 96px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  .cierreAcciones {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .botonCierre { padding: 0 40px; }
+  .enlaceCierre { min-height: 0; }
+
+  /* Pie: marca, correo y año a la izquierda; legal a la derecha */
+  .pieInterior {
+    padding-top: 56px;
+    padding-bottom: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'logo legal'
+      'correo .'
+      'copy .';
+    column-gap: 40px;
+    row-gap: 20px;
+    align-items: start;
+  }
+
+  .logoPie {
+    grid-area: logo;
+    height: 45px;
+    margin: -6.1px -32.1px -6.7px -9.9px;
+  }
+
+  .legal {
+    grid-area: legal;
+    gap: 28px;
+  }
+
+  .enlaceLegal { min-height: 0; }
+
+  .correo {
+    grid-area: correo;
+    font-size: 20px;
+  }
+
+  .copyright { grid-area: copy; }
+}

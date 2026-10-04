@@ -588,6 +588,27 @@
      --color-cta-disco): el fondo de los videos es exactamente este crema,
      asi que si cambiara se veria el borde cuadrado del video. */
   --personaje-escenario: #FAF3EC;
+
+  /* ═══ Portada publica (propuesta B de Claude Design, 4 oct 2026) ═══
+     La paleta Mocha Mix tal cual, en bloques de color. Fija en claro Y en
+     oscuro, sin override (mismo criterio que --personaje-escenario): es la
+     cara de la marca para quien todavia no tiene cuenta, y en oscuro los
+     tokens de la app invertirian las secciones (la tinta se volveria crema). */
+  --portada-terracota:    #A84B28;  /* = --color-primary-deep en claro */
+  --portada-crema:        #FAF3EC;  /* = --color-bg en claro */
+  --portada-durazno:      #FEE8D6;  /* = --color-primary-bg en claro */
+  --portada-tangerine:    #E56E26;  /* = --color-primary */
+  --portada-tangerine-osc:#C45A18;  /* = --color-primary-dark en claro */
+  --portada-naranja-claro:#EE9452;  /* = --color-primary-light en claro */
+  --portada-tinta:        #2A1A0E;  /* = --color-text en claro */
+  --portada-tinta-suave:  #7A6050;  /* = --color-text-muted en claro */
+  --portada-tinta-clara:  #B0987A;  /* = --color-text-light en claro */
+  --portada-mocha:        #9B7B6A;  /* = --color-accent-mocha */
+  --portada-borde:        #E8DACE;  /* = --color-border en claro */
+  --portada-arena:        #EDE4D8;  /* = --color-surface-alt en claro */
+  --portada-pistacho:     #8FA840;  /* = --color-accent */
+  --portada-blanco:       #FFFFFF;  /* = --color-surface en claro */
+  --portada-sombra-telefono: 0 12px 48px rgba(0, 0, 0, 0.35);
 }
 
 /* ── Modo oscuro ── */
