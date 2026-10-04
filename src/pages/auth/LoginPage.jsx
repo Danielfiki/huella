@@ -126,6 +126,10 @@ export default function LoginPage() {
           ¿No tienes cuenta?{' '}
           <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`} className={styles.link}>Crear cuenta</Link>
         </p>
+
+        <p className={styles.footer}>
+          <Link to="/privacidad" className={styles.link}>Política de privacidad</Link>
+        </p>
       </div>
     </div>
   )

@@ -1,0 +1,8 @@
+/* Caja del boton oficial de Google: el boton es un iframe que Google dibuja
+   con el ancho que se le pasa (200 a 400 px). Alto reservado para que la
+   tarjeta no salte cuando aparece. */
+.boton {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
