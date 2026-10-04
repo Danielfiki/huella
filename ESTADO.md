@@ -105,8 +105,8 @@
 ### Personaje
 
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
-- ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver Cerrado HOY.
-- ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver Cerrado HOY.
+- ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver bloque del 2-3 oct.
+- ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver bloque del 2-3 oct.
 - ⬜ **Variante 3 de la visita del "?"** — **3 oct** — 2 intentos fallidos el 3 oct: Veo convierte la mano en alto en un saludo. **Otra idea: solo cara, sin levantar la mano** (mira hacia arriba pensando y abre los ojos como si se le ocurriera algo). Misma base `24-orgulloso-base`; el video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suma a `VARIANTES_PREGUNTA` en `pregunta.js`.
 - ⬜ **Procesar y sumar las bienvenidas 4 y 5** — **3 oct** — ya están medidas; falta empaquetarlas y agregarlas a `VARIANTES` en `bienvenida.js`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
@@ -150,7 +150,7 @@
 - **Prompt caching fase 2** — junto con la auditoría de costo de la API.
 - **Encuesta de salida en Tally** — cuando el primer tester se dé de baja.
 - **Separar la bandeja `contacto@`** — cuando el volumen de correo lo pida.
-- **Consent screen de Google OAuth** — antes de salir de beta cerrada.
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver Cerrado HOY. Falta el registro (`/signup`), que sigue con el botón antiguo.
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
@@ -338,7 +338,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 **Antes de invitar a desconocidos (NO bloquea al círculo cercano):**
 - **Separar la bandeja de `contacto@huella.lat`** de la cuenta personal de Google.
-- **Consent screen de Google OAuth** (hoy muestra el subdominio crudo de Supabase) — se arregla por config, no por código.
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver Cerrado HOY). Falta `/signup`.
 
 **Cola NO bloqueante:**
 - **Montar la encuesta de salida en Tally** (texto ya definido con el precio real; recién al final de la beta).
@@ -370,7 +370,36 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (2-3 oct 2026) — **Ficha "?" del Home, visita diaria del escarabajo y su variante 2, EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (3-4 oct 2026) — **Login con Google: botón oficial EN PRODUCCIÓN PARA TODOS, Google ya muestra "huella.lat"; página /privacidad**
+
+### 1. ✅ Botón oficial de Google en el login (para todos)
+- **Problema:** con `signInWithOAuth` la pantalla de Google mostraba `igwzepnzpibzrbbkwkbb.supabase.co` en vez de Huella, y con un dominio `supabase.co` la verificación de marca suele rechazarse. Estamos en el plan Free de Supabase (sin dominio propio).
+- **Solución:** Google Identity Services (el botón oficial, no una imitación) + `supabase.auth.signInWithIdToken` con nonce: Google recibe el hash SHA-256 y Supabase el crudo ("Skip nonce checks" sigue apagado). Google ahora muestra **"continue to huella.lat"**. Mismo usuario y mismos datos: Daniel entró a su cuenta de siempre (aprobado en la ruta de prueba).
+- **Mismo destino** que antes: `?redirect=` o `/panel` (lo hace el efecto de `user` de LoginPage).
+- **Respaldo:** si a los 5 s el botón oficial no está dibujado (script que no carga, colgado, o Google que no lo dibuja), aparece el botón antiguo (`signInWithOAuth`), con su flujo de vuelta intacto.
+- **Código:** `src/services/googleIdToken.js` (nonce, carga del script, canje del token; sirve tal cual para iOS nativo con un Client ID de iOS) y `src/components/auth/BotonGoogleOficial.jsx`. La ruta de prueba `/entrar-google-prueba` se borró.
+- **Google Cloud (hecho por Daniel):** orígenes de JavaScript autorizados `https://www.huella.lat` y `https://huella.lat` en el cliente web `48774588483-3c3c…`. Sin localhost: el botón oficial no se dibuja en local (403) y ahí sale el respaldo. No se tocaron los URI de redireccionamiento.
+- **Commits:** `af88aed` (ruta de prueba + /privacidad) y el de este cierre (login real + respaldo).
+
+### 2. ✅ Página /privacidad
+- Pública, con el mismo texto de privacidad de `/terminos` (Parte 2), que ahora vive en un solo componente (`src/pages/legal/PoliticaPrivacidad.jsx`) para las dos páginas. Se sumó un párrafo: de la cuenta de Google solo se usan nombre, correo y foto para crear la cuenta en Huella; no se comparten ni se venden. Fecha de actualización de ambas: 4 oct 2026.
+- Enlace "Política de privacidad" en el pie del login y en el pie de `/terminos`.
+- URL para Google (Desarrollo de la marca → Vínculo a la Política de Privacidad): `https://www.huella.lat/privacidad`.
+
+### 3. QA (Code)
+- Build sin errores. Producción: botón oficial completo y dentro de la tarjeta en iPhone 14 (306x44) y computador (346x44), Chrome y Safari.
+- Respaldo en local: con el script de Google bloqueado, el botón antiguo aparece al tiro en iPhone 14 y computador; con el script colgado, aparece a los 5,4 s, y al tocarlo va a `supabase.co/auth/v1/authorize?provider=google` como siempre.
+- Capturas en `huella-design-pack/login-google/` (`login-*-antes`, `login-*-despues`, `login-*-respaldo-local`, `www-entrar-google-prueba-*`, `privacidad-*`).
+
+### ⏭️ Pendiente
+1. ⬜ **Registro (`/signup`)** sigue con el botón antiguo (pasa por supabase.co). Decide Daniel si se cambia igual que el login.
+2. ⬜ **Probar en la app de Android** (TWA, Chrome): entrar con Google desde el login.
+3. ⬜ **Confirmar en Google Cloud** el vínculo a `/privacidad` en Desarrollo de la marca y, si corresponde, pedir la verificación de la marca.
+4. ⬜ Siguen: variante 3 de la visita del "?", bienvenidas 4 y 5, detalle opcional de `button:active` (ver PENDIENTES → Personaje).
+
+---
+
+## Sesión 2-3 oct 2026 — **Ficha "?" del Home, visita diaria del escarabajo y su variante 2, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Ficha "?" para todos
 - Diseño de Claude Design: dos fichas de 56 px (la de atrás terracota, corrida 4 px; la de adelante crema con el "?" en Fraunces). Al tocar, la de adelante baja y se tiñe; en reposo la de atrás asoma 1 px cada 6 s (sin animación con "reducir movimiento").

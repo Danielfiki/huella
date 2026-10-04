@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../../components/ui/Logo'
+import BotonGoogleOficial from '../../components/auth/BotonGoogleOficial'
 import styles from './AuthPage.module.css'
 
 function GoogleIcon() {
@@ -33,6 +34,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [respaldoGoogle, setRespaldoGoogle] = useState(false)
 
   async function handleGoogleSignIn() {
     setError('')
@@ -71,16 +73,23 @@ export default function LoginPage() {
         <h1 className={styles.title}>Bienvenido de vuelta</h1>
         <p className={styles.subtitle}>Ingresa a tu cuenta para continuar</p>
 
-        <button
-          type="button"
-          className={styles.btnGoogle}
-          onClick={handleGoogleSignIn}
-          disabled={loadingGoogle || loading}
-        >
-          {loadingGoogle
-            ? <span className={styles.spinnerDark} />
-            : <><GoogleIcon /> Continuar con Google</>}
-        </button>
+        {/* Boton oficial de Google (Google muestra "huella.lat"). Si no se
+            dibuja en 5 s, queda el boton antiguo (signInWithOAuth). Al entrar,
+            el efecto de `user` de arriba lleva al mismo destino. */}
+        {!respaldoGoogle ? (
+          <BotonGoogleOficial onError={setError} onRespaldo={() => setRespaldoGoogle(true)} />
+        ) : (
+          <button
+            type="button"
+            className={styles.btnGoogle}
+            onClick={handleGoogleSignIn}
+            disabled={loadingGoogle || loading}
+          >
+            {loadingGoogle
+              ? <span className={styles.spinnerDark} />
+              : <><GoogleIcon /> Continuar con Google</>}
+          </button>
+        )}
 
         <div className={styles.separator}><span>o</span></div>
 

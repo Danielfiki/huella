@@ -28,7 +28,6 @@ import CerebroPage from './pages/cerebro/CerebroPage'
 import TerminosPage from './pages/legal/TerminosPage'
 import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import PrivacidadPage from './pages/legal/PrivacidadPage'
-import EntrarGooglePruebaPage from './pages/auth/EntrarGooglePruebaPage'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
@@ -162,8 +161,6 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/terminos"       element={<TerminosPage />} />
               <Route path="/privacidad"     element={<PrivacidadPage />} />
-              {/* Prueba del boton oficial de Google (signInWithIdToken); /login sigue igual. */}
-              <Route path="/entrar-google-prueba" element={<EntrarGooglePruebaPage />} />
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
