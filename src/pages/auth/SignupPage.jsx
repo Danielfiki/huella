@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../../components/ui/Logo'
+import BotonGoogleOficial from '../../components/auth/BotonGoogleOficial'
 import styles from './AuthPage.module.css'
 
 function GoogleIcon() {
@@ -16,7 +17,8 @@ function GoogleIcon() {
 }
 
 export default function SignupPage() {
-  const { signUp, signInWithGoogle } = useAuth()
+  const { signUp, signInWithGoogle, user } = useAuth()
+  const navigate = useNavigate()
   // El query param ?redirect=... viaja desde InvitarPage cuando una pareja
   // invitada llega al signup. Necesita preservarse a través del email-
   // confirm y del OAuth de Google para que el partner aterrice de vuelta
@@ -30,6 +32,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [emailConfirmado, setEmailConfirmado] = useState('')
+  const [respaldoGoogle, setRespaldoGoogle] = useState(false)
+  const [entroGoogle, setEntroGoogle] = useState(false)
+
+  // Boton oficial de Google: al entrar no hay redireccion del navegador (como
+  // con el boton antiguo), asi que se navega al mismo destino cuando
+  // AuthContext ya tiene al usuario. Solo tras Google: el registro por correo
+  // sigue mostrando "Revisa tu correo".
+  useEffect(() => {
+    if (entroGoogle && user) navigate(redirectTo, { replace: true })
+  }, [entroGoogle, user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleGoogleSignIn() {
     setError('')
@@ -124,16 +136,26 @@ export default function SignupPage() {
         <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>Empieza a conocer mejor a tu hijo</p>
 
-        <button
-          type="button"
-          className={styles.btnGoogle}
-          onClick={handleGoogleSignIn}
-          disabled={loadingGoogle || loading}
-        >
-          {loadingGoogle
-            ? <span className={styles.spinnerDark} />
-            : <><GoogleIcon /> Continuar con Google</>}
-        </button>
+        {/* Boton oficial de Google, igual que en /login; si no se dibuja en
+            5 s, queda el boton antiguo (signInWithOAuth). */}
+        {!respaldoGoogle ? (
+          <BotonGoogleOficial
+            onError={setError}
+            onRespaldo={() => setRespaldoGoogle(true)}
+            onEntro={() => setEntroGoogle(true)}
+          />
+        ) : (
+          <button
+            type="button"
+            className={styles.btnGoogle}
+            onClick={handleGoogleSignIn}
+            disabled={loadingGoogle || loading}
+          >
+            {loadingGoogle
+              ? <span className={styles.spinnerDark} />
+              : <><GoogleIcon /> Continuar con Google</>}
+          </button>
+        )}
 
         <div className={styles.separator}><span>o</span></div>
 

@@ -150,7 +150,7 @@
 - **Prompt caching fase 2** — junto con la auditoría de costo de la API.
 - **Encuesta de salida en Tally** — cuando el primer tester se dé de baja.
 - **Separar la bandeja `contacto@`** — cuando el volumen de correo lo pida.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver Cerrado HOY. Falta el registro (`/signup`), que sigue con el botón antiguo.
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver Cerrado HOY.
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
@@ -338,7 +338,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 **Antes de invitar a desconocidos (NO bloquea al círculo cercano):**
 - **Separar la bandeja de `contacto@huella.lat`** de la cuenta personal de Google.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver Cerrado HOY). Falta `/signup`.
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver Cerrado HOY).
 
 **Cola NO bloqueante:**
 - **Montar la encuesta de salida en Tally** (texto ya definido con el precio real; recién al final de la beta).
@@ -370,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (3-4 oct 2026) — **Login con Google: botón oficial EN PRODUCCIÓN PARA TODOS, Google ya muestra "huella.lat"; página /privacidad**
+## Cerrado HOY (3-4 oct 2026) — **Login y registro con Google: botón oficial EN PRODUCCIÓN PARA TODOS, Google ya muestra "huella.lat"; página /privacidad**
 
 ### 1. ✅ Botón oficial de Google en el login (para todos)
 - **Problema:** con `signInWithOAuth` la pantalla de Google mostraba `igwzepnzpibzrbbkwkbb.supabase.co` en vez de Huella, y con un dominio `supabase.co` la verificación de marca suele rechazarse. Estamos en el plan Free de Supabase (sin dominio propio).
@@ -391,8 +391,13 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Respaldo en local: con el script de Google bloqueado, el botón antiguo aparece al tiro en iPhone 14 y computador; con el script colgado, aparece a los 5,4 s, y al tocarlo va a `supabase.co/auth/v1/authorize?provider=google` como siempre.
 - Capturas en `huella-design-pack/login-google/` (`login-*-antes`, `login-*-despues`, `login-*-respaldo-local`, `www-entrar-google-prueba-*`, `privacidad-*`).
 
+### 4. ✅ Registro (`/signup`, "Crear cuenta") con el mismo botón oficial (para todos)
+- Reusa `BotonGoogleOficial` (sin copia) con el mismo respaldo de 5 s al botón antiguo. El componente suma `onEntro` (opcional): `/signup` no navegaba sola al aparecer el usuario (el botón antiguo dependía de la redirección del navegador), así que ahora va al mismo destino de antes (`?redirect=` o `/panel`) apenas Google termina. El registro por correo sigue igual ("Revisa tu correo").
+- **Cuenta nueva = mismo onboarding:** el onboarding sale cuando la cuenta no tiene hijos ni nombre del papá (`Layout.jsx`, `yaTieneCuenta`); la app no lee el nombre que trae Google (sin `user_metadata` en `src`), así que una cuenta nueva creada con el botón oficial llega igual que con el antiguo. No se pudo crear una cuenta de Google de prueba desde Code: lo prueba Daniel con un correo nuevo.
+- QA: build sin errores; respaldo en local con el script de Google bloqueado en iPhone 14 y computador (también re-probado en `/login`). Capturas `signup-*-antes`, `signup-*-despues`, `signup-*-respaldo-local`.
+
 ### ⏭️ Pendiente
-1. ⬜ **Registro (`/signup`)** sigue con el botón antiguo (pasa por supabase.co). Decide Daniel si se cambia igual que el login.
+1. ⬜ **Probar crear una cuenta nueva con Google** (correo que nunca entró a Huella): tiene que llegar al onboarding.
 2. ⬜ **Probar en la app de Android** (TWA, Chrome): entrar con Google desde el login.
 3. ⬜ **Confirmar en Google Cloud** el vínculo a `/privacidad` en Desarrollo de la marca y, si corresponde, pedir la verificación de la marca.
 4. ⬜ Siguen: variante 3 de la visita del "?", bienvenidas 4 y 5, detalle opcional de `button:active` (ver PENDIENTES → Personaje).

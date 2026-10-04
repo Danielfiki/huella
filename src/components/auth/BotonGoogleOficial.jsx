@@ -11,10 +11,12 @@ import styles from './BotonGoogleOficial.module.css'
 // para que la pantalla muestre el boton antiguo (signInWithOAuth).
 const ESPERA_RESPALDO = 5000
 
-export default function BotonGoogleOficial({ onError, onRespaldo }) {
+// `onEntro` (opcional): avisa que el canje salio bien, para pantallas que no
+// navegan solas cuando aparece el usuario (/signup).
+export default function BotonGoogleOficial({ onError, onRespaldo, onEntro }) {
   const cajaRef = useRef(null)
-  const avisos = useRef({ onError, onRespaldo })
-  avisos.current = { onError, onRespaldo }
+  const avisos = useRef({ onError, onRespaldo, onEntro })
+  avisos.current = { onError, onRespaldo, onEntro }
 
   useEffect(() => {
     let vivo = true
@@ -34,6 +36,7 @@ export default function BotonGoogleOficial({ onError, onRespaldo }) {
             avisos.current.onError('')
             try {
               await entrarConTokenGoogle(credential, nonce.crudo)
+              avisos.current.onEntro?.()
             } catch (e) {
               console.error('[google] signInWithIdToken:', e)
               avisos.current.onError('No se pudo entrar con Google. Intenta de nuevo.')
