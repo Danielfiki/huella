@@ -13,13 +13,14 @@ import styles from './PortadaPage.module.css'
 
 const TITULO = 'Huella — Conoce y potencia a tu hijo'
 
-// Edades de algunos autores (src/services/anthropic.js: edad minima y maxima
-// por autor). `hasta`: entra hasta esa edad; `desde`: entra desde esa edad.
+// Edades de algunos autores (src/services/anthropic.js: EDAD_MINIMA_AUTOR y
+// EDAD_MAXIMA_AUTOR). `hasta`: entra hasta esa edad; `desde`: entra desde esa
+// edad. Carlos González salio de la portada (4 oct 2026); no entro otro: los
+// demas autores del banco no tienen limite de edad en el codigo.
 const AUTORES = [
   { nombre: 'Gerber', hasta: 3 },
   { nombre: 'Lansbury', hasta: 6 },
   { nombre: 'Bowlby', hasta: 11 },
-  { nombre: 'Carlos González', hasta: 11 },
   { nombre: 'Wolfelt', desde: 3 },
   { nombre: 'Haidt', desde: 10 },
   { nombre: 'Twenge', desde: 10 },
