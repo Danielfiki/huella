@@ -4,8 +4,8 @@ import Logo from '../../components/ui/Logo'
 import styles from './PortadaPage.module.css'
 
 // Portada publica de Huella (propuesta B de Claude Design, "Bloques de
-// color"). Por ahora vive en /portada-prueba; la logica para que pase a "/"
-// esta escrita en ./destinoRaiz.js, sin activar. El copy es el del diseno,
+// color"). Vive en "/" para quien entra sin sesion desde el navegador
+// (EntradaRaiz.jsx + destinoRaiz.js). El copy es el del diseno,
 // palabra por palabra; donde la version de computador dice otra cosa, van
 // las dos y el CSS muestra la que corresponde (.soloMovil / .soloEscritorio).
 // Las capturas son reales (cuenta de prueba, La brava) y viven en

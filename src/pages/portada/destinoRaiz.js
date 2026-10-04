@@ -1,22 +1,16 @@
-// Que se ve en "/" cuando la portada pase a ser la entrada (TODAVIA SIN
-// ACTIVAR: hoy "/" sigue yendo al login sin sesion, por ProtectedRoute).
+// Que se ve en "/" (activo desde el 4 oct 2026; lo usa EntradaRaiz.jsx).
 //
-//   - Con sesion                      -> /panel, como hoy.
+//   - Con sesion                      -> /panel, como antes.
 //   - Sin sesion, desde el navegador  -> portada.
 //   - Sin sesion, dentro de la app de Android (TWA lat.huella.app) o en la
-//     app instalada (PWA, display-mode standalone) -> /login, como hoy.
+//     app instalada (PWA, display-mode standalone) -> /login, como antes.
 //
 // La TWA se reconoce porque al abrirla `document.referrer` empieza con
 // android-app://lat.huella.app. Ese dato solo existe en la primera carga, asi
-// que se guarda en sessionStorage para las navegaciones siguientes de esa
-// sesion. sessionStorage y no localStorage: la TWA comparte almacenamiento con
-// Chrome, y una marca permanente le escondería la portada tambien al navegador.
-//
-// Para activarlo, en App.jsx la ruta "/" pasa a ser publica y su index usa
-// <EntradaRaiz />: con `destinoRaiz(...)` decide entre <Navigate to="/panel">,
-// <PortadaPage /> o <Navigate to="/login">, y espera a que `loading` del
-// AuthContext termine antes de decidir (si no, un usuario con sesion veria la
-// portada un instante).
+// que App.jsx llama a recordarSiEsAppAndroid() al cargar y queda en
+// sessionStorage para las navegaciones siguientes de esa sesion. sessionStorage
+// y no localStorage: la TWA comparte almacenamiento con Chrome, y una marca
+// permanente le esconderia la portada tambien al navegador.
 
 const CLAVE_APP = 'huella_en_app_android'
 const REFERRER_TWA = 'android-app://lat.huella.app'

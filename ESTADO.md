@@ -370,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (3-4 oct 2026) — **Login y registro con Google: botón oficial EN PRODUCCIÓN PARA TODOS, Google ya muestra "huella.lat"; página /privacidad**
+## Cerrado HOY (3-4 oct 2026) — **Portada pública en "/", login y registro con el botón oficial de Google (Google ya muestra "huella.lat") y página /privacidad, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Botón oficial de Google en el login (para todos)
 - **Problema:** con `signInWithOAuth` la pantalla de Google mostraba `igwzepnzpibzrbbkwkbb.supabase.co` en vez de Huella, y con un dominio `supabase.co` la verificación de marca suele rechazarse. Estamos en el plan Free de Supabase (sin dominio propio).
@@ -396,11 +396,25 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Cuenta nueva = mismo onboarding:** el onboarding sale cuando la cuenta no tiene hijos ni nombre del papá (`Layout.jsx`, `yaTieneCuenta`); la app no lee el nombre que trae Google (sin `user_metadata` en `src`), así que una cuenta nueva creada con el botón oficial llega igual que con el antiguo. No se pudo crear una cuenta de Google de prueba desde Code: lo prueba Daniel con un correo nuevo.
 - QA: build sin errores; respaldo en local con el script de Google bloqueado en iPhone 14 y computador (también re-probado en `/login`). Capturas `signup-*-antes`, `signup-*-despues`, `signup-*-respaldo-local`.
 
+### 5. ✅ Portada pública en "/" (propuesta B de Claude Design, para todos)
+- **Qué ve cada uno en `huella.lat/`:** sin sesión en el navegador → la portada; con sesión → `/panel`, como antes; dentro de la app de Android (TWA: `document.referrer` empieza con `android-app://lat.huella.app`, guardado en sessionStorage para la sesión) o en la app instalada (`display-mode: standalone`) → `/login`, como antes. La portada nunca aparece dentro de la app. `/portada-prueba` redirige a `/`; `/login` y `/signup` funcionan directo.
+- **Código:** `src/pages/portada/` (`PortadaPage.jsx` + CSS, `EntradaRaiz.jsx` decide en "/", `destinoRaiz.js` la lógica). En `App.jsx` la ruta de la app con sesión quedó sin path propio (las rutas siguen siendo /panel, /nuevo…) y "/" exacto es de `EntradaRaiz`. Tokens nuevos `--portada-*` en `index.css`, fijos en claro y oscuro. Capturas reales en `public/portada/` (WebP 930 px). `<meta name="description">` con el nombre Huella en `index.html`.
+- **Diferencias con el diseño:** el título del hero corta igual que Design con un ancho máximo en celular y 90 px en computador (la Fraunces de la app es de un solo corte óptico); el lema sale en itálica regular (la app no tiene la semibold itálica); el escarabajo 3D en computador queda a 2,8x (el original mide 450 px).
+- **QA (Code):** sin desplazamiento horizontal en SE 320/375, 14, 14 Pro Max; el escarabajo 3D no tapa texto ni botones; imágenes sin deformar. Ruteo de "/" probado en local y en producción: portada sin sesión (iPhone 14 y computador), `/panel` con sesión, `/login` simulando la app de Android (primera carga y recarga sin referrer) y la app instalada, con un vigilante que confirma que la portada no aparece ni un instante. Capturas en `huella-design-pack/portada/capturas/` (`raiz-*`).
+- **Commits:** `f8a8f30` (portada en prueba), `b6452ef` (Tomás y gráfico) y el de este cierre.
+
+### 6. ✅ Tomás en la cuenta de prueba y gráfico de autores
+- **Tomás** (niño, 3 mar 2021) creado en la cuenta de prueba para que la portada no muestre "La brava" (nombre de fantasía). Tiene el mismo momento (rabieta del baño, con su orientación guardada) y la misma pregunta (pataletas largas). La brava sigue igual, con su momento y su pregunta. Ojo: el hijo activo vive en memoria; en una sesión nueva vuelve La brava y hay que elegir Tomás en el selector del Home.
+- **Carlos González salió del gráfico "Algunos autores y sus edades"** sin reemplazo: los 9 autores con rango de edad en el código (`EDAD_MINIMA_AUTOR` / `EDAD_MAXIMA_AUTOR`, `src/services/anthropic.js:669-692`) ya estaban; Neufeld no tiene límite de edad en el código (desde los 12 toma "apego" solo porque Bowlby sale a los 11).
+
 ### ⏭️ Pendiente
-1. ⬜ **Probar crear una cuenta nueva con Google** (correo que nunca entró a Huella): tiene que llegar al onboarding.
-2. ⬜ **Probar en la app de Android** (TWA, Chrome): entrar con Google desde el login.
-3. ⬜ **Confirmar en Google Cloud** el vínculo a `/privacidad` en Desarrollo de la marca y, si corresponde, pedir la verificación de la marca.
-4. ⬜ Siguen: variante 3 de la visita del "?", bienvenidas 4 y 5, detalle opcional de `button:active` (ver PENDIENTES → Personaje).
+1. 🔴 **URGENTE: la firma "Lente · dimensión" de las respuestas no calza con el tema.** Ejemplo real: una pregunta sobre comida firmada "Carlos González · Sueño con presencia". Revisar cómo se elige la dimensión y el autor que firma (MAPA_DIMENSIONES en `anthropic.js`) para preguntas y momentos.
+2. ⬜ **Evaluar sumar alimentación al banco teórico** (hoy no hay una dimensión de comida; el ejemplo de arriba cae en otra).
+3. ⬜ **Llenar el perfil de Tomás en 2 días reales y sumar a la portada la sección del perfil único.** Plan (4 oct): día 1 después de las 21:00 (cuando se reinicia el contador de IA): 3 episodios con fechas de hoy, ayer y hace 3 días, 3 avances y 1 "Algo que aún no cambia" (~15 llamadas); día 2, el lunes después de las 21:00: 1 episodio y 3 avances (~9 llamadas), y confirmar los rasgos recargando la app (una card por visita, máximo 3 en cola). Motivos: el motor de rasgos corre cada 5 momentos; los rasgos positivos piden evidencia de 2 días distintos y los avances solo se guardan con fecha de hoy; el análisis semanal se arma al abrir la app y queda fijo hasta el lunes; tope de 20 llamadas de IA al día. Los textos de los 11 registros están propuestos en el chat del 4 oct, pendientes de aprobación de Daniel.
+4. ⬜ **Probar en un Android real:** que la app abra en el login y nunca en la portada, y entrar con Google.
+5. ⬜ **Probar crear una cuenta nueva con Google** (correo que nunca entró a Huella): tiene que llegar al onboarding.
+6. ⬜ **Confirmar en Google Cloud** el vínculo a `/privacidad` en Desarrollo de la marca y, si corresponde, pedir la verificación de la marca (la portada pública ya está en "/").
+7. ⬜ Siguen: variante 3 de la visita del "?", bienvenidas 4 y 5, detalle opcional de `button:active` (ver PENDIENTES → Personaje).
 
 ---
 

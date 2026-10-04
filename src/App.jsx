@@ -28,7 +28,8 @@ import CerebroPage from './pages/cerebro/CerebroPage'
 import TerminosPage from './pages/legal/TerminosPage'
 import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import PrivacidadPage from './pages/legal/PrivacidadPage'
-import PortadaPage from './pages/portada/PortadaPage'
+import EntradaRaiz from './pages/portada/EntradaRaiz'
+import { recordarSiEsAppAndroid } from './pages/portada/destinoRaiz'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
@@ -36,6 +37,10 @@ import BetaPage from './pages/beta/BetaPage'
 import RutaPersonaje from './pages/personaje/RutaPersonaje'
 import RutaPruebaPersonaje from './pages/personaje/RutaPruebaPersonaje'
 import MockupViewer from '../design_handoff_estrategias/mockups/MockupViewer'
+
+// Al cargar: si la app de Android (TWA) abrio esta pestaña, queda anotado para
+// la sesion, asi "/" lleva al login y nunca a la portada (destinoRaiz.js).
+recordarSiEsAppAndroid()
 
 // Página para grabar el loop del cerebro de la puerta "Su cerebro". Solo en
 // desarrollo: en producción import.meta.env.DEV es false y el import se va.
@@ -162,8 +167,10 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/terminos"       element={<TerminosPage />} />
               <Route path="/privacidad"     element={<PrivacidadPage />} />
-              {/* Portada publica en prueba; la logica para pasarla a "/" esta en pages/portada/destinoRaiz.js (sin activar). */}
-              <Route path="/portada-prueba" element={<PortadaPage />} />
+              {/* "/": portada sin sesion en el navegador, Home con sesion, login
+                  dentro de la app de Android o instalada (pages/portada/destinoRaiz.js). */}
+              <Route path="/" element={<EntradaRaiz />} />
+              <Route path="/portada-prueba" element={<Navigate to="/" replace />} />
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
@@ -176,15 +183,15 @@ export default function App() {
               {/* Vitrina privada del personaje: solo la cuenta de Daniel;
                   cualquier otra vuelve a /panel. Sin enlace en ningún menú. */}
               <Route path="/personaje" element={<ProtectedRoute><PageErrorBoundary><RutaPersonaje /></PageErrorBoundary></ProtectedRoute>} />
+              {/* Toda la app con sesion. Sin path propio: "/" exacto es de
+                  EntradaRaiz; las rutas de adentro siguen siendo /panel, /nuevo... */}
               <Route
-                path="/"
                 element={
                   <ProtectedRoute>
                     <Layout />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/panel" replace />} />
                 <Route path="panel"       element={<PageErrorBoundary><PanelPage /></PageErrorBoundary>} />
                 {/* Pantalla de prueba de la vitrina del personaje, con la barra y el
                     main reales del Home. Solo la cuenta de Daniel. */}
