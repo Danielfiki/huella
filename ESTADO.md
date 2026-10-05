@@ -108,7 +108,7 @@
 - ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver bloque del 2-3 oct.
 - ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver bloque del 2-3 oct.
 - ⬜ **Variante 3 de la visita del "?"** — **3 oct** — 2 intentos fallidos el 3 oct: Veo convierte la mano en alto en un saludo. **Otra idea: solo cara, sin levantar la mano** (mira hacia arriba pensando y abre los ojos como si se le ocurriera algo). Misma base `24-orgulloso-base`; el video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suma a `VARIANTES_PREGUNTA` en `pregunta.js`.
-- 🟡 **Bienvenidas 4 (izquierda) y 5 (esquina): EN PRUEBA, solo cuenta de Daniel** — **5 oct** — procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Daniel rota entre 5 (`soloDueno` en `VARIANTES`), el resto sigue con 3. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`. Falta: el OK de Daniel en su iPhone y abrirlas a todos (sacar `soloDueno`).
+- ✅ **Bienvenidas 4 (izquierda) y 5 (esquina) EN PRODUCCIÓN PARA TODOS** — **5 oct** — `a3cc2ea`, ver Cerrado HOY. Procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Todos rotan entre las 5. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
 ### Eliminar perfil y Momentos (desde 1 oct)
@@ -150,7 +150,7 @@
 - **Prompt caching fase 2** — junto con la auditoría de costo de la API.
 - **Encuesta de salida en Tally** — cuando el primer tester se dé de baja.
 - **Separar la bandeja `contacto@`** — cuando el volumen de correo lo pida.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver Cerrado HOY.
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver bloque del 3-4 oct; marca de Google verificada y publicada (ver Cerrado HOY).
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
@@ -338,7 +338,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 **Antes de invitar a desconocidos (NO bloquea al círculo cercano):**
 - **Separar la bandeja de `contacto@huella.lat`** de la cuenta personal de Google.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver Cerrado HOY).
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver bloque del 3-4 oct). La verificación de marca quedó publicada (ver Cerrado HOY).
 
 **Cola NO bloqueante:**
 - **Montar la encuesta de salida en Tally** (texto ya definido con el precio real; recién al final de la beta).
@@ -370,7 +370,30 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (3-4 oct 2026) — **Portada pública en "/", login y registro con el botón oficial de Google (Google ya muestra "huella.lat") y página /privacidad, EN PRODUCCIÓN PARA TODOS**
+## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 EN PRODUCCIÓN PARA TODOS, marca de Google verificada y día 1 de Tomás**
+
+### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
+- **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
+- **Videos:** 28 (saluda desde la pared izquierda, cuadros 12 a 216; el 0 es destello) y 29 (asoma desde la esquina inferior izquierda, cuadros 14 a 224; los cuadros 0 a 4 traían la imagen de referencia). Mismo pipeline que las demás: chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala por cráneo (75 y 76,7 px en pantalla contra 75,7 del costado), MP4 empaquetado + WebGL a 3x, CRF 18, 24 fps, video fuente recortado dentro de la barra. La pared va al borde izquierdo de la pantalla.
+- **Archivos:** `public/personaje/home/bienvenida-izquierda-alfa.mp4` (941 KB) y `bienvenida-esquina-alfa.mp4` (875 KB), con sus pósters.
+- **Commits:** `f4d9490` (solo cuenta de Daniel, aprobado por Daniel en su iPhone: se ven bien y dejan desplazar) y `a3cc2ea` (para todos).
+- **QA de cierre (Code, producción, cuenta de prueba, solo mirar, con la IA y toda escritura a Supabase bloqueadas en el navegador: 0 llamadas de IA):** bundle cambió de `bienvenida-auwjpzEU` a `bienvenida-BSBG32Dl`, igual byte a byte al build local y sin `soloDueno`. Los 4 archivos nuevos dan 200 en huella.lat e idénticos al repo. La cuenta vio su bienvenida del día (salió centro) y en la recarga no apareció otra. Con `play()` rechazado (bajo consumo) y con el video bloqueado: no aparece nada, ni póster ni cuadro quieto, el Home se ve igual y el día no se marca. Rotación simulada para un usuario normal: 500 bienvenidas, aparecen las 5 y nunca se repite la anterior. Capturas en `huella-design-pack\animaciones\bienvenida-4-5\` y `...\cierre\`.
+
+### 2. ✅ Verificación de marca de Google publicada (4 oct)
+- La pantalla de Google muestra **huella.lat**, el nombre **"Huella"** y el **logo**.
+
+### 3. ✅ Día 1 de Tomás (4 oct, cuenta de prueba)
+- **7 momentos + 1 pregunta** registrados. Apareció el rasgo **"Las transiciones y los finales le cuestan"**, **sin confirmar** todavía.
+
+### ⏭️ Pendiente
+1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
+2. 🔴 **URGENTE: la firma "Lente · dimensión" no calza con el tema** (ver bloque del 3-4 oct).
+3. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
+4. ⬜ Siguen: variante 3 de la visita del "?" y el detalle opcional de `button:active` (ver PENDIENTES → Personaje).
+
+---
+
+## Sesión 3-4 oct 2026 — **Portada pública en "/", login y registro con el botón oficial de Google (Google ya muestra "huella.lat") y página /privacidad, EN PRODUCCIÓN PARA TODOS**
 
 ### 1. ✅ Botón oficial de Google en el login (para todos)
 - **Problema:** con `signInWithOAuth` la pantalla de Google mostraba `igwzepnzpibzrbbkwkbb.supabase.co` en vez de Huella, y con un dominio `supabase.co` la verificación de marca suele rechazarse. Estamos en el plan Free de Supabase (sin dominio propio).
