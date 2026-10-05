@@ -370,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada y día 1 de Tomás**
+## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fechas en Preguntar, edad de bebés y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
@@ -392,11 +392,20 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **QA de cierre (Code, producción, cuenta de prueba, solo mirar, 0 llamadas de IA):** el index cambió de `CCBAG2Qy` a `Bt0JJYwZ`; el chunk `pregunta-DpMA08bI.js` es igual byte a byte al build local y no tiene `soloDueno`. `pregunta-3-alfa.mp4` da 200 en huella.lat, 995.312 bytes, idéntico al repo. 1ª entrada: solo la bienvenida (costado), la ficha escondida mientras corre y nada más en esa entrada; 2ª entrada (Tú → Inicio): solo la visita (salió la 2); 3ª entrada: nada. Con `play()` rechazado (bajo consumo) y con la descarga del video fallida: no aparece nada, la ficha "?" se ve y el día no se marca. Rotación simulada para un usuario normal: 500 visitas, aparecen las 3 y nunca se repite la anterior. Capturas en `huella-design-pack\animaciones\pregunta-3\cierre\`.
 - ⚠️ **Lo que salió mal en el QA:** el bloqueo de escrituras con `page.route` se filtró al volver a cargar la página: `perfiles.ultima_actividad` de la cuenta de prueba quedó en 2026-10-05 16:50:15 UTC (leído con un GET). Fue lo único escrito: ninguna llamada a `/api/`, ningún otro PATCH/POST. Además, el `<video>` de WebKit descarga por fuera de `page.route`, así que "video que no carga" no se puede simular cortando la red. **Regla para los próximos QA en producción: el bloqueo va DENTRO de la página** (`addInitScript` que envuelve `fetch` y rechaza escrituras a Supabase, `/api/` y el `.mp4`), y al terminar se lee `ultima_actividad` para confirmar que no cambió. Con ese bloqueo se rehízo "video que no carga": `ultima_actividad` siguió en 16:50:15 después de la prueba.
 
+### 5. ✅ Fechas en Preguntar y edad de bebés, EN PRODUCCIÓN PARA TODOS (`05f58a3`)
+- **Fechas:** el prompt de Preguntar trae "Hoy es lunes 5 de octubre de 2026" (zona horaria del teléfono) y cada momento llega con "hoy", "ayer", "hace N días/semanas/meses" calculado en el código, más la fecha corta y la regla "Para decir cuándo pasó algo, usa solo esa etiqueta. No calcules fechas." Cuenta días de calendario: 23:50 de ayer es "ayer", 00:10 de hoy es "hoy"; las fechas sin hora no se corren. Causa del error: la IA recibía "5 oct" sin saber qué día era hoy y decía "la semana pasada".
+- **Bebés de menos de 1 año:** la edad 0 se leía como 4 en la elección de autores (`|| 4`, 5 lugares) y como "? años" en 15 prompts. Ahora usa la edad real (`edadNumero`) y los prompts dicen "6 meses" (`edadEnTexto`, con la fecha de nacimiento). El 4 por defecto queda solo sin fecha de nacimiento. Desde 1 año, nada cambia.
+- **QA sin IA (Code):** fechas de hoy, ayer 23:50, hace 3, 10 y 40 días y sin hora; edades 0, 6, 11 y 12 meses, 4 años y sin fecha; prompt de un bebé de 6 meses armado sin enviar (marco 0-2, Gerber y Bowlby sí, Wolfelt/Damour/Steinberg/Haidt/Twenge no). Todo OK. Archivos en `huella-design-packpreguntarechas-y-bebes`.
+- ⏳ **Falta confirmar con IA:** en la pregunta del día 2 de Tomás esta noche, la respuesta tiene que decir "hoy" y no "la semana pasada".
+
 ### ⏭️ Pendiente
 1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
-2. 🔴 **URGENTE: la firma "Lente · dimensión" no calza con el tema** (ver bloque del 3-4 oct).
-3. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
-4. ⬜ Detalle opcional de `button:active` en la ficha "?" (ver PENDIENTES → Personaje).
+2. 🔴 **Mañana: firma de alimentación** — opciones A + B del diagnóstico del 5 oct: sumar la dimensión Alimentación (Ellyn Satter, Gill Rapley, Katja Rowell / Jenny McGlothlin y Carlos González con una segunda lente) y que Preguntar elija primero la dimensión y después el autor de esa dimensión, con el par validado en el código. Causa: en Preguntar cada autor tiene una sola lente, y la de Carlos González es "Sueño con presencia".
+3. ⬜ **Mañana: fecha de hoy en los otros 8 prompts** que reciben momentos sin ella: `analizarEpisodio`, `interpretarPatrones`, `generarConsejoDiario`, `generarRespuestaReflexion`, `analizarReflexionesCuidador`, `analizarCierreCiclo`, `detectarPatronesEstructurado`, `detectarRasgos`.
+4. ⬜ **Mañana: "1 años" → "1 año"** en los prompts (`edadEnTexto` y los que usan `?? '?'`).
+5. ⬜ **Mañana: edad de bebé en blanco en la tarjeta de estrategia activa** (`EstrategiaActivaCard.jsx:38`, `hijo?.edad ? ... : ''` deja vacío el 0).
+6. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
+7. ⬜ Detalle opcional de `button:active` en la ficha "?" (ver PENDIENTES → Personaje).
 
 ---
 
