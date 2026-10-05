@@ -618,7 +618,7 @@ function matchKeywords(texto, lista) {
 // importa no perder cuando aparecen). Si nada calza, fallback a
 // 'desregulacion' que es la dimensión más frecuente y cubre el caso default.
 function inferirDimensionCentral({ episodio, hijo }) {
-  const edad = parseInt(hijo?.edad, 10) || 4
+  const edad = edadNumero(hijo?.edad)
   const textoCrudo = [
     episodio?.contexto || '',
     episodio?.descripcionLibre || '',
@@ -692,6 +692,46 @@ const EDAD_MAXIMA_AUTOR = {
   'John Bowlby':      11,
 }
 
+// Edad en años para las tablas de autores. 0 es una edad real (un bebé de
+// menos de 1 año): el 4 por defecto es solo para cuando no hay edad.
+function edadNumero(edad) {
+  const n = parseInt(edad, 10)
+  return Number.isNaN(n) ? 4 : n
+}
+
+// 'AAAA-MM-DD' se lee como día local, igual que fechaLocal en HuellaContext:
+// con new Date('2026-10-05') el navegador la toma como medianoche UTC, que en
+// Chile es el día anterior.
+function fechaLocal(fecha) {
+  return typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+    ? new Date(`${fecha}T00:00:00`)
+    : new Date(fecha)
+}
+
+// Meses cumplidos desde la fecha de nacimiento, o null si no hay fecha.
+function mesesDesde(fechaNacimiento, ahora = new Date()) {
+  if (!fechaNacimiento) return null
+  const nac = fechaLocal(fechaNacimiento)
+  if (Number.isNaN(nac.getTime())) return null
+  let meses = (ahora.getFullYear() - nac.getFullYear()) * 12 + (ahora.getMonth() - nac.getMonth())
+  if (ahora.getDate() < nac.getDate()) meses--
+  return meses >= 0 ? meses : null
+}
+
+// Edad para los prompts. Un bebé de menos de 1 año va en meses (antes salía
+// "? años": el 0 se leía como falta de dato). Desde 1 año, igual que siempre.
+export function edadEnTexto(hijo, sinDato = '?', ahora = new Date()) {
+  const n = parseInt(hijo?.edad, 10)
+  if (Number.isNaN(n)) return `${sinDato} años`
+  if (n === 0) {
+    const m = mesesDesde(hijo?.fechaNacimiento, ahora)
+    if (m == null) return 'menos de 1 año'
+    if (m === 0) return 'menos de 1 mes'
+    return `${m} ${m === 1 ? 'mes' : 'meses'}`
+  }
+  return `${n} años`
+}
+
 const autorCalzaConEdad = (autor, edadNum) => {
   const minimo = EDAD_MINIMA_AUTOR[autor]
   const maximo = EDAD_MAXIMA_AUTOR[autor]
@@ -707,7 +747,7 @@ function seleccionarAutor({ dimension, edad, ultimoAutorUsado }) {
   const mapeo = MAPA_DIMENSIONES[dimension] || MAPA_DIMENSIONES.desregulacion
   const candidatosCrudos = [mapeo.primario, mapeo.secundario, mapeo.terciario].filter(Boolean)
 
-  const edadNum = parseInt(edad, 10) || 4
+  const edadNum = edadNumero(edad)
   let compatibles = candidatosCrudos.filter((autor) => autorCalzaConEdad(autor, edadNum))
 
   if (compatibles.length === 0 && edadNum >= 12) {
@@ -962,7 +1002,7 @@ export async function generarAccionInmediata({ hijo, episodio, ultimoAutorUsado 
   const prompt = `${calibracion}
 
 HIJO/A
-Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${hijo?.edad || '?'} años. Género: ${genero}.
+Nombre: ${hijo?.nombre || 'tu hijo/a'}, ${edadEnTexto(hijo)}. Género: ${genero}.
 Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
 ${instruccionGenero(hijo)}
 
@@ -1179,7 +1219,7 @@ export async function analizarEpisodio({ hijo, episodio, historialReciente = [],
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 
 Episodio registrado:
@@ -1281,7 +1321,7 @@ export async function interpretarPatrones({ hijo, episodios, teaser = false }) {
   if (teaser) {
     const promptTeaser = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 
 Historial de episodios (más recientes primero):
@@ -1303,7 +1343,7 @@ No agregues secciones de atención, causas ni próximos pasos. No agregues discl
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 
 Historial de episodios (más recientes primero):
@@ -1383,7 +1423,7 @@ function datosDeLaSemana({ hijo, episodios, hitos }) {
 
   const cabecera = `${marcoEdad(hijo?.edad)}
 
-Nombre: ${nombre}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${nombre}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 
 Esto es lo que su mamá o papá registró en los últimos 7 días.
@@ -1481,7 +1521,7 @@ export async function generarTareas({ hijo, habilidad, descripcion }) {
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 Habilidad a trabajar: ${habilidad}
 Contexto: ${descripcion || 'ninguno'}
@@ -1543,7 +1583,7 @@ export async function generarConsejoDiario({ hijo, episodios, hitos, estrategias
 
 ${contexto}
 
-Escribe exactamente 2 oraciones sobre ${hijo?.nombre || 'este niño'} (${genero}, ${hijo?.edad || '?'} años).
+Escribe exactamente 2 oraciones sobre ${hijo?.nombre || 'este niño'} (${genero}, ${edadEnTexto(hijo)}).
 ${instruccionGenero(hijo)}
 
 Oración 1: El patrón más claro de esta semana y qué hacer. Máximo 20 palabras.
@@ -1563,7 +1603,7 @@ export async function generarEstrategia({ hijo, habilidad, descripcion }) {
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 Habilidad a fortalecer: ${habilidad}
 Contexto adicional: ${descripcion || 'ninguno'}
@@ -1582,7 +1622,7 @@ export async function generarReflexionCheckin({ hijo, episodio, checkin }) {
 
   const evolucionTexto = { mejoro: 'mejoró', igual: 'se mantuvo igual', empero: 'empeoró' }
 
-  const prompt = `El padre/madre tuvo un episodio con su ${genero} (${hijo?.nombre || 'su hijo/a'}, ${hijo?.edad || '?'} años): ${episodio?.tipo || 'dificultad'} de intensidad ${episodio?.intensidad || '?'}/5.
+  const prompt = `El padre/madre tuvo un episodio con su ${genero} (${hijo?.nombre || 'su hijo/a'}, ${edadEnTexto(hijo)}): ${episodio?.tipo || 'dificultad'} de intensidad ${episodio?.intensidad || '?'}/5.
 
 Qué intentó hacer: ${checkin.queIntentaste || 'no especificado'}
 Cómo respondió el ${genero}: ${checkin.respuestaHijo || 'no especificado'}
@@ -1967,7 +2007,7 @@ export async function generarEstrategiaDesdeContexto({ texto_libre, hijo, edad_h
 
   const prompt = `${marco}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto({ ...hijo, edad })}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona en toda tu respuesta.
 ${instruccionGenero(hijo)}
 
 El padre/madre describe esta situación en sus propias palabras:
@@ -2024,7 +2064,7 @@ export async function analizarPatron({ descripcion, desde_cuando, frecuencia, in
 
 ${REGLA_IDIOMA}
 
-Nombre: ${hijo?.nombre || 'sin nombre'}, ${hijo?.edad || '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+Nombre: ${hijo?.nombre || 'sin nombre'}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
 ${instruccionGenero(hijo)}
 
 El padre/madre registra una conducta que dura semanas o meses (NO un episodio puntual):
@@ -2138,7 +2178,7 @@ export async function analizarCierreCiclo({ hijo, ciclo, notas_bitacora = [], ep
 
 DATOS DEL HIJO/A
 Nombre: ${hijo?.nombre || 'el niño/a'}
-Edad: ${hijo?.edad || 's/d'} años
+Edad: ${edadEnTexto(hijo, 's/d')}
 Género: ${genero}
 ${instruccionGenero(hijo)}
 
@@ -2238,7 +2278,7 @@ export async function generarCicloN({ hijo, habilidad, descripcion, usar_memoria
 
 DATOS DEL HIJO/A
 Nombre: ${hijo?.nombre || 'el niño/a'}
-Edad: ${hijo?.edad || 's/d'} años
+Edad: ${edadEnTexto(hijo, 's/d')}
 Género: ${genero}
 ${instruccionGenero(hijo)}
 
@@ -2647,7 +2687,7 @@ ${JSON.stringify({
 // marco es la lente del MAPA en minusculas — exactamente lo que la UI imprime
 // como "Marco · ...". Asi los tres campos salen SIEMPRE de la misma entrada.
 export function bancoPrimerEncuentro(edad, maximo = 7) {
-  const edadNum = parseInt(edad, 10) || 4
+  const edadNum = edadNumero(edad)
   const vistos = new Set()
   const entradas = []
 
@@ -3176,36 +3216,64 @@ export const TEMAS_FUERA_DE_MARCO = ['medicamentos', 'salud_fisica', 'diagnostic
 
 // "Autor · Lente" de todos los autores del banco que calzan con esta edad.
 export function lentesParaEdad(edad) {
-  const n = parseInt(edad, 10) || 4
+  const n = edadNumero(edad)
   return Object.keys(AUTORES)
     .filter((autor) => autorCalzaConEdad(autor, n) && AUTORES[autor]?.lente)
     .map((autor) => `${autor} · ${AUTORES[autor].lente}`)
 }
 
 function lenteDeRespaldo(edad) {
-  const n = parseInt(edad, 10) || 4
+  const n = edadNumero(edad)
   const autor = n >= 12 ? 'Lisa Damour' : 'Daniel Siegel'
   return `${autor} · ${AUTORES[autor].lente}`
 }
 
+// "lunes 5 de octubre de 2026", con la zona horaria del teléfono.
+export function hoyEnTexto(ahora = new Date()) {
+  return ahora.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(',', '')
+}
+
+// Cuándo pasó un momento, contado en días de calendario del teléfono (no en
+// horas): uno de las 23:50 de ayer es "ayer" y uno de las 00:10 de hoy es
+// "hoy". El modelo no calcula fechas: recibe esta etiqueta hecha.
+export function cuandoFue(fecha, ahora = new Date()) {
+  const f = fechaLocal(fecha)
+  if (!fecha || Number.isNaN(f.getTime())) return null
+  const diaF = new Date(f.getFullYear(), f.getMonth(), f.getDate())
+  const diaHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+  // round: un cambio de horario deja el día en 23 o 25 horas
+  const dias = Math.round((diaHoy - diaF) / 86400000)
+  if (dias < 0) return null
+  if (dias === 0) return 'hoy'
+  if (dias === 1) return 'ayer'
+  if (dias < 7) return `hace ${dias} días`
+  if (dias < 30) { const s = Math.floor(dias / 7); return `hace ${s} ${s === 1 ? 'semana' : 'semanas'}` }
+  const meses = Math.floor(dias / 30)
+  return `hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`
+}
+
 // Lo que Huella ya sabe del hijo, compacto: los rasgos confirmados y los
-// últimos momentos. El modelo lo usa solo si conecta con la pregunta.
-function bloqueLoQueSabe({ nombre, rasgosConfirmados = [], momentosRecientes = [] }) {
+// últimos momentos. El modelo lo usa solo si conecta con la pregunta. Cada
+// momento lleva cuándo pasó (calculado acá) y su fecha corta.
+function bloqueLoQueSabe({ nombre, rasgosConfirmados = [], momentosRecientes = [], ahora = new Date() }) {
   const rasgos = rasgosConfirmados.map((r) => (typeof r === 'string' ? r : r?.titulo)).filter(Boolean).slice(0, 8)
   const momentos = momentosRecientes.slice(0, 8).map((m) => {
-    const fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : ''
+    const fecha = m.fecha ? fechaLocal(m.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : ''
+    const cuando = m.fecha ? cuandoFue(m.fecha, ahora) : null
     const relato = (m.descripcionLibre || m.descripcion || m.contexto || '').replace(/\s+/g, ' ').slice(0, 160)
     const tipo = m._tipo === 'avance' ? 'avance' : (m.tipo || 'episodio')
-    return `- ${fecha} · ${tipo}${m.emocion ? ` · ${m.emocion}` : ''}${relato ? ` · «${relato}»` : ''}`
+    const cuandoTexto = cuando ? `${cuando} (${fecha})` : fecha
+    return `- ${cuandoTexto} · ${tipo}${m.emocion ? ` · ${m.emocion}` : ''}${relato ? ` · «${relato}»` : ''}`
   })
   return `LO QUE HUELLA YA SABE DE ${nombre.toUpperCase()} (úsalo solo si conecta de verdad con la pregunta; si no conecta, no lo menciones)
+Cada momento dice cuándo pasó. Para decir cuándo pasó algo, usa solo esa etiqueta. No calcules fechas.
 Rasgos confirmados:
 ${rasgos.length ? rasgos.map((r) => `- ${r}`).join('\n') : '- ninguno todavía'}
 Momentos recientes:
 ${momentos.length ? momentos.join('\n') : '- ninguno todavía'}`
 }
 
-export async function preguntarAHuella({ hijo, pregunta, historial = [], rasgosConfirmados = [], momentosRecientes = [] }) {
+export async function preguntarAHuella({ hijo, pregunta, historial = [], rasgosConfirmados = [], momentosRecientes = [], ahora = new Date() }) {
   const nombre = hijo?.nombre || 'tu hijo/a'
   const edad = hijo?.edad ?? null
   const { sustantivo: genero, pronombre, articulo } = palabrasGenero(hijo)
@@ -3222,11 +3290,14 @@ ${historial.map((m, i) => `${i + 1}. Pregunta: «${m.pregunta}»\n   Tu respuest
 
 ${REGLA_IDIOMA}
 
+HOY
+Hoy es ${hoyEnTexto(ahora)}.
+
 HIJO/A
-Nombre: ${nombre}, ${edad ?? '?'} años. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
+Nombre: ${nombre}, ${edadEnTexto(hijo)}. Género: ${genero}. Usa siempre "${genero}", "${pronombre}" y "${articulo}" al referirte a esta persona.
 ${instruccionGenero(hijo)}
 
-${bloqueLoQueSabe({ nombre, rasgosConfirmados, momentosRecientes })}
+${bloqueLoQueSabe({ nombre, rasgosConfirmados, momentosRecientes, ahora })}
 
 ${conversacion}${historial.length ? 'PREGUNTA DE SEGUIMIENTO' : 'PREGUNTA'} DEL PAPÁ O LA MAMÁ:
 «${pregunta}»
@@ -3234,7 +3305,7 @@ ${conversacion}${historial.length ? 'PREGUNTA DE SEGUIMIENTO' : 'PREGUNTA'} DEL 
 ${REGLA_PREGUNTA} Acá la contesta la primera frase de "respuesta".
 
 QUÉ HACES
-Respondes una duda sobre ${nombre}, aunque no haya pasado nada. Una respuesta corta calibrada a sus ${edad ?? '?'} años: qué es esperable a esta edad, qué conviene observar y cuándo vale la pena consultar. Nunca diagnosticas, nunca etiquetas ${articulo === 'la' ? 'a la' : 'al'} ${genero} y nunca culpas al adulto.
+Respondes una duda sobre ${nombre}, aunque no haya pasado nada. Una respuesta corta calibrada a sus ${edadEnTexto(hijo)}: qué es esperable a esta edad, qué conviene observar y cuándo vale la pena consultar. Nunca diagnosticas, nunca etiquetas ${articulo === 'la' ? 'a la' : 'al'} ${genero} y nunca culpas al adulto.
 
 CAMPOS
 - "respuesta": 3 a 5 líneas, entre 40 y 90 palabras. La primera frase contesta la pregunta directo (sí, no, depende, o lo que corresponda). Después, lo que explica eso a esta edad y UNA idea práctica y concreta para esta semana. Si algo amerita consultar, cierra con el criterio concreto (qué señal y por cuánto tiempo). Sin listas.
