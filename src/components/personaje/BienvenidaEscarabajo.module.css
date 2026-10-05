@@ -60,6 +60,28 @@
   right: calc(50% - var(--ancho) * 0.56851);
 }
 
+/* Video 28. Recorte 420 x 564 de la fuente desde la pared (x 56, borde
+   izquierdo del archivo): esa linea va al borde izquierdo de la pantalla y
+   saca la mano que la cruza. Abajo, los pies (y 655). Escala: craneo igual al
+   del costado (196 px de la fuente = 71 px en pantalla). */
+.izquierda {
+  --ancho: calc(var(--base) * 1.01333);
+  aspect-ratio: 456 / 612;
+  right: auto;
+  left: 0;
+}
+
+/* Video 29. Recorte 374 x 562 de la fuente desde la pared (x 156, borde
+   izquierdo del archivo) hasta la repisa (y 675, borde de abajo): la pared
+   va al borde izquierdo de la pantalla y saca los dedos que la rodean.
+   Escala: craneo igual al del costado (222 px de la fuente = 71 px). */
+.esquina {
+  --ancho: calc(var(--base) * 0.79556);
+  aspect-ratio: 358 / 538;
+  right: auto;
+  left: 0;
+}
+
 .visible {
   opacity: 1;
   transition: opacity var(--motion-rapida) var(--motion-ease-entrada);
@@ -99,6 +121,16 @@
 
 .centro .fuente {
   width: 484px;
+  height: 1092px;
+}
+
+.izquierda .fuente {
+  width: 456px;
+  height: 1240px;
+}
+
+.esquina .fuente {
+  width: 358px;
   height: 1092px;
 }
 

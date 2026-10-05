@@ -42,7 +42,8 @@ const SEPARACION = 16
 const SIN_CUADRO = 3000 // desde el evento playing hasta el primer cuadro dibujado
 const SIN_PLAYING = 8000 // seguro: desde loadeddata, si nunca llega playing
 // 1 pixel del cuerpo por variante (x, y desde arriba) para saber que ya hay un cuadro de verdad
-const PIXEL_CUERPO = { costado: [330, 450], derecha: [541, 405], centro: [201, 530] }
+// (izquierda y esquina: junto a la pared, con cuerpo desde el cuadro 2)
+const PIXEL_CUERPO = { costado: [330, 450], derecha: [541, 405], centro: [201, 530], izquierda: [4, 250], esquina: [6, 172] }
 
 const VERTICES = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2((p.x+1.0)*0.5,(1.0-p.y)*0.5);gl_Position=vec4(p,0.0,1.0);}'
 const fragmento = (ALTO, ALTO_VIDEO) => `precision mediump float;uniform sampler2D t;varying vec2 uv;

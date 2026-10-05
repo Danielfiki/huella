@@ -36,7 +36,15 @@ export const VARIANTES = [
   { id: 'derecha', nombre: 'Derecha', video: '/personaje/home/bienvenida-derecha-alfa.mp4', poster: '/personaje/home/bienvenida-derecha-poster.webp', ancho: 642, alto: 652 },
   // video 16, cuadros 0 a 228
   { id: 'centro', nombre: 'Centro', video: '/personaje/home/bienvenida-centro-alfa.mp4', poster: '/personaje/home/bienvenida-centro-poster.webp', ancho: 484, alto: 538 },
+  // En prueba (soloDueno): solo entran a la rotacion de la cuenta de Daniel.
+  // video 28, cuadros 12 a 216
+  { id: 'izquierda', nombre: 'Izquierda', video: '/personaje/home/bienvenida-izquierda-alfa.mp4', poster: '/personaje/home/bienvenida-izquierda-poster.webp', ancho: 456, alto: 612, soloDueno: true },
+  // video 29, cuadros 14 a 224
+  { id: 'esquina', nombre: 'Esquina', video: '/personaje/home/bienvenida-esquina-alfa.mp4', poster: '/personaje/home/bienvenida-esquina-poster.webp', ancho: 358, alto: 538, soloDueno: true },
 ]
+
+// Las que entran a la rotacion de este usuario
+const variantesDe = (userId) => VARIANTES.filter((v) => !v.soloDueno || userId === DUENO_PERSONAJE)
 
 const claveUltima = (userId) => `huella_bienvenida_ultima_${userId}`
 const CLAVE_FORZADA = 'huella_bienvenida_forzada'
@@ -44,7 +52,7 @@ const CLAVE_FORZADA = 'huella_bienvenida_forzada'
 // Al azar sin repetir la ultima mostrada. La vitrina puede forzar una (se
 // consume cuando la bienvenida entra, en marcarVariante).
 export function elegirVariante(userId) {
-  const lista = VARIANTES
+  const lista = variantesDe(userId)
   try {
     const v = lista.find((x) => x.id === localStorage.getItem(CLAVE_FORZADA))
     if (v) return v

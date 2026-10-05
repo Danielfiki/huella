@@ -15,7 +15,7 @@ import styles from './PruebaPersonajePage.module.css'
 // del Home que no se desplaza en el iPhone corre en las mismas condiciones.
 // Solo la cuenta de Daniel (el filtro vive en RutaPruebaPersonaje).
 //   ?tipo=orgulloso&v=pulgar|aplauso|jarras
-//   ?tipo=bienvenida&v=costado|derecha|centro  (no marca el dia: solo anota
+//   ?tipo=bienvenida&v=costado|derecha|centro|izquierda|esquina  (no marca el dia: solo anota
 //   la variante mostrada, para que "Ver bienvenida otra vez" alterne)
 export default function PruebaPersonajePage() {
   const { user } = useAuth()
