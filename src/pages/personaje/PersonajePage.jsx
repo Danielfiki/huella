@@ -9,6 +9,7 @@ import SelloPensando from '../../components/personaje/SelloPensando'
 import VoiceTextarea from '../../components/ui/VoiceTextarea'
 import { usaPensando, elegirPensando, marcarPensando, precargarPensando, calentarPensando, VARIANTES_PENSANDO } from '../../components/personaje/pensando'
 import { usaOrgulloso, elegirOrgulloso, VARIANTES_ORGULLOSO } from '../../components/personaje/orgulloso'
+import { VARIANTES_PREGUNTA } from '../../components/personaje/pregunta'
 import regStyles from '../registro/RegistroPage.module.css'
 import styles from './PersonajePage.module.css'
 
@@ -407,6 +408,13 @@ export default function PersonajePage() {
         <Button variant="ghost" onClick={() => abrirPrueba('visita', 'pregunta1')}>
           Ver visita ?
         </Button>
+      </div>
+      <div className={styles.repetir}>
+        {VARIANTES_PREGUNTA.map((v, i) => (
+          <Button key={v.id} variant="ghost" size="sm" onClick={() => abrirPrueba('visita', v.id)}>
+            {`Visita ? ${i + 1}`}
+          </Button>
+        ))}
       </div>
 
       {abierto && <Visor estado={abierto} alCerrar={cerrar} />}

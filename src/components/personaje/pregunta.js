@@ -1,11 +1,11 @@
 import { diaChile } from '../../utils/fechaChile'
-import { tocaBienvenida } from './bienvenida'
+import { tocaBienvenida, DUENO_PERSONAJE } from './bienvenida'
 
 // Visita de la ficha "?" en el Home (para todos desde el 3 oct 2026). Mismo
 // video empaquetado y misma escala que los orgullosos (base 24, craneo x1,085),
 // pero fuera de su alternancia: no entra en VARIANTES_ORGULLOSO.
-// Hoy hay una sola; la eleccion ya alterna sin repetir la ultima para cuando
-// lleguen la 2 y la 3.
+// Alterna sin repetir la ultima. La 3 esta en prueba (solo la cuenta de
+// Daniel).
 export const VARIANTES_PREGUNTA = [
   // video 30-pregunta-1 (mano en el menton), cuadros 1 a 239 (el 0 es el
   // destello); los ultimos 6 con fundido a transparente: el ultimo, vacio.
@@ -15,7 +15,14 @@ export const VARIANTES_PREGUNTA = [
   // Recorte mas ancho a la izquierda por la mano, mismo borde derecho, repisa
   // y escala que el 30: cae en el mismo lugar de la pantalla.
   { id: 'pregunta2', video: '/personaje/home/pregunta-2-alfa.mp4', ancho: 476, alto: 562, pixel: [260, 550] },
+  // video 32-pregunta-3 (piensa mirando hacia arriba y sonrie), cuadros 2 a
+  // 216 (el 0 y el 1 son el destello). Mismo recorte, repisa y escala que el
+  // 30: cae en el mismo lugar. En prueba (soloDueno): solo la cuenta de Daniel.
+  { id: 'pregunta3', video: '/personaje/home/pregunta-3-alfa.mp4', ancho: 432, alto: 562, pixel: [130, 552], soloDueno: true },
 ]
+
+// Las que entran a la rotacion de este usuario
+const variantesDe = (userId) => VARIANTES_PREGUNTA.filter((v) => !v.soloDueno || userId === DUENO_PERSONAJE)
 
 // Una vez al dia por usuario en este telefono, igual que la bienvenida: guarda
 // el dia de Chile en que ya se mostro. Solo despues de que la bienvenida ya se
@@ -36,7 +43,8 @@ export function tocaVisitaPregunta(userId) {
 export function elegirPregunta(userId) {
   let ultima = null
   try { ultima = localStorage.getItem(claveUltima(userId)) } catch { /* sin ultima */ }
-  const opciones = VARIANTES_PREGUNTA.length > 1 ? VARIANTES_PREGUNTA.filter((v) => v.id !== ultima) : VARIANTES_PREGUNTA
+  const lista = variantesDe(userId)
+  const opciones = lista.length > 1 ? lista.filter((v) => v.id !== ultima) : lista
   return opciones[Math.floor(Math.random() * opciones.length)]
 }
 

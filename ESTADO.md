@@ -107,7 +107,7 @@
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
 - ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver bloque del 2-3 oct.
 - ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver bloque del 2-3 oct.
-- ⬜ **Variante 3 de la visita del "?"** — **3 oct** — 2 intentos fallidos el 3 oct: Veo convierte la mano en alto en un saludo. **Otra idea: solo cara, sin levantar la mano** (mira hacia arriba pensando y abre los ojos como si se le ocurriera algo). Misma base `24-orgulloso-base`; el video tiene que terminar con el escarabajo escondido 1 s antes del final. Se suma a `VARIANTES_PREGUNTA` en `pregunta.js`.
+- 🟡 **Variante 3 de la visita del "?": EN PRUEBA, solo cuenta de Daniel** — **5 oct** — video `32-pregunta-3` (asoma, piensa mirando hacia arriba, sonríe y baja), cuadros 2 a 216 (el 0 y el 1 son destello). Mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: cae en la misma caja detrás del "?". Daniel rota entre 3 (`soloDueno` en `VARIANTES_PREGUNTA`), el resto sigue con 2. Vitrina: botones "Visita ? 1/2/3". Capturas en `huella-design-pack\animaciones\pregunta-3`. Falta: el OK de Daniel en su iPhone y abrirla a todos (sacar `soloDueno`).
 - ✅ **Bienvenidas 4 (izquierda) y 5 (esquina) EN PRODUCCIÓN PARA TODOS** — **5 oct** — `a3cc2ea`, ver Cerrado HOY. Procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Todos rotan entre las 5. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
@@ -385,11 +385,14 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 ### 3. ✅ Día 1 de Tomás (4 oct, cuenta de prueba)
 - **7 momentos + 1 pregunta** registrados. Apareció el rasgo **"Las transiciones y los finales le cuestan"**, **sin confirmar** todavía.
 
+### 4. 🟡 Variante 3 de la visita del "?" (solo cuenta de Daniel)
+- Ver PENDIENTES → Personaje. Commit de este cierre.
+
 ### ⏭️ Pendiente
 1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
 2. 🔴 **URGENTE: la firma "Lente · dimensión" no calza con el tema** (ver bloque del 3-4 oct).
 3. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
-4. ⬜ Siguen: variante 3 de la visita del "?" y el detalle opcional de `button:active` (ver PENDIENTES → Personaje).
+4. ⬜ OK de Daniel a la variante 3 de la visita del "?" y abrirla a todos; detalle opcional de `button:active` (ver PENDIENTES → Personaje).
 
 ---
 
