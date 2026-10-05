@@ -107,7 +107,7 @@
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
 - ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver bloque del 2-3 oct.
 - ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver bloque del 2-3 oct.
-- 🟡 **Variante 3 de la visita del "?": EN PRUEBA, solo cuenta de Daniel** — **5 oct** — video `32-pregunta-3` (asoma, piensa mirando hacia arriba, sonríe y baja), cuadros 2 a 216 (el 0 y el 1 son destello). Mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: cae en la misma caja detrás del "?". Daniel rota entre 3 (`soloDueno` en `VARIANTES_PREGUNTA`), el resto sigue con 2. Vitrina: botones "Visita ? 1/2/3". Capturas en `huella-design-pack\animaciones\pregunta-3`. Falta: el OK de Daniel en su iPhone y abrirla a todos (sacar `soloDueno`).
+- ✅ **Variante 3 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **5 oct** — `03b6fdc`, ver Cerrado HOY. Video `32-pregunta-3` (asoma, piensa mirando hacia arriba, sonríe y baja), cuadros 2 a 216 (el 0 y el 1 son destello). Mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: cae en la misma caja detrás del "?". Todos rotan entre las 3. Vitrina: botones "Visita ? 1/2/3". Capturas en `huella-design-pack\animaciones\pregunta-3`.
 - ✅ **Bienvenidas 4 (izquierda) y 5 (esquina) EN PRODUCCIÓN PARA TODOS** — **5 oct** — `a3cc2ea`, ver Cerrado HOY. Procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Todos rotan entre las 5. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
@@ -370,14 +370,14 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 EN PRODUCCIÓN PARA TODOS, marca de Google verificada y día 1 de Tomás**
+## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
 - **Videos:** 28 (saluda desde la pared izquierda, cuadros 12 a 216; el 0 es destello) y 29 (asoma desde la esquina inferior izquierda, cuadros 14 a 224; los cuadros 0 a 4 traían la imagen de referencia). Mismo pipeline que las demás: chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala por cráneo (75 y 76,7 px en pantalla contra 75,7 del costado), MP4 empaquetado + WebGL a 3x, CRF 18, 24 fps, video fuente recortado dentro de la barra. La pared va al borde izquierdo de la pantalla.
 - **Archivos:** `public/personaje/home/bienvenida-izquierda-alfa.mp4` (941 KB) y `bienvenida-esquina-alfa.mp4` (875 KB), con sus pósters.
 - **Commits:** `f4d9490` (solo cuenta de Daniel, aprobado por Daniel en su iPhone: se ven bien y dejan desplazar) y `a3cc2ea` (para todos).
-- **QA de cierre (Code, producción, cuenta de prueba, solo mirar, con la IA y toda escritura a Supabase bloqueadas en el navegador: 0 llamadas de IA):** bundle cambió de `bienvenida-auwjpzEU` a `bienvenida-BSBG32Dl`, igual byte a byte al build local y sin `soloDueno`. Los 4 archivos nuevos dan 200 en huella.lat e idénticos al repo. La cuenta vio su bienvenida del día (salió centro) y en la recarga no apareció otra. Con `play()` rechazado (bajo consumo) y con el video bloqueado: no aparece nada, ni póster ni cuadro quieto, el Home se ve igual y el día no se marca. Rotación simulada para un usuario normal: 500 bienvenidas, aparecen las 5 y nunca se repite la anterior. Capturas en `huella-design-pack\animaciones\bienvenida-4-5\` y `...\cierre\`.
+- **QA de cierre (Code, producción, cuenta de prueba, solo mirar, con la IA y toda escritura a Supabase bloqueadas en el navegador: 0 llamadas de IA):** bundle cambió de `bienvenida-auwjpzEU` a `bienvenida-BSBG32Dl`, igual byte a byte al build local y sin `soloDueno`. Los 4 archivos nuevos dan 200 en huella.lat e idénticos al repo. La cuenta vio su bienvenida del día (salió centro) y en la recarga no apareció otra. Con `play()` rechazado (bajo consumo) y con el video bloqueado: no aparece nada, ni póster ni cuadro quieto, el Home se ve igual y el día no se marca. Rotación simulada para un usuario normal: 500 bienvenidas, aparecen las 5 y nunca se repite la anterior. Capturas en `huella-design-pack\animaciones\bienvenida-4-5\` y `...\cierre\`. ⚠️ **Corrección (5 oct, cierre del "?"):** el bloqueo de escrituras con `page.route` de Playwright en WebKit **se filtra cuando la página se vuelve a cargar**: la recarga de este QA casi seguro escribió `perfiles.ultima_actividad` de la cuenta de prueba (lo único que la app escribe al abrir el Home; nada de IA ni de datos). Ver la regla en el punto 4.
 
 ### 2. ✅ Verificación de marca de Google publicada (4 oct)
 - La pantalla de Google muestra **huella.lat**, el nombre **"Huella"** y el **logo**.
@@ -385,14 +385,18 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 ### 3. ✅ Día 1 de Tomás (4 oct, cuenta de prueba)
 - **7 momentos + 1 pregunta** registrados. Apareció el rasgo **"Las transiciones y los finales le cuestan"**, **sin confirmar** todavía.
 
-### 4. 🟡 Variante 3 de la visita del "?" (solo cuenta de Daniel)
-- Ver PENDIENTES → Personaje. Commit de este cierre.
+### 4. ✅ Visita del "?" con 3 variantes, EN PRODUCCIÓN PARA TODOS
+- **Qué hace:** la visita del escarabajo detrás de la ficha "?" rota entre **3 variantes** para todos (mano en el mentón, se rasca la cabeza, piensa mirando hacia arriba y sonríe), sin repetir la última. Misma regla: 1 vez al día, en la segunda entrada al Home. Nada más cambió de la técnica.
+- **Video 32:** cuadros 2 a 216 (el 0 y el 1 son destello), mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: misma caja en pantalla (254, 424,8, 129,3 x 168,2 en el iPhone 14), cráneo 269-273 px contra 267-274. `public/personaje/home/pregunta-3-alfa.mp4` (995 KB).
+- **Commits:** `36032d0` (solo cuenta de Daniel, aprobado por Daniel en su iPhone: se ve bien y deja desplazar) y `03b6fdc` (para todos).
+- **QA de cierre (Code, producción, cuenta de prueba, solo mirar, 0 llamadas de IA):** el index cambió de `CCBAG2Qy` a `Bt0JJYwZ`; el chunk `pregunta-DpMA08bI.js` es igual byte a byte al build local y no tiene `soloDueno`. `pregunta-3-alfa.mp4` da 200 en huella.lat, 995.312 bytes, idéntico al repo. 1ª entrada: solo la bienvenida (costado), la ficha escondida mientras corre y nada más en esa entrada; 2ª entrada (Tú → Inicio): solo la visita (salió la 2); 3ª entrada: nada. Con `play()` rechazado (bajo consumo) y con la descarga del video fallida: no aparece nada, la ficha "?" se ve y el día no se marca. Rotación simulada para un usuario normal: 500 visitas, aparecen las 3 y nunca se repite la anterior. Capturas en `huella-design-pack\animaciones\pregunta-3\cierre\`.
+- ⚠️ **Lo que salió mal en el QA:** el bloqueo de escrituras con `page.route` se filtró al volver a cargar la página: `perfiles.ultima_actividad` de la cuenta de prueba quedó en 2026-10-05 16:50:15 UTC (leído con un GET). Fue lo único escrito: ninguna llamada a `/api/`, ningún otro PATCH/POST. Además, el `<video>` de WebKit descarga por fuera de `page.route`, así que "video que no carga" no se puede simular cortando la red. **Regla para los próximos QA en producción: el bloqueo va DENTRO de la página** (`addInitScript` que envuelve `fetch` y rechaza escrituras a Supabase, `/api/` y el `.mp4`), y al terminar se lee `ultima_actividad` para confirmar que no cambió. Con ese bloqueo se rehízo "video que no carga": `ultima_actividad` siguió en 16:50:15 después de la prueba.
 
 ### ⏭️ Pendiente
 1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
 2. 🔴 **URGENTE: la firma "Lente · dimensión" no calza con el tema** (ver bloque del 3-4 oct).
 3. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
-4. ⬜ OK de Daniel a la variante 3 de la visita del "?" y abrirla a todos; detalle opcional de `button:active` (ver PENDIENTES → Personaje).
+4. ⬜ Detalle opcional de `button:active` en la ficha "?" (ver PENDIENTES → Personaje).
 
 ---
 
