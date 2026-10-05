@@ -176,7 +176,7 @@ export default function ModalPuenteCiclo({
             <span className={styles.node} aria-hidden="true" />
             <div className={styles.block}>
               <p className={styles.eyebrow}>
-                {hijoNombre || 'Tu hijo'}{edadHijo ? ` · ${edadHijo} años` : ''}
+                {hijoNombre || 'Tu hijo'}{edadHijo ? ` · ${edadHijo} ${edadHijo === 1 ? 'año' : 'años'}` : ''}
               </p>
               <h2 id={headingId} className={styles.heading}>
                 Comienza tu Ciclo 2

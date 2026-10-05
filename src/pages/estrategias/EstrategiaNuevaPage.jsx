@@ -218,7 +218,7 @@ export default function EstrategiaNuevaPage() {
           <div className={styles.eye}>Vamos a trabajar</div>
           <h2 className={styles.ttl}>{habilidad.label}</h2>
           {contextoHabilidad && <p className={styles.ctx}>{contextoHabilidad}</p>}
-          <p className={styles.sub}>Para {hijo?.nombre} · {hijo?.edad} años</p>
+          <p className={styles.sub}>Para {hijo?.nombre} · {hijo?.edad} {hijo?.edad === 1 ? 'año' : 'años'}</p>
           {episodiosDetonantes.length > 0 && (
             <div className={styles.epList}>
               <div className={styles.epLbl}>Basado en lo que registraste</div>

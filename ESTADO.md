@@ -370,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fechas en Preguntar, edad de bebés y día 1 de Tomás**
+## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
@@ -398,14 +398,21 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **QA sin IA (Code):** fechas de hoy, ayer 23:50, hace 3, 10 y 40 días y sin hora; edades 0, 6, 11 y 12 meses, 4 años y sin fecha; prompt de un bebé de 6 meses armado sin enviar (marco 0-2, Gerber y Bowlby sí, Wolfelt/Damour/Steinberg/Haidt/Twenge no). Todo OK. Archivos en `huella-design-pack\preguntar\fechas-y-bebes\`.
 - ⏳ **Falta confirmar con IA:** en la pregunta del día 2 de Tomás esta noche, la respuesta tiene que decir "hoy" y no "la semana pasada".
 
+### 6. ✅ Fecha de hoy en los otros prompts y "1 año", EN PRODUCCIÓN PARA TODOS
+- **Mismas funciones que Preguntar, compartidas** (`bloqueHoy`, `fechaConEtiqueta`, `REGLA_CUANDO` en `anthropic.js`): "Hoy es lunes 5 de octubre de 2026" (zona horaria del teléfono), cada momento con "hoy / ayer / hace N días / semanas / meses" y la fecha corta, y la regla "Para decir cuándo pasó algo, usa solo esa etiqueta. No calcules fechas."
+- **Cambiaron 7:** `analizarEpisodio` (además, "Cuándo pasó" del episodio que se analiza), `interpretarPatrones` (las dos plantillas), `generarRespuestaReflexion`, `analizarReflexionesCuidador` (`PDFSection` ahora le pasa la fecha original), `analizarCierreCiclo` (episodios y notas de bitácora; las fechas de inicio y cierre del ciclo siguen igual), `detectarPatronesEstructurado` y `detectarRasgos` (campo `cuando` solo en el JSON que va a la IA; el `fecha` que usa el código para la regla de días distintos no se tocó).
+- **No cambió:** `generarConsejoDiario`. No le manda fechas a la IA: solo filtra los últimos 7 días en el código.
+- **De paso se arreglaron dos errores de fecha:** las reflexiones contaban horas y no días (un momento de ayer 23:50 salía "hoy"; uno de hace 3 días, "hace 2 días"; se borró `fechaRelativa`), y el cierre de ciclo mandaba la fecha en UTC (ayer 23:50 aparecía como el día siguiente).
+- **"1 año" y "1 mes":** `edadEnTexto` y los prompts de avance, primer encuentro y extracción del relato; en pantalla, el PDF y las 3 de estrategias (`EstrategiaActivaCard`, `ModalPuenteCiclo`, `EstrategiaNuevaPage`). Los demás ya lo decían bien.
+- **QA sin IA (Code):** hoy fijo y fetch falso, 0 llamadas a la red. Cada prompt armado con momentos de hoy, ayer 23:50, hace 3 y 10 días, en la versión anterior y la nueva: el diff solo muestra el bloque HOY, las etiquetas y "1 año"; el resto del texto queda idéntico. El prompt de Preguntar quedó idéntico al de `05f58a3`. Diffs en `huella-design-pack\preguntar\fechas-resto\`.
+- ⏳ **Se confirma con IA esta noche** en el día 2 de Tomás, que pasa por estos prompts.
+
 ### ⏭️ Pendiente
 1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
 2. 🔴 **Mañana: firma de alimentación** — opciones A + B del diagnóstico del 5 oct: sumar la dimensión Alimentación (Ellyn Satter, Gill Rapley, Katja Rowell / Jenny McGlothlin y Carlos González con una segunda lente) y que Preguntar elija primero la dimensión y después el autor de esa dimensión, con el par validado en el código. Causa: en Preguntar cada autor tiene una sola lente, y la de Carlos González es "Sueño con presencia".
-3. ⬜ **Mañana: fecha de hoy en los otros 8 prompts** que reciben momentos sin ella: `analizarEpisodio`, `interpretarPatrones`, `generarConsejoDiario`, `generarRespuestaReflexion`, `analizarReflexionesCuidador`, `analizarCierreCiclo`, `detectarPatronesEstructurado`, `detectarRasgos`.
-4. ⬜ **Mañana: "1 años" → "1 año"** en los prompts (`edadEnTexto` y los que usan `?? '?'`).
-5. ⬜ **Mañana: edad de bebé en blanco en la tarjeta de estrategia activa** (`EstrategiaActivaCard.jsx:38`, `hijo?.edad ? ... : ''` deja vacío el 0).
-6. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
-7. ⬜ Detalle opcional de `button:active` en la ficha "?" (ver PENDIENTES → Personaje).
+3. ⬜ **Mañana: edad de bebé en blanco en la tarjeta de estrategia activa** (`EstrategiaActivaCard.jsx:38`, `hijo?.edad ? ... : ''` deja vacío el 0).
+4. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.
+5. ⬜ Detalle opcional de `button:active` en la ficha "?" (ver PENDIENTES → Personaje).
 
 ---
 

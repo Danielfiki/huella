@@ -21,7 +21,8 @@ export default function PDFSection({ hijo, episodios, estrategias, hitos }) {
     .slice(0, 10)
     .map(e => ({
       texto: e.reflexion,
-      fecha: new Date(e.fecha).toLocaleDateString('es-CL'),
+      // la fecha tal cual: analizarReflexionesCuidador le pone "hoy", "ayer"...
+      fecha: e.fecha,
       tipoEpisodio: e.tipo,
     }))
 

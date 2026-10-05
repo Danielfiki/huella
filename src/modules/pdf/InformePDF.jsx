@@ -695,7 +695,7 @@ function renderOrientacion(text) {
 // ── Sections ───────────────────────────────────────────────────────────────
 function HeaderSection({ hijo, generadoEl }) {
   const nombreHijo = hijo?.nombre || 'Sin nombre'
-  const edadStr = hijo?.edad != null ? `, ${hijo.edad} años` : ''
+  const edadStr = hijo?.edad != null ? `, ${hijo.edad} ${hijo.edad === 1 ? 'año' : 'años'}` : ''
   return (
     <View style={s.header}>
       <View style={s.headerTop}>
@@ -715,7 +715,7 @@ function HeaderSection({ hijo, generadoEl }) {
 function VistaGeneralSection({ hijo, episodios, estrategias }) {
   const v = calcVistaGeneral(episodios, estrategias)
   const nombreHijo = hijo?.nombre || 'Sin nombre'
-  const edadStr    = hijo?.edad != null ? `, ${hijo.edad} años` : ''
+  const edadStr    = hijo?.edad != null ? `, ${hijo.edad} ${hijo.edad === 1 ? 'año' : 'años'}` : ''
 
   return (
     <View style={s.section}>

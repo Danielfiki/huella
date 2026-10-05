@@ -35,7 +35,7 @@ export default function EstrategiaActivaCard({
           <div className={styles.child}>{inicial}</div>
           <div className={styles.childMeta}>
             <div className={styles.nm}>{hijo?.nombre}</div>
-            <div className={styles.age}>{hijo?.edad ? `${hijo.edad} años` : ''}</div>
+            <div className={styles.age}>{hijo?.edad ? `${hijo.edad} ${hijo.edad === 1 ? 'año' : 'años'}` : ''}</div>
           </div>
         </div>
 
