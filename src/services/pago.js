@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { estaEnAppAndroid } from '../pages/portada/destinoRaiz'
 
 // Inicia una suscripción de Huella Pro en Mercado Pago para el ciclo elegido
 // ('mensual' | 'anual'). Reutiliza el patrón validado de CuentaPage:
@@ -11,6 +12,8 @@ import { supabase } from '../lib/supabase'
 // Lanza un Error si la pasarela no responde con un init_point; el caller lo
 // captura y muestra un error suave.
 export async function iniciarSuscripcion(ciclo) {
+  // En la app de Android no se cobra fuera de Google Play (politica de pagos).
+  if (estaEnAppAndroid()) throw new Error('Pago no disponible en la app de Android')
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/mp-crear-suscripcion', {
     method: 'POST',

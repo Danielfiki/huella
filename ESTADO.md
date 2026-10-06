@@ -370,7 +370,17 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-6 oct 2026) — **Portada nueva en "/", día 2 de Tomás, Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
+## 🚨 REGLA — App de Android sin opciones de compra (política de pagos de Google Play, desde el 6 oct 2026)
+
+**La app de Android (la TWA de Google Play) no muestra NINGUNA opción de compra.** Google Play exige cobrar las suscripciones digitales con Google Play Billing y no deja botones, enlaces ni llamados a pagar fuera (Mercado Pago, huella.lat). Chile y Latam no tienen excepción.
+- **Detección:** `estaEnAppAndroid()` en `src/pages/portada/destinoRaiz.js`: el referrer `android-app://lat.huella.app` de la primera carga, guardado en sessionStorage para toda la sesión (`recordarSiEsAppAndroid()` en `App.jsx`). **No** usa `display-mode: standalone`: la app instalada del iPhone y el navegador quedan exactamente igual.
+- **Qué cambia en Android:** el aviso de función Pro (`UpgradeModal`) muestra solo el título, "Esto no viene en el plan gratuito." y "Entendido" (sin precios, sin "Activar Huella Pro", sin enlace a /cuenta); el límite dice "Llegaste a los 15 momentos del plan gratuito."; la card semanal muestra los candados sin "Ver el cuadro completo con Pro"; en Tú el plan gratuito no ve la card de Huella Pro y el Pro la ve con "Activo" sin "Gestionar plan"; `/cuenta` redirige a Tú; `iniciarSuscripcion` se niega en Android. Quien ya es Pro (pagó en la web) usa todo normal. El canje de código de beta sigue (no es un pago).
+- **Toda pantalla nueva que ofrezca pagar o subir de plan tiene que respetar `estaEnAppAndroid()`.**
+- ⬜ **Pendiente: integrar Google Play Billing** en la app de Android.
+
+---
+
+## Cerrado HOY (4-6 oct 2026) — **App de Android sin opciones de compra, capturas de Google Play, portada nueva en "/", día 2 de Tomás, Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
@@ -415,7 +425,16 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Fotos en `public/portada/fotos/` (WebP + JPG, srcset, ancho y alto fijos, carga diferida). Peso de la página: ~2,5 MB → ~2,7 MB.
 - Reglas de entrada de "/" iguales a `4a0bf97` (sin sesión → portada; con sesión → /panel; app de Android o instalada → /login): `EntradaRaiz.jsx`, `destinoRaiz.js`, `App.jsx` y `vercel.json` sin diff contra `4a0bf97`. `/portada-prueba` vuelve a redirigir a "/" y "/" no lleva noindex.
 
+### 9. ✅ Capturas para la ficha de Google Play (6 oct, sin código)
+- 6 capturas de 1080 x 1920 (PNG 24 bits, sin transparencia) con el contenido real de Tomás, en `Downloads/fotos-portada/play/` (`play-1-su-huella` … `play-6-inicio`, más `revision.png`). Mismo estilo que las anteriores: banda mocha con titular en Fraunces y teléfono debajo. En las capturas se ocultó el selector de hijos (con un hijo no aparece), el nombre "Tester" del saludo y el "?" que tapaba la card semanal.
+- ⚠️ La primera pasada de exploración corrió sin bloqueo (el script venía roto) y escribió `perfiles.ultima_actividad` de la cuenta de prueba (2026-10-06 12:57:01 UTC). Sin IA (`api_llamadas` siguió en 8). Desde ahí, siempre con el bloqueo verificado antes de abrir la app.
+
+### 10. ✅ App de Android sin opciones de compra (6 oct) — ver la regla de arriba
+- **Archivos:** `destinoRaiz.js`, `UpgradeModal.jsx`, `RegistroPage.jsx`, `PerfilPage.jsx`, `CuentaPage.jsx`, `AnalisisSemanalCard.jsx`, `pago.js`.
+- **QA (Code, cuenta de prueba, solo mirar, bloqueo verificado antes de abrir la app, plan gratuito y límite de 15 simulados solo en la lectura):** en Android simulado (mismo referrer + marca de sesión), Home, card semanal abierta, Registrar, Momentos, aviso del PDF, Preguntar, Estrategias, Tú, Mi familia, /cuenta y límite de 15 con **cero precios y cero enlaces de pago**; siendo Pro, "Activo" sin "Gestionar plan". Web con el build nuevo en iPhone 14 y 1440: todo lo de pago igual que antes. `ultima_actividad` igual al principio y al final. El QA se hizo contra el build local (la conexión estaba demasiado lenta para cargar producción en el navegador). Imagen: `Downloads/fotos-portada/android-sin-pagos/revision.png`.
+
 ### ⏭️ Pendiente
+0. ⬜ **Integrar Google Play Billing** en la app de Android (hoy la app de Android no ofrece comprar).
 1. ⬜ **Completar el origen de las fotos de la portada** en `docs/portada-fotos-origen.md`: llegaron renombradas y sin metadatos (falta el autor y el enlace de Pexels de manos, sillón y arenero).
 2. 🔴 **Mañana: firma de alimentación** — opciones A + B del diagnóstico del 5 oct: sumar la dimensión Alimentación (Ellyn Satter, Gill Rapley, Katja Rowell / Jenny McGlothlin y Carlos González con una segunda lente) y que Preguntar elija primero la dimensión y después el autor de esa dimensión, con el par validado en el código. Causa: en Preguntar cada autor tiene una sola lente, y la de Carlos González es "Sueño con presencia".
 3. ⬜ **Mañana: edad de bebé en blanco en la tarjeta de estrategia activa** (`EstrategiaActivaCard.jsx:38`, `hijo?.edad ? ... : ''` deja vacío el 0).

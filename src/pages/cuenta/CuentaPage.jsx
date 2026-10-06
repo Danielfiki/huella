@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
 import { iniciarSuscripcion } from '../../services/pago'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
+import { estaEnAppAndroid } from '../portada/destinoRaiz'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -50,7 +51,14 @@ const TODO_PRO = [
   'Modo familia — conecta con tu pareja',
 ]
 
+// En la app de Android (Google Play) no hay pantalla de planes ni de pago:
+// cualquier enlace o vuelta a /cuenta termina en Tu.
 export default function CuentaPage() {
+  if (estaEnAppAndroid()) return <Navigate to="/perfil" replace />
+  return <CuentaContenido />
+}
+
+function CuentaContenido() {
   const { isPro, isAdmin, reloadData } = useHuella()
   const navigate = useNavigate()
   const [verTodo, setVerTodo] = useState(false)

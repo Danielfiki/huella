@@ -21,6 +21,18 @@ export function recordarSiEsAppAndroid() {
   } catch { /* sin almacenamiento: se decide solo con el referrer */ }
 }
 
+// Solo la app de Android de Google Play (TWA), sin la app instalada del iPhone
+// ni el navegador. La usan las pantallas de pago: la politica de pagos de
+// Google Play no deja ofrecer compras fuera de Google Play Billing, asi que en
+// la TWA no se muestra ninguna opcion de compra (desde el 6 oct 2026).
+export function estaEnAppAndroid() {
+  try {
+    return document.referrer.startsWith(REFERRER_TWA) || sessionStorage.getItem(CLAVE_APP) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function estaEnApp() {
   try {
     if (document.referrer.startsWith(REFERRER_TWA)) return true

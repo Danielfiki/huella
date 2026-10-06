@@ -10,6 +10,7 @@ import { esLetraChicaDelModelo } from '../registro/OrientacionSecciones'
 import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../../services/anthropic'
 import TopeDiario, { esLimiteDiario } from '../ui/TopeDiario'
+import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
 import styles from './AnalisisSemanalCard.module.css'
 
 // La card "Esta semana" del Home. Es la única lectura de la semana: absorbió
@@ -219,9 +220,12 @@ function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrateg
                   <span>{s}</span>
                 </div>
               ))}
-              <button className={`${styles.btn} ${styles.primary}`} onClick={onUpgrade}>
-                Ver el cuadro completo con Pro
-              </button>
+              {/* En la app de Android no se ofrece comprar (politica de Google Play). */}
+              {!estaEnAppAndroid() && (
+                <button className={`${styles.btn} ${styles.primary}`} onClick={onUpgrade}>
+                  Ver el cuadro completo con Pro
+                </button>
+              )}
             </div>
           ) : cargando ? (
             <div className={styles.cuerpo}>

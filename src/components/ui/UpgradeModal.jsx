@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { iniciarSuscripcion } from '../../services/pago'
 import ErrorPago from './ErrorPago'
+import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
 import styles from './UpgradeModal.module.css'
 
 const FEATURES = [
@@ -13,7 +14,7 @@ const FEATURES = [
   'Seguimiento post-episodio (check-in)',
 ]
 
-export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
+export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tituloAndroid, mensajeAndroid }) {
   const navigate = useNavigate()
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
@@ -66,6 +67,27 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom }) {
   function verTodoPro() {
     onClose()
     navigate('/cuenta')
+  }
+
+  // App de Android (Google Play): sin precios, sin CTA de pago y sin enlace a
+  // /cuenta. Solo avisa que no viene en el plan gratuito y se cierra.
+  // `mensajeAndroid` vacio ('') no muestra bajada.
+  if (estaEnAppAndroid()) {
+    const bajada = mensajeAndroid ?? 'Esto no viene en el plan gratuito.'
+    return createPortal(
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.header}>
+            <h2 className={styles.titulo}>{tituloAndroid || tituloCustom || 'Plan gratuito'}</h2>
+            {bajada && <p className={styles.bajada}>{bajada}</p>}
+          </div>
+          <button className={styles.cta} onClick={onClose}>
+            Entendido
+          </button>
+        </div>
+      </div>,
+      document.body
+    )
   }
 
   // Portal a document.body: el modal vive fuera de .pageWrap (que queda con

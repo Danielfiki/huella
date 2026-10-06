@@ -13,6 +13,7 @@ import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import TusMedallas from '../../components/medallas/TusMedallas'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
 import { EliminarHijoModal, anunciarEliminado } from '../../components/hijo/EliminarHijo'
+import { estaEnAppAndroid } from '../portada/destinoRaiz'
 import styles from './PerfilPage.module.css'
 
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
@@ -52,6 +53,7 @@ async function compressImage(file, maxSize = 400) {
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
   const { state, dispatch, setHijo, setHijoActivo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading, guardarHoraAviso } = useHuella()
+  const enAppAndroid = estaEnAppAndroid()
 
   // Control permanente de notificaciones push. Reutiliza el MISMO hook que el
   // NotifBanner (permission/isSupported/requestPermission); no duplica la logica
@@ -487,7 +489,10 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {/* ── Huella Pro ───────────────────────────────── */}
+      {/* ── Huella Pro ───────────────────────────────────
+           App de Android (Google Play): el plan gratuito no ve esta card y
+           el Pro la ve sin "Gestionar plan" (no hay compras fuera de Play). */}
+      {(!enAppAndroid || isPro()) && (
       <Card className={styles.proCard}>
         <div className={styles.proHeader}>
           <div className={styles.proTitleWrap}>
@@ -499,7 +504,7 @@ export default function PerfilPage() {
           </span>
         </div>
 
-        {isPro() ? (
+        {enAppAndroid ? null : isPro() ? (
           <Link to="/cuenta" className={styles.proManageLink}>
             Gestionar plan
           </Link>
@@ -515,6 +520,7 @@ export default function PerfilPage() {
           </>
         )}
       </Card>
+      )}
 
       {/* ── Tus medallas ─────────────────────────────────
           B3: las 33 medallas vivian en /hitos ("Logros"), como si fueran del
