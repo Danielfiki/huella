@@ -1330,3 +1330,289 @@
 
   .copyright { grid-area: copy; }
 }
+
+/* ══ Portada nueva (/portada-prueba, PortadaPage con `nueva`) ══
+   Medidas de las referencias de Claude Design ("B · Portada completa con El
+   perfil único" y "Cierre C1 · Mitad a sangre"). Las escenas de foto +
+   telefono van en unidades del ancho de su caja (cqw): asi la proporcion es
+   la del diseno en cualquier ancho y el telefono nunca tapa a la niña. */
+
+.fotoImagen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── El perfil único ── */
+.perfil { background: var(--portada-blanco); }
+
+.perfilInterior {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.perfilEncabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* los titulos cortan donde el diseno */
+.linea { display: block; }
+
+.perfilBajada {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--portada-tinta-suave);
+}
+
+.perfilGrilla {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* foto a sangre; el telefono baja sobre su borde derecho y sale por abajo */
+.perfilEscena {
+  container-type: inline-size;
+  position: relative;
+  margin: 0 -24px;
+  aspect-ratio: 100 / 156.4;
+}
+
+.perfilFoto {
+  display: block;
+  width: 100cqw;
+  height: 117.7cqw;
+}
+
+.perfilTelefono {
+  position: absolute;
+  left: 47.5cqw;
+  top: 66.9cqw;
+}
+
+.tamPerfil { --ancho: 48.7cqw; }
+
+.rasgos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* camino de puntos: punto naranjo y linea punteada hasta el siguiente */
+.camino {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.rasgo {
+  position: relative;
+  padding-left: 36px;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.rasgo::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: calc(0.7em - 7px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--portada-tangerine);
+}
+
+.rasgo:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: calc(0.7em + 11px);
+  bottom: calc(-28px + 0.7em - 11px);
+  border-left: 2px dashed var(--portada-naranja-claro);
+}
+
+.comoFuncionaSinPersonaje { padding-bottom: 64px; }
+
+/* ── ¿Qué avanzó? con foto ── */
+.avancesEscena {
+  container-type: inline-size;
+  display: block;
+  position: relative;
+  padding: 0;
+  margin-top: 12px;
+  aspect-ratio: 100 / 117.6;
+}
+
+.avancesFoto {
+  display: block;
+  width: 67cqw;
+  height: 93.3cqw;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.avancesTelefonoSobre {
+  position: absolute;
+  left: 47.1cqw;
+  top: 20.3cqw;
+}
+
+.tamAvanceSobre { --ancho: 52.9cqw; }
+
+/* ── Cierre con foto a sangre ── */
+.cierreNuevo {
+  display: flex;
+  flex-direction: column;
+  background: var(--portada-terracota);
+  color: var(--portada-crema);
+}
+
+.cierreFoto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 390 / 320;
+}
+
+.cierreTexto {
+  box-sizing: border-box;
+  padding: 52px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cierreBajada {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.cierreBotones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.cierreGratis {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .perfilInterior {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    gap: 56px;
+  }
+
+  .perfilEncabezado {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: end;
+  }
+
+  .perfilBajada {
+    max-width: 520px;
+    font-size: 19px;
+  }
+
+  .perfilGrilla {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 56px;
+    align-items: center;
+  }
+
+  .perfilEscena {
+    margin: 0;
+    aspect-ratio: 100 / 82.2;
+  }
+
+  .perfilFoto {
+    width: 79.5cqw;
+    height: 82.2cqw;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+
+  .perfilTelefono {
+    left: 64.3cqw;
+    top: 8.2cqw;
+  }
+
+  .tamPerfil { --ancho: 35.7cqw; }
+
+  .rasgo { font-size: 21px; }
+
+  .comoFuncionaSinPersonaje { padding-bottom: 120px; }
+
+  .avancesEscena {
+    margin-top: 0;
+    width: min(520px, 100%);
+    aspect-ratio: 100 / 109.1;
+  }
+
+  .avancesFoto {
+    width: 69.2cqw;
+    height: 99.6cqw;
+  }
+
+  .avancesTelefonoSobre {
+    left: 50.2cqw;
+    top: 17.5cqw;
+  }
+
+  .tamAvanceSobre { --ancho: 49.8cqw; }
+
+  .cierreNuevo {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .cierreFoto {
+    flex: 0 0 50%;
+    aspect-ratio: 720 / 533;
+  }
+
+  .cierreTexto {
+    flex: 1 1 0%;
+    justify-content: center;
+    gap: 24px;
+    padding: 80px 56px 80px 80px;
+  }
+
+  .cierreBajada {
+    max-width: 440px;
+    font-size: 20px;
+  }
+
+  .cierreBotones {
+    flex-direction: row;
+    gap: 14px;
+  }
+
+  .cierreBotones .botonCrema { padding: 0 38px; }
+  .cierreBotones .botonBorde { padding: 0 34px; }
+
+  .cierreGratis {
+    font-size: 15px;
+    text-align: left;
+  }
+}

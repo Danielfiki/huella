@@ -51,6 +51,13 @@ const FUNCIONES = [
   { titulo: 'Crianza compartida', texto: 'Invitas a tu pareja y registran juntos lo que vive su hijo.', pro: true },
 ]
 
+// Rasgos reales de Tomás (cuenta de prueba, confirmados el 5 oct 2026)
+const RASGOS_TOMAS = [
+  'Cuando algo le llama la atención, observa con calma y después se lanza con ganas',
+  'Con tiempo y presencia silenciosa a su lado, logra calmarse solo',
+  'Cuando se frustra, puede reencuadrarse y buscar otra salida',
+]
+
 const PLAN_GRATIS = ['Hasta 15 momentos', 'Hasta 3 estrategias de 4 semanas al mismo tiempo', 'Huella · Esta semana, en tres líneas']
 const PLAN_PRO = ['Momentos ilimitados', 'Estrategias de 4 semanas con tareas concretas', 'Seguimiento después de cada episodio', 'Análisis semanal completo', 'Informes PDF de tu historial', 'Modo familia: conecta con tu pareja']
 
@@ -80,13 +87,51 @@ function Telefono({ tam, src, alt, alto = 1583, cortado = false, marco, pantalla
   )
 }
 
-export default function PortadaPage() {
+// Foto de la portada nueva: WebP con JPG de respaldo, en varios anchos
+// (public/portada/fotos/, origen en docs/portada-fotos-origen.md). `ancho` y
+// `alto` son los del archivo mas chico: fijan la proporcion para que la
+// pagina no salte al cargar. `escritorio`: otro recorte desde 900 px
+// ({ nombre, anchos, sizes }), cuando el diseno encuadra distinto.
+function Foto({ nombre, anchos, ancho, alto, sizes, alt, className, escritorio }) {
+  const serie = (ext, n = nombre, lista = anchos) => lista.map((a) => `/portada/fotos/${n}-${a}.${ext} ${a}w`).join(', ')
+  const ESCRITORIO = '(min-width: 900px)'
+  return (
+    <picture className={className}>
+      {escritorio && <source media={ESCRITORIO} type="image/webp" srcSet={serie('webp', escritorio.nombre, escritorio.anchos)} sizes={escritorio.sizes} />}
+      {escritorio && <source media={ESCRITORIO} type="image/jpeg" srcSet={serie('jpg', escritorio.nombre, escritorio.anchos)} sizes={escritorio.sizes} />}
+      <source type="image/webp" srcSet={serie('webp')} sizes={sizes} />
+      <img
+        className={styles.fotoImagen}
+        src={`/portada/fotos/${nombre}-${anchos[0]}.jpg`}
+        srcSet={serie('jpg')}
+        sizes={sizes}
+        width={ancho}
+        height={alto}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  )
+}
+
+// `nueva`: la portada en prueba de /portada-prueba (El perfil único, foto en
+// ¿Qué avanzó?, cierre con foto a sangre y sin el escarabajo 3D). Sin enlaces
+// desde ningún lado y con noindex. "/" la usa sin `nueva`, igual que antes.
+export default function PortadaPage({ nueva = false }) {
   useEffect(() => {
     const antes = document.title
     document.title = TITULO
     window.scrollTo(0, 0)
-    return () => { document.title = antes }
-  }, [])
+    let robots = null
+    if (nueva) {
+      robots = document.createElement('meta')
+      robots.name = 'robots'
+      robots.content = 'noindex, nofollow'
+      document.head.appendChild(robots)
+    }
+    return () => { document.title = antes; robots?.remove() }
+  }, [nueva])
 
   return (
     <div className={styles.pagina}>
@@ -132,9 +177,48 @@ export default function PortadaPage() {
         <p className={styles.lemaTexto}>Conoce y potencia a tu hijo</p>
       </section>
 
+      {/* El perfil único (solo la portada nueva) */}
+      {nueva && (
+        <section className={styles.perfil}>
+          <div className={`${styles.contenedor} ${styles.perfilInterior}`}>
+            <div className={styles.perfilEncabezado}>
+              <div className={styles.encabezado}>
+                <p className={styles.antetitulo}>Su huella</p>
+                <h2 className={styles.titulo}>
+                  <span className={styles.linea}>Con cada</span> <span className={styles.linea}>momento,</span> <span className={styles.linea}>lo conoces</span> <span className={styles.linea}>un poco más</span>
+                </h2>
+              </div>
+              <p className={styles.perfilBajada}>Cada vez que registras algo, Huella va notando qué lo mueve y qué lo calma. Lo que descubre queda guardado en su perfil, rasgo a rasgo.</p>
+            </div>
+            <div className={styles.perfilGrilla}>
+              <div className={styles.perfilEscena}>
+                <Foto
+                  className={styles.perfilFoto}
+                  nombre="manos"
+                  anchos={[480, 800, 1240]}
+                  ancho="480"
+                  alto="571"
+                  sizes="(min-width: 900px) 620px, 100vw"
+                  alt="Manos de un adulto y una niña chocando las palmas"
+                />
+                <div className={styles.perfilTelefono}>
+                  <Telefono tam={styles.tamPerfil} marco={styles.marcoSombra} src="/portada/su-huella.webp" alt="Pantalla Su huella, con el camino de rasgos que Huella fue encontrando en un niño." />
+                </div>
+              </div>
+              <div className={styles.rasgos}>
+                <p className={styles.antetitulo}>Así lo ve Huella: rasgos que fue encontrando en Tomás</p>
+                <ol className={styles.camino}>
+                  {RASGOS_TOMAS.map((r) => <li key={r} className={styles.rasgo}>{r}</li>)}
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Cómo funciona */}
       <section className={styles.comoFunciona}>
-        <div className={`${styles.contenedor} ${styles.comoFuncionaInterior}`}>
+        <div className={`${styles.contenedor} ${styles.comoFuncionaInterior} ${nueva ? styles.comoFuncionaSinPersonaje : ''}`}>
           <div className={styles.encabezado}>
             <p className={styles.antetitulo}>Paso a paso</p>
             <h2 className={styles.titulo}>Cómo funciona</h2>
@@ -163,15 +247,17 @@ export default function PortadaPage() {
             </li>
           </ol>
         </div>
-        <img
-          className={styles.personaje}
-          src="/portada/personaje.webp"
-          alt="El personaje de Huella asomándose"
-          width="450"
-          height="568"
-          loading="lazy"
-          decoding="async"
-        />
+        {!nueva && (
+          <img
+            className={styles.personaje}
+            src="/portada/personaje.webp"
+            alt="El personaje de Huella asomándose"
+            width="450"
+            height="568"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
       </section>
 
       {/* Huella te lee */}
@@ -196,9 +282,26 @@ export default function PortadaPage() {
       {/* Avances */}
       <section className={styles.avances}>
         <div className={`${styles.contenedor} ${styles.avancesGrilla}`}>
-          <div className={styles.avancesTelefono}>
-            <Telefono tam={styles.tamAvance} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
-          </div>
+          {nueva ? (
+            <div className={`${styles.avancesTelefono} ${styles.avancesEscena}`}>
+              <Foto
+                className={styles.avancesFoto}
+                nombre="arenero"
+                anchos={[360, 720]}
+                ancho="360"
+                alto="522"
+                sizes="(min-width: 900px) 360px, 67vw"
+                alt="Una niña de espaldas jugando en un arenero"
+              />
+              <div className={styles.avancesTelefonoSobre}>
+                <Telefono tam={styles.tamAvanceSobre} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
+              </div>
+            </div>
+          ) : (
+            <div className={styles.avancesTelefono}>
+              <Telefono tam={styles.tamAvance} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
+            </div>
+          )}
           <div className={styles.avancesTexto}>
             <p className={styles.antetituloTinta}>Avances</p>
             <h2 className={styles.titulo}>¿Qué avanzó?</h2>
@@ -331,7 +434,32 @@ export default function PortadaPage() {
         </div>
       </section>
 
-      {/* Cierre */}
+      {/* Cierre: en la portada nueva, foto a sangre en una mitad y texto en la otra */}
+      {nueva ? (
+        <section className={styles.cierreNuevo}>
+          <Foto
+            className={styles.cierreFoto}
+            nombre="sillon"
+            anchos={[480, 800, 1440]}
+            ancho="480"
+            alto="356"
+            sizes="100vw"
+            escritorio={{ nombre: 'sillon-cerca', anchos: [720, 1440], sizes: '50vw' }}
+            alt="Una mamá besa la cabeza de su hijo, abrazados en un sillón"
+          />
+          <div className={styles.cierreTexto}>
+            <h2 className={styles.titulo}>
+              <span className={styles.linea}>Empieza con lo</span> <span className={styles.linea}>que pasó hoy</span>
+            </h2>
+            <p className={styles.cierreBajada}>Cuéntale a Huella el primer momento, como te salga. Desde ahí, lo van conociendo juntos.</p>
+            <div className={styles.cierreBotones}>
+              <Link to="/signup" className={styles.botonCrema}>Crear cuenta</Link>
+              <Link to="/login" className={styles.botonBorde}>Entrar</Link>
+            </div>
+            <p className={styles.cierreGratis}>Gratis hasta 15 momentos.</p>
+          </div>
+        </section>
+      ) : (
       <section className={styles.cierre}>
         <div className={`${styles.contenedor} ${styles.cierreInterior}`}>
           <h2 className={styles.titulo}>Empieza con lo que pasó hoy</h2>
@@ -344,6 +472,7 @@ export default function PortadaPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Pie. El espacio del boton de Google Play se agrega al publicar. */}
       <footer className={styles.pie_}>
