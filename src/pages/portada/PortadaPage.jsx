@@ -8,8 +8,10 @@ import styles from './PortadaPage.module.css'
 // (EntradaRaiz.jsx + destinoRaiz.js). El copy es el del diseno,
 // palabra por palabra; donde la version de computador dice otra cosa, van
 // las dos y el CSS muestra la que corresponde (.soloMovil / .soloEscritorio).
-// Las capturas son reales (cuenta de prueba, La brava) y viven en
-// public/portada/ en WebP a 930 px (3x del telefono mas grande).
+// Las capturas son reales (cuenta de prueba, Tomás) y viven en
+// public/portada/ en WebP a 930 px (3x del telefono mas grande). Desde el 6 oct
+// 2026 suma El perfil único, fotos en ¿Qué avanzó? y en el cierre, y no lleva
+// el escarabajo 3D (lo que se probó en /portada-prueba).
 
 const TITULO = 'Huella — Conoce y potencia a tu hijo'
 
@@ -87,7 +89,7 @@ function Telefono({ tam, src, alt, alto = 1583, cortado = false, marco, pantalla
   )
 }
 
-// Foto de la portada nueva: WebP con JPG de respaldo, en varios anchos
+// Foto de la portada: WebP con JPG de respaldo, en varios anchos
 // (public/portada/fotos/, origen en docs/portada-fotos-origen.md). `ancho` y
 // `alto` son los del archivo mas chico: fijan la proporcion para que la
 // pagina no salte al cargar. `escritorio`: otro recorte desde 900 px
@@ -115,23 +117,13 @@ function Foto({ nombre, anchos, ancho, alto, sizes, alt, className, escritorio }
   )
 }
 
-// `nueva`: la portada en prueba de /portada-prueba (El perfil único, foto en
-// ¿Qué avanzó?, cierre con foto a sangre y sin el escarabajo 3D). Sin enlaces
-// desde ningún lado y con noindex. "/" la usa sin `nueva`, igual que antes.
-export default function PortadaPage({ nueva = false }) {
+export default function PortadaPage() {
   useEffect(() => {
     const antes = document.title
     document.title = TITULO
     window.scrollTo(0, 0)
-    let robots = null
-    if (nueva) {
-      robots = document.createElement('meta')
-      robots.name = 'robots'
-      robots.content = 'noindex, nofollow'
-      document.head.appendChild(robots)
-    }
-    return () => { document.title = antes; robots?.remove() }
-  }, [nueva])
+    return () => { document.title = antes }
+  }, [])
 
   return (
     <div className={styles.pagina}>
@@ -165,7 +157,7 @@ export default function PortadaPage({ nueva = false }) {
                 cortado
                 prioridad
                 src="/portada/registrar.webp"
-                alt="Pantalla Registrar de Huella: ¿Qué pasó con La brava? Cuéntamelo como se lo contarías a una amiga."
+                alt="Pantalla Registrar de Huella: ¿Qué pasó con Tomás? Cuéntamelo como se lo contarías a una amiga."
               />
             </div>
           </div>
@@ -177,48 +169,46 @@ export default function PortadaPage({ nueva = false }) {
         <p className={styles.lemaTexto}>Conoce y potencia a tu hijo</p>
       </section>
 
-      {/* El perfil único (solo la portada nueva) */}
-      {nueva && (
-        <section className={styles.perfil}>
-          <div className={`${styles.contenedor} ${styles.perfilInterior}`}>
-            <div className={styles.perfilEncabezado}>
-              <div className={styles.encabezado}>
-                <p className={styles.antetitulo}>Su huella</p>
-                <h2 className={styles.titulo}>
-                  <span className={styles.linea}>Con cada</span> <span className={styles.linea}>momento,</span> <span className={styles.linea}>lo conoces</span> <span className={styles.linea}>un poco más</span>
-                </h2>
-              </div>
-              <p className={styles.perfilBajada}>Cada vez que registras algo, Huella va notando qué lo mueve y qué lo calma. Lo que descubre queda guardado en su perfil, rasgo a rasgo.</p>
+      {/* El perfil único */}
+      <section className={styles.perfil}>
+        <div className={`${styles.contenedor} ${styles.perfilInterior}`}>
+          <div className={styles.perfilEncabezado}>
+            <div className={styles.encabezado}>
+              <p className={styles.antetitulo}>Su huella</p>
+              <h2 className={styles.titulo}>
+                <span className={styles.linea}>Con cada</span> <span className={styles.linea}>momento,</span> <span className={styles.linea}>lo conoces</span> <span className={styles.linea}>un poco más</span>
+              </h2>
             </div>
-            <div className={styles.perfilGrilla}>
-              <div className={styles.perfilEscena}>
-                <Foto
-                  className={styles.perfilFoto}
-                  nombre="manos"
-                  anchos={[480, 800, 1240]}
-                  ancho="480"
-                  alto="571"
-                  sizes="(min-width: 900px) 620px, 100vw"
-                  alt="Manos de un adulto y una niña chocando las palmas"
-                />
-                <div className={styles.perfilTelefono}>
-                  <Telefono tam={styles.tamPerfil} marco={styles.marcoSombra} src="/portada/su-huella.webp" alt="Pantalla Su huella, con el camino de rasgos que Huella fue encontrando en un niño." />
-                </div>
+            <p className={styles.perfilBajada}>Cada vez que registras algo, Huella va notando qué lo mueve y qué lo calma. Lo que descubre queda guardado en su perfil, rasgo a rasgo.</p>
+          </div>
+          <div className={styles.perfilGrilla}>
+            <div className={styles.perfilEscena}>
+              <Foto
+                className={styles.perfilFoto}
+                nombre="manos"
+                anchos={[480, 800, 1240]}
+                ancho="480"
+                alto="571"
+                sizes="(min-width: 900px) 620px, 100vw"
+                alt="Manos de un adulto y una niña chocando las palmas"
+              />
+              <div className={styles.perfilTelefono}>
+                <Telefono tam={styles.tamPerfil} marco={styles.marcoSombra} src="/portada/su-huella.webp" alt="Pantalla Su huella, con el camino de rasgos que Huella fue encontrando en un niño." />
               </div>
-              <div className={styles.rasgos}>
-                <p className={styles.antetitulo}>Así lo ve Huella: rasgos que fue encontrando en Tomás</p>
-                <ol className={styles.camino}>
-                  {RASGOS_TOMAS.map((r) => <li key={r} className={styles.rasgo}>{r}</li>)}
-                </ol>
-              </div>
+            </div>
+            <div className={styles.rasgos}>
+              <p className={styles.antetitulo}>Así lo ve Huella: rasgos que fue encontrando en Tomás</p>
+              <ol className={styles.camino}>
+                {RASGOS_TOMAS.map((r) => <li key={r} className={styles.rasgo}>{r}</li>)}
+              </ol>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Cómo funciona */}
       <section className={styles.comoFunciona}>
-        <div className={`${styles.contenedor} ${styles.comoFuncionaInterior} ${nueva ? styles.comoFuncionaSinPersonaje : ''}`}>
+        <div className={`${styles.contenedor} ${styles.comoFuncionaInterior}`}>
           <div className={styles.encabezado}>
             <p className={styles.antetitulo}>Paso a paso</p>
             <h2 className={styles.titulo}>Cómo funciona</h2>
@@ -247,17 +237,6 @@ export default function PortadaPage({ nueva = false }) {
             </li>
           </ol>
         </div>
-        {!nueva && (
-          <img
-            className={styles.personaje}
-            src="/portada/personaje.webp"
-            alt="El personaje de Huella asomándose"
-            width="450"
-            height="568"
-            loading="lazy"
-            decoding="async"
-          />
-        )}
       </section>
 
       {/* Huella te lee */}
@@ -282,26 +261,20 @@ export default function PortadaPage({ nueva = false }) {
       {/* Avances */}
       <section className={styles.avances}>
         <div className={`${styles.contenedor} ${styles.avancesGrilla}`}>
-          {nueva ? (
-            <div className={`${styles.avancesTelefono} ${styles.avancesEscena}`}>
-              <Foto
-                className={styles.avancesFoto}
-                nombre="arenero"
-                anchos={[360, 720]}
-                ancho="360"
-                alto="522"
-                sizes="(min-width: 900px) 360px, 67vw"
-                alt="Una niña de espaldas jugando en un arenero"
-              />
-              <div className={styles.avancesTelefonoSobre}>
-                <Telefono tam={styles.tamAvanceSobre} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
-              </div>
+          <div className={`${styles.avancesTelefono} ${styles.avancesEscena}`}>
+            <Foto
+              className={styles.avancesFoto}
+              nombre="arenero"
+              anchos={[360, 720]}
+              ancho="360"
+              alto="522"
+              sizes="(min-width: 900px) 360px, 67vw"
+              alt="Una niña de espaldas jugando en un arenero"
+            />
+            <div className={styles.avancesTelefonoSobre}>
+              <Telefono tam={styles.tamAvanceSobre} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
             </div>
-          ) : (
-            <div className={styles.avancesTelefono}>
-              <Telefono tam={styles.tamAvance} marco={styles.marcoSombra} src="/portada/avance.webp" alt="Pantalla ¿Qué avanzó?, con las opciones de lo que asomó." />
-            </div>
-          )}
+          </div>
           <div className={styles.avancesTexto}>
             <p className={styles.antetituloTinta}>Avances</p>
             <h2 className={styles.titulo}>¿Qué avanzó?</h2>
@@ -434,45 +407,30 @@ export default function PortadaPage({ nueva = false }) {
         </div>
       </section>
 
-      {/* Cierre: en la portada nueva, foto a sangre en una mitad y texto en la otra */}
-      {nueva ? (
-        <section className={styles.cierreNuevo}>
-          <Foto
-            className={styles.cierreFoto}
-            nombre="sillon"
-            anchos={[480, 800, 1440]}
-            ancho="480"
-            alto="356"
-            sizes="100vw"
-            escritorio={{ nombre: 'sillon-cerca', anchos: [720, 1440], sizes: '50vw' }}
-            alt="Una mamá besa la cabeza de su hijo, abrazados en un sillón"
-          />
-          <div className={styles.cierreTexto}>
-            <h2 className={styles.titulo}>
-              <span className={styles.linea}>Empieza con lo</span> <span className={styles.linea}>que pasó hoy</span>
-            </h2>
-            <p className={styles.cierreBajada}>Cuéntale a Huella el primer momento, como te salga. Desde ahí, lo van conociendo juntos.</p>
-            <div className={styles.cierreBotones}>
-              <Link to="/signup" className={styles.botonCrema}>Crear cuenta</Link>
-              <Link to="/login" className={styles.botonBorde}>Entrar</Link>
-            </div>
-            <p className={styles.cierreGratis}>Gratis hasta 15 momentos.</p>
+      {/* Cierre: foto a sangre en una mitad y texto en la otra */}
+      <section className={styles.cierreNuevo}>
+        <Foto
+          className={styles.cierreFoto}
+          nombre="sillon"
+          anchos={[480, 800, 1440]}
+          ancho="480"
+          alto="356"
+          sizes="100vw"
+          escritorio={{ nombre: 'sillon-cerca', anchos: [720, 1440], sizes: '50vw' }}
+          alt="Una mamá besa la cabeza de su hijo, abrazados en un sillón"
+        />
+        <div className={styles.cierreTexto}>
+          <h2 className={styles.titulo}>
+            <span className={styles.linea}>Empieza con lo</span> <span className={styles.linea}>que pasó hoy</span>
+          </h2>
+          <p className={styles.cierreBajada}>Cuéntale a Huella el primer momento, como te salga. Desde ahí, lo van conociendo juntos.</p>
+          <div className={styles.cierreBotones}>
+            <Link to="/signup" className={styles.botonCrema}>Crear cuenta</Link>
+            <Link to="/login" className={styles.botonBorde}>Entrar</Link>
           </div>
-        </section>
-      ) : (
-      <section className={styles.cierre}>
-        <div className={`${styles.contenedor} ${styles.cierreInterior}`}>
-          <h2 className={styles.titulo}>Empieza con lo que pasó hoy</h2>
-          <div className={styles.cierreAcciones}>
-            <Link to="/signup" className={`${styles.botonCrema} ${styles.botonCierre}`}>Crear cuenta</Link>
-            <Link to="/login" className={styles.enlaceCierre}>
-              <span className={styles.soloMovil}>Ya tengo cuenta, entrar</span>
-              <span className={styles.soloEscritorio}>Entrar</span>
-            </Link>
-          </div>
+          <p className={styles.cierreGratis}>Gratis hasta 15 momentos.</p>
         </div>
       </section>
-      )}
 
       {/* Pie. El espacio del boton de Google Play se agrega al publicar. */}
       <footer className={styles.pie_}>

@@ -121,7 +121,6 @@
 
 .tamHero { --ancho: 270px; }
 .tamTeLee { --ancho: 266px; }
-.tamAvance { --ancho: 236px; }
 /* Dos de 172 + 14 de espacio: en el 390 asoman 8 px sobre el margen (como en
    el diseno); en pantallas mas angostas se achican parejo, sin salirse. */
 .tamDemas { --ancho: min(172px, calc((100vw - 32px - 14px) / 2)); }
@@ -294,10 +293,9 @@
   overflow: hidden;
 }
 
-/* el espacio de abajo es del escarabajo: nunca queda sobre los pasos */
 .comoFuncionaInterior {
   padding-top: 64px;
-  padding-bottom: 190px;
+  padding-bottom: 64px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -350,15 +348,6 @@
   font-size: 16px;
   line-height: 1.6;
   color: var(--portada-tinta-suave);
-}
-
-.personaje {
-  position: absolute;
-  right: -2px;
-  bottom: 0;
-  height: 160px;
-  width: auto;
-  pointer-events: none;
 }
 
 /* ── Huella te lee ── */
@@ -842,36 +831,6 @@
 }
 
 /* ── Cierre ── */
-.cierre {
-  background: var(--portada-terracota);
-  color: var(--portada-crema);
-}
-
-.cierreInterior {
-  padding-top: 64px;
-  padding-bottom: 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.cierreAcciones {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.enlaceCierre {
-  align-self: center;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  color: var(--portada-crema);
-  font-size: 16px;
-  font-weight: 700;
-  text-decoration: underline;
-}
-
 /* ── Pie ── */
 .pie_ {
   flex: 1 1 0%;
@@ -956,7 +915,6 @@
 
   .tamHero { --ancho: 330px; }
   .tamTeLee { --ancho: 288px; }
-  .tamAvance { --ancho: 310px; }
   .tamDemas { --ancho: 246px; }
   .marcoLeve { box-shadow: var(--shadow-md); }
 
@@ -1046,7 +1004,7 @@
   /* Cómo funciona */
   .comoFuncionaInterior {
     padding-top: 120px;
-    padding-bottom: 230px;
+    padding-bottom: 120px;
     gap: 56px;
   }
 
@@ -1073,11 +1031,6 @@
   .pasoTexto { gap: 16px; }
   .pasoTitulo { font-size: 22px; }
   .pasoDescripcion { font-size: 17px; }
-
-  .personaje {
-    right: -3px;
-    height: 200px;
-  }
 
   /* Huella te lee */
   .teLeeGrilla {
@@ -1276,24 +1229,6 @@
   .planProPago { margin-top: -8px; }
 
   /* Cierre */
-  .cierreInterior {
-    padding-top: 96px;
-    padding-bottom: 96px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-  }
-
-  .cierreAcciones {
-    flex-direction: row;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .botonCierre { padding: 0 40px; }
-  .enlaceCierre { min-height: 0; }
 
   /* Pie: marca, correo y año a la izquierda; legal a la derecha */
   .pieInterior {
@@ -1331,7 +1266,7 @@
   .copyright { grid-area: copy; }
 }
 
-/* ══ Portada nueva (/portada-prueba, PortadaPage con `nueva`) ══
+/* ══ El perfil único, fotos en ¿Qué avanzó? y cierre (6 oct 2026) ══
    Medidas de las referencias de Claude Design ("B · Portada completa con El
    perfil único" y "Cierre C1 · Mitad a sangre"). Las escenas de foto +
    telefono van en unidades del ancho de su caja (cqw): asi la proporcion es
@@ -1443,8 +1378,6 @@
   bottom: calc(-28px + 0.7em - 11px);
   border-left: 2px dashed var(--portada-naranja-claro);
 }
-
-.comoFuncionaSinPersonaje { padding-bottom: 64px; }
 
 /* ── ¿Qué avanzó? con foto ── */
 .avancesEscena {
@@ -1560,8 +1493,6 @@
   .tamPerfil { --ancho: 35.7cqw; }
 
   .rasgo { font-size: 21px; }
-
-  .comoFuncionaSinPersonaje { padding-bottom: 120px; }
 
   .avancesEscena {
     margin-top: 0;

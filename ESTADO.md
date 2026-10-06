@@ -370,7 +370,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-5 oct 2026) — **Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
+## Cerrado HOY (4-6 oct 2026) — **Portada nueva en "/", día 2 de Tomás, Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.
@@ -407,8 +407,16 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **QA sin IA (Code):** hoy fijo y fetch falso, 0 llamadas a la red. Cada prompt armado con momentos de hoy, ayer 23:50, hace 3 y 10 días, en la versión anterior y la nueva: el diff solo muestra el bloque HOY, las etiquetas y "1 año"; el resto del texto queda idéntico. El prompt de Preguntar quedó idéntico al de `05f58a3`. Diffs en `huella-design-pack\preguntar\fechas-resto\`.
 - ⏳ **Se confirma con IA esta noche** en el día 2 de Tomás, que pasa por estos prompts.
 
+### 7. ✅ Día 2 de Tomás (5 oct, cuenta de prueba)
+- Episodio de la plaza (hoy) + 3 avances + 1 pregunta; 8 de 20 llamadas de IA. 6 rasgos confirmados ("6 de 12" en Su huella), entre ellos "Las transiciones y los finales le cuestan". La respuesta de Preguntar no dijo "la semana pasada" ni otra fecha equivocada (tampoco nombró "hoy"); el análisis del momento no nombra fechas.
+
+### 8. ✅ Portada nueva EN PRODUCCIÓN en "/" (6 oct)
+- Lo que se probó en `/portada-prueba` (`70e2a45`, aprobado por Daniel) pasó a "/": sección **"El perfil único"** (foto de manos con el teléfono mostrando Su huella de Tomás y 3 rasgos en camino de puntos), **foto del arenero en espejo** junto al teléfono en "¿Qué avanzó?" (nunca le tapa a la niña), **cierre con la foto del sillón a sangre** (encuadre de escritorio más cerca, `sillon-cerca-*`) y "Gratis hasta 15 momentos.", y **sin el escarabajo 3D** (se borró `personaje.webp`). El texto alternativo del teléfono del inicio dice Tomás.
+- Fotos en `public/portada/fotos/` (WebP + JPG, srcset, ancho y alto fijos, carga diferida). Peso de la página: ~2,5 MB → ~2,7 MB.
+- Reglas de entrada de "/" iguales a `4a0bf97` (sin sesión → portada; con sesión → /panel; app de Android o instalada → /login): `EntradaRaiz.jsx`, `destinoRaiz.js`, `App.jsx` y `vercel.json` sin diff contra `4a0bf97`. `/portada-prueba` vuelve a redirigir a "/" y "/" no lleva noindex.
+
 ### ⏭️ Pendiente
-1. ⬜ **Día 2 de Tomás** (5 oct después de las 21:00, con las 20 llamadas de IA del día) y confirmar el rasgo.
+1. ⬜ **Completar el origen de las fotos de la portada** en `docs/portada-fotos-origen.md`: llegaron renombradas y sin metadatos (falta el autor y el enlace de Pexels de manos, sillón y arenero).
 2. 🔴 **Mañana: firma de alimentación** — opciones A + B del diagnóstico del 5 oct: sumar la dimensión Alimentación (Ellyn Satter, Gill Rapley, Katja Rowell / Jenny McGlothlin y Carlos González con una segunda lente) y que Preguntar elija primero la dimensión y después el autor de esa dimensión, con el par validado en el código. Causa: en Preguntar cada autor tiene una sola lente, y la de Carlos González es "Sueño con presencia".
 3. ⬜ **Mañana: edad de bebé en blanco en la tarjeta de estrategia activa** (`EstrategiaActivaCard.jsx:38`, `hijo?.edad ? ... : ''` deja vacío el 0).
 4. ⬜ Probar en un Android real (abre en el login, entrar con Google) y crear una cuenta nueva con Google.

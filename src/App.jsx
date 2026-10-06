@@ -29,7 +29,6 @@ import TerminosPage from './pages/legal/TerminosPage'
 import EliminarCuentaPage from './pages/legal/EliminarCuentaPage'
 import PrivacidadPage from './pages/legal/PrivacidadPage'
 import EntradaRaiz from './pages/portada/EntradaRaiz'
-import PortadaPage from './pages/portada/PortadaPage'
 import { recordarSiEsAppAndroid } from './pages/portada/destinoRaiz'
 import InvitarPage from './pages/invitar/InvitarPage'
 import CheckinPage from './pages/checkin/CheckinPage'
@@ -171,9 +170,7 @@ export default function App() {
               {/* "/": portada sin sesion en el navegador, Home con sesion, login
                   dentro de la app de Android o instalada (pages/portada/destinoRaiz.js). */}
               <Route path="/" element={<EntradaRaiz />} />
-              {/* Portada nueva en prueba: sin enlaces desde ningún lado y con noindex
-                  (meta en PortadaPage + X-Robots-Tag en vercel.json). */}
-              <Route path="/portada-prueba" element={<PortadaPage nueva />} />
+              <Route path="/portada-prueba" element={<Navigate to="/" replace />} />
               <Route path="/eliminar-cuenta" element={<EliminarCuentaPage />} />
               <Route path="/invitar"  element={<PageErrorBoundary><InvitarPage /></PageErrorBoundary>} />
               <Route path="/mockups"  element={<PageErrorBoundary><MockupViewer /></PageErrorBoundary>} />
