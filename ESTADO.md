@@ -76,7 +76,7 @@
 - ⬜ **Botón de perfil de la barra superior de 36 a 44 px** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (zona táctil).
 - ⬜ **Color del rótulo "Registrar" de la barra inferior a `--color-eyebrow`** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (hoy `--color-primary` da 2,9:1).
 - ⬜ **Brief para ilustrador** — **16 sep** — entra sin detalle, lo precisa Daniel.
-- ✅ **Auditoría del costo de la API** — **cerrada el 7 oct** (marco cacheado, cache 1 h, 3 líneas en Haiku, consejo solo con algo nuevo, tope 120/mes; ver Cerrado HOY).
+- ✅ **Auditoría del costo de la API** — **cerrada el 7 oct** (marco cacheado, cache 1 h, 3 líneas en Haiku, consejo solo con algo nuevo, tope 120/mes; ver Sesión 7 oct mañana).
 - ⬜ **Aplicar el precio decidido en la web** — **7 oct** — Pro 7.990/mes, 59.990/año, 7 días gratis. Decidido, sin aplicar.
 - ⬜ **"3 líneas" en Haiku se pasan de las 30 palabras** — **7 oct** — "Mejoró" salió con ~37. Mirar cómo se ve en la card; si molesta, recortar en el prompt de Haiku.
 - ⬜ **Cachear también los prompts fijos de rasgos y patrones** — **7 oct** — `PROMPT_DETECTAR_RASGOS` y `PROMPT_DETECTAR_PATRONES` van al inicio del prompt y sin cache (rasgos lleva ~6.700 tokens de entrada además del system).
@@ -378,11 +378,41 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Detección:** `estaEnAppAndroid()` en `src/pages/portada/destinoRaiz.js`: el referrer `android-app://lat.huella.app` de la primera carga, guardado en sessionStorage para toda la sesión (`recordarSiEsAppAndroid()` en `App.jsx`). **No** usa `display-mode: standalone`: la app instalada del iPhone y el navegador quedan exactamente igual.
 - **Qué cambia en Android:** el aviso de función Pro (`UpgradeModal`) muestra solo el título, "Esto no viene en el plan gratuito." y "Entendido" (sin precios, sin "Activar Huella Pro", sin enlace a /cuenta); el límite dice "Llegaste a los 15 momentos del plan gratuito."; la card semanal muestra los candados sin "Ver el cuadro completo con Pro"; en Tú el plan gratuito no ve la card de Huella Pro y el Pro la ve con "Activo" sin "Gestionar plan"; `/cuenta` redirige a Tú; `iniciarSuscripcion` se niega en Android. Quien ya es Pro (pagó en la web) usa todo normal. El canje de código de beta sigue (no es un pago).
 - **Toda pantalla nueva que ofrezca pagar o subir de plan tiene que respetar `estaEnAppAndroid()`.**
-- ⬜ **Pendiente: integrar Google Play Billing** en la app de Android.
+- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026, versión 5 (ver Cerrado HOY). Falta la configuración de Daniel en Google y la prueba interna.
 
 ---
 
-## Cerrado HOY (7 oct 2026) — **Costo de IA: marco por edad cacheado, cache de 1 hora, "3 líneas" en Haiku, consejo diario solo con algo nuevo y tope de 120 llamadas al mes**
+## Cerrado HOY (7 oct 2026, tarde) — **Google Play Billing en la app de Android (versión 5 firmada) — web y Android sin Google Play quedan iguales**
+
+### 1. ✅ App de Android, versión 5 (`Downloads\huella-android\huella-v5-versionCode5.aab`)
+- **Firmada con la MISMA llave de siempre** (`huella-twa\android.keystore`): huella SHA-256 `44:CA:BB:01:…:23:CF`, igual a la v4, leída del APK y del AAB. versionCode 5, targetSdk 36, permiso `com.android.vending.BILLING`, `PaymentActivity` + `PaymentService` y el `DigitalGoodsRequestHandler` en `DelegationService`.
+- **`billing:1.2.0` y no la 1.1.0 de la plantilla de bubblewrap:** la 1.1.0 trae Play Billing Library 7.1.1 y **desde el 31 ago 2026 Play rechaza actualizaciones con la 7** (prórroga hasta el 1 nov). La 1.2.0 trae la 8.3.0 (leída en el APK).
+- **minSdk 21 → 23** (Android 6): lo exige `billing:1.2.0`. Los teléfonos con Android 5 se quedan en la v4.
+- Cambios aplicados a mano en `Desktop\huella-twa` (sin `bubblewrap update`, para no perder el targetSdk 36): `twa-manifest.json` (`features.playBilling`, `minSdkVersion`), `app/build.gradle`, `AndroidManifest.xml`, `DelegationService.java`, y `manifest-checksum.txt` recalculado con la función de bubblewrap. Respaldo previo en `huella-twa\respaldo-2026-10-07\`.
+- 🪤 **Compilar FUERA de OneDrive:** dentro de `Desktop\huella-twa` Gradle falla con `AccessDeniedException` en `app\build` (OneDrive bloquea archivos). Se compiló en una copia: `Downloads\huella-android\proyecto`.
+- 🪤 **La firma falló 2 veces por el script, no por la contraseña:** (1) PowerShell 5.1 con `ErrorActionPreference Stop` + `2>&1` corta con la primera advertencia de Gradle; (2) la ventana heredó `NoDefaultCurrentDirectoryInExePath=1` de la sesión de Code y `cmd` no encontraba `gradlew.bat`. La contraseña la escribió Daniel en una ventana aparte; no quedó en ningún archivo.
+
+### 2. ✅ Web y servidor (commit de hoy)
+- **Productos (Play Console):** dos suscripciones, `huella_pro_mensual` y `huella_pro_anual`, cada una con **un solo plan base** y **una oferta de 7 días gratis**. La librería de Google solo mira el primer plan base de cada suscripción.
+- **Cliente** (`src/services/playBilling.js`): solo en la app de Android (`estaEnAppAndroid`). Si `getDigitalGoodsService('https://play.google.com/billing')` existe y trae los dos productos, el aviso Pro, `/cuenta`, la card semanal y Tú ofrecen Pro con el **precio que entrega Google**, la línea "Los primeros 7 días son gratis. Después se cobran … y puedes cancelar cuando quieras desde Google Play." y el botón "Probar 7 días gratis" (Payment Request). Si no existe o falla: igual que desde el 6 oct, sin compra. Sin oferta si ya es Pro o si esa cuenta de Google ya tiene la compra. Al abrir la app (`Layout`) se mandan al servidor las compras que Google ya tiene (restaurar). En Tú, "Administrar suscripción" → página de suscripciones de Google Play cuando hay compra de Google.
+- **Servidor:** `api/play-verificar.js` (token + sesión → `subscriptionsv2` → acknowledge → guarda token → usuario → `perfiles.plan='pro'`, igual que Mercado Pago; un token queda atado al primer usuario) y `api/play-rtdn.js` (Pub/Sub push con `?token=` secreto; relee la suscripción en Google y aplica: renovación, cancelación, vencimiento, pausa, reembolso). Lógica común en `api/_lib/play.js`. **Sin variables de entorno responden 503 `play_no_configurado` y no hacen nada.**
+- **⬜ Supabase: correr `supabase/migrations/029_suscripciones_google.sql`** (tabla `suscripciones_google`, RLS encendida sin policies, sin permisos para anon/authenticated). No toca `perfiles` ni sus GRANT.
+- **⬜ Vercel:** `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` y `GOOGLE_PLAY_RTDN_TOKEN`.
+
+### 3. QA (Code, cuenta de prueba, solo mirar)
+- **Web y Android sin Google Play idénticos a producción**, texto completo de cada pantalla comparado letra por letra: portada, Home, aviso Pro, Tú, /cuenta (Mercado Pago), límite de 15, Tú siendo Pro. Tres pasadas; la última con el código final, 15 de 15 iguales. `/cuenta` en Android sin Google Play sigue terminando en Tú, también al recargar. `ultima_actividad` igual al inicio y al final en todas (2026-10-06 12:57:01). WebKit iPhone 14.
+- **Android con Digital Goods simulado:** precios de Google, línea de la prueba, "Probar 7 días gratis", sin oferta siendo Pro.
+- **Servidor sin red (13 casos):** sin variables, compra activa con acknowledge, sin sesión, token de otro usuario, producto o paquete ajeno, secreto malo, notificación de prueba, vencida, cancelada aún pagada, reembolso, token sin usuario.
+- Imagen: `Downloads\huella-android\revision.png`.
+
+### ⬜ Pendiente
+- Daniel: Play Console + Google Cloud (lista en el informe del 7 oct), SQL 029, variables en Vercel, subir la v5 a Prueba interna y probar una compra real con un tester de licencia.
+- ⚠️ Verificar en la prueba interna que la hoja de Google diga "7 días gratis": la librería compra con la **primera** oferta que devuelve Google, no necesariamente la de prueba.
+- ⚠️ Un usuario que pague por Mercado Pago **y** por Google, al vencer la de Google baja a gratis aunque siga pagando Mercado Pago (caso raro, no cubierto).
+
+---
+
+## Sesión 7 oct 2026 (mañana) — **Costo de IA: marco por edad cacheado, cache de 1 hora, "3 líneas" en Haiku, consejo diario solo con algo nuevo y tope de 120 llamadas al mes**
 
 ### 1. ✅ Qué cambió (precio decidido: Pro 7.990/mes, 59.990/año, 7 días gratis — **aún sin aplicar en la web**)
 - **Marco por edad cacheado.** Si el prompt empieza con uno de los 4 marcos (`marcoEdad`), `separarMarco()` en `src/services/anthropic.js` lo manda aparte y `api/anthropic.js` lo pone como primer bloque del mensaje con su `cache_control`. El modelo lee el mismo texto en el mismo orden (el arnés midió los mismos tokens totales que el 6 oct en las 21 llamadas). Aplica a 12 tipos de llamada; no a la acción inmediata, rasgos, patrones estructurados, check-in ni reflexiones del PDF (no empiezan con el marco).

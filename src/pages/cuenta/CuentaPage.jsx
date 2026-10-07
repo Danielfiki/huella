@@ -7,6 +7,7 @@ import { iniciarSuscripcion } from '../../services/pago'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
 import { estaEnAppAndroid } from '../portada/destinoRaiz'
+import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, MENSAJE_ERROR } from '../../services/playBilling'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -51,14 +52,23 @@ const TODO_PRO = [
   'Modo familia — conecta con tu pareja',
 ]
 
-// En la app de Android (Google Play) no hay pantalla de planes ni de pago:
-// cualquier enlace o vuelta a /cuenta termina en Tu.
+// En la app de Android (Google Play) solo hay pantalla de planes si Google Play
+// Billing está disponible y hay algo que comprar; si no, cualquier enlace o
+// vuelta a /cuenta termina en Tu, como desde el 6 oct.
 export default function CuentaPage() {
-  if (estaEnAppAndroid()) return <Navigate to="/perfil" replace />
-  return <CuentaContenido />
+  const { isPro } = useHuella()
+  const play = usePlayBilling()
+  if (estaEnAppAndroid()) {
+    // Mientras Google Play responde (como mucho unos segundos) no se decide:
+    // al recargar estando en /cuenta, si no, terminaba siempre en Tu.
+    if (play === undefined) return null
+    if (!ofrecerCompraPlay(play, isPro())) return <Navigate to="/perfil" replace />
+    return <CuentaContenido play={play} />
+  }
+  return <CuentaContenido play={null} />
 }
 
-function CuentaContenido() {
+function CuentaContenido({ play }) {
   const { isPro, isAdmin, reloadData } = useHuella()
   const navigate = useNavigate()
   const [verTodo, setVerTodo] = useState(false)
@@ -190,10 +200,30 @@ function CuentaContenido() {
     }
   }
 
+  // App de Android: compra con Google Play (play llega solo ahí).
+  const [avisoPlay, setAvisoPlay] = useState('')
+  async function comprarPlay() {
+    setCargando(true)
+    setError('')
+    setAvisoPlay('')
+    try {
+      const r = await comprarConPlay(ciclo)
+      if (r.estado === 'activo') await reloadData()
+      else if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
+    } catch (err) {
+      console.error('CuentaPage comprarPlay error:', err)
+      setError(MENSAJE_ERROR)
+    }
+    setCargando(false)
+  }
+
   function handleActivar() {
     if (cargando) return
-    dispararPago()
+    if (play) comprarPlay()
+    else dispararPago()
   }
+
+  const tp = play ? textosPlay(play, ciclo) : null
 
   // Pide el permiso de notificaciones vía el hook. Al resolverse, el hook
   // actualiza `permission` y esta pantalla re-renderiza al estado correcto.
@@ -233,7 +263,7 @@ function CuentaContenido() {
               className={`${styles.cicloOption} ${ciclo === 'mensual' ? styles.cicloOptionActive : ''}`}
               onClick={() => setCiclo('mensual')}
             >
-              <span className={styles.cicloMonto}>CLP 9.990</span>
+              <span className={styles.cicloMonto}>{tp ? tp.precioMensual : 'CLP 9.990'}</span>
               <span className={styles.cicloPeriodo}>/mes</span>
             </button>
             <button
@@ -243,9 +273,11 @@ function CuentaContenido() {
               className={`${styles.cicloOption} ${ciclo === 'anual' ? styles.cicloOptionActive : ''}`}
               onClick={() => setCiclo('anual')}
             >
-              <span className={styles.cicloMonto}>CLP 99.900</span>
+              <span className={styles.cicloMonto}>{tp ? tp.precioAnual : 'CLP 99.900'}</span>
               <span className={styles.cicloPeriodo}>/año</span>
-              <span className={styles.ahorroBadge}>2 meses gratis</span>
+              {(tp ? tp.ahorro : '2 meses gratis') && (
+                <span className={styles.ahorroBadge}>{tp ? tp.ahorro : '2 meses gratis'}</span>
+              )}
             </button>
           </div>
         )}
@@ -290,10 +322,14 @@ function CuentaContenido() {
       {/* ── CTA — dispara la suscripción del ciclo elegido en Mercado Pago ── */}
       {!pro && (
         <>
+          {tp && <p className={styles.activoMsg}>{avisoPlay || tp.aviso}</p>}
           <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
-            {cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro'}
+            {tp
+              ? (cargando ? 'Abriendo Google Play…' : tp.cta)
+              : (cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro')}
           </button>
-          {error && (
+          {error && tp && <p className={styles.error}>{error}</p>}
+          {error && !tp && (
             <ErrorPago
               referencia={referenciaPago}
               onReintentar={dispararPago}

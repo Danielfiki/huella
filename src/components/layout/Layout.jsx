@@ -10,6 +10,8 @@ import { useHuella } from '../../context/HuellaContext'
 import { useFamily } from '../../context/FamilyContext'
 import { useMedallasNuevas } from '../medallas/medallasNuevas'
 import CitaLoader from '../ui/CitaLoader'
+import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
+import { restaurarComprasPlay } from '../../services/playBilling'
 import styles from './Layout.module.css'
 
 // B3 · la barra baja de 5 a 3.
@@ -101,6 +103,16 @@ function SkeletonLoader() {
 
 export default function Layout() {
   const { state, dataLoading, dataLoaded, reloadData, setHijoActivo } = useHuella()
+
+  // App de Android: al abrir, lo que Google Play ya tiene comprado por esta
+  // cuenta se sincroniza con el servidor (restaurar compras). Una vez por
+  // carga; sin Google Play no hace nada.
+  const playRestaurado = useRef(false)
+  useEffect(() => {
+    if (!dataLoaded || playRestaurado.current || !estaEnAppAndroid()) return
+    playRestaurado.current = true
+    restaurarComprasPlay().then((activo) => { if (activo && state.plan !== 'pro') reloadData() }).catch(() => {})
+  }, [dataLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
   const { family, familyLoading } = useFamily()
 
 

@@ -5,6 +5,8 @@ import { Check } from 'lucide-react'
 import { iniciarSuscripcion } from '../../services/pago'
 import ErrorPago from './ErrorPago'
 import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
+import { useHuella } from '../../context/HuellaContext'
+import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, MENSAJE_ERROR } from '../../services/playBilling'
 import styles from './UpgradeModal.module.css'
 
 const FEATURES = [
@@ -22,6 +24,13 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
   // Código HP-XXXXXX que devuelve el endpoint cuando el intento falla. Puede
   // quedar en null si el registro no alcanzó a escribir.
   const [referenciaPago, setReferenciaPago] = useState(null)
+  const { isPro, reloadData } = useHuella()
+  const play = usePlayBilling()
+  // App de Android con Google Play disponible: mismo modal que la web, con los
+  // precios de Google y la compra por Google Play. Sin Google Play, el aviso
+  // neutro de siempre (más abajo).
+  const conPlay = estaEnAppAndroid() && ofrecerCompraPlay(play, isPro())
+  const [avisoPlay, setAvisoPlay] = useState('')
 
   // Si el usuario vuelve atrás desde el checkout de MP, el navegador puede
   // restaurar la página desde el bfcache con el modal abierto y `cargando`
@@ -58,9 +67,25 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
     }
   }
 
+  async function comprarPlay() {
+    setCargando(true)
+    setError('')
+    setAvisoPlay('')
+    try {
+      const r = await comprarConPlay(ciclo)
+      if (r.estado === 'activo') { await reloadData(); onClose(); return }
+      if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
+    } catch (err) {
+      console.error('UpgradeModal comprarPlay error:', err)
+      setError(MENSAJE_ERROR)
+    }
+    setCargando(false)
+  }
+
   function handleActivar() {
     if (cargando) return
-    dispararPago()
+    if (conPlay) comprarPlay()
+    else dispararPago()
   }
 
   // Enlace secundario discreto: lleva al detalle completo en CuentaPage.
@@ -72,7 +97,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
   // App de Android (Google Play): sin precios, sin CTA de pago y sin enlace a
   // /cuenta. Solo avisa que no viene en el plan gratuito y se cierra.
   // `mensajeAndroid` vacio ('') no muestra bajada.
-  if (estaEnAppAndroid()) {
+  if (estaEnAppAndroid() && !conPlay) {
     const bajada = mensajeAndroid ?? 'Esto no viene en el plan gratuito.'
     return createPortal(
       <div className={styles.overlay} onClick={onClose}>
@@ -89,6 +114,9 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
       document.body
     )
   }
+
+  // Textos con los precios de Google (solo en la app de Android con Google Play).
+  const tp = conPlay ? textosPlay(play, ciclo) : null
 
   // Portal a document.body: el modal vive fuera de .pageWrap (que queda con
   // transform tras la animación de página y captura el position:fixed). Así
@@ -121,7 +149,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
             className={`${styles.cicloOption} ${ciclo === 'mensual' ? styles.cicloOptionActive : ''}`}
             onClick={() => setCiclo('mensual')}
           >
-            <span className={styles.cicloMonto}>CLP 9.990</span>
+            <span className={styles.cicloMonto}>{tp ? tp.precioMensual : 'CLP 9.990'}</span>
             <span className={styles.cicloPeriodo}>/mes</span>
           </button>
           <button
@@ -131,22 +159,29 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
             className={`${styles.cicloOption} ${ciclo === 'anual' ? styles.cicloOptionActive : ''}`}
             onClick={() => setCiclo('anual')}
           >
-            <span className={styles.cicloMonto}>CLP 99.900</span>
+            <span className={styles.cicloMonto}>{tp ? tp.precioAnual : 'CLP 99.900'}</span>
             <span className={styles.cicloPeriodo}>/año</span>
-            <span className={styles.ahorroBadge}>2 meses gratis</span>
+            {(tp ? tp.ahorro : '2 meses gratis') && (
+              <span className={styles.ahorroBadge}>{tp ? tp.ahorro : '2 meses gratis'}</span>
+            )}
           </button>
         </div>
 
-        {error && (
-          <ErrorPago
-            referencia={referenciaPago}
-            onReintentar={dispararPago}
-            cargando={cargando}
-          />
+        {tp && <p className={styles.bajada}>{avisoPlay || tp.aviso}</p>}
+
+        {error && (conPlay
+          ? <p className={styles.error}>{error}</p>
+          : <ErrorPago
+              referencia={referenciaPago}
+              onReintentar={dispararPago}
+              cargando={cargando}
+            />
         )}
 
         <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
-          {cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro'}
+          {conPlay
+            ? (cargando ? 'Abriendo Google Play…' : tp.cta)
+            : (cargando ? 'Redirigiéndote al pago…' : 'Activar Huella Pro')}
         </button>
         <button className={styles.verTodo} onClick={verTodoPro}>
           Ver todo lo que incluye Pro

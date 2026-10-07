@@ -11,6 +11,7 @@ import { esTituloSeccion, tituloSeccionLimpio } from '../../utils/seccionesIA'
 import { momentosDeLaSemana, MIN_MOMENTOS_ANALISIS } from '../../services/anthropic'
 import TopeDiario, { esLimiteDiario } from '../ui/TopeDiario'
 import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
+import { usePlayBilling, ofrecerCompraPlay } from '../../services/playBilling'
 import styles from './AnalisisSemanalCard.module.css'
 
 // La card "Esta semana" del Home. Es la única lectura de la semana: absorbió
@@ -129,6 +130,10 @@ export default function AnalisisSemanalCard({
 // `abiertaAlInicio`: solo cuando el papá entra desde el aviso del domingo. Es
 // el valor inicial y nada más; después la card se abre y cierra como siempre.
 function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrategias, onPedirCompleto, abiertaAlInicio = false }) {
+  // App de Android: el botón a Pro solo si se puede comprar con Google Play.
+  // `bloqueado` ya implica que no es Pro.
+  const play = usePlayBilling()
+  const ofrecePro = !estaEnAppAndroid() || ofrecerCompraPlay(play, false)
   const [cardAbierta, setCardAbierta] = useState(abiertaAlInicio)
   const [abierto, setAbierto] = useState(false)
   const [cargando, setCargando] = useState(false)
@@ -220,8 +225,8 @@ function CardConAnalisis({ analisis, barras, bloqueado, onUpgrade, onVerEstrateg
                   <span>{s}</span>
                 </div>
               ))}
-              {/* En la app de Android no se ofrece comprar (politica de Google Play). */}
-              {!estaEnAppAndroid() && (
+              {/* En la app de Android solo con Google Play Billing (politica de Google Play). */}
+              {ofrecePro && (
                 <button className={`${styles.btn} ${styles.primary}`} onClick={onUpgrade}>
                   Ver el cuadro completo con Pro
                 </button>

@@ -14,6 +14,7 @@ import TusMedallas from '../../components/medallas/TusMedallas'
 import SelectorFechaNacimiento from '../../components/ui/SelectorFechaNacimiento'
 import { EliminarHijoModal, anunciarEliminado } from '../../components/hijo/EliminarHijo'
 import { estaEnAppAndroid } from '../portada/destinoRaiz'
+import { usePlayBilling, ofrecerCompraPlay, urlAdministrarSuscripcion } from '../../services/playBilling'
 import styles from './PerfilPage.module.css'
 
 // isoToDisplay/displayToIso se eliminaron: SelectorFechaNacimiento habla
@@ -54,6 +55,11 @@ export default function PerfilPage() {
   const { user, signOut } = useAuth()
   const { state, dispatch, setHijo, setHijoActivo, savePadreNombre, savePadreAvatar, isPro, isAdmin, dataLoading, guardarHoraAviso } = useHuella()
   const enAppAndroid = estaEnAppAndroid()
+  // App de Android: con Google Play Billing se puede ofrecer Pro, y si esta
+  // cuenta de Google ya tiene la suscripcion se enlaza a administrarla en Play.
+  const play = usePlayBilling()
+  const ofrecePlay = enAppAndroid && ofrecerCompraPlay(play, isPro())
+  const compraGoogle = enAppAndroid ? play?.compras?.[0] ?? null : null
 
   // Control permanente de notificaciones push. Reutiliza el MISMO hook que el
   // NotifBanner (permission/isSupported/requestPermission); no duplica la logica
@@ -490,9 +496,10 @@ export default function PerfilPage() {
       </section>
 
       {/* ── Huella Pro ───────────────────────────────────
-           App de Android (Google Play): el plan gratuito no ve esta card y
-           el Pro la ve sin "Gestionar plan" (no hay compras fuera de Play). */}
-      {(!enAppAndroid || isPro()) && (
+           App de Android (Google Play): el plan gratuito ve esta card solo si
+           se puede comprar con Google Play; el Pro la ve sin "Gestionar plan",
+           y si el Pro viene de Google, con "Administrar suscripción". */}
+      {(!enAppAndroid || isPro() || ofrecePlay || compraGoogle) && (
       <Card className={styles.proCard}>
         <div className={styles.proHeader}>
           <div className={styles.proTitleWrap}>
@@ -504,7 +511,11 @@ export default function PerfilPage() {
           </span>
         </div>
 
-        {enAppAndroid ? null : isPro() ? (
+        {compraGoogle ? (
+          <a href={urlAdministrarSuscripcion(compraGoogle.itemId)} target="_blank" rel="noopener noreferrer" className={styles.proManageLink}>
+            Administrar suscripción
+          </a>
+        ) : enAppAndroid && !ofrecePlay ? null : isPro() ? (
           <Link to="/cuenta" className={styles.proManageLink}>
             Gestionar plan
           </Link>
