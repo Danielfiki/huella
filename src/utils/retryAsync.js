@@ -32,6 +32,7 @@ export async function retryAsync(fn, { maxAttempts = 3, esReintentable = () => f
 // (`limite_diario`) NO se reintenta — eso no cambia hasta mañana.
 const CODES_NO_REINTENTABLES = new Set([
   'limite_diario',          // rate limit propio (20/día) — no se arregla reintentando
+  'limite_mensual',         // tope propio (120/mes) — vuelve el día 1
 ])
 const CODES_REINTENTABLES = new Set([
   'servicio_saturado',      // 429/529 upstream (sobrecarga Anthropic)

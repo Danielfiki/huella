@@ -11,6 +11,18 @@ import { LENTES_AVANCE, LENTE_POR_ID } from '../constants/catalogoAvance.js'
 // normal de generación de plan y mata cualquier cuelgue real.
 const TIMEOUT_MS = 75000
 
+// Si el prompt empieza con uno de los 4 marcos por edad, lo separa para que el
+// backend lo mande como bloque cacheado (api/anthropic.js). El modelo lee el
+// mismo texto en el mismo orden; solo cambia que el marco deja de cobrarse
+// completo en cada llamada.
+let marcosPorTramo = null
+function separarMarco(prompt) {
+  marcosPorTramo ??= [1, 4, 8, 14].map(marcoEdad)
+  const marco = marcosPorTramo.find((m) => prompt.startsWith(m))
+  if (!marco || !prompt.slice(marco.length).trim()) return { prompt }
+  return { marco, prompt: prompt.slice(marco.length) }
+}
+
 // Igual que llamarAPI pero devolviendo el texto por pedazos: llama a `onTexto`
 // con el acumulado cada vez que el modelo escribe algo más.
 //
@@ -39,7 +51,7 @@ async function llamarAPIStream(prompt, max_tokens, onTexto, opciones = {}) {
     response = await fetch('/api/anthropic', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ prompt, max_tokens, stream: true, ...(opciones.voz ? { voz: opciones.voz } : {}) }),
+      body: JSON.stringify({ ...separarMarco(prompt), max_tokens, stream: true, ...(opciones.voz ? { voz: opciones.voz } : {}) }),
       signal: controller.signal,
     })
   } catch (err) {
@@ -143,7 +155,7 @@ async function llamarAPI(prompt, max_tokens, opciones = {}) {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        prompt,
+        ...separarMarco(prompt),
         max_tokens,
         ...(opciones.system ? { system: opciones.system } : {}),
         ...(opciones.model  ? { model:  opciones.model  } : {}),
@@ -1481,7 +1493,9 @@ Cierra con las dos líneas finales de siempre (descargo y "Marco aplicado"), cad
 
 ${REGLA_IDIOMA}`
 
-  return llamarAPI(prompt, 350, { voz: true })
+  // Haiku (7 oct 2026): tres frases cortas sobre datos ya dados; el modelo
+  // grande no se nota acá y cuesta un tercio.
+  return llamarAPI(prompt, 350, { voz: true, model: 'claude-haiku-4-5' })
 }
 
 export async function generarAnalisisCompleto({ hijo, episodios, hitos, tresLineas }) {
@@ -1597,6 +1611,9 @@ Oración 2: Una frase entre *asteriscos* basada en el marco científico anterior
 
 Solo esas 2 oraciones. Sin títulos. Sin explicaciones extra.`
 
+  // Sigue en Sonnet: con Haiku (probado el 7 oct) salía más genérico y pegaba
+  // las líneas de cierre del system dentro del consejo. El ahorro lo dan el
+  // cache del marco y generar solo cuando hay algo nuevo (useConsejoDiario).
   return llamarAPI(prompt, 200, { voz: true })
 }
 

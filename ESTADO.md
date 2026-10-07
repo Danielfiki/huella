@@ -76,7 +76,10 @@
 - ⬜ **Botón de perfil de la barra superior de 36 a 44 px** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (zona táctil).
 - ⬜ **Color del rótulo "Registrar" de la barra inferior a `--color-eyebrow`** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (hoy `--color-primary` da 2,9:1).
 - ⬜ **Brief para ilustrador** — **16 sep** — entra sin detalle, lo precisa Daniel.
-- ⬜ **Auditoría del costo de la API** — **16 sep** — entra sin detalle, lo precisa Daniel.
+- ✅ **Auditoría del costo de la API** — **cerrada el 7 oct** (marco cacheado, cache 1 h, 3 líneas en Haiku, consejo solo con algo nuevo, tope 120/mes; ver Cerrado HOY).
+- ⬜ **Aplicar el precio decidido en la web** — **7 oct** — Pro 7.990/mes, 59.990/año, 7 días gratis. Decidido, sin aplicar.
+- ⬜ **"3 líneas" en Haiku se pasan de las 30 palabras** — **7 oct** — "Mejoró" salió con ~37. Mirar cómo se ve en la card; si molesta, recortar en el prompt de Haiku.
+- ⬜ **Cachear también los prompts fijos de rasgos y patrones** — **7 oct** — `PROMPT_DETECTAR_RASGOS` y `PROMPT_DETECTAR_PATRONES` van al inicio del prompt y sin cache (rasgos lleva ~6.700 tokens de entrada además del system).
 - ⬜ **`InvitarPage`** — **16 sep** — entra sin detalle, lo precisa Daniel.
 - ⬜ **Citas atribuidas a autores reales en Acción Rápida** — **14 jul** — revisar si son textuales o parafraseadas.
 - ⬜ **Data vieja de demo con el nombre "Pascualito"** — **14 jul** — vive en `orientacion_ia` persistida; solo data de demo.
@@ -107,8 +110,8 @@
 - ✅ **Orgulloso de visita EN PRODUCCIÓN PARA TODOS** — **30 sep** — ver bloque del 30 sep.
 - ✅ **Ficha "?" del Home y visita diaria del escarabajo EN PRODUCCIÓN PARA TODOS** — **3 oct** — ver bloque del 2-3 oct.
 - ✅ **Variante 2 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **3 oct** — `812f2b4`, video 31 (se rasca la cabeza). Ver bloque del 2-3 oct.
-- ✅ **Variante 3 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **5 oct** — `03b6fdc`, ver Cerrado HOY. Video `32-pregunta-3` (asoma, piensa mirando hacia arriba, sonríe y baja), cuadros 2 a 216 (el 0 y el 1 son destello). Mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: cae en la misma caja detrás del "?". Todos rotan entre las 3. Vitrina: botones "Visita ? 1/2/3". Capturas en `huella-design-pack\animaciones\pregunta-3`.
-- ✅ **Bienvenidas 4 (izquierda) y 5 (esquina) EN PRODUCCIÓN PARA TODOS** — **5 oct** — `a3cc2ea`, ver Cerrado HOY. Procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Todos rotan entre las 5. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`.
+- ✅ **Variante 3 de la visita del "?" EN PRODUCCIÓN PARA TODOS** — **5 oct** — `03b6fdc`, ver Sesión 4-6 oct. Video `32-pregunta-3` (asoma, piensa mirando hacia arriba, sonríe y baja), cuadros 2 a 216 (el 0 y el 1 son destello). Mismo pipeline, recorte (398 px desde x 434, repisa y 677) y escala que pregunta-1: cae en la misma caja detrás del "?". Todos rotan entre las 3. Vitrina: botones "Visita ? 1/2/3". Capturas en `huella-design-pack\animaciones\pregunta-3`.
+- ✅ **Bienvenidas 4 (izquierda) y 5 (esquina) EN PRODUCCIÓN PARA TODOS** — **5 oct** — `a3cc2ea`, ver Sesión 4-6 oct. Procesadas con el pipeline de siempre (chroma, alfa por proporción de azul en la franja de la barra, terracota de 02-orgulloso, escala de cráneo, empaquetado CRF 18, 24 fps) y pegadas al borde izquierdo (la pared va al borde de la pantalla). Video 28: cuadros 12 a 216 (el 0 es destello). Video 29: cuadros 14 a 224 (los cuadros 0 a 4 traían la imagen de referencia). Todos rotan entre las 5. Vitrina: botones "Izquierda" y "Esquina". Capturas en `huella-design-pack\animaciones\bienvenida-4-5`.
 - ⬜ **Detalle opcional: al tocar, la ficha se encoge** — **3 oct** — la regla global `button:active { transform: scale(0.93) }` (`src/index.css:784`) se suma al bajar de la ficha de adelante: baja 6 px en vez de 4. Se arregla con una línea en `BotonPregunta.module.css` (`.ficha:active { transform: none; }`). Decide Daniel.
 
 ### Eliminar perfil y Momentos (desde 1 oct)
@@ -147,10 +150,9 @@
 - **Compromiso elegido en el onboarding** — después del ítem 3 (la push).
 - **iOS nativo** — después de que Android esté estable en producción.
 - **`claude-sonnet-5`** — cuando se revise el costo de la API (está en deuda).
-- **Prompt caching fase 2** — junto con la auditoría de costo de la API.
 - **Encuesta de salida en Tally** — cuando el primer tester se dé de baja.
 - **Separar la bandeja `contacto@`** — cuando el volumen de correo lo pida.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver bloque del 3-4 oct; marca de Google verificada y publicada (ver Cerrado HOY).
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google (Google muestra "huella.lat"); ver bloque del 3-4 oct; marca de Google verificada y publicada (ver Sesión 4-6 oct).
 - **Registrante del dominio** — trámite, sin bloqueo técnico.
 - **Gmail en `PerfilPage.jsx:193`** — cuando se toque esa pantalla por otra razón.
 - **Guarda "un momento refuerza un solo rasgo por familia"** — cuando aparezca un duplicado de rasgo en una cuenta real de tester.
@@ -338,7 +340,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 **Antes de invitar a desconocidos (NO bloquea al círculo cercano):**
 - **Separar la bandeja de `contacto@huella.lat`** de la cuenta personal de Google.
-- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver bloque del 3-4 oct). La verificación de marca quedó publicada (ver Cerrado HOY).
+- ✅ **Consent screen de Google OAuth** — **resuelto en el login y en el registro el 4 oct** con el botón oficial de Google, sin dominio propio en Supabase (ver bloque del 3-4 oct). La verificación de marca quedó publicada (ver Sesión 4-6 oct).
 
 **Cola NO bloqueante:**
 - **Montar la encuesta de salida en Tally** (texto ya definido con el precio real; recién al final de la beta).
@@ -380,7 +382,33 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (4-6 oct 2026) — **App de Android sin opciones de compra, capturas de Google Play, portada nueva en "/", día 2 de Tomás, Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
+## Cerrado HOY (7 oct 2026) — **Costo de IA: marco por edad cacheado, cache de 1 hora, "3 líneas" en Haiku, consejo diario solo con algo nuevo y tope de 120 llamadas al mes**
+
+### 1. ✅ Qué cambió (precio decidido: Pro 7.990/mes, 59.990/año, 7 días gratis — **aún sin aplicar en la web**)
+- **Marco por edad cacheado.** Si el prompt empieza con uno de los 4 marcos (`marcoEdad`), `separarMarco()` en `src/services/anthropic.js` lo manda aparte y `api/anthropic.js` lo pone como primer bloque del mensaje con su `cache_control`. El modelo lee el mismo texto en el mismo orden (el arnés midió los mismos tokens totales que el 6 oct en las 21 llamadas). Aplica a 12 tipos de llamada; no a la acción inmediata, rasgos, patrones estructurados, check-in ni reflexiones del PDF (no empiezan con el marco).
+- **Cache de 1 hora** en el SYSTEM_PROMPT clínico y el marco. Con el tráfico de Huella las llamadas llegan con 10-40 min de distancia: el de 5 min casi nunca se leía y cada llamada pagaba la escritura (1,25x); el de 1 hora escribe a 2x pero se lee a 0,1x, y gana apenas más del ~40% de las llamadas llegan a menos de una hora de otra. Los system propios (Haiku cortos, extracción) quedan en 5 min.
+- **"Semana: 3 líneas" en Haiku** (`generarAnalisisSemanal`). **El consejo diario sigue en Sonnet** (decisión de Daniel el 7 oct): con Haiku salía más genérico, con jerga, y pegaba las dos líneas de cierre del system ("Esta orientación…", "Marco aplicado…") dentro del modal. En Sonnet cuesta ~76 CLP más al mes por Pro típico.
+- **Consejo diario solo con algo nuevo** (`useConsejoDiario.js`): guarda el último consejo con una firma de los momentos y avances del hijo; si al día siguiente no cambió nada, muestra ese sin llamar a la IA (y sin puntito en la campana). Si la IA falla, muestra el último: el Home no queda vacío. Vive en localStorage (por teléfono).
+- **Tope de 120 llamadas de IA al mes** (además de las 20 al día), en `verificarRateLimit` con la misma lectura de `api_llamadas` (ahora trae las filas del mes). Mes en UTC, igual que el diario. Responde 429 `limite_mensual` con "Este mes ya usaste todas las respuestas de Huella. Se renuevan el día 1."; en pantalla, el mismo aviso de `TopeDiario` con el título "Ya usaste las respuestas de este mes", sin precios ni enlaces. La red de voz no cuenta. La cuenta de Daniel sigue sin límite. Aplica a todos los usuarios, no solo Pro (un gratuito difícilmente llega).
+- **El backend devuelve `usage`** (solo conteo de tokens) en las respuestas sin streaming, para poder ver `cache_read_input_tokens`.
+
+### 2. Costo por llamada y por mes (arnés del 6 oct, sin IA)
+Supuestos de acierto del cache: antes 30% (solo dentro de una ráfaga de registro); después 85% el system y 75% el marco en Sonnet, 50% en Haiku. Consejo después: 12 días al mes con algo nuevo (típico) y 25 (p90).
+
+| Escenario | Llamadas/mes | Antes | Después | Ahorro |
+|---|---|---|---|---|
+| Pro típico | 86 → 78 | 3.232 CLP | 1.822 CLP | 44% |
+| Pro p90 | 236 → 231 (el tope lo corta en 120) | 8.698 CLP | 5.482 CLP sin tope / ~2.848 con tope | 37% / 67% |
+
+Por llamada: registro (orientación) 0,059 → 0,040 USD; Preguntar 0,052 → 0,033; 3 líneas 0,046 → 0,017; consejo 0,040 → 0,021. Ingreso neto por Pro (sin IVA, −15% tienda): mensual 5.707 CLP, anual 3.571 CLP/mes. ⚠️ Un Pro p90 llega al tope de 120 a mitad de mes.
+
+### 3. QA (Code)
+- **Sin IA:** `count_tokens` (gratis) aceptó la forma nueva en 6 tipos de llamada (HTTP 200, ~15.200 tokens de entrada en Sonnet). Tope simulado en el servidor con la cuenta de prueba: 119 en el mes pasa, 120 da `limite_mensual` sin llamar a Anthropic ni escribir, 20 en el día sigue dando `limite_diario`. Aviso del tope en WebKit iPhone 14 (Preguntar). Consejo en WebKit con stub: 1ª vez pide 1, día siguiente sin nada nuevo pide 0, con algo nuevo pide 1, con la IA caída muestra el último. Dos pasadas cada uno, mismos resultados.
+- **Con IA (8 llamadas, cuenta de prueba, Tomás, sin guardar nada salvo el contador):** cache confirmado en la respuesta de Anthropic: 2º consejo Haiku `cache_read_input_tokens` = 12.712; 2º registro y Preguntar = 12.713 (system + marco). "3 líneas" en Haiku: cálidas, específicas y sin inventar (todo sale de los momentos), sin la fórmula; ⚠️ se pasan del tope de 30 palabras ("Mejoró" ~37).
+
+---
+
+## Sesión 4-6 oct 2026 — **App de Android sin opciones de compra, capturas de Google Play, portada nueva en "/", día 2 de Tomás, Bienvenidas 4 y 5 y visita del "?" con 3 variantes EN PRODUCCIÓN PARA TODOS, marca de Google verificada, fecha de hoy en Preguntar y en 7 prompts más, edad de bebés, "1 año" y día 1 de Tomás**
 
 ### 1. ✅ Bienvenidas 4 (Izquierda) y 5 (Esquina) para todos
 - **Qué hace:** la bienvenida del Home rota entre **5 variantes** para todos los usuarios (costado, derecha, centro, izquierda, esquina), una vez al día, sin repetir la última. Nada más cambió de la técnica ni de la regla.

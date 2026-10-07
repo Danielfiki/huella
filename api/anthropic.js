@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
 const DAILY_LIMIT = 20
+// Tope del mes (7 oct 2026): pone techo al costo de un Pro muy activo. Cuenta
+// las mismas llamadas que el diario; la red de voz no pasa por acá.
+const MONTHLY_LIMIT = 120
 
 // Modelos que el cliente puede pedir, y NADA MAS. La lista blanca no es
 // ceremonia: el body lo arma el navegador, así que sin ella cualquiera con un
@@ -31,17 +34,22 @@ async function verificarRateLimit(token) {
 
     const today = new Date().toISOString().split('T')[0]
 
-    const { data: existing } = await client
+    // Una sola lectura trae las filas del mes: de ahí sale la cuenta de hoy y
+    // la del mes. Mismo reloj UTC que el límite diario.
+    const { data: filasMes } = await client
       .from('api_llamadas')
-      .select('cuenta')
+      .select('fecha, cuenta')
       .eq('user_id', userId)
-      .eq('fecha', today)
-      .maybeSingle()
+      .gte('fecha', today.slice(0, 8) + '01')
 
-    const cuenta = existing?.cuenta ?? 0
+    const cuenta = filasMes?.find((f) => f.fecha === today)?.cuenta ?? 0
+    const cuentaMes = (filasMes ?? []).reduce((s, f) => s + (f.cuenta ?? 0), 0)
 
+    if (cuentaMes >= MONTHLY_LIMIT) {
+      return { permitido: false, motivo: 'mensual' }
+    }
     if (cuenta >= DAILY_LIMIT) {
-      return { permitido: false }
+      return { permitido: false, motivo: 'diario' }
     }
 
     await client.from('api_llamadas').upsert(
@@ -459,7 +467,13 @@ export default async function handler(req, res) {
   }
 
   const token = req.headers.authorization?.replace('Bearer ', '')
-  const { permitido } = await verificarRateLimit(token)
+  const { permitido, motivo } = await verificarRateLimit(token)
+  if (!permitido && motivo === 'mensual') {
+    return res.status(429).json({
+      error: 'Este mes ya usaste todas las respuestas de Huella. Se renuevan el día 1.',
+      code: 'limite_mensual',
+    })
+  }
   if (!permitido) {
     return res.status(429).json({
       error: `Alcanzaste el límite de ${DAILY_LIMIT} consultas diarias. Vuelve mañana.`,
@@ -467,10 +481,25 @@ export default async function handler(req, res) {
     })
   }
 
-  const { prompt, max_tokens = 700, system, stream = false, model, voz = null } = req.body
+  const { prompt, max_tokens = 700, system, stream = false, model, voz = null, marco = null } = req.body
   if (!prompt) {
     return res.status(400).json({ error: 'Falta el campo prompt', code: 'error_servicio' })
   }
+
+  // Cache (7 oct 2026). El SYSTEM_PROMPT clínico y el marco por edad son fijos
+  // (el marco tiene 4 versiones, una por tramo) y juntos suman ~12.700 tokens
+  // de los ~15.000 de cada llamada. Los dos llevan su punto de cache.
+  // TTL de 1 hora: con el tráfico de Huella las llamadas llegan con 10 a 40
+  // minutos de distancia, así que el cache de 5 minutos casi nunca alcanzaba a
+  // leerse y cada llamada pagaba la escritura. Un system propio (Haiku corto,
+  // extracción) queda en 5 minutos: se usa poco y no paga escribir a 1 hora.
+  const cache = system ? { type: 'ephemeral' } : { type: 'ephemeral', ttl: '1h' }
+  // El cliente manda el marco aparte cuando el prompt empieza con él. Va como
+  // primer bloque del mismo mensaje, así que el modelo lee el mismo texto en
+  // el mismo orden que antes.
+  const contenido = typeof marco === 'string' && marco
+    ? [{ type: 'text', text: marco, cache_control: cache }, { type: 'text', text: prompt }]
+    : prompt
 
   // Un modelo fuera de la lista blanca no es error: cae al de siempre. Así una
   // versión vieja del cliente, o una pedida mal escrita, sigue funcionando.
@@ -492,18 +521,18 @@ export default async function handler(req, res) {
         // Si no, cae al SYSTEM_PROMPT clínico default de Huella.
         // Esto permite que el Onboarding Susurro pase un system propio
         // (JSON estructurado) sin pisar al resto del flujo.
-        // El system va como array de bloques con cache_control ephemeral:
-        // el SYSTEM_PROMPT es byte-idéntico en todas las llamadas, así que
-        // tras la primera se lee del cache (~0.1x) en vez de re-facturarse
-        // completo. Cache compartido a nivel de cuenta, 5 min de TTL.
+        // El system va como array de bloques con cache_control: el
+        // SYSTEM_PROMPT es byte-idéntico en todas las llamadas, así que tras
+        // la primera se lee del cache (~0.1x) en vez de re-facturarse
+        // completo. Cache compartido a nivel de cuenta (TTL arriba, en `cache`).
         system: [
           {
             type: 'text',
             text: system || SYSTEM_PROMPT,
-            cache_control: { type: 'ephemeral' },
+            cache_control: cache,
           },
         ],
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: contenido }],
         ...(stream ? { stream: true } : {}),
       }),
     })
@@ -628,5 +657,7 @@ export default async function handler(req, res) {
   // stop_reason viaja al cliente para que pueda distinguir una respuesta
   // completa de una cortada por max_tokens. Sin esto una respuesta truncada
   // llega como JSON invalido y no hay forma de saber por que.
-  return res.status(200).json({ text: texto, stop_reason: data.stop_reason ?? null })
+  // usage (solo conteo de tokens) deja ver si el cache se está leyendo:
+  // cache_read_input_tokens > 0.
+  return res.status(200).json({ text: texto, stop_reason: data.stop_reason ?? null, usage: data.usage ?? null })
 }
