@@ -382,12 +382,12 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (8 oct 2026) — **Versión 6 (minSdk 24) en prueba interna; la compra con Google se cierra sola y ahora muestra el error**
+## Cerrado HOY (8 oct 2026) — **Versión 6 en prueba interna: la compra de Google funciona con Chrome; el servidor no activa el Pro porque Google aún niega el permiso a la cuenta de servicio**
 
 ### 1. ✅ App de Android, versión 6 (`Downloads\huella-android\huella-v6-versionCode6.aab`)
 - Play Console rechazó la v5: la protección automática de Play exige **minSdk 24**. Se subió **minSdk 23 → 24** (Android 7) y **versionCode 6**; nada más (targetSdk 36, `billing:1.2.0`). Cambiado en `OneDrive\Desktop\huella-twa` y en la copia de compilación `Downloads\huella-android\proyecto` (`app/build.gradle`, `twa-manifest.json`, `manifest-checksum.txt`). Respaldo en `huella-twa\respaldo-2026-10-08\`. Ninguna de las dos carpetas está en git.
 - Firmada con el script de la v5 (Daniel escribió la contraseña en ventana aparte). Huella SHA-256 `44:CA:BB:01:…:23:CF`, igual a la v4 y la v5. minSdk 24 y versionCode 6 leídos en el APK de la misma compilación; Play aceptó el AAB.
-- Variables `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` / `GOOGLE_PLAY_RTDN_TOKEN` en Vercel Production + redeploy (Daniel). Productos y ofertas de 7 días activos en Play Console. ⬜ SQL 029: sin confirmar que se corrió (el 8 oct se copió y se abrió el editor).
+- Variables `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` / `GOOGLE_PLAY_RTDN_TOKEN` en Vercel Production + redeploy (Daniel). Productos y ofertas de 7 días activos en Play Console. ✅ SQL 029 corrido (Daniel, Success).
 
 ### 2. ⚠️ Prueba interna en tablet Android 13 (cuenta de Google `contacto@huella.lat`, Workspace, tester de licencias)
 - Aparecen los precios de Google (CLP 7.990 / 59.990): Digital Goods funciona.
@@ -396,8 +396,16 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Cambio web:** solo en la app de Android (único lugar donde corre `comprarConPlay`), cualquier error de la compra, incluido `AbortError`, se muestra en pantalla: "No se pudo abrir el pago: <nombre> <texto>" (`mensajeErrorPlay`, en `/cuenta` y en el aviso Pro). Web e iPhone sin cambios. QA WebKit iPhone 14 con Digital Goods y Payment Request simulados: mensaje en las dos pantallas (2 pasadas), web sigue con "Activar Huella Pro" sin Payment Request.
 - Logs de Vercel no revisados: el CLI de este equipo no tiene sesión. Por código, `play-verificar` solo se llama con un token de compra, y no hubo compra.
 
+### 3. ✅ Compra de prueba OK con Chrome; ⚠️ el servidor no activa el Pro
+- **La hoja se cerraba por Samsung Internet** como navegador predeterminado de la tablet (`AbortError` invalid state, PWABuilder #6151). Con Chrome como predeterminado: hoja de Google con prueba de 3 min, tarjeta de prueba, "pago realizado con éxito". Cuenta de Huella `danielundurraga.r+compra1@gmail.com`.
+- En Tú: "Administrar suscripción" con "Plan Gratuito" (el cliente tiene la compra; el servidor no activó).
+- **Causa:** la cuenta de servicio `huella-play-pagos@huella-493820.iam.gserviceaccount.com` saca token OAuth (200) pero Google niega el permiso: listar suscripciones → 403 PERMISSION_DENIED "The caller does not have permission"; `subscriptionsv2` (la llamada del servidor) → 401 "The current user has insufficient permissions to perform the requested operation." Invitada en Play Console el 8 oct 12:12 con "Ver datos financieros" y "Gestionar pedidos y suscripciones". Lo más probable: la demora conocida de Google con cuentas de servicio nuevas (hasta 24-36 h).
+- Supabase no leído por Code (sin service role en este equipo): consulta de solo lectura entregada a Daniel.
+- **Cambio web:** solo en la app de Android, si `play-verificar` falla se muestra "No se pudo activar tu plan: <código> <detalle> (<HTTP>)": en Tú bajo "Administrar suscripción" (al abrir la app) y en `/cuenta` / aviso Pro después de comprar. `play-verificar` devuelve `detalle` en el 502 (paso + código de Google o de la base, sin tokens). Arreglado de paso: `usePlayBilling` releía el estado solo en el primer render y perdía cambios ocurridos antes de suscribirse. QA WebKit iPhone 14 con Google y servidor simulados (502 `subscriptionsv2 401`): mensaje en Tú y después de comprar, 2 pasadas; error del pago y web sin cambios.
+
 ### ⬜ Pendiente
-- Daniel: repetir la compra en la tablet y mandar el texto del error. Probar también con un Gmail personal como tester de licencias (sospecha: cuenta de Workspace, o varias cuentas de Google en la tablet).
+- **Mañana (9 oct), Daniel:** abrir Huella en la tablet → Tú. Si el Pro no se activó solo, mandar el texto rojo. Si sigue en `subscriptionsv2 401` pasadas 36 h desde las 12:12 del 8 oct, revisar permisos de la cuenta de servicio en Play Console.
+- **Samsung Internet** (propuesta, sin implementar): abrir la app con Chrome si está instalado (requiere .aab nuevo) y, sin Chrome, no ofrecer compra en Samsung Internet (solo web).
 - Cuando la compra funcione: decidir si el `AbortError` de "el papá cerró la hoja" vuelve a no mostrar nada (hoy muestra el mensaje).
 - Siguen los ⚠️ del 7 oct (primera oferta de Google, doble pago Mercado Pago + Google).
 

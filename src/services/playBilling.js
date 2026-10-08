@@ -80,6 +80,9 @@ export function usePlayBilling() {
   const [play, setPlay] = useState(resultado)
   useEffect(() => {
     oyentes.add(setPlay)
+    // Lo que cambió entre el primer render y esta suscripción (ej. el error del
+    // servidor justo después de comprar, mientras /cuenta lleva a Tú).
+    setPlay(resultado)
     if (estaEnAppAndroid()) cargarPlay()
     return () => oyentes.delete(setPlay)
   }, [])
@@ -94,7 +97,20 @@ async function verificarEnServidor(purchaseToken) {
     body: JSON.stringify({ purchaseToken }),
   })
   const j = await r.json().catch(() => ({}))
-  return { ok: r.ok, pro: Boolean(j.pro), code: j.code ?? null }
+  return { ok: r.ok, pro: Boolean(j.pro), code: j.code ?? null, detalle: j.detalle ?? null, status: r.status }
+}
+
+// Lo que respondió el servidor cuando no pudo activar la compra, tal cual.
+function mensajeErrorServidor(v) {
+  return `No se pudo activar tu plan: ${v.code || 'error'} ${v.detalle || ''} (${v.status})`.replace(/\s+/g, ' ')
+}
+
+// El último fallo del servidor queda en el resultado para que Tú lo muestre
+// junto a "Administrar suscripción" (compra en Google, plan sin activar).
+function anotarErrorServidor(mensaje) {
+  if (!resultado || resultado.errorServidor === mensaje) return
+  resultado = { ...resultado, errorServidor: mensaje }
+  avisar()
 }
 
 // Compra con la hoja de pago de Google. Devuelve:
@@ -122,10 +138,13 @@ export async function comprarConPlay(ciclo) {
   }
   let v = { ok: false }
   if (token) {
-    try { v = await verificarEnServidor(token) } catch { /* se reintenta al abrir la app */ }
+    try { v = await verificarEnServidor(token) } catch (err) { v = { ok: false, code: 'sin_conexion', detalle: err?.message, status: 0 } }
   }
   await respuesta.complete(v.ok ? 'success' : 'unknown').catch(() => {})
-  return { estado: v.ok && v.pro ? 'activo' : 'pendiente' }
+  // Se reintenta solo al abrir la app; mientras, se ve qué dijo el servidor.
+  const error = token && !v.ok ? mensajeErrorServidor(v) : null
+  anotarErrorServidor(error)
+  return { estado: v.ok && v.pro ? 'activo' : 'pendiente', error }
 }
 
 // Al abrir la app: lo que Google ya tiene comprado por esta cuenta se manda al
@@ -133,10 +152,14 @@ export async function comprarConPlay(ciclo) {
 export async function restaurarComprasPlay() {
   const play = await cargarPlay()
   if (!play?.compras?.length) return false
-  let activo = false
+  let activo = false, error = null
   for (const c of play.compras) {
-    try { activo = (await verificarEnServidor(c.purchaseToken)).pro || activo } catch { /* la próxima vez */ }
+    let v
+    try { v = await verificarEnServidor(c.purchaseToken) } catch (err) { v = { ok: false, code: 'sin_conexion', detalle: err?.message, status: 0 } }
+    activo = v.pro || activo
+    if (!v.ok) error = mensajeErrorServidor(v)
   }
+  anotarErrorServidor(activo ? null : error)
   return activo
 }
 

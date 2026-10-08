@@ -209,6 +209,7 @@ function CuentaContenido({ play }) {
     try {
       const r = await comprarConPlay(ciclo)
       if (r.estado === 'activo') await reloadData()
+      else if (r.error) setError(r.error)
       else if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
     } catch (err) {
       console.error('CuentaPage comprarPlay error:', err)

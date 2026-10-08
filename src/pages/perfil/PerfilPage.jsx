@@ -512,9 +512,13 @@ export default function PerfilPage() {
         </div>
 
         {compraGoogle ? (
-          <a href={urlAdministrarSuscripcion(compraGoogle.itemId)} target="_blank" rel="noopener noreferrer" className={styles.proManageLink}>
-            Administrar suscripción
-          </a>
+          <>
+            <a href={urlAdministrarSuscripcion(compraGoogle.itemId)} target="_blank" rel="noopener noreferrer" className={styles.proManageLink}>
+              Administrar suscripción
+            </a>
+            {/* Compra en Google sin Pro activo: qué respondió el servidor al verificarla. */}
+            {!isPro() && play?.errorServidor && <p className={styles.error}>{play.errorServidor}</p>}
+          </>
         ) : enAppAndroid && !ofrecePlay ? null : isPro() ? (
           <Link to="/cuenta" className={styles.proManageLink}>
             Gestionar plan

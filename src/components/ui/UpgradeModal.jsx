@@ -74,7 +74,8 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
     try {
       const r = await comprarConPlay(ciclo)
       if (r.estado === 'activo') { await reloadData(); onClose(); return }
-      if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
+      if (r.error) setError(r.error)
+      else if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
     } catch (err) {
       console.error('UpgradeModal comprarPlay error:', err)
       setError(mensajeErrorPlay(err))
