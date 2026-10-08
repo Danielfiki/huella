@@ -378,11 +378,32 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Detección:** `estaEnAppAndroid()` en `src/pages/portada/destinoRaiz.js`: el referrer `android-app://lat.huella.app` de la primera carga, guardado en sessionStorage para toda la sesión (`recordarSiEsAppAndroid()` en `App.jsx`). **No** usa `display-mode: standalone`: la app instalada del iPhone y el navegador quedan exactamente igual.
 - **Qué cambia en Android:** el aviso de función Pro (`UpgradeModal`) muestra solo el título, "Esto no viene en el plan gratuito." y "Entendido" (sin precios, sin "Activar Huella Pro", sin enlace a /cuenta); el límite dice "Llegaste a los 15 momentos del plan gratuito."; la card semanal muestra los candados sin "Ver el cuadro completo con Pro"; en Tú el plan gratuito no ve la card de Huella Pro y el Pro la ve con "Activo" sin "Gestionar plan"; `/cuenta` redirige a Tú; `iniciarSuscripcion` se niega en Android. Quien ya es Pro (pagó en la web) usa todo normal. El canje de código de beta sigue (no es un pago).
 - **Toda pantalla nueva que ofrezca pagar o subir de plan tiene que respetar `estaEnAppAndroid()`.**
-- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026, versión 5 (ver Cerrado HOY). Falta la configuración de Daniel en Google y la prueba interna.
+- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026 (versión 5), versión 6 el 8 oct (ver Cerrado HOY). En prueba interna: precios OK, la hoja de pago se cierra sola.
 
 ---
 
-## Cerrado HOY (7 oct 2026, tarde) — **Google Play Billing en la app de Android (versión 5 firmada) — web y Android sin Google Play quedan iguales**
+## Cerrado HOY (8 oct 2026) — **Versión 6 (minSdk 24) en prueba interna; la compra con Google se cierra sola y ahora muestra el error**
+
+### 1. ✅ App de Android, versión 6 (`Downloads\huella-android\huella-v6-versionCode6.aab`)
+- Play Console rechazó la v5: la protección automática de Play exige **minSdk 24**. Se subió **minSdk 23 → 24** (Android 7) y **versionCode 6**; nada más (targetSdk 36, `billing:1.2.0`). Cambiado en `OneDrive\Desktop\huella-twa` y en la copia de compilación `Downloads\huella-android\proyecto` (`app/build.gradle`, `twa-manifest.json`, `manifest-checksum.txt`). Respaldo en `huella-twa\respaldo-2026-10-08\`. Ninguna de las dos carpetas está en git.
+- Firmada con el script de la v5 (Daniel escribió la contraseña en ventana aparte). Huella SHA-256 `44:CA:BB:01:…:23:CF`, igual a la v4 y la v5. minSdk 24 y versionCode 6 leídos en el APK de la misma compilación; Play aceptó el AAB.
+- Variables `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` / `GOOGLE_PLAY_RTDN_TOKEN` en Vercel Production + redeploy (Daniel). Productos y ofertas de 7 días activos en Play Console. ⬜ SQL 029: sin confirmar que se corrió (el 8 oct se copió y se abrió el editor).
+
+### 2. ⚠️ Prueba interna en tablet Android 13 (cuenta de Google `contacto@huella.lat`, Workspace, tester de licencias)
+- Aparecen los precios de Google (CLP 7.990 / 59.990): Digital Goods funciona.
+- Al tocar "Probar 7 días gratis" Google Play carga un instante y se cierra, sin mensaje. **Causa del silencio:** Chrome devuelve `AbortError` tanto si el papá cierra la hoja como si Google Play la cierra por un problema, y `comprarConPlay` lo trataba como "cancelado" sin aviso.
+- Revisado y en orden: `PaymentActivity` (`PAY`) + `PaymentService` (`IS_READY_TO_PAY`) + permiso `BILLING` en el APK final; `PaymentRequest` con `https://play.google.com/billing` y `sku` correcto; `show()` con el gesto del toque activo.
+- **Cambio web:** solo en la app de Android (único lugar donde corre `comprarConPlay`), cualquier error de la compra, incluido `AbortError`, se muestra en pantalla: "No se pudo abrir el pago: <nombre> <texto>" (`mensajeErrorPlay`, en `/cuenta` y en el aviso Pro). Web e iPhone sin cambios. QA WebKit iPhone 14 con Digital Goods y Payment Request simulados: mensaje en las dos pantallas (2 pasadas), web sigue con "Activar Huella Pro" sin Payment Request.
+- Logs de Vercel no revisados: el CLI de este equipo no tiene sesión. Por código, `play-verificar` solo se llama con un token de compra, y no hubo compra.
+
+### ⬜ Pendiente
+- Daniel: repetir la compra en la tablet y mandar el texto del error. Probar también con un Gmail personal como tester de licencias (sospecha: cuenta de Workspace, o varias cuentas de Google en la tablet).
+- Cuando la compra funcione: decidir si el `AbortError` de "el papá cerró la hoja" vuelve a no mostrar nada (hoy muestra el mensaje).
+- Siguen los ⚠️ del 7 oct (primera oferta de Google, doble pago Mercado Pago + Google).
+
+---
+
+## Sesión 7 oct 2026 (tarde) — **Google Play Billing en la app de Android (versión 5 firmada) — web y Android sin Google Play quedan iguales**
 
 ### 1. ✅ App de Android, versión 5 (`Downloads\huella-android\huella-v5-versionCode5.aab`)
 - **Firmada con la MISMA llave de siempre** (`huella-twa\android.keystore`): huella SHA-256 `44:CA:BB:01:…:23:CF`, igual a la v4, leída del APK y del AAB. versionCode 5, targetSdk 36, permiso `com.android.vending.BILLING`, `PaymentActivity` + `PaymentService` y el `DigitalGoodsRequestHandler` en `DelegationService`.

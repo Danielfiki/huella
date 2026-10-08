@@ -6,7 +6,7 @@ import { iniciarSuscripcion } from '../../services/pago'
 import ErrorPago from './ErrorPago'
 import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
 import { useHuella } from '../../context/HuellaContext'
-import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, MENSAJE_ERROR } from '../../services/playBilling'
+import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
 import styles from './UpgradeModal.module.css'
 
 const FEATURES = [
@@ -77,7 +77,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
       if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
     } catch (err) {
       console.error('UpgradeModal comprarPlay error:', err)
-      setError(MENSAJE_ERROR)
+      setError(mensajeErrorPlay(err))
     }
     setCargando(false)
   }

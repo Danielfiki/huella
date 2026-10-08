@@ -7,7 +7,7 @@ import { iniciarSuscripcion } from '../../services/pago'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
 import { estaEnAppAndroid } from '../portada/destinoRaiz'
-import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, MENSAJE_ERROR } from '../../services/playBilling'
+import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
 import styles from './CuentaPage.module.css'
 
 // Los 4 beneficios principales de la vitrina (sin emoji, con ícono minimalista).
@@ -212,7 +212,7 @@ function CuentaContenido({ play }) {
       else if (r.estado === 'pendiente') setAvisoPlay(MENSAJE_PENDIENTE)
     } catch (err) {
       console.error('CuentaPage comprarPlay error:', err)
-      setError(MENSAJE_ERROR)
+      setError(mensajeErrorPlay(err))
     }
     setCargando(false)
   }

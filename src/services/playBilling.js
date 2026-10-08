@@ -100,8 +100,10 @@ async function verificarEnServidor(purchaseToken) {
 // Compra con la hoja de pago de Google. Devuelve:
 //   { estado: 'activo' }      Google cobró (o empezó la prueba) y el servidor activó Pro
 //   { estado: 'pendiente' }   Google confirmó la compra pero el servidor aún no la activa
-//   { estado: 'cancelado' }   el papá cerró la hoja de Google
-// y lanza solo si la hoja no se pudo abrir.
+// y lanza si la hoja no se pudo abrir o se cerró sin comprar. Incluye el
+// AbortError: Chrome usa ese mismo error cuando el papá cierra la hoja y cuando
+// Google Play la cierra solo por un problema (8 oct: se abría y se cerraba sin
+// aviso), así que se muestra en pantalla con mensajeErrorPlay.
 export async function comprarConPlay(ciclo) {
   const itemId = PRODUCTO[ciclo]
   const play = await cargarPlay()
@@ -111,13 +113,7 @@ export async function comprarConPlay(ciclo) {
     [{ supportedMethods: METODO, data: { sku: itemId } }],
     { total: { label: 'Huella Pro', amount: { currency: detalle.price.currency, value: '0' } } },
   )
-  let respuesta
-  try {
-    respuesta = await pedido.show()
-  } catch (err) {
-    if (err?.name === 'AbortError') return { estado: 'cancelado' }
-    throw err
-  }
+  const respuesta = await pedido.show()
   const token = respuesta?.details?.purchaseToken ?? respuesta?.details?.token
   // Ya comprado: deja de ofrecerse aunque el servidor tarde en activar.
   if (token && resultado) {
@@ -166,7 +162,10 @@ export function textosPlay(play, ciclo) {
 }
 
 export const MENSAJE_PENDIENTE = 'Google Play confirmó tu compra. Estamos activando tu plan, puede tardar unos minutos.'
-export const MENSAJE_ERROR = 'No pudimos abrir Google Play. Intenta de nuevo en un momento.'
+// Con el nombre y el texto del error tal cual, para saber qué dijo Google.
+export function mensajeErrorPlay(err) {
+  return `No se pudo abrir el pago: ${err?.name || 'Error'} ${err?.message || ''}`.trim()
+}
 
 // Se ofrece comprar solo con Google Play disponible, sin Pro (por Mercado Pago,
 // beta o Google) y sin una compra de Google ya hecha en esta cuenta.
