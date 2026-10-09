@@ -378,11 +378,41 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Detección:** `estaEnAppAndroid()` en `src/pages/portada/destinoRaiz.js`: el referrer `android-app://lat.huella.app` de la primera carga, guardado en sessionStorage para toda la sesión (`recordarSiEsAppAndroid()` en `App.jsx`). **No** usa `display-mode: standalone`: la app instalada del iPhone y el navegador quedan exactamente igual.
 - **Qué cambia en Android:** el aviso de función Pro (`UpgradeModal`) muestra solo el título, "Esto no viene en el plan gratuito." y "Entendido" (sin precios, sin "Activar Huella Pro", sin enlace a /cuenta); el límite dice "Llegaste a los 15 momentos del plan gratuito."; la card semanal muestra los candados sin "Ver el cuadro completo con Pro"; en Tú el plan gratuito no ve la card de Huella Pro y el Pro la ve con "Activo" sin "Gestionar plan"; `/cuenta` redirige a Tú; `iniciarSuscripcion` se niega en Android. Quien ya es Pro (pagó en la web) usa todo normal. El canje de código de beta sigue (no es un pago).
 - **Toda pantalla nueva que ofrezca pagar o subir de plan tiene que respetar `estaEnAppAndroid()`.**
-- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026 (versión 5), versión 6 el 8 oct (ver Cerrado HOY). En prueba interna: precios OK, la hoja de pago se cierra sola.
+- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026 (versión 5), versión 6 el 8 oct, versión 7 el 9 oct (ver Cerrado HOY). Compra OK de punta a punta en Chrome (9 oct); la v7 abre la app en Chrome aunque Samsung Internet sea el predeterminado, y en Samsung Internet la web no ofrece compra.
 
 ---
 
-## Cerrado HOY (8 oct 2026) — **Versión 6 en prueba interna: la compra de Google funciona con Chrome; el servidor no activa el Pro porque Google aún niega el permiso a la cuenta de servicio**
+## Cerrado HOY (9 oct 2026) — **La compra de Google Play funciona de punta a punta; versión 7 abre la app en Chrome aunque Samsung Internet sea el predeterminado**
+
+### 1. ✅ Compra de Google Play OK de punta a punta (9 oct 18:39)
+- Tablet Android 13, navegador Chrome: compra de prueba → Tú muestra **"Huella Pro · Activo"**.
+- **Lo que destrabó el 401 de `subscriptionsv2`:** la espera, más darle a la cuenta de servicio permisos **a nivel de la app Huella** en Play Console (no solo de cuenta), más **volver a guardar las suscripciones** en Play Console.
+
+### 2. ✅ Versión 7 (`Downloads\huella-android\huella-v7-versionCode7.aab`, sin subir)
+- **Problema:** con Samsung Internet como navegador predeterminado, la TWA se abre dentro de Samsung Internet; los precios cargan pero `PaymentRequest.show()` falla con `AbortError: invalid state`.
+- **Cambio:** `LauncherActivity.java` sobreescribe `createTwaLauncher()` (método protegido de androidbrowserhelper 2.6.2): si `com.android.chrome` está instalado y habilitado (`CustomTabsClient.getPackageName(..., ignoreDefault=true)`), la app se abre en Chrome con los mismos argumentos que usa la librería (sesión por tarea, `SharedPreferencesTokenStore`, modo TWA). Sin Chrome, `super` (comportamiento de siempre). `AndroidManifest.xml` suma `<queries><package com.android.chrome/></queries>` (visibilidad de paquetes en Android 11+). versionCode 6 → 7 (`app/build.gradle`, `twa-manifest.json`, `manifest-checksum.txt` = SHA-1 del manifiesto). Nada más: minSdk 24, targetSdk 36, `billing:1.2.0`.
+- Cambiado en `Desktop\huella-twa` y copiado a `Downloads\huella-android\proyecto` (compilación). Respaldo previo en `huella-twa\respaldo-2026-10-09\`. Salida de la v6 movida a `Downloads\huella-android\v6-salida-proyecto\`.
+- Firmada con el script de la v6 (Daniel escribió la contraseña; la primera ventana se cerró sin firmar, la segunda con `-NoExit` firmó). Leído en el APK/AAB de la misma compilación: SHA-256 `44:CA:BB:01:…:23:CF` (AAB y APK), versionCode 7, minSdk 24, targetSdk 36, permiso BILLING, `<queries>` con Chrome. En el código compilado (R8 renombra `createTwaLauncher` a `d`): el método busca `com.android.chrome` y si no, llama al de la librería; la librería lo invoca con `invoke-virtual`.
+- 🪤 **Al pasar de Samsung Internet a Chrome, el papá probablemente tenga que iniciar sesión de nuevo:** la sesión de Huella vive en el navegador que abre la app.
+
+### 3. ✅ Web (red de seguridad, sin .aab)
+- `playBilling.js`: en la app de Android, si el navegador no es Chrome (`SamsungBrowser`, Edge, Opera, Yandex, Firefox, UC, Miui, Huawei, Vivaldi en el userAgent) o no hay `PaymentRequest`, Google Play cuenta como no disponible → mismo estado que sin Google Play (sin compra, `/cuenta` → Tú, aviso Pro neutro). Ni siquiera se consulta a Google.
+- **Sin cambios:** los mensajes de error visibles ("No se pudo abrir el pago…", "No se pudo activar tu plan…") siguen; se quitan después de probar la v7.
+
+### 4. QA (Code, WebKit iPhone 14, cuenta de prueba, solo mirar, bloqueo dentro de la página)
+- Web/iPhone: producción vs build nuevo, texto completo de Inicio, Tú, /cuenta y aviso Pro: idénticos.
+- Android + Samsung Internet (Google simulado): sin botón de compra, `/cuenta` → Tú, 0 consultas a Google; idéntico letra por letra a "Android sin Google Play" en producción.
+- Android + Chrome (Google simulado): sigue "Probar 7 días gratis".
+- `ultima_actividad` igual al inicio y al final (2026-10-06 12:57:01). 3 pasadas.
+
+### ⬜ Pendiente
+- **Daniel:** subir `huella-v7-versionCode7.aab` a Prueba interna. En la tablet con **Samsung Internet como predeterminado** (y Chrome instalado): abrir Huella → debe abrir en Chrome (puede pedir login) → comprar → Tú "Huella Pro · Activo".
+- Después de probar la v7: quitar los mensajes de error visibles (pago y servidor) y decidir qué se muestra cuando el papá cierra la hoja.
+- Siguen los ⚠️ del 7 oct (primera oferta de Google, doble pago Mercado Pago + Google).
+
+---
+
+## Sesión 8 oct 2026 — **Versión 6 en prueba interna: la compra de Google funciona con Chrome; el servidor no activa el Pro porque Google aún niega el permiso a la cuenta de servicio**
 
 ### 1. ✅ App de Android, versión 6 (`Downloads\huella-android\huella-v6-versionCode6.aab`)
 - Play Console rechazó la v5: la protección automática de Play exige **minSdk 24**. Se subió **minSdk 23 → 24** (Android 7) y **versionCode 6**; nada más (targetSdk 36, `billing:1.2.0`). Cambiado en `OneDrive\Desktop\huella-twa` y en la copia de compilación `Downloads\huella-android\proyecto` (`app/build.gradle`, `twa-manifest.json`, `manifest-checksum.txt`). Respaldo en `huella-twa\respaldo-2026-10-08\`. Ninguna de las dos carpetas está en git.

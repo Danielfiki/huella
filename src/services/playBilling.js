@@ -48,8 +48,17 @@ export function formatoPrecio(precio) {
   }
 }
 
+// La hoja de pago de Google solo abre dentro de Chrome. Samsung Internet entrega
+// los precios pero show() falla con "AbortError: invalid state" (9 oct), así que
+// la app de Android abierta en Samsung Internet —u otro navegador, o sin
+// PaymentRequest— queda como sin Google Play: sin ninguna opción de compra.
+const NAVEGADOR_NO_CHROME = /SamsungBrowser|EdgA|OPR\/|YaBrowser|Firefox|UCBrowser|MiuiBrowser|HuaweiBrowser|Vivaldi/i
+function hojaDePagoDisponible() {
+  return typeof window.PaymentRequest === 'function' && !NAVEGADOR_NO_CHROME.test(navigator.userAgent || '')
+}
+
 async function consultar() {
-  if (!estaEnAppAndroid() || typeof window.getDigitalGoodsService !== 'function') return null
+  if (!estaEnAppAndroid() || typeof window.getDigitalGoodsService !== 'function' || !hojaDePagoDisponible()) return null
   try {
     const servicio = await conTope(window.getDigitalGoodsService(METODO), 5000)
     if (!servicio) return null
