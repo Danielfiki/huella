@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('[play-verificar] fallo:', err?.message)
     // detalle: solo el paso y el código de Google o de la base (ej.
-    // "subscriptionsv2 401"), sin tokens ni llaves. La app de Android lo muestra.
+    // "subscriptionsv2 401"), sin tokens ni llaves. La app lo deja en la consola.
     return res.status(502).json({ code: 'play_error', detalle: String(err?.message ?? '').slice(0, 200) })
   }
 }

@@ -378,11 +378,41 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - **Detección:** `estaEnAppAndroid()` en `src/pages/portada/destinoRaiz.js`: el referrer `android-app://lat.huella.app` de la primera carga, guardado en sessionStorage para toda la sesión (`recordarSiEsAppAndroid()` en `App.jsx`). **No** usa `display-mode: standalone`: la app instalada del iPhone y el navegador quedan exactamente igual.
 - **Qué cambia en Android:** el aviso de función Pro (`UpgradeModal`) muestra solo el título, "Esto no viene en el plan gratuito." y "Entendido" (sin precios, sin "Activar Huella Pro", sin enlace a /cuenta); el límite dice "Llegaste a los 15 momentos del plan gratuito."; la card semanal muestra los candados sin "Ver el cuadro completo con Pro"; en Tú el plan gratuito no ve la card de Huella Pro y el Pro la ve con "Activo" sin "Gestionar plan"; `/cuenta` redirige a Tú; `iniciarSuscripcion` se niega en Android. Quien ya es Pro (pagó en la web) usa todo normal. El canje de código de beta sigue (no es un pago).
 - **Toda pantalla nueva que ofrezca pagar o subir de plan tiene que respetar `estaEnAppAndroid()`.**
-- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026 (versión 5), versión 6 el 8 oct, versión 7 el 9 oct (ver Cerrado HOY). Compra OK de punta a punta en Chrome (9 oct); la v7 abre la app en Chrome aunque Samsung Internet sea el predeterminado, y en Samsung Internet la web no ofrece compra.
+- ✅ **Google Play Billing integrado en la app de Android** — 7 oct 2026 (versión 5), versión 6 el 8 oct, versión 7 el 9 oct (ver Sesión 9 oct). Compra OK de punta a punta en Chrome (9 oct); la v7 abre la app en Chrome aunque Samsung Internet sea el predeterminado, y en Samsung Internet la web no ofrece compra.
 
 ---
 
-## Cerrado HOY (9 oct 2026) — **La compra de Google Play funciona de punta a punta; versión 7 abre la app en Chrome aunque Samsung Internet sea el predeterminado**
+## Cerrado HOY (10 oct 2026) — **Antes de pasar la v7 a Producción: mensajes de error en simple, el Pro de Google se apaga solo al vencer y "Ahorras 37%" en el anual de Android**
+
+### 1. ✅ Mensajes de la compra con Google (solo app de Android, solo web, sin .aab)
+- El papá cierra la hoja de pago (`AbortError`): no se muestra nada.
+- Falla abrir el pago (cualquier otro error): "No pudimos abrir el pago. Inténtalo de nuevo en unos minutos."
+- Google cobró y el servidor no activó Pro: "Tu pago quedó registrado, pero no pudimos activar Pro todavía. Cierra y abre la app. Si sigue igual, escríbenos a contacto@huella.lat." (en `/cuenta`, en el aviso Pro y en Tú al abrir).
+- Los códigos técnicos salen de la pantalla: quedan en la consola (`[play] no se pudo activar: …`) y en los logs de `play-verificar`. Todo en `src/services/playBilling.js`.
+- **Arreglado de paso (también pasaba en producción):** al comprar desde el aviso Pro y fallar el servidor, el aviso pasaba a "Esto no viene en el plan gratuito. Entendido", sin ningún mensaje. Ahora muestra el de arriba (`UpgradeModal.jsx`, rama Android sin oferta; mismo estilo `.error` del modal, sin elementos nuevos).
+
+### 2. ✅ El Pro de Google se apaga solo al llegar "vence" — ⬜ **falta correr la migración 030**
+- **Antes:** la compra de Google ponía `perfiles.plan='pro'` y solo bajaba si llegaba el aviso de Google (`play-rtdn`) o si la app se abría. Nada miraba `vence`.
+- **Ahora:** `supabase/migrations/030_vencer_pro_google.sql`: función `vencer_pro_google()` + job de pg_cron `vencer-pro-google` cada 15 min. Marca `VENCIDA_SIN_AVISO` las suscripciones que la base tiene con acceso y `vence` ya pasado (una sola vez por compra) y baja a `free` al usuario si estaba en `pro` y no le queda otra de Google vigente (mismo criterio que `api/_lib/play.js`). Admin no se toca.
+- **Renovación:** si llega el aviso de Google, `vence` se extiende sola. Si no llega, al abrir la app `restaurarComprasPlay` → `play-verificar` relee Google y vuelve a `pro` con el `vence` nuevo.
+- Probada en Postgres local (PGlite, carpeta temporal): 6 casos (vencida, vigente, cancelada aún pagada, admin, dos compras, ya marcada) y segunda corrida sin cambios. Resultado esperado en los 6.
+
+### 3. ✅ "Ahorras 37%" en el plan anual de la app de Android
+- `textosPlay`: `Math.round((1 - anual / (mensual × 12)) × 100)` con los precios de Google → 59.990 vs 95.880 = 37%. La web sigue con "2 meses gratis".
+
+### 4. QA (Code, WebKit iPhone 14, cuenta de prueba, solo mirar, bloqueo dentro de la página)
+- Android en Chrome con Google, pago y `play-verificar` (502) simulados, 3 pasadas: cierre de la hoja sin mensaje; falla → "No pudimos abrir el pago…"; compra sin activar → "Tu pago quedó registrado…" en `/cuenta`, aviso Pro y Tú; "Ahorras 37%" en `/cuenta` y aviso Pro. Producción, con la misma simulación, mostraba los códigos técnicos y "4 meses gratis".
+- Web: texto completo de Inicio, Tú, `/cuenta` y aviso Pro idéntico a producción (2 pasadas; la única diferencia fue el "?" de la visita del escarabajo, que sale al azar).
+- `ultima_actividad` igual al inicio y al final (2026-10-06 12:57:01) en todas.
+
+### ⬜ Pendiente
+- **Daniel: correr la migración 030 en el SQL Editor** (pasos 1, 2 y 3 del archivo).
+- **Daniel: pasar la v7 a Producción** en Play Console.
+- Siguen los ⚠️ del 7 oct (doble pago Mercado Pago + Google: al vencer la de Google baja a gratis aunque pague Mercado Pago; ahora también vale para el job de la 030).
+
+---
+
+## Sesión 9 oct 2026 — **La compra de Google Play funciona de punta a punta; versión 7 abre la app en Chrome aunque Samsung Internet sea el predeterminado**
 
 ### 1. ✅ Compra de Google Play OK de punta a punta (9 oct 18:39)
 - Tablet Android 13, navegador Chrome: compra de prueba → Tú muestra **"Huella Pro · Activo"**.

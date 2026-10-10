@@ -97,15 +97,19 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
 
   // App de Android (Google Play): sin precios, sin CTA de pago y sin enlace a
   // /cuenta. Solo avisa que no viene en el plan gratuito y se cierra.
-  // `mensajeAndroid` vacio ('') no muestra bajada.
+  // `mensajeAndroid` vacio ('') no muestra bajada. Si se acaba de comprar con
+  // Google en este modal y el servidor no activó Pro, la oferta desaparece y
+  // cae acá: se muestra lo que pasó con la compra en vez de la bajada.
   if (estaEnAppAndroid() && !conPlay) {
-    const bajada = mensajeAndroid ?? 'Esto no viene en el plan gratuito.'
+    const bajada = avisoPlay || (mensajeAndroid ?? 'Esto no viene en el plan gratuito.')
     return createPortal(
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.header}>
             <h2 className={styles.titulo}>{tituloAndroid || tituloCustom || 'Plan gratuito'}</h2>
-            {bajada && <p className={styles.bajada}>{bajada}</p>}
+            {error
+              ? <p className={styles.error}>{error}</p>
+              : bajada && <p className={styles.bajada}>{bajada}</p>}
           </div>
           <button className={styles.cta} onClick={onClose}>
             Entendido

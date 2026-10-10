@@ -109,9 +109,12 @@ async function verificarEnServidor(purchaseToken) {
   return { ok: r.ok, pro: Boolean(j.pro), code: j.code ?? null, detalle: j.detalle ?? null, status: r.status }
 }
 
-// Lo que respondió el servidor cuando no pudo activar la compra, tal cual.
+// Google cobró pero el servidor no activó Pro. El código técnico va solo a la
+// consola; al papá se le dice qué hacer.
+const MENSAJE_ERROR_SERVIDOR = 'Tu pago quedó registrado, pero no pudimos activar Pro todavía. Cierra y abre la app. Si sigue igual, escríbenos a contacto@huella.lat.'
 function mensajeErrorServidor(v) {
-  return `No se pudo activar tu plan: ${v.code || 'error'} ${v.detalle || ''} (${v.status})`.replace(/\s+/g, ' ')
+  console.warn('[play] no se pudo activar:', v.code, v.detalle, v.status)
+  return MENSAJE_ERROR_SERVIDOR
 }
 
 // El último fallo del servidor queda en el resultado para que Tú lo muestre
@@ -125,10 +128,8 @@ function anotarErrorServidor(mensaje) {
 // Compra con la hoja de pago de Google. Devuelve:
 //   { estado: 'activo' }      Google cobró (o empezó la prueba) y el servidor activó Pro
 //   { estado: 'pendiente' }   Google confirmó la compra pero el servidor aún no la activa
-// y lanza si la hoja no se pudo abrir o se cerró sin comprar. Incluye el
-// AbortError: Chrome usa ese mismo error cuando el papá cierra la hoja y cuando
-// Google Play la cierra solo por un problema (8 oct: se abría y se cerraba sin
-// aviso), así que se muestra en pantalla con mensajeErrorPlay.
+// y lanza si la hoja no se pudo abrir o se cerró sin comprar. El AbortError
+// (el papá cerró la hoja) no muestra nada: ver mensajeErrorPlay.
 export async function comprarConPlay(ciclo) {
   const itemId = PRODUCTO[ciclo]
   const play = await cargarPlay()
@@ -181,11 +182,11 @@ export function textosPlay(play, ciclo) {
   const dias = diasDePrueba(d.freeTrialPeriod)
   const cada = ciclo === 'anual' ? 'al año' : 'al mes'
   const m = Number(play.mensual.price.value), a = Number(play.anual.price.value)
-  const meses = Math.floor((m * 12 - a) / m)
+  const porcentaje = Math.round((1 - a / (m * 12)) * 100)
   return {
     precioMensual: formatoPrecio(play.mensual.price),
     precioAnual: formatoPrecio(play.anual.price),
-    ahorro: meses >= 1 ? `${meses} ${meses === 1 ? 'mes' : 'meses'} gratis` : null,
+    ahorro: porcentaje >= 1 ? `Ahorras ${porcentaje}%` : null,
     aviso: dias
       ? `Los primeros ${dias} días son gratis. Después se cobran ${precio} ${cada}, y puedes cancelar cuando quieras desde Google Play.`
       : `Se cobran ${precio} ${cada}. Puedes cancelar cuando quieras desde Google Play.`,
@@ -194,9 +195,12 @@ export function textosPlay(play, ciclo) {
 }
 
 export const MENSAJE_PENDIENTE = 'Google Play confirmó tu compra. Estamos activando tu plan, puede tardar unos minutos.'
-// Con el nombre y el texto del error tal cual, para saber qué dijo Google.
+// AbortError = el papá cerró la hoja de pago: no se muestra nada. Desde la v7
+// la app abre en Chrome y Samsung Internet no ofrece compra, así que ya no es
+// el cierre solo de Google del 8 oct. El error real queda en la consola.
 export function mensajeErrorPlay(err) {
-  return `No se pudo abrir el pago: ${err?.name || 'Error'} ${err?.message || ''}`.trim()
+  if (err?.name === 'AbortError') return ''
+  return 'No pudimos abrir el pago. Inténtalo de nuevo en unos minutos.'
 }
 
 // Se ofrece comprar solo con Google Play disponible, sin Pro (por Mercado Pago,
