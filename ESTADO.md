@@ -415,7 +415,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Sin cambios de código: ni precio (sigue 9.990 / 99.900 en la web), ni prueba, ni frase de cobro. La parte B (cuántas suscripciones de Mercado Pago hay) no se pudo leer: este equipo no tiene la llave de administrador de Supabase ni el token de Mercado Pago.
 
 ### ⬜ Pendiente (decisión de Daniel)
-- Elegir camino para la prueba en la web: (1) probar `start_date` + `end_date` en el entorno de prueba de Mercado Pago; (2) planes con prueba + formulario de tarjeta en Huella; → ✅ Daniel eligió la (3) el mismo día (ver parte 4). Opciones: (3) sin prueba en la web (solo precio nuevo). Detalle y riesgos en el informe del 11 oct.
+- Elegir camino para la prueba en la web: (1) probar `start_date` + `end_date` en el entorno de prueba de Mercado Pago; (2) planes con prueba + formulario de tarjeta en Huella; (3) sin prueba en la web (solo precio nuevo). Detalle y riesgos en el informe del 10 oct. → ✅ Daniel eligió la (3) el mismo día (ver parte 4).
 - Parte B: correr las consultas de solo lectura del informe del 10 oct y revisar el panel de Mercado Pago. → ✅ cerrada el mismo día (ver parte 4).
 
 ---
