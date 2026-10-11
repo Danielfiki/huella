@@ -398,6 +398,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ### 4. ✅ Canje de código en /cuenta
 - La tarjeta "ACCESO DE BETA" ya no aparece bajo el botón de pagar. Al final queda "Tengo un código de invitación" (13px, gris suave, subrayado) que abre la misma `CanjeCodigoBeta`; una vez abierta se comporta igual que antes (confirmación en verde aunque pase a Pro). Si ya es Pro, no aparece el enlace.
+- Ajuste (mismo día): al tocar el enlace, la tarjeta aparece en su lugar (lo último de la página, justo bajo el botón de pagar) y la pantalla baja suave hasta dejarla centrada (`scrollIntoView`, sin animación si el teléfono pide reducir movimiento). QA 2 pasadas, claro/oscuro, web/Android: tarjeta completa entre el encabezado y la barra inferior, también en pantalla de iPhone SE. Capturas en `Downloadshuella-capturas-10oct-c` (01 a 08).
 
 ### 5. QA (Code, WebKit iPhone 14, cuenta de prueba, solo mirar, 2 pasadas, claro y oscuro, web y Android simulado)
 - Destacado correcto en los 8 casos; tarjeta de beta oculta y enlace que la abre (sin enviar código); aviso Pro y /cuenta iguales a producción salvo los puntos 2, 3 y 4; `ultima_actividad` igual (2026-10-06 12:57:01). Capturas en `Downloads\huella-capturas-10oct-b\` (01 a 20).

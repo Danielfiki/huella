@@ -159,6 +159,14 @@ function CuentaContenido({ play }) {
   const navigate = useNavigate()
   const [verTodo, setVerTodo] = useState(false)
   const [verCanje, setVerCanje] = useState(false)
+  // Al abrir el canje, la tarjeta aparece donde estaba el enlace (al final) y
+  // la pantalla baja suave hasta ella para que se vea completa.
+  const canjeRef = useRef(null)
+  useEffect(() => {
+    if (!verCanje || !canjeRef.current) return
+    const quieto = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    canjeRef.current.scrollIntoView({ behavior: quieto ? 'auto' : 'smooth', block: 'center' })
+  }, [verCanje])
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
@@ -440,7 +448,9 @@ function CuentaContenido({ play }) {
            OK conserva visible la confirmacion en verde en el mismo instante en
            que isPro() pasa a true. ── */}
       {verCanje ? (
-        <CanjeCodigoBeta />
+        <div ref={canjeRef}>
+          <CanjeCodigoBeta />
+        </div>
       ) : !pro && (
         <button type="button" className={styles.canjeLink} onClick={() => setVerCanje(true)}>
           Tengo un código de invitación
