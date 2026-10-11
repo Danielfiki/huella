@@ -7,6 +7,7 @@ import { iniciarSuscripcion, consultarSuscripcionMP, cancelarSuscripcionMP } fro
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
 import LineaRetracto from '../../components/ui/LineaRetracto'
+import { textosWeb } from '../../services/preciosWeb'
 import { estaEnAppAndroid } from '../portada/destinoRaiz'
 import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
 import styles from './CuentaPage.module.css'
@@ -310,6 +311,8 @@ function CuentaContenido({ play }) {
   }
 
   const tp = play ? textosPlay(play, ciclo) : null
+  // Web (Mercado Pago): precios fijos, sin prueba gratis.
+  const tw = textosWeb(ciclo)
 
   // Pide el permiso de notificaciones vía el hook. Al resolverse, el hook
   // actualiza `permission` y esta pantalla re-renderiza al estado correcto.
@@ -352,7 +355,7 @@ function CuentaContenido({ play }) {
               className={`${styles.cicloOption} ${ciclo === 'mensual' ? styles.cicloOptionActive : ''}`}
               onClick={() => setCiclo('mensual')}
             >
-              <span className={styles.cicloMonto}>{tp ? tp.precioMensual : 'CLP 9.990'}</span>
+              <span className={styles.cicloMonto}>{tp ? tp.precioMensual : tw.precioMensual}</span>
               <span className={styles.cicloPeriodo}>/mes</span>
             </button>
             <button
@@ -362,10 +365,10 @@ function CuentaContenido({ play }) {
               className={`${styles.cicloOption} ${ciclo === 'anual' ? styles.cicloOptionActive : ''}`}
               onClick={() => setCiclo('anual')}
             >
-              <span className={styles.cicloMonto}>{tp ? tp.precioAnual : 'CLP 99.900'}</span>
+              <span className={styles.cicloMonto}>{tp ? tp.precioAnual : tw.precioAnual}</span>
               <span className={styles.cicloPeriodo}>/año</span>
-              {(tp ? tp.ahorro : '2 meses gratis') && (
-                <span className={styles.ahorroBadge}>{tp ? tp.ahorro : '2 meses gratis'}</span>
+              {(tp ? tp.ahorro : tw.ahorro) && (
+                <span className={styles.ahorroBadge}>{tp ? tp.ahorro : tw.ahorro}</span>
               )}
             </button>
           </div>
@@ -411,7 +414,7 @@ function CuentaContenido({ play }) {
       {/* ── CTA — dispara la suscripción del ciclo elegido en Mercado Pago ── */}
       {!pro && (
         <>
-          {tp && <p className={styles.activoMsg}>{avisoPlay || tp.aviso}</p>}
+          <p className={styles.activoMsg}>{tp ? (avisoPlay || tp.aviso) : tw.aviso}</p>
           <LineaRetracto className={styles.activoMsg} />
           <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
             {tp

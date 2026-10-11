@@ -5,6 +5,7 @@ import { Check } from 'lucide-react'
 import { iniciarSuscripcion } from '../../services/pago'
 import ErrorPago from './ErrorPago'
 import LineaRetracto from './LineaRetracto'
+import { textosWeb } from '../../services/preciosWeb'
 import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
 import { useHuella } from '../../context/HuellaContext'
 import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
@@ -123,6 +124,8 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
 
   // Textos con los precios de Google (solo en la app de Android con Google Play).
   const tp = conPlay ? textosPlay(play, ciclo) : null
+  // Web (Mercado Pago): precios fijos, sin prueba gratis.
+  const tw = textosWeb(ciclo)
 
   // Portal a document.body: el modal vive fuera de .pageWrap (que queda con
   // transform tras la animación de página y captura el position:fixed). Así
@@ -155,7 +158,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
             className={`${styles.cicloOption} ${ciclo === 'mensual' ? styles.cicloOptionActive : ''}`}
             onClick={() => setCiclo('mensual')}
           >
-            <span className={styles.cicloMonto}>{tp ? tp.precioMensual : 'CLP 9.990'}</span>
+            <span className={styles.cicloMonto}>{tp ? tp.precioMensual : tw.precioMensual}</span>
             <span className={styles.cicloPeriodo}>/mes</span>
           </button>
           <button
@@ -165,15 +168,15 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
             className={`${styles.cicloOption} ${ciclo === 'anual' ? styles.cicloOptionActive : ''}`}
             onClick={() => setCiclo('anual')}
           >
-            <span className={styles.cicloMonto}>{tp ? tp.precioAnual : 'CLP 99.900'}</span>
+            <span className={styles.cicloMonto}>{tp ? tp.precioAnual : tw.precioAnual}</span>
             <span className={styles.cicloPeriodo}>/año</span>
-            {(tp ? tp.ahorro : '2 meses gratis') && (
-              <span className={styles.ahorroBadge}>{tp ? tp.ahorro : '2 meses gratis'}</span>
+            {(tp ? tp.ahorro : tw.ahorro) && (
+              <span className={styles.ahorroBadge}>{tp ? tp.ahorro : tw.ahorro}</span>
             )}
           </button>
         </div>
 
-        {tp && <p className={styles.bajada}>{avisoPlay || tp.aviso}</p>}
+        <p className={styles.bajada}>{tp ? (avisoPlay || tp.aviso) : tw.aviso}</p>
         <LineaRetracto className={`${styles.bajada} ${styles.retracto}`} />
 
         {error && (conPlay

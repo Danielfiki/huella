@@ -395,8 +395,8 @@ export default function PortadaPage() {
           <div className={styles.planPro}>
             <div className={styles.planProCabeza}>
               <h3 className={styles.planNombre}>Pro</h3>
-              <p className={styles.planProPrecio}>CLP 9.990 <span className={styles.planProPeriodo}>al mes</span></p>
-              <p className={styles.planProAnual}>o CLP 99.900 al año: 2 meses gratis</p>
+              <p className={styles.planProPrecio}>CLP 7.990 <span className={styles.planProPeriodo}>al mes</span></p>
+              <p className={styles.planProAnual}>o CLP 59.990 al año: ahorras 37%</p>
             </div>
             <ul className={styles.planLista}>
               {PLAN_PRO.map((x) => <li key={x}><span className={styles.guionClaro}>—</span>{x}</li>)}

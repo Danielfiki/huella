@@ -2,15 +2,17 @@ import { createClient } from '@supabase/supabase-js'
 
 // Configuración de los dos ciclos de Huella Pro. Los montos van en CLP
 // (sin decimales) y se cobran de forma recurrente: el mensual cada mes,
-// el anual cada 12 meses. Sin free_trial.
+// el anual cada 12 meses. Sin free_trial: Mercado Pago no lo acepta en
+// suscripciones sin plan (ver ESTADO.md, 11 oct). Los montos que ve el papá
+// viven en src/services/preciosWeb.js; si cambia uno, cambia el otro.
 const CICLOS = {
   mensual: {
     reason: 'Huella Pro mensual',
-    auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: 9990, currency_id: 'CLP' },
+    auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: 7990, currency_id: 'CLP' },
   },
   anual: {
     reason: 'Huella Pro anual',
-    auto_recurring: { frequency: 12, frequency_type: 'months', transaction_amount: 99900, currency_id: 'CLP' },
+    auto_recurring: { frequency: 12, frequency_type: 'months', transaction_amount: 59990, currency_id: 'CLP' },
   },
 }
 
