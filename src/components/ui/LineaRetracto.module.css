@@ -3,3 +3,10 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Lo que la ley pide que se vea: mismo tamaño que el resto de la línea,
+   en negrita y con el color del texto principal (no el gris suave). */
+.destacado {
+  font-weight: 700;
+  color: var(--color-text);
+}

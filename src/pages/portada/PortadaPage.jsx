@@ -61,7 +61,7 @@ const RASGOS_TOMAS = [
 ]
 
 const PLAN_GRATIS = ['Hasta 15 momentos', 'Hasta 3 estrategias de 4 semanas al mismo tiempo', 'Huella · Esta semana, en tres líneas']
-const PLAN_PRO = ['Momentos ilimitados', 'Estrategias de 4 semanas con tareas concretas', 'Seguimiento después de cada episodio', 'Análisis semanal completo', 'Informes PDF de tu historial', 'Modo familia: conecta con tu pareja']
+const PLAN_PRO = ['Momentos ilimitados', 'Estrategias de 4 semanas con tareas concretas', 'Seguimiento después de cada momento difícil', 'Análisis semanal completo', 'Informes PDF de tu historial', 'Modo familia: conecta con tu pareja']
 
 // Marco de telefono. `tam` fija el ancho (y con el, bordes, isla y pie, que
 // van en proporcion en el CSS). `cortado`: sin pie, recortado abajo por su

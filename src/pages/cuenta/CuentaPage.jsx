@@ -158,6 +158,7 @@ function CuentaContenido({ play }) {
   const { isPro, isAdmin, reloadData } = useHuella()
   const navigate = useNavigate()
   const [verTodo, setVerTodo] = useState(false)
+  const [verCanje, setVerCanje] = useState(false)
   const [ciclo, setCiclo] = useState('mensual')   // 'mensual' | 'anual' — mensual por defecto
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
@@ -432,13 +433,19 @@ function CuentaContenido({ play }) {
         </>
       )}
 
-      {/* ── Canje de codigo de beta — alternativa al pago. Va FUERA del {!pro}
-           de arriba a proposito: se auto-esconde si ya es Pro, pero cuando el
-           canje sale OK conserva visible la confirmacion en verde en el mismo
-           instante en que isPro() pasa a true. ── */}
-      <div style={{ marginTop: '16px' }}>
+      {/* ── Canje de codigo de beta — alternativa al pago. Desde el 10 oct es
+           un enlace discreto al final que abre la misma tarjeta (antes la
+           tarjeta quedaba bajo el boton de pagar). Una vez abierta se monta
+           sin gatear: se auto-esconde si ya es Pro, pero cuando el canje sale
+           OK conserva visible la confirmacion en verde en el mismo instante en
+           que isPro() pasa a true. ── */}
+      {verCanje ? (
         <CanjeCodigoBeta />
-      </div>
+      ) : !pro && (
+        <button type="button" className={styles.canjeLink} onClick={() => setVerCanje(true)}>
+          Tengo un código de invitación
+        </button>
+      )}
     </div>
   )
 }

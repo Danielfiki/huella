@@ -892,7 +892,7 @@ export default function RegistroPage() {
     return (
       <UpgradeModal
         onClose={() => navigate('/nuevo')}
-        tituloCustom={`Registraste ${MAX_EPISODIOS_FREE} episodios`}
+        tituloCustom={`Registraste ${MAX_EPISODIOS_FREE} momentos`}
         mensajeCustom="Eso es dedicación de verdad. Con Huella Pro sigues registrando sin límite y desbloqueas el análisis completo de patrones."
         tituloAndroid={`Llegaste a los ${MAX_EPISODIOS_FREE} momentos del plan gratuito.`}
         mensajeAndroid=""

@@ -14,8 +14,8 @@ import styles from './UpgradeModal.module.css'
 const FEATURES = [
   'Estrategias de 4 semanas con tareas concretas',
   'Exportar informes PDF del historial',
-  'Registro ilimitado de episodios',
-  'Seguimiento post-episodio (check-in)',
+  'Momentos ilimitados',
+  'Seguimiento después de cada momento difícil',
 ]
 
 export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tituloAndroid, mensajeAndroid }) {

@@ -383,7 +383,28 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (10 oct 2026, parte 4) — **Precio nuevo en la web: 7.990 / 59.990, "Ahorras 37%" y frase de cobro antes de pagar, sin prueba gratis (alternativa 3)**
+## Cerrado HOY (10 oct 2026, parte 5) — **Ajustes finales antes de publicar la v7: retracto destacado, "momento" en el aviso Pro y la portada, canje de código como enlace discreto**
+
+### 1. Portada en la app de Android: no se muestra (sin cambios)
+- La portada solo vive en "/" (`EntradaRaiz`), y `destinoRaiz` manda a `/login` cuando `estaEnApp()` es verdadero (referrer `android-app://lat.huella.app` o la marca de sessionStorage, la misma detección que usa `playBilling.js`). Verificado simulando la app de Android: "/" sin sesión termina en `/login` (claro y oscuro). En la web sigue "El pago se hace con Mercado Pago.".
+
+### 2. ✅ Línea de retracto destacada (web y Android, /cuenta y aviso Pro)
+- `LineaRetracto.jsx`: "no aplica el derecho a retracto" en `<strong>` con `.destacado` (negrita 700, `--color-text`); el resto igual. Texto idéntico letra por letra. Medido: 14px igual que la frase de cobro; claro rgb(42,26,14), oscuro rgb(245,237,227).
+
+### 3. ✅ "momento" en el aviso Pro y la portada
+- Palabra de la app: "Registrar" (botón), "Momento guardado" / "Enmarca este momento" (registro), pestaña "Momentos" (historial); la portada ya decía "Momentos ilimitados".
+- Aviso Pro: "Registro ilimitado de episodios" → "Momentos ilimitados"; "Seguimiento post-episodio (check-in)" → "Seguimiento después de cada momento difícil". Portada: "Seguimiento después de cada episodio" → lo mismo. "difícil" porque el seguimiento solo existe para momentos difíciles (tabla `checkins_episodio`).
+- Título del aviso Pro al llegar al límite (lo pasa `RegistroPage`): "Registraste 15 episodios" → "Registraste 15 momentos" (Android ya decía "15 momentos").
+
+### 4. ✅ Canje de código en /cuenta
+- La tarjeta "ACCESO DE BETA" ya no aparece bajo el botón de pagar. Al final queda "Tengo un código de invitación" (13px, gris suave, subrayado) que abre la misma `CanjeCodigoBeta`; una vez abierta se comporta igual que antes (confirmación en verde aunque pase a Pro). Si ya es Pro, no aparece el enlace.
+
+### 5. QA (Code, WebKit iPhone 14, cuenta de prueba, solo mirar, 2 pasadas, claro y oscuro, web y Android simulado)
+- Destacado correcto en los 8 casos; tarjeta de beta oculta y enlace que la abre (sin enviar código); aviso Pro y /cuenta iguales a producción salvo los puntos 2, 3 y 4; `ultima_actividad` igual (2026-10-06 12:57:01). Capturas en `Downloads\huella-capturas-10oct-b\` (01 a 20).
+
+---
+
+## Sesión 10 oct 2026 (parte 4) — **Precio nuevo en la web: 7.990 / 59.990, "Ahorras 37%" y frase de cobro antes de pagar, sin prueba gratis (alternativa 3)**
 
 ### 1. ✅ Cambios (solo web; Android sin tocar)
 - `src/services/preciosWeb.js`: precios de la web (7.990 / 59.990), "Ahorras 37%" (mismo cálculo que Android) y la frase de cobro: "Se cobran CLP 7.990 al mes. Se renueva automáticamente hasta que canceles." (anual: "CLP 59.990 al año"). Misma estructura que Android sin prueba.
