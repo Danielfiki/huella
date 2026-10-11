@@ -382,7 +382,25 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (10 oct 2026, parte 2) — **Términos de la suscripción, línea de retracto antes de pagar y cancelar Mercado Pago desde Huella con Pro hasta el fin del período**
+## Cerrado HOY (11 oct 2026) — **Precio nuevo + prueba de 7 días en la web: DETENIDO antes de construir. Mercado Pago no acepta prueba gratis en suscripciones sin plan (la forma en que Huella las crea hoy)**
+
+### 1. ⛔ Lo que dice la documentación oficial de Mercado Pago (leída el 11 oct)
+- **Crear suscripción** (`POST /preapproval`, lo que usa `api/mp-crear-suscripcion.js`): el pedido acepta en `auto_recurring` solo `frequency, frequency_type, start_date, end_date, transaction_amount, currency_id`. `free_trial` aparece **solo en la respuesta** (`responses → 200 → auto_recurring`), no como algo que se pueda mandar.
+- **Crear plan** (`POST /preapproval_plan`): el pedido sí acepta `free_trial`. Pero la guía dice: "Una Suscripción con plan asociado siempre deberá ser creada con su `card_token_id` y en status `Authorized`" → hay que tomar la tarjeta en una pantalla propia (formulario de tarjeta de Mercado Pago dentro de Huella), no en la página de pago de Mercado Pago que usamos hoy.
+- Las dos guías de "suscripciones sin plan asociado" (con pago autorizado y con pago pendiente) no mencionan `free_trial` ni prueba gratis.
+- `start_date` en crear suscripción: "Fecha a partir de la cual la suscripción estará activa y se empezarán a cobrar las facturas… solo funciona en conjunto con `end_date`". No está documentado como prueba gratis.
+- Fuentes: referencia "Crear suscripción" y "Crear plan de suscripción" en mercadopago.cl/developers/es/reference/online-payments/subscriptions/…; guías subscription-associated-plan y subscription-no-associated-plan.
+
+### 2. No se construyó nada
+- Sin cambios de código: ni precio (sigue 9.990 / 99.900 en la web), ni prueba, ni frase de cobro. La parte B (cuántas suscripciones de Mercado Pago hay) no se pudo leer: este equipo no tiene la llave de administrador de Supabase ni el token de Mercado Pago.
+
+### ⬜ Pendiente (decisión de Daniel)
+- Elegir camino para la prueba en la web: (1) probar `start_date` + `end_date` en el entorno de prueba de Mercado Pago; (2) planes con prueba + formulario de tarjeta en Huella; (3) sin prueba en la web (solo precio nuevo). Detalle y riesgos en el informe del 11 oct.
+- Parte B: correr las consultas de solo lectura del informe del 11 oct y revisar el panel de Mercado Pago.
+
+---
+
+## Sesión 10 oct 2026 (parte 2) — **Términos de la suscripción, línea de retracto antes de pagar y cancelar Mercado Pago desde Huella con Pro hasta el fin del período**
 
 ### 1. ✅ /terminos y política de privacidad
 - `TerminosPage.jsx`: sección **"Planes y suscripción Huella Pro"** (texto de Daniel tal cual, cada párrafo con su título en negrita) entre "Disponibilidad del servicio" y la Parte 2, con entrada en el índice (`#suscripcion`).
