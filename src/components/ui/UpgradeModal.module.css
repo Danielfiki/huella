@@ -162,3 +162,8 @@
   text-align: center;
   margin: 0 0 10px;
 }
+
+/* Línea de retracto (LineaRetracto): mismo texto que .bajada, con el aire que
+   el modal deja entre bloques antes del botón. */
+.retracto { margin-bottom: 20px; }
+.bajada + .retracto { margin-top: 8px; }

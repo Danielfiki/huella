@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { venceDe, guardarSuscripcion } from './_lib/mp.js'
 
 // Red de seguridad del pago (Paso 3) — RESPALDO del webhook.
 // Cuando el usuario vuelve del checkout a /cuenta?suscripcion=ok, la app llama
@@ -98,6 +99,11 @@ export default async function handler(req, res) {
       console.error('mp-verificar-suscripcion: error activando plan en perfiles', user.id, error)
       return res.status(500).json({ error: 'No se pudo activar el plan' })
     }
+
+    // Anota la suscripción como activa (misma tabla que el webhook). Si falla,
+    // el Pro ya quedó activado igual.
+    await guardarSuscripcion(supabaseAdmin, { preapprovalId: autorizada.id, userId: user.id, estado: 'activa', vence: venceDe(autorizada) })
+      .catch((err) => console.error('mp-verificar-suscripcion: no se pudo anotar la suscripción —', err?.message))
 
     const filasAfectadas = filas?.length ?? 0
     console.log('mp-verificar-suscripcion: plan activado a pro para', user.id, '— filas afectadas:', filasAfectadas)

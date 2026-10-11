@@ -382,7 +382,35 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (10 oct 2026) — **Antes de pasar la v7 a Producción: mensajes de error en simple, el Pro de Google se apaga solo al vencer y "Ahorras 37%" en el anual de Android**
+## Cerrado HOY (10 oct 2026, parte 2) — **Términos de la suscripción, línea de retracto antes de pagar y cancelar Mercado Pago desde Huella con Pro hasta el fin del período**
+
+### 1. ✅ /terminos y política de privacidad
+- `TerminosPage.jsx`: sección **"Planes y suscripción Huella Pro"** (texto de Daniel tal cual, cada párrafo con su título en negrita) entre "Disponibilidad del servicio" y la Parte 2, con entrada en el índice (`#suscripcion`).
+- `PoliticaPrivacidad.jsx`: bloque "Google Play y Mercado Pago (pagos)" en "Quién más accede a tus datos"; "No usamos otros proveedores con acceso a datos personales."; IA "20 por día y 120 al mes por usuario". `FECHA` → 10 de octubre de 2026 (la comparten /terminos y /privacidad).
+
+### 2. ✅ Línea de retracto antes de pagar (web y Android, /cuenta y aviso Pro)
+- `src/components/ui/LineaRetracto.jsx`: "El servicio comienza al suscribirte, por lo que no aplica el derecho a retracto. Puedes cancelar cuando quieras. Ver términos" → `/terminos#suscripcion`. Usa la clase de la frase del cobro de cada pantalla (14px, `--color-text-muted`, 5,3:1 en claro y 6,7:1 en oscuro); enlace subrayado. Debajo de la frase del cobro (Android) y antes del botón. En la web no hay frase del cobro: va justo sobre "Activar Huella Pro".
+- Aviso Pro: `.retracto` le da el mismo aire que el resto del modal antes del botón.
+
+### 3. ✅ Cancelar Mercado Pago desde /cuenta — ⬜ **falta correr la migración 031**
+- **Pantalla:** si el Pro viene de Mercado Pago, bajo "Tienes acceso completo…" aparece **"Cancelar suscripción"**, igual a "Gestionar plan" de Tú (13px, `--color-text-muted`, peso 400, subrayado; medido en las dos). Al tocar: "Seguirás con Huella Pro hasta el [fecha]. Después no se te cobrará más." + Volver / Sí, cancelar (botones copiados de "Eliminar perfil"). Cancelada: queda solo esa frase. Si falla: "No pudimos cancelar. Inténtalo de nuevo en unos minutos." Pro de beta, admin o Google: no aparece.
+- **Servidor:** `api/mp-suscripcion.js` (consultar / cancelar; anota la cancelación con su `vence` = `next_payment_date` y recién después hace `PUT /preapproval/{id}` `cancelled`; si la tabla no está, no cancela nada; si Mercado Pago rechaza, la fila vuelve a activa). Lógica común en `api/_lib/mp.js`. 11 funciones en Vercel (tope Hobby 12).
+- **Webhook:** `cancelled` con período pagado por delante → **no baja el Pro**, lo anota como cancelada (fecha anotada por Huella o, si canceló en Mercado Pago, `next_payment_date` o último cobro + frecuencia). Sin fecha o sin la tabla → baja al tiro como antes. `paused` igual que antes. `authorized` (webhook y `mp-verificar-suscripcion`) anota la suscripción como activa.
+- **Migración 031:** tabla `suscripciones_mp` (sin permisos para el cliente) + `vencer_pro_mp()` + job pg_cron `vencer-pro-mp` cada 15 min. No baja a quien tenga otra de Mercado Pago vigente o una de Google con acceso.
+
+### 4. QA (Code, solo mirar, nunca contra Mercado Pago real)
+- Servidor con Mercado Pago y Supabase falsos en memoria (15 escenarios, 2 pasadas, 0 llamadas fuera de lo simulado): consultar, cancelar, webhook después de cancelar, cancelada en MP con fecha / con último cobro / sin fecha, otra activa, pausada, autorizada, sin tabla, MP rechaza, sin suscripción.
+- SQL 031 en PGlite: 7 casos, segunda corrida sin cambios.
+- WebKit iPhone 14, cuenta de prueba, bloqueo dentro de la página, `/api/mp-suscripcion` simulado, 3 pasadas: /terminos y /privacidad con los textos nuevos; línea de retracto en /cuenta y aviso Pro (web y Android), "Ver términos" abre la sección; web idéntica a producción salvo la línea; cancelar: enlace → confirmación con "10 de noviembre de 2026" → error → cancelada. `ultima_actividad` igual (2026-10-06 12:57:01).
+
+### ⬜ Pendiente
+- **Daniel: correr la migración 031** (pasos 1 a 4) — y la 030 si aún no se corrió: el paso 4 de la 031 muestra los dos jobs.
+- Primera cancelación real: mirar en Supabase que `suscripciones_mp` guarde `vence` con la fecha del próximo cobro.
+- Siguen: precio decidido (7.990 / 59.990 / 7 días) sin aplicar en la web; la web no tiene prueba gratis aunque los términos la mencionan "cuando tu suscripción la incluya".
+
+---
+
+## Sesión 10 oct 2026 (parte 1) — **Antes de pasar la v7 a Producción: mensajes de error en simple, el Pro de Google se apaga solo al vencer y "Ahorras 37%" en el anual de Android**
 
 ### 1. ✅ Mensajes de la compra con Google (solo app de Android, solo web, sin .aab)
 - El papá cierra la hoja de pago (`AbortError`): no se muestra nada.

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { iniciarSuscripcion } from '../../services/pago'
 import ErrorPago from './ErrorPago'
+import LineaRetracto from './LineaRetracto'
 import { estaEnAppAndroid } from '../../pages/portada/destinoRaiz'
 import { useHuella } from '../../context/HuellaContext'
 import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
@@ -173,6 +174,7 @@ export default function UpgradeModal({ onClose, tituloCustom, mensajeCustom, tit
         </div>
 
         {tp && <p className={styles.bajada}>{avisoPlay || tp.aviso}</p>}
+        <LineaRetracto className={`${styles.bajada} ${styles.retracto}`} />
 
         {error && (conPlay
           ? <p className={styles.error}>{error}</p>

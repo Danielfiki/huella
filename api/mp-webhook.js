@@ -1,10 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+import { venceDe, guardarSuscripcion, leerFila } from './_lib/mp.js'
+
+// ¿Le queda a este usuario otra suscripción con Pro vigente (Mercado Pago
+// activa o cancelada aún pagada, o Google con acceso)? Mismo criterio que el
+// job vencer_pro_mp de la migración 031.
+async function tieneOtroPro(db, userId, preapprovalId) {
+  const ahora = new Date().toISOString()
+  const { data: mp } = await db.from('suscripciones_mp').select('estado, vence')
+    .eq('user_id', userId).neq('preapproval_id', preapprovalId).in('estado', ['activa', 'cancelada'])
+  if ((mp ?? []).some((f) => f.estado === 'activa' || Date.parse(f.vence ?? '') > Date.now())) return true
+  const { data: g } = await db.from('suscripciones_google').select('purchase_token')
+    .eq('user_id', userId).gt('vence', ahora)
+    .in('estado', ['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD', 'SUBSCRIPTION_STATE_CANCELED'])
+  return Boolean(g?.length)
+}
 
 // Webhook de Mercado Pago para Suscripciones (preapproval).
 // Maneja el ciclo de vida del plan según el status real de la suscripción:
 //   - authorized          → activa plan='pro'  (upsert: crea fila si no existe)
-//   - paused | cancelled  → baja plan='free'   (update solo si estaba en 'pro')
+//   - cancelled           → sigue Pro hasta el fin del período pagado (lo
+//                           apaga el job vencer_pro_mp); sin fecha, baja al tiro
+//   - paused              → baja plan='free'   (update solo si estaba en 'pro')
 //   - pending u otro       → no toca nada (solo loguea)
 // Usa el cliente service-role (SUPABASE_SERVICE_ROLE_KEY) para escribir saltando
 // RLS, igual que push-remind. Siempre consulta el status EN VIVO con
@@ -123,7 +140,32 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // 5a. DOWNGRADE: 'paused'/'cancelled' → 'free'. Usamos UPDATE (no upsert):
+    // 5a. CANCELADA con período pagado por delante: NO se baja el Pro. Se
+    // anota hasta cuándo (la fecha que guardó /api/mp-suscripcion al cancelar
+    // desde Huella o, si canceló en Mercado Pago, la que informa MP) y el job
+    // vencer_pro_mp lo apaga al llegar. Sin fecha, o sin la tabla, se baja al
+    // tiro como siempre.
+    if (status === 'cancelled') {
+      try {
+        const fila = await leerFila(supabase, preapprovalId)
+        const anotada = fila?.vence && Date.parse(fila.vence) > Date.now() ? new Date(fila.vence) : null
+        const vence = anotada ?? venceDe(sub)
+        if (vence) {
+          await guardarSuscripcion(supabase, { preapprovalId, userId: externalReference, estado: 'cancelada', vence })
+          console.log('mp-webhook: cancelada, Pro hasta', vence.toISOString(), 'para', externalReference)
+          return res.status(200).json({ ok: true, cancelada: true, vence })
+        }
+        await guardarSuscripcion(supabase, { preapprovalId, userId: externalReference, estado: 'vencida', vence: null })
+        if (await tieneOtroPro(supabase, externalReference, preapprovalId)) {
+          console.log('mp-webhook: cancelada sin período pagado, pero tiene otra suscripción vigente —', externalReference)
+          return res.status(200).json({ ok: true, otraVigente: true })
+        }
+      } catch (err) {
+        console.error('mp-webhook: suscripciones_mp no disponible, se baja al tiro —', err?.message)
+      }
+    }
+
+    // 5b. DOWNGRADE: 'paused'/'cancelled' → 'free'. Usamos UPDATE (no upsert):
     // si no existe fila, no hay Pro que bajar (free es la ausencia de Pro). El
     // filtro plan='pro' protege a admin y deja intactos a free/null; 0 filas
     // afectadas es resultado VÁLIDO (no había Pro que bajar, o era admin/free).
@@ -146,7 +188,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, bajado: true, status, filasAfectadas })
     }
 
-    // 5b. ACTIVAR el plan a 'pro'. Usamos UPSERT (no UPDATE) con el mismo
+    // Anota la suscripción como activa (para saber, al cancelar o vencer otra,
+    // que este usuario sigue pagando). Si falla, igual se activa el Pro.
+    await guardarSuscripcion(supabase, { preapprovalId, userId: externalReference, estado: 'activa', vence: venceDe(sub) })
+      .catch((err) => console.error('mp-webhook: no se pudo anotar la suscripción —', err?.message))
+
+    // 5c. ACTIVAR el plan a 'pro'. Usamos UPSERT (no UPDATE) con el mismo
     // onConflict: 'user_id' que ocupa savePadreNombre en HuellaContext: si el
     // usuario ya tiene fila, le actualiza plan='pro'; si todavía no la tiene
     // (pagó antes de guardar su nombre), la crea con plan='pro' y nombre null

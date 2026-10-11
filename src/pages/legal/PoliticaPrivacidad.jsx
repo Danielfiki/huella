@@ -4,7 +4,7 @@ import styles from './TerminosPage.module.css'
 // Politica de privacidad de Huella: una sola fuente para /privacidad (sola) y
 // /terminos (Parte 2). Cambiar aca cambia las dos paginas.
 export const CONTACTO = 'contacto@huella.lat'
-export const FECHA = '4 de octubre de 2026'
+export const FECHA = '10 de octubre de 2026'
 
 export function Section({ id, title, children }) {
   return (
@@ -105,8 +105,13 @@ export default function PoliticaPrivacidad() {
                 La aplicación está alojada en <strong>Vercel</strong>. Vercel puede registrar metadatos técnicos de cada solicitud (como la dirección IP), pero no accede al contenido de tus datos.
               </p>
             </Sub>
+            <Sub title="Google Play y Mercado Pago (pagos)">
+              <p>
+                Procesan el pago de Huella Pro. Huella no ve ni guarda los datos de tu tarjeta; solo recibe el estado de tu suscripción y un identificador de la compra.
+              </p>
+            </Sub>
             <p className={styles.note}>
-              No usamos ningún otro proveedor de terceros con acceso a datos personales.
+              No usamos otros proveedores con acceso a datos personales.
             </p>
           </Section>
   
@@ -123,7 +128,7 @@ export default function PoliticaPrivacidad() {
               <li>Todas las comunicaciones usan cifrado TLS (el candado del navegador).</li>
               <li>Las contraseñas se almacenan con hash seguro; nadie puede verlas en texto plano.</li>
               <li>Cada usuario solo puede acceder a sus propios datos (Row Level Security en Supabase).</li>
-              <li>Limitamos el acceso a la API de IA a 20 llamadas por día por usuario para prevenir uso abusivo.</li>
+              <li>Limitamos el acceso a la API de IA a 20 por día y 120 al mes por usuario para prevenir uso abusivo.</li>
             </ul>
             <p>
               Ningún sistema es 100% infalible. Si detectamos una brecha de seguridad que afecte tus datos, te notificaremos por email en el menor tiempo posible.

@@ -31,3 +31,27 @@ export async function iniciarSuscripcion(ciclo) {
   }
   return data.init_point
 }
+
+// Pro pagado con Mercado Pago: si viene de ahí, si ya está cancelado y hasta
+// cuándo está pagado. accion 'consultar' | 'cancelar' (POST /api/mp-suscripcion).
+async function llamarSuscripcion(accion) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/mp-suscripcion', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ accion }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error('mp-suscripcion ' + accion + ' ' + res.status)
+    err.detail = data
+    throw err
+  }
+  return data
+}
+
+export const consultarSuscripcionMP = () => llamarSuscripcion('consultar')
+export const cancelarSuscripcionMP = () => llamarSuscripcion('cancelar')

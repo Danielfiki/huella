@@ -3,9 +3,10 @@ import { useNavigate, Navigate } from 'react-router-dom'
 import { ArrowLeft, Lightbulb, Zap, Camera, Users, Check } from 'lucide-react'
 import { useHuella } from '../../context/HuellaContext'
 import { supabase } from '../../lib/supabase'
-import { iniciarSuscripcion } from '../../services/pago'
+import { iniciarSuscripcion, consultarSuscripcionMP, cancelarSuscripcionMP } from '../../services/pago'
 import CanjeCodigoBeta from '../../components/CanjeCodigoBeta'
 import ErrorPago from '../../components/ui/ErrorPago'
+import LineaRetracto from '../../components/ui/LineaRetracto'
 import { estaEnAppAndroid } from '../portada/destinoRaiz'
 import { usePlayBilling, ofrecerCompraPlay, textosPlay, comprarConPlay, MENSAJE_PENDIENTE, mensajeErrorPlay } from '../../services/playBilling'
 import styles from './CuentaPage.module.css'
@@ -66,6 +67,90 @@ export default function CuentaPage() {
     return <CuentaContenido play={play} />
   }
   return <CuentaContenido play={null} />
+}
+
+// "10 de noviembre de 2026", en hora de Chile. null si no hay fecha.
+function fechaLarga(iso) {
+  const d = iso ? new Date(iso) : null
+  if (!d || Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santiago' })
+}
+
+// Pro pagado con Mercado Pago (web): cancelar desde Huella, igual de visible
+// que "Gestionar plan" en Tú. Sigue con Pro hasta el fin del período pagado;
+// lo apaga el job vencer_pro_mp (migración 031). Sin suscripción de Mercado
+// Pago (beta, admin, Google) no se muestra nada.
+function CancelarSuscripcion() {
+  const [estado, setEstado] = useState(null)
+  const [confirmando, setConfirmando] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let vivo = true
+    consultarSuscripcionMP()
+      .then((r) => { if (vivo) setEstado(r) })
+      .catch((err) => console.error('CancelarSuscripcion consultar error:', err, err?.detail))
+    return () => { vivo = false }
+  }, [])
+
+  if (!estado?.mp) return null
+  const hasta = fechaLarga(estado.vence)
+
+  if (estado.cancelada) {
+    return (
+      <p className={styles.activoMsg}>
+        {hasta
+          ? `Seguirás con Huella Pro hasta el ${hasta}. Después no se te cobrará más.`
+          : 'Tu suscripción quedó cancelada. No se te cobrará más.'}
+      </p>
+    )
+  }
+
+  if (!confirmando) {
+    return (
+      <button type="button" className={styles.cancelarLink} onClick={() => setConfirmando(true)}>
+        Cancelar suscripción
+      </button>
+    )
+  }
+
+  async function cancelar() {
+    setCancelando(true)
+    setError('')
+    try {
+      const r = await cancelarSuscripcionMP()
+      setEstado({ mp: true, cancelada: true, vence: r.vence ?? null })
+    } catch (err) {
+      console.error('CancelarSuscripcion cancelar error:', err, err?.detail)
+      setError('No pudimos cancelar. Inténtalo de nuevo en unos minutos.')
+    }
+    setCancelando(false)
+  }
+
+  return (
+    <div className={styles.cancelarConfirm}>
+      <p className={styles.activoMsg}>
+        {hasta
+          ? `Seguirás con Huella Pro hasta el ${hasta}. Después no se te cobrará más.`
+          : 'Se cancelará tu suscripción y no se te cobrará más.'}
+      </p>
+      <div className={styles.cancelarBtns}>
+        <button
+          type="button"
+          className={styles.cancelarVolverBtn}
+          onClick={() => { setConfirmando(false); setError('') }}
+          disabled={cancelando}
+        >
+          Volver
+        </button>
+        <button type="button" className={styles.cancelarConfirmarBtn} onClick={cancelar} disabled={cancelando}>
+          {cancelando ? 'Cancelando…' : 'Sí, cancelar'}
+        </button>
+      </div>
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  )
 }
 
 function CuentaContenido({ play }) {
@@ -252,9 +337,12 @@ function CuentaContenido({ play }) {
         )}
 
         {pro ? (
-          <p className={styles.activoMsg}>
-            Tienes acceso completo a todas las funcionalidades de Huella.
-          </p>
+          <>
+            <p className={styles.activoMsg}>
+              Tienes acceso completo a todas las funcionalidades de Huella.
+            </p>
+            {!play && <CancelarSuscripcion />}
+          </>
         ) : (
           <div className={styles.cicloToggle} role="radiogroup" aria-label="Elige tu ciclo de pago">
             <button
@@ -324,6 +412,7 @@ function CuentaContenido({ play }) {
       {!pro && (
         <>
           {tp && <p className={styles.activoMsg}>{avisoPlay || tp.aviso}</p>}
+          <LineaRetracto className={styles.activoMsg} />
           <button className={styles.cta} onClick={handleActivar} disabled={cargando}>
             {tp
               ? (cargando ? 'Abriendo Google Play…' : tp.cta)
