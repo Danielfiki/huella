@@ -77,8 +77,8 @@
 - ⬜ **Color del rótulo "Registrar" de la barra inferior a `--color-eyebrow`** — **29 sep** — propuesta de Design en el rediseño de Momentos, no aplicada: toca toda la app (hoy `--color-primary` da 2,9:1).
 - ⬜ **Brief para ilustrador** — **16 sep** — entra sin detalle, lo precisa Daniel.
 - ✅ **Auditoría del costo de la API** — **cerrada el 7 oct** (marco cacheado, cache 1 h, 3 líneas en Haiku, consejo solo con algo nuevo, tope 120/mes; ver Sesión 7 oct mañana).
-- ✅ **Precio nuevo en la web** — **11 oct** — 7.990/mes, 59.990/año, "Ahorras 37%", sin prueba gratis (ver Cerrado HOY 11 oct).
-- ⬜ **Prueba de 7 días en la web con fecha de inicio a 7 días (alternativa 1)** — **11 oct** — **disparador: después de publicar la v7 en Producción.** Mercado Pago no acepta `free_trial` al crear una suscripción sin plan (`POST /preapproval`, como lo hace `api/mp-crear-suscripcion.js`); solo en planes (`POST /preapproval_plan`), que exigen `card_token_id` (formulario de tarjeta propio). La alternativa es mandar `auto_recurring.start_date` = hoy + 7 días, con `end_date` (la documentación dice que `start_date` sin `end_date` no se reconoce): "fecha a partir de la cual la suscripción estará activa y se empezarán a cobrar las facturas". No está documentada como prueba gratis. **Antes de construir:** probar en el modo de pruebas de Mercado Pago (credenciales y tarjetas de prueba) si cobra algo al suscribirse, qué fecha muestra la página de pago, qué `status` y `next_payment_date` quedan y si cancelar antes del día 8 evita el cobro. Si se construye: una prueba por persona en el servidor (`suscripciones_google`, `suscripciones_mp` y las antiguas en Mercado Pago), y `vence` = fin de la prueba para `vencer_pro_mp`.
+- ✅ **Precio nuevo en la web** — **10 oct** — 7.990/mes, 59.990/año, "Ahorras 37%", sin prueba gratis (ver Cerrado HOY 10 oct, parte 4).
+- ⬜ **Prueba de 7 días en la web con fecha de inicio a 7 días (alternativa 1)** — **10 oct** — **disparador: después de publicar la v7 en Producción.** Mercado Pago no acepta `free_trial` al crear una suscripción sin plan (`POST /preapproval`, como lo hace `api/mp-crear-suscripcion.js`); solo en planes (`POST /preapproval_plan`), que exigen `card_token_id` (formulario de tarjeta propio). La alternativa es mandar `auto_recurring.start_date` = hoy + 7 días, con `end_date` (la documentación dice que `start_date` sin `end_date` no se reconoce): "fecha a partir de la cual la suscripción estará activa y se empezarán a cobrar las facturas". No está documentada como prueba gratis. **Antes de construir:** probar en el modo de pruebas de Mercado Pago (credenciales y tarjetas de prueba) si cobra algo al suscribirse, qué fecha muestra la página de pago, qué `status` y `next_payment_date` quedan y si cancelar antes del día 8 evita el cobro. Si se construye: una prueba por persona en el servidor (`suscripciones_google`, `suscripciones_mp` y las antiguas en Mercado Pago), y `vence` = fin de la prueba para `vencer_pro_mp`.
 - ⬜ **"3 líneas" en Haiku se pasan de las 30 palabras** — **7 oct** — "Mejoró" salió con ~37. Mirar cómo se ve en la card; si molesta, recortar en el prompt de Haiku.
 - ⬜ **Cachear también los prompts fijos de rasgos y patrones** — **7 oct** — `PROMPT_DETECTAR_RASGOS` y `PROMPT_DETECTAR_PATRONES` van al inicio del prompt y sin cache (rasgos lleva ~6.700 tokens de entrada además del system).
 - ⬜ **`InvitarPage`** — **16 sep** — entra sin detalle, lo precisa Daniel.
@@ -383,7 +383,7 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ---
 
-## Cerrado HOY (11 oct 2026, parte 2) — **Precio nuevo en la web: 7.990 / 59.990, "Ahorras 37%" y frase de cobro antes de pagar, sin prueba gratis (alternativa 3)**
+## Cerrado HOY (10 oct 2026, parte 4) — **Precio nuevo en la web: 7.990 / 59.990, "Ahorras 37%" y frase de cobro antes de pagar, sin prueba gratis (alternativa 3)**
 
 ### 1. ✅ Cambios (solo web; Android sin tocar)
 - `src/services/preciosWeb.js`: precios de la web (7.990 / 59.990), "Ahorras 37%" (mismo cálculo que Android) y la frase de cobro: "Se cobran CLP 7.990 al mes. Se renueva automáticamente hasta que canceles." (anual: "CLP 59.990 al año"). Misma estructura que Android sin prueba.
@@ -394,17 +394,17 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 
 ### 2. QA (Code, solo mirar, sin Mercado Pago real)
 - Servidor con Mercado Pago y Supabase falsos, 2 pasadas: mensual 7990 / anual 59990, CLP, sin prueba; ciclo inválido no llega a Mercado Pago; 0 llamadas no previstas.
-- WebKit iPhone 14, cuenta de prueba, bloqueo dentro de la página, 3 pasadas, claro y oscuro: frase de cobro correcta en mensual y anual en `/cuenta` y aviso Pro, antes del retracto y del botón, mismo tamaño; portada con el precio nuevo; 0 precios viejos, 0 "meses gratis", 0 "días gratis" en la web; Android idéntico a producción; `ultima_actividad` igual (2026-10-06 12:57:01). Capturas en `Downloadshuella-capturas-11oct` (01 a 12).
+- WebKit iPhone 14, cuenta de prueba, bloqueo dentro de la página, 3 pasadas, claro y oscuro: frase de cobro correcta en mensual y anual en `/cuenta` y aviso Pro, antes del retracto y del botón, mismo tamaño; portada con el precio nuevo; 0 precios viejos, 0 "meses gratis", 0 "días gratis" en la web; Android idéntico a producción; `ultima_actividad` igual (2026-10-06 12:57:01). Capturas en `Downloadshuella-capturas-11oct` (01 a 12; la carpeta se llama 11oct pero corresponde al 10 oct).
 
 ### ⬜ Pendiente
-- Quien ya pagaba por Mercado Pago a 9.990 / 99.900 sigue con ese monto: el cambio vale para suscripciones nuevas (ver parte B del 11 oct, sin responder).
+- ✅ **Parte B cerrada (Daniel):** nadie paga por Mercado Pago. `suscripciones_mp` está vacía y el único perfil Pro es la cuenta demo de Daniel.
 - Alternativa 1 (prueba con fecha de inicio a 7 días): en PENDIENTES, después de publicar la v7.
 
 ---
 
-## Sesión 11 oct 2026 (parte 1) — **Precio nuevo + prueba de 7 días en la web: DETENIDO antes de construir. Mercado Pago no acepta prueba gratis en suscripciones sin plan (la forma en que Huella las crea hoy)**
+## Sesión 10 oct 2026 (parte 3) — **Precio nuevo + prueba de 7 días en la web: DETENIDO antes de construir. Mercado Pago no acepta prueba gratis en suscripciones sin plan (la forma en que Huella las crea hoy)**
 
-### 1. ⛔ Lo que dice la documentación oficial de Mercado Pago (leída el 11 oct)
+### 1. ⛔ Lo que dice la documentación oficial de Mercado Pago (leída el 10 oct)
 - **Crear suscripción** (`POST /preapproval`, lo que usa `api/mp-crear-suscripcion.js`): el pedido acepta en `auto_recurring` solo `frequency, frequency_type, start_date, end_date, transaction_amount, currency_id`. `free_trial` aparece **solo en la respuesta** (`responses → 200 → auto_recurring`), no como algo que se pueda mandar.
 - **Crear plan** (`POST /preapproval_plan`): el pedido sí acepta `free_trial`. Pero la guía dice: "Una Suscripción con plan asociado siempre deberá ser creada con su `card_token_id` y en status `Authorized`" → hay que tomar la tarjeta en una pantalla propia (formulario de tarjeta de Mercado Pago dentro de Huella), no en la página de pago de Mercado Pago que usamos hoy.
 - Las dos guías de "suscripciones sin plan asociado" (con pago autorizado y con pago pendiente) no mencionan `free_trial` ni prueba gratis.
@@ -415,8 +415,8 @@ El evento también dispara cuando un puntero solo pasa por encima (el hover del 
 - Sin cambios de código: ni precio (sigue 9.990 / 99.900 en la web), ni prueba, ni frase de cobro. La parte B (cuántas suscripciones de Mercado Pago hay) no se pudo leer: este equipo no tiene la llave de administrador de Supabase ni el token de Mercado Pago.
 
 ### ⬜ Pendiente (decisión de Daniel)
-- Elegir camino para la prueba en la web: (1) probar `start_date` + `end_date` en el entorno de prueba de Mercado Pago; (2) planes con prueba + formulario de tarjeta en Huella; (3) sin prueba en la web (solo precio nuevo). Detalle y riesgos en el informe del 11 oct.
-- Parte B: correr las consultas de solo lectura del informe del 11 oct y revisar el panel de Mercado Pago.
+- Elegir camino para la prueba en la web: (1) probar `start_date` + `end_date` en el entorno de prueba de Mercado Pago; (2) planes con prueba + formulario de tarjeta en Huella; → ✅ Daniel eligió la (3) el mismo día (ver parte 4). Opciones: (3) sin prueba en la web (solo precio nuevo). Detalle y riesgos en el informe del 11 oct.
+- Parte B: correr las consultas de solo lectura del informe del 10 oct y revisar el panel de Mercado Pago. → ✅ cerrada el mismo día (ver parte 4).
 
 ---
 
